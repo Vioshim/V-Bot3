@@ -141,4 +141,5 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-.pyre/!/src/utils/credentials.json
+/src/utils/credentials.json
+/src/utils/token.json
