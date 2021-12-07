@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "V-Bot"
+version = "3.0.0"
+description = ""
+authors = ["Vioshim <Krangelj@unicartagena.edu.co>"]
+
+[tool.poetry.dependencies]
+python = "^3.10.1"
+isort = { git = "https://github.com/PyCQA/isort.git", rev = "main", extras = ["requirements_deprecated_finder", "pipfile_deprecated_finder"] }
+flake8 = { git = "https://github.com/PyCQA/flake8.git", rev = "main" }
+py-cord = { git = "https://github.com/Pycord-Development/pycord.git", extras = ["voice", "speed"] }
+frozendict = { git = "https://github.com/Marco-Sulla/python-frozendict.git", rev = "master" }
+asyncpg = { git = "https://github.com/MagicStack/asyncpg.git", rev = "master" }
+jishaku = { git = "https://github.com/Gorialis/jishaku.git", rev = "master" }
+lark = { git = "https://github.com/lark-parser/lark" }
+google-api-python-client = { git = "https://github.com/googleapis/google-api-python-client.git", rev = "main" }
+google-auth-httplib2 = { git = "https://github.com/googleapis/google-auth-library-python-httplib2.git", rev = "main" }
+google-auth-oauthlib = { git = "https://github.com/googleapis/google-auth-library-python-oauthlib.git", rev = "main" }
+nested-lookup = { git = "https://github.com/russellballestrini/nested-lookup.git" }
+apscheduler = { git = "https://github.com/agronholm/apscheduler.git" }
+"mystbin.py" = { git = "https://github.com/AbstractUmbra/mystbin.py.git", rev = "main" }
+asyncdagpi = { git = "https://github.com/Daggy1234/asyncdagpi.git" }
+python-dotenv = { git = "https://github.com/theskumar/python-dotenv.git" }
+coveralls = { git = "https://github.com/TheKevJames/coveralls-python.git" }
+black = { git = "https://github.com/psf/black.git", rev = "main" }
+coverage = { git = "https://github.com/nedbat/coveragepy.git" }
+pip = { git = "https://github.com/pypa/pip.git", rev = "main" }
+pyright = "^0.0.13"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+
+line-length = 99 # override black's default line-length
+target-version = ["py310"]
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | venv
+  | .vscode
+  | .history
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+[tool.pyright]
+useLibraryCodeForTypes = true
+typeCheckingMethod = "basic"
+pythonVersion = "3.10.1"
+
+
+[tool.isort]
+# make it compatible with black
+profile = "black" 
