@@ -1,26 +1,16 @@
-#  Copyright 2021 Vioshim
+# Copyright 2021 Vioshim
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#       https://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#       https://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import annotations
 
@@ -61,16 +51,16 @@ class Simple(View):
     """A Paginator for View-only purposes"""
 
     def __init__(
-            self,
-            *,
-            bot: CustomBot,
-            member: Member | User,
-            values: Iterable[_T],
-            target: _M = None,
-            timeout: Optional[float] = 180.0,
-            embed: Embed = None,
-            inline: bool = False,
-            entries_per_page: int = 25,
+        self,
+        *,
+        bot: CustomBot,
+        member: Member | User,
+        values: Iterable[_T],
+        target: _M = None,
+        timeout: Optional[float] = 180.0,
+        embed: Embed = None,
+        inline: bool = False,
+        entries_per_page: int = 25,
     ):
         """Init Method
 
@@ -78,7 +68,7 @@ class Simple(View):
         ----------
         bot : CustomBot
             Bot
-        member : Member
+        member : Member | User
             Member
         target : _M
             Destination
@@ -90,7 +80,7 @@ class Simple(View):
             Embed to display, defaults to None
         inline : bool, optional
             If the values need to be inline or not, defaults to False
-        entries_per_page : int
+        entries_per_page : int, optional
             The max amount of entries per page, defaults to 25
         """
         super().__init__(timeout=timeout)
@@ -100,12 +90,15 @@ class Simple(View):
         items: list[_T] = list(values)
         if not embed:
             embed = Embed(
-                title="Displaying values", colour=member.colour, timestamp=datetime.now()
+                title="Displaying values",
+                colour=member.colour,
+                timestamp=datetime.now(),
             )
-            embed.set_image(url=WHITE_BAR)
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            if guild := member.guild:
-                embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        embed.set_image(url=WHITE_BAR)
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        if isinstance(member, Member):
+            guild = member.guild
+            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         self.bot = bot
         self._embed = embed
         self._member = member
@@ -115,10 +108,13 @@ class Simple(View):
         self._inline = inline
         self._pos = 0
         self._entries_per_page = entries_per_page
-        self.sort()
+        if not isinstance(values, list):
+            self.sort()
         self.menu_format()
 
-    def sort(self, key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
+    def sort(
+        self, key: Callable[[_T], Any] = None, reverse: bool = False
+    ) -> None:
         """Sort method used for the view's values
 
         Attributes
@@ -132,30 +128,43 @@ class Simple(View):
 
     # noinspection PyMethodMayBeStatic
     def parser(self, item: _T) -> tuple[str, str]:
+        """This method parses an item and returns a tuple which will set
+        values and description for the select choices
+
+        Parameters
+        ----------
+        item : _T
+            Independant element
+
+        Returns
+        -------
+        tuple[str, str]
+            generated name and description for the item
+        """
         if isinstance(item, tuple):
             return item
         return str(item), repr(item)
 
     async def send(
-            self,
-            content: str = None,
-            *,
-            tts: bool = False,
-            embed: Embed = None,
-            embeds: list[Embed] = None,
-            file: File = None,
-            files: list[File] = None,
-            stickers: list[GuildSticker | StickerItem] = None,
-            delete_after: float = None,
-            nonce: int = None,
-            allowed_mentions: AllowedMentions = None,
-            reference: Message | MessageReference | PartialMessage = None,
-            mention_author: bool = False,
-            username: str = None,
-            avatar_url: str = None,
-            ephemeral: bool = False,
-            thread: Snowflake = None,
-    ) -> bool:
+        self,
+        content: str = None,
+        *,
+        tts: bool = False,
+        embed: Embed = None,
+        embeds: list[Embed] = None,
+        file: File = None,
+        files: list[File] = None,
+        stickers: list[GuildSticker | StickerItem] = None,
+        delete_after: float = None,
+        nonce: int = None,
+        allowed_mentions: AllowedMentions = None,
+        reference: Message | MessageReference | PartialMessage = None,
+        mention_author: bool = False,
+        username: str = None,
+        avatar_url: str = None,
+        ephemeral: bool = False,
+        thread: Snowflake = None,
+    ) -> None:
         """Sends the paginator towards the defined destination
 
         Attributes
@@ -216,7 +225,11 @@ class Simple(View):
         )
 
         webhook_elements = dict(
-            username=username, avatar_url=avatar_url, thread=thread, ephemeral=ephemeral, wait=True
+            username=username,
+            avatar_url=avatar_url,
+            thread=thread,
+            ephemeral=ephemeral,
+            wait=True,
         )
 
         if not embeds and not embed:
@@ -227,7 +240,9 @@ class Simple(View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if not resp.is_done():
-                common_pop_get(data, "stickers", "nonce", "reference", "mention_author")
+                common_pop_get(
+                    data, "stickers", "nonce", "reference", "mention_author"
+                )
                 await resp.send_message(**data, ephemeral=ephemeral)
             else:
                 data |= webhook_elements
@@ -312,7 +327,9 @@ class Simple(View):
             self.message = None
         except DiscordException as e:
             self.bot.logger.exception(
-                "Exception occurred while deleting %s", self.message.jump_url, exc_info=e
+                "Exception occurred while deleting %s",
+                self.message.jump_url,
+                exc_info=e,
             )
         finally:
             return self.stop()
@@ -354,9 +371,11 @@ class Simple(View):
                 icon_url=self.embed.footer.icon_url,
             )
             amount = self._entries_per_page * self._pos
-            for item in self.values[amount: amount + self._entries_per_page]:
+            for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
-                self.embed.add_field(name=name, value=value, inline=self._inline)
+                self.embed.add_field(
+                    name=name, value=value, inline=self._inline
+                )
 
     async def edit(self, page: int) -> None:
         """This method edits the pagination's page given an index.
@@ -373,7 +392,9 @@ class Simple(View):
                 await message.edit(embed=self._embed, view=self)
         except DiscordException as e:
             self.bot.logger.exception(
-                "Exception while editing view %s", self.message.jump_url, exc_info=e
+                "Exception while editing view %s",
+                self.message.jump_url,
+                exc_info=e,
             )
 
     @button(emoji=":lasttrack:861938354609717258", row=0, custom_id="first")
@@ -393,7 +414,9 @@ class Simple(View):
         if not resp.is_done():
             return await self.edit(page=0)
 
-    @button(emoji=":fastreverse:861938354136416277", row=0, custom_id="previous")
+    @button(
+        emoji=":fastreverse:861938354136416277", row=0, custom_id="previous"
+    )
     async def previous(self, btn: Button, interaction: Interaction) -> None:
         """
         Method used to reach previous page of the pagination
@@ -459,7 +482,9 @@ class Simple(View):
         resp: InteractionResponse = interaction.response
         await self.custom_last(btn, interaction)
         if not resp.is_done():
-            return await self.edit(page=len(self.values[:: self._entries_per_page]) - 1)
+            return await self.edit(
+                page=len(self.values[:: self._entries_per_page]) - 1
+            )
 
     async def custom_previous(self, btn: Button, interaction: Interaction):
         """Placeholder for custom defined operations

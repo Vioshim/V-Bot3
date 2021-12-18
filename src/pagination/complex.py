@@ -1,40 +1,37 @@
-#  Copyright 2021 Vioshim
+# Copyright 2021 Vioshim
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#       https://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#       https://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from contextlib import suppress
+from contextlib import asynccontextmanager, suppress
 from difflib import get_close_matches
 from typing import Iterable, Optional, TypeVar
 
 from discord import (
+    AllowedMentions,
     DiscordException,
     Embed,
+    File,
+    GuildSticker,
     Interaction,
     InteractionResponse,
     Member,
     Message,
+    MessageReference,
+    PartialMessage,
+    StickerItem,
+    User,
 )
-from discord.abc import Messageable
+from discord.abc import Messageable, Snowflake
 from discord.ui import Button, Select, button, select
 
 from src.pagination.simple import Simple
@@ -49,16 +46,16 @@ __all__ = ("Complex", "ComplexInput")
 
 class Complex(Simple):
     def __init__(
-            self,
-            *,
-            bot: CustomBot,
-            member: Member,
-            values: Iterable[_T],
-            target: _M = None,
-            timeout: Optional[float] = 180.0,
-            embed: Embed = None,
-            max_values: int = 1,
-            entries_per_page: int = 25,
+        self,
+        *,
+        bot: CustomBot,
+        member: Member | User,
+        values: Iterable[_T],
+        target: _M = None,
+        timeout: Optional[float] = 180.0,
+        embed: Embed = None,
+        max_values: int = 1,
+        entries_per_page: int = 25,
     ):
         self._choices: set[_T] = set()
         self._max_values = max_values
@@ -71,15 +68,13 @@ class Complex(Simple):
             embed=embed,
             entries_per_page=entries_per_page,
         )
-        self.sort()
-        self.menu_format()
 
     # noinspection PyMethodMayBeStatic
     def emoji_parser(self, _item: _T) -> str:
         return "\N{DIAMOND SHAPE WITH A DOT INSIDE}"
 
     async def __aenter__(self) -> set[_T]:
-        await self.send()
+        await super(Complex, self).send()
         await self.wait()
         return self._choices
 
@@ -115,7 +110,9 @@ class Complex(Simple):
 
         # Then gets defined the amount of entries an user can pick
 
-        foo.max_values = min(self.max_values - len(self.choices), self.entries_per_page)
+        foo.max_values = min(
+            self.max_values - len(self.choices), self.entries_per_page
+        )
 
         # Now we get the indexes that each page should start with
 
@@ -127,12 +124,11 @@ class Complex(Simple):
 
             elements: dict[int, list[_T]] = {}
 
-            for index, element in enumerate(indexes):
+            for index, _ in enumerate(indexes):
                 # The chunks start to get loaded keeping in mind the length of the pages
                 # the basis is pretty much the amount of elements multiplied by the page index.
-
-                amount = self.entries_per_page * index
-                items = self.values[amount: amount + self.entries_per_page]
+                amount = index * self.entries_per_page
+                items = self.values[amount : amount + self.entries_per_page]
                 elements[index] = items
 
             # After loading the chunks, we proceed to determine the minimum and maximum range for the pagination
@@ -142,7 +138,9 @@ class Complex(Simple):
             # the range of pages would be from page 10 to page 14
 
             min_range = max(self._pos - int(self.entries_per_page / 2), 0)
-            max_range = min(self._pos + int(self.entries_per_page / 2), len(elements))
+            max_range = min(
+                self._pos + int(self.entries_per_page / 2), len(elements)
+            )
 
             for index in range(min_range, max_range):
                 item = elements[index]
@@ -162,7 +160,9 @@ class Complex(Simple):
                 digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
 
                 pages.add_option(
-                    label=f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"[:100],
+                    label=f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"[
+                        :100
+                    ],
                     value=f"{index}"[:100],
                     description=f"From {firstname} to {lastname}"[:100],
                     emoji="\N{PAGE FACING UP}",
@@ -210,9 +210,94 @@ class Complex(Simple):
             return await super(Complex, self).edit(page=page)
         await self.delete()
 
+    @asynccontextmanager
+    async def send(
+        self,
+        content: str = None,
+        *,
+        tts: bool = False,
+        embed: Embed = None,
+        embeds: list[Embed] = None,
+        file: File = None,
+        files: list[File] = None,
+        stickers: list[GuildSticker | StickerItem] = None,
+        delete_after: float = None,
+        nonce: int = None,
+        allowed_mentions: AllowedMentions = None,
+        reference: Message | MessageReference | PartialMessage = None,
+        mention_author: bool = False,
+        username: str = None,
+        avatar_url: str = None,
+        ephemeral: bool = False,
+        thread: Snowflake = None,
+    ):
+        """Sends the paginator towards the defined destination
+
+        Attributes
+        ----------
+        content : str, optional
+            message's content
+        tts : bool, optional
+            message's tts, defaults to False
+        embed : Embed, optional
+            message's embed, defaults to None
+            if set as None, no embed is generated.
+        embeds : list[Embed], optional
+            message's embeds, defaults to None
+        file : File, optional
+            message's file, defaults to None'
+        files : list[File], optional
+            message's file, defaults to None
+        stickers : list[GuildSticker | StickerItem], optional
+            message's stickers, defaults to None
+        delete_after : float, optional
+            defaults to None
+        nonce : int, optional
+            message's nonce, defaults to None
+        allowed_mentions : AllowedMentions, optional
+            message's allowed mentions, defaults MISSING
+        reference : Message | MessageReference | PartialMessage, optional
+            message's reference, defaults to None
+        mention_author : bool, optional
+            if mentions the author of the message, defaults to MISSING
+        username : str, Optional
+            webhook username to send as, defaults to None
+        avatar_url: str, optional
+            webhook avatar_url to send as, defaults to None
+        ephemeral: bool, optional
+            if message is ephemeral, defaults to False
+        thread: Snowflake, optional
+            if message is sent to a thread, defaults to None
+        """
+        try:
+            await super(Complex, self).send(
+                content=content,
+                tts=tts,
+                embed=embed,
+                embeds=embeds,
+                file=file,
+                files=files,
+                stickers=stickers,
+                delete_after=delete_after,
+                nonce=nonce,
+                allowed_mentions=allowed_mentions,
+                reference=reference,
+                mention_author=mention_author,
+                username=username,
+                avatar_url=avatar_url,
+                ephemeral=ephemeral,
+                thread=thread,
+            )
+            await self.wait()
+            yield self.choices
+        finally:
+            await self.delete()
+
     # noinspection PyTypeChecker
     @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, sct: Select, interaction: Interaction) -> None:
+    async def select_choice(
+        self, sct: Select, interaction: Interaction
+    ) -> None:
         """Method used to select values from the pagination
 
         Parameters
@@ -229,7 +314,7 @@ class Complex(Simple):
             entries = []
             for index in answer:  # type: str
                 amount = self.entries_per_page * self._pos
-                chunk = self.values[amount: amount + self.entries_per_page]
+                chunk = self.values[amount : amount + self.entries_per_page]
                 item: _T = chunk[int(index)]
                 name, _ = self.parser(item)
                 entries.append(str(name))
@@ -247,7 +332,9 @@ class Complex(Simple):
         await self.edit(page=self._pos)
 
     # noinspection PyTypeChecker
-    @select(placeholder="Press here to scroll pages", row=2, custom_id="navigate")
+    @select(
+        placeholder="Press here to scroll pages", row=2, custom_id="navigate"
+    )
     async def navigate(self, sct: Select, interaction: Interaction) -> None:
         """Method used to select values from the pagination
 
@@ -265,7 +352,9 @@ class Complex(Simple):
             if items[0].isdigit():
                 return await self.edit(page=int(items[0]))
 
-    async def custom_choice(self, sct: Select, interaction: Interaction) -> None:
+    async def custom_choice(
+        self, sct: Select, interaction: Interaction
+    ) -> None:
         """
         Method used to reach next first of the pagination
 
@@ -277,7 +366,9 @@ class Complex(Simple):
             Current interaction of the user
         """
 
-    async def custom_navigate(self, sct: Select, interaction: Interaction) -> None:
+    async def custom_navigate(
+        self, sct: Select, interaction: Interaction
+    ) -> None:
         """
         Method used to reach next first of the pagination
 
@@ -292,15 +383,15 @@ class Complex(Simple):
 
 class ComplexInput(Complex):
     def __init__(
-            self,
-            *,
-            bot: CustomBot,
-            member: Member,
-            values: Iterable[_T],
-            target: _M = None,
-            timeout: Optional[float] = 180.0,
-            embed: Embed = None,
-            max_values: int = 1,
+        self,
+        *,
+        bot: CustomBot,
+        member: Member | User,
+        values: Iterable[_T],
+        target: _M = None,
+        timeout: Optional[float] = 180.0,
+        embed: Embed = None,
+        max_values: int = 1,
     ):
         super().__init__(
             bot=bot,
@@ -331,8 +422,12 @@ class ComplexInput(Complex):
             return
         btn.disabled = True
         await ctx.message.edit(view=self)
-        await response.send_message(content="Write down the choice in that case.", ephemeral=True)
-        message: Message = await self.bot.wait_for(event="message", check=text_check(ctx))
+        await response.send_message(
+            content="Write down the choice in that case.", ephemeral=True
+        )
+        message: Message = await self.bot.wait_for(
+            event="message", check=text_check(ctx)
+        )
         aux = {}
         for item in self.values:
             key, _ = self.parser(item)
@@ -341,7 +436,9 @@ class ComplexInput(Complex):
         current = set()
         for elem in message.content.split(","):
             if len(self._choices) < self.max_values - len(current):
-                if entries := get_close_matches(word=elem.strip(), possibilities=list(aux), n=1):
+                if entries := get_close_matches(
+                    word=elem.strip(), possibilities=list(aux), n=1
+                ):
                     item = aux[entries[0]]
                     current.add(item)
 
@@ -351,12 +448,16 @@ class ComplexInput(Complex):
                 self.values = set(self.values) - self.choices
                 await message.delete()
             else:
-                await message.reply(content="No close matches were found", delete_after=5)
+                await message.reply(
+                    content="No close matches were found", delete_after=5
+                )
                 await message.delete(delay=5)
 
         return await self.edit(page=self._pos)
 
-    async def custom_message_handler(self, btn: Button, interaction: Interaction):
+    async def custom_message_handler(
+        self, btn: Button, interaction: Interaction
+    ):
         """
         Method used to reach next first of the pagination
 

@@ -1,26 +1,16 @@
-#  Copyright 2021 Vioshim
+# Copyright 2021 Vioshim
 #
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#       https://www.apache.org/licenses/LICENSE-2.0
+#      https://www.apache.org/licenses/LICENSE-2.0
 #
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#       https://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import annotations
 
@@ -52,7 +42,11 @@ class Moves(Enum):
         Moves
             Obtained move
         """
-        moves = [move for move in Moves if not move.value.banned and move.value.metronome]
+        moves = [
+            move
+            for move in Moves
+            if not move.value.banned and move.value.metronome
+        ]
         return choice(moves)
 
     @classmethod
@@ -72,9 +66,9 @@ class Moves(Enum):
         if isinstance(move, Moves):
             return move
         for data in get_close_matches(
-                word=move.upper().replace("-", "").replace(" ", ""),
-                possibilities=Moves.__members__,
-                n=1,
+            word=move.upper().replace("-", "").replace(" ", ""),
+            possibilities=Moves.__members__,
+            n=1,
         ):
             move: Moves = Moves[data]
             if not move.value.banned:
@@ -96,7 +90,11 @@ class Moves(Enum):
         """
         if isinstance(name, Iterable):
             name = ",".join(name)
-        return {data for item in name.split(",") if (data := cls.fetch_by_name(item))}
+        return {
+            data
+            for item in name.split(",")
+            if (data := cls.fetch_by_name(item))
+        }
 
     ABSORB = Move(
         desc=r"The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down.",
