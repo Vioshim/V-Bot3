@@ -762,6 +762,7 @@ class Submission(Cog):
         if isinstance(age := data.get("age", "13"), str):
             data["age"] = int(age)
 
+        print(data.items())
         if isinstance(species := data["species"], Fakemon):
             if stats := data.pop("stats", {}):
                 species.set_stats(**stats)
