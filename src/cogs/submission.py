@@ -773,6 +773,7 @@ class Submission(Cog):
 
         return kind_deduce(data.get("species"), **data)
 
+    @Cog.listener()
     async def on_message(self, message: Message) -> None:
         """This method processes character submissions
 

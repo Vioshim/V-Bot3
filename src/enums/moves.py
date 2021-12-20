@@ -29,6 +29,9 @@ class Moves(Enum):
     def __repr__(self) -> str:
         return repr(self.value)
 
+    def __str__(self) -> str:
+        return str(self.value)
+
     @property
     def emoji(self):
         return self.value.type.emoji

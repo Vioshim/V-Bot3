@@ -50,6 +50,9 @@ class Move:
     banned: bool = False
     metronome: bool = True
 
+    def __str__(self):
+        return self.name
+
     def __repr__(self) -> str:
         """Repr method for movepool based on Crest's design.
 
