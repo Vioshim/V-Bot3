@@ -35,7 +35,14 @@ from src.enums.pronouns import Pronoun
 from src.enums.species import Species
 from src.structures.ability import SpAbility
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
+from src.structures.species import (
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+)
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.utils.doc_reader import docs_reader
@@ -305,7 +312,7 @@ class Character(metaclass=ABCMeta):
             )
         self.id = new_index
         await self.upsert(connection)
-    
+
     def update_from_dict(self, data: dict[str, Any]):
         """Update the class' values given a dict
 
@@ -972,7 +979,13 @@ class FakemonCharacter(Character):
                 """,
                 oc_id,
             )
-            fakemon = Fakemon(**dict(species))
+            species = dict(species)
+            stats = multiple_pop(
+                species, "hp", "atk", "def", "spa", "spd", "spe"
+            )
+            for k, v in stats.items():
+                species[k.upper()] = v
+            fakemon = Fakemon(**species)
             fakemon.movepool = await Movepool.fakemon_fetch(connection, oc_id)
             self.species = fakemon
 
