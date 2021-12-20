@@ -964,7 +964,7 @@ class FakemonCharacter(Character):
         """
         if oc_id := self.id:
             await super(FakemonCharacter, self).retrieve(connection)
-            species = await connection.fetchval(
+            species = await connection.fetchrow(
                 """--sql
                 SELECT *
                 FROM FAKEMON
