@@ -140,6 +140,6 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
-/src/utils/credentials.json
-/src/utils/token.json
+# Google docs' credentials
+credentials.json
+token.json

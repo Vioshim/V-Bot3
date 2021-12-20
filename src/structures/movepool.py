@@ -79,9 +79,11 @@ class Movepool:
         return len(self) > len(other)
 
     def operator(
-            self,
-            other: Movepool,
-            method: Callable[[frozenset[Moves], frozenset[Moves]], frozenset[Moves]],
+        self,
+        other: Movepool,
+        method: Callable[
+            [frozenset[Moves], frozenset[Moves]], frozenset[Moves]
+        ],
     ) -> Movepool:
         """This method allows to perform operations on the movepool
 
@@ -210,9 +212,9 @@ class Movepool:
         return bool(item in self.__call__())
 
     def __setitem__(
-            self,
-            key: str,
-            value: set[Moves] | dict[int, set[Moves]],
+        self,
+        key: str,
+        value: set[Moves] | dict[int, set[Moves]],
     ):
         """Assigning method for movepool
 
@@ -340,24 +342,24 @@ class Movepool:
         """
         items: dict[str, set[Moves] | dict[int, set[Moves]]] = dict(level={})
         async for item in connection.cursor(
-                """--sql
+            """--sql
                 SELECT MOVE, METHOD
                 FROM FAKEMON_MOVEPOOL
                 WHERE FAKEMON = $1 AND METHOD != 'LEVEL';
                 """,
-                id,
+            id,
         ):
             move, method = item["move"], item["method"]
             items.setdefault(method, set())
             items[method].add(Moves[move])
 
         async for item in connection.cursor(
-                """--sql
+            """--sql
                 SELECT MOVE, LEVEL
                 FROM FAKEMON_LEARNSET
                 WHERE FAKEMON = $1;
                 """,
-                id,
+            id,
         ):
             move, level = item["move"], item["level"]
             items["level"].setdefault(level, set())
@@ -393,17 +395,38 @@ class Movepool:
         movepool_elements = []
         learnset_elements = []
 
-        for key, value in asdict(self).items():
+        move_set = frozenset[Moves]
+        data: dict[str, move_set | frozendict[int, move_set]] = {
+            "LEVEL": self.level,
+            "TM": self.tm,
+            "EVENT": self.event,
+            "TUTOR": self.tutor,
+            "EGG": self.egg,
+            "LEVEL-UP": self.levelup,
+            "OTHER": self.other,
+        }
 
-            if key == "levelup":
-                key = "level-up"
+        for key, value in data.items():
 
-            movepool_elements.extend((id, key, m.id) for m in value if not m.banned)
+            if isinstance(value, frozendict):
+                for level, values in value.items():
+                    entries = ((id, m.name, level) for m in values if not m.banned)
+                    learnset_elements.extend(entries)
+                    movepool_elements.extend(
+                        (x, y, "LEVEL") for x, y, _ in entries
+                    )
+            elif isinstance(value, frozenset):
+                movepool_elements.extend((id, m.name, key) for m in value if not m.banned)
 
-            if isinstance(value, dict):
-                for level, values in self.level.items():
-                    learnset_elements.extend((id, m.id, level) for m in values if not m.banned)
-
+        if movepool_elements:
+            await connection.executemany(
+                """
+                --sql
+                INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, MOVE, METHOD)
+                VALUES ($1, $2, $3);
+                """,
+                movepool_elements,
+            )
         if learnset_elements:
             await connection.executemany(
                 """
@@ -412,13 +435,4 @@ class Movepool:
                 VALUES ($1, $2, $3);
                 """,
                 learnset_elements,
-            )
-        if movepool_elements:
-            await connection.executemany(
-                """
-                --sql
-                INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, METHOD, MOVE)
-                VALUES ($1, $2, $3);
-                """,
-                movepool_elements,
             )

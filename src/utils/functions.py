@@ -56,6 +56,25 @@ def common_get(item: dict[str, _T], *args: str) -> Optional[_T]:
             return data
 
 
+def multiple_pop(item: dict[str, _T], *args: str) -> dict[str, _T]:
+    """Returns a dict removing all values
+
+    Attributes
+    ----------
+    item : dict[str, _T]
+        Dict to remove and obtain data from
+    *args : str
+        Parameters to possibly obtain data from
+
+    Returns
+    -------
+    dict[str, _T]
+        The possibly removed data
+    """
+
+    return {x: elem for x in args if (elem := item.pop(x, None))}
+
+
 def common_pop_get(item: dict[str, _T], *args: str) -> Optional[_T]:
     """Dict whose values to remove from
 

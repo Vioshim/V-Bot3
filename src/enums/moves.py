@@ -30,8 +30,16 @@ class Moves(Enum):
         return repr(self.value)
 
     @property
+    def emoji(self):
+        return self.value.type.emoji
+
+    @property
     def banned(self) -> bool:
         return self.value.banned
+
+    @property
+    def metronome(self) -> bool:
+        return self.value.metronome
 
     @classmethod
     def metronome_fetch(cls) -> Moves:
@@ -42,11 +50,7 @@ class Moves(Enum):
         Moves
             Obtained move
         """
-        moves = [
-            move
-            for move in Moves
-            if not move.value.banned and move.value.metronome
-        ]
+        moves = [move for move in Moves if not move.banned and move.metronome]
         return choice(moves)
 
     @classmethod

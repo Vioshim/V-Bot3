@@ -39,6 +39,10 @@ class Abilities(Enum):
         Returns the abilities whose name fits the given string.
     """
 
+    @property
+    def description(self):
+        return self.value.description
+
     @classmethod
     def deduce(cls, item: str | Iterable[str]) -> set[Abilities]:
         """Deduce the provided abilities out of a string

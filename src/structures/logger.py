@@ -47,7 +47,9 @@ def formatter_message(message: str, use_color=True) -> str:
     return message
 
 
-COLORS = dict(WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED)
+COLORS = dict(
+    WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED
+)
 
 
 class ColoredFormatter(Formatter):
@@ -80,13 +82,20 @@ class ColoredFormatter(Formatter):
         """
         level_name: str = record.levelname
         if self.use_color and level_name in COLORS:
-            level_name_color: str = COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
+            level_name_color: str = (
+                COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
+            )
             record.levelname = level_name_color
         return super(ColoredFormatter, self).format(record)
 
 
 class ColoredLogger(Logger):
-    FORMAT = "[%(asctime)s] [$BOLD%(filename)s$RESET] [%(name)s:%(module)s] [%(levelname)] %(message)s"
+    FORMAT = (
+        "%(asctime)s〕"
+        "$BOLD%(module)-10s$RESET]"
+        "$BOLD%(funcName)-20s$RESET]"
+        "[%(levelname)-18s]  %(message)s"
+    )
     COLOR_FORMAT = formatter_message(FORMAT, True)
 
     def __init__(self, name: str):

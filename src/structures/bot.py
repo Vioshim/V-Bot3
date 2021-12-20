@@ -86,9 +86,7 @@ class CustomBot(Bot):
         """
         if isinstance(message, int):
             self.msg_cache.add(message)
-        elif isinstance(message, Message):
-            self.msg_cache.add(message.id)
-        elif isinstance(message, PartialMessage):
+        elif isinstance(message, (Message, PartialMessage)):
             self.msg_cache.add(message.id)
 
     async def embed_raw(

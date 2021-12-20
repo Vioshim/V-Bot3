@@ -14,6 +14,7 @@
 
 from contextlib import asynccontextmanager, suppress
 from difflib import get_close_matches
+from types import TracebackType
 from typing import Iterable, Optional, TypeVar
 
 from discord import (
@@ -71,14 +72,23 @@ class Complex(Simple):
 
     # noinspection PyMethodMayBeStatic
     def emoji_parser(self, _item: _T) -> str:
-        return "\N{DIAMOND SHAPE WITH A DOT INSIDE}"
+        return getattr(_item, "emoji", "\N{DIAMOND SHAPE WITH A DOT INSIDE}")
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
         await self.wait()
         return self._choices
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self, exc_type: type, exc_val: Exception, exc_tb: TracebackType
+    ) -> None:
+        if exc_type:
+            self.bot.logger.exception(
+                "Exception occurred, target: %s, user: %s",
+                str(self.target),
+                str(self.member),
+                exc_info=exc_val,
+            )
         await self.delete()
 
     @property
@@ -137,10 +147,9 @@ class Complex(Simple):
             # Example: assuming there's 4 entries per page, 100 values and user is at the page 12 in this case,
             # the range of pages would be from page 10 to page 14
 
-            min_range = max(self._pos - int(self.entries_per_page / 2), 0)
-            max_range = min(
-                self._pos + int(self.entries_per_page / 2), len(elements)
-            )
+            amount = int(self.entries_per_page / 2)
+            min_range = max(self._pos - amount, 0)
+            max_range = min(self._pos + amount, len(elements))
 
             for index in range(min_range, max_range):
                 item = elements[index]
@@ -158,11 +167,11 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
-
+                page_text = (
+                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                )
                 pages.add_option(
-                    label=f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"[
-                        :100
-                    ],
+                    label=page_text[:100],
                     value=f"{index}"[:100],
                     description=f"From {firstname} to {lastname}"[:100],
                     emoji="\N{PAGE FACING UP}",
@@ -332,9 +341,7 @@ class Complex(Simple):
         await self.edit(page=self._pos)
 
     # noinspection PyTypeChecker
-    @select(
-        placeholder="Press here to scroll pages", row=2, custom_id="navigate"
-    )
+    @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
     async def navigate(self, sct: Select, interaction: Interaction) -> None:
         """Method used to select values from the pagination
 
@@ -382,6 +389,8 @@ class Complex(Simple):
 
 
 class ComplexInput(Complex):
+    """This class allows written input."""
+
     def __init__(
         self,
         *,
@@ -402,7 +411,6 @@ class ComplexInput(Complex):
             embed=embed,
             max_values=max_values,
         )
-        self.menu_format()
 
     def menu_format(self) -> None:
         """Default Formatter"""
@@ -426,7 +434,8 @@ class ComplexInput(Complex):
             content="Write down the choice in that case.", ephemeral=True
         )
         message: Message = await self.bot.wait_for(
-            event="message", check=text_check(ctx)
+            event="message",
+            check=text_check(ctx),
         )
         aux = {}
         for item in self.values:
@@ -437,7 +446,9 @@ class ComplexInput(Complex):
         for elem in message.content.split(","):
             if len(self._choices) < self.max_values - len(current):
                 if entries := get_close_matches(
-                    word=elem.strip(), possibilities=list(aux), n=1
+                    word=elem.strip(),
+                    possibilities=aux,
+                    n=1,
                 ):
                     item = aux[entries[0]]
                     current.add(item)
@@ -449,7 +460,8 @@ class ComplexInput(Complex):
                 await message.delete()
             else:
                 await message.reply(
-                    content="No close matches were found", delete_after=5
+                    content="No close matches were found",
+                    delete_after=5,
                 )
                 await message.delete(delay=5)
 

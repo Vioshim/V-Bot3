@@ -13,9 +13,10 @@
 # limitations under the License.
 
 
-from asyncio import run
+from asyncio import run, set_event_loop_policy
 from functools import wraps
 from os import getenv
+from os import name as system_os
 from typing import Any, Callable, Coroutine
 
 from aiohttp.client_exceptions import ClientConnectionError
@@ -28,15 +29,15 @@ from dotenv import load_dotenv
 from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 
-try:
+if system_os != "nt":
     # noinspection PyUnresolvedReferences,PyPackageRequirements
-    from uvloop import install
+    from uvloop import EventLoopPolicy
 
-    install()
-except ModuleNotFoundError:
+    set_event_loop_policy(EventLoopPolicy())
+else:
     print("Unable to use uvloop in Windows")
-finally:
-    load_dotenv()
+
+load_dotenv()
 
 
 def wrap_session(
@@ -66,12 +67,6 @@ def wrap_session(
     return wrapper
 
 
-__all__ = (
-    "COGS",
-    "PREFIX",
-)
-
-PREFIX = "%"
 INTENTS = Intents.all()
 MENTIONS = AllowedMentions(
     users=False,
@@ -80,7 +75,16 @@ MENTIONS = AllowedMentions(
     replied_user=True,
 )
 
-COGS = []
+COGS = ["submission"]
+
+
+EXCEPTIONS = {
+    LoginFailure: "Login failed. The discord token is invalid.",
+    SystemExit: "Bot has been interrupted by system.",
+    KeyboardInterrupt: "Bot has been interrupted by the user.",
+    ClientConnectionError: "Unable to connect to discord.",
+    AttributeError: "Bot had issues when reading the cogs.",
+}
 
 
 @wrap_session
@@ -98,7 +102,7 @@ async def main(
     """
     bot = CustomBot(
         pool=pool,
-        command_prefix=when_mentioned_or(PREFIX),
+        command_prefix=when_mentioned_or("%"),
         scheduler=scheduler,
         description="This is Vioshim's bot",
         command_attrs=dict(hidden=True),
@@ -111,31 +115,14 @@ async def main(
     try:
         bot.load_extension("jishaku")
         for cog in COGS:
-            bot.load_extension(f"cogs.{cog}")
+            bot.load_extension(f"src.cogs.{cog}")
             bot.logger.info("Successfully loaded %s", cog)
         await bot.start(getenv("DISCORD_TOKEN"))
-    except LoginFailure as e:
-        bot.logger.critical(
-            msg="Login failed. The discord token is invalid.", exc_info=e
-        )
-    except SystemExit as e:
-        bot.logger.critical(
-            msg="Bot has been interrupted by system", exc_info=e
-        )
-    except KeyboardInterrupt as e:
-        bot.logger.critical(
-            msg="Bot has been interrupted by the user", exc_info=e
-        )
-    except ClientConnectionError as e:
-        bot.logger.critical(msg="Unable to connect to discord.", exc_info=e)
-    except AttributeError as e:
-        bot.logger.critical(
-            msg="Bot had issues when reading the cogs.", exc_info=e
-        )
     except Exception as e:
-        bot.logger.critical(
-            msg="An exception occurred while trying to connect", exc_info=e
+        msg = EXCEPTIONS.get(
+            type(e), "An exception occurred while trying to connect"
         )
+        bot.logger.critical(msg=msg, exc_info=e)
 
 
 if __name__ == "__main__":

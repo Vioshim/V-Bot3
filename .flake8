@@ -17,6 +17,7 @@ extend-ignore =
     ANN101,
     # ANN102: Missing type annotation for cls in class method
     ANN102,
+    F722,
 per-file-ignores =
     # F401: Module imported by unused (non-implicit modules)
     # TC002: Move third-party import '...' into a type-checking block

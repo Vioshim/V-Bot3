@@ -26,13 +26,9 @@ __all__ = (
     "DISCORD_MSG_URL",
     "LINK_REGEX",
     "DATA_FINDER",
-    "MOVE_FINDER",
-    "TYPE_FINDER",
 )
 
-DATA_FINDER = compile(r"(Species|Ability) (\d+)", MULTILINE)
-MOVE_FINDER = compile(r"(Move|Level|Egg|TM|Tutor|Event) (\d+)", MULTILINE)
-TYPE_FINDER = compile(r"Type (\d+)", MULTILINE)
+DATA_FINDER = compile(r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE)
 
 IMAGEKIT_API = "https://ik.imagekit.io/vioshim"
 DISCORD_MATCH = compile(r"https://\w+\.discordapp\.\w+/(.*)", IGNORECASE)

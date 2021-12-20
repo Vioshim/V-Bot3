@@ -1,53 +1,48 @@
 {
-  "editor.insertSpaces": true,
-  "editor.tabSize": 4,
-  "editor.detectIndentation": false,
-  "editor.formatOnSave": true,
-  "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/.DS_Store": true,
-    "**/Thumbs.db": true,
-    "**/.history": true
-  },
-  "python.formatting.provider": "black",
-  "python.formatting.blackArgs": [
-    "--target-version",
-    "py310",
-    "--line-length",
-    "80"
-  ],
-  "prettier.useTabs": true,
-  "prettier.tabWidth": 4,
-  "[python]": {
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": true
-    }
-  },
-  "python.sortImports.args": [
-    "--profile",
-    "black"
-  ],
-  "git.autofetch": true,
-  "python.envFile": "${workspaceFolder}/.env",
-  "python.linting.flake8Enabled": true,
-  "python.linting.flake8Args": [],
-  "terminal.integrated.profiles.windows": {
-    "PowerShell": {
-      "source": "PowerShell",
-      "icon": "terminal-powershell",
-      "args": [
-        "-ExecutionPolicy",
-        "Bypass"
-      ]
-    }
-  },
-  "autoDocstring.docstringFormat": "numpy",
-  "autoDocstring.logLevel": "Debug",
-  "copyrightInserter.holder": "Vioshim",
-  "copyrightInserter.license": "apache",
-  "copyrightInserter.useLineComment": true,
-  "terminal.integrated.defaultProfile.windows": "PowerShell"
+	"editor.insertSpaces": true,
+	"editor.tabSize": 4,
+	"editor.detectIndentation": false,
+	"editor.formatOnSave": true,
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"**/Thumbs.db": true,
+		"**/.history": true
+	},
+	"python.formatting.provider": "black",
+	"python.formatting.blackArgs": [
+		"--target-version",
+		"py310",
+		"--line-length",
+		"80"
+	],
+	"prettier.useTabs": true,
+	"prettier.tabWidth": 4,
+	"[python]": {
+		"editor.codeActionsOnSave": {
+			"source.organizeImports": true
+		}
+	},
+	"python.sortImports.args": ["--profile", "black"],
+	"git.autofetch": true,
+	"git.enableCommitSigning": true,
+	"python.envFile": "${workspaceFolder}/.env",
+	"python.linting.flake8Enabled": true,
+	"python.linting.flake8Args": [],
+	"terminal.integrated.profiles.windows": {
+		"PowerShell": {
+			"source": "PowerShell",
+			"icon": "terminal-powershell",
+			"args": ["-ExecutionPolicy", "Bypass"]
+		}
+	},
+	"autoDocstring.docstringFormat": "numpy",
+	"autoDocstring.logLevel": "Debug",
+	"copyrightInserter.holder": "Vioshim",
+	"copyrightInserter.license": "apache",
+	"copyrightInserter.useLineComment": true,
+	"terminal.integrated.defaultProfile.windows": "PowerShell"
 }

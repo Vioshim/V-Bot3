@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pagination.view_base import Basic
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.simple import Simple
 
 __all__ = (
+    "Basic",
     "Complex",
     "ComplexInput",
     "Simple",

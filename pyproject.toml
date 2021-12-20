@@ -56,7 +56,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.10.1"
+pythonVersion = "3.10"
 
 
 [tool.isort]

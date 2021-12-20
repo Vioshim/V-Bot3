@@ -19,7 +19,8 @@ from typing import TYPE_CHECKING, Any, Callable, Mapping
 from discord import SlashCommand
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Command, Group, Cog, Context
+    from discord.ext.commands import Command, Group, Cog
+    from src.type_hinting.context import Context
 
 from discord.ext.commands import HelpCommand
 
@@ -27,6 +28,8 @@ from src.pagination.simple import Simple
 
 
 class CustomHelp(HelpCommand):
+    context: Context
+
     async def send_bot_help(self, mapping: Mapping[Cog, list[Command]]) -> None:
         """Bot Help
 
@@ -36,6 +39,19 @@ class CustomHelp(HelpCommand):
             Mapping of all Cogs and commands
         """
 
+        target = self.get_destination()
+
+        view = Simple(
+            bot=self.context.bot,
+            timeout=None,
+            member=self.context.author,
+            target=target,
+            values=mapping.items(),
+            entries_per_age=10,
+        )
+        view.embed.title = "Help Command - Bot Options"
+
+        @view.set_parser
         def mapping_parser(item: tuple[Cog, list[Command]]) -> tuple[str, str]:
             """Parsing Method
 
@@ -58,17 +74,6 @@ class CustomHelp(HelpCommand):
             text_signatures = "n".join(signatures) or "No Commands"
             return cog_name, text_signatures
 
-        target = self.get_destination()
-
-        view = Simple(
-            bot=self.context.bot,
-            timeout=None,
-            member=self.context.author,
-            target=target,
-            values=mapping.items(),
-            title="Help Command - Bot Options",
-            parser=mapping_parser,
-        )
         await view.send()
 
     async def send_command_help(self, cmd: Command) -> None:
@@ -82,7 +87,8 @@ class CustomHelp(HelpCommand):
 
         values = {
             "Short document": cmd.short_doc or "None",
-            "Aliases": "\n".join(f"> • {item}" for item in cmd.aliases) or "None",
+            "Aliases": "\n".join(f"> • {item}" for item in cmd.aliases)
+            or "None",
             "Cog": getattr(cmd.cog, "qualified_name", None) or "None",
             "Usage": self.get_command_signature(cmd) or "None",
         }
@@ -93,12 +99,13 @@ class CustomHelp(HelpCommand):
             bot=self.context.bot,
             timeout=None,
             target=target,
-            title=f"Command {cmd.qualified_name!r}",
             member=self.context.author,
-            description=cmd.description,
-            values=values,
+            values=values.items(),
             inline=False,
+            entries_per_age=10,
         )
+        view.embed.title = f"Command {cmd.qualified_name!r}"
+        view.embed.description = cmd.description
 
         await view.send()
 
@@ -111,10 +118,10 @@ class CustomHelp(HelpCommand):
             Group
         """
         aliases = "\n".join(f"> • {item}" for item in group.aliases) or "None"
-        text = f"__**Short Document**__\n> {group.short_doc}\n\n" f"__**Aliases**__\n{aliases}"
-
-        def group_parser(cmd: Command):
-            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
+        text = (
+            f"__**Short Document**__\n> {group.short_doc}\n\n"
+            f"__**Aliases**__\n{aliases}"
+        )
 
         target = self.get_destination()
 
@@ -122,13 +129,17 @@ class CustomHelp(HelpCommand):
             bot=self.context.bot,
             timeout=None,
             target=target,
-            title=f"Group {group.qualified_name!r}",
             member=self.context.author,
-            description=text,
             values=group.commands,
-            parser=group_parser,
             inline=False,
         )
+
+        view.embed.title = f"Group {group.qualified_name!r}"
+        view.embed.description = text
+
+        @view.set_parser
+        def group_parser(cmd: Command):
+            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
 
         await view.send()
 
@@ -141,7 +152,30 @@ class CustomHelp(HelpCommand):
             Cog
         """
 
-        def cog_parser(item: tuple[str, Callable[[Any], Any]]) -> tuple[str, str]:
+        # noinspection PyUnresolvedReferences
+        commands = [f"> • {item.name}" for item in cog.get_commands()]
+
+        commands.sort()
+
+        target = self.get_destination()
+
+        view = Simple(
+            bot=self.context.bot,
+            timeout=None,
+            target=target,
+            member=self.context.author,
+            values=cog.get_listeners(),
+            inline=False,
+            entries_per_age=10,
+        )
+
+        view.embed.title = (f"Cog {cog.qualified_name} - Commands",)
+        view.embed.description = "\n".join(commands) or "> No Commands"
+
+        @view.set_parser
+        def cog_parser(
+            item: tuple[str, Callable[[Any], Any]]
+        ) -> tuple[str, str]:
             """Parser for cogs
 
             Attributes
@@ -161,27 +195,6 @@ class CustomHelp(HelpCommand):
                     return name, f"> {entry}"
                 return name, "\n".join(split)
             return name, "> Not Documented"
-
-        # noinspection PyUnresolvedReferences
-        commands = [f"> • {item.name}" for item in cog.get_commands()]
-
-        commands.sort()
-
-        description = "\n".join(commands) or "> No Commands"
-
-        target = self.get_destination()
-
-        view = Simple(
-            bot=self.context.bot,
-            timeout=None,
-            target=target,
-            title=f"Cog {cog.qualified_name} - Commands",
-            description=description,
-            member=self.context.author,
-            values=cog.get_listeners(),
-            parser=cog_parser,
-            inline=False,
-        )
 
         await view.send()
 
@@ -203,9 +216,10 @@ class CustomHelp(HelpCommand):
             timeout=None,
             target=target,
             member=member,
-            title="Help Error",
-            description=f"> {error}",
+            entries_per_age=10,
         )
+        view.embed.title = "Help Error"
+        view.embed.description = f"> {error}"
         await view.send()
 
     async def on_help_command_error(self, ctx: Context, error: Exception):
@@ -218,4 +232,6 @@ class CustomHelp(HelpCommand):
         error: Exception
             Exception that occurred
         """
-        ctx.bot.logger.exception("Help Command > %s > %s", ctx.author, error, exc_info=error)
+        ctx.bot.logger.exception(
+            "Help Command > %s > %s", ctx.author, error, exc_info=error
+        )

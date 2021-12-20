@@ -98,6 +98,7 @@ class Typing:
     max_move: str = field(default_factory=str)
     chart: frozendict[int, float] = field(default_factory=frozendict)
     banner: str = field(default_factory=str)
+    icon: str = field(default_factory=str)
 
     def __add__(self, other: Typing) -> Typing:
         """Add Method
@@ -117,7 +118,11 @@ class Typing:
                 name=f"{self.name}/{other.name}",
                 color=((self.color + other.color) ** 2) / 2,
                 chart=frozendict(
-                    {x: multi for x in a | b if (multi := a.get(x, 1) * b.get(x, 1)) != 1}
+                    {
+                        x: multi
+                        for x in a | b
+                        if (multi := a.get(x, 1) * b.get(x, 1)) != 1
+                    }
                 ),
             )
         return self
@@ -158,9 +163,9 @@ class Typing:
         return self.id
 
     def __setitem__(
-            self,
-            type_id: Typing,
-            value: int | float,
+        self,
+        type_id: Typing,
+        value: int | float,
     ) -> None:
         """Setitem method for assigning chart values
 
