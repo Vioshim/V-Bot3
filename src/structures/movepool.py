@@ -304,7 +304,7 @@ class Movepool:
         """
 
         movepool = Movepool()
-        for item in cls.__slots__:
+        for item in ["tm", "event", "tutor", "egg", "levelup", "other"]:
             movepool[item] = kwargs.get(item, set())
         return movepool
 
