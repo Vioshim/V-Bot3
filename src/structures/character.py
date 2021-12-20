@@ -620,6 +620,7 @@ class LegendaryCharacter(Character):
             """
         ):
             data = dict(item)
+            data.pop("kind", None)
             if species := data.pop("species", None):
                 data["species"] = Species[species]
             mon = LegendaryCharacter(**data)
@@ -710,6 +711,7 @@ class MythicalCharacter(Character):
             """
         ):
             data = dict(item)
+            data.pop("kind", None)
             if species := data.pop("species", None):
                 data["species"] = Species[species]
             mon = MythicalCharacter(**data)
@@ -798,6 +800,7 @@ class UltraBeastCharacter(Character):
             """
         ):
             data = dict(item)
+            data.pop("kind", None)
             if species := data.pop("species", None):
                 data["species"] = Species[species]
             mon = UltraBeastCharacter(**data)
@@ -934,6 +937,7 @@ class FakemonCharacter(Character):
             """
         ):
             data: dict[str, int] = dict(item)
+            data.pop("kind", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "HP", "ATK", "DEF", "SPA", "SPE", "SPD")
             if species := data.pop("species", None):
@@ -1053,6 +1057,7 @@ class FusionCharacter(Character):
             """
         ):
             data: dict[str, int] = dict(item)
+            data.pop("kind", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "HP", "ATK", "DEF", "SPA", "SPE", "SPD")
             if species := data.pop("species", None):
@@ -1155,6 +1160,7 @@ class MegaCharacter(Character):
             """
         ):
             data = dict(item)
+            data.pop("kind", None)
             if species := data.pop("species", None):
                 data["species"] = Species[species]
             mon = MegaCharacter(**data)
