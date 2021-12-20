@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from difflib import get_close_matches
 from enum import Enum
-from typing import Iterable
+from typing import Iterable, Union
 
 from src.structures.ability import Ability
 
@@ -44,7 +44,7 @@ class Abilities(Enum):
         return self.value.description
 
     @classmethod
-    def deduce(cls, item: str | Iterable[str]) -> set[Abilities]:
+    def deduce(cls, item: Union[str, Iterable[str]]) -> set[Abilities]:
         """Deduce the provided abilities out of a string
 
         Parameters

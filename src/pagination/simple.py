@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Optional, TypeVar
+from typing import Any, Callable, Iterable, Optional, TypeVar, Union
 
 from discord import (
     DiscordException,
@@ -27,7 +27,7 @@ from discord import (
 from discord.abc import Messageable
 from discord.ui import Button, button
 
-from pagination.view_base import Basic
+from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
 
 _T = TypeVar("_T")
@@ -63,7 +63,7 @@ class Simple(Basic):
         self,
         *,
         bot: CustomBot,
-        member: Member | User,
+        member: Union[Member, User],
         values: Iterable[_T],
         target: _M = None,
         timeout: Optional[float] = 180.0,
@@ -77,7 +77,7 @@ class Simple(Basic):
         ----------
         bot : CustomBot
             Bot
-        member : Member | User
+        member : Union[Member, User]
             Member
         target : _M
             Destination

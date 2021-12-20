@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from discord import PartialEmoji
+from typing import Union
 from frozendict import frozendict
 
 __all__ = ("Typing", "Z_MOVE_RANGE", "MAX_MOVE_RANGE1", "MAX_MOVE_RANGE2")
@@ -64,7 +65,7 @@ MAX_MOVE_RANGE2 = frozendict(
 )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Typing:
     """This is the basic information a type has.
 
@@ -165,7 +166,7 @@ class Typing:
     def __setitem__(
         self,
         type_id: Typing,
-        value: int | float,
+        value: Union[int, float],
     ) -> None:
         """Setitem method for assigning chart values
 

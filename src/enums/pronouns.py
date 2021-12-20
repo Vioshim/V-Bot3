@@ -20,7 +20,7 @@ from enum import Enum
 from typing import Optional
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class PronounItem:
     """This is the basic information a pronoun has.
 
@@ -95,15 +95,15 @@ class Pronoun(Enum):
             name = item.__class__.__name__
             raise TypeError(f"Expected str but received {name} instead.")
 
-        match item.lower():
-            case x if "them" in x:
-                return Pronoun.Them
-            case x if "female" in x or "she" in x:
-                return Pronoun.She
-            case x if "male" in x or "he" in x:
-                return Pronoun.He
-            case _:
-                return Pronoun.Them
+        x = item.lower()
+
+        if "them" in x:
+            return Pronoun.Them
+        if "female" in x or "she" in x:
+            return Pronoun.She
+        if "male" in x or "he" in x:
+            return Pronoun.He
+        return Pronoun.Them
 
     @property
     def emoji(self) -> Optional[str]:

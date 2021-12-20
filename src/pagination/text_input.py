@@ -13,8 +13,7 @@
 # limitations under the License.
 
 from contextlib import asynccontextmanager
-from types import TracebackType
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Union
 
 from discord import (
     ButtonStyle,
@@ -43,7 +42,7 @@ class TextInput(Basic):
         self,
         *,
         bot: CustomBot,
-        member: Member | User,
+        member: Union[Member, User],
         target: _M = None,
         timeout: Optional[float] = None,
         embed: Embed = None,

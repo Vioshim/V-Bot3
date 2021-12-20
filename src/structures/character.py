@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from os import urandom
 from random import sample
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 from asyncpg import Connection
 from discord import Color, Embed
@@ -35,14 +35,7 @@ from src.enums.pronouns import Pronoun
 from src.enums.species import Species
 from src.structures.ability import SpAbility
 from src.structures.movepool import Movepool
-from src.structures.species import (
-    Fakemon,
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-)
+from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.utils.doc_reader import docs_reader
@@ -62,9 +55,9 @@ __all__ = (
 )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Character(metaclass=ABCMeta):
-    species: Type[SpeciesBase] | Species = None
+    species: Union[Type[SpeciesBase], Species] = None
     id: Optional[int] = None
     author: Optional[int] = None
     thread: Optional[int] = None
@@ -494,7 +487,7 @@ class Character(metaclass=ABCMeta):
             await sp_ability.upsert(connection, idx=self.id)
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class PokemonCharacter(Character):
     species: Pokemon = None
 
@@ -585,7 +578,7 @@ class PokemonCharacter(Character):
         )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class LegendaryCharacter(Character):
     species: Legendary = None
 
@@ -675,7 +668,7 @@ class LegendaryCharacter(Character):
             )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class MythicalCharacter(Character):
     species: Mythical = None
 
@@ -763,7 +756,7 @@ class MythicalCharacter(Character):
             )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class UltraBeastCharacter(Character):
     species: UltraBeast = None
 
@@ -854,7 +847,7 @@ class UltraBeastCharacter(Character):
             )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class FakemonCharacter(Character):
     species: Fakemon = None
 
@@ -1007,7 +1000,7 @@ class FakemonCharacter(Character):
             await self.movepool.upsert(connection, oc_id)
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class FusionCharacter(Character):
     species: Fusion = None
 
@@ -1120,7 +1113,7 @@ class FusionCharacter(Character):
         )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class MegaCharacter(Character):
     species: Mega = None
 
@@ -1286,12 +1279,12 @@ async def fetch_all(connection: Connection):
     return data
 
 
-def kind_deduce(item: SpeciesBase | None, *args, **kwargs):
+def kind_deduce(item: Optional[SpeciesBase], *args, **kwargs):
     """This class returns the character class based on the given species
 
     Attributes
     ----------
-    item : SpeciesBase | None
+    item : Optional[SpeciesBase]
         Species
     args : Any
         Args of the Character class
@@ -1300,7 +1293,7 @@ def kind_deduce(item: SpeciesBase | None, *args, **kwargs):
 
     Returns
     -------
-    Character | None
+    Optional[Character]
         Character instance
     """
     if instance := ASSOCIATIONS.get(type(item)):
@@ -1353,8 +1346,8 @@ async def doc_convert(url: str) -> dict[str, Any]:
             if (strip := item.strip())
         ]
 
-        movepool_typing = dict[str, set[str] | dict[int, set[str]]]
-        raw_kwargs: dict[str, str | set[str] | movepool_typing] = dict(
+        movepool_typing = dict[str, Union[set[str], dict[int, set[str]]]]
+        raw_kwargs: dict[str, Union[str, set[str], movepool_typing]] = dict(
             url=f"https://docs.google.com/document/d/{url}/edit?usp=sharing",
             moveset=set(),
             movepool={},
@@ -1381,23 +1374,23 @@ async def doc_convert(url: str) -> dict[str, Any]:
                 raw_kwargs[argument] = next_value
             elif element := DATA_FINDER.match(item):
                 argument = next_value.title()
-                match element.groups():
-                    case ["Level", y]:
-                        idx = int(y)
-                        raw_kwargs["movepool"].setdefault("level", {})
-                        raw_kwargs["movepool"]["level"].setdefault(idx, set())
-                        raw_kwargs["movepool"]["level"][idx].add(argument)
-                    case ["Move", _]:
-                        raw_kwargs["moveset"].add(argument)
-                    case ["Ability", _]:
-                        raw_kwargs["abilities"].add(next_value)
-                    case ["Species", _]:
-                        raw_kwargs["fusion"].add(next_value)
-                    case ["Type", _]:
-                        raw_kwargs["types"].add(next_value.upper())
-                    case [x, _]:
-                        raw_kwargs["movepool"].setdefault(x.lower(), set())
-                        raw_kwargs["movepool"][x.lower()].add(argument)
+                x, y = element.groups()
+                if x == "Level":
+                    idx = int(y)
+                    raw_kwargs["movepool"].setdefault("level", {})
+                    raw_kwargs["movepool"]["level"].setdefault(idx, set())
+                    raw_kwargs["movepool"]["level"][idx].add(argument)
+                elif x == "Move":
+                    raw_kwargs["moveset"].add(argument)
+                elif x == "Ability":
+                    raw_kwargs["abilities"].add(next_value)
+                elif x == "Species":
+                    raw_kwargs["fusion"].add(next_value)
+                elif x == "Type":
+                    raw_kwargs["types"].add(next_value.upper())
+                else:
+                    raw_kwargs["movepool"].setdefault(x.lower(), set())
+                    raw_kwargs["movepool"][x.lower()].add(argument)
 
         raw_kwargs.pop("artist", None)
         raw_kwargs.pop("website", None)

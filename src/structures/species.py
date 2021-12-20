@@ -35,7 +35,7 @@ __all__ = (
 )
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Species(metaclass=ABCMeta):
     id: str = ""
     name: str = ""
@@ -95,7 +95,7 @@ class Species(metaclass=ABCMeta):
         """
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Pokemon(Species):
     """
     This class Represents a common Pokemon
@@ -114,7 +114,7 @@ class Pokemon(Species):
         return 2
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Legendary(Species):
     """
     This class Represents a legendary
@@ -133,7 +133,7 @@ class Legendary(Species):
         return 2
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Mythical(Species):
     """
     This class Represents a Mythical
@@ -152,7 +152,7 @@ class Mythical(Species):
         return 2
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Mega(Species):
     """
     This class Represents a legendary
@@ -171,7 +171,7 @@ class Mega(Species):
         return 2
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class UltraBeast(Species):
     """
     This class Represents a legendary
@@ -197,7 +197,7 @@ class UltraBeast(Species):
         return 1
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Fakemon(Species):
     """
     This class Represents a fakemon
@@ -245,7 +245,7 @@ class Fakemon(Species):
         return Abilities.BEASTBOOST not in self.abilities
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Fusion(Species):
     """
     This class Represents a fusion

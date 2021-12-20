@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class StatItem:
     HP: int = 3
     ATK: int = 3
@@ -70,10 +70,9 @@ class Stats(StatItem, Enum):
         str
             Emoji
         """
-        match self.name.split("_"):
-            case [_, "ATTACKER"]:
-                return "\N{CROSSED SWORDS}"
-            case [_, "DEFENDER"]:
-                return "\N{SHIELD}"
-            case _:
-                return "\N{SCALES}"
+        _, name = self.name.split("_")
+        if name == "ATTACKER":
+            return "\N{CROSSED SWORDS}"
+        if name == "DEFENDER":
+            return "\N{SHIELD}"
+        return "\N{SCALES}"

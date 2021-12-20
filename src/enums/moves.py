@@ -17,7 +17,7 @@ from __future__ import annotations
 from difflib import get_close_matches
 from enum import Enum
 from random import choice
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 from src.enums.mon_types import Types
 from src.structures.move import Category, Move
@@ -54,12 +54,12 @@ class Moves(Enum):
         return choice(moves)
 
     @classmethod
-    def fetch_by_name(cls, move: Moves | str) -> Optional[Moves]:
+    def fetch_by_name(cls, move: Union[Moves, str]) -> Optional[Moves]:
         """Obtain a move by name based on its similarity
 
         Parameters
         ----------
-        move : Moves | str
+        move : Union[Moves, str]
             Move name to check
 
         Returns
@@ -79,7 +79,7 @@ class Moves(Enum):
                 return move
 
     @classmethod
-    def deduce(cls, name: str | Iterable[str]) -> set[Moves]:
+    def deduce(cls, name: Union[str, Iterable[str]]) -> set[Moves]:
         """This method obtains a set of moves based on a string with commas.
 
         Parameters

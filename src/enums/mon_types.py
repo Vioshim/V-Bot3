@@ -18,7 +18,7 @@ from __future__ import annotations
 from difflib import get_close_matches
 from enum import Enum
 from re import compile
-from typing import Optional
+from typing import Optional, Union
 
 from discord import PartialEmoji
 from frozendict import frozendict
@@ -725,12 +725,12 @@ class Types(Enum):
         return raw[next(info, 250)]
 
     @classmethod
-    def deduce(cls, item: list[str] | str) -> set[Types]:
+    def deduce(cls, item: Union[list[str], str]) -> set[Types]:
         """Deduce the provided typings out of a string
 
         Parameters
         ----------
-        item : list[str] | str
+        item : Union[list[str], str]
             list/String to inspect
 
         Returns

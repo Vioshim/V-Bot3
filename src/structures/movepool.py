@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, astuple, dataclass, field
-from typing import Callable
+from typing import Callable, Union
 
 from asyncpg.connection import Connection
 from frozendict import frozendict
@@ -26,7 +26,7 @@ __all__ = ("Movepool",)
 
 
 # noinspection PyArgumentList
-@dataclass(unsafe_hash=True, repr=False, slots=True)
+@dataclass(unsafe_hash=True, repr=False)
 class Movepool:
     """
     Class which represents a movepool
@@ -214,7 +214,7 @@ class Movepool:
     def __setitem__(
         self,
         key: str,
-        value: set[Moves] | dict[int, set[Moves]],
+        value: Union[set[Moves], dict[int, set[Moves]]],
     ):
         """Assigning method for movepool
 
@@ -222,7 +222,7 @@ class Movepool:
         ----------
         key : str
             Element in specific to set
-        value : frozenset[Moves] | frozendict[int, frozenset[Moves]]
+        value : Union[frozenset[Moves], frozendict[int, frozenset[Moves]]]
             Values to set
         """
         if key == "level":
@@ -245,19 +245,20 @@ class Movepool:
 
             moves = frozenset(moves)
 
-            match key.lower():
-                case "tm":
-                    self.tm = moves
-                case "event":
-                    self.event = moves
-                case "tutor":
-                    self.tutor = moves
-                case "egg":
-                    self.egg = moves
-                case "levelup" | "level-up":
-                    self.levelup = moves
-                case _:
-                    self.other = moves
+            item = key.lower()
+
+            if item == "tm":
+                self.tm = moves
+            elif item == "event":
+                self.event = moves
+            elif item == "tutor":
+                self.tutor = moves
+            elif item == "egg":
+                self.egg = moves
+            elif item == "levelup" or item == "level-up":
+                self.levelup = moves
+            else:
+                self.other = moves
 
     def __getitem__(self, key: str):
         """Get method for movepool
@@ -269,7 +270,7 @@ class Movepool:
 
         Returns
         -------
-        frozenset[Moves] | frozendict[int, frozenset[Moves]]
+        Union[frozenset[Moves], frozendict[int, frozenset[Moves]]]
             Values that belong to the movepool
 
         Raises
@@ -277,23 +278,20 @@ class Movepool:
         KeyError
             If the provided key is not found
         """
-        match key.lower():
-            case "level":
-                return self.level
-            case "tm":
-                return self.tm
-            case "event":
-                return self.event
-            case "tutor":
-                return self.tutor
-            case "egg":
-                return self.egg
-            case "levelup" | "level-up":
-                return self.levelup
-            case "other":
-                return self.other
-            case _:
-                raise KeyError(key)
+        item = key.lower()
+        if item == "tm":
+            return self.tm
+        if item == "event":
+            return self.event
+        if item == "tutor":
+            return self.tutor
+        if item == "egg":
+            return self.egg
+        if item == "levelup" or item == "level-up":
+            return self.levelup
+        if item == "other":
+            return self.other
+        raise KeyError(key)
 
     @classmethod
     def from_dict(cls, **kwargs) -> Movepool:
@@ -340,7 +338,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items: dict[str, set[Moves] | dict[int, set[Moves]]] = dict(level={})
+        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(level={})
         async for item in connection.cursor(
             """--sql
                 SELECT MOVE, METHOD
@@ -396,7 +394,7 @@ class Movepool:
         learnset_elements = []
 
         move_set = frozenset[Moves]
-        data: dict[str, move_set | frozendict[int, move_set]] = {
+        data: dict[str, Union[move_set, frozendict[int, move_set]]] = {
             "LEVEL": self.level,
             "TM": self.tm,
             "EVENT": self.event,
@@ -410,13 +408,17 @@ class Movepool:
 
             if isinstance(value, frozendict):
                 for level, values in value.items():
-                    entries = ((id, m.name, level) for m in values if not m.banned)
+                    entries = (
+                        (id, m.name, level) for m in values if not m.banned
+                    )
                     learnset_elements.extend(entries)
                     movepool_elements.extend(
                         (x, y, "LEVEL") for x, y, _ in entries
                     )
             elif isinstance(value, frozenset):
-                movepool_elements.extend((id, m.name, key) for m in value if not m.banned)
+                movepool_elements.extend(
+                    (id, m.name, key) for m in value if not m.banned
+                )
 
         if movepool_elements:
             await connection.executemany(

@@ -23,7 +23,7 @@ from asyncpg import Connection, Record
 __all__ = ("Ability", "SpAbility")
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Ability:
     """
     Ability class which represents the game provided ones.
@@ -43,7 +43,7 @@ class Ability:
         return f"Ability({self.name!r})"
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class SpAbility(Ability):
     """
     Special Ability class which inherits from Ability

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 from discord import (
     AllowedMentions,
@@ -24,7 +24,7 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import SlashCommandGroup
+from discord.commands import Permission, SlashCommandGroup
 from discord.ext.commands import Cog
 from jishaku.codeblocks import codeblock_converter
 from yaml import safe_load
@@ -49,14 +49,7 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import (
-    Fakemon,
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-)
+from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -136,6 +129,7 @@ class Submission(Cog):
         "register",
         "Command used for registering characters",
         [719343092963999804],
+        permissions=[Permission("owner", 2, True)],
     )
 
     async def list_update(self, member: Member):
@@ -176,7 +170,7 @@ class Submission(Cog):
 
     async def registration(
         self,
-        ctx: ApplicationContext | Message,
+        ctx: Union[ApplicationContext, Message],
         oc: Type[Character],
         sp_ability: bool = True,
         moveset: bool = True,
@@ -268,7 +262,7 @@ class Submission(Cog):
                         return
                     if answer:
                         data: dict[str, str] = {}
-                        for item in SpAbility.__slots__:
+                        for item in ["name", "description", "method", "pros", "cons"]:
                             if item == "method":
                                 word = "origin"
                             text_view.embed.title = (
@@ -392,7 +386,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -425,7 +419,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -452,7 +446,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -479,7 +473,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -506,7 +500,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -538,7 +532,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species1: Option(
             str,
@@ -581,7 +575,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -613,7 +607,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -639,7 +633,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -665,7 +659,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         species: Option(
             str,
@@ -696,7 +690,7 @@ class Submission(Cog):
         pronoun: Option(
             str,
             description="Preferred pronoun",
-            choices=["He", "She", "Them"],
+            choices=[item.name for item in Pronoun],
         ),
         mega: Option(
             str,

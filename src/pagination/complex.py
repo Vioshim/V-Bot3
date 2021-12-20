@@ -15,7 +15,7 @@
 from contextlib import asynccontextmanager, suppress
 from difflib import get_close_matches
 from types import TracebackType
-from typing import Iterable, Optional, TypeVar
+from typing import Iterable, Optional, TypeVar, Union
 
 from discord import (
     AllowedMentions,
@@ -50,7 +50,7 @@ class Complex(Simple):
         self,
         *,
         bot: CustomBot,
-        member: Member | User,
+        member: Union[Member, User],
         values: Iterable[_T],
         target: _M = None,
         timeout: Optional[float] = 180.0,
@@ -229,11 +229,11 @@ class Complex(Simple):
         embeds: list[Embed] = None,
         file: File = None,
         files: list[File] = None,
-        stickers: list[GuildSticker | StickerItem] = None,
+        stickers: list[Union[GuildSticker, StickerItem]] = None,
         delete_after: float = None,
         nonce: int = None,
         allowed_mentions: AllowedMentions = None,
-        reference: Message | MessageReference | PartialMessage = None,
+        reference: Union[Message, MessageReference, PartialMessage] = None,
         mention_author: bool = False,
         username: str = None,
         avatar_url: str = None,
@@ -257,7 +257,7 @@ class Complex(Simple):
             message's file, defaults to None'
         files : list[File], optional
             message's file, defaults to None
-        stickers : list[GuildSticker | StickerItem], optional
+        stickers : list[Union[GuildSticker, StickerItem]], optional
             message's stickers, defaults to None
         delete_after : float, optional
             defaults to None
@@ -265,7 +265,7 @@ class Complex(Simple):
             message's nonce, defaults to None
         allowed_mentions : AllowedMentions, optional
             message's allowed mentions, defaults MISSING
-        reference : Message | MessageReference | PartialMessage, optional
+        reference : Union[Message, MessageReference, PartialMessage], optional
             message's reference, defaults to None
         mention_author : bool, optional
             if mentions the author of the message, defaults to MISSING
@@ -395,7 +395,7 @@ class ComplexInput(Complex):
         self,
         *,
         bot: CustomBot,
-        member: Member | User,
+        member: Union[Member, User],
         values: Iterable[_T],
         target: _M = None,
         timeout: Optional[float] = 180.0,

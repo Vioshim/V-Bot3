@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, TypeVar
+from typing import Optional, TypeVar, Union
 
 from discord import (  # TODO learn about AutocompleteContext
     AllowedMentions,
@@ -53,7 +53,7 @@ class Basic(View):
         self,
         *,
         bot: CustomBot,
-        member: Member | User,
+        member: Union[Member, User],
         target: _M = None,
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
@@ -64,7 +64,7 @@ class Basic(View):
         ----------
         bot : CustomBot
             Bot
-        member : Member | User
+        member : Union[Member, User]
             Member
         target : _M
             Destination
@@ -118,11 +118,11 @@ class Basic(View):
         embeds: list[Embed] = None,
         file: File = None,
         files: list[File] = None,
-        stickers: list[GuildSticker | StickerItem] = None,
+        stickers: list[Union[GuildSticker, StickerItem]] = None,
         delete_after: float = None,
         nonce: int = None,
         allowed_mentions: AllowedMentions = None,
-        reference: Message | MessageReference | PartialMessage = None,
+        reference: Union[Message, MessageReference, PartialMessage] = None,
         mention_author: bool = False,
         username: str = None,
         avatar_url: str = None,
@@ -146,7 +146,7 @@ class Basic(View):
             message's file, defaults to None'
         files : list[File], optional
             message's file, defaults to None
-        stickers : list[GuildSticker | StickerItem], optional
+        stickers : list[Union[GuildSticker, StickerItem]], optional
             message's stickers, defaults to None
         delete_after : float, optional
             defaults to None
@@ -154,7 +154,7 @@ class Basic(View):
             message's nonce, defaults to None
         allowed_mentions : AllowedMentions, optional
             message's allowed mentions, defaults MISSING
-        reference : Message | MessageReference | PartialMessage, optional
+        reference : Union[Message, MessageReference, PartialMessage], optional
             message's reference, defaults to None
         mention_author : bool, optional
             if mentions the author of the message, defaults to MISSING
@@ -245,11 +245,11 @@ class Basic(View):
         self._message = None
 
     @property
-    def member(self) -> Member | User:
+    def member(self) -> Union[Member, User]:
         return self._member
 
     @member.setter
-    def member(self, member: Member | User):
+    def member(self, member: Union[Member, User]):
         self._member = member
 
     @property
