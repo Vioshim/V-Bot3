@@ -49,7 +49,14 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
+from src.structures.species import (
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+)
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -106,6 +113,7 @@ class Submission(Cog):
         # User ID - Thread ID / List Message ID
         self.oc_list: dict[int, int] = {}
 
+    @Cog.listener()
     async def on_ready(self):
         """This method loads all the characters from the database."""
         async with self.bot.database() as db:
@@ -262,7 +270,13 @@ class Submission(Cog):
                         return
                     if answer:
                         data: dict[str, str] = {}
-                        for item in ["name", "description", "method", "pros", "cons"]:
+                        for item in [
+                            "name",
+                            "description",
+                            "method",
+                            "pros",
+                            "cons",
+                        ]:
                             if item == "method":
                                 word = "origin"
                             text_view.embed.title = (
