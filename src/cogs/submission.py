@@ -131,7 +131,7 @@ class Submission(Cog):
                 self.ocs[oc.id] = oc
                 self.rpers.setdefault(oc.author, set())
                 self.rpers[oc.author].add(oc)
-            self.bot.logger()
+            self.bot.logger.info("All ocs were loaded")
             self.ready = True
 
     register = SlashCommandGroup(
