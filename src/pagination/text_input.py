@@ -73,7 +73,7 @@ class TextInput(Basic):
         )
         aux = TextInput(**data)
         try:
-            await self.send()
+            await aux.send()
             await aux.wait()
             yield aux.text
         except Exception as e:
