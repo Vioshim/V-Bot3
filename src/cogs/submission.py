@@ -369,13 +369,13 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(ctx.author.id, frozenset())
-            self.rpers[ctx.author.id].add(oc)
             for item in astuple(oc):
                 try:
                     hash(item)
                 except Exception:
                     self.bot.logger.error("%s can't be hashed", str(item))
+            self.rpers.setdefault(ctx.author.id, frozenset())
+            self.rpers[ctx.author.id].add(oc)
             self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character registered! > %s > %s > %s",
