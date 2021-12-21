@@ -51,14 +51,7 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import (
-    Fakemon,
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-)
+from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -386,6 +379,7 @@ class Submission(Cog):
                 "information about how they are, information of their past, or anything you'd like to add."
             )
             async with text_view.handle(required=False) as text:
+                self.bot.logger.info(str(text))
                 if text is None:
                     return
                 if text:
