@@ -40,6 +40,17 @@ class Movepool:
     levelup: frozenset[Moves] = field(default_factory=frozenset)
     other: frozenset[Moves] = field(default_factory=frozenset)
 
+    def __post_init__(self):
+        self.level = frozendict(
+            {k: frozenset(v) for k, v in self.level.items()}
+        )
+        self.tm = frozenset(self.tm)
+        self.event = frozenset(self.event)
+        self.tutor = frozenset(self.tutor)
+        self.egg = frozenset(self.egg)
+        self.levelup = frozenset(self.levelup)
+        self.other = frozenset(self.other)
+
     def __repr__(self) -> str:
         """Repr Method
 
@@ -338,7 +349,9 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(level={})
+        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(
+            level={}
+        )
         async for item in connection.cursor(
             """--sql
                 SELECT MOVE, METHOD
