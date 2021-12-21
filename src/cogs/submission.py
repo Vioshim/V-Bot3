@@ -51,14 +51,7 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import (
-    Fakemon,
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-)
+from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -883,7 +876,7 @@ class Submission(Cog):
         if images := message.attachments:
             msg_data["image"] = images[0].url
 
-        if msg_data:
+        if isinstance(msg_data, dict):
             if oc := await self.process(**msg_data):
                 oc.author = message.author.id
                 await self.registration(ctx=message, oc=oc)
