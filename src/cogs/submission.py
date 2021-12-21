@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import asdict
 from typing import Any, Optional, Type, Union
 
 from discord import (
@@ -65,6 +64,7 @@ from src.type_hinting.context import ApplicationContext, AutocompleteContext
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import common_pop_get
 from src.utils.matches import G_DOCUMENT
+from src.views.image_view import ImageView
 from src.views.stats_view import StatsView
 
 
@@ -257,6 +257,26 @@ class Submission(Cog):
             if isinstance(oc, FusionCharacter):
                 pass  # Ask for the typing
 
+            if not oc.abilities:
+                max_ab = oc.species.abilities
+                ability_view = ComplexInput(
+                    bot=self.bot,
+                    member=ctx.author,
+                    values=oc.species.abilities,
+                    target=ctx,
+                    max_values=max_ab,
+                )
+                ability_view.embed.title = (
+                    f"Select the Abilities (Max {max_ab})"
+                )
+                if max_ab == 2:
+                    ability_view.embed.description = "If you press the write button, you can add multiple by adding commas."
+
+                async with ability_view as abilities:
+                    if not abilities:
+                        return
+                    oc.abilities = frozenset(abilities)
+
             if sp_ability and oc.can_have_special_abilities:
                 bool_view = BooleeanView(
                     bot=self.bot, member=ctx.author, target=ctx
@@ -291,10 +311,9 @@ class Submission(Cog):
                                 if not answer:
                                     return
                                 data[item] = answer
-                        else:
-                            self.oc.sp_ability = SpAbility(**data)
+                        oc.sp_ability = SpAbility(**data)
 
-            if moveset:
+            if moveset and not oc.moveset:
                 if not (movepool := oc.movepool):
                     movepool = Movepool(event=frozenset(Moves))
 
@@ -310,6 +329,8 @@ class Submission(Cog):
                 moves_view.embed.description = "If you press the write button, you can add multiple by adding commas."
 
                 async with moves_view as moves:
+                    if not moves:
+                        return
                     oc.moveset = frozenset(moves)
 
                 if isinstance(oc, FakemonCharacter):
@@ -350,7 +371,18 @@ class Submission(Cog):
                 oc.extra = text
 
             if not oc.image:
-                pass  # Ask for an image
+                image_view = ImageView(
+                    bot=self.bot,
+                    member=ctx.author,
+                    target=ctx,
+                    default_img=oc.default_image,
+                )
+                async with image_view.send() as image:
+                    if image is None:
+                        return
+                    oc.image = image
+                if received := image_view.received:
+                    await received.delete(delay=10)
 
         await self.list_update(ctx.author)
         webhook = await self.bot.fetch_webhook(919280056558317658)
@@ -372,12 +404,6 @@ class Submission(Cog):
             )
             oc.image = msg_oc.embeds[0].image.url
             self.check_oc = oc
-            for key, item in asdict(oc).items():
-                try:
-                    hash(item)
-                except Exception:
-                    self.bot.logger.error("%s can't be hashed", key)
-
             self.rpers.setdefault(ctx.author.id, frozenset())
             self.rpers[ctx.author.id].add(oc)
             self.ocs[oc.id] = oc
@@ -396,16 +422,10 @@ class Submission(Cog):
             return await ctx.respond(
                 "That's not a google document", ephemeral=True
             )
-        return await ctx.respond(
-            f"Google Doc Detected, ID: {doc_data.group(1)}", ephemeral=True
-        )
-
-        # if not (msg_data := await doc_convert(doc_data.group(1))):
-        #     return await ctx.respond(
-        #         "No information was retrieved from the url.", ephemeral=True
-        #     )
-
-        # TODO self.registration(msg_data)
+        msg_data = await doc_convert(doc_data.group(1))
+        if oc := await self.process(**msg_data):
+            oc.author = ctx.author.id
+            await self.registration(ctx=ctx, oc=oc)
 
     @register.command()
     async def pokemon(
@@ -602,8 +622,12 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc)
 
-    @register.command()
-    async def fakemon(
+    fakemon = register.create_subgroup(
+        description="This is for creating a fakemon."
+    )
+
+    @fakemon.command(name="Common")
+    async def fakemon_common(
         self,
         ctx: ApplicationContext,
         name: str,
@@ -635,8 +659,8 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc)
 
-    @register.command()
-    async def custom_legendary(
+    @fakemon.command(name="Legendary")
+    async def fakemon_legendary(
         self,
         ctx: ApplicationContext,
         name: str,
@@ -662,8 +686,8 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc, sp_ability=False)
 
-    @register.command()
-    async def custom_mythical(
+    @register.command(name="Mythical")
+    async def fakemon_mythical(
         self,
         ctx: ApplicationContext,
         name: str,
@@ -689,8 +713,8 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc, sp_ability=False)
 
-    @register.command()
-    async def custom_ultra_beast(
+    @register.command(name="Ultra Beast")
+    async def fakemon_ultra_beast(
         self,
         ctx: ApplicationContext,
         name: str,
@@ -721,8 +745,8 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc, sp_ability=False)
 
-    @register.command()
-    async def custom_mega(
+    @register.command(name="Mega")
+    async def fakemon_mega(
         self,
         ctx: ApplicationContext,
         name: str,
@@ -824,10 +848,14 @@ class Submission(Cog):
             except ParserError:
                 return
 
+        if images := message.attachments:
+            msg_data["image"] = images[0].url
+
         if msg_data:
             if oc := await self.process(**msg_data):
                 oc.author = message.author.id
                 await self.registration(ctx=message, oc=oc)
+                await message.delete()
 
 
 def setup(bot: CustomBot) -> None:

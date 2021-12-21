@@ -96,27 +96,29 @@ class Character(metaclass=ABCMeta):
             self.created_at = utcnow()
         if types := self.species.types:
             self.types = types
-        if not self.abilities:
-            if abilities := list(self.species.abilities):
-                amount = min(self.max_amount_abilities, len(abilities))
-                items = sample(abilities, k=amount)
-                self.abilities = frozenset(items)
         if isinstance(self.age, int):
             if self.age >= 100:
                 self.age = None
             if self.age < 13:
                 self.age = 13
-        if not self.moveset:
-            if movepool := self.movepool:
-                moves = list(movepool())
-                amount = min(6, len(moves))
-                items = sample(moves, k=amount)
-                self.moveset = frozenset(items)
         if not self.can_have_special_abilities:
             self.sp_ability = None
 
     def __eq__(self, other: Character):
         return self.id == other.id and self.thread == other.thread
+
+    def randomize_abilities(self):
+        if abilities := list(self.species.abilities):
+            amount = min(self.max_amount_abilities, len(abilities))
+            items = sample(abilities, k=amount)
+            self.abilities = frozenset(items)
+
+    def randomize_moveset(self):
+        if movepool := self.movepool:
+            moves = list(movepool())
+            amount = min(6, len(moves))
+            items = sample(moves, k=amount)
+            self.moveset = frozenset(items)
 
     @property
     @abstractmethod
