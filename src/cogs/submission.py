@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import astuple
 from typing import Any, Optional, Type, Union
 
 from discord import (
@@ -368,8 +369,13 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(ctx.author.id, set())
+            self.rpers.setdefault(ctx.author.id, frozenset())
             self.rpers[ctx.author.id].add(oc)
+            for item in astuple(oc):
+                try:
+                    hash(item)
+                except Exception:
+                    self.bot.logger.error("%s can't be hashed", str(item))
             self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character registered! > %s > %s > %s",
