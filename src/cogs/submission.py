@@ -350,7 +350,8 @@ class Submission(Cog):
             async with text_view.send() as text:
                 if text is None:
                     return
-                oc.backstory = text
+                if text:
+                    oc.backstory = text
 
             text_view.embed.title = "Character's extra information"
             text_view.embed.description = (
@@ -361,7 +362,8 @@ class Submission(Cog):
             async with text_view.send() as text:
                 if text is None:
                     return
-                oc.extra = text
+                if text:
+                    oc.extra = text
 
             if not oc.image:
                 image_view = ImageView(
@@ -382,9 +384,7 @@ class Submission(Cog):
         thread_id = self.oc_list[ctx.author.id]
         thread: Thread = await self.bot.fetch_channel(thread_id)
         oc.thread = thread.id
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(

@@ -90,11 +90,17 @@ class ImageView(Basic):
             ephemeral=True,
         )
         received: Message = await self.bot.wait_for("message", check=check(ctx))
-        self.received = received
         if attachments := received.attachments:
             self.text = attachments[0].url
+            self.received = received
+        elif file := await self.bot.get_file(
+            url=received.content, filename="image"
+        ):
+            self.received = await ctx.channel.send(file=file)
+            self.text = self.received.attachments[0].url
+            await received.delete()
         else:
-            self.text = received.content
+            self.text = None
         self.stop()
 
     @button(label="I like the default one", row=0)
