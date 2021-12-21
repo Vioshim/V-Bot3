@@ -803,7 +803,6 @@ class Submission(Cog):
 
         if abilities := common_pop_get(data, "abilities", "ability"):
             data["abilities"] = frozenset(Abilities.deduce(abilities))
-            print(data["abilities"])
 
         if moveset := common_pop_get(data, "moveset", "moves"):
             data["moveset"] = frozenset(Moves.deduce(moveset))
@@ -822,7 +821,6 @@ class Submission(Cog):
                 species.movepool = Movepool(event=frozenset(moveset))
 
         data = {k: v for k, v in data.items() if v}
-        print(data)
 
         return kind_deduce(data.get("species"), **data)
 
@@ -847,7 +845,6 @@ class Submission(Cog):
                 msg_data = safe_load(text)
             except ParserError:
                 return
-
         if images := message.attachments:
             msg_data["image"] = images[0].url
 
