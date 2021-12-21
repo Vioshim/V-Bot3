@@ -367,7 +367,7 @@ class Submission(Cog):
                 allowed_mentions=AllowedMentions(users=True),
                 wait=True,
             )
-            oc.image = msg_oc.attachments[0].url
+            oc.image = msg_oc.embeds[0].image.url
             self.bot.logger.info(
                 "New character registered! > %s > %s > %s",
                 str(ctx.author),
