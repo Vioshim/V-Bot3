@@ -93,7 +93,7 @@ def common_pop_get(item: dict[str, _T], *args: str) -> Optional[_T]:
     data: Optional[_T] = None
     for arg in args:
         item = item.pop(arg, None)
-        data = data | item
+        data = data or item
     return data
 
 
