@@ -61,11 +61,14 @@ class Abilities(Enum):
             item = ",".join(item)
 
         info = set()
-        for elem in item.upper().split(","):
+        elements = {item.value.name: item.name}
+        for elem in item.split(","):
             for data in get_close_matches(
-                word=elem.strip(), possibilities=Abilities.__members__, n=1
+                word=elem.title().strip(),
+                possibilities=elements,
+                n=1,
             ):
-                info.add(Abilities[data])
+                info.add(Abilities[elements[data]])
         return info
 
     NOABILITY = Ability(name="No Ability", description="Does nothing.")
