@@ -109,6 +109,9 @@ class Submission(Cog):
         self.rpers: dict[int, set[Character]] = {}
         # User ID - Thread ID / List Message ID
         self.oc_list: dict[int, int] = {}
+        
+        # User currently making ocs
+        self.ignore: set[int] = set()
 
     @Cog.listener()
     async def on_ready(self):
@@ -863,6 +866,8 @@ class Submission(Cog):
         """
         if message.channel.id != 852180971985043466:
             return
+        if message.author.id in self.ignore:
+            return
         if message.author.bot:
             return
         text: str = codeblock_converter(message.content or "").content
@@ -877,10 +882,12 @@ class Submission(Cog):
             msg_data["image"] = images[0].url
 
         if isinstance(msg_data, dict):
+            self.ignore.add(message.author.id)
             if oc := await self.process(**msg_data):
                 oc.author = message.author.id
                 await self.registration(ctx=message, oc=oc)
                 await message.delete()
+            self.ignore.remove(message.author.id)
 
 
 def setup(bot: CustomBot) -> None:
