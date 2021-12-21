@@ -797,6 +797,7 @@ class Submission(Cog):
                 species.movepool = Movepool(event=frozenset(moveset))
 
         data = {k: v for k, v in data.items() if v}
+        print(data)
 
         return kind_deduce(data.get("species"), **data)
 
