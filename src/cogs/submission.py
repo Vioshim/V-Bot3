@@ -747,7 +747,7 @@ class Submission(Cog):
                 species_name,
                 fakemon_mode=fakemon_mode,
             ):
-                data["species"] = species
+                data["species"] = species.value
 
         if types := common_pop_get(data, "types", "type"):
             data["types"] = frozenset(Types.deduce(types))
@@ -796,7 +796,9 @@ class Submission(Cog):
             msg_data = safe_load(text)
 
         if msg_data:
-            if oc := await self.process(**msg_data):
+            oc = await self.process(**msg_data)
+            print(oc)
+            if oc:
                 await self.registration(
                     ctx=message, oc=oc, moveset=False, sp_ability=False
                 )
