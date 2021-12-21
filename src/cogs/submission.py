@@ -419,6 +419,7 @@ class Submission(Cog):
         mon = Species[species]
         oc = PokemonCharacter(
             name=name.title(),
+            author=ctx.author.id,
             species=mon,
             thread=self.oc_list.get(ctx.author.id),
             server=ctx.guild_id,
@@ -448,6 +449,7 @@ class Submission(Cog):
         oc = LegendaryCharacter(
             name=name.title(),
             species=mon,
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
@@ -475,6 +477,7 @@ class Submission(Cog):
         oc = MythicalCharacter(
             name=name.title(),
             species=mon,
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
@@ -502,6 +505,7 @@ class Submission(Cog):
         oc = UltraBeastCharacter(
             name=name.title(),
             species=mon,
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
@@ -534,6 +538,7 @@ class Submission(Cog):
         oc = MegaCharacter(
             name=name.title(),
             species=mon,
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
@@ -576,6 +581,7 @@ class Submission(Cog):
         oc = FusionCharacter(
             name=name.title(),
             species=Fusion(mon1, mon2),
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             age=age,
@@ -608,6 +614,7 @@ class Submission(Cog):
         oc = FakemonCharacter(
             name=name.title(),
             species=fakemon,
+            author=ctx.author.id,
             thread=self.oc_list.get(ctx.author.id),
             server=ctx.guild_id,
             age=age,
@@ -635,6 +642,7 @@ class Submission(Cog):
         oc = FakemonCharacter(
             name=name.title(),
             species=fakemon,
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
@@ -661,6 +669,7 @@ class Submission(Cog):
         oc = FakemonCharacter(
             name=name.title(),
             species=fakemon,
+            author=ctx.author.id,
             server=ctx.guild_id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
@@ -693,6 +702,7 @@ class Submission(Cog):
             name=name.title(),
             species=fakemon,
             server=ctx.guild_id,
+            author=ctx.author.id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
         )
@@ -729,6 +739,7 @@ class Submission(Cog):
             name=name.title(),
             species=fakemon,
             server=ctx.guild_id,
+            author=ctx.author.id,
             thread=self.oc_list.get(ctx.author.id),
             pronoun=Pronoun[pronoun],
             age=age,
@@ -797,6 +808,7 @@ class Submission(Cog):
 
         if msg_data:
             if oc := await self.process(**msg_data):
+                oc.author = message.author.id
                 await self.registration(
                     ctx=message, oc=oc, moveset=False, sp_ability=False
                 )
