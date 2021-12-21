@@ -796,9 +796,7 @@ class Submission(Cog):
             msg_data = safe_load(text)
 
         if msg_data:
-            oc = await self.process(**msg_data)
-            print(oc)
-            if oc:
+            if oc := await self.process(**msg_data):
                 await self.registration(
                     ctx=message, oc=oc, moveset=False, sp_ability=False
                 )

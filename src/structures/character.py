@@ -404,7 +404,7 @@ class Character(metaclass=ABCMeta):
             self.id,
             self.name,
             self.age,
-            self.pronoun,
+            self.pronoun.name,
             self.backstory,
             self.extra,
             self.kind,
