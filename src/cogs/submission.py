@@ -51,7 +51,14 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
+from src.structures.species import (
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+)
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -253,8 +260,11 @@ class Submission(Cog):
 
             max_ab = oc.max_amount_abilities
             if not oc.abilities:
-                
-                if not isinstance(oc, FakemonCharacter) and oc.max_amount_abilities == 1:
+
+                if (
+                    not isinstance(oc, FakemonCharacter)
+                    and oc.max_amount_abilities == 1
+                ):
                     oc.abilities = oc.species.abilities
                 else:
                     ability_view = ComplexInput(
@@ -263,6 +273,9 @@ class Submission(Cog):
                         values=oc.species.abilities or Abilities,
                         target=ctx,
                         max_values=max_ab,
+                    )
+                    ability_view.set_parser(
+                        lambda x: (x.value.name, x.value.description)
                     )
                     ability_view.embed.title = (
                         f"Select the Abilities (Max {max_ab})"
@@ -277,23 +290,26 @@ class Submission(Cog):
 
             if len(oc.abilities) > max_ab:
                 if not isinstance(oc, FakemonCharacter):
-                    oc.abilities = frozenset(sample(oc.species.abilities, k=max_ab))
+                    oc.abilities = frozenset(
+                        sample(oc.species.abilities, k=max_ab)
+                    )
                 else:
                     await ctx_send(
                         "fakemons can only have a max of two special abilities"
                     )
                     return
-            
-            move_errors: set[Moves] = set()
-            for item in oc.abilities:
-                if item not in oc.species.abilities:
-                    move_errors.add(item)
 
-            if text := ", ".join(i.value.name for i in move_errors):
-                await ctx_send(
-                    f"the moves [{text}] were not found in the species"
-                )
-                return
+            if not isinstance(oc, FakemonCharacter):
+                ability_errors: set[Moves] = set()
+                for item in oc.abilities:
+                    if item not in oc.species.abilities:
+                        ability_errors.add(item)
+
+                if text := ", ".join(i.value.name for i in ability_errors):
+                    await ctx_send(
+                        f"the abilities [{text}] were not found in the species"
+                    )
+                    return
 
             if sp_ability and oc.can_have_special_abilities:
                 bool_view = BooleeanView(
