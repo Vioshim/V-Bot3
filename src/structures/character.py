@@ -35,7 +35,14 @@ from src.enums.pronouns import Pronoun
 from src.enums.species import Species
 from src.structures.ability import SpAbility
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
+from src.structures.species import (
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+)
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.utils.doc_reader import docs_reader
@@ -527,7 +534,7 @@ class PokemonCharacter(Character):
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            cls.kind,
+            "COMMON",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -619,7 +626,7 @@ class LegendaryCharacter(Character):
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            cls.kind,
+            "LEGENDARY",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -711,7 +718,7 @@ class MythicalCharacter(Character):
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            cls.kind,
+            "MYTHICAL",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -801,7 +808,7 @@ class UltraBeastCharacter(Character):
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            cls.kind,
+            "ULTRA BEAST",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -939,7 +946,7 @@ class FakemonCharacter(Character):
             FROM FAKEMON F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
-            cls.kind,
+            "FAKEMON",
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
@@ -1066,7 +1073,7 @@ class FusionCharacter(Character):
             FROM FAKEMON F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
-            cls.kind,
+            "FUSION",
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
@@ -1170,7 +1177,7 @@ class MegaCharacter(Character):
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            cls.kind,
+            "MEGA",
         ):
             data = dict(item)
             data.pop("kind", None)
