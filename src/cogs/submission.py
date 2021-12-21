@@ -747,7 +747,7 @@ class Submission(Cog):
                 species_name,
                 fakemon_mode=fakemon_mode,
             ):
-                data["species"] = species.value
+                data["species"] = species
 
         if types := common_pop_get(data, "types", "type"):
             data["types"] = frozenset(Types.deduce(types))
