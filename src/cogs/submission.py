@@ -778,12 +778,13 @@ class Submission(Cog):
 
         if abilities := common_pop_get(data, "abilities", "ability"):
             data["abilities"] = frozenset(Abilities.deduce(abilities))
+            print(data["abilities"])
 
         if moveset := common_pop_get(data, "moveset", "moves"):
             data["moveset"] = frozenset(Moves.deduce(moveset))
 
         data["pronoun"] = Pronoun.deduce(data.get("pronoun", "Them"))
-        if isinstance(age := data.get("age", "13"), str):
+        if isinstance(age := data.get("age"), str):
             data["age"] = int(age)
 
         if isinstance(species := data["species"], Fakemon):

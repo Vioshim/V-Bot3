@@ -56,7 +56,7 @@ class BooleeanView(Basic):
     @asynccontextmanager
     async def send(self):
         try:
-            await super().send()
+            await super(BooleeanView, self).send()
             await self.wait()
             yield self.value
         except Exception as e:
