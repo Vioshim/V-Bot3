@@ -369,7 +369,7 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            for key, item in asdict(oc):
+            for key, item in asdict(oc).items():
                 try:
                     hash(item)
                 except Exception:
