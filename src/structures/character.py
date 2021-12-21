@@ -35,14 +35,7 @@ from src.enums.pronouns import Pronoun
 from src.enums.species import Species
 from src.structures.ability import SpAbility
 from src.structures.movepool import Movepool
-from src.structures.species import (
-    Fakemon,
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-)
+from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.utils.doc_reader import docs_reader
@@ -84,9 +77,6 @@ class Character(metaclass=ABCMeta):
     delete_button: Optional[str] = None
     location: Optional[int] = None
     created_at: datetime = None
-
-    def __bool__(self) -> bool:
-        return self.id and self.species
 
     def __post_init__(self):
         if not self.ping_button:
