@@ -201,6 +201,9 @@ class Basic(View):
 
         data = {k: v for k, v in data.items() if v}
 
+        if isinstance(target, Message):
+            target = target.channel
+
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if not resp.is_done():
