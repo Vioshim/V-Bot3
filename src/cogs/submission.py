@@ -827,9 +827,7 @@ class Submission(Cog):
         if msg_data:
             if oc := await self.process(**msg_data):
                 oc.author = message.author.id
-                await self.registration(
-                    ctx=message, oc=oc, moveset=False, sp_ability=False
-                )
+                await self.registration(ctx=message, oc=oc)
 
 
 def setup(bot: CustomBot) -> None:
