@@ -50,14 +50,7 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import (
-    Fakemon,
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-)
+from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -623,7 +616,7 @@ class Submission(Cog):
         await self.registration(ctx, oc)
 
     fakemon = register.create_subgroup(
-        description="This is for creating a fakemon."
+        "fakemon", "This is for creating a fakemon."
     )
 
     @fakemon.command(name="Common")
