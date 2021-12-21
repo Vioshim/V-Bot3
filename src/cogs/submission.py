@@ -743,7 +743,6 @@ class Submission(Cog):
             "species",
             "fusion",
         ):
-            print(species_name)
             if species := Species.deduce(
                 species_name,
                 fakemon_mode=fakemon_mode,
@@ -763,7 +762,6 @@ class Submission(Cog):
         if isinstance(age := data.get("age", "13"), str):
             data["age"] = int(age)
 
-        print(data.items())
         if isinstance(species := data["species"], Fakemon):
             if stats := data.pop("stats", {}):
                 species.set_stats(**stats)
@@ -772,6 +770,8 @@ class Submission(Cog):
                 species.movepool.from_dict(**movepool)
             else:
                 species.movepool = Movepool(event=frozenset(moveset))
+
+        data = {k: v for k, v in data.items() if v}
 
         return kind_deduce(data.get("species"), **data)
 
