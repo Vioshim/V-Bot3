@@ -792,7 +792,6 @@ class Submission(Cog):
         text: str = codeblock_converter(message.content or "").content
         if doc_data := G_DOCUMENT.match(text):
             msg_data = await doc_convert(doc_data.group(1))
-            print(msg_data, "DATA")
         else:
             msg_data = safe_load(text)
 
