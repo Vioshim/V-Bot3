@@ -73,7 +73,7 @@ class BooleeanView(Basic):
     async def confirm(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         await resp.send_message(
-            content=f"{self._title}\nAnswer: Yes", ephemeral=True
+            content=f"{self.embed.title}\nAnswer: Yes", ephemeral=True
         )
         self.value = True
         self.stop()
@@ -83,7 +83,7 @@ class BooleeanView(Basic):
     async def deny(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         await resp.send_message(
-            content=f"{self._title}\nAnswer: No", ephemeral=True
+            content=f"{self.embed.title}\nAnswer: No", ephemeral=True
         )
         self.value = False
         self.stop()
