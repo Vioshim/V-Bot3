@@ -224,8 +224,7 @@ class Submission(Cog):
             text_view = TextInput(
                 bot=self.bot,
                 member=ctx.author,
-                target=ctx,
-                required=True,
+                target=ctx
             )
             await ctx_send("Starting submission process", delete_after=5)
 
@@ -388,7 +387,7 @@ class Submission(Cog):
                 "that people can keep in mind when interacting with your character. You can provide "
                 "information about how they are, information of their past, or anything you'd like to add."
             )
-            async with text_view.send() as text:
+            async with text_view.send(required=False) as text:
                 if text is None:
                     return
                 if text:
@@ -400,7 +399,7 @@ class Submission(Cog):
                 "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
                 "or simply just writing down that your character has a goal in specific."
             )
-            async with text_view.send() as text:
+            async with text_view.send(required=False) as text:
                 if text is None:
                     return
                 if text:
