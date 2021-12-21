@@ -51,7 +51,14 @@ from src.structures.character import (
     kind_deduce,
 )
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, Pokemon
+from src.structures.species import (
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+)
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
@@ -101,7 +108,6 @@ class Submission(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.ready: bool = False
-        self.check_oc: Optional[Character] = None
 
         # Msg ID - Character
         self.ocs: dict[int, Character] = {}
@@ -109,7 +115,7 @@ class Submission(Cog):
         self.rpers: dict[int, set[Character]] = {}
         # User ID - Thread ID / List Message ID
         self.oc_list: dict[int, int] = {}
-        
+
         # User currently making ocs
         self.ignore: set[int] = set()
 
@@ -217,11 +223,7 @@ class Submission(Cog):
                 "Character has been loaded successfully", delete_after=5
             )
         else:
-            text_view = TextInput(
-                bot=self.bot,
-                member=ctx.author,
-                target=ctx
-            )
+            text_view = TextInput(bot=self.bot, member=ctx.author, target=ctx)
             await ctx_send("Starting submission process", delete_after=5)
 
             if isinstance(oc, FakemonCharacter):
@@ -241,7 +243,7 @@ class Submission(Cog):
                         "Write the character's types (Min 1, Max 2)"
                     )
                     text_view.embed.description = "For example: Fire, Psychic"
-                    async with text_view.send(required=True) as answer:
+                    async with text_view.handle(required=True) as answer:
                         if not answer:
                             return
                         types = Types.deduce(answer)
@@ -336,7 +338,7 @@ class Submission(Cog):
                                 f"Special Ability's {word.title()}"
                             )
                             text_view.embed.description = f"Here you'll define the Special Ability's {word.title()}, make sure it is actually understandable."
-                            async with text_view.send(required=True) as answer:
+                            async with text_view.handle(required=True) as answer:
                                 if not answer:
                                     return
                                 data[item] = answer
@@ -383,7 +385,7 @@ class Submission(Cog):
                 "that people can keep in mind when interacting with your character. You can provide "
                 "information about how they are, information of their past, or anything you'd like to add."
             )
-            async with text_view.send(required=False) as text:
+            async with text_view.handle(required=False) as text:
                 if text is None:
                     return
                 if text:
@@ -395,7 +397,7 @@ class Submission(Cog):
                 "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
                 "or simply just writing down that your character has a goal in specific."
             )
-            async with text_view.send(required=False) as text:
+            async with text_view.handle(required=False) as text:
                 if text is None:
                     return
                 if text:
@@ -434,7 +436,6 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            self.check_oc = oc
             self.rpers.setdefault(ctx.author.id, frozenset())
             self.rpers[ctx.author.id].add(oc)
             self.ocs[oc.id] = oc

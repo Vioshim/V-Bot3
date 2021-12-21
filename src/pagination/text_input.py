@@ -60,7 +60,7 @@ class TextInput(Basic):
         self.empty.disabled = required
 
     @asynccontextmanager
-    async def send(self, **kwargs):
+    async def handle(self, **kwargs):
         data = (
             dict(
                 bot=self.bot,
@@ -73,7 +73,7 @@ class TextInput(Basic):
         )
         aux = TextInput(**data)
         try:
-            await super(TextInput, self).send()
+            await self.send()
             await aux.wait()
             yield aux.text
         except Exception as e:
