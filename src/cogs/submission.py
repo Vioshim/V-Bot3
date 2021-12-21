@@ -106,6 +106,7 @@ class Submission(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.ready: bool = False
+        self.check_oc: Optional[Character] = None
 
         # Msg ID - Character
         self.ocs: dict[int, Character] = {}
@@ -369,6 +370,7 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
+            self.check_oc = oc
             for key, item in asdict(oc).items():
                 try:
                     hash(item)
