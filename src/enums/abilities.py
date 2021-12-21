@@ -61,7 +61,7 @@ class Abilities(Enum):
             item = ",".join(item)
 
         info = set()
-        elements = {item.value.name: item.name}
+        elements = {x.value.name: x.name for x in Abilities}
         for elem in item.split(","):
             for data in get_close_matches(
                 word=elem.title().strip(),
