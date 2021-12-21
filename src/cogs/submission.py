@@ -121,12 +121,20 @@ class Submission(Cog):
         # User currently making ocs
         self.ignore: set[int] = set()
 
-    async def method(self, channel_id: int):
-        channel: TextChannel = self.bot.get_channel(channel_id)
-        if m := self.data_msg.pop(channel_id, None):
+    async def unclaiming(self, channel: Union[TextChannel, int]):
+        """This method is used when a channel has been inactivate for 3 days.
+
+        Parameters
+        ----------
+        channel_id : int
+            channel id to use
+        """
+        if isinstance(channel, int):
+            channel: TextChannel = self.bot.get_channel(channel)
+        if m := self.data_msg.pop(channel.id, None):
             with suppress(DiscordException):
                 await m.delete()
-        self.data_msg[channel_id] = await channel.send(
+        self.data_msg[channel.id] = await channel.send(
             "\n".join(
                 [
                     "**。　　　　•　    　ﾟ　　。**",
@@ -180,12 +188,12 @@ class Submission(Cog):
                         if not m.webhook_id:
                             self.data_msg[ch.id] = m
                     elif (raw := utcnow() - m.created_at) > timedelta(days=3):
-                        await self.method(ch.id)
+                        await self.unclaiming(ch)
                     elif date := utcnow() + (timedelta(days=3) - raw):
                         trigger = DateTrigger(date)
 
                         await self.bot.scheduler.add_schedule(
-                            self.method,
+                            self.unclaiming,
                             trigger,
                             id=f"RP[{ch.id}]",
                             args=[ch.id],
