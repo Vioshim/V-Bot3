@@ -619,7 +619,7 @@ class Submission(Cog):
         "fakemon", "This is for creating a fakemon."
     )
 
-    @fakemon.command(name="common")
+    @fakemon.command(name="custom_pokemon")
     async def fakemon_common(
         self,
         ctx: ApplicationContext,
@@ -652,7 +652,7 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc)
 
-    @fakemon.command(name="legendary")
+    @fakemon.command(name="custom_legendary")
     async def fakemon_legendary(
         self,
         ctx: ApplicationContext,
@@ -679,7 +679,7 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc, sp_ability=False)
 
-    @register.command(name="mythical")
+    @register.command(name="custom_mythical")
     async def fakemon_mythical(
         self,
         ctx: ApplicationContext,
@@ -706,7 +706,7 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc, sp_ability=False)
 
-    @register.command(name="ultra_beast")
+    @register.command(name="custom_ultra_beast")
     async def fakemon_ultra_beast(
         self,
         ctx: ApplicationContext,
@@ -738,7 +738,7 @@ class Submission(Cog):
         )
         await self.registration(ctx, oc, sp_ability=False)
 
-    @register.command(name="mega")
+    @register.command(name="custom_mega")
     async def fakemon_mega(
         self,
         ctx: ApplicationContext,
