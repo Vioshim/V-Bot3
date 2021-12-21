@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import astuple
+from dataclasses import asdict
 from typing import Any, Optional, Type, Union
 
 from discord import (
@@ -313,12 +313,12 @@ class Submission(Cog):
                 if isinstance(oc, FakemonCharacter):
                     oc.species.movepool = Movepool(event=oc.moveset)
 
-            move_errors = set()
+            move_errors: set[Moves] = set()
             for item in oc.moveset:
                 if item not in oc.movepool:
                     move_errors.add(item)
 
-            if text := ", ".join(repr(i) for i in move_errors):
+            if text := ", ".join(i.value.name for i in move_errors):
                 await ctx_send(
                     f"the moves [{text}] were not found in the movepool"
                 )
@@ -369,11 +369,12 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            for item in astuple(oc):
+            for key, item in asdict(oc):
                 try:
                     hash(item)
                 except Exception:
-                    self.bot.logger.error("%s can't be hashed", str(item))
+                    self.bot.logger.error("%s can't be hashed", key)
+
             self.rpers.setdefault(ctx.author.id, frozenset())
             self.rpers[ctx.author.id].add(oc)
             self.ocs[oc.id] = oc
