@@ -368,6 +368,9 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
+            self.rpers.setdefault(ctx.author.id, set())
+            self.rpers[ctx.author.id].add(oc)
+            self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character registered! > %s > %s > %s",
                 str(ctx.author),
