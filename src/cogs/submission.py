@@ -29,6 +29,7 @@ from discord.commands import Permission, SlashCommandGroup
 from discord.ext.commands import Cog
 from jishaku.codeblocks import codeblock_converter
 from yaml import safe_load
+from yaml.parser import ParserError
 
 from src.enums import Abilities, Moves, Pronoun, Species, Types
 from src.pagination.boolean import BooleeanView
@@ -818,7 +819,10 @@ class Submission(Cog):
         if doc_data := G_DOCUMENT.match(text):
             msg_data = await doc_convert(doc_data.group(1))
         else:
-            msg_data = safe_load(text)
+            try:
+                msg_data = safe_load(text)
+            except ParserError:
+                return
 
         if msg_data:
             if oc := await self.process(**msg_data):
