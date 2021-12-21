@@ -170,7 +170,7 @@ class Character(metaclass=ABCMeta):
         str
             URL
         """
-        return f"https://discord.com/channels/{self.server_id}/{self.thread_id}/{self.id}"
+        return f"https://discord.com/channels/{self.server}/{self.thread}/{self.id}"
 
     @property
     def default_image(self) -> Optional[str]:
@@ -396,6 +396,7 @@ class Character(metaclass=ABCMeta):
             asyncpg connection
         """
         assert isinstance(self.id, int)
+        print("TEST")
         await connection.execute(
             """--sql
             INSERT INTO CHARACTER(
