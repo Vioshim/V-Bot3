@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from random import sample
 from typing import Any, Optional, Type, Union
 
 from discord import (
@@ -250,25 +251,49 @@ class Submission(Cog):
             if isinstance(oc, FusionCharacter):
                 pass  # Ask for the typing
 
+            max_ab = oc.max_amount_abilities
             if not oc.abilities:
-                max_ab = oc.species.abilities
-                ability_view = ComplexInput(
-                    bot=self.bot,
-                    member=ctx.author,
-                    values=oc.species.abilities,
-                    target=ctx,
-                    max_values=max_ab,
-                )
-                ability_view.embed.title = (
-                    f"Select the Abilities (Max {max_ab})"
-                )
-                if max_ab == 2:
-                    ability_view.embed.description = "If you press the write button, you can add multiple by adding commas."
+                
+                if not isinstance(oc, FakemonCharacter) and oc.max_amount_abilities == 1:
+                    oc.abilities = oc.species.abilities
+                else:
+                    ability_view = ComplexInput(
+                        bot=self.bot,
+                        member=ctx.author,
+                        values=oc.species.abilities or Abilities,
+                        target=ctx,
+                        max_values=max_ab,
+                    )
+                    ability_view.embed.title = (
+                        f"Select the Abilities (Max {max_ab})"
+                    )
+                    if max_ab == 2:
+                        ability_view.embed.description = "If you press the write button, you can add multiple by adding commas."
 
-                async with ability_view as abilities:
-                    if not abilities:
-                        return
-                    oc.abilities = frozenset(abilities)
+                    async with ability_view as abilities:
+                        if not abilities:
+                            return
+                        oc.abilities = frozenset(abilities)
+
+            if len(oc.abilities) > max_ab:
+                if not isinstance(oc, FakemonCharacter):
+                    oc.abilities = frozenset(sample(oc.species.abilities, k=max_ab))
+                else:
+                    await ctx_send(
+                        "fakemons can only have a max of two special abilities"
+                    )
+                    return
+            
+            move_errors: set[Moves] = set()
+            for item in oc.abilities:
+                if item not in oc.species.abilities:
+                    move_errors.add(item)
+
+            if text := ", ".join(i.value.name for i in move_errors):
+                await ctx_send(
+                    f"the moves [{text}] were not found in the species"
+                )
+                return
 
             if sp_ability and oc.can_have_special_abilities:
                 bool_view = BooleeanView(
@@ -384,7 +409,9 @@ class Submission(Cog):
         thread_id = self.oc_list[ctx.author.id]
         thread: Thread = await self.bot.fetch_channel(thread_id)
         oc.thread = thread.id
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(

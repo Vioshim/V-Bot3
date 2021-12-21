@@ -111,7 +111,7 @@ class Pokemon(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 2
+        return min(len(self.abilities), 2)
 
 
 @dataclass(unsafe_hash=True)
@@ -130,7 +130,7 @@ class Legendary(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 2
+        return min(len(self.abilities), 2)
 
 
 @dataclass(unsafe_hash=True)
@@ -149,7 +149,7 @@ class Mythical(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 2
+        return min(len(self.abilities), 2)
 
 
 @dataclass(unsafe_hash=True)
@@ -168,7 +168,7 @@ class Mega(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 2
+        return 1
 
 
 @dataclass(unsafe_hash=True)
