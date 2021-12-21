@@ -95,8 +95,10 @@ class Moves(Enum):
         set[Moves]
             Set with the matches.
         """
-        if isinstance(name, Iterable):
-            name = ",".join(name)
+        if isinstance(name, str):
+            name = name.title()
+        elif isinstance(name, Iterable):
+            name = ",".join(name).title()
         return {
             data
             for item in name.split(",")

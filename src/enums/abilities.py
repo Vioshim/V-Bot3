@@ -57,18 +57,20 @@ class Abilities(Enum):
         set[Abilities]
             set with the abilities
         """
-        if isinstance(item, Iterable):
-            item = ",".join(item)
+        if isinstance(item, str):
+            item = item.title()
+        elif isinstance(item, Iterable):
+            item = ",".join(item).title()
 
         info = set()
-        elements = {x.value.name: x.name for x in Abilities}
+        elements = {x.value.name: x for x in Abilities}
         for elem in item.split(","):
             for data in get_close_matches(
                 word=elem.title().strip(),
                 possibilities=elements,
                 n=1,
             ):
-                info.add(Abilities[elements[data]])
+                info.add(elements[data])
         return info
 
     NOABILITY = Ability(name="No Ability", description="Does nothing.")
