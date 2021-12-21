@@ -12,21 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import suppress
+from datetime import timedelta
 from random import sample
 from typing import Any, Optional, Type, Union
 
+from apscheduler.enums import ConflictPolicy
+from apscheduler.triggers.date import DateTrigger
 from discord import (
     AllowedMentions,
+    CategoryChannel,
+    DiscordException,
     Embed,
     Member,
     Message,
     Option,
     OptionChoice,
+    TextChannel,
     Thread,
     WebhookMessage,
 )
 from discord.commands import Permission, SlashCommandGroup
 from discord.ext.commands import Cog
+from discord.utils import utcnow
 from jishaku.codeblocks import codeblock_converter
 from yaml import safe_load
 from yaml.parser import ParserError
@@ -55,11 +63,10 @@ from src.structures.species import Fakemon, Fusion, Legendary, Mega, Mythical, P
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast
 from src.type_hinting.context import ApplicationContext, AutocompleteContext
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.functions import common_pop_get
 from src.utils.matches import G_DOCUMENT
-from src.views.image_view import ImageView
-from src.views.stats_view import StatsView
+from src.views import ImageView, RPView, StatsView
 
 
 def detection(kind: Type[SpeciesBase]):
@@ -102,6 +109,8 @@ class Submission(Cog):
         self.bot = bot
         self.ready: bool = False
 
+        self.data_msg: dict[int, Message] = {}
+
         # Msg ID - Character
         self.ocs: dict[int, Character] = {}
         # User ID - set[Character]
@@ -112,26 +121,77 @@ class Submission(Cog):
         # User currently making ocs
         self.ignore: set[int] = set()
 
+    async def method(self, channel_id: int):
+        channel: TextChannel = self.bot.get_channel(channel_id)
+        if m := self.data_msg.pop(channel_id, None):
+            with suppress(DiscordException):
+                await m.delete()
+        self.data_msg[channel_id] = await channel.send(
+            "\n".join(
+                [
+                    "**。　　　　•　    　ﾟ　　。**",
+                    "**　　.　　　.　　　.　　。　　   。　.**",
+                    "** 　.　　      。             。　    .    •**",
+                    "** •     RP claimable, feel free to use it.　 。　.**",
+                    "**          Is assumed that everyone left**",
+                    "**　 　　。　　　　ﾟ　　　.　　　　　.**",
+                    "**,　　　　.　 .　　       .               。**",
+                ]
+            )
+        )
+
     @Cog.listener()
     async def on_ready(self):
         """This method loads all the characters from the database."""
         async with self.bot.database() as db:
-            self.oc_list = dict(
-                await db.fetch(
-                    """--sql
-                    SELECT AUTHOR, ID
-                    FROM THREAD_LIST
-                    WHERE SERVER = $1;
-                    """,
-                    719343092963999804,
+            self.bot.logger.info("Loading All Profiles")
+            async for item in db.cursor(
+                """--sql
+                SELECT AUTHOR, ID
+                FROM THREAD_LIST
+                WHERE SERVER = $1;
+                """,
+                719343092963999804,
+            ):
+                author, thread_id = item
+                self.oc_list[author] = thread_id
+                view = RPView(
+                    bot=self.bot, member_id=author, oc_list=self.oc_list
                 )
+                self.bot.add_view(view=view, message_id=thread_id)
+            self.bot.logger.info(
+                "Finished loading all Profiles. Loading all characters"
             )
             for oc in await fetch_all(db):
                 self.ocs[oc.id] = oc
                 self.rpers.setdefault(oc.author, set())
                 self.rpers[oc.author].add(oc)
-            self.bot.logger.info("All ocs were loaded")
+            self.bot.logger.info("Finished loading all characters")
             self.ready = True
+        self.bot.logger.info("Loading claimed categories")
+        for item in RP_CATEGORIES:
+            if not (cat := self.bot.get_channel(item)):
+                cat: CategoryChannel = await self.bot.fetch_channel(item)
+            for ch in cat.channels:
+                if ch.name.endswith("-ooc"):
+                    continue
+                async for m in ch.history(limit=1):
+                    if m.author == self.bot.user:
+                        if not m.webhook_id:
+                            self.data_msg[ch.id] = m
+                    elif (raw := utcnow() - m.created_at) > timedelta(days=3):
+                        await self.method(ch.id)
+                    elif date := utcnow() + (timedelta(days=3) - raw):
+                        trigger = DateTrigger(date)
+
+                        await self.bot.scheduler.add_schedule(
+                            self.method,
+                            trigger,
+                            id=f"RP[{ch.id}]",
+                            args=[ch.id],
+                            conflict_policy=ConflictPolicy.replace,
+                        )
+        self.bot.logger.info("Finished loading claimed categories")
 
     register = SlashCommandGroup(
         "register",
@@ -331,7 +391,9 @@ class Submission(Cog):
                                 f"Special Ability's {word.title()}"
                             )
                             text_view.embed.description = f"Here you'll define the Special Ability's {word.title()}, make sure it is actually understandable."
-                            async with text_view.handle(required=True) as answer:
+                            async with text_view.handle(
+                                required=True
+                            ) as answer:
                                 if not answer:
                                     return
                                 data[item] = answer
@@ -379,7 +441,6 @@ class Submission(Cog):
                 "information about how they are, information of their past, or anything you'd like to add."
             )
             async with text_view.handle(required=False) as text:
-                self.bot.logger.info(str(text))
                 if text is None:
                     return
                 if text:
@@ -859,6 +920,8 @@ class Submission(Cog):
         message : Message
             Message to process
         """
+        if not self.ready:
+            return
         if message.channel.id != 852180971985043466:
             return
         if message.author.id in self.ignore:
