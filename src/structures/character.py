@@ -108,6 +108,9 @@ class Character(metaclass=ABCMeta):
         if not self.can_have_special_abilities:
             self.sp_ability = None
 
+    def __eq__(self, other: Character):
+        return self.id == other.id and self.thread == other.thread
+
     @property
     @abstractmethod
     def kind(self) -> str:
@@ -522,8 +525,9 @@ class PokemonCharacter(Character):
             """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = 'COMMON';
-            """
+            WHERE C.ID = PC.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -613,8 +617,9 @@ class LegendaryCharacter(Character):
             """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID;
-            """
+            WHERE C.ID = PC.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -704,8 +709,9 @@ class MythicalCharacter(Character):
             """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID;
-            """
+            WHERE C.ID = PC.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -793,8 +799,9 @@ class UltraBeastCharacter(Character):
             """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID;
-            """
+            WHERE C.ID = PC.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -930,8 +937,9 @@ class FakemonCharacter(Character):
             """--sql
             SELECT C.*, F.NAME AS SPECIES
             FROM FAKEMON F, CHARACTER C
-            WHERE C.ID = F.ID;
-            """
+            WHERE C.ID = F.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
@@ -1056,8 +1064,9 @@ class FusionCharacter(Character):
             """--sql
             SELECT C.*, F.NAME AS SPECIES
             FROM FAKEMON F, CHARACTER C
-            WHERE C.ID = F.ID;
-            """
+            WHERE C.ID = F.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
@@ -1159,8 +1168,9 @@ class MegaCharacter(Character):
             """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID;
-            """
+            WHERE C.ID = PC.ID and C.kind = $1;
+            """,
+            cls.kind,
         ):
             data = dict(item)
             data.pop("kind", None)
