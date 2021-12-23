@@ -691,7 +691,7 @@ class Submission(Cog):
                 bot=self.bot,
                 ocs=self.ocs,
                 rpers=self.rpers,
-                oc_list=self.oc_kist,
+                oc_list=self.oc_list,
                 missions=self.missions,
                 **loads(contents),
             )
