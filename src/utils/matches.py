@@ -24,7 +24,6 @@ __all__ = (
     "EMOJI_REGEX",
     "REGEX_URL",
     "DISCORD_MSG_URL",
-    "LINK_REGEX",
     "DATA_FINDER",
 )
 
@@ -47,8 +46,7 @@ REGEX_URL = compile(
     r"http[s]?://" r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
 )
 
-DISCORD_MSG_URL = compile(r"https://(?:\w+\.)?discord(?:app)?\.com/channels/(\d+)/(\d+)/(\d+)")
-LINK_REGEX = compile(
+DISCORD_MSG_URL = compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"
     r"(?:[0-9]{15,20}|@me)"
     r"/(?P<channel_id>[0-9]{15,20})/(?P<message_id>[0-9]{15,20})/?"

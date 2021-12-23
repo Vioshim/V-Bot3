@@ -178,7 +178,7 @@ class Disboard(Bump):
 
 class DiscordServer(Bump):
     def __init__(self):
-        super(Disboard, self).__init__(
+        super(DiscordServer, self).__init__(
             id=315926021457051650,
             name="Discord-Server",
             url="https://discord-server.com/{server}#reviews",
@@ -186,7 +186,7 @@ class DiscordServer(Bump):
         )
 
     def on_message(self, message: Message) -> bool:
-        if super(Disboard, self).on_message(message):
+        if super(DiscordServer, self).on_message(message):
             if embeds := message.embeds:
                 return ":thumbsup:" in embeds[0].description
         return False
@@ -197,7 +197,7 @@ class DiscordServer(Bump):
 
 class ListIO(Bump):
     def __init__(self):
-        super(Disboard, self).__init__(
+        super(ListIO, self).__init__(
             id=212681528730189824,
             name="Discord List IO",
             url="https://discordlist.io/leaderboard/Pokemon-Parallel-Yonder",
@@ -206,7 +206,7 @@ class ListIO(Bump):
         )
 
     def on_message(self, message: Message) -> bool:
-        if super(Disboard, self).on_message(message):
+        if super(ListIO, self).on_message(message):
             if embeds := message.embeds:
                 return "Server bumped!" in embeds[0].description
         return False
@@ -217,7 +217,7 @@ class ListIO(Bump):
 
 class ServerMate(Bump):
     def __init__(self):
-        super(Disboard, self).__init__(
+        super(ServerMate, self).__init__(
             id=481810078031282176,
             name="Discord List IO",
             url="https://discordlist.io/leaderboard/Pokemon-Parallel-Yonder",
@@ -229,7 +229,7 @@ class ServerMate(Bump):
         return False
 
     def on_message_edit(self, before: Message, now: Message) -> bool:
-        if super(Disboard, self).on_message_edit(before, now):
+        if super(ServerMate, self).on_message_edit(before, now):
             if embeds := now.embeds:
                 return embeds[0].author.name == "Server Bumped"
         return False

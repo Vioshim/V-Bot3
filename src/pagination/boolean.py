@@ -29,12 +29,12 @@ from discord.ui import Button, button
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
 
-__all__ = ("BooleeanView",)
+__all__ = ("BooleanView",)
 
 _M = TypeVar("_M", bound=Messageable)
 
 
-class BooleeanView(Basic):
+class BooleanView(Basic):
     def __init__(
         self,
         *,
@@ -44,7 +44,7 @@ class BooleeanView(Basic):
         timeout: Optional[float] = None,
         embed: Embed = None,
     ):
-        super(BooleeanView, self).__init__(
+        super(BooleanView, self).__init__(
             bot=bot,
             member=member,
             target=target,
@@ -56,7 +56,7 @@ class BooleeanView(Basic):
     @asynccontextmanager
     async def send(self):
         try:
-            await super(BooleeanView, self).send()
+            await super(BooleanView, self).send()
             await self.wait()
             yield self.value
         except Exception as e:
@@ -72,22 +72,26 @@ class BooleeanView(Basic):
     @button(label="Yes", row=0)
     async def confirm(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.send_message(content=f"{self.embed.title}\nAnswer: Yes", ephemeral=True)
+        await resp.send_message(
+            content=f"{self.embed.title}\nAnswer: Yes", ephemeral=True
+        )
         self.value = True
         self.stop()
 
-    # noinspection PyTypeChecker
     @button(label="No", row=0)
     async def deny(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.send_message(content=f"{self.embed.title}\nAnswer: No", ephemeral=True)
+        await resp.send_message(
+            content=f"{self.embed.title}\nAnswer: No", ephemeral=True
+        )
         self.value = False
         self.stop()
 
-    # noinspection PyTypeChecker
     @button(label="Cancel Process", style=ButtonStyle.red, row=0)
     async def cancel(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.send_message(content="Process has been cancelled", ephemeral=True)
+        await resp.send_message(
+            content="Process has been cancelled", ephemeral=True
+        )
         self.value = None
         self.stop()

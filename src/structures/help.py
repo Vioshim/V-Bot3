@@ -26,6 +26,8 @@ from discord.ext.commands import HelpCommand
 
 from src.pagination.simple import Simple
 
+__all__ = ("CustomHelp",)
+
 
 class CustomHelp(HelpCommand):
     context: Context
@@ -87,7 +89,8 @@ class CustomHelp(HelpCommand):
 
         values = {
             "Short document": cmd.short_doc or "None",
-            "Aliases": "\n".join(f"> • {item}" for item in cmd.aliases) or "None",
+            "Aliases": "\n".join(f"> • {item}" for item in cmd.aliases)
+            or "None",
             "Cog": getattr(cmd.cog, "qualified_name", None) or "None",
             "Usage": self.get_command_signature(cmd) or "None",
         }
@@ -117,7 +120,10 @@ class CustomHelp(HelpCommand):
             Group
         """
         aliases = "\n".join(f"> • {item}" for item in group.aliases) or "None"
-        text = f"__**Short Document**__\n> {group.short_doc}\n\n" f"__**Aliases**__\n{aliases}"
+        text = (
+            f"__**Short Document**__\n> {group.short_doc}\n\n"
+            f"__**Aliases**__\n{aliases}"
+        )
 
         target = self.get_destination()
 
@@ -169,7 +175,9 @@ class CustomHelp(HelpCommand):
         view.embed.description = "\n".join(commands) or "> No Commands"
 
         @view.set_parser
-        def cog_parser(item: tuple[str, Callable[[Any], Any]]) -> tuple[str, str]:
+        def cog_parser(
+            item: tuple[str, Callable[[Any], Any]]
+        ) -> tuple[str, str]:
             """Parser for cogs
 
             Attributes
@@ -226,4 +234,6 @@ class CustomHelp(HelpCommand):
         error: Exception
             Exception that occurred
         """
-        ctx.bot.logger.exception("Help Command > %s > %s", ctx.author, error, exc_info=error)
+        ctx.bot.logger.exception(
+            "Help Command > %s > %s", ctx.author, error, exc_info=error
+        )

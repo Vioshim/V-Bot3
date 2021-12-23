@@ -12,12 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, TypeVar
 
-from discord import Embed, Interaction, Member, Message, TextChannel, User
+from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
 
 _T = TypeVar("_T")
+
+__all__ = (
+    "fix",
+    "common_get",
+    "multiple_pop",
+    "common_pop_get",
+    "embed_modifier",
+    "int_check",
+    "stats_check",
+    "check_valid",
+    "text_check",
+    "image_check",
+    "message_line",
+    "embed_handler",
+)
 
 
 def fix(text: str) -> str:
@@ -249,7 +264,7 @@ def text_check(ctx: Interaction):
     return inner
 
 
-def image_check(ctx: Interaction):
+def image_check(ctx: Interaction, channel: TextChannel = None):
     """Image checker
 
     Parameters
@@ -257,6 +272,8 @@ def image_check(ctx: Interaction):
     ctx: Interaction
         Current Slash Command context
     """
+    if not channel:
+        channel = ctx.channel
 
     def inner(message: Message) -> bool:
         """Wrapper method
@@ -266,33 +283,7 @@ def image_check(ctx: Interaction):
         message: Message
             Message to scan
         """
-        if ctx.user == message.author and ctx.channel == message.channel:
-            return bool(message.attachments or message.content)
-        return False
-
-    return inner
-
-
-def image_check2(user: Union[Member, User], channel: TextChannel):
-    """Image checker
-
-    Parameters
-    ----------
-    user: Union[Member, User]
-        User that interacts
-    channel: TextChannel
-        target channel
-    """
-
-    def inner(message: Message) -> bool:
-        """Wrapper method
-
-        Parameters
-        ----------
-        message: Message
-            Message to scan
-        """
-        if user == message.author and channel == message.channel:
+        if ctx.user == message.author and channel == message.channel:
             return bool(message.attachments or message.content)
         return False
 

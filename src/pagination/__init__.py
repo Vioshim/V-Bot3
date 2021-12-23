@@ -15,9 +15,11 @@
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.simple import Simple
 from src.pagination.view_base import Basic
+from src.pagination.boolean import BooleanView
 
 __all__ = (
     "Basic",
+    "BooleanView",
     "Complex",
     "ComplexInput",
     "Simple",

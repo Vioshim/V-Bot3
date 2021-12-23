@@ -1,5 +1,6 @@
 from contextlib import suppress
 from pathlib import Path
+from typing import Optional
 
 from aiofiles import open as aiopen
 from apscheduler.triggers.cron import CronTrigger
@@ -45,7 +46,7 @@ class Information(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
-        self.view: InformationView = InformationView(bot=bot)
+        self.view: Optional[InformationView] = None
 
     # noinspection PyTypeChecker
     async def daily_question(self) -> None:
@@ -70,15 +71,19 @@ class Information(Cog):
             message = await channel.send(embed=embed, delete_after=3600 * 24)
             thread = await message.create_thread(name=date.strftime("%d-%m-%Y"))
             view = View()
-            view.add_item(Button(label="Back to Information", url=message.jump_url))
+            view.add_item(
+                Button(label="Back to Information", url=message.jump_url)
+            )
             data = await thread.send(view=view, embed=embed)
             view = View()
-            view.add_item(Button(label="Join the Discussion", url=data.jump_url))
+            view.add_item(
+                Button(label="Join the Discussion", url=data.jump_url)
+            )
             await message.edit(view=view)
 
     async def member_count(self):
         """Function which updates the member count and the Information's view"""
-        webhook = await self.bot.webhook(860590339327918100)
+        webhook = await self.bot.fetch_webhook(860606374488047616)
         guild = webhook.guild
         members = len([m for m in guild.members if not m.bot])
         total = len(guild.members)
@@ -87,7 +92,7 @@ class Information(Cog):
         data = {
             "Members": members,
             "Bots   ": total - members,
-            "Total  ": total
+            "Total  ": total,
         }
         text = ""
         for key, value in data.items():
@@ -105,21 +110,21 @@ class Information(Cog):
         description="Map related information",
     )
     async def map(
-            self,
-            ctx: ApplicationContext,
-            area: Option(
-                str,
-                description="Region to check about",
-                required=False,
-                autocomplete=map_find,
-            )
+        self,
+        ctx: ApplicationContext,
+        area: Option(
+            str,
+            description="Region to check about",
+            required=False,
+            autocomplete=map_find,
+        ),
     ):
         await ctx.defer(ephemeral=True)
 
         if not area:
             await ctx.respond(
                 "https://cdn.discordapp.com/attachments/823629617629495386/918221231210246184/5x4zl8.png",
-                ephemeral=True
+                ephemeral=True,
             )
             return
 
@@ -137,7 +142,9 @@ class Information(Cog):
             text=f"There's a total of {view.total:02d} OCs in this area."
         )
 
-        for info_btn in self.view.buttons.get("Map Information", {}).get(area, []):
+        for info_btn in self.view.buttons.get("Map Information", {}).get(
+            area, []
+        ):
             view.add_item(info_btn)
 
         return await ctx.respond(embed=embed, view=view, ephemeral=True)
@@ -158,7 +165,9 @@ class Information(Cog):
         )
         if text := "\n".join(f"> **•** {role.mention}" for role in roles[::-1]):
             embed.description = text
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.set_author(
+            name=member.display_name, icon_url=member.display_avatar.url
+        )
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
         if file := await self.bot.get_file(
@@ -189,10 +198,12 @@ class Information(Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(
                 name="Account Age",
-                value=format_dt(member.created_at, style="R")
+                value=format_dt(member.created_at, style="R"),
             )
             message = await log.send(embed=embed, file=file)
-            image = ImageKit(base="welcome_TW8HUQOuU.png", weight=1920, height=1080)
+            image = ImageKit(
+                base="welcome_TW8HUQOuU.png", weight=1920, height=1080
+            )
             image.add_text(
                 font="unifont_HcfNyZlJoK.otf",
                 text=member.display_name,
@@ -208,7 +219,9 @@ class Information(Cog):
                 x=1308,
                 y=65,
             )
-            if file := await self.bot.get_file(image.url, filename=str(member.id)):
+            if file := await self.bot.get_file(
+                image.url, filename=str(member.id)
+            ):
                 embed = Embed(
                     color=Color.blurple(),
                     title="__**`A new user has joined!`**__",
@@ -298,7 +311,9 @@ class Information(Cog):
                 )
                 embed.set_image(url=WHITE_BAR)
                 embed.add_field(name="Channel", value=ch.mention)
-                embed.add_field(name="Amount", value=f"{len(messages)} messages")
+                embed.add_field(
+                    name="Amount", value=f"{len(messages)} messages"
+                )
                 embed.set_author(name=guild.name, icon_url=guild.icon.url)
                 await channel.send(embed=embed)
             self.bot.msg_cache -= ids
@@ -342,7 +357,9 @@ class Information(Cog):
                 embed.set_author(name=user.display_name)
             embed.add_field(name="Channel", value=ctx.channel.mention)
             embed.add_field(name="Embed", value=f"**{len(embeds)}**")
-            embed.add_field(name="Attachments", value=f"**{len(ctx.attachments)}**")
+            embed.add_field(
+                name="Attachments", value=f"**{len(ctx.attachments)}**"
+            )
             embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
             files = []
             for item in ctx.attachments:

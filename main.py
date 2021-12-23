@@ -75,7 +75,7 @@ MENTIONS = AllowedMentions(
     replied_user=True,
 )
 
-COGS = ["submission"]
+COGS = ["submission", "information", "bumps"]
 
 
 EXCEPTIONS = {
@@ -115,11 +115,13 @@ async def main(
     try:
         bot.load_extension("jishaku")
         for cog in COGS:
-            bot.load_extension(f"src.cogs.{cog}")
+            bot.load_extension(f"src.cogs.{cog}.cog")
             bot.logger.info("Successfully loaded %s", cog)
         await bot.start(getenv("DISCORD_TOKEN"))
     except Exception as e:
-        msg = EXCEPTIONS.get(type(e), "An exception occurred while trying to connect")
+        msg = EXCEPTIONS.get(
+            type(e), "An exception occurred while trying to connect"
+        )
         bot.logger.critical(msg=msg, exc_info=e)
 
 
