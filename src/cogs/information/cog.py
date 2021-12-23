@@ -25,8 +25,8 @@ from yaml import dump
 
 from src.cogs.information.area_selection import AreaSelection
 from src.cogs.information.information_view import InformationView
+from src.context import ApplicationContext, AutocompleteContext, Context
 from src.structures.bot import CustomBot
-from src.type_hinting.context import ApplicationContext, Context, AutocompleteContext
 from src.utils.etc import MAP_BUTTONS, WHITE_BAR
 from src.utils.functions import message_line
 from src.utils.imagekit import ImageKit
@@ -141,7 +141,7 @@ class Information(Cog):
             view.add_item(info_btn)
 
         return await ctx.respond(embed=embed, view=view, ephemeral=True)
-    
+
     @Cog.listener()
     async def on_member_remove(self, member: Member):
         await self.member_count()
@@ -302,7 +302,7 @@ class Information(Cog):
                 embed.set_author(name=guild.name, icon_url=guild.icon.url)
                 await channel.send(embed=embed)
             self.bot.msg_cache -= ids
-            
+
     @Cog.listener()
     async def on_message_delete(self, ctx: Message) -> None:
         """Message deleted detection
@@ -357,7 +357,7 @@ class Information(Cog):
                 else:
                     embed.set_image(url=item.url)
                     await message.reply(embed=embed)
-    
+
     @Cog.listener()
     async def on_command(self, ctx: Context) -> None:
         """This allows me to check when commands are being used.
@@ -384,7 +384,7 @@ class Information(Cog):
                 ctx.author,
                 ctx.command.qualified_name,
             )
-    
+
     @Cog.listener()
     async def on_ready(self) -> None:
         """Loads the program in the scheduler

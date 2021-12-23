@@ -43,6 +43,7 @@ from orjson import loads
 from yaml import safe_load
 from yaml.parser import ParserError
 
+from src.context import ApplicationContext, AutocompleteContext
 from src.enums import Abilities, Moves, Pronoun, Species, Types
 from src.pagination.boolean import BooleeanView
 from src.pagination.complex import ComplexInput
@@ -77,7 +78,6 @@ from src.structures.species import (
 )
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
-from src.type_hinting.context import ApplicationContext, AutocompleteContext
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.functions import common_pop_get
 from src.utils.matches import G_DOCUMENT
