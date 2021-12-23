@@ -1,0 +1,1360 @@
+# Copyright 2021 Vioshim
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from contextlib import suppress
+from datetime import timedelta
+from pathlib import Path
+from typing import Any, Optional, Type, Union
+
+from aiofiles import open as aiopen
+from apscheduler.enums import ConflictPolicy
+from apscheduler.triggers.date import DateTrigger
+from discord import (
+    AllowedMentions,
+    CategoryChannel,
+    DiscordException,
+    Embed,
+    Member,
+    Message,
+    Option,
+    OptionChoice,
+    RawMessageDeleteEvent,
+    RawThreadDeleteEvent,
+    TextChannel,
+    Thread,
+    WebhookMessage,
+)
+from discord.commands import Permission, SlashCommandGroup
+from discord.ext.commands import Cog
+from discord.utils import utcnow
+from jishaku.codeblocks import codeblock_converter
+from orjson import loads
+from yaml import safe_load
+from yaml.parser import ParserError
+
+from src.enums import Abilities, Moves, Pronoun, Species, Types
+from src.pagination.boolean import BooleeanView
+from src.pagination.complex import ComplexInput
+from src.pagination.text_input import TextInput
+from src.structures.ability import SpAbility
+from src.structures.bot import CustomBot
+from src.structures.character import (
+    Character,
+    CustomMegaCharacter,
+    FakemonCharacter,
+    FusionCharacter,
+    LegendaryCharacter,
+    MegaCharacter,
+    MythicalCharacter,
+    PokemonCharacter,
+    UltraBeastCharacter,
+    VariantCharacter,
+    doc_convert,
+    fetch_all,
+    kind_deduce,
+)
+from src.structures.mission import Mission
+from src.structures.movepool import Movepool
+from src.structures.species import (
+    CustomMega,
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+)
+from src.structures.species import Species as SpeciesBase
+from src.structures.species import UltraBeast, Variant
+from src.type_hinting.context import ApplicationContext, AutocompleteContext
+from src.utils.etc import RP_CATEGORIES, WHITE_BAR
+from src.utils.functions import common_pop_get
+from src.utils.matches import G_DOCUMENT
+from src.views import ImageView, MissionView, RPView, StatsView, SubmissionView
+
+
+def detection(kind: Type[SpeciesBase], exclude: Type[SpeciesBase] = None):
+    """This method is used to provide an autocomplete
+    depending on the desired kind
+
+    Parameters
+    ----------
+    kind : Type[SpeciesBase]
+        Species to search
+    """
+
+    def inner(ctx: AutocompleteContext) -> list[OptionChoice]:
+        """Inner method for searching
+
+        Parameters
+        ----------
+        ctx : AutocompleteContext
+            Context
+
+        Returns
+        -------
+        list[OptionChoice]
+            Options that matches the criteria
+        """
+        data = ctx.value or ""
+
+        def condition(item: SpeciesBase) -> bool:
+            param = isinstance(item, kind)
+            if exclude:
+                param &= isinstance(item, exclude)
+            param &= not item.banned
+            param &= item.name.startswith(data.title())
+            return param
+
+        return [OptionChoice(item.name, item.id) for item in Species if condition(item.value)]
+
+    return inner
+
+
+class Submission(Cog):
+    def __init__(self, bot: CustomBot):
+        self.bot = bot
+        self.ready: bool = False
+        self.missions: list[Mission] = []
+        self.ignore: set[int] = set()
+        self.data_msg: dict[int, Message] = {}
+        self.ocs: dict[int, Character] = {}
+        self.rpers: dict[int, set[Character]] = {}
+        self.oc_list: dict[int, int] = {}
+
+    async def process(self, **kwargs):
+        """Function used for processing a dict, to a character
+
+        Returns
+        -------
+        Type[Character]
+            Character given the paraneters
+        """
+        data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
+        fakemon_mode: bool = "fakemon" in data
+        if species_name := common_pop_get(
+            data,
+            "fakemon",
+            "species",
+            "fusion",
+        ):
+            if fakemon_mode:
+                name: str = species_name.title()
+                if name.startswith("Mega"):
+                    data["species"] = CustomMega(Species.deduce(name[5:]))
+                elif name.startswith("Variant"):
+                    data["species"] = Variant(Species.deduce(name[8:]))
+                else:
+                    data["species"] = Fakemon(name=name)
+            elif species := Species.deduce(species_name):
+                data["species"] = species
+
+        if types := common_pop_get(data, "types", "type"):
+            data["types"] = frozenset(Types.deduce(types))
+
+        if abilities := common_pop_get(data, "abilities", "ability"):
+            data["abilities"] = frozenset(Abilities.deduce(abilities))
+
+        if moveset := common_pop_get(data, "moveset", "moves"):
+            data["moveset"] = frozenset(Moves.deduce(moveset))
+
+        data["pronoun"] = Pronoun.deduce(data.get("pronoun", "Them"))
+        if isinstance(age := data.get("age"), str):
+            data["age"] = int(age)
+
+        if isinstance(species := data["species"], Fakemon):
+            if stats := data.pop("stats", {}):
+                species.set_stats(**stats)
+
+            if movepool := data.pop("movepool", {}):
+                species.movepool.from_dict(**movepool)
+            else:
+                species.movepool = Movepool(event=frozenset(moveset))
+
+        data = {k: v for k, v in data.items() if v}
+
+        return kind_deduce(data.get("species"), **data)
+
+    async def unclaiming(self, channel: Union[TextChannel, int]):
+        """This method is used when a channel has been inactivate for 3 days.
+
+        Parameters
+        ----------
+        channel_id : int
+            channel id to use
+        """
+        if isinstance(channel, int):
+            channel: TextChannel = self.bot.get_channel(channel)
+        if m := self.data_msg.pop(channel.id, None):
+            with suppress(DiscordException):
+                await m.delete()
+        self.data_msg[channel.id] = await channel.send(
+            "\n".join(
+                [
+                    "**。　　　　•　    　ﾟ　　。**",
+                    "**　　.　　　.　　　.　　。　　   。　.**",
+                    "** 　.　　      。             。　    .    •**",
+                    "** •     RP claimable, feel free to use it.　 。　.**",
+                    "**          Is assumed that everyone left**",
+                    "**　 　　。　　　　ﾟ　　　.　　　　　.**",
+                    "**,　　　　.　 .　　       .               。**",
+                ]
+            )
+        )
+
+    async def list_update(self, member: Member):
+        """This function updates an user's character list message
+
+        Parameters
+        ----------
+        member : Member
+            User to update list
+        """
+        if not self.ready:
+            return
+        embed = Embed(
+            title="Registered Characters",
+            color=member.color,
+        )
+        guild = member.guild
+        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        embed.set_author(name=member.display_name)
+        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_image(url=WHITE_BAR)
+        view = RPView(self.bot, member.id, self.oc_list)
+        webhook = await self.bot.fetch_webhook(919280056558317658)
+        if oc_list := self.oc_list.get(member.id, None):
+            try:
+                await webhook.edit_message(oc_list, embed=embed, view=None)
+                return
+            except DiscordException:
+                with suppress(DiscordException):
+                    thread = await self.bot.fetch_channel(oc_list)
+                    await thread.delete(reason="Former OC List Message was removed.")
+        message: WebhookMessage = await webhook.send(
+            content=member.mention,
+            wait=True,
+            embed=embed,
+            allowed_mentions=AllowedMentions(users=True),
+            view=view,
+        )
+        thread = await message.create_thread(name=f"OCs⎱{member.id}")
+        await thread.add_user(member)
+        self.oc_list[member.id] = thread.id
+        await message.edit(view=view)
+        async with self.bot.database() as db:
+            await db.execute(
+                """--sql
+                INSERT INTO THREAD_LIST(ID, AUTHOR, SERVER)
+                VALUES ($1, $2, $3) ON CONFLICT(AUTHOR, SERVER)
+                DO UPDATE SET ID = $1;
+                """,
+                thread.id,
+                member.id,
+                guild.id,
+            )
+
+    async def registration(
+        self,
+        ctx: Union[ApplicationContext, Message],
+        oc: Type[Character],
+        sp_ability: bool = True,
+        moveset: bool = True,
+        standard_register: bool = True,
+    ):
+        async def ctx_send(msg: str, delete_after: int = None) -> Optional[Message]:
+            """This is a handler for sending messages depending on the context
+
+            Parameters
+            ----------
+            msg : str
+                message to send
+            delete_after : int, optional
+                If it will be deleted after some time, by default None
+
+            Returns
+            -------
+            Optional[Message]
+                If non interaction, returns the message
+            """
+            if isinstance(ctx, ApplicationContext):
+                await ctx.respond(msg, ephemeral=True)
+                return
+            return await ctx.channel.send(msg, delete_after=delete_after)
+
+        if not self.ready:
+            await ctx_send("Bot is restarting, please be patient", delete_after=5)
+            return
+
+        if standard_register:
+            if oc.url:
+                await ctx_send("Character has been loaded successfully", delete_after=5)
+            else:
+                text_view = TextInput(bot=self.bot, member=ctx.author, target=ctx)
+                await ctx_send("Starting submission process", delete_after=5)
+
+                if isinstance(oc, FakemonCharacter):
+                    stats_view = StatsView(
+                        bot=self.bot,
+                        member=ctx.author,
+                        target=ctx,
+                    )
+                    async with stats_view:
+                        if not (stats := stats_view.choice):
+                            return
+                        oc.species.set_stats(*stats.value)
+
+                    types = None
+                    while types is None:
+                        text_view.embed.title = "Write the character's types (Min 1, Max 2)"
+                        text_view.embed.description = "For example: Fire, Psychic"
+                        async with text_view.handle(required=True) as answer:
+                            if not answer:
+                                return
+                            types = Types.deduce(answer)
+                            if 1 <= len(types) <= 2:
+                                oc.types = types
+                            else:
+                                types = None
+
+                if not oc.types:
+                    values = oc.possible_types if isinstance(oc, FusionCharacter) else Types
+                    mode = isinstance(values, list)
+                    view = ComplexInput(
+                        bot=self.bot,
+                        member=ctx.author,
+                        target=ctx,
+                        values=values,
+                        max_values=1 if mode else 2,
+                        timeout=None,
+                        parser=lambda x: (
+                            name := "/".join(str(i) for i in x) if isinstance(x, set) else str(x),
+                            f"Adds the typing {name}",
+                        ),
+                    )
+                    async with view.send(single=mode, title="Select Typing") as types:
+                        if not types:
+                            return
+                        oc.species.types = frozenset(types)
+
+                elif oc.has_default_types:
+                    if isinstance(oc, FusionCharacter):
+                        values = oc.possible_types
+                        if oc.types not in values:
+                            items = ", ".join(
+                                "/".join(i.name for i in item) for item in values
+                            ).title()
+                            await ctx_send(
+                                f"Invalid typing for the fusion, valid types are {items}",
+                                delete_after=5,
+                            )
+                            return
+                    elif oc.types != oc.species.types:
+                        items = "/".join(i.name for i in oc.species.types).title()
+                        await ctx_send(
+                            f"Invalid typing for the character, valid types is {items}",
+                            delete_after=5,
+                        )
+                        return
+
+                max_ab = oc.max_amount_abilities
+                if not oc.abilities:
+
+                    if not isinstance(oc, FakemonCharacter) and oc.max_amount_abilities == 1:
+                        oc.abilities = oc.species.abilities
+                    else:
+                        ability_view = ComplexInput(
+                            bot=self.bot,
+                            member=ctx.author,
+                            values=(
+                                Abilities if oc.any_ability_at_first else oc.species.abilities
+                            ),
+                            target=ctx,
+                            max_values=max_ab,
+                        )
+                        ability_view.set_parser(lambda x: (x.value.name, x.value.description))
+                        ability_view.embed.title = f"Select the Abilities (Max {max_ab})"
+                        if max_ab == 2:
+                            ability_view.embed.description = "If you press the write button, you can add multiple by adding commas."
+
+                        async with ability_view as abilities:
+                            if not abilities:
+                                return
+                            oc.abilities = frozenset(abilities)
+
+                if len(oc.abilities) > oc.max_amount_abilities:
+                    await ctx_send(
+                        f"Max Amount of Abilities for the current Species is {oc.max_amount_abilities}"
+                    )
+                    return
+
+                if not oc.any_ability_at_first:
+                    ability_errors: set[Moves] = set()
+                    for item in oc.abilities:
+                        if item not in oc.species.abilities:
+                            ability_errors.add(item)
+
+                    if text := ", ".join(i.value.name for i in ability_errors):
+                        await ctx_send(f"the abilities [{text}] were not found in the species")
+                        return
+
+                if sp_ability and oc.can_have_special_abilities and len(oc.abilities) == 1:
+                    bool_view = BooleeanView(bot=self.bot, member=ctx.author, target=ctx)
+                    bool_view.embed.title = "Does the character have an Special Ability?'"
+                    bool_view.embed.description = (
+                        "Special abilities are basically unique traits that their OC's kind usually can't do,"
+                        " it's like being born with an unique power that could have been obtained by different"
+                        " reasons, they are known for having pros and cons."
+                    )
+                    async with bool_view.send() as answer:
+                        if answer is None:
+                            return
+                        if answer:
+                            data: dict[str, str] = {}
+                            for item in [
+                                "name",
+                                "description",
+                                "method",
+                                "pros",
+                                "cons",
+                            ]:
+                                if item == "method":
+                                    word = "origin"
+                                text_view.embed.title = f"Special Ability's {word.title()}"
+                                text_view.embed.description = f"Here you'll define the Special Ability's {word.title()}, make sure it is actually understandable."
+                                async with text_view.handle(required=True) as answer:
+                                    if not answer:
+                                        return
+                                    data[item] = answer
+                            oc.sp_ability = SpAbility(**data)
+
+                if moveset and not oc.moveset:
+                    if oc.any_move_at_first:
+                        movepool = Movepool(event=frozenset(Moves))
+                    elif not (movepool := oc.movepool):
+                        movepool = Movepool(event=frozenset(Moves))
+
+                    moves_view = ComplexInput(
+                        bot=self.bot,
+                        member=ctx.author,
+                        values=movepool(),
+                        timeout=None,
+                        target=ctx,
+                        max_values=6,
+                    )
+                    moves_view.embed.title = "Select the Moves"
+                    moves_view.embed.description = (
+                        "If you press the write button, you can add multiple by adding commas."
+                    )
+
+                    async with moves_view as moves:
+                        if not moves:
+                            return
+                        oc.moveset = frozenset(moves)
+
+                    if isinstance(oc, (VariantCharacter, FakemonCharacter)):
+                        oc.species.movepool += Movepool(event=oc.moveset)
+
+                if not oc.any_move_at_first:
+                    move_errors: set[Moves] = set()
+                    for item in oc.moveset:
+                        if item not in oc.movepool:
+                            move_errors.add(item)
+
+                    if text := ", ".join(i.value.name for i in move_errors):
+                        await ctx_send(f"the moves [{text}] were not found in the movepool")
+                        return
+
+                # Ask for backstory
+                text_view.embed.title = "Character's backstory"
+                text_view.embed.description = (
+                    "Don't worry about having to write too much, this is just a summary of information "
+                    "that people can keep in mind when interacting with your character. You can provide "
+                    "information about how they are, information of their past, or anything you'd like to add."
+                )
+                async with text_view.handle(required=False) as text:
+                    if text is None:
+                        return
+                    if text:
+                        oc.backstory = text
+
+                text_view.embed.title = "Character's extra information"
+                text_view.embed.description = (
+                    "In this area, you can write down information you want people to consider when they are rping with them, "
+                    "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
+                    "or simply just writing down that your character has a goal in specific."
+                )
+                async with text_view.handle(required=False) as text:
+                    if text is None:
+                        return
+                    if text:
+                        oc.extra = text
+
+                if not oc.image:
+                    image_view = ImageView(
+                        bot=self.bot,
+                        member=ctx.author,
+                        target=ctx,
+                        default_img=oc.default_image,
+                    )
+                    async with image_view.send() as image:
+                        if image is None:
+                            return
+                        oc.image = image
+                    if received := image_view.received:
+                        await received.delete(delay=10)
+
+        await self.list_update(ctx.author)
+        webhook = await self.bot.fetch_webhook(919280056558317658)
+        thread_id = self.oc_list[ctx.author.id]
+        thread: Thread = await self.bot.fetch_channel(thread_id)
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+            embed: Embed = oc.embed
+            embed.set_image(url=f"attachment://{file.filename}")
+            msg_oc = await webhook.send(
+                content=ctx.author.mention,
+                embed=embed,
+                file=file,
+                thread=thread,
+                allowed_mentions=AllowedMentions(users=True),
+                wait=True,
+            )
+            oc.image = msg_oc.embeds[0].image.url
+            self.rpers.setdefault(ctx.author.id, frozenset())
+            self.rpers[ctx.author.id].add(oc)
+            self.ocs[oc.id] = oc
+            self.bot.logger.info(
+                "New character has been registered! > %s > %s > %s",
+                str(ctx.author),
+                str(type(oc)),
+                oc.url or "Manual",
+            )
+            async with self.bot.database() as conn:
+                await oc.update(connection=conn, idx=msg_oc.id)
+
+    @Cog.listener()
+    async def on_ready(self) -> None:
+        """This method loads all the characters from the database."""
+        async with self.bot.database() as db:
+
+            self.bot.logger.info("Loading All Profiles")
+
+            async for item in db.cursor(
+                """--sql
+                SELECT AUTHOR, ID
+                FROM THREAD_LIST
+                WHERE SERVER = $1;
+                """,
+                719343092963999804,
+            ):
+                author, thread_id = item
+                self.oc_list[author] = thread_id
+                view = RPView(
+                    bot=self.bot,
+                    member_id=author,
+                    oc_list=self.oc_list,
+                )
+                self.bot.add_view(view=view, message_id=thread_id)
+
+            self.bot.logger.info("Finished loading all Profiles. Loading all characters")
+
+            for oc in await fetch_all(db):
+                self.ocs[oc.id] = oc
+                self.rpers.setdefault(oc.author, set())
+                self.rpers[oc.author].add(oc)
+
+            self.bot.logger.info("Finished loading all characters")
+
+            self.ready = True
+
+            self.bot.logger.info("Loading claimed missions")
+
+            self.missions = await Mission.fetch_all(db)
+
+            w = await self.bot.webhook(908498210211909642)
+
+            for mission in self.missions:
+                view = MissionView(bot=self.bot, mission=mission)
+                if msg_id := mission.msg_id:
+                    self.bot.add_view(view, message_id=msg_id)
+                else:
+                    msg = await w.send(
+                        content=f"<@{mission.author}>",
+                        embed=mission.embed,
+                        view=view,
+                        wait=True,
+                        allowed_mentions=AllowedMentions(users=True),
+                    )
+                    mission.msg_id = msg.msg_id
+                    await mission.upsert(db)
+
+        self.bot.logger.info("Loading claimed categories")
+
+        for item in RP_CATEGORIES:
+
+            if not (cat := self.bot.get_channel(item)):
+                cat: CategoryChannel = await self.bot.fetch_channel(item)
+
+            for ch in cat.channels:
+                if ch.name.endswith("-ooc"):
+                    continue
+
+                async for m in ch.history(limit=1):
+                    if m.author == self.bot.user:
+                        if not m.webhook_id:
+                            self.data_msg[ch.id] = m
+                    elif (raw := utcnow() - m.created_at) > timedelta(days=3):
+                        await self.unclaiming(ch)
+                    elif date := utcnow() + (timedelta(days=3) - raw):
+                        trigger = DateTrigger(date)
+                        await self.bot.scheduler.add_schedule(
+                            self.unclaiming,
+                            trigger,
+                            id=f"RP[{ch.id}]",
+                            args=[ch.id],
+                            conflict_policy=ConflictPolicy.replace,
+                        )
+
+        self.bot.logger.info("Finished loading claimed categories")
+
+        source = Path("resources/information.json")
+        async with aiopen(source.resolve(), mode="r") as f:
+            contents = await f.read()
+            view = SubmissionView(
+                bot=self.bot,
+                ocs=self.ocs,
+                rpers=self.rpers,
+                oc_list=self.oc_kist,
+                missions=self.missions,
+                **loads(contents),
+            )
+            self.bot.add_view(view, message_id=903437849154711552)
+
+        self.bot.logger.info("Finished loading menu")
+
+    @Cog.listener()
+    async def on_member_update(self, past: Member, now: Member) -> None:
+        if any(
+            (
+                past.display_name != now.display_name,
+                past.display_name != now.display_avatar,
+                past.colour != now.colour,
+            )
+        ):
+            if self.oc_list.get(now.id):
+                await self.list_update(now)
+
+    @Cog.listener()
+    async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent) -> None:
+        """Detects if threads were removed
+
+        Parameters
+        ----------
+        payload : RawThreadDeleteEvent
+            Information
+        """
+        if payload.parent_id != 919277769735680050:
+            return
+        if payload.thread_id in self.oc_list.values():
+            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
+            async with self.bot.database() as db:
+                del self.oc_list[author_id]
+                await db.execute(
+                    """--sql
+                    DELETE FROM THREAD_LIST
+                    WHERE ID = $1 AND SERVER = $2;
+                    """,
+                    payload.thread_id,
+                    payload.guild_id,
+                )
+
+                for oc in self.rpers.pop(author_id, set()):
+                    del self.ocs[oc.id]
+                    self.bot.logger.info(
+                        "Character Removed as Thread was removed! > %s > %s",
+                        str(type(oc)),
+                        oc.url or "None",
+                    )
+                    await oc.delete(db)
+
+    @Cog.listener()
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
+        """Detects if ocs or lists were deleted
+
+        Parameters
+        ----------
+        payload : RawMessageDeleteEvent
+            Information
+        """
+        if oc := self.ocs.get(payload.message_id):
+            if oc.thread == payload.channel_id:
+                del self.ocs[oc.id]
+                ocs = self.rpers.get(oc.author)
+                ocs.remove(oc)
+                async with self.bot.database() as db:
+                    self.bot.logger.info(
+                        "Character Removed as message was removed! > %s > %s",
+                        str(type(oc)),
+                        oc.url or "None",
+                    )
+                    await oc.delete(db)
+        if payload.message_id in self.oc_list.values():
+            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
+            del self.oc_list[author_id]
+            async with self.bot.database() as db:
+                for oc in self.rpers.pop(author_id, set()):
+                    del self.ocs[oc.id]
+                    self.bot.logger.info(
+                        "Character Removed as Thread was removed! > %s > %s",
+                        str(type(oc)),
+                        oc.url or "None",
+                    )
+                    await oc.delete(db)
+
+    @Cog.listener()
+    async def on_message(self, message: Message) -> None:
+        """This method processes character submissions
+
+        Attributes
+        ----------
+        message : Message
+            Message to process
+        """
+        if not self.ready:
+            return
+        if message.channel.id != 852180971985043466:
+            return
+        if message.author.id in self.ignore:
+            return
+        if message.author.bot:
+            return
+        text: str = codeblock_converter(message.content or "").content
+        try:
+            if doc_data := G_DOCUMENT.match(text):
+                msg_data = await doc_convert(doc_data.group(1))
+            else:
+                msg_data = safe_load(text)
+            if images := message.attachments:
+                msg_data["image"] = images[0].url
+
+            if isinstance(msg_data, dict):
+                self.ignore.add(message.author.id)
+                if oc := await self.process(**msg_data):
+                    oc.author = message.author.id
+                    oc.server = message.guild.id
+                    await self.registration(ctx=message, oc=oc)
+                    await message.delete()
+                self.ignore.remove(message.author.id)
+        except ParserError:
+            return
+        except Exception as e:
+            self.bot.logger.exception("Exception processing character", exc_info=e)
+            await message.reply(f"Exception:\n\n{e}", delete_after=10)
+            return
+
+    register = SlashCommandGroup(
+        "register",
+        "Command used for registering characters",
+        [719343092963999804],
+        permissions=[Permission("owner", 2, True)],
+    )
+
+    @register.command()
+    async def document(self, ctx: ApplicationContext, url: str):
+        """This command loads a document from Google Docs
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            Context
+        url : str
+            URL
+        """
+        if not (doc_data := G_DOCUMENT.match(url)):
+            return await ctx.respond("That's not a google document", ephemeral=True)
+        msg_data = await doc_convert(doc_data.group(1))
+        if oc := await self.process(**msg_data):
+            oc.author = ctx.author.id
+            await self.registration(ctx=ctx, oc=oc)
+
+    @register.command()
+    async def pokemon(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(Pokemon),
+        ),
+        age: Option(
+            int,
+            description="Age. Use 0 if unknown",
+            required=False,
+        ),
+    ):
+        """Command for making a Pokemon Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        age : int, optional
+            Age, defaults to None
+        """
+        await ctx.defer(ephemeral=True)
+        mon = Species[species]
+        oc = PokemonCharacter(
+            name=name.title(),
+            author=ctx.author.id,
+            species=mon,
+            thread=self.oc_list.get(ctx.author.id),
+            server=ctx.guild_id,
+            age=age,
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    @register.command()
+    async def legendary(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(Legendary),
+        ),
+    ):
+        """Command for making a Legendary Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        """
+        await ctx.defer(ephemeral=True)
+        mon = Species[species]
+        oc = LegendaryCharacter(
+            name=name.title(),
+            species=mon,
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    @register.command()
+    async def mythical(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(Mythical),
+        ),
+    ):
+        """Command for making a Mythical Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        """
+        await ctx.defer(ephemeral=True)
+        mon = Species[species]
+        oc = MythicalCharacter(
+            name=name.title(),
+            species=mon,
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    @register.command()
+    async def ultra_beast(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(UltraBeast),
+        ),
+    ):
+        """Command for making an Ultra Beast Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        """
+        await ctx.defer(ephemeral=True)
+        mon = Species[species]
+        oc = UltraBeastCharacter(
+            name=name.title(),
+            species=mon,
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    @register.command()
+    async def mega(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(Mega),
+        ),
+        age: Option(
+            int,
+            description="Character's age",
+            required=False,
+        ),
+    ):
+        """Command for making a Permanent Mega Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        age : int, optional
+            Age, defaults to None
+        """
+        await ctx.defer(ephemeral=True)
+        mon = Species[species]
+        oc = MegaCharacter(
+            name=name.title(),
+            species=mon,
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            age=age,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    @register.command()
+    async def fusion(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species1: Option(
+            str,
+            description="Select the species 1.",
+            autocomplete=detection(SpeciesBase),
+        ),
+        species2: Option(
+            str,
+            description="Select the species 2.",
+            autocomplete=detection(SpeciesBase),
+        ),
+        age: Option(
+            int,
+            description="Character's age",
+            required=False,
+        ),
+    ):
+        """Command for making a Fusion Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species1 : str
+            Species
+        species2 : str
+            Species
+        age : int, optional
+            Age, defaults to None
+        """
+        await ctx.defer(ephemeral=True)
+
+        mon1, mon2 = Species[species1], Species[species2]
+        if mon1 == mon2:
+            return await ctx.respond("Both species are the same", ephemeral=True)
+        oc = FusionCharacter(
+            name=name.title(),
+            species=Fusion(mon1, mon2),
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            thread=self.oc_list.get(ctx.author.id),
+            age=age,
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    fakemon = register.create_subgroup(
+        name="fakemon",
+        description="This is for creating a fakemon.",
+    )
+
+    @fakemon.command(name="custom_pokemon")
+    async def fakemon_common(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Name of the Species",
+        ),
+        age: Option(
+            int,
+            description="Character's age",
+            required=False,
+        ),
+    ):
+        """Command for making a Fakemon Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        age : int, optional
+            Age, defaults to None
+        """
+        await ctx.defer(ephemeral=True)
+        fakemon = Fakemon(name=species.title())
+        oc = FakemonCharacter(
+            name=name.title(),
+            species=fakemon,
+            author=ctx.author.id,
+            thread=self.oc_list.get(ctx.author.id),
+            server=ctx.guild_id,
+            age=age,
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc)
+
+    @fakemon.command(name="custom_legendary")
+    async def fakemon_legendary(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Species' name.",
+        ),
+    ):
+        """Command for making a Custom Legendary Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        """
+        await ctx.defer(ephemeral=True)
+        fakemon = Fakemon(name=species.title())
+        oc = FakemonCharacter(
+            name=name.title(),
+            species=fakemon,
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc, sp_ability=False)
+
+    @fakemon.command(name="custom_mythical")
+    async def fakemon_mythical(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Species' name.",
+        ),
+    ):
+        """Command for making a Custom Mythical Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        """
+        await ctx.defer(ephemeral=True)
+        fakemon = Fakemon(name=species.title())
+        oc = FakemonCharacter(
+            name=name.title(),
+            species=fakemon,
+            author=ctx.author.id,
+            server=ctx.guild_id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc, sp_ability=False)
+
+    @fakemon.command(name="custom_ultra_beast")
+    async def fakemon_ultra_beast(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        species: Option(
+            str,
+            description="Species' name.",
+        ),
+    ):
+        """Command for making a Custom Ultra Beast Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        """
+        await ctx.defer(ephemeral=True)
+        fakemon = Fakemon(
+            name=species.title(),
+            abilities=frozenset(
+                {Abilities.BEASTBOOST},
+            ),
+        )
+        oc = FakemonCharacter(
+            name=name.title(),
+            species=fakemon,
+            server=ctx.guild_id,
+            author=ctx.author.id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+        )
+        await self.registration(ctx, oc, sp_ability=False)
+
+    @fakemon.command(name="custom_mega")
+    async def fakemon_mega(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        mega: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(Pokemon),
+        ),
+        age: Option(
+            int,
+            description="Character's age",
+            required=False,
+        ),
+    ):
+        """Command for making a Custom Mega Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        age : int, optional
+            Age, defaults to None
+        """
+        await ctx.defer(ephemeral=True)
+        mon = Species[mega]
+        fakemon = CustomMega(
+            name=f"Mega {mon.value.name}",
+            movepool=mon.movepool,
+        )
+        oc = CustomMegaCharacter(
+            name=name.title(),
+            species=fakemon,
+            server=ctx.guild_id,
+            author=ctx.author.id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+            age=age,
+        )
+        await self.registration(ctx, oc, sp_ability=False)
+
+    @fakemon.command(name="variant")
+    async def variant(
+        self,
+        ctx: ApplicationContext,
+        name: str,
+        pronoun: Option(
+            str,
+            description="Preferred pronoun",
+            choices=[item.name for item in Pronoun],
+        ),
+        variant: Option(
+            str,
+            description="Select the species.",
+            autocomplete=detection(SpeciesBase, Mega),
+        ),
+        age: Option(
+            int,
+            description="Character's age",
+            required=False,
+        ),
+    ):
+        """Command for making a Pokemon Variant Character
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            context
+        name : str
+            Name
+        pronoun : str
+            Pronoun
+        species : str
+            Species
+        age : int, optional
+            Age, defaults to None
+        """
+        await ctx.defer(ephemeral=True)
+        mon = CustomMega(Species[variant])
+        oc = FakemonCharacter(
+            name=name.title(),
+            species=mon,
+            server=ctx.guild_id,
+            author=ctx.author.id,
+            thread=self.oc_list.get(ctx.author.id),
+            pronoun=Pronoun[pronoun],
+            age=age,
+        )
+        await self.registration(ctx, oc, sp_ability=False)
+
+
+def setup(bot: CustomBot) -> None:
+    """Default Cog loader
+
+    Parameters
+    ----------
+    bot: CustomBot
+        Bot
+    """
+    bot.add_cog(Submission(bot))

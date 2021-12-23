@@ -93,9 +93,7 @@ class ImageView(Basic):
         if attachments := received.attachments:
             self.text = attachments[0].url
             self.received = received
-        elif file := await self.bot.get_file(
-            url=received.content, filename="image"
-        ):
+        elif file := await self.bot.get_file(url=received.content, filename="image"):
             self.received = await ctx.channel.send(file=file)
             self.text = self.received.attachments[0].url
             await received.delete()

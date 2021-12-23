@@ -41,9 +41,7 @@ class Movepool:
     other: frozenset[Moves] = field(default_factory=frozenset)
 
     def __post_init__(self):
-        self.level = frozendict(
-            {k: frozenset(v) for k, v in self.level.items()}
-        )
+        self.level = frozendict({k: frozenset(v) for k, v in self.level.items()})
         self.tm = frozenset(self.tm)
         self.event = frozenset(self.event)
         self.tutor = frozenset(self.tutor)
@@ -92,9 +90,7 @@ class Movepool:
     def operator(
         self,
         other: Movepool,
-        method: Callable[
-            [frozenset[Moves], frozenset[Moves]], frozenset[Moves]
-        ],
+        method: Callable[[frozenset[Moves], frozenset[Moves]], frozenset[Moves]],
     ) -> Movepool:
         """This method allows to perform operations on the movepool
 
@@ -349,9 +345,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(
-            level={}
-        )
+        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(level={})
         async for item in connection.cursor(
             """--sql
                 SELECT MOVE, METHOD
@@ -421,17 +415,11 @@ class Movepool:
 
             if isinstance(value, frozendict):
                 for level, values in value.items():
-                    entries = (
-                        (id, m.name, level) for m in values if not m.banned
-                    )
+                    entries = ((id, m.name, level) for m in values if not m.banned)
                     learnset_elements.extend(entries)
-                    movepool_elements.extend(
-                        (x, y, "LEVEL") for x, y, _ in entries
-                    )
+                    movepool_elements.extend((x, y, "LEVEL") for x, y, _ in entries)
             elif isinstance(value, frozenset):
-                movepool_elements.extend(
-                    (id, m.name, key) for m in value if not m.banned
-                )
+                movepool_elements.extend((id, m.name, key) for m in value if not m.banned)
 
         if movepool_elements:
             await connection.executemany(

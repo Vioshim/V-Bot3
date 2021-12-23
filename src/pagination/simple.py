@@ -14,7 +14,16 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Optional, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Optional,
+    Sized,
+    TypeVar,
+    Union,
+)
 
 from discord import (
     DiscordException,
@@ -30,14 +39,14 @@ from discord.ui import Button, button
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=Sized)
 _M = TypeVar("_M", bound=Messageable)
 
 __all__ = ("Simple",)
 
 
 def default_parser(item: _T) -> tuple[str, str]:
-    """[summary]
+    """Standard parser for elements
 
     Parameters
     ----------
@@ -56,7 +65,7 @@ def default_parser(item: _T) -> tuple[str, str]:
 
 
 # noinspection DuplicatedCode,PyTypeChecker
-class Simple(Basic):
+class Simple(Generic[_T], Basic):
     """A Paginator for View-only purposes"""
 
     def __init__(
@@ -70,6 +79,7 @@ class Simple(Basic):
         embed: Embed = None,
         inline: bool = False,
         entries_per_page: int = 25,
+        parser: Callable[[_T], tuple[str, str]] = default_parser,
     ):
         """Init Method
 
@@ -91,10 +101,10 @@ class Simple(Basic):
             If the values need to be inline or not, defaults to False
         entries_per_page : int, optional
             The max amount of entries per page, defaults to 25
+        parser : Callable[[_T], tuple[str, str]]
+            Parser method, defaults to lambda x: str(x), repr(x)
         """
-        super().__init__(
-            bot=bot, member=member, target=target, timeout=timeout, embed=embed
-        )
+        super().__init__(bot=bot, member=member, target=target, timeout=timeout, embed=embed)
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
@@ -102,15 +112,13 @@ class Simple(Basic):
         self._values = items
         self._inline = inline
         self._pos = 0
-        self._parser = default_parser
+        self._parser = parser or default_parser
         self._entries_per_page = entries_per_page
         if not isinstance(values, list):
             self.sort()
         self.menu_format()
 
-    def sort(
-        self, key: Callable[[_T], Any] = None, reverse: bool = False
-    ) -> None:
+    def sort(self, key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
         """Sort method used for the view's values
 
         Attributes
@@ -210,9 +218,7 @@ class Simple(Basic):
             amount = self._entries_per_page * self._pos
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
-                self.embed.add_field(
-                    name=name, value=value, inline=self._inline
-                )
+                self.embed.add_field(name=name, value=value, inline=self._inline)
 
     async def edit(self, page: int) -> None:
         """This method edits the pagination's page given an index.
@@ -251,9 +257,7 @@ class Simple(Basic):
         if not resp.is_done():
             return await self.edit(page=0)
 
-    @button(
-        emoji=":fastreverse:861938354136416277", row=0, custom_id="previous"
-    )
+    @button(emoji=":fastreverse:861938354136416277", row=0, custom_id="previous")
     async def previous(self, btn: Button, interaction: Interaction) -> None:
         """
         Method used to reach previous page of the pagination
@@ -319,9 +323,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_last(btn, interaction)
         if not resp.is_done():
-            return await self.edit(
-                page=len(self.values[:: self._entries_per_page]) - 1
-            )
+            return await self.edit(page=len(self.values[:: self._entries_per_page]) - 1)
 
     async def custom_previous(self, btn: Button, interaction: Interaction):
         """Placeholder for custom defined operations

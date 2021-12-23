@@ -104,12 +104,12 @@ class SpAbility(Ability):
             Fetched element
         """
         if entry := await connection.fetchrow(
-                """--sql
+            """--sql
                     SELECT *
                     FROM SPECIAL_ABILITIES
                     WHERE ID = $1;
                     """,
-                idx,
+            idx,
         ):
             return cls.convert(entry)
 

@@ -15,12 +15,13 @@
 from contextlib import asynccontextmanager, suppress
 from difflib import get_close_matches
 from types import TracebackType
-from typing import Iterable, Optional, TypeVar, Union
+from typing import Callable, Generic, Iterable, Optional, Sized, TypeVar, Union
 
 from discord import (
     AllowedMentions,
     DiscordException,
     Embed,
+    Emoji,
     File,
     GuildSticker,
     Interaction,
@@ -28,6 +29,7 @@ from discord import (
     Member,
     Message,
     MessageReference,
+    PartialEmoji,
     PartialMessage,
     StickerItem,
     User,
@@ -37,15 +39,33 @@ from discord.ui import Button, Select, button, select
 
 from src.pagination.simple import Simple
 from src.structures.bot import CustomBot
-from src.utils.functions import text_check
+from src.utils.functions import embed_modifier, text_check
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=Sized)
 _M = TypeVar("_M", bound=Messageable)
 
 __all__ = ("Complex", "ComplexInput")
 
 
-class Complex(Simple):
+def default_emoji_parser(item: _T) -> tuple[str, str]:
+    """Standard parser for emoji out of elements
+
+    Parameters
+    ----------
+    item : _T
+        Element to parse as
+
+    Returns
+    -------
+    str | PartialEmoji | EMoji
+        Resulting emoji
+    """
+    if isinstance(item, (PartialEmoji, Emoji)):
+        return item
+    return getattr(item, "emoji", "\N{DIAMOND SHAPE WITH A DOT INSIDE}")
+
+
+class Complex(Generic[_T], Simple):
     def __init__(
         self,
         *,
@@ -57,9 +77,15 @@ class Complex(Simple):
         embed: Embed = None,
         max_values: int = 1,
         entries_per_page: int = 25,
+        parser: Callable[[_T], tuple[str, str]] = None,
+        emoji_parser: Union[str, Callable[[_T], Union[str, PartialEmoji, Emoji]]] = None,
     ):
-        self._choices: set[_T] = set()
+        self._choices: set[_T] = None
         self._max_values = max_values
+        if isinstance(emoji_parser, str):
+            self._emoji_parser = lambda x: emoji_parser
+        else:
+            self._emoji_parser = emoji_parser or default_emoji_parser
         super().__init__(
             bot=bot,
             timeout=timeout,
@@ -68,20 +94,35 @@ class Complex(Simple):
             values=values,
             embed=embed,
             entries_per_page=entries_per_page,
+            parser=parser,
         )
 
     # noinspection PyMethodMayBeStatic
-    def emoji_parser(self, _item: _T) -> str:
-        return getattr(_item, "emoji", "\N{DIAMOND SHAPE WITH A DOT INSIDE}")
+    def emoji_parser(self, item: _T) -> str:
+        return self._emoji_parser(item)
+
+    def set_emoji_parser(
+        self, item: Callable[[_T], Union[str, PartialEmoji, Emoji]] = None
+    ) -> None:
+        """Function used for setting a parser
+
+        Parameters
+        ----------
+        item : Callable[[_T], Union[str, PartialEmoji, Emoji]], optional
+            Function to add, defaults to None
+        """
+        if item:
+            self._emoji_parser = item
+        else:
+            self._emoji_parser = default_emoji_parser
+        self.menu_format()
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
         await self.wait()
         return self._choices
 
-    async def __aexit__(
-        self, exc_type: type, exc_val: Exception, exc_tb: TracebackType
-    ) -> None:
+    async def __aexit__(self, exc_type: type, exc_val: Exception, exc_tb: TracebackType) -> None:
         if exc_type:
             self.bot.logger.exception(
                 "Exception occurred, target: %s, user: %s",
@@ -120,9 +161,7 @@ class Complex(Simple):
 
         # Then gets defined the amount of entries an user can pick
 
-        foo.max_values = min(
-            self.max_values - len(self.choices), self.entries_per_page
-        )
+        foo.max_values = min(self.max_values - len(self.choices), self.entries_per_page)
 
         # Now we get the indexes that each page should start with
 
@@ -167,9 +206,7 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
-                page_text = (
-                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
-                )
+                page_text = f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
                 pages.add_option(
                     label=page_text[:100],
                     value=f"{index}"[:100],
@@ -215,7 +252,8 @@ class Complex(Simple):
         page: int
             Page to be accessed.
         """
-        if len(self._choices) != self._max_values:
+        amount = len(self._choices or set())
+        if amount < self._max_values:
             return await super(Complex, self).edit(page=page)
         await self.delete()
 
@@ -239,6 +277,8 @@ class Complex(Simple):
         avatar_url: str = None,
         ephemeral: bool = False,
         thread: Snowflake = None,
+        single: bool = False,
+        **kwargs,
     ):
         """Sends the paginator towards the defined destination
 
@@ -277,12 +317,16 @@ class Complex(Simple):
             if message is ephemeral, defaults to False
         thread: Snowflake, optional
             if message is sent to a thread, defaults to None
+        single: bool, Optional
+            If returning an object or a set of objects
         """
         try:
+            embed = embed or self.embed
+            self.embed = embed_modifier(embed, **kwargs)
             await super(Complex, self).send(
                 content=content,
                 tts=tts,
-                embed=embed,
+                embed=self.embed,
                 embeds=embeds,
                 file=file,
                 files=files,
@@ -298,15 +342,13 @@ class Complex(Simple):
                 thread=thread,
             )
             await self.wait()
-            yield self.choices
+            yield self.choice if single else self.choices
         finally:
             await self.delete()
 
     # noinspection PyTypeChecker
     @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(
-        self, sct: Select, interaction: Interaction
-    ) -> None:
+    async def select_choice(self, sct: Select, interaction: Interaction) -> None:
         """Method used to select values from the pagination
 
         Parameters
@@ -319,6 +361,8 @@ class Complex(Simple):
         response: InteractionResponse = interaction.response
         await self.custom_choice(sct, interaction)
         answer: list[str] = interaction.data.get("values", [])
+        if self._choices is None:
+            self._choices = set()
         if not response.is_done():
             entries = []
             for index in answer:  # type: str
@@ -359,9 +403,7 @@ class Complex(Simple):
             if items[0].isdigit():
                 return await self.edit(page=int(items[0]))
 
-    async def custom_choice(
-        self, sct: Select, interaction: Interaction
-    ) -> None:
+    async def custom_choice(self, sct: Select, interaction: Interaction) -> None:
         """
         Method used to reach next first of the pagination
 
@@ -373,9 +415,7 @@ class Complex(Simple):
             Current interaction of the user
         """
 
-    async def custom_navigate(
-        self, sct: Select, interaction: Interaction
-    ) -> None:
+    async def custom_navigate(self, sct: Select, interaction: Interaction) -> None:
         """
         Method used to reach next first of the pagination
 
@@ -388,7 +428,7 @@ class Complex(Simple):
         """
 
 
-class ComplexInput(Complex):
+class ComplexInput(Generic[_T], Complex):
     """This class allows written input."""
 
     def __init__(
@@ -401,6 +441,9 @@ class ComplexInput(Complex):
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         max_values: int = 1,
+        entries_per_page: int = 25,
+        parser: Callable[[_T], tuple[str, str]] = None,
+        emoji_parser: Union[str, Callable[[_T], Union[str, PartialEmoji, Emoji]]] = None,
     ):
         super().__init__(
             bot=bot,
@@ -410,6 +453,9 @@ class ComplexInput(Complex):
             values=values,
             embed=embed,
             max_values=max_values,
+            entries_per_page=entries_per_page,
+            parser=parser,
+            emoji_parser=emoji_parser,
         )
 
     def menu_format(self) -> None:
@@ -430,9 +476,7 @@ class ComplexInput(Complex):
             return
         btn.disabled = True
         await ctx.message.edit(view=self)
-        await response.send_message(
-            content="Write down the choice in that case.", ephemeral=True
-        )
+        await response.send_message(content="Write down the choice in that case.", ephemeral=True)
         message: Message = await self.bot.wait_for(
             event="message",
             check=text_check(ctx),
@@ -444,12 +488,14 @@ class ComplexInput(Complex):
 
         current = set()
         for elem in message.content.split(","):
-            if len(self._choices) < self.max_values - len(current):
+            if len(self._choices or set()) < self.max_values - len(current):
                 if entries := get_close_matches(
                     word=elem.strip(),
                     possibilities=aux,
                     n=1,
                 ):
+                    if self._choices is None:
+                        self._choices = set()
                     item = aux[entries[0]]
                     current.add(item)
 
@@ -467,9 +513,7 @@ class ComplexInput(Complex):
 
         return await self.edit(page=self._pos)
 
-    async def custom_message_handler(
-        self, btn: Button, interaction: Interaction
-    ):
+    async def custom_message_handler(self, btn: Button, interaction: Interaction):
         """
         Method used to reach next first of the pagination
 

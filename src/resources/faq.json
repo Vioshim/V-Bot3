@@ -1,0 +1,746 @@
+{
+    "Server F.A.Q.": [
+        {
+            "label": "Rules - SFW",
+            "title": "Is this Server SFW?",
+            "content": "This server is strictly SFW, meaning- no NSFW content of any kind allowed.\n\nThis also applies for any kind of sexual harassment, even if jokingly."
+        },
+        {
+            "label": "Rules - Bullying & Toxicity",
+            "title": "Bullying & Toxicity",
+            "content": "For any reason, do not insult or harass anyone on the server. Even excessive joking may be interpreted as an act of aggression, resulting in a warning.\n\nToxicity, of any type, is strictly prohibited, regardless of who you are.",
+            "fields": [
+                {
+                    "name": "Note",
+                    "value": "Keep in mind that we won't tolerate the usage of ooc as a way to discourage others, Don't intentionally say something that could be taken as rude or hurtful to make others to forcefully like or dislike certain topic.",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Rules - Personal Information",
+            "title": "Personal Information",
+            "content": "Keep in mind that Discord is an online media. It is strongly discouraged to share personal information. If you're going to do it, do it in DMs rather than openly where everybody can see it."
+        },
+        {
+            "label": "Rules - Advertising",
+            "title": "Advertising",
+            "content": "If you wish to advertise your server, try requesting a partnership on our server.\n\nI know that people really do love to share with others about their media, and diverse contents.\n\nHowever, It's important to understand that such things aren't well received outside of their proper channels.\n\nSo in order to prevent Ads spam, we will moderate users who keep promoting outside of the designed channels.",
+            "fields": [
+                {
+                    "name": "Art",
+                    "value": "<#719646362471497879>",
+                    "inline": true
+                },
+                {
+                    "name": "Non-Art",
+                    "value": "<#724490531215900712>",
+                    "inline": true
+                },
+                {
+                    "name": "Games",
+                    "value": "<#726454949336055818>",
+                    "inline": true
+                }
+            ]
+        },
+        {
+            "label": "Rules - Special Needs",
+            "title": "Special Needs",
+            "content": "We are a welcoming community, therefore it means we'll treat everyone equally and won't give preferences towards individuals. As such, we are aware that many users in our community have special needs, however, this won't excuse them for getting moderated accordingly\n\nIf you have special needs, then do your best to behave within the server and if ever feel mentally blocked or upset, try to keep out of discord until such mood changes."
+        },
+        {
+            "label": "Rules - Warning System",
+            "title": "Warning System",
+            "content": "This server has a warning system.\n\nThree warnings for breaking any of the rules above, and you're out.",
+            "fields": [
+                {
+                    "name": "First Warn",
+                    "value": "<@&732328576615055393>",
+                    "inline": true
+                },
+                {
+                    "name": "Second Warn",
+                    "value": "<@&732412511118164048>",
+                    "inline": true
+                },
+                {
+                    "name": "Last Warn",
+                    "value": "<@&732412547520659528>",
+                    "inline": true
+                }
+            ]
+        },
+        {
+            "label": "Enable Notifications",
+            "title": "I'd like to get notifications when my rps are replied",
+            "content": "Well, the easy solution for this is enabling notifications to all messages to the channel you're currently rping in.\n\nThis can be done by going to the channel's settings and set notifications to all messages, it works in mobile and desktop version.",
+            "image": "https://media.discordapp.net/attachments/913420545792561182/913427768073662474/image.png"
+        },
+        {
+            "label": "Report to TOS",
+            "title": "How to Report an user for breaking Discord TOS?",
+            "content": "Press the URL below, it will lead you to Discord's Support for Reports.",
+            "thumbnail": "https://media.discordapp.net/attachments/913420545792561182/913421375191015454/thumbnail.png",
+            "buttons": [
+                {
+                    "label": "Report Website",
+                    "url": "https://support.discord.com/hc/en-us/requests/new?ticket_form_id=360000029731"
+                }
+            ]
+        },
+        {
+            "label": "Partnership",
+            "title": "How to Partner?",
+            "content": "If your server is sfw, then post our ad in your server, and get in contact with the staff so they can add your server at one of your channels.",
+            "thumbnail": "https://media.discordapp.net/attachments/913420609994756106/913421178729820170/thumbnail.png",
+            "buttons": [
+                {
+                    "label": "Our Ad",
+                    "url": "https://discord.com/channels/719343092963999804/729809801088991374/912753213105655848"
+                },
+                {
+                    "label": "Pokemon Partners",
+                    "url": "https://discord.com/channels/719343092963999804/855197800907407360/"
+                },
+                {
+                    "label": "Other Partners",
+                    "url": "https://discord.com/channels/719343092963999804/855199463978041355/"
+                }
+            ]
+        },
+        {
+            "label": "Tupperbox/Proxy Usage",
+            "title": "Are Tupper/Proxies mandatory?",
+            "content": "Well if you only have 1 character then it's not mandatory, because the bot instantly helps with that regard.\n\nBut if you have multiple characters then at that point is mandatory, because it allows to distinguish the difference between the character and the user, pointing out how they aren't the same. If you want to use V-bot's Proxy, then check oc-proxy and follow the steps.",
+            "buttons": [
+                {
+                    "label": "Go to OC Proxy",
+                    "url": "https://discord.com/channels/719343092963999804/865357802876698654/865974005256683570"
+                }
+            ]
+        },
+        {
+            "label": "Important Roles",
+            "title": "Can I have an Important Role?",
+            "content": "Well hello user, I'm quite glad that you want to have an important role here, that means a lot since important roles here aren't used for display, they are done by actions, we really have the belief of actions being better than words.\n\nEvery user here is important, and the small things that people do are enough to contribute and be as great as any mod or admin in any server. Here we truly won't be asking for mods that often, instead we love our community and encourage them to try do their best without having to wear a mod role on them.\n\nIf you want to help, help.\nIf you want to be helped, ask for help.\nIf you want to have a particular thing added in our lore, let's talk it together and determine wether it works or not.\nIf you have issues with an user, try to first solve the issues with that user privately and if things are out of your reach, then go with the mod team.\nIf you are burnt out, then take a break.\nIf you feel sad, well don't be sad, ez.\n\nIn many ways our community is different, and we love how different we are."
+        },
+        {
+            "label": "Literacy Level",
+            "title": "What is the Server's Literacy level?",
+            "content": "Semi Literate to Literate, which means that people are allowed to do one liners to even multiple paragraphs as long as they actually include actions or things for the characters to do."
+        },
+        {
+            "label": "Art Policy",
+            "title": "Server's policies towards Art?",
+            "content": "First of all, don't claim what is not yours, when you're submitting a character you can't say that you drew a character when in reality that art was drawn by another individual (lying in this aspect can lead to warnings)\n\nBut other than that, we don't mind much in this aspect, as we are a RP server in which art is mostly a help for visuals but not the basis of the interactions themselves, so by this reasoning here we go by fair usage to transformative art according to DMCA rules. (In few words, you are free to make your characters use art from the internet without worrying as long as you don't make false claims about it)."
+        },
+        {
+            "label": "CMD: Display Characters",
+            "title": "How can I show my OCs?",
+            "content": "Well, by default people can simply look at <#919277769735680050>\n\nHowever, there's also the slash command `/ocs` which allows to display the user's or someone's characters.",
+            "image": "https://cdn.discordapp.com/attachments/748384705098940426/917163657467686962/unknown.png",
+            "buttons": [
+                {
+                    "label": "Go to Roleplayers",
+                    "url": "https://discord.com/channels/719343092963999804/919277769735680050/"
+                }
+            ]
+        },
+        {
+            "label": "CMD: RP Pinging",
+            "title": "How can I look for RP?",
+            "content": "Just use the slash command /ping in order to request a Rp based on the desired category.",
+            "image": "https://media.discordapp.net/attachments/748384705098940426/913481537658441759/unknown.png",
+            "buttons": [
+                {
+                    "label": "Check existing Pings",
+                    "url": "https://discord.com/channels/719343092963999804/722617383738540092/"
+                }
+            ]
+        },
+        {
+            "label": "CMD: Rolling",
+            "title": "How can I roll dice?",
+            "content": "Despite rolling not being enforced, you can roll by using the slash command `/roll`",
+            "image": "https://cdn.discordapp.com/attachments/748384705098940426/917164718899216414/unknown.png"
+        },
+        {
+            "label": "CMD: NPC Narration",
+            "title": "How to narrate NPCs for a RP?",
+            "content": "It shows a NPC with the provided species",
+            "image": "https://media.discordapp.net/attachments/748384705098940426/916788749134884916/unknown.png",
+            "fields": [
+                {
+                    "name": "Usage",
+                    "value": "?npc <Species> <Message>"
+                },
+                {
+                    "name": "Examples",
+                    "value": "`?npc Fennekin Hello there`\n`?npc \"Ninetales Alola\" Hello Fennekin`"
+                }
+            ],
+            "buttons": []
+        },
+        {
+            "label": "Boosting & Support",
+            "title": "What perks do I obtain for boosting?",
+            "content": "Believe it or not, people here boost the server because they are aware it helps its stability.\n\nYep, there's no Pay to Win mechanism here or anything of that regard, but yet cool people decide to boost the server.\n\nThat's the reason that we give a custom role to them, because they decided to help without any interest.",
+            "thumbnail": "https://media.discordapp.net/attachments/913420609994756106/913428255233687582/thumbnail.png",
+            "fields": [
+                {
+                    "name": "Note",
+                    "value": "Starting today, now nitro users can make their own channel, that channel can be used for any purpose that the user would like to\n\n• Posting their own content\n• Making an out of canon RP ( or even \"What If\" worlds within them)\n• Making a Questions and Answers channel about their ocs.\n• Making a channel in which you can hold debates\n\nThese are just suggestion, but anything similar can be done in those channels, as long as they abide by our server rules and discord TOS.",
+                    "inline": false
+                }
+            ],
+            "buttons": [
+                {
+                    "label": "Ko-Fi Support",
+                    "emoji": ":kofi:881922542053519360",
+                    "url": "https://ko-fi.com/vioshim"
+                }
+            ]
+        }
+    ],
+    "RP F.A.Q.": [
+        {
+            "label": "Lore",
+            "title": "World building, Lore and such",
+            "content": "This server's lore is more about people's arcs, they are the ones that shape the story by keeping in mind the server's world building and the rest of guidelines.",
+            "buttons": [
+                {
+                    "label": "World-Building (Context)",
+                    "url": "https://docs.google.com/document/d/1XGRfTJG0o2nX24QCBa5qllkXQm7ykl-QeQb232bVLzI/edit?usp=sharing"
+                },
+                {
+                    "label": "Check Current Story Lines",
+                    "url": "https://discord.com/channels/719343092963999804/903627523911458816/"
+                }
+            ]
+        },
+        {
+            "label": "Game Approach",
+            "title": "You do [...] But games do [...]",
+            "content": "We are not nintendo, and things may happen different in contrast how they do in games.",
+            "thumbnail": "https://media.discordapp.net/attachments/913420668043943946/913421103723073536/thumbnail.png"
+        },
+        {
+            "label": "Picking Fights",
+            "title": "Do I need to worry about People when my character is fighting?",
+            "content": "No, the moment a battle starts it is stated all the people that are involved in it, or that have enough time to react to the battle.\n\nPeople that aren't in the battle can't just pop in and start fighting, they need to first approach, which may take at least 5 turn cycles to be able to participate and secondly, they can't assume who is good or bad without knowing them.\n\nSo if a bad guy is attacking a guild member, and other guild members show up, they can't use moves to assist the guild guy until certain time has happened as they approach. This approach has been designed to avoid people ganging up on others by suddenly showing up out of nowhere in RP, and then stop role-playing after such conflict.\n\nAt the end of any conflict, there must always be a conclusion about what happened and how it affected each participant whether be it for good, bad or neutral reasons.",
+            "fields": [
+                {
+                    "name": "Note",
+                    "value": "These rules can be partial or totally overriden if all the users participating in the battle currently agree on it."
+                }
+            ]
+        },
+        {
+            "label": "Important Roles in RP",
+            "title": "Can my character have an important role?",
+            "content": "Sure go ahead, usually people when they want to have an important role they work for them in RP. Try to do your best with your character to give an impact in the RP so that people can really get to notice the character for such trait.\n\nFor example, If you want your character to be a recognized doctor, you can assume If they are known or not, If so, try to bring up why would people recognize them, maybe not all the people but people in the hospital, eventually as the plot develops they can get to involve with solving problems or even the fabrication of certain items.\n\nIn a similar way to how fallout games work, each person has proficiencies, so when a member of staff narrates in missions, they will mostly point out what the character can react to, there's no need to state things that the character can't do or use\n\nAs another example of this, if the character is a mechanic who is doing a guild mission, if they find a reaverbot or any of the old ruins, narrators will point out what they can do with them. But if another character such as a mercenary, checks the reaverbots, they will be informed not of their usage, but about their price in the market.",
+            "fields": [
+                {
+                    "name": "Note",
+                    "value": "You can always inform a mod so that we can add you at Storylines"
+                }
+            ],
+            "buttons": [
+                {
+                    "label": "Go to Storylines",
+                    "url": "https://discord.com/channels/719343092963999804/903627523911458816/"
+                }
+            ]
+        },
+        {
+            "label": "Character no longer in RP",
+            "title": "What do I do if a character hasn't replied anymore, how can I continue now?",
+            "content": "Easy, this simply can be railroaded or assumed. Here what we'll do is mostly the Chuck Cunningham syndrome,\n\nThe character simply will be temporarily forgotten, they won't think about that character until that character is around, It'd be similar to how the void in Gumball show (cartoon network animation) works, but without it intervening the RP directly.\n\nWith that being said, if someone is a police officer and stops rping or leaves the server, the characters will remember such experiences and will simply assume it was a random police officer but not necessarily that character.\n\nA plot device will occur in such cases that justifies that character leaving or simply, just forgetting them, in order to allow the stories to continue without issues.",
+            "buttons": [
+                {
+                    "label": "Click here to read more",
+                    "url": "https://tropedia.fandom.com/wiki/Chuck_Cunningham_Syndrome"
+                }
+            ]
+        },
+        {
+            "label": "How to RP - Type Chart",
+            "title": "Type Chart in RP",
+            "content": "Type strengths and weaknesses are something they keep in mind, but it's not something that they necessarily know unless they have practically studied all single type combination. \n\nIt makes sense for a battle expertise or a researcher to be quite familiarized with them, but a random character that hasn't had such involvement, surely doesn't know all type chart.",
+            "image": "https://media.discordapp.net/attachments/748384705098940426/917244554229448724/unknown.png"
+        },
+        {
+            "label": "Calculations in RP",
+            "title": "How to RP - Calculations",
+            "content": "There's no such concept as stats, levels, IVs and stages, within the Pokemon world they only know that they can get buffed or hindered, they know that some people are stronger than others, but there's no exact measure, the only way to know in a vague way about such things is by actually being an anatomist that has studied a lot, or a really experienced medic, although levels aren't a thing here."
+        },
+        {
+            "label": "Move Usage in RP",
+            "title": "How to RP - Move Usage",
+            "content": "Pokemon most of the time are unable to tell what exact move is being used against them, and even then usually they don't know the name of the moves they are using, the only way for them to know about moves is either by using the TM's listed name, obtaining them directly and such, but other than that most normal people tend to describe their powers as they don't even know they have a name classification."
+        },
+        {
+            "label": "Pokedex Entries in RP",
+            "title": "Pokedex says [...] Can I use that?",
+            "content": "Most of the pokedex entries make allusion towards moves that they can use, for example Delphoxes' pokedex entry refers to the way they cast mystical fire. However It's important to keep in mind that in canon, most of the species' pokedex entries were written by 10 year old trainers.\n\nSome pokedex entries are exaggerated while some are exact, with that being said, Gardevoir isn't able to make black holes but it can use shadow ball and Magcargo isn't hotter than the surface of the sun as it simply is as hot as lava.\n\nWith that being said, many are exaggerated and if you have questions towards which is valid and what not, feel free to bring it up at <#732440209891000381>"
+        },
+        {
+            "label": "Moves and how they work",
+            "title": "How Moves work?",
+            "content": "Pokemon being smarter than how they used to be, have made them try to do things in unique ways, which means that moves won't necessarily behave as how they are meant to do in media, this is mostly explained by understanding the context and logic behind a move. Using moves outside of their allowed parameters may lead to them not working as expected, but they can still be used.\n\nFor example, Toxic is a move that only targets 1 pokemon, but if you use Toxic for more than 1 pokemon within a turn, then Toxic instead becomes something non lethal, which instead of poisoning it becomes a bad smell or something like it (The more targets the weaker the effect).\n\nThis information can be useful for outside of battle actions, such as trying to make a bad smell in a room, use a healing move in a room to make people feel better, there's many circumstances in which moves can affect outside of battle, but it's important to keep them balanced.\n\nBasically, most moves can be used for non battle purposes even in comical ways, which means that all moves can always be used without meaning to harm regardless of their values, so they can measure up if they are gonna give their 100% or not.\n\nThis applies to all moves, if a move that hits multiple targets is used against 1 single target, then that means that the move is more likely to perform well but can lead to collateral damage."
+        },
+        {
+            "label": "Spoon-feeding RP",
+            "title": "What is Spoon feeding in RP? Is it bad?",
+            "content": "Spoon feeding is a bad RP practice which consists on handling information to an user (whether is narration/interaction) and the user that receives such information doesn't do an effort on actually try to do things on their own initiative.",
+            "fields": [
+                {
+                    "name": "How to prevent it? ( as Target )",
+                    "value": "To prevent it as user, you simply have to try to communicate with the RPers if you see that your current interaction is going nowhere.\nUse the ooc channels for discussing what they wanna achieve from the current rp and know if they have plans.\n\nThis way you can tell if a RP is worth continuing or not.",
+                    "inline": false
+                },
+                {
+                    "name": "How to prevent it? ( as User )",
+                    "value": "Try to take initiative, use the world building in order to assume the environment around the characters and use it to give stuff to do to the role players.\n\nInstead of following all the time, try to make your character have specific things to do in order to have a specific goal.",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Parasite RP",
+            "title": "What is Parasite RP? Is it bad?",
+            "content": "It's a bad RP practice as well which consists on pretty much not doing anything in a RP.\n\nThis kind of characters tend to not react to their environment and narrative, which leads to discouraging\n\nAn example of this is that after a long narrative the character only replies:\n\n`Hi ^^`\n\nRole-play isn't a SMS or random chatting, if you're having a character in this RP it's because you're willing to RP and narrate for them.\n\nTherefore, what should happen instead is something like:\n\n*She didn't mind the music that was being played in the background and then looks at the musician.* \n\"Hi!\" *She just said.*",
+            "fields": [
+                {
+                    "name": "You're saying that one lining is Parasite RP?",
+                    "value": "No, we don't mind one liners, but just because it's one line it doesn't mean it has to be done in such a poor way, try to use actual sentences, with narrated actions.",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Evolution in RP",
+            "title": "How Evolution works in RP",
+            "content": "In our role-play server, being evolved by experience doesn't work like games, here it's not a battle reward, instead it's something that happens when a pokemon's body is ready to face such a change.\n\nSome people have it easy to evolve as they get older, while there's also some people whose bodies don't feel ready for evolving due to different reasons which causes them to keep in their pre-evolutions\n\nEvolving it's something that matters and happens uniquely to each individual, while there's people that evolve when something very important happens in their lives, there's also people that simply evolved by training a lot trying to push their limits."
+        },
+        {
+            "label": "RP Locks",
+            "title": "What do I do if I'm being RP Locked?",
+            "content": "Today’s guideline is about, \"Role-play locks.\" I’m sure you’ve heard the term around, even if you aren’t 100% familiar with what it means. Role-play locks / locking. It refers to when your character cannot be used due waiting on another person’s reply.\n\nHowever, after seeing how it affects our community, we've decided to make this rule.\n\nYou are no longer bound to someone’s reply, but, you must wait at least a day before just moving on, and you need to role-play your way out of it.",
+            "fields": [
+                {
+                    "name": "Example",
+                    "value": "*Lyra had waited a while in the silent company of her friends, and now, she had other things to do. With an apologetic smile, she disappeared.*",
+                    "inline": true
+                }
+            ]
+        },
+        {
+            "label": "RP Sniping",
+            "title": "RP Sniping - Late joiners",
+            "content": "In order to avoid consistency issues with RPs, we are making this guideline about how to handle late joiners in a RP to avoid this\n\n**Person:** *Drops an OC in a channel 8 days ago.*\n**Users:** *RPs something in the channel*\n**Person:** *\"I guess my OC was there, now I can use all that info without even RPing about him being there.\"*\n\nTo avoid this from being exploited and get easily confused with meta-gaming, we have decided to make a change towards this.\n\nIn order to have knowledge about something that happens in the RP, the OC needs to be in the Room first, and when it is happening the OC needs to state that they are listening to such event that is happening in the background, or else it would count as if the OC didn't hear the conversation due to different factors or simply was there.\n\nThis is done in order to avoid users keeping OCs in key locations just to use knowledge from RPs they haven't been involved.\n\nHowever, OCs can get to be informed of the events from other OCs if those characters were present in the current interaction."
+        },
+        {
+            "label": "Aura in RP",
+            "title": "'Aura is with me'",
+            "content": "Okay, here's the thing people... Aura doesn't make you Jedi\nAura doesn't pull stuff out of nothing, It doesn't make you a psychic type and doesn't make you capable of telepathy\n\nThe lucario from the movie was stated to be special but that's not something all of its kind can do. So",
+            "fields": [
+                {
+                    "name": "What is Aura for?",
+                    "value": "Aura is meant to be a way to tell someone's emotion, it basically allows to read what is a character's emotion without them visibly showing it, and yet that would require them to focus for a while to do such action, but overall Aura isn't related to more than that.",
+                    "inline": false
+                },
+                {
+                    "name": "Can I pull an aura Sword, or an aura shield? I mean, I use the aura to do a katana or hide and teleport from behind [...]",
+                    "value": "No",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Quality over Quantity",
+            "title": "Server's literacy Clarifications.",
+            "content": "Something important to keep in mind when role-playing, is that in contrast to most servers, this server is based on a Sandbox RP Style.\n\nAnd as such, actions are happening in real time, in which the RP sessions don't have start dates or end dates, they simply happen across time, as long as the Roleplayers are available to interact with others.\n\nThe time that RPers can provide is quite valuable, by that reason, something we would like to recommend is to avoid extensive paragraphs.\n\nBy avoiding these, people can get to do more actions in less time, having a good amount of actions can get to be better than writing a good amount of text.\n\nAnd something that it's important to keep in mind as well is that a high amount of our community aren't native english speakers.\n\nHaving walls of text can lead to RP Locks, discouraging from RP or even making users struggle to keep up with such writing style, hence why we recommend to try to optimize what you write when doing Roleplay interactions, try to balance out the ratio between quality and quantity.",
+            "image": "https://media.discordapp.net/attachments/913420668043943946/913428880549875732/image.png",
+            "fields": [
+                {
+                    "name": "Actions Matter",
+                    "value": "Taking into account that this is a Roleplay server\n\nSomething that really does matter for us is, what can people do with the interactions they are currently having.\n\nAs such, it's really important to provide things for characters to do and yet things for users to react with.",
+                    "inline": true
+                }
+            ]
+        },
+        {
+            "label": "Dynamax in RP",
+            "title": "How Dynamax works in RP?",
+            "content": "Well, after some discussion and feedback from the community, we have decided to change the way that this works.\n\nHere this works similar to the way that Pym particles work in the Marvel universe, which means that it can be used to affect the size of matter, in such a way that it can be used by scientific characters in order to enlarge things or simply shrink them by using the inverted energy that such particles use, this can be used for plots but try to keep fair with this.",
+            "fields": [
+                {
+                    "name": "If a character gets dynamaxed?",
+                    "value": "• Here they can't use G-max or max moves just normal pokemon moves\n• They can't use moves as fast as normal pokemons, which makes their moves more likely to be dodged or avoided as they aren't that fast.\n• During dynamax, pokemons are a bit more resistant than their usual species, but this doesn't mean they will be an \"always win\" character.\n• Dynamax is forbidden in the town, so if a pokemon becomes that, they'd only be able to use it outside of it or in dungeons.",
+                    "inline": true
+                }
+            ]
+        },
+        {
+            "label": "Items in RP",
+            "title": "How items work in RP?",
+            "content": "Even with how advanced this RP server is, we don't have an inventory system to keep track of people's items.\nAfter all, items are something that can always be assumed or implied based on people's preferences.\n\nHowever, it's important to keep in mind that items have several rules as well.\n\nSeeds, orbs and other PMD/main games related items aren't obtainable or usable outside of the dungeons unless a moderator states it within a mission or dungeon exploration as they narrate them.\n\nAt the same time, for battle purposes, it's good to state which items will be used during the battle before it starts, to avoid inconveniences of pulling items out of nowhere to get advantage in the interactions.",
+            "fields": [
+                {
+                    "name": "Good thing to do",
+                    "value": "• Use Items to help the RP interactions out of battle\n• Use wealth as a way to indicate the character's economic position [can lead to plots]",
+                    "inline": false
+                },
+                {
+                    "name": "Bad thing to do",
+                    "value": "• Use items trying to get advantage by metagaming\n• Trying to heal in battle by pulling infinite berries\n• Pulling tons of money when buying something without the OC being rich or without doing missions to get money.",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Food in RP",
+            "title": "How Food works in RP?",
+            "content": "Taking into account that this world differs from the Mystery Dungeon franchise, as events here happened after the main games\n\nIt's important to keep in mind that nature items are good for hunger but not really good for healing.\n\nWith this being said, berries don't behave like how they do in games, berries are berries like the ones that exist in real life.\n\n• So, it's true that an Oran berry can heal, don't expect it to make you resist more hits in battle.\n• This also applies for all kind of berries, even the so famous Sitrus berries only heals the user's HP a little.\n• Berries that affect type resistances are helpful but just a little, don't expect them to work as a type change, it just makes you more likely to resist a type for RP purposes.\n• Berries that remove effects such as lum berries, they help but in a slow manner, don't expect them to work instantly but if it was held in battle, they help during those circumstances but not necessarily as how it happens in games.\n• Berries that affect EVs, don't do anything special but they are still food that can help hunger.\n• Barries that raise a stat upon certain condition, don't do anything special but they are still food that can help hunger.\n• In contrast to games, actual fruit and vegetables exist but these can be found the markets, dungeons, wilderness.\n• Some special and new added berries can also be found in the wilderness and dungeons.\n\nWith that being said, it's good for character development to make your characters eat from time to time, so it's noticeable what the character's life is, regardless of their traits.\n\nLegendaries, Mythicals and Ultra Beasts never starve however as every pokemon, they can't cast moves if they don't have enough energies which can be obtained by eating food.",
+            "image": "https://media.discordapp.net/attachments/913420668043943946/913429215418908682/image.png"
+        },
+        {
+            "label": "*Follows*",
+            "title": "Endlessly follower OCs",
+            "content": "Follows what?! Look piece of .. user- here's the thing\n\nIf your character is going to be in a role-play, is because it will actually do something. Having characters that only stick around other characters without saying anything, is called stalking, and that is something that it's not only boring but also can lead to characters not really liking those behaviour.\n\nAs you may know, like in real life, following an individual constantly without doing anything is something that no one would take lightly, and characters aren't the exception.\n\nIf your character is going to follow, then add dialogue or actions that show that your character is more than just a walking corpse, If you don't have anything to add then just don't add it until your character actually has something to say, that way RP interactions are more meaningful."
+        },
+        {
+            "label": "Scent in RP",
+            "title": "Apparently Scent = No Surprises?",
+            "content": "I know it is quite common for pokemon lately to use their scent as a way to detect others, but this isn't accurate.\n\nScent only works if a pokemon is actively checking its surroundings while trying to do so, and even then it isn't 100% Accurate\n\nAt the same time, this doesn't mean that the pokemon is unable to get surprises, there are many factors that can affect tracking by scent, such as having multiple scents in an area.\n\nThis Ability to track by scent that is present in animals, isn't necessarily how it works in pokemon, therefore in order to detect in such a way, it is because they have a move that allows them to do so and it has to be used otherwise, it can be implied that the pokemon won't necessarily detect right away, and even then moves only work upon close proximity.\n\nThere are literally many factors that can affect scent from working, such as the wind, strong scents or anything really."
+        }
+    ],
+    "OC Creation F.A.Q.": [
+        {
+            "label": "Human Related OCs",
+            "title": "Can I use an oc that was human but-...",
+            "content": "No, here all community characters aren't involved with humans, try to keep in mind the lore of each region, but so far they have nothing to do with them."
+        },
+        {
+            "label": "Ferals in RP",
+            "title": "Can I use a Feral of some sort?",
+            "content": "No, due to this server being focused in the interaction aspect, so that makes ferals be quite of an obstacle for that to happen, hence why we decided to not allow them."
+        },
+        {
+            "label": "Character Limit",
+            "title": "Is there a max amount of OCs?",
+            "content": "Nope, there's a thread that opens up which stores all of your ocs."
+        },
+        {
+            "label": "Aging in RP",
+            "title": "How aging works in RP?",
+            "content": "Despite how the franchise portrays age to differ towards species, like animals do in real life, we have decided to use human like-aging as reference, in order to allow us to easily understand the possible capacities of the characters and being able to measure their skills and maturity easily.",
+            "image": "https://cdn.discordapp.com/attachments/748384705098940426/917279338427211836/at3axn5160471.png",
+            "fields": [
+                {
+                    "name": "Note",
+                    "value": "Evolution does not have to do with aging."
+                }
+            ]
+        },
+        {
+            "label": "Minimum age",
+            "title": "Can I make a very young OC?",
+            "content": "No, ocs here have at least 13 years old, after all too young ocs don't really contribute to the Story due to how our RP server works\n\nWith that being said, we'll not allow characters that have less than 13 years old get approved from now on."
+        },
+        {
+            "label": "Backstories?",
+            "title": "How to make a backstory?",
+            "content": "This guideline is more about a recommendation in order to enjoy the server's RP as much as possible, by trying to keep in mind several questions that may help the roleplayer to get more engaged with the narrative by keeping in mind the following.",
+            "image": "https://media.discordapp.net/attachments/913420821387685888/913428699913809960/image.png"
+        },
+        {
+            "label": "Height & Weight",
+            "title": "Can my OC have different height and weight?",
+            "content": "This topic for some reason, has been quite common here, people making characters that have a different height, so in order to give the wrong message in this server, we have decided to try regulate this issue.\n\nBy default all Pokemon are normal sized, unless otherwise is being stated in the bio's extra information. This is done in order to avoid inconsistencies in the interactions between characters\n\nWith that being said, a normal Pokemon without special abilities that affect this, their height is in the range of 60 % to 140 % of their height, and in weight, they can be 30 % to 170 %\n\nThese aspects can be used to portray why a character is they they are, for example, usually when a character had an edgy backstory or shows abandonment, then they will have less weight and height since they didn't get to develop accordingly.\n\nThe following image states how these sizes are referred as in RP, (Note, the ratio isn't really restrictive but try to keep it in mind when you make characters)",
+            "image": "https://media.discordapp.net/attachments/748384705098940426/917287422956556328/unknown.png"
+        },
+        {
+            "label": "Anthro & Different Body Shapes",
+            "title": "Can I make an anthro oc that normally isn't ?",
+            "content": "No, Anthro versions of pokemon that aren't anthro, aren't allowed here, the species are designed in a specific way, if you don't like the species, then just find another pokemon or simply don't rp here.\n\nThese kind of characters won't be accepted even if they are presented as fakemons."
+        },
+        {
+            "label": "OC Immigration",
+            "title": "My character comes from a previous RP / Another server....\nI wanna continue their story here and [...]",
+            "content": "It is a bad RP practice to transfer characters from server to server due to how it can lead to easily getting out of ideas and really stopping character involvement and development. After all, it has been quite noticeable that most characters that claim being from other servers tend to not really adapt to their new RP environment.\n\nThis is the reason why we don't really recommend to import characters here and instead try to make new ones, however even though we don't encourage it, it is still allowed as long as people keep in mind that those characters have to follow our server's rules/lore 100%. This means that making random excuses like\n\n\"My character is a demon but he hides it and no one knows...\"\n\"he'll never say it [...] \"\n\nIt's not valid, because in Parallel's lore there's no demons, so they simply aren't one, if there's a special thing try to discuss it with our team beforehand, otherwise it'd be assumed as a Charlatan talk.\n\nI'mma provide some other random examples of porting:",
+            "fields": [
+                {
+                    "name": "My OC is a famous warrior at IOTL (Server)",
+                    "value": "There's no way for IOTL characters to leave the island that is protected by mewtwo's barrier, so you're not only contradicting our lore but also theirs.\nWhich means that the one here is different than the one at the other server.",
+                    "inline": false
+                },
+                {
+                    "name": "My OC is from [city name] of my own story",
+                    "value": "This is a case by case basis, but so far in the Despa continent all the areas are defined, if you're adding a place that isn't there, then you gotta find a way to justify how the characters went overseas in order to reach this continent. The recommendation is to change backstory names to places that exist in our canon.",
+                    "inline": false
+                },
+                {
+                    "name": "My OC is [x] from a comic !",
+                    "value": "Then by definition is not an OC.\nOC stands for Original Character, and role-playing someone's character doesn't count as such which means it'd not get approved (Unless you own it).",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Custom Megas",
+            "title": "Can I make a Custom mega as Fakemon?",
+            "content": "Yes, you can do that, however keep in mind it'd still be accounted as a Permamega irp, and won't be able to have special abilities and only have 1 normal ability."
+        },
+        {
+            "label": "Custom Ultra Beast",
+            "title": "Can I make a Ultra Beast as Fakemon?",
+            "content": "Yes, It's allowed, however keep in mind it'd need to have a proficient stat (it can't have multiple high stats), and they can only have beast boost as ability, they can't have special abilities."
+        },
+        {
+            "label": "Templates - Empty Moveset",
+            "title": "What happens if no moves are provided?",
+            "content": "The bot will automatically assign a valid moveset for your oc randomly, which you can change later (good luck)"
+        },
+        {
+            "label": "Templates - Empty Abilities",
+            "title": "What happens if no abilities are provided?",
+            "content": "The bot will automatically pick the valid abilities for the species, (Which is useful for pokemon that only have 1 or 2 abilities.)"
+        },
+        {
+            "label": "Templates - Empty Age",
+            "title": "What happens if no age is provided?",
+            "content": "The bot will simply state that the age is Unknown"
+        },
+        {
+            "label": "Templates - Empty Pronoun",
+            "title": "What happens if no pronoun is provided?",
+            "content": "The bot will simply assume that the pronoun is Them"
+        },
+        {
+            "label": "Special Abilities",
+            "title": "What are Special Abilities?",
+            "content": "Special abilities are pretty much being born with the capability of having an unique power, which is something that usually their species can't do but they can do so. These abilities are affected by main games logic of moves, so they are affected by abilities and related gimmicks.\n\nKeep in mind that a special ability can't be swapped in most cases (depends on the user), however can be temporary disabled.\n\nAt the same time, carrying a special ability or a copy, carries its downsides as well, and the character that just obtained such ability would be inexperienced on it.",
+            "fields": [
+                {
+                    "name": "Reminder",
+                    "value": "Monsters do have two abilities, one that temporary disables special abilities, and other that makes the holder unable to attack with moves, but resistant to fusions and permanent megas.",
+                    "inline": false
+                },
+                {
+                    "name": "Note",
+                    "value": "Special abilities are fully affected by logic of pokemon moves, and other abilities.",
+                    "inline": false
+                }
+            ]
+        },
+        {
+            "label": "Battle Styles",
+            "title": "Techniques, and unique ways to battle.",
+            "content": "Keeping in mind that this server, doesn't rely on calculations and such, it is important to keep in mind that the way a move is represented or performed, doesn't mean that the move is affected or changed in any way.\n\nFor example, with that being said, just because a move is portrayed by an user as `\"Hyper Ultra dynamic kick\"` while performing `Blaze kick`, it doesn't make the blaze kick stronger or anything, it is still blaze kick, which based on the RP interactions can miss, be prevented or simply the usual RP handling in battle that people tend to portray.\n\nIt's important to know that we are not discouraging this but at the same time, it's important to keep in mind for role-players that his styles don't affect the experience in any way, other than making the character be more dramatic when doing stuff."
+        },
+        {
+            "label": "How to Register?",
+            "title": "How can I get my character registered?",
+            "content": "It's recommended to go to OC Submissions, and check the templates, there you'll see our copy paste templates and google document templates as well.",
+            "buttons": [
+                {
+                    "label": "Go to OC Submissions",
+                    "url": "https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552"
+                }
+            ]
+        }
+    ],
+    "NPC F.A.Q.": [
+        {
+            "label": "NPC",
+            "title": "What are NPCs?",
+            "content": "NPCs are pretty much characters that exist within the canon but they aren't protected by our rules towards fairness, and at the same time the NPCs are meant to help characters' development but not their own."
+        },
+        {
+            "label": "NPC Narration Command",
+            "title": "How to Narrate NPCs?",
+            "content": "That's easy, in order to avoid spam of Tuppers, we have decided to make a new command `?npc`\n\nThis command works by introducing species and the message to say\n\nFew examples:\n\n`?npc mienshao *The pokemon looks to her* \"Hello there\"`\n\n`?npc \"alolan ninetales\" \"No\"`\n\nHave fun npcing with this tool, we should facilitate the job of narrating and improvising.",
+            "image": "https://cdn.discordapp.com/attachments/748384705098940426/917297699064270928/unknown.png"
+        },
+        {
+            "label": "NPC Intervention",
+            "title": "Do I need to worry about NPCs messing with my plans?",
+            "content": "No, unless otherwise has been stated. Regular Non playable Characters are there to assist the narrative, to help a character realize something or pretty much to assist the provided narrative.\n\nWith that being said, it doesn't make sense for NPCs to behave as characters, of course a character can lose to them if this makes sense for it to happen, but otherwise, they are mostly tools to help people to understand the environment / context.\n\nCharacters here are supposed to be people that are distinguishable from society people in which they only have their common jobs and on going situations, but that's it.\n\nEveryone can make and narrate NPCs, but they aren't characters, so if they can't be used for combat purposes, and even then if a combat happens they can easily be defeated by any pokemon by assuming a plot armor happens against them. It'd not count as power play since they aren't characters."
+        },
+        {
+            "label": "Police Intervention",
+            "title": "Do I need to worry about the Police messing with my plans?",
+            "content": "Keep things realistic, of course if you steal in the town, you're probably gonna have at least some minutes (1-2 turn cycles) until a guard notices it and starts to rush.\n\nBut overall, if a crime happens in non guarded areas, it doesn't make sense for the police to suddenly show up. They need to first know about the location, the situation and then start going there, which it would be at least 5 turn cycles until the police can arrive in such case (can be longer based on the distances)\n\nAnother thing to keep in mind is that they will arrest all pokemon in the scene, after all they have no clue about who is the bad or the good guy, instead will determine what happened. (Note that when characters reach a crime scene, it is metagaming to instantly know who is the bad or good one, unless it is either obvious or they know the characters involved)"
+        },
+        {
+            "label": "NPCs becoming OCs",
+            "title": "I feel a bit attached towards an NPC, Can I make it as a character?",
+            "content": "Sure, in that case, let us know beforehand so that we can remove that NPC from the list, if you're willing to make a character for yourself out of that NPC.\n\nOf course, in that case It'll be required to make a backstory since, you're understanding the npc and now trying to make it a character.\n\nHowever, you'll have to keep in mind that their past actions are still canon, but we can work on something around it in any case. (Case by case basis)"
+        },
+        {
+            "label": "Defining S.P.E.C.I.A.L.",
+            "title": "How S.P.E.C.I.A.L. works for NPCs in RP?",
+            "content": "These are measures that I've decided to implement for the npcs in this channel, as a way to point out the NPC's traits based on Fallout's stats.\n\nDon't worry, the server isn't turning D&D, but we'll use this as a way to simplify the NPCs' personalities and traits.\n\nThe average punctuation is 5, so anything below it, means that the character lacks in that field, and having more than it means that the character is talented / has been granted with that aspect."
+        },
+        {
+            "label": "S - Strength",
+            "title": "S.P.E.C.I.A.L: Strength",
+            "content": "This is implemented as a way to show the character's physical capabilities, they aren't necessarily battle related, but are mostly oriented on the kind of things that they can do within the story line."
+        },
+        {
+            "label": "P - Perception",
+            "title": "S.P.E.C.I.A.L: Perception",
+            "content": "It's a measure to indicate how great a character is at detecting danger, this can be implemented in RP, by being less or more likely to detect traps, bad intentions or things that may put their lives in danger. This value also states how likely they are to get surprise attacked or not and such."
+        },
+        {
+            "label": "E - Endurance",
+            "title": "S.P.E.C.I.A.L: Endurance",
+            "content": "An indicator that pretty much describes if a character is weak or not, if it is able to take more than a hit, or if it needs to be protected.\n\nIt is assumed that characters that have high endurance tend to be bound to survive more often in their environment with what they have, characters that lack endurance may be more clingy and dependant in that aspect."
+        },
+        {
+            "label": "C - Charisma",
+            "title": "S.P.E.C.I.A.L: Charisma",
+            "content": "This is one of the most important values for RP, this indicates if how likely they are to express their ideas and find ways to be persuasive.\n\nWhen this stat is low, is usually characters that aren't talkative or simply are rude, which really causes interactions to be more about actions than words, when this stat is high, the characters will try to get their goals by using speech and try to possibly negotiate terms within a conflict, regardless if they are good or not."
+        },
+        {
+            "label": "I - Intelligence",
+            "title": "S.P.E.C.I.A.L: Intelligence",
+            "content": "Intelligence in this case doesn't have to do much with being smart or intuitive, instead it has to do with how much knowledge they have about the world, that they can use within character interactions. Intelligent characters are most likely researching and studying, while low intelligence characters are most likely living in the wilderness."
+        },
+        {
+            "label": "A - Agility",
+            "title": "S.P.E.C.I.A.L: Agility",
+            "content": "Agility can be used outside of battle for things such as running or evading an obstacle, however in a battle it can be implied about how creative they can get to be in battle as well.\n\nA character with not so much, would simply attack and keep static while waiting to get hit, but an agile character is quite likely to attack, and then try to reduce damage as much as possible by jumping back or something similar."
+        },
+        {
+            "label": "L - Luck",
+            "title": "S.P.E.C.I.A.L: Luck",
+            "content": "This has to do about plot armor, this isn't necessarily about critical hits or something. It's more about them having luck in life, by living properly, having the needs they want, or simply by having more of a chance of having comical situations that go in their favour.\n\nA quite lucky individual, is bound to accidentally help its allies by doing something that was unexpected yet worked.\n\nBut a very unlucky character is quite bound to get a bad outcome or simply get something that doesn't benefit."
+        }
+    ],
+    "Map Information": [
+        {
+            "label": "Ashouria",
+            "category": 909239415287738418,
+            "emoji": "FIRE",
+            "content": "Ashouria is a wealthy country with a main vacation spot, Osfield, which is a large city which holds a lot of things to do, it has a Battle Arena as well. It is usually very hot there, luckily it was built near the beach, so feel free to take a swim from time to time! If you guess that the mayor of this city is a fire type, you are right!"
+        },
+        {
+            "label": "Athar",
+            "category": 909243882133389342,
+            "emoji": "FIREWORK SPARKLER",
+            "content": "Welcome to Athar and the city of Bienri where Fairy and Psychic live together. For a long time, Fairies have claimed this large country, that is until a few years later, the Psychic types came and settled in. At first, the fairies were a bit standoffish, until they finally bonded with each other. Come to the present day and they lived in harmony, there’s even a large guild called the Faery Guild to fend off attackers. Now, the Fairy Type Battle Arena was made, this arena was made to test if fairy dust isn’t the only thing you can resist."
+        },
+        {
+            "label": "Brevania",
+            "category": 909249684621647942,
+            "emoji": "GHOST",
+            "content": "If you like to visit abandoned places for some spooks? Well, you’ve come to the right place, Welcome to Pandus, a small city that has abandoned structures dotted around, quite a lot of ‘mons still live here. Some of the buildings have a lot of history tied behind it. If you want to learn more about these buildings, you’ll have to meet the leader of this city. The Battle arena is actually one of the actual abandoned."
+        },
+        {
+            "label": "Broxburn",
+            "category": 874015245251797012,
+            "emoji": "CAMPING",
+            "content": "It's pretty much a forest town, there's some citizens here and even some outlaws, but you'll most likely love this place if you want to chill and hang out with people. It's common to see kids play in the grass, despite the great amount of trees which can easily hinder visibility to police officers."
+        },
+        {
+            "label": "Chandra Nur",
+            "category": 909250294506983505,
+            "emoji": "BOXING GLOVE",
+            "content": "Welcome to Chandra Nur and the city of Axrid, the home ground for fighting types. The weather here is pretty calm, mostly cloudy half the time, and the temperature here is at a stable 60 degrees. Just like Ashouria, Chandra Nur welcomes a lot of outsiders and pokemon from overseas. The fighting types that live here are generally nice since the battle arena was built here, making those who came to spectate or participate in the tournament feel quite at home."
+        },
+        {
+            "label": "Estelia",
+            "category": 909250668672466974,
+            "emoji": "MOVIE CAMERA",
+            "content": "Welcome to Estelia and the city of Rici! If you are currently coming in from a different region to this place, it’ll look like a normal city, but what you don’t know is that this place is at least 2 years ahead in technology! This is also the home to quite a lot of steel and electric types. No, there are no flying cars here… at least, not yet of course.\n"
+        },
+        {
+            "label": "Lougy",
+            "category": 909264695414910996,
+            "emoji": "CROSSED FLAGS",
+            "content": "A very peculiar hospital, which has been designed to deal with all the problems that one could deem \"otherworldly\", it has all the kind of medics that you may expect from a hospital but also has experts in the different disciplines such as magic, therapies, special abilities and all that."
+        },
+        {
+            "label": "Muzatoorah",
+            "category": 874017660470431784,
+            "emoji": "CACTUS",
+            "content": "Muzatoorah is your generic desert town, which despite its limitations it's quite great in the commerce aspect, its citizens tend to be very smart and always ready to start business, however they also tend to have distrust on foreigners due to historical reasons.\n\nThis kingdom has a royal family which keeps making decisions for the benefit of it while also trying to keep in good terms with the rest of the regions."
+        },
+        {
+            "label": "Norwich",
+            "category": 874017703411720212,
+            "emoji": "HOUSE WITH GARDEN",
+            "content": "Currently one of the most stable places in the whole region, this place is widely known by its rice production, and the fact that most of the citizens tend to be very friendly, which makes it an easy place for travellers to start their journey. It has a very noticeable english design and it also contains one of the main guilds which despite not having a specific name, it's very known by its efforts with monster hunting."
+        },
+        {
+            "label": "Osfield",
+            "category": 909264739488649246,
+            "emoji": "HOSPITAL",
+            "content": "A very large hospital which is quite ready to handle most of the needs from all its citizens, to the tiniest joltik to even the needs of a wailord, this place overall is the most effective healing center that you can ever find."
+        },
+        {
+            "label": "Parvi",
+            "category": 909264770018988072,
+            "emoji": "CRYSTAL BALL",
+            "content": "Welcome to Parvi and the city of Belle where most of the over-seas trading happens and where merchants come to sell their items. This city is popular for trading because of its unique resources and culture. However, not only is it that this city is near water, the Battle Arena is in the water! Hope you’ve taken some swimming lessons."
+        },
+        {
+            "label": "Pixy Foundation",
+            "category": 909266661515870258,
+            "emoji": "LAB COAT",
+            "content": "This is the Pixy Foundation, here is where most of their research is conducted. Today, they’re letting people take a tour around, but of course, they have their restricted areas, so there’s really not a lot to see other than prototype machines and weapons, which are more likely to be recycled."
+        },
+        {
+            "label": "Richmod",
+            "category": 909279217995370536,
+            "emoji": "ANT",
+            "content": "Richmod holds yet another large port city, always open for overseas trading and merchants piling up all over the city. Recently, the city was struck by a tsunami, luckily everyone was safe, but the markets weren’t. Though everything was quickly repaired and now everything is back to normal, since there is a risk for another tsunami, there was a wall that was built, it was big enough to have cargo ships come in without getting damaged when they’re docking."
+        },
+        {
+            "label": "Sashi",
+            "category": 909279584732721184,
+            "emoji": "TROPICAL DRINK",
+            "content": "Say hello to Sashi! This country isn’t as hot as Ashouria, but it has its days. Lougy is a medium-sized city that is surrounded by trees but also holds a Battle Arena as well. Though it is on the other side of the river, luckily there’s a bridge that leads to the arena.\n"
+        },
+        {
+            "label": "Schalzburg",
+            "category": 874017935369310218,
+            "emoji": "SNOWFLAKE",
+            "content": "Schalzburg, one of the most reserved areas in the whole continent, It is quite known due to its weather always being snow, which makes it a place quite common for ice types. This area tends to be very independent of the other regions, however recently they have opened their gates as a way to keep their community living, due to it being in a slow decay as time happened."
+        },
+        {
+            "label": "Shiey Shea",
+            "category": 909280179006877706,
+            "emoji": "CLASSICAL BUILDING",
+            "content": "If you know a thing or two about Astronomy, it would be very useful because Shiey Shea has a large Rainforest along the border. Further past the forest, you’ll see the city of Giram. Giram is similar to Lougy, but a bit small. Back then, this city was known for its many battles over history, some of which were civil conflicts. Giram is also quite a hotspot for a lot of thunderstorms, but thankfully they aren’t too severe. The Battle Arena was built a few miles south from the city, so it’ll take a hefty walk up there."
+        },
+        {
+            "label": "Shouhead Peaks",
+            "category": 909294313303846932,
+            "emoji": "CURLING STONE",
+            "content": "This is a town that is widely known by its heavy focus on rocks, there's many reasons to visit this place such as its museum, the crystal lake and its mystical forest.\n\nAs you explore the land, you can get to discover that the guild here stopped operating as they have finally reached a relative state of peace in their territory, this is quite a great town if you want to have a slice of life kind of story without much involvement in the main events."
+        },
+        {
+            "label": "Tomalia",
+            "category": 909294458204487690,
+            "emoji": "DRAGON FACE",
+            "content": "If you’ve passed the Fire type battle arena, this is where your resistance to excessive heat comes in handy, there is nothing but desert that stretches for miles. However, there is a city (about the size of present day dubai) that is near the coast. Make it there safely and you’ll be given lots of water and somewhere to cool down. Priland is a city where Dragon, Ground, and Fire types live among each other in peace. The Battle Arena is located in the middle of this extremely large city. The city holds a lot of cultural value to the ‘mons here though, So there are some very old structures around. The whole town heavily relies on something they consider as Magic."
+        },
+        {
+            "label": "Upria",
+            "category": 909302744676986890,
+            "emoji": "ICE CUBE",
+            "content": "This is the Kingdom of Upria and the city of Ponta, a large and seemingly medieval like city. However, this country is mainly cold, and if you guessed it, ice types make a living here. Back in the day, the Kingdom of Upria raged war against Ashouria. Though, it quickly came to an end due to Ashouria having the Advantage over Ice. Stories say that Upria had tried to battle Ashouria many times, but ended up failing multiple times. Upria is known for its hardened battle skills and because since it’s very cold in Ponta, Battling in the battle arena will be difficult. Moreso, Upria is known for their hate against Ashouria and refuse to be allies with them, so any Ashourian that enters Upria will most likely be robbed or attacked viciously."
+        },
+        {
+            "label": "Wilderness",
+            "category": 874018024649265172,
+            "emoji": "EVERGREEN TREE",
+            "content": "All the towns are connected by wilderness, curiously Despa is mostly wilderness despite the big cities that have settled here. Dungeons are bound to be more common in this area, and as expected, wild pokemon and outlaws tend to be more frequent in this area."
+        }
+    ]
+}

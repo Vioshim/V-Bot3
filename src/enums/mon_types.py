@@ -502,7 +502,7 @@ class Types(Enum):
         str
             Type's name
         """
-        return self.name
+        return self.value.name
 
     def __repr__(self) -> str:
         """repr method

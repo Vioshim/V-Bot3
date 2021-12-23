@@ -90,7 +90,7 @@ class CustomBot(Bot):
             self.msg_cache.add(message.id)
 
     async def embed_raw(
-            self, embed: Embed, *exclude: Literal["thumbnail", "author", "footer", "image"]
+        self, embed: Embed, *exclude: Literal["thumbnail", "author", "footer", "image"]
     ) -> tuple[list[File], Embed]:
         """Asynchronous function for fetching files of an embed,
         and attached to itself
@@ -161,7 +161,7 @@ class CustomBot(Bot):
         return files, embed
 
     async def get_file(
-            self, url: str, filename: str = None, spoiler: bool = False
+        self, url: str, filename: str = None, spoiler: bool = False
     ) -> Optional[File]:
         """Early Implementation of an image downloader with size specified
 
@@ -191,13 +191,13 @@ class CustomBot(Bot):
     # noinspection PyBroadException
     @asynccontextmanager
     async def database(
-            self,
-            *,
-            timeout: float = None,
-            isolation: Literal["read_committed", "serializable", "repeatable_read"] = None,
-            readonly: bool = False,
-            deferrable: bool = False,
-            raise_on_error: bool = False,
+        self,
+        *,
+        timeout: float = None,
+        isolation: Literal["read_committed", "serializable", "repeatable_read"] = None,
+        readonly: bool = False,
+        deferrable: bool = False,
+        raise_on_error: bool = False,
     ):
         """Database connection function
 

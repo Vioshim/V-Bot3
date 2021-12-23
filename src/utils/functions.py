@@ -97,6 +97,64 @@ def common_pop_get(item: dict[str, _T], *args: str) -> Optional[_T]:
     return data
 
 
+def embed_modifier(embed: Embed = None, **kwargs):
+    """Function which modified an embed given kwargs
+
+    Parameters
+    ----------
+    embed : Embed, optional
+        embed to modify as reference, defaults to None
+
+    Returns
+    -------
+    Embed
+        copy of the embed with the modifications
+    """
+    if embed:
+        embed = embed.copy()
+    else:
+        embed = Embed()
+    embed.title = kwargs.get("title", embed.title)
+    embed.description = kwargs.get("description", embed.description)
+    embed.url = kwargs.get("url", embed.url)
+    embed.color = kwargs.get("color", embed.color)
+    embed.timestamp = kwargs.get("timestamp", embed.timestamp)
+    if "author" in kwargs:
+        if author := kwargs.get("author", {}):
+            embed.set_author(**author)
+        else:
+            embed.remove_author()
+    if "footer" in kwargs:
+        if footer := kwargs.get("footer"):
+            embed.set_footer(**footer)
+        else:
+            embed.remove_footer()
+    if "image" in kwargs:
+        if image := kwargs.get("image"):
+            embed.set_image(url=image)
+        else:
+            embed.remove_image()
+    if "thumbnail" in kwargs:
+        if thumbnail := kwargs.get("thumbnail"):
+            embed.set_thumbnail(url=thumbnail)
+        else:
+            embed.remove_thumbnail
+    if "fields" in kwargs:
+        embed.clear_fields()
+        if fields := kwargs.get("fields", []):
+            for field in fields:
+                if isinstance(field, tuple):
+                    try:
+                        name, value = field
+                        embed.add_field(name=name, value=value)
+                    except ValueError:
+                        name, value, inline = field
+                        embed.add_field(name=name, value=value, inline=inline)
+                if isinstance(field, dict):
+                    embed.add_field(**field)
+    return embed
+
+
 def int_check(data: str, a: int, b: int) -> Optional[int]:
     """This is a method that checks the integer out of a string given a range
 

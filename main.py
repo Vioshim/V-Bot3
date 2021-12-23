@@ -119,9 +119,7 @@ async def main(
             bot.logger.info("Successfully loaded %s", cog)
         await bot.start(getenv("DISCORD_TOKEN"))
     except Exception as e:
-        msg = EXCEPTIONS.get(
-            type(e), "An exception occurred while trying to connect"
-        )
+        msg = EXCEPTIONS.get(type(e), "An exception occurred while trying to connect")
         bot.logger.critical(msg=msg, exc_info=e)
 
 

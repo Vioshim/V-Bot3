@@ -351,9 +351,7 @@ class Abilities(Enum):
         name="Full Metal Body",
         description="Prevents other Pokemon from lowering this Pokemon's stat stages.",
     )
-    FURCOAT = Ability(
-        name="Fur Coat", description="This Pokemon's Defense is doubled."
-    )
+    FURCOAT = Ability(name="Fur Coat", description="This Pokemon's Defense is doubled.")
     GALEWINGS = Ability(
         name="Gale Wings",
         description="If this Pokemon is at full HP, its Flying-type moves have their priority increased by 1.",
@@ -406,15 +404,9 @@ class Abilities(Enum):
         name="Heatproof",
         description="The power of Fire-type attacks against this Pokemon is halved; burn damage halved.",
     )
-    HEAVYMETAL = Ability(
-        name="Heavy Metal", description="This Pokemon's weight is doubled."
-    )
-    HONEYGATHER = Ability(
-        name="Honey Gather", description="No competitive use."
-    )
-    HUGEPOWER = Ability(
-        name="Huge Power", description="This Pokemon's Attack is doubled."
-    )
+    HEAVYMETAL = Ability(name="Heavy Metal", description="This Pokemon's weight is doubled.")
+    HONEYGATHER = Ability(name="Honey Gather", description="No competitive use.")
+    HUGEPOWER = Ability(name="Huge Power", description="This Pokemon's Attack is doubled.")
     HUNGERSWITCH = Ability(
         name="Hunger Switch",
         description="If Morpeko, it changes between Full Belly and Hangry Mode at the end of each turn.",
@@ -512,9 +504,7 @@ class Abilities(Enum):
         name="Libero",
         description="This Pokemon's type changes to match the type of the move it is about to use.",
     )
-    LIGHTMETAL = Ability(
-        name="Light Metal", description="This Pokemon's weight is halved."
-    )
+    LIGHTMETAL = Ability(name="Light Metal", description="This Pokemon's weight is halved.")
     LIGHTNINGROD = Ability(
         name="Lightning Rod",
         description="This Pokemon draws Electric moves to itself to raise Sp. Atk by 1; Electric immunity.",
@@ -731,9 +721,7 @@ class Abilities(Enum):
         name="Punk Rock",
         description="This Pokemon receives 1/2 damage from sound moves. Its own have 1.3x power.",
     )
-    PUREPOWER = Ability(
-        name="Pure Power", description="This Pokemon's Attack is doubled."
-    )
+    PUREPOWER = Ability(name="Pure Power", description="This Pokemon's Attack is doubled.")
     QUEENLYMAJESTY = Ability(
         name="Queenly Majesty",
         description="While this Pokemon is active, allies are protected from opposing priority moves.",

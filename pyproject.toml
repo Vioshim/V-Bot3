@@ -26,6 +26,9 @@ black = { git = "https://github.com/psf/black.git", rev = "main" }
 coverage = { git = "https://github.com/nedbat/coveragepy.git" }
 pip = { git = "https://github.com/pypa/pip.git", rev = "main" }
 pyright = "^0.0.13"
+aiofiles = {git = "https://github.com/Tinche/aiofiles.git"}
+uvloop = {version = "^0.16.0", platform = "linux"}
+beautifulsoup4 = "^4.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

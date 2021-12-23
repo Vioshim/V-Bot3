@@ -15,10 +15,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
 
-from discord import (  # TODO learn about AutocompleteContext
+from discord import (
     AllowedMentions,
+    ApplicationContext,
     DiscordException,
     Embed,
     File,
@@ -31,14 +32,13 @@ from discord import (  # TODO learn about AutocompleteContext
     PartialMessage,
     StickerItem,
     User,
-    Webhook,
 )
 from discord.abc import Messageable, Snowflake
+from discord.ext.commands import Context
 from discord.ui import View
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import common_pop_get
 
 _M = TypeVar("_M", bound=Messageable)
 
@@ -46,15 +46,15 @@ __all__ = ("Basic",)
 
 
 # noinspection DuplicatedCode,PyTypeChecker
-class Basic(View):
+class Basic(Generic[_M], View):
     """A Paginator for View-only purposes"""
 
     def __init__(
         self,
         *,
         bot: CustomBot,
-        member: Union[Member, User],
         target: _M = None,
+        member: Union[Member, User] = None,
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
     ):
@@ -79,6 +79,13 @@ class Basic(View):
                 colour=member.colour,
                 timestamp=datetime.now(),
             )
+
+        if not member:
+            if isinstance(target, (Message, Context, ApplicationContext)):
+                member = target.author
+            elif isinstance(target, Interaction):
+                member = target.user
+
         embed.set_image(url=WHITE_BAR)
         embed.set_author(
             name=member.display_name,
@@ -106,7 +113,8 @@ class Basic(View):
             If validation is successful
         """
         if self._member != interaction.user:
-            return await resp.send_message("This isn't yours", ephemeral=True)
+            msg = f"This menu has been requested by {self.member}"
+            return await resp.send_message(msg, ephemeral=True)
         return True
 
     async def send(
@@ -186,9 +194,6 @@ class Basic(View):
             reference=reference,
             mention_author=mention_author,
             view=self,
-        )
-
-        webhook_elements = dict(
             username=username,
             avatar_url=avatar_url,
             thread=thread,
@@ -207,20 +212,13 @@ class Basic(View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if not resp.is_done():
-                common_pop_get(
-                    data, "stickers", "nonce", "reference", "mention_author"
-                )
-                await resp.send_message(**data, ephemeral=ephemeral)
+                await resp.send_message(**data)
             else:
-                data |= webhook_elements
                 await target.followup.send(**data)
             if message := await target.original_message():
                 await message.edit(embed=self._embed)
                 self.message = message
         else:
-
-            if isinstance(target, Webhook):
-                data |= webhook_elements
 
             self.message = await target.send(**data)
 

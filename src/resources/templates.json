@@ -1,0 +1,167 @@
+{
+    "Pokemon": {
+        "Template": {
+            "Name": "Name",
+            "Species": "Species",
+            "Age": "Age",
+            "Pronoun": "He/She/Them",
+            "Abilities": "Ability, Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1-Ebq40ONEzl0klHqUatG0Sy54mffal6AC2iX2aDHNas",
+            "W/ Sp. Ability": "1prCYzbqJAAetv_c3HRsXIU22dN7Co-tqykhxWo2SrwY"
+        },
+        "Slash": "/register pokemon"
+    },
+    "Legendary": {
+        "Template": {
+            "Name": "Name",
+            "Species": "Species",
+            "Pronoun": "He/She/Them",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM"
+        },
+        "Slash": "/register legendary"
+    },
+    "Mythical": {
+        "Template": {
+            "Name": "Name",
+            "Species": "Species",
+            "Pronoun": "He/She/Them",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1rVdi3XMXBadIZc03SrZl-vz3b-AcM2WgBSAfvdgW5Fs"
+        },
+        "Slash": "/register mythical"
+    },
+    "Ultra Beast": {
+        "Template": {
+            "Name": "Name",
+            "Species": "Species",
+            "Pronoun": "He/She/Them",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1Xi25gAj6qoh14xYSXsinfMZ3-6loJ_CTCdrRdPlEhW8"
+        },
+        "Slash": "/register ultra_beast"
+    },
+    "Mega": {
+        "Template": {
+            "Name": "Name",
+            "Species": "Species",
+            "Age": "Age",
+            "Pronoun": "He/She/Them",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM"
+        },
+        "Slash": "/register mega"
+    },
+    "Fusion": {
+        "Template": {
+            "Name": "Name",
+            "Species": "Species 1, Species 2",
+            "Types": "Type, Type",
+            "Age": "Age",
+            "Pronoun": "He/She/Them",
+            "Ability": "Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04"
+        },
+        "Slash": "/register fusion"
+    },
+    "Fakemon": {
+        "Template": {
+            "Name": "Name",
+            "Fakemon": "Fakemon Species",
+            "Types": "Type, Type",
+            "Age": "Age",
+            "Pronoun": "He/She/Them",
+            "Abilities": "Ability, Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
+            "W/ Sp. Ability": "12EJpXCJmtDksb1VZjdr8DrMiJeRlpIWI3544r47MVns"
+        },
+        "Slash": "/register fakemon custom_pokemon"
+    },
+    "Custom Legendary": {
+        "Template": {
+            "Name": "Name",
+            "Fakemon": "Fakemon Legendary Species",
+            "Types": "Type, Type",
+            "Pronoun": "He/She/Them",
+            "Ability": "Ability, Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
+        },
+        "Slash": "/register fakemon custom_legendary"
+    },
+    "Custom Mythical": {
+        "Template": {
+            "Name": "Name",
+            "Fakemon": "Fakemon Mythical Species",
+            "Types": "Type, Type",
+            "Pronoun": "He/She/Them",
+            "Ability": "Ability, Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
+        },
+        "Slash": "/register fakemon custom_mythical"
+    },
+    "Custom Ultra Beast": {
+        "Template": {
+            "Name": "Name",
+            "Fakemon": "Fakemon Ultra beast Species",
+            "Types": "Type, Type",
+            "Pronoun": "He/She/Them",
+            "Ability": "Beast Boost",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
+        },
+        "Slash": "/register fakemon custom_ultra_beast"
+    },
+    "Custom Mega": {
+        "Template": {
+            "Name": "Name",
+            "Fakemon": "Mega Species",
+            "Types": "Type, Type",
+            "Pronoun": "He/She/Them",
+            "Ability": "Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
+        },
+        "Slash": "/register fakemon custom_mega"
+    },
+    "Variant": {
+        "Template": {
+            "Name": "Name",
+            "Fakemon": "Variant Species",
+            "Types": "Type, Type",
+            "Pronoun": "He/She/Them",
+            "Ability": "Ability, Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move"
+        },
+        "Document": {
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
+        },
+        "Slash": "/register fakemon variant"
+    }
+}

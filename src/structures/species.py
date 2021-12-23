@@ -15,8 +15,8 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from copy import copy
 from dataclasses import dataclass, field
-from random import choice
 from typing import Optional
 
 from src.enums.abilities import Abilities
@@ -32,6 +32,8 @@ __all__ = (
     "Mega",
     "Fusion",
     "Pokemon",
+    "CustomMega",
+    "Variant",
 )
 
 
@@ -55,6 +57,8 @@ class Species(metaclass=ABCMeta):
     SPD: int = 0
     SPE: int = 0
     banned: bool = False
+    evolves_from: Optional[str] = None
+    evolves_to: list[str] = field(default_factory=frozenset)
     movepool: Movepool = field(default_factory=Movepool)
     abilities: frozenset[Abilities] = field(default_factory=frozenset)
 
@@ -221,7 +225,13 @@ class Fakemon(Species):
 
     # noinspection PyPep8Naming
     def set_stats(
-            self, HP: int = 3, ATK: int = 3, DEF: int = 3, SPA: int = 3, SPD: int = 3, SPE: int = 3
+        self,
+        HP: int = 3,
+        ATK: int = 3,
+        DEF: int = 3,
+        SPA: int = 3,
+        SPD: int = 3,
+        SPE: int = 3,
     ):
         stats = HP, ATK, DEF, SPA, SPD, SPE
         if sum(stats) > 18:
@@ -246,6 +256,77 @@ class Fakemon(Species):
 
 
 @dataclass(unsafe_hash=True)
+class CustomMega(Species):
+    """
+    This class Represents a Custom Mega
+    """
+
+    def __init__(self, base: Species):
+        self.id: str = f"C_MEGA_{base.id}"
+        self.name: str = f"Mega {base.name}"
+        self.shape: str = base.shape
+        self.color: str = base.color
+        self.height: int = base.height
+        self.weight: int = base.weight
+        self.HP: int = base.HP
+        self.ATK: int = base.ATK
+        self.DEF: int = base.DEF
+        self.SPA: int = base.SPA
+        self.SPD: int = base.SPD
+        self.SPE: int = base.SPE
+        self.movepool: Movepool = base.movepool
+        self.abilities: frozenset[Abilities] = copy(base.abilities)
+
+    @property
+    def requires_image(self) -> bool:
+        return True
+
+    @property
+    def max_amount_abilities(self) -> int:
+        return 1
+
+    @property
+    def can_have_special_abilities(self) -> bool:
+        return False
+
+
+@dataclass(unsafe_hash=True)
+class Variant(Species):
+    """
+    This class Represents a Variant
+    """
+
+    def __init__(self, base: Species):
+        self.base = base
+        self.id = f"VARIANT_{base.id}"
+        self.name = f"Variant {base.name}"
+        self.shape: str = base.shape
+        self.color: str = base.color
+        self.height: int = base.height
+        self.weight: int = base.weight
+        self.HP: int = base.HP
+        self.ATK: int = base.ATK
+        self.DEF: int = base.DEF
+        self.SPA: int = base.SPA
+        self.SPD: int = base.SPD
+        self.SPE: int = base.SPE
+        self.movepool: Movepool = copy(base.movepool)
+        self.abilities: frozenset[Abilities] = copy(base.abilities)
+
+    @property
+    def requires_image(self) -> bool:
+        return True
+
+    @property
+    def max_amount_abilities(self) -> int:
+        return 1 if Abilities.BEASTBOOST in self.abilities else self.base.max_amount_abilities
+
+    @property
+    def can_have_special_abilities(self) -> bool:
+        return Abilities.BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
+
+
+@dataclass(unsafe_hash=True)
 class Fusion(Species):
     """
     This class Represents a fusion
@@ -253,6 +334,8 @@ class Fusion(Species):
 
     mon1: Optional[Species] = None
     mon2: Optional[Species] = None
+    evolves_from: Optional[tuple[str, str]] = None
+    evolves_to: list[tuple[str, str]] = field(default_factory=list)
 
     def __init__(self, mon1: Species, mon2: Species):
         super(Fusion, self).__init__()
@@ -262,13 +345,8 @@ class Fusion(Species):
         self.name = f"{mon1.name}/{mon2.name}"
         self.height = round((mon1.height + mon2.height) / 2)
         self.weight = round((mon1.weight + mon2.weight) / 2)
-        if items := self.possible_types:
-            if len(items) == 1:
-                self.types = frozenset(items[0])
-            elif not self.types:
-                self.types = frozenset(choice(items))
-            elif self.types not in items:
-                raise Exception("Invalid typing")
+        if len(items := self.possible_types) == 1:
+            self.types = frozenset(items[0])
         self.HP = round((mon1.HP + mon2.HP) / 2)
         self.ATK = round((mon1.ATK + mon2.ATK) / 2)
         self.DEF = round((mon1.DEF + mon2.DEF) / 2)
@@ -277,6 +355,10 @@ class Fusion(Species):
         self.SPE = round((mon1.SPE + mon2.SPE) / 2)
         self.movepool = mon1.movepool + mon2.movepool
         self.abilities = mon1.abilities | mon2.abilities
+        if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
+            self.evolves_from = item1, item2
+        if (item1 := mon1.evolves_to) and (item2 := mon2.evolves_to):
+            self.evolves_to = list(zip(item1, item2))
 
     @property
     def possible_types(self) -> list[set[Types]]:

@@ -109,13 +109,13 @@ class ImageKit:
         return base
 
     def add_image(
-            self,
-            image: str,
-            *,
-            height: int = None,
-            weight: int = None,
-            x: int = None,
-            y: int = None,
+        self,
+        image: str,
+        *,
+        height: int = None,
+        weight: int = None,
+        x: int = None,
+        y: int = None,
     ):
         entries = [f"oi-{image_formatter(image)}"]
         if isinstance(height, int) and height:
@@ -130,18 +130,18 @@ class ImageKit:
 
     # noinspection DuplicatedCode
     def add_text(
-            self,
-            text: str,
-            font: str = None,
-            font_size: int = None,
-            color: int = None,
-            transparency: int = None,
-            radius: int = None,
-            padding: Iterable[int] = None,
-            alignment: str = None,
-            background: int = None,
-            x: int = None,
-            y: int = None,
+        self,
+        text: str,
+        font: str = None,
+        font_size: int = None,
+        color: int = None,
+        transparency: int = None,
+        radius: int = None,
+        padding: Iterable[int] = None,
+        alignment: str = None,
+        background: int = None,
+        x: int = None,
+        y: int = None,
     ):
 
         encoded = b64encode(text.encode("utf-8"))

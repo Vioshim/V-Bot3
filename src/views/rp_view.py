@@ -42,9 +42,7 @@ class RPView(View):
         self.last_ping = None
         self.oc_list = oc_list
         self.server = server
-        self.url = (
-            f"https://discord.com/channels/{server}/{oc_list[member_id]}/"
-        )
+        self.url = f"https://discord.com/channels/{server}/{oc_list[member_id]}/"
         btn = Button(label="Check User's OCs", url=self.url)
         self.add_item(btn)
 
@@ -55,17 +53,13 @@ class RPView(View):
             await resp.send_message("Can't ping yourself", ephemeral=True)
             return False
         if registered not in interaction.user.roles:
-            await resp.send_message(
-                "Only registered users can ping", ephemeral=True
-            )
+            await resp.send_message("Only registered users can ping", ephemeral=True)
             return False
         if not (member := interaction.guild.get_member(self.member_id)):
             await resp.send_message("User isn't here anymore.", ephemeral=True)
             return False
         if registered not in member:
-            await resp.send_message(
-                "User is no longer registered.", ephemeral=True
-            )
+            await resp.send_message("User is no longer registered.", ephemeral=True)
             return False
 
         return True
@@ -75,9 +69,7 @@ class RPView(View):
         member: Member = interaction.user
         guild = interaction.guild
         webhook = await self.bot.webhook(740568087820238919, reason="Ping")
-        embed = Embed(
-            title="User has pinged you.", timestamp=utcnow(), color=member.color
-        )
+        embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=member.color)
         embed.set_author(name=member.display_name)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         embed.set_thumbnail(url=member.display_avatar.url)
