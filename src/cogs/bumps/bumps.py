@@ -107,7 +107,7 @@ class PingBump(View):
         self.mentions: set[Member] = set()
         self.embed = data.adapt_embed(ctx)
         self.prefix = data.prefix
-        self.message: Optional[Message] = None
+        self.message: Optional[Message] = ctx
         self.data = data
 
     async def send(
