@@ -150,8 +150,6 @@ class SubmissionView(View):
                 bot=self.bot,
                 member=ctx.user,
                 oc=oc,
-                oc_list=self.oc_list,
-                oc_slots=self.rpers,
             )
             webhook = await self.bot.webhook(ctx.channel_id, reason="Bio")
             message: WebhookMessage = await webhook.send(
