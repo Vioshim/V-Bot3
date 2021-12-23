@@ -684,7 +684,7 @@ class Submission(Cog):
 
         self.bot.logger.info("Finished loading claimed categories")
 
-        source = Path("resources/information.json")
+        source = Path("resources/templates.json")
         async with aiopen(source.resolve(), mode="r") as f:
             contents = await f.read()
             view = SubmissionView(
