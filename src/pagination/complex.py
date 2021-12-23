@@ -159,14 +159,19 @@ class Complex(Simple):
 
         foo: Select = self.select_choice
         pages: Select = self.navigate
-        foo.placeholder = f"Picked:{len(self.choices)}, Max:{self.max_values}"
+        
+        if not (choices := self.choices):
+            choices = set()
+
+        foo.placeholder = f"Picked:{len(choices)}, Max:{self.max_values}"
+        
         foo.options.clear()
         pages.options.clear()
 
         # Then gets defined the amount of entries an user can pick
 
         foo.max_values = min(
-            self.max_values - len(self.choices), self.entries_per_page
+            self.max_values - len(choices), self.entries_per_page
         )
 
         # Now we get the indexes that each page should start with
