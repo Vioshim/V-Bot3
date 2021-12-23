@@ -185,7 +185,6 @@ class SubmissionView(View):
             member=ctx.user,
             target=ctx,
             values=locations,
-            title="Select Region",
             parser=lambda x: (name := x.name[2:].capitalize(), f"Sets it at {name}"),
             emoji_parser=lambda x: x.name[0],
         )
@@ -202,7 +201,6 @@ class SubmissionView(View):
                     for item in choice.channels
                     if ("-ooc" not in item.name and isinstance(item, TextChannel))
                 ],
-                title="Select Area",
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
                     desc[:50] if (desc := x.topic) else "No description.",
