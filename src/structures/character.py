@@ -94,6 +94,8 @@ class Character(metaclass=ABCMeta):
             self.server = 719343092963999804
         if not self.created_at:
             self.created_at = utcnow()
+        if isinstance(self.pronoun, str):
+            self.pronoun = Pronoun[self.pronoun]
         if isinstance(self.age, int):
             if self.age >= 100:
                 self.age = None
