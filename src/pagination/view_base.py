@@ -32,6 +32,7 @@ from discord import (
     PartialMessage,
     StickerItem,
     User,
+    Webhook
 )
 from discord.abc import Messageable, Snowflake
 from discord.ext.commands import Context
@@ -198,7 +199,6 @@ class Basic(Generic[_M], View):
             avatar_url=avatar_url,
             thread=thread,
             ephemeral=ephemeral,
-            wait=True,
         )
 
         if not embeds and not embed:
@@ -218,8 +218,9 @@ class Basic(Generic[_M], View):
             if message := await target.original_message():
                 await message.edit(embed=self._embed)
                 self.message = message
+        elif isinstance(target, Webhook):
+            self.message = await target.send(**data, wait=True)
         else:
-
             self.message = await target.send(**data)
 
         if message := self.message:
