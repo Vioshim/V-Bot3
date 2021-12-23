@@ -42,7 +42,7 @@ class Bump(metaclass=ABCMeta):
         prefix: str = "!bump",
         hours: float = 2.0,
     ):
-        self.id: id
+        self.id = id
         self.name = name
         self.url = url
         self.prefix = prefix
