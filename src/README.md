@@ -14,7 +14,6 @@
 | `enums/`             | Enumeration of commonly used values within the bot     |
 | `exceptions/`        | User defined exceptions that are used in the code.     |
 | `pagination/`        | Discord views, that are used as dropdown selectors     |
-| `resources/`         | JSON files which contain Pokemon/Server related info   |
 | `structures/`        | User defined classes that are implemented in the cogs  |
 | `tests/`             | Self explanatory, it's a sandbox testing               |
 | `utils/`             | Utilities that are handful given their functionalities |
