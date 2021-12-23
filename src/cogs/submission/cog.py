@@ -41,7 +41,7 @@ from discord.utils import utcnow
 from jishaku.codeblocks import codeblock_converter
 from orjson import loads
 from yaml import safe_load
-from yaml.parser import ParserError
+from yaml.error import MarkedYAMLError
 
 from src.context import ApplicationContext, AutocompleteContext
 from src.enums import Abilities, Moves, Pronoun, Species, Types
@@ -641,7 +641,7 @@ class Submission(Cog):
 
             self.missions = await Mission.fetch_all(db)
 
-            w = await self.bot.webhook(908498210211909642)
+            w = await self.bot.fetch_webhook(908549481807614022)
 
             for mission in self.missions:
                 view = MissionView(bot=self.bot, mission=mission)
@@ -698,7 +698,8 @@ class Submission(Cog):
                 missions=self.missions,
                 **loads(contents),
             )
-            self.bot.add_view(view, message_id=903437849154711552)
+            w = await self.bot.fetch_webhook(857435846454280244)
+            await w.edit_message(903437849154711552, view=view)
 
         self.bot.logger.info("Finished loading menu")
 
@@ -821,7 +822,7 @@ class Submission(Cog):
                     await self.registration(ctx=message, oc=oc)
                     await message.delete()
                 self.ignore.remove(message.author.id)
-        except ParserError:
+        except MarkedYAMLError:
             return
         except Exception as e:
             self.bot.logger.exception(
