@@ -628,7 +628,10 @@ class Submission(Cog):
             for oc in await fetch_all(db):
                 self.ocs[oc.id] = oc
                 self.rpers.setdefault(oc.author, set())
-                self.rpers[oc.author].add(oc)
+                try:
+                    self.rpers[oc.author].add(oc)
+                except Exception as e:
+                    self.bot.logger.exception(f"Error with {oc!r}", exc_info=e)
 
             self.bot.logger.info("Finished loading all characters")
 
