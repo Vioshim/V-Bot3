@@ -79,7 +79,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
-from src.utils.functions import common_pop_get
+from src.utils.functions import common_pop_get, int_check
 from src.utils.matches import G_DOCUMENT
 from src.views import ImageView, MissionView, RPView, StatsView, SubmissionView
 
@@ -173,9 +173,11 @@ class Submission(Cog):
         if moveset := common_pop_get(data, "moveset", "moves"):
             data["moveset"] = frozenset(Moves.deduce(moveset))
 
-        data["pronoun"] = Pronoun.deduce(data.get("pronoun", "Them"))
+        if pronoun := common_pop_get(data, "pronoun", "gender"):
+            data["pronoun"] = Pronoun.deduce(pronoun)
+
         if isinstance(age := data.get("age"), str):
-            data["age"] = int(age)
+            data["age"] = int_check(age, 1, 99)
 
         if isinstance(species := data["species"], Fakemon):
             if stats := data.pop("stats", {}):
@@ -316,9 +318,7 @@ class Submission(Cog):
                     "Character has been loaded successfully", delete_after=5
                 )
             else:
-                text_view = TextInput(
-                    bot=self.bot, member=member, target=ctx
-                )
+                text_view = TextInput(bot=self.bot, member=member, target=ctx)
                 await ctx_send("Starting submission process", delete_after=5)
 
                 if isinstance(oc, FakemonCharacter):

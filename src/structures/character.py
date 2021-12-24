@@ -299,7 +299,9 @@ class Character(metaclass=ABCMeta):
             URL
         """
         if image := self.image or self.default_image:
-            if image.startswith(f"https://cdn.discordapp.com/attachments/{self.thread}/"):
+            if image.startswith(
+                f"https://cdn.discordapp.com/attachments/{self.thread}/"
+            ):
                 return image
 
             kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
@@ -398,7 +400,9 @@ class Character(metaclass=ABCMeta):
                 """,
                 self.id,
             )
-            self.abilities = frozenset({Abilities[item["ability"]] for item in abilities})
+            self.abilities = frozenset(
+                {Abilities[item["ability"]] for item in abilities}
+            )
 
             if not self.has_default_types:
                 mon_types = await connection.fetch(
@@ -410,7 +414,9 @@ class Character(metaclass=ABCMeta):
                     """,
                     self.id,
                 )
-                self.species.types = frozenset({Types[item["type"]] for item in mon_types})
+                self.species.types = frozenset(
+                    {Types[item["type"]] for item in mon_types}
+                )
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
@@ -475,7 +481,10 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [(self.id, item.name, not main) for main, item in enumerate(self.types)]:
+        if entries := [
+            (self.id, item.name, not main)
+            for main, item in enumerate(self.types)
+        ]:
             await connection.executemany(
                 """--sql
                 INSERT INTO CHARACTER_TYPES(CHARACTER, TYPE, MAIN)
@@ -491,7 +500,8 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, bool(main)) for main, item in enumerate(self.abilities)
+            (self.id, item.name, bool(main))
+            for main, item in enumerate(self.abilities)
         ]:
             await connection.executemany(
                 """--sql
@@ -509,7 +519,8 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, value.name, key) for key, value in enumerate(self.moveset, start=1)
+            (self.id, value.name, key)
+            for key, value in enumerate(self.moveset, start=1)
         ]:
             await connection.executemany(
                 """--sql
@@ -1645,9 +1656,15 @@ async def doc_convert(url: str) -> dict[str, Any]:
     if doc := await to_thread(docs_reader, url):
         tables = nested_lookup(key="table", document=doc["body"]["content"])
         contents = nested_lookup(key="textRun", document=tables)
-        content_values: list[str] = nested_lookup(key="content", document=contents)
+        content_values: list[str] = nested_lookup(
+            key="content", document=contents
+        )
 
-        text = [strip.replace("\u2019", "'") for item in content_values if (strip := item.strip())]
+        text = [
+            strip.replace("\u2019", "'")
+            for item in content_values
+            if (strip := item.strip())
+        ]
 
         movepool_typing = dict[str, Union[set[str], dict[int, set[str]]]]
         raw_kwargs: dict[str, Union[str, set[str], movepool_typing]] = dict(
