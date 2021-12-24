@@ -43,7 +43,7 @@ from src.views.mission_view import MissionView
 
 
 class CharacterHandlerView(Complex):
-    
+
     def __init__(
         self,
         bot: CustomBot,
