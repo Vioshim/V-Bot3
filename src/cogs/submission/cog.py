@@ -594,7 +594,7 @@ class Submission(Cog):
             self.bot.logger.info(
                 "New character has been registered! > %s > %s > %s",
                 str(member),
-                str(type(oc)),
+                repr(oc),
                 oc.url or "Manual",
             )
             async with self.bot.database() as conn:
