@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import INFO, Formatter, Logger, LogRecord, StreamHandler
-from pytz import UTC, timezone
 from datetime import datetime
+from logging import INFO, Formatter, Logger, LogRecord, StreamHandler
+
+from pytz import UTC, timezone
 
 __all__ = ("ColoredLogger",)
 
@@ -49,7 +50,9 @@ def formatter_message(message: str, use_color=True) -> str:
     return message
 
 
-COLORS = dict(WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED)
+COLORS = dict(
+    WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED
+)
 
 
 class ColoredFormatter(Formatter):
@@ -70,7 +73,7 @@ class ColoredFormatter(Formatter):
         # Create datetime in UTC
         dt = datetime.fromtimestamp(timestamp, tz=UTC)
         # Change datetime's timezone
-        return dt.astimezone(timezone('America/Bogota'))
+        return dt.astimezone(timezone("America/Bogota"))
 
     def formatTime(self, record: LogRecord, datefmt=None):
         dt = self.converter(record.created)
@@ -78,11 +81,11 @@ class ColoredFormatter(Formatter):
             s = dt.strftime(datefmt)
         else:
             try:
-                s = dt.isoformat(timespec='milliseconds')
+                s = dt.isoformat(timespec="milliseconds")
             except TypeError:
                 s = dt.isoformat()
         return s
-    
+
     def format(self, record: LogRecord) -> str:
         """Formatting Method
 
@@ -98,15 +101,15 @@ class ColoredFormatter(Formatter):
         """
         level_name: str = record.levelname
         if self.use_color and level_name in COLORS:
-            level_name_color: str = COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
+            level_name_color: str = (
+                COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
+            )
             record.levelname = level_name_color
         return super(ColoredFormatter, self).format(record)
 
 
 class ColoredLogger(Logger):
-    FORMAT = (
-        "%(asctime)s〕$BOLD%(pathname)s$RESET|$BOLD%(funcName)s$RESET[%(levelname)s] %(message)s"
-    )
+    FORMAT = "%(asctime)s〕$BOLD%(pathname)s$RESET|$BOLD%(funcName)s$RESET[%(levelname)s] %(message)s"
     COLOR_FORMAT = formatter_message(FORMAT, True)
 
     def __init__(self, name: str):
