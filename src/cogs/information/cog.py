@@ -36,12 +36,6 @@ from yaml import dump
 
 from src.cogs.information.area_selection import AreaSelection
 from src.cogs.information.information_view import InformationView
-from src.cogs.information.roles import (
-    BasicRoles,
-    ColorRoles,
-    PronounRoles,
-    RPSearchRoles,
-)
 from src.context import ApplicationContext, AutocompleteContext, Context
 from src.structures.bot import CustomBot
 from src.utils.etc import MAP_BUTTONS, WHITE_BAR
@@ -480,22 +474,6 @@ class Information(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
-        self.bot.add_view(
-            view=PronounRoles(timeout=None),
-            message_id=916482734933811232,
-        )
-        self.bot.add_view(
-            view=BasicRoles(timeout=None),
-            message_id=916482736309534762,
-        )
-        self.bot.add_view(
-            view=ColorRoles(timeout=None),
-            message_id=916482737811120128,
-        )
-        self.bot.add_view(
-            view=RPSearchRoles(timeout=None),
-            message_id=916482738876477483,
-        )
         await self.bot.scheduler.add_schedule(
             self.daily_question,
             trigger=CronTrigger(hour=13, minute=0, second=0),

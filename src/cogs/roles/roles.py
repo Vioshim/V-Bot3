@@ -12,23 +12,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime
+from time import mktime
 from typing import Iterable, Optional
 
 from discord import (
+    AllowedMentions,
+    Embed,
     Guild,
     Interaction,
     InteractionResponse,
     Member,
     Role,
     SelectOption,
+    TextChannel,
 )
 from discord.ui import Button, Select, View, button, select
+from discord.utils import utcnow
 
-__all__ = ("PronounRoles", "BasicRoles", "ColorRoles", "RPSearchRoles")
+from src.structures.bot import CustomBot
+from src.structures.character import Character
+from src.views.characters_view import CharactersView
+
+__all__ = (
+    "PronounRoles",
+    "BasicRoles",
+    "ColorRoles",
+    "RPSearchRoles",
+    "RoleView",
+    "RP_SEARCH_ROLES",
+)
+
+
+def hours(test: datetime = None) -> int:
+    """A function which returns the time between a date and today, with 2 hours as max
+
+    Parameters
+    ----------
+    test: datetime
+        Time
+
+    Returns
+    -------
+    Time in between
+    """
+    if test:
+        today = utcnow()
+        data = mktime(today.timetuple()) - mktime(test.timetuple())
+        return int(data // 3600)
+    return 2
+
+
+def seconds(test: datetime) -> int:
+    """A function which returns the difference between a date and the current in seconds.
+
+    Parameters
+    ----------
+    test: datetime
+        Datetime parameter
+
+    Returns
+    -------
+    Difference in seconds
+    """
+    return int((utcnow() - test).total_seconds())
 
 
 async def role_menu(
-    ctx: Interaction, roles: Iterable[Role], total: Iterable[Role]
+    ctx: Interaction,
+    roles: Iterable[Role],
+    total: Iterable[Role],
 ):
     member: Member = ctx.user
     resp: InteractionResponse = ctx.response
@@ -39,7 +92,9 @@ async def role_menu(
 
 
 async def unique_role_button(
-    ctx: Interaction, role: Optional[Role], roles: Iterable[int]
+    ctx: Interaction,
+    role: Optional[Role],
+    roles: Iterable[int],
 ) -> None:
     """Button to add/remove roles. Removing its set
 
@@ -104,7 +159,9 @@ async def unique_role_button(
 
 
 async def required_role_menu(
-    ctx: Interaction, selected: Role, required: Role
+    ctx: Interaction,
+    selected: Role,
+    required: Role,
 ) -> None:
     resp: InteractionResponse = ctx.response
     member: Member = ctx.user
@@ -321,7 +378,6 @@ class ColorRoles(View):
 
 
 class BasicRoles(View):
-
     @select(
         placeholder="Select Basic Roles",
         min_values=0,
@@ -441,3 +497,159 @@ class RPSearchRoles(View):
             f"You need {required.mention} to use this role.", ephemeral=True
         )
         return False
+
+
+class RoleManage(View):
+    def __init__(self, bot: CustomBot, role: Role, ocs: set[Character]):
+        super(RoleManage, self).__init__(timeout=None)
+        self.bot = bot
+        self.role = role
+        self.ocs = ocs
+        self.role_add.label = f"Get {role.name} Role"
+        self.role_remove.label = f"Remove {role.name} Role"
+
+    @button(emoji="\N{WHITE HEAVY CHECK MARK}", row=0)
+    async def role_add(self, _: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        member: Member = interaction.user
+        if self.role in member.roles:
+            await resp.send_message("You already have the role", ephemeral=True)
+            return
+        await member.add_roles(self.role)
+        await resp.send_message(
+            "Role added, you'll get pinged next time.", ephemeral=True
+        )
+
+    @button(emoji="\N{CROSS MARK}", row=0)
+    async def role_remove(self, _: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        member: Member = interaction.user
+        if self.role in member.roles:
+            await member.remove_roles(self.role, reason="RP Search")
+            await resp.send_message("Role removed successfully", ephemeral=True)
+            return
+        await resp.send_message("You don't have that role.", ephemeral=True)
+
+    @button(label="Click here to view all the user's characters.", row=1)
+    async def check_ocs(self, _: Button, ctx: Interaction):
+        view = CharactersView(
+            bot=self.bot,
+            member=ctx.user,
+            target=ctx,
+            ocs=self.ocs,
+        )
+        await view.send(ephemeral=True)
+
+
+class RoleButton(Button):
+    def __init__(
+        self,
+        bot: CustomBot,
+        label: str,
+        custom_id: int,
+        cool_down: dict[int, datetime],
+        role_cool_down: dict[int, datetime],
+    ):
+        super(RoleButton, self).__init__(
+            label=label,
+            custom_id=str(custom_id),
+        )
+        self.bot = bot
+        self.cool_down = cool_down
+        self.role_cool_down = role_cool_down
+
+    async def callback(self, ctx: Interaction) -> bool:
+        role: Role = ctx.guild.get_role(int(self.custom_id))
+        member: Member = ctx.user
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+
+        if role not in member.roles:
+            await member.add_roles(role, reason="RP searching")
+
+        cog = self.bot.get_cog(name="Submission")
+        channel: TextChannel = self.bot.get_channel(722617383738540092)
+
+        characters = cog.rpers.get(member.id, set())
+        view = RoleManage(self.bot, role, characters)
+
+        embed = Embed(
+            title=role.name,
+            color=ctx.user.color,
+            description=f"{ctx.user.display_name} is looking "
+            "to RP with their registered character(s).",
+            timestamp=utcnow(),
+        )
+        embed.set_thumbnail(url=ctx.user.avatar.url)
+        msg = await channel.send(
+            content=f"{role.mention} is being pinged by {ctx.user.mention}",
+            embed=embed,
+            allowed_mentions=AllowedMentions(roles=True, users=True),
+            view=view,
+        )
+        self.cool_down[member.id] = utcnow()
+        self.role_cool_down[role.id] = utcnow()
+
+        view = View()
+        view.add_item(Button(label="Jump URL", url=msg.url))
+
+        await ctx.followup.send(
+            content="Ping has been done successfully.",
+            view=view,
+            ephemeral=True,
+        )
+
+
+class RoleView(View):
+    __slots__ = ("cool_down", "role_time", "bot")
+
+    def __init__(
+        self,
+        bot: CustomBot,
+        cool_down: dict[int, datetime],
+        role_cool_down: dict[int, datetime],
+    ):
+        """Init Method
+        Parameters
+        ----------
+        bot: CustomBot
+            Bot
+        cool_down: dict[int, datetime]
+            cool down per user
+        role_cool_down: dict[int, datetime]
+            cool down per role
+        """
+        super().__init__(timeout=None)
+        self.cool_down: dict[int, datetime] = cool_down
+        self.role_cool_down: dict[int, datetime] = role_cool_down
+        self.bot = bot
+        for label, role_id in RP_SEARCH_ROLES.items():
+            btn = RoleButton(
+                bot=self.bot,
+                label=label,
+                custom_id=role_id,
+                cool_down=self.cool_down,
+                role_cool_down=self.role_cool_down,
+            )
+            self.add_item(item=btn)
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        resp: InteractionResponse = interaction.response
+        if hours((val := self.cool_down.get(interaction.user.id))) < 2:
+            s = 7200 - seconds(val)
+            await resp.send_message(
+                "You're in cool down, you pinged one of the roles recently."
+                f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                ephemeral=True,
+            )
+            return False
+        custom_id: int = int(interaction.data.get("custom_id"))
+        if hours((val := self.role_cool_down.get(custom_id))) < 2:
+            s = 7200 - seconds(val)
+            await resp.send_message(
+                f"<@&{custom_id}> is in cool down, check the latest ping at <#722617383738540092>."
+                f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                ephemeral=True,
+            )
+            return False
+        return True
