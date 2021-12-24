@@ -1063,7 +1063,7 @@ class FakemonCharacter(Character):
         async for item in connection.cursor(
             """--sql
             SELECT C.*, F.NAME AS SPECIES,
-            F.HP, F.ATK, F.DEF, F.SPA, F.SPD, F.SPD
+            F.HP, F.ATK, F.DEF, F.SPA, F.SPD, F.SPE
             FROM FAKEMON F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
@@ -1076,15 +1076,12 @@ class FakemonCharacter(Character):
             stats = {k.upper(): v for k, v in stats.items()}
             if species := data.pop("species", None):
                 movepool = await Movepool.fakemon_fetch(connection, fakemon_id)
-                try:
-                    data["species"] = Fakemon(
-                        id=fakemon_id,
-                        name=species,
-                        movepool=movepool,
-                        **stats,
-                    )
-                except Exception:
-                    print(stats, data)
+                data["species"] = Fakemon(
+                    id=fakemon_id,
+                    name=species,
+                    movepool=movepool,
+                    **stats,
+                )
             mon = FakemonCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
