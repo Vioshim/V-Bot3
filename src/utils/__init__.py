@@ -67,7 +67,6 @@ __all__ = (
     "check_valid",
     "text_check",
     "image_check",
-    "image_check2",
     "message_line",
     "embed_handler",
     "ImageKit",
@@ -81,5 +80,5 @@ __all__ = (
     "EMOJI_REGEX",
     "REGEX_URL",
     "DISCORD_MSG_URL",
-    "DATA_FINDER",
+    "DATA_FINDER"
 )
