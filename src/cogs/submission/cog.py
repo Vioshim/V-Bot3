@@ -301,6 +301,9 @@ class Submission(Cog):
                 return
             return await ctx.channel.send(msg, delete_after=delete_after)
 
+        if not (member := getattr(ctx, "author", None)):
+            member = ctx.user
+
         if not self.ready:
             await ctx_send(
                 "Bot is restarting, please be patient", delete_after=5
@@ -314,14 +317,14 @@ class Submission(Cog):
                 )
             else:
                 text_view = TextInput(
-                    bot=self.bot, member=ctx.author, target=ctx
+                    bot=self.bot, member=member, target=ctx
                 )
                 await ctx_send("Starting submission process", delete_after=5)
 
                 if isinstance(oc, FakemonCharacter):
                     stats_view = StatsView(
                         bot=self.bot,
-                        member=ctx.author,
+                        member=member,
                         target=ctx,
                     )
                     async with stats_view:
@@ -355,7 +358,7 @@ class Submission(Cog):
                     mode = isinstance(values, list)
                     view = ComplexInput(
                         bot=self.bot,
-                        member=ctx.author,
+                        member=member,
                         target=ctx,
                         values=values,
                         max_values=1 if mode else 2,
@@ -408,7 +411,7 @@ class Submission(Cog):
                     else:
                         ability_view = ComplexInput(
                             bot=self.bot,
-                            member=ctx.author,
+                            member=member,
                             values=(
                                 Abilities
                                 if oc.any_ability_at_first
@@ -455,7 +458,7 @@ class Submission(Cog):
                     and len(oc.abilities) == 1
                 ):
                     bool_view = BooleanView(
-                        bot=self.bot, member=ctx.author, target=ctx
+                        bot=self.bot, member=member, target=ctx
                     )
                     bool_view.embed.title = (
                         "Does the character have an Special Ability?'"
@@ -499,7 +502,7 @@ class Submission(Cog):
 
                     moves_view = ComplexInput(
                         bot=self.bot,
-                        member=ctx.author,
+                        member=member,
                         values=movepool(),
                         timeout=None,
                         target=ctx,
@@ -556,7 +559,7 @@ class Submission(Cog):
                 if not oc.image:
                     image_view = ImageView(
                         bot=self.bot,
-                        member=ctx.author,
+                        member=member,
                         target=ctx,
                         default_img=oc.default_image,
                     )
@@ -567,9 +570,9 @@ class Submission(Cog):
                     if received := image_view.received:
                         await received.delete(delay=10)
 
-        await self.list_update(ctx.author)
+        await self.list_update(member)
         webhook = await self.bot.fetch_webhook(919280056558317658)
-        thread_id = self.oc_list[ctx.author.id]
+        thread_id = self.oc_list[member.id]
         thread: Thread = await self.bot.fetch_channel(thread_id)
         if file := await self.bot.get_file(
             url=oc.generated_image, filename="image"
@@ -585,12 +588,12 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(ctx.author.id, frozenset())
-            self.rpers[ctx.author.id].add(oc)
+            self.rpers.setdefault(member.id, frozenset())
+            self.rpers[member.id].add(oc)
             self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character has been registered! > %s > %s > %s",
-                str(ctx.author),
+                str(member),
                 str(type(oc)),
                 oc.url or "Manual",
             )
@@ -621,12 +624,8 @@ class Submission(Cog):
                 )
                 self.bot.add_view(view=view, message_id=thread_id)
 
-            self.bot.logger.info(
-                "Finished loading all Profiles."
-            )
-            self.bot.logger.info(
-                "Loading all Characters."
-            )
+            self.bot.logger.info("Finished loading all Profiles.")
+            self.bot.logger.info("Loading all Characters.")
 
             for oc in await fetch_all(db):
                 self.ocs[oc.id] = oc
@@ -678,7 +677,7 @@ class Submission(Cog):
             await w.edit_message(903437849154711552, view=view)
 
         self.bot.logger.info("Finished loading menu")
-        
+
         self.bot.logger.info("Loading claimed categories")
 
         for item in RP_CATEGORIES:
