@@ -316,7 +316,7 @@ class AgeMod(Mod):
         text_view = TextInput(bot=bot, member=member, target=target)
         handler = text_view.handle(
             title="Write the character's Age. Current below",
-            description=f"> {oc.name}",
+            description=f"> {oc.age or 'Unknown'}",
         )
         async with handler as answer:
             if isinstance(answer, str):
