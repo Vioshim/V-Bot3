@@ -215,20 +215,15 @@ class Basic(Generic[_M], View):
             resp: InteractionResponse = target.response
             if not resp.is_done():
                 await resp.send_message(**data)
-                self.bot.logger.info("Test 1")
             else:
                 await target.followup.send(**data)
-                self.bot.logger.info("Test 2")
             if message := await target.original_message():
                 await message.edit(embed=self._embed, view=self)
                 self.message = message
-                self.bot.logger.info("Test 3")
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
-            self.bot.logger.info("Test 4")
         else:
             self.message = await target.send(**data)
-            self.bot.logger.info("Test 5")
 
         if message := self.message:
             self.bot.msg_cache.add(message.id)

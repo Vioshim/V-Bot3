@@ -116,7 +116,11 @@ def detection(kind: Type[SpeciesBase], exclude: Type[SpeciesBase] = None):
             param &= item.name.startswith(data.title())
             return param
 
-        return [OptionChoice(item.name, item.id) for item in Species if condition(item.value)]
+        return [
+            OptionChoice(item.name, item.id)
+            for item in Species
+            if condition(item.value)
+        ]
 
     return inner
 
@@ -187,7 +191,9 @@ class Submission(Cog):
             except DiscordException:
                 with suppress(DiscordException):
                     thread = await self.bot.fetch_channel(oc_list)
-                    await thread.delete(reason="Former OC List Message was removed.")
+                    await thread.delete(
+                        reason="Former OC List Message was removed."
+                    )
         message: WebhookMessage = await webhook.send(
             content=member.mention,
             wait=True,
@@ -219,7 +225,9 @@ class Submission(Cog):
         moveset: bool = True,
         standard_register: bool = True,
     ):
-        async def ctx_send(msg: str, delete_after: int = None) -> Optional[Message]:
+        async def ctx_send(
+            msg: str, delete_after: int = None
+        ) -> Optional[Message]:
             """This is a handler for sending messages depending on the context
 
             Parameters
@@ -243,12 +251,16 @@ class Submission(Cog):
             member = ctx.user
 
         if not self.ready:
-            await ctx_send("Bot is restarting, please be patient", delete_after=5)
+            await ctx_send(
+                "Bot is restarting, please be patient", delete_after=5
+            )
             return
 
         if standard_register:
             if oc.url:
-                await ctx_send("Character has been loaded successfully", delete_after=5)
+                await ctx_send(
+                    "Character has been loaded successfully", delete_after=5
+                )
             else:
                 text_view = TextInput(bot=self.bot, member=member, target=ctx)
                 await ctx_send("Starting submission process", delete_after=5)
@@ -266,8 +278,12 @@ class Submission(Cog):
 
                     types = None
                     while types is None:
-                        text_view.embed.title = "Write the character's types (Min 1, Max 2)"
-                        text_view.embed.description = "For example: Fire, Psychic"
+                        text_view.embed.title = (
+                            "Write the character's types (Min 1, Max 2)"
+                        )
+                        text_view.embed.description = (
+                            "For example: Fire, Psychic"
+                        )
                         async with text_view.handle(required=True) as answer:
                             if not answer:
                                 return
@@ -278,7 +294,11 @@ class Submission(Cog):
                                 types = None
 
                 if not oc.types:
-                    values = oc.possible_types if isinstance(oc, FusionCharacter) else Types
+                    values = (
+                        oc.possible_types
+                        if isinstance(oc, FusionCharacter)
+                        else Types
+                    )
                     mode = isinstance(values, list)
                     view = ComplexInput(
                         bot=self.bot,
@@ -288,11 +308,15 @@ class Submission(Cog):
                         max_values=1 if mode else 2,
                         timeout=None,
                         parser=lambda x: (
-                            name := "/".join(str(i) for i in x) if isinstance(x, set) else str(x),
+                            name := "/".join(str(i) for i in x)
+                            if isinstance(x, set)
+                            else str(x),
                             f"Adds the typing {name}",
                         ),
                     )
-                    async with view.send(single=mode, title="Select Typing") as types:
+                    async with view.send(
+                        single=mode, title="Select Typing"
+                    ) as types:
                         if not types:
                             return
                         oc.species.types = frozenset(types)
@@ -302,7 +326,8 @@ class Submission(Cog):
                         values = oc.possible_types
                         if oc.types not in values:
                             items = ", ".join(
-                                "/".join(i.name for i in item) for item in values
+                                "/".join(i.name for i in item)
+                                for item in values
                             ).title()
                             await ctx_send(
                                 f"Invalid typing for the fusion, valid types are {items}",
@@ -310,7 +335,9 @@ class Submission(Cog):
                             )
                             return
                     elif oc.types != oc.species.types:
-                        items = "/".join(i.name for i in oc.species.types).title()
+                        items = "/".join(
+                            i.name for i in oc.species.types
+                        ).title()
                         await ctx_send(
                             f"Invalid typing for the character, valid types is {items}",
                             delete_after=5,
@@ -320,20 +347,29 @@ class Submission(Cog):
                 max_ab = oc.max_amount_abilities
                 if not oc.abilities:
 
-                    if not isinstance(oc, FakemonCharacter) and oc.max_amount_abilities == 1:
+                    if (
+                        not isinstance(oc, FakemonCharacter)
+                        and oc.max_amount_abilities == 1
+                    ):
                         oc.abilities = oc.species.abilities
                     else:
                         ability_view = ComplexInput(
                             bot=self.bot,
                             member=member,
                             values=(
-                                Abilities if oc.any_ability_at_first else oc.species.abilities
+                                Abilities
+                                if oc.any_ability_at_first
+                                else oc.species.abilities
                             ),
                             target=ctx,
                             max_values=max_ab,
                         )
-                        ability_view.set_parser(lambda x: (x.value.name, x.value.description))
-                        ability_view.embed.title = f"Select the Abilities (Max {max_ab})"
+                        ability_view.set_parser(
+                            lambda x: (x.value.name, x.value.description)
+                        )
+                        ability_view.embed.title = (
+                            f"Select the Abilities (Max {max_ab})"
+                        )
                         if max_ab == 2:
                             ability_view.embed.description = "If you press the write button, you can add multiple by adding commas."
 
@@ -355,12 +391,22 @@ class Submission(Cog):
                             ability_errors.add(item)
 
                     if text := ", ".join(i.value.name for i in ability_errors):
-                        await ctx_send(f"the abilities [{text}] were not found in the species")
+                        await ctx_send(
+                            f"the abilities [{text}] were not found in the species"
+                        )
                         return
 
-                if sp_ability and oc.can_have_special_abilities and len(oc.abilities) == 1:
-                    bool_view = BooleanView(bot=self.bot, member=member, target=ctx)
-                    bool_view.embed.title = "Does the character have an Special Ability?'"
+                if (
+                    sp_ability
+                    and oc.can_have_special_abilities
+                    and len(oc.abilities) == 1
+                ):
+                    bool_view = BooleanView(
+                        bot=self.bot, member=member, target=ctx
+                    )
+                    bool_view.embed.title = (
+                        "Does the character have an Special Ability?'"
+                    )
                     bool_view.embed.description = (
                         "Special abilities are basically unique traits that their OC's kind usually can't do,"
                         " it's like being born with an unique power that could have been obtained by different"
@@ -380,9 +426,13 @@ class Submission(Cog):
                             ]:
                                 if item == "method":
                                     word = "origin"
-                                text_view.embed.title = f"Special Ability's {word.title()}"
+                                text_view.embed.title = (
+                                    f"Special Ability's {word.title()}"
+                                )
                                 text_view.embed.description = f"Here you'll define the Special Ability's {word.title()}, make sure it is actually understandable."
-                                async with text_view.handle(required=True) as answer:
+                                async with text_view.handle(
+                                    required=True
+                                ) as answer:
                                     if not answer:
                                         return
                                     data[item] = answer
@@ -403,9 +453,7 @@ class Submission(Cog):
                         max_values=6,
                     )
                     moves_view.embed.title = "Select the Moves"
-                    moves_view.embed.description = (
-                        "If you press the write button, you can add multiple by adding commas."
-                    )
+                    moves_view.embed.description = "If you press the write button, you can add multiple by adding commas."
 
                     async with moves_view as moves:
                         if not moves:
@@ -422,7 +470,9 @@ class Submission(Cog):
                             move_errors.add(item)
 
                     if text := ", ".join(i.value.name for i in move_errors):
-                        await ctx_send(f"the moves [{text}] were not found in the movepool")
+                        await ctx_send(
+                            f"the moves [{text}] were not found in the movepool"
+                        )
                         return
 
                 # Ask for backstory
@@ -468,7 +518,9 @@ class Submission(Cog):
         webhook = await self.bot.fetch_webhook(919280056558317658)
         thread_id = self.oc_list[member.id]
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
@@ -621,7 +673,9 @@ class Submission(Cog):
         if payload.parent_id != 919277769735680050:
             return
         if payload.thread_id in self.oc_list.values():
-            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
+            author_id: int = [
+                k for k, v in self.oc_list.items() if v == payload.message_id
+            ][0]
             async with self.bot.database() as db:
                 del self.oc_list[author_id]
                 await db.execute(
@@ -643,7 +697,9 @@ class Submission(Cog):
                     await oc.delete(db)
 
     @Cog.listener()
-    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
+    async def on_raw_message_delete(
+        self, payload: RawMessageDeleteEvent
+    ) -> None:
         """Detects if ocs or lists were deleted
 
         Parameters
@@ -664,7 +720,9 @@ class Submission(Cog):
                     )
                     await oc.delete(db)
         if payload.message_id in self.oc_list.values():
-            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
+            author_id: int = [
+                k for k, v in self.oc_list.items() if v == payload.message_id
+            ][0]
             del self.oc_list[author_id]
             async with self.bot.database() as db:
                 for oc in self.rpers.pop(author_id, set()):
@@ -713,7 +771,9 @@ class Submission(Cog):
         except MarkedYAMLError:
             return
         except Exception as e:
-            self.bot.logger.exception("Exception processing character", exc_info=e)
+            self.bot.logger.exception(
+                "Exception processing character", exc_info=e
+            )
             await message.reply(f"Exception:\n\n{e}", delete_after=10)
             return
 
@@ -721,7 +781,6 @@ class Submission(Cog):
         "register",
         "Command used for registering characters",
         [719343092963999804],
-        permissions=[Permission("owner", 2, True)],
     )
 
     @register.command()
@@ -736,7 +795,9 @@ class Submission(Cog):
             URL
         """
         if not (doc_data := G_DOCUMENT.match(url)):
-            return await ctx.respond("That's not a google document", ephemeral=True)
+            return await ctx.respond(
+                "That's not a google document", ephemeral=True
+            )
         msg_data = await doc_convert(doc_data.group(1))
         if oc := oc_process(**msg_data):
             oc.author = ctx.author.id
@@ -1010,7 +1071,9 @@ class Submission(Cog):
 
         mon1, mon2 = Species[species1], Species[species2]
         if mon1 == mon2:
-            return await ctx.respond("Both species are the same", ephemeral=True)
+            return await ctx.respond(
+                "Both species are the same", ephemeral=True
+            )
         oc = FusionCharacter(
             name=name.title(),
             species=Fusion(mon1, mon2),
