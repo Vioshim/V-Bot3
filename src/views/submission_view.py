@@ -43,13 +43,12 @@ from src.views.mission_view import MissionView
 
 
 class CharacterHandlerView(Complex):
-
     def __init__(
         self,
         bot: CustomBot,
         member: Member,
         ctx: Interaction,
-        values: set[Character]
+        values: set[Character],
     ):
         super(CharacterHandlerView, self).__init__(
             bot=bot,
@@ -57,7 +56,7 @@ class CharacterHandlerView(Complex):
             ctx=ctx,
             values=values,
             parser=lambda x: (x.name, repr(x)),
-            timeout=None
+            timeout=None,
         )
 
     async def custom_choice(self, sct: Select, interaction: Interaction):
@@ -70,9 +69,7 @@ class CharacterHandlerView(Complex):
                 oc=oc,
             )
             await resp.send_message(
-                embed=oc.embed,
-                view=mod_view,
-                ephemeral=True
+                embed=oc.embed, view=mod_view, ephemeral=True
             )
 
 
@@ -122,7 +119,9 @@ class SubmissionView(View):
                 timestamp=utcnow(),
             )
             if slash := template.get("Slash"):
-                embed.set_footer(text=f"Alternatively, there's also the command {slash}")
+                embed.set_footer(
+                    text=f"Alternatively, there's also the command {slash}"
+                )
             view = View()
             for k, v in template.get("Document", {}).items():
                 btn = Button(
@@ -149,16 +148,22 @@ class SubmissionView(View):
 
         if channel.permissions_for(ctx.user).manage_messages:
             m = await channel.send("Mention the User")
-            aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
+            aux: Message = await self.bot.wait_for(
+                "message", check=text_check(ctx)
+            )
             self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
             await m.delete()
             context = await self.bot.get_context(aux)
-            member = await MemberConverter().convert(ctx=context, argument=aux.content)
+            member = await MemberConverter().convert(
+                ctx=context, argument=aux.content
+            )
             await aux.delete()
 
         if not (values := self.rpers.get(member.id, set())):
-            return await resp.send_message("You don't have characters to modify", ephemeral=True)
+            return await resp.send_message(
+                "You don't have characters to modify", ephemeral=True
+            )
 
         view = Complex(
             bot=self.bot,
@@ -169,8 +174,12 @@ class SubmissionView(View):
         )
 
         oc: Type[Character]
-        view.embed.title = "Select Character to modify"
-        await view.send()
+        async with view.send(
+            title="Select Character to modify", single=True
+        ) as oc:
+            self.bot.logger.info(
+                "%s is modifying a Character(%s)", str(ctx.user), repr(oc)
+            )
         await view.wait()
 
     @button(
@@ -184,15 +193,22 @@ class SubmissionView(View):
         role = guild.get_role(719642423327719434)
         resp: InteractionResponse = ctx.response
         if role not in ctx.user.roles:
-            await resp.send_message("You don't have a character registered", ephemeral=True)
+            await resp.send_message(
+                "You don't have a character registered", ephemeral=True
+            )
             return
-        locations: list[CategoryChannel] = [guild.get_channel(item) for item in RP_CATEGORIES]
+        locations: list[CategoryChannel] = [
+            guild.get_channel(item) for item in RP_CATEGORIES
+        ]
         view = ComplexInput(
             bot=self.bot,
             member=ctx.user,
             target=ctx,
             values=locations,
-            parser=lambda x: (name := x.name[2:].capitalize(), f"Sets it at {name}"),
+            parser=lambda x: (
+                name := x.name[2:].capitalize(),
+                f"Sets it at {name}",
+            ),
             emoji_parser=lambda x: x.name[0],
         )
         choice: CategoryChannel
@@ -206,7 +222,10 @@ class SubmissionView(View):
                 values=[
                     item
                     for item in choice.channels
-                    if ("-ooc" not in item.name and isinstance(item, TextChannel))
+                    if (
+                        "-ooc" not in item.name
+                        and isinstance(item, TextChannel)
+                    )
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
@@ -220,7 +239,10 @@ class SubmissionView(View):
                     return
                 mission = Mission(author=ctx.user.id, place=area.id)
                 text_input = TextInput(
-                    bot=self.bot, member=ctx.user, target=ctx.channel, required=True
+                    bot=self.bot,
+                    member=ctx.user,
+                    target=ctx.channel,
+                    required=True,
                 )
 
                 async with text_input.send(
@@ -264,7 +286,9 @@ class SubmissionView(View):
                     parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
                     title="Mission's Difficulty",
                 )
-                async with view.send(title="Mission's difficulty", single=True) as item:
+                async with view.send(
+                    title="Mission's difficulty", single=True
+                ) as item:
                     if not item:
                         return
                     mission.difficulty = item
