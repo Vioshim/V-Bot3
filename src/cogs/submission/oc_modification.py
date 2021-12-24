@@ -886,8 +886,7 @@ class ModifyView(View):
                 description=item.description,
                 emoji="\N{PENCIL}",
             )
-            for item in Modification
-            if item.value.check(oc)
+            for item in filter(lambda x: x.check(oc), Modification)
         ]
         self.edit.max_values = len(self.edit.options)
 
