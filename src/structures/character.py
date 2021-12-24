@@ -1673,10 +1673,10 @@ def oc_process(**kwargs):
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", {}):
+        if movepool := data.pop(
+            "movepool", {"event": data.get("moveset", set())}
+        ):
             species.movepool = Movepool.from_dict(**movepool)
-        else:
-            species.movepool = Movepool(event=data.get("moveset", frozenset()))
 
     data = {k: v for k, v in data.items() if v}
 
