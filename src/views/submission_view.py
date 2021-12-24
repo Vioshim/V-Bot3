@@ -68,7 +68,10 @@ class CharacterHandlerView(Complex):
                 member=interaction.user,
                 oc=oc,
             )
-            await interaction.followup.send(embed=oc.embed, view=mod_view, ephemeral=True)
+            await interaction.followup.send(
+                embed=oc.embed, view=mod_view, ephemeral=True
+            )
+            self.stop()
 
 
 class SubmissionView(View):

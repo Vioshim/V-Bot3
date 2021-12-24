@@ -520,6 +520,7 @@ class AbilitiesMod(Mod):
             timeout=None,
             target=target,
             max_values=oc.max_amount_abilities,
+            parser=lambda x: (x.value.name, x.description)
         )
         async with view.send(
             title="Select the abilities. Current ones below",
