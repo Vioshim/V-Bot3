@@ -742,7 +742,7 @@ class ModifyView(View):
             if modifying:
                 cog = self.bot.get_cog("Submission")
                 cog.ocs.pop(self.oc.id, None)
-                cog.rpers.set_default(self.oc.author, set())
+                cog.rpers.setdefault(self.oc.author, set())
                 cog.rpers[self.oc.author] -= {self.oc}
                 async with self.bot.database() as db:
                     await self.oc.delete(db)
