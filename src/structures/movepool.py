@@ -244,7 +244,7 @@ class Movepool:
                     for item in value:
                         if data := Moves.fetch_by_name(item):
                             if not data.banned:
-                                moves.add(item)
+                                moves.add(data)
                     level[key] = frozenset(moves)
                 self.level = frozendict(level)
         else:
@@ -252,7 +252,7 @@ class Movepool:
             for item in value:
                 if data := Moves.fetch_by_name(item):
                     if not data.banned:
-                        moves.add(item)
+                        moves.add(data)
 
             moves = frozenset(moves)
 
