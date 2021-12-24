@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
 from typing import Type, Union
 
 from discord import (
     AllowedMentions,
     CategoryChannel,
-    DiscordException,
     Embed,
     Guild,
     Interaction,
@@ -27,7 +25,6 @@ from discord import (
     Message,
     SelectOption,
     TextChannel,
-    WebhookMessage,
 )
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, Select, View, button, select
@@ -43,6 +40,40 @@ from src.structures.mission import Mission
 from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
 from src.utils.functions import text_check
 from src.views.mission_view import MissionView
+
+
+class CharacterHandlerView(Complex):
+    
+    def __init__(
+        self,
+        bot: CustomBot,
+        member: Member,
+        ctx: Interaction,
+        values: set[Character]
+    ):
+        super(CharacterHandlerView, self).__init__(
+            bot=bot,
+            member=member,
+            ctx=ctx,
+            values=values,
+            parser=lambda x: (x.name, repr(x)),
+            timeout=None
+        )
+
+    async def custom_choice(self, sct: Select, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        if oc := self.choice:
+            await resp.defer(ephemeral=True)
+            mod_view = ModifyView(
+                bot=self.bot,
+                member=interaction.user,
+                oc=oc,
+            )
+            await resp.send_message(
+                embed=oc.embed,
+                view=mod_view,
+                ephemeral=True
+            )
 
 
 class SubmissionView(View):
@@ -115,7 +146,7 @@ class SubmissionView(View):
         channel: TextChannel = ctx.channel
 
         await resp.defer(ephemeral=True)
-        
+
         if channel.permissions_for(ctx.user).manage_messages:
             m = await channel.send("Mention the User")
             aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
@@ -138,26 +169,9 @@ class SubmissionView(View):
         )
 
         oc: Type[Character]
-        async with view.send(title="Select Character to modify", single=True) as oc:
-            if oc is None:
-                return
-            mod_view = ModifyView(
-                bot=self.bot,
-                member=ctx.user,
-                oc=oc,
-            )
-            webhook = await self.bot.webhook(ctx.channel_id, reason="Bio")
-            message: WebhookMessage = await webhook.send(
-                embed=oc.embed,
-                view=mod_view,
-                wait=True,
-                username=ctx.user.display_name,
-                avatar_url=ctx.user.display_avatar.url,
-            )
-            self.bot.msg_cache.add(message.id)
-            await mod_view.wait()
-            with suppress(DiscordException):
-                await message.delete()
+        view.embed.title = "Select Character to modify"
+        await view.send()
+        await view.wait()
 
     @button(
         label="Create Mission",

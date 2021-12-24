@@ -159,12 +159,12 @@ class Complex(Simple):
 
         foo: Select = self.select_choice
         pages: Select = self.navigate
-        
+
         if not (choices := self.choices):
             choices = set()
 
         foo.placeholder = f"Picked:{len(choices)}, Max:{self.max_values}"
-        
+
         foo.options.clear()
         pages.options.clear()
 
@@ -374,20 +374,19 @@ class Complex(Simple):
             Current interaction of the user
         """
         response: InteractionResponse = interaction.response
-        await self.custom_choice(sct, interaction)
         answer: list[str] = interaction.data.get("values", [])
         if self._choices is None:
             self._choices = set()
+        entries = []
+        amount = self.entries_per_page * self._pos
+        chunk = self.values[amount : amount + self.entries_per_page]
+        for index in answer:  # type: str
+            item: _T = chunk[int(index)]
+            name, _ = self.parser(item)
+            entries.append(str(name))
+            self._choices.add(item)
+        await self.custom_choice(sct, interaction)
         if not response.is_done():
-            entries = []
-            for index in answer:  # type: str
-                amount = self.entries_per_page * self._pos
-                chunk = self.values[amount : amount + self.entries_per_page]
-                item: _T = chunk[int(index)]
-                name, _ = self.parser(item)
-                entries.append(str(name))
-                self._choices.add(item)
-
             text = ", ".join(entries)
             await response.send_message(
                 content=f"Great! you have selected **{text}**.",
