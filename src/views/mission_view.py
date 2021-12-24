@@ -20,7 +20,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mission import Mission
 
-__all__ = ("MissionView",)
+__all__ = ("MissionView", )
 
 
 class MissionView(View):
@@ -37,18 +37,16 @@ class MissionView(View):
         member: Member = interaction.user
         if not (ocs := cog.oc_slots.get(member.id, set())):
             await interaction.response.send_message(
-                "You don't have registered characters", ephemeral=True
-            )
+                "You don't have registered characters", ephemeral=True)
             return
 
         async with self.bot.database() as db:
 
             if await db.fetchval(
-                "SELECT COUNT(*) > 1 FROM MISSIONS WHERE CLAIMED = $1;", member.id
-            ):
+                    "SELECT COUNT(*) > 1 FROM MISSIONS WHERE CLAIMED = $1;",
+                    member.id):
                 await interaction.response.send_message(
-                    "You are already doing a mission.", ephemeral=True
-                )
+                    "You are already doing a mission.", ephemeral=True)
                 return
 
         view_select = Complex(
@@ -61,8 +59,8 @@ class MissionView(View):
 
         choice: Character
         async with view_select.send(
-            title="Mission Claiming",
-            description="Select who is taking the mission",
+                title="Mission Claiming",
+                description="Select who is taking the mission",
         ) as choice:
 
             if not choice:
@@ -70,7 +68,8 @@ class MissionView(View):
 
             async with self.bot.database() as db:
 
-                w2 = await self.bot.webhook(interaction.channel_id, reason="Missions")
+                w2 = await self.bot.webhook(interaction.channel_id,
+                                            reason="Missions")
 
                 btn.label = "See Claim"
                 btn.custom_id = None
@@ -79,13 +78,15 @@ class MissionView(View):
 
                 await w2.edit_message(interaction.message.id, view=self)
 
-                w3 = await self.bot.webhook(740568087820238919, reason="Mission Claim")
+                w3 = await self.bot.webhook(740568087820238919,
+                                            reason="Mission Claim")
 
                 self.mission.claimed = member.id
                 await self.mission.upsert(connection=db)
                 view = View()
                 view.add_item(Button(label="Character", url=choice.jump_url))
-                view.add_item(Button(label="Mission", url=self.mission.jump_url))
+                view.add_item(
+                    Button(label="Mission", url=self.mission.jump_url))
 
                 if author := w3.guild.get_member(self.mission.author):
                     await w3.send(
@@ -107,9 +108,11 @@ class MissionView(View):
         ch: TextChannel = interaction.channel
         if not ch.permissions_for(member).manage_messages:
             if member.id != self.mission.author:
-                await interaction.response.send_message("It's not yours.", ephemeral=True)
+                await interaction.response.send_message("It's not yours.",
+                                                        ephemeral=True)
                 return
         async with self.bot.database() as db:
             await self.mission.remove(db)
             await interaction.message.delete()
-        await interaction.response.send_message("Mission has been removed.", ephemeral=True)
+        await interaction.response.send_message("Mission has been removed.",
+                                                ephemeral=True)
