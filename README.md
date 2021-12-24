@@ -1,7 +1,5 @@
 # Pokemon Parallel Yonder
 
-![image](https://cdn.discordapp.com/attachments/748384705098940426/909988411199348767/unknown.png)
-
 ---
 
 [![image](https://img.shields.io/discord/719343092963999804?color=%237289DA&label=Parallel%20Yonder&logo=discord&logoColor=white)](https://discord.gg/CENcTvnarE)
@@ -15,3 +13,5 @@ If you're interested in joining, feel feel free to click our link, there's many 
 Currently we have a great amount of users in our community that are the greatest people that a server owner can even ask for, So don't worry over being a moderator in order to do stuff, here any user can give a hand in what they can even if they don't have a role.
 
 Have a great day and can't wait to see the characters that you can design with our bot.
+
+![image](https://cdn.discordapp.com/attachments/748384705098940426/909988411199348767/unknown.png)
