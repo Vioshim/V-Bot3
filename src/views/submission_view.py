@@ -40,7 +40,7 @@ from src.pagination.text_input import TextInput
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mission import Mission
-from src.utils.etc import RP_CATEGORIES, DICE_NUMBERS
+from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
 from src.utils.functions import text_check
 from src.views.mission_view import MissionView
 
@@ -123,16 +123,7 @@ class SubmissionView(View):
             await aux.delete()
 
         if not (values := self.rpers.get(member.id, set())):
-            if resp.is_done():
-                return await resp.send_message(
-                    "You don't have characters to modify", ephemeral=True
-                )
-            else:
-                msg = await ctx.channel.send(
-                    "You don't have characters to modify", delete_after=10
-                )
-                self.bot.msg_cache_add(msg)
-                return
+            return await resp.send_message("You don't have characters to modify", ephemeral=True)
 
         view = Complex(
             bot=self.bot,
