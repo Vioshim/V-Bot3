@@ -313,21 +313,10 @@ class Movepool:
         Movepool
             Generated movepool
         """
-
-        def check(item):
-            if isinstance(item, str):
-                return Moves.fetch_by_name(item)
-            return item
-
-        level = {
-            k: frozenset(item for i in v if (item := check(i)))
-            for k, v in kwargs.get("level", {}).items()
-        }
-
-        movepool = Movepool(level=frozendict(level))
+        movepool = Movepool()
+        movepool["level"] = kwargs.get("level", {})
         for item in ["tm", "event", "tutor", "egg", "levelup", "other"]:
-            elements = {item for i in kwargs.get(item, set()) if (item := Moves.fetch_by_name(i))}
-            movepool[item] = frozenset(elements)
+            movepool[item] = kwargs.get(item, set())
         return movepool
 
     @property
