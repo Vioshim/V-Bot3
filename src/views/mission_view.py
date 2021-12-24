@@ -64,7 +64,6 @@ class MissionView(View):
             title="Mission Claiming",
             description="Select who is taking the mission",
         ) as choice:
-            pass
 
             if not choice:
                 return

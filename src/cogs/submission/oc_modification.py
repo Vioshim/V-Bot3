@@ -248,7 +248,6 @@ class Mod(metaclass=ABCMeta):
         bool
             If it requires to update or not
         """
-        pass
 
 
 class NameMod(Mod):
