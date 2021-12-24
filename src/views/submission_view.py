@@ -117,7 +117,7 @@ class SubmissionView(View):
         await resp.defer(ephemeral=True)
         
         if channel.permissions_for(ctx.user).manage_messages:
-            m = await channel.send("Mention the User", ephemeral=True)
+            m = await channel.send("Mention the User")
             aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
             self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
