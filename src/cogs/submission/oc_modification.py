@@ -39,8 +39,8 @@ from src.pagination.view_base import Basic
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.views import ImageView
 from src.utils.functions import int_check
+from src.views import ImageView
 
 SP_ABILITY_ITEMS = ["name", "origin", "description", "pros", "cons"]
 
@@ -104,15 +104,14 @@ class SPView(Basic):
                 parser=lambda x: (x.value.name, x.description),
             )
             async with view.send(
-                title="Select an Ability to Remove.",
-                fields=[
-                    dict(
-                        name=f"Ability {index} - {item.value.name}",
-                        value=item.description,
-                        inline=False,
-                    )
-                    for index, item in enumerate(backup, start=1)
-                ],
+                    title="Select an Ability to Remove.",
+                    fields=[
+                        dict(
+                            name=f"Ability {index} - {item.value.name}",
+                            value=item.description,
+                            inline=False,
+                        ) for index, item in enumerate(backup, start=1)
+                    ],
             ) as items:
                 if isinstance(items, set):
                     self.oc.abilities -= items
@@ -189,8 +188,8 @@ class SPView(Basic):
                 title = f"Special Ability's {item}. Current Below".title()
                 description = backup.get(word)
                 async with text_view.handle(
-                    title=title,
-                    description=description,
+                        title=title,
+                        description=description,
                 ) as answer:
                     if not isinstance(answer, str):
                         break
@@ -362,9 +361,9 @@ class PronounMod(Mod):
         )
         aux: Optional[bool] = None
         async with view.send(
-            title="Write the character's Pronoun. Current below",
-            description=f"> {oc.pronoun.name}",
-            single=True,
+                title="Write the character's Pronoun. Current below",
+                description=f"> {oc.pronoun.name}",
+                single=True,
         ) as item:
             if isinstance(item, Pronoun):
                 aux = item != oc.pronoun
@@ -475,14 +474,16 @@ class MovesetMod(Mod):
         moves_view = ComplexInput(
             bot=bot,
             member=member,
-            values=oc.movepool() or [item for item in Moves if not item.banned],
+            values=oc.movepool()
+            or [item for item in Moves if not item.banned],
             timeout=None,
             target=target,
             max_values=6,
         )
         async with moves_view.send(
-            title="Select the Moves. Current Moves below",
-            description="\n".join(repr(item) for item in oc.moveset) or "No moves",
+                title="Select the Moves. Current Moves below",
+                description="\n".join(repr(item) for item in oc.moveset)
+                or "No moves",
         ) as moves:
             if isinstance(moves, set):
                 oc.moveset = frozenset(moves)
@@ -524,15 +525,14 @@ class AbilitiesMod(Mod):
             parser=lambda x: (x.value.name, x.description),
         )
         async with view.send(
-            title="Select the abilities. Current ones below",
-            fields=[
-                dict(
-                    name=f"Ability {index} - {item.value.name}",
-                    value=item.description,
-                    inline=False,
-                )
-                for index, item in enumerate(oc.abilities, start=1)
-            ],
+                title="Select the abilities. Current ones below",
+                fields=[
+                    dict(
+                        name=f"Ability {index} - {item.value.name}",
+                        value=item.description,
+                        inline=False,
+                    ) for index, item in enumerate(oc.abilities, start=1)
+                ],
         ) as abilities:
             if isinstance(abilities, set):
                 oc.abilities = frozenset(abilities)
@@ -687,8 +687,7 @@ class ModifyView(View):
                 value=item.name,
                 description=f"Edit OC's {item}",
                 emoji="\N{PENCIL}",
-            )
-            for item in data
+            ) for item in data
         ]
         self.edit.max_values = len(self.edit.options)
 
@@ -728,7 +727,9 @@ class ModifyView(View):
                 thread: Thread = await self.bot.fetch_channel(self.oc.thread)
                 embed = self.oc.embed
                 embed.set_image(url="attachment://image.png")
-                await webhook.edit_message(self.oc.id, embed=embed, thread=thread)
+                await webhook.edit_message(self.oc.id,
+                                           embed=embed,
+                                           thread=thread)
                 async with self.bot.database() as db:
                     await self.oc.update(db)
             except DiscordException as e:
@@ -750,9 +751,12 @@ class ModifyView(View):
 
                 with suppress(DiscordException):
                     webhook = await self.bot.fetch_webhook(919280056558317658)
-                    await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
+                    await webhook.delete_message(self.oc.id,
+                                                 thread_id=self.oc.thread)
 
-                await cog.registration(ctx=ctx, oc=self.oc, standard_register=False)
+                await cog.registration(ctx=ctx,
+                                       oc=self.oc,
+                                       standard_register=False)
         self.used = False
         self.stop()
 
