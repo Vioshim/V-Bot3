@@ -14,7 +14,7 @@
 
 from abc import ABCMeta, abstractmethod
 from contextlib import suppress
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Optional, Type, Union
 
@@ -104,14 +104,15 @@ class SPView(Basic):
                 parser=lambda x: (x.value.name, x.description),
             )
             async with view.send(
-                    title="Select an Ability to Remove.",
-                    fields=[
-                        dict(
-                            name=f"Ability {index} - {item.value.name}",
-                            value=item.description,
-                            inline=False,
-                        ) for index, item in enumerate(backup, start=1)
-                    ],
+                title="Select an Ability to Remove.",
+                fields=[
+                    dict(
+                        name=f"Ability {index} - {item.value.name}",
+                        value=item.description,
+                        inline=False,
+                    )
+                    for index, item in enumerate(backup, start=1)
+                ],
             ) as items:
                 if isinstance(items, set):
                     self.oc.abilities -= items
@@ -188,8 +189,8 @@ class SPView(Basic):
                 title = f"Special Ability's {item}. Current Below".title()
                 description = backup.get(word)
                 async with text_view.handle(
-                        title=title,
-                        description=description,
+                    title=title,
+                    description=description,
                 ) as answer:
                     if not isinstance(answer, str):
                         break
@@ -219,7 +220,26 @@ class SPView(Basic):
         self.stop()
 
 
+@dataclass(unsafe_hash=True)
 class Mod(metaclass=ABCMeta):
+    label: str = ""
+    description: str = ""
+
+    @abstractmethod
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+
     @abstractmethod
     async def method(
         self,
@@ -250,7 +270,26 @@ class Mod(metaclass=ABCMeta):
         """
 
 
+@dataclass(unsafe_hash=True)
 class NameMod(Mod):
+    label: str = "Name"
+    description: str = "Modify the OC's Name"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -287,7 +326,26 @@ class NameMod(Mod):
                 return False
 
 
+@dataclass(unsafe_hash=True)
 class AgeMod(Mod):
+    label: str = "Age"
+    description: str = "Modify the OC's Age"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -324,7 +382,26 @@ class AgeMod(Mod):
                 return False
 
 
+@dataclass(unsafe_hash=True)
 class PronounMod(Mod):
+    label: str = "Pronoun"
+    description: str = "Modify the OC's Pronoun"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -360,9 +437,9 @@ class PronounMod(Mod):
         )
         aux: Optional[bool] = None
         async with view.send(
-                title="Write the character's Pronoun. Current below",
-                description=f"> {oc.pronoun.name}",
-                single=True,
+            title="Write the character's Pronoun. Current below",
+            description=f"> {oc.pronoun.name}",
+            single=True,
         ) as item:
             if isinstance(item, Pronoun):
                 aux = item != oc.pronoun
@@ -370,7 +447,26 @@ class PronounMod(Mod):
         return aux
 
 
+@dataclass(unsafe_hash=True)
 class BackstoryMod(Mod):
+    label: str = "Backstory"
+    description: str = "Modify the OC's Backstory"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -407,7 +503,26 @@ class BackstoryMod(Mod):
                 return False
 
 
+@dataclass(unsafe_hash=True)
 class ExtraMod(Mod):
+    label: str = "Extra Information"
+    description: str = "Modify the OC's Extra Information"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -444,7 +559,26 @@ class ExtraMod(Mod):
                 return False
 
 
+@dataclass(unsafe_hash=True)
 class MovesetMod(Mod):
+    label: str = "Moveset"
+    description: str = "Modify the OC's Moveset"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -473,22 +607,40 @@ class MovesetMod(Mod):
         moves_view = ComplexInput(
             bot=bot,
             member=member,
-            values=oc.movepool()
-            or [item for item in Moves if not item.banned],
+            values=oc.movepool() or [item for item in Moves if not item.banned],
             timeout=None,
             target=target,
             max_values=6,
         )
         async with moves_view.send(
-                title="Select the Moves. Current Moves below",
-                description="\n".join(repr(item) for item in oc.moveset)
-                or "No moves",
+            title="Select the Moves. Current Moves below",
+            description="\n".join(repr(item) for item in oc.moveset)
+            or "No moves",
         ) as moves:
             if isinstance(moves, set):
                 oc.moveset = frozenset(moves)
 
 
+@dataclass(unsafe_hash=True)
 class AbilitiesMod(Mod):
+    label: str = "Abilities"
+    description: str = "Modify the OC's Abilities"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -524,20 +676,40 @@ class AbilitiesMod(Mod):
             parser=lambda x: (x.value.name, x.description),
         )
         async with view.send(
-                title="Select the abilities. Current ones below",
-                fields=[
-                    dict(
-                        name=f"Ability {index} - {item.value.name}",
-                        value=item.description,
-                        inline=False,
-                    ) for index, item in enumerate(oc.abilities, start=1)
-                ],
+            title="Select the abilities. Current ones below",
+            fields=[
+                dict(
+                    name=f"Ability {index} - {item.value.name}",
+                    value=item.description,
+                    inline=False,
+                )
+                for index, item in enumerate(oc.abilities, start=1)
+            ],
         ) as abilities:
             if isinstance(abilities, set):
                 oc.abilities = frozenset(abilities)
 
 
+@dataclass(unsafe_hash=True)
 class ImageMod(Mod):
+    label: str = "Image"
+    description: str = "Modify the OC's Image"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return True
+
     async def method(
         self,
         oc: Type[Character],
@@ -579,7 +751,26 @@ class ImageMod(Mod):
         return aux
 
 
+@dataclass(unsafe_hash=True)
 class SpAbilityMod(Mod):
+    label: str = "Special Ability"
+    description: str = "Modify/Add the OC's Special Abilities"
+
+    def check(oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return oc.can_have_special_abilities
+
     async def method(
         self,
         oc: Type[Character],
@@ -624,6 +815,17 @@ class Modification(Enum):
     Abilities = AbilitiesMod()
     Image = ImageMod()
     SpAbility = SpAbilityMod()
+
+    @property
+    def label(self) -> str:
+        return self.value.label
+
+    @property
+    def description(self) -> str:
+        return self.value.description
+
+    def check(self, oc: Type[Character]) -> bool:
+        return self.value.check(oc)
 
     async def method(
         self,
@@ -676,17 +878,16 @@ class ModifyView(View):
         self.member = member
         self.oc = oc
         self.used = False
-        data = list(Modification)
-        if not oc.can_have_special_abilities:
-            data.remove(Modification.SpAbility)
 
         self.edit.options = [
             SelectOption(
-                label=f"OC's {item.name}".title(),
+                label=item.label,
                 value=item.name,
-                description=f"Edit OC's {item}",
+                description=item.description,
                 emoji="\N{PENCIL}",
-            ) for item in data
+            )
+            for item in Modification
+            if item.check(oc)
         ]
         self.edit.max_values = len(self.edit.options)
 
@@ -726,9 +927,9 @@ class ModifyView(View):
                 thread: Thread = await self.bot.fetch_channel(self.oc.thread)
                 embed = self.oc.embed
                 embed.set_image(url="attachment://image.png")
-                await webhook.edit_message(self.oc.id,
-                                           embed=embed,
-                                           thread=thread)
+                await webhook.edit_message(
+                    self.oc.id, embed=embed, thread=thread
+                )
                 async with self.bot.database() as db:
                     await self.oc.update(db)
             except DiscordException as e:
@@ -750,12 +951,13 @@ class ModifyView(View):
 
                 with suppress(DiscordException):
                     webhook = await self.bot.fetch_webhook(919280056558317658)
-                    await webhook.delete_message(self.oc.id,
-                                                 thread_id=self.oc.thread)
+                    await webhook.delete_message(
+                        self.oc.id, thread_id=self.oc.thread
+                    )
 
-                await cog.registration(ctx=ctx,
-                                       oc=self.oc,
-                                       standard_register=False)
+                await cog.registration(
+                    ctx=ctx, oc=self.oc, standard_register=False
+                )
         self.used = False
         self.stop()
 
