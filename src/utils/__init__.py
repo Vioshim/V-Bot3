@@ -80,5 +80,5 @@ __all__ = (
     "EMOJI_REGEX",
     "REGEX_URL",
     "DISCORD_MSG_URL",
-    "DATA_FINDER"
+    "DATA_FINDER",
 )
