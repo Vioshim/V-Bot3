@@ -1676,7 +1676,7 @@ def oc_process(**kwargs):
         if movepool := data.pop("movepool", {}):
             species.movepool = Movepool.from_dict(**movepool)
         else:
-            species.movepool = Movepool(event=frozenset(moveset))
+            species.movepool = Movepool(event=data.get("moveset", frozenset()))
 
     data = {k: v for k, v in data.items() if v}
 

@@ -77,9 +77,7 @@ class Moves(Enum):
             possibilities=Moves.__members__,
             n=1,
         ):
-            move: Moves = Moves[data]
-            if not move.value.banned:
-                return move
+            return Moves[data]
 
     @classmethod
     def deduce(cls, name: Union[str, Iterable[str]]) -> set[Moves]:
