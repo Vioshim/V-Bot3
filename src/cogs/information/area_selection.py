@@ -61,10 +61,7 @@ class AreaSelection(View):
         cog: Submission = bot.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
         self.total: int = 0
-        data = set()
-        for ocs in cog.oc_slots.values():
-            data.update(ocs)
-        for oc in data:
+        for oc in cog.ocs.values():
             if not (location := oc.location):
                 continue
             if not (ch := cat.guild.get_channel(location)):  # type: TextChannel
