@@ -63,7 +63,7 @@ class ColoredFormatter(Formatter):
         use_color: bool = True
             If using color or not
         """
-        super().__init__(msg)
+        super().__init__(fmt=msg, datefmt=r"%Y-%m-%d,%H:%M:%S.%f")
         self.use_color = use_color
 
     def converter(self, timestamp):
