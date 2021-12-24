@@ -106,7 +106,7 @@ class Movepool:
         Movepool
             Resulting movepool
         """
-        level: dict[int, frozenset] = dict()
+        level: dict[int, frozenset] = {}
 
         for index in set(self.level) | set(other.level):
             first = self.level.get(index, set())
@@ -234,7 +234,7 @@ class Movepool:
         """
         if key == "level":
             if isinstance(value, dict):
-                level = dict()
+                level = {}
                 for key, value in value.items():
                     moves = set()
                     for item in value:
@@ -262,7 +262,7 @@ class Movepool:
                 self.tutor = moves
             elif item == "egg":
                 self.egg = moves
-            elif item == "levelup" or item == "level-up":
+            elif item in ["levelup", "level-up"]:
                 self.levelup = moves
             else:
                 self.other = moves
@@ -294,7 +294,7 @@ class Movepool:
             return self.tutor
         if item == "egg":
             return self.egg
-        if item == "levelup" or item == "level-up":
+        if item in ["levelup", "level-up"]:
             return self.levelup
         if item == "other":
             return self.other

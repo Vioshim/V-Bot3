@@ -50,13 +50,9 @@ class PingView(View):
         if registered in interaction.user.roles:
             if guild.get_member(self.oc.author):
                 return True
-            await resp.send_message(
-                "Owner of the OC is no longer in the Server", ephemeral=True
-            )
+            await resp.send_message("Owner of the OC is no longer in the Server", ephemeral=True)
             return False
-        await resp.send_message(
-            "You don't have registered role", ephemeral=True
-        )
+        await resp.send_message("You don't have registered role", ephemeral=True)
         return False
 
     @button(label="Ping to RP with the OC")
@@ -134,9 +130,7 @@ class CharactersView(Complex):
                         ephemeral=True,
                     )
             except Exception as e:
-                self.bot.logger.exception(
-                    "Type: %s, Str: %s", type(item), str(item), exc_info=e
-                )
+                self.bot.logger.exception("Type: %s, Str: %s", type(item), str(item), exc_info=e)
             finally:
                 await self.edit(ctx, self._pos)
 

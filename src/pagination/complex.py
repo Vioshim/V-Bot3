@@ -449,35 +449,6 @@ class Complex(Simple):
 class ComplexInput(Complex):
     """This class allows written input."""
 
-    def __init__(
-        self,
-        *,
-        bot: CustomBot,
-        member: Union[Member, User],
-        values: Iterable[_T],
-        target: _M = None,
-        timeout: Optional[float] = 180.0,
-        embed: Embed = None,
-        max_values: int = 1,
-        entries_per_page: int = 25,
-        parser: Callable[[_T], tuple[str, str]] = None,
-        emoji_parser: Union[
-            str, Callable[[_T], Union[str, PartialEmoji, Emoji]]
-        ] = None,
-    ):
-        super().__init__(
-            bot=bot,
-            timeout=timeout,
-            member=member,
-            target=target,
-            values=values,
-            embed=embed,
-            max_values=max_values,
-            entries_per_page=entries_per_page,
-            parser=parser,
-            emoji_parser=emoji_parser,
-        )
-
     def menu_format(self) -> None:
         """Default Formatter"""
         self.message_handler.disabled = False

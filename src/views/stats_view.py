@@ -49,9 +49,6 @@ class StatsView(Complex):
             "> **5** - Very High"
         )
 
-    async def __aenter__(self) -> set[Stats]:
-        return super(StatsView, self).__aenter__()
-
     @property
     def choice(self) -> Optional[Stats]:
         """Override Method

@@ -17,6 +17,3 @@ class CharacterException(Exception):
     """
     This represents an exception related to a character
     """
-
-    def __init__(self):
-        super(CharacterException, self).__init__()

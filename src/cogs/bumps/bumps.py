@@ -93,9 +93,7 @@ class Bump(metaclass=ABCMeta):
                 value=f"> If you like the server, "
                 f"feel free to let us know your opinion by rating/reviewing the server in {self.name}.",
             )
-        embed.set_author(
-            name=ctx.author.display_name, icon_url=ctx.author.avatar.url
-        )
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
         if guild := ctx.guild:
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         return embed
@@ -134,13 +132,9 @@ class PingBump(View):
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)
-            return await resp.send_message(
-                "Alright, you won't get notified", ephemeral=True
-            )
+            return await resp.send_message("Alright, you won't get notified", ephemeral=True)
         self.mentions.add(inter.user)
-        return await resp.send_message(
-            "Alright, you will get notified", ephemeral=True
-        )
+        return await resp.send_message("Alright, you will get notified", ephemeral=True)
 
     async def on_timeout(self) -> None:
         text = f"**Bump Reminder (Prefix is {self.prefix}):**\n"

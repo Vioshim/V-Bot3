@@ -77,9 +77,7 @@ class AreaSelection(View):
                     "-", " "
                 ).title(),
                 value=str(item.id),
-                description=topic[:50]
-                if (topic := item.topic)
-                else "No description yet.",
+                description=topic[:50] if (topic := item.topic) else "No description yet.",
                 emoji=item.name[0],
             )
             for item in cat.channels
@@ -100,9 +98,7 @@ class AreaSelection(View):
             )
 
             ocs = self.entries.get(idx, set())
-            view = CharactersView(
-                target=ctx, member=ctx.user, ocs=ocs, bot=self.bot
-            )
+            view = CharactersView(target=ctx, member=ctx.user, ocs=ocs, bot=self.bot)
 
             embed = view.embed
 
@@ -110,9 +106,7 @@ class AreaSelection(View):
             embed.description = channel.topic or "No description yet"
             embed.color = ctx.user.color
             embed.timestamp = utcnow()
-            embed.set_author(
-                name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url
-            )
+            embed.set_author(name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url)
             embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
             await resp.send_message(embed=embed, view=view, ephemeral=True)
 
@@ -125,9 +119,7 @@ class AreaSelection(View):
         perms = permissions.get(ctx.user, PermissionOverwrite())
         perms.read_messages = btn.label == "Toggle ON"
         await self.cat.set_permissions(target=ctx.user, overwrite=perms)
-        await ctx.followup.send(
-            "Permissions have been changed.", ephemeral=True
-        )
+        await ctx.followup.send("Permissions have been changed.", ephemeral=True)
 
     # noinspection PyTypeChecker
     @button(label="Enable all", row=1)
@@ -159,6 +151,4 @@ class AreaSelection(View):
                 await category.set_permissions(
                     ctx.user, overwrite=perms, reason="Region Selection"
                 )
-        await ctx.followup.send(
-            "Now you can't see all the areas", ephemeral=True
-        )
+        await ctx.followup.send("Now you can't see all the areas", ephemeral=True)

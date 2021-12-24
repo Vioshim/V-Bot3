@@ -69,9 +69,7 @@ class CharacterHandlerView(Complex):
                 member=interaction.user,
                 oc=data[0],
             )
-            await interaction.followup.send(
-                embed=data[0].embed, view=mod_view, ephemeral=True
-            )
+            await interaction.followup.send(embed=data[0].embed, view=mod_view, ephemeral=True)
             self.stop()
 
 
@@ -82,7 +80,7 @@ class SubmissionView(View):
         ocs: dict[int, Character],
         rpers: dict[int, set[Character]],
         oc_list: dict[int, int],
-        missions: set[Mission] = set(),
+        missions: set[Mission],
         **kwargs: Union[str, dict],
     ):
         super(SubmissionView, self).__init__(timeout=None)
@@ -121,9 +119,7 @@ class SubmissionView(View):
                 timestamp=utcnow(),
             )
             if slash := template.get("Slash"):
-                embed.set_footer(
-                    text=f"Alternatively, there's also the command {slash}"
-                )
+                embed.set_footer(text=f"Alternatively, there's also the command {slash}")
             view = View()
             for k, v in template.get("Document", {}).items():
                 btn = Button(
@@ -150,22 +146,16 @@ class SubmissionView(View):
 
         if channel.permissions_for(ctx.user).manage_messages:
             m = await channel.send("Mention the User")
-            aux: Message = await self.bot.wait_for(
-                "message", check=text_check(ctx)
-            )
+            aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
             self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
             await m.delete()
             context = await self.bot.get_context(aux)
-            member = await MemberConverter().convert(
-                ctx=context, argument=aux.content
-            )
+            member = await MemberConverter().convert(ctx=context, argument=aux.content)
             await aux.delete()
 
         if not (values := self.rpers.get(member.id, set())):
-            return await ctx.followup.send(
-                "You don't have characters to modify", ephemeral=True
-            )
+            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
 
         view = CharacterHandlerView(
             bot=self.bot,
@@ -175,12 +165,8 @@ class SubmissionView(View):
         )
 
         oc: Type[Character]
-        async with view.send(
-            title="Select Character to modify", single=True
-        ) as oc:
-            self.bot.logger.info(
-                "%s is modifying a Character(%s)", str(ctx.user), repr(oc)
-            )
+        async with view.send(title="Select Character to modify", single=True) as oc:
+            self.bot.logger.info("%s is modifying a Character(%s)", str(ctx.user), repr(oc))
         await view.wait()
 
     @button(
@@ -194,13 +180,9 @@ class SubmissionView(View):
         role = guild.get_role(719642423327719434)
         resp: InteractionResponse = ctx.response
         if role not in ctx.user.roles:
-            await resp.send_message(
-                "You don't have a character registered", ephemeral=True
-            )
+            await resp.send_message("You don't have a character registered", ephemeral=True)
             return
-        locations: list[CategoryChannel] = [
-            guild.get_channel(item) for item in RP_CATEGORIES
-        ]
+        locations: list[CategoryChannel] = [guild.get_channel(item) for item in RP_CATEGORIES]
         view = ComplexInput(
             bot=self.bot,
             member=ctx.user,
@@ -223,10 +205,7 @@ class SubmissionView(View):
                 values=[
                     item
                     for item in choice.channels
-                    if (
-                        "-ooc" not in item.name
-                        and isinstance(item, TextChannel)
-                    )
+                    if ("-ooc" not in item.name and isinstance(item, TextChannel))
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
@@ -287,9 +266,7 @@ class SubmissionView(View):
                     parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
                     title="Mission's Difficulty",
                 )
-                async with view.send(
-                    title="Mission's difficulty", single=True
-                ) as item:
+                async with view.send(title="Mission's difficulty", single=True) as item:
                     if not item:
                         return
                     mission.difficulty = item

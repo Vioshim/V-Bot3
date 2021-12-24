@@ -520,7 +520,7 @@ class AbilitiesMod(Mod):
             timeout=None,
             target=target,
             max_values=oc.max_amount_abilities,
-            parser=lambda x: (x.value.name, x.description)
+            parser=lambda x: (x.value.name, x.description),
         )
         async with view.send(
             title="Select the abilities. Current ones below",
@@ -676,7 +676,7 @@ class ModifyView(View):
         self.member = member
         self.oc = oc
         self.used = False
-        data = [item for item in Modification]
+        data = list(Modification)
         if not oc.can_have_special_abilities:
             data.remove(Modification.SpAbility)
 

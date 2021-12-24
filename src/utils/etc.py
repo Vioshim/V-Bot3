@@ -24,7 +24,9 @@ __all__ = (
 from discord import OptionChoice, PartialEmoji
 
 RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/863415224626184192/image.gif"
-WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
+WHITE_BAR = (
+    "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
+)
 NUMBERS = [
     PartialEmoji(name="one", id=861932320373866497),
     PartialEmoji(name="two", id=861932320420266015),

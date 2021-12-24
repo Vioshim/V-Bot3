@@ -47,7 +47,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import multiple_pop, stats_check
+from src.utils.functions import multiple_pop, stats_check, common_pop_get, int_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -299,9 +299,7 @@ class Character(metaclass=ABCMeta):
             URL
         """
         if image := self.image or self.default_image:
-            if image.startswith(
-                f"https://cdn.discordapp.com/attachments/{self.thread}/"
-            ):
+            if image.startswith(f"https://cdn.discordapp.com/attachments/{self.thread}/"):
                 return image
 
             kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
@@ -400,9 +398,7 @@ class Character(metaclass=ABCMeta):
                 """,
                 self.id,
             )
-            self.abilities = frozenset(
-                {Abilities[item["ability"]] for item in abilities}
-            )
+            self.abilities = frozenset({Abilities[item["ability"]] for item in abilities})
 
             if not self.has_default_types:
                 mon_types = await connection.fetch(
@@ -414,9 +410,7 @@ class Character(metaclass=ABCMeta):
                     """,
                     self.id,
                 )
-                self.species.types = frozenset(
-                    {Types[item["type"]] for item in mon_types}
-                )
+                self.species.types = frozenset({Types[item["type"]] for item in mon_types})
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
@@ -481,10 +475,7 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [
-            (self.id, item.name, not main)
-            for main, item in enumerate(self.types)
-        ]:
+        if entries := [(self.id, item.name, not main) for main, item in enumerate(self.types)]:
             await connection.executemany(
                 """--sql
                 INSERT INTO CHARACTER_TYPES(CHARACTER, TYPE, MAIN)
@@ -500,8 +491,7 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, bool(main))
-            for main, item in enumerate(self.abilities)
+            (self.id, item.name, bool(main)) for main, item in enumerate(self.abilities)
         ]:
             await connection.executemany(
                 """--sql
@@ -519,8 +509,7 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, value.name, key)
-            for key, value in enumerate(self.moveset, start=1)
+            (self.id, value.name, key) for key, value in enumerate(self.moveset, start=1)
         ]:
             await connection.executemany(
                 """--sql
@@ -1620,6 +1609,62 @@ def kind_deduce(item: Optional[SpeciesBase], *args, **kwargs):
         return instance(*args, **kwargs)
 
 
+def oc_process(self, **kwargs):
+    """Function used for processing a dict, to a character
+
+    Returns
+    -------
+    Type[Character]
+        Character given the paraneters
+    """
+    data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
+    fakemon_mode: bool = "fakemon" in data
+    if species_name := common_pop_get(
+        data,
+        "fakemon",
+        "species",
+        "fusion",
+    ):
+        if fakemon_mode:
+            name: str = species_name.title()
+            if name.startswith("Mega"):
+                data["species"] = CustomMega(Species.deduce(name[5:]))
+            elif name.startswith("Variant"):
+                data["species"] = Variant(Species.deduce(name[8:]))
+            else:
+                data["species"] = Fakemon(name=name)
+        elif species := Species.deduce(species_name):
+            data["species"] = species
+
+    if types := common_pop_get(data, "types", "type"):
+        data["types"] = frozenset(Types.deduce(types))
+
+    if abilities := common_pop_get(data, "abilities", "ability"):
+        data["abilities"] = frozenset(Abilities.deduce(abilities))
+
+    if moveset := common_pop_get(data, "moveset", "moves"):
+        data["moveset"] = frozenset(Moves.deduce(moveset))
+
+    if pronoun := common_pop_get(data, "pronoun", "gender"):
+        data["pronoun"] = Pronoun.deduce(pronoun)
+
+    if isinstance(age := data.get("age"), str):
+        data["age"] = int_check(age, 1, 99)
+
+    if isinstance(species := data["species"], Fakemon):
+        if stats := data.pop("stats", {}):
+            species.set_stats(**stats)
+
+        if movepool := data.pop("movepool", {}):
+            species.movepool.from_dict(**movepool)
+        else:
+            species.movepool = Movepool(event=frozenset(moveset))
+
+    data = {k: v for k, v in data.items() if v}
+
+    return kind_deduce(data.get("species"), **data)
+
+
 def check(value: Optional[str]) -> bool:
     """A checker function to determine what is useful
     out of a character template
@@ -1656,15 +1701,9 @@ async def doc_convert(url: str) -> dict[str, Any]:
     if doc := await to_thread(docs_reader, url):
         tables = nested_lookup(key="table", document=doc["body"]["content"])
         contents = nested_lookup(key="textRun", document=tables)
-        content_values: list[str] = nested_lookup(
-            key="content", document=contents
-        )
+        content_values: list[str] = nested_lookup(key="content", document=contents)
 
-        text = [
-            strip.replace("\u2019", "'")
-            for item in content_values
-            if (strip := item.strip())
-        ]
+        text = [strip.replace("\u2019", "'") for item in content_values if (strip := item.strip())]
 
         movepool_typing = dict[str, Union[set[str], dict[int, set[str]]]]
         raw_kwargs: dict[str, Union[str, set[str], movepool_typing]] = dict(
