@@ -591,7 +591,7 @@ class RoleButton(Button):
         self.role_cool_down[role.id] = utcnow()
 
         view = View()
-        view.add_item(Button(label="Jump URL", url=msg.url))
+        view.add_item(Button(label="Jump URL", url=msg.jump_url))
 
         await ctx.followup.send(
             content="Ping has been done successfully.",

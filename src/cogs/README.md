@@ -13,15 +13,16 @@ In this project, the cogs are Cog instances which implement a setup method and t
 ## **List of Cogs**
 ---
 
-<details closed> <summary>Submission</summary>
+</details>
+
+<details closed> <summary> Bump </summary>
 
 <p>
 
-> A dynamic character submission system with the purpose to facilitate the creation of characters for role-playing purposes aimed at easing the process to all users despite limitations.
-
+> A standard temporizer which norifies to users when to bump, based on popular discord bump bots.
 </p>
-
 </details>
+
 
 <details closed> <summary> Information </summary>
 
@@ -32,10 +33,32 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary> Bump </summary>
+<details closed> <summary>Proxy</summary>
 
 <p>
 
-> A standard temporizer which norifies to users when to bump, based on popular discord bump bots.
+> An implementation of a Proxy system, which allows users to use their characters by replacing their PFP through webhook messages as long as the regex matches..
+
 </p>
+
+</details>
+
+<details closed> <summary>Roles</summary>
+
+<p>
+
+> Implementation of Self Roles through Discord's Views and implementation of a RP search system through pings.
+
+</p>
+
+</details>
+
+<details closed> <summary>Submission</summary>
+
+<p>
+
+> A dynamic character submission system with the purpose to facilitate the creation of characters for role-playing purposes aimed at easing the process to all users despite limitations.
+
+</p>
+
 </details>
