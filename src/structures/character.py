@@ -47,12 +47,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -283,7 +278,7 @@ class Character(metaclass=ABCMeta):
             )
 
         if isinstance(self.extra, str):
-            if extra := self.extra[: min(1000, len(c_embed) - 100)]:
+            if extra := self.extra[:min(1000, len(c_embed) - 100)]:
                 index = len(c_embed.fields) - 1
                 c_embed.insert_field_at(
                     index=index,
@@ -305,8 +300,7 @@ class Character(metaclass=ABCMeta):
         """
         if image := self.image or self.default_image:
             if image.startswith(
-                f"https://cdn.discordapp.com/attachments/{self.thread}/"
-            ):
+                    f"https://cdn.discordapp.com/attachments/{self.thread}/"):
                 return image
 
             kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
@@ -385,12 +379,12 @@ class Character(metaclass=ABCMeta):
             asyncpg connection
         """
         if info := await connection.fetchrow(
-            """--sql
+                """--sql
             SELECT *
             FROM CHARACTER
             WHERE ID = $1;
             """,
-            self.id,
+                self.id,
         ):
             data = dict(info)
             if pronoun := data.get("pronoun"):
@@ -406,8 +400,8 @@ class Character(metaclass=ABCMeta):
                 self.id,
             )
             self.abilities = frozenset(
-                {Abilities[item["ability"]] for item in abilities}
-            )
+                {Abilities[item["ability"]]
+                 for item in abilities})
 
             if not self.has_default_types:
                 mon_types = await connection.fetch(
@@ -420,8 +414,8 @@ class Character(metaclass=ABCMeta):
                     self.id,
                 )
                 self.species.types = frozenset(
-                    {Types[item["type"]] for item in mon_types}
-                )
+                    {Types[item["type"]]
+                     for item in mon_types})
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
@@ -486,10 +480,8 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [
-            (self.id, item.name, not main)
-            for main, item in enumerate(self.types)
-        ]:
+        if entries := [(self.id, item.name, not main)
+                       for main, item in enumerate(self.types)]:
             await connection.executemany(
                 """--sql
                 INSERT INTO CHARACTER_TYPES(CHARACTER, TYPE, MAIN)
@@ -504,10 +496,8 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [
-            (self.id, item.name, bool(main))
-            for main, item in enumerate(self.abilities)
-        ]:
+        if entries := [(self.id, item.name, bool(main))
+                       for main, item in enumerate(self.abilities)]:
             await connection.executemany(
                 """--sql
                 INSERT INTO CHARACTER_ABILITIES(ID, ABILITY, SLOT)
@@ -523,10 +513,8 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [
-            (self.id, value.name, key)
-            for key, value in enumerate(self.moveset, start=1)
-        ]:
+        if entries := [(self.id, value.name, key)
+                       for key, value in enumerate(self.moveset, start=1)]:
             await connection.executemany(
                 """--sql
                 INSERT INTO MOVESET(CHARACTER, MOVE, SLOT)
@@ -570,7 +558,8 @@ class PokemonCharacter(Character):
 
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
-        return f"Pokemon: {self.species.name}, Age: {self.age}, Types: {types}".title()
+        return f"Pokemon: {self.species.name}, Age: {self.age}, Types: {types}".title(
+        )
 
     @property
     def kind(self) -> str:
@@ -625,12 +614,12 @@ class PokemonCharacter(Character):
         """
         characters: list[PokemonCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            "COMMON",
+                "COMMON",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -723,12 +712,12 @@ class LegendaryCharacter(Character):
         """
         characters: list[LegendaryCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            "LEGENDARY",
+                "LEGENDARY",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -821,12 +810,12 @@ class MythicalCharacter(Character):
         """
         characters: list[MythicalCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            "MYTHICAL",
+                "MYTHICAL",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -917,12 +906,12 @@ class UltraBeastCharacter(Character):
         """
         characters: list[UltraBeastCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            "ULTRA BEAST",
+                "ULTRA BEAST",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -1061,13 +1050,13 @@ class FakemonCharacter(Character):
         """
         characters: list[FakemonCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, F.NAME AS SPECIES,
             F.HP, F.ATK, F.DEF, F.SPA, F.SPD, F.SPD
             FROM FAKEMON F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
-            "FAKEMON",
+                "FAKEMON",
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
@@ -1190,12 +1179,12 @@ class CustomMegaCharacter(Character):
         """
         characters: list[CustomMegaCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, F.SPECIES AS SPECIES
             FROM CUSTOM_MEGA_CHARACTER F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
-            "CUSTOM MEGA",
+                "CUSTOM MEGA",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -1298,12 +1287,12 @@ class VariantCharacter(Character):
         """
         characters: list[VariantCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, F.SPECIES AS SPECIES
             FROM VARIANT_CHARACTER F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
-            "VARIANT",
+                "VARIANT",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -1392,12 +1381,12 @@ class FusionCharacter(Character):
         """
         characters: list[FusionCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, SPECIES1, SPECIES2
             FROM FUSION_CHARACTER F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
-            "FUSION",
+                "FUSION",
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
@@ -1493,12 +1482,12 @@ class MegaCharacter(Character):
         """
         characters: list[MegaCharacter] = []
         async for item in connection.cursor(
-            """--sql
+                """--sql
             SELECT C.*, PC.SPECIES
             FROM POKEMON_CHARACTER PC, CHARACTER C
             WHERE C.ID = PC.ID and C.kind = $1;
             """,
-            "MEGA",
+                "MEGA",
         ):
             data = dict(item)
             data.pop("kind", None)
@@ -1572,19 +1561,26 @@ PLACEHOLDER_STATS = {
     "Speed": "SPE",
 }
 
-ASSOCIATIONS: frozendict[Type[SpeciesBase], Type[Character]] = frozendict(
-    {
-        Pokemon: PokemonCharacter,
-        Mega: MegaCharacter,
-        Legendary: LegendaryCharacter,
-        Mythical: MythicalCharacter,
-        UltraBeast: UltraBeastCharacter,
-        Fakemon: FakemonCharacter,
-        Fusion: FusionCharacter,
-        CustomMega: CustomMegaCharacter,
-        Variant: VariantCharacter,
-    }
-)
+ASSOCIATIONS: frozendict[Type[SpeciesBase], Type[Character]] = frozendict({
+    Pokemon:
+    PokemonCharacter,
+    Mega:
+    MegaCharacter,
+    Legendary:
+    LegendaryCharacter,
+    Mythical:
+    MythicalCharacter,
+    UltraBeast:
+    UltraBeastCharacter,
+    Fakemon:
+    FakemonCharacter,
+    Fusion:
+    FusionCharacter,
+    CustomMega:
+    CustomMegaCharacter,
+    Variant:
+    VariantCharacter,
+})
 
 
 async def fetch_all(connection: Connection):
@@ -1640,10 +1636,10 @@ def oc_process(self, **kwargs):
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
     fakemon_mode: bool = "fakemon" in data
     if species_name := common_pop_get(
-        data,
-        "fakemon",
-        "species",
-        "fusion",
+            data,
+            "fakemon",
+            "species",
+            "fusion",
     ):
         if fakemon_mode:
             name: str = species_name.title()
@@ -1721,13 +1717,11 @@ async def doc_convert(url: str) -> dict[str, Any]:
     if doc := await to_thread(docs_reader, url):
         tables = nested_lookup(key="table", document=doc["body"]["content"])
         contents = nested_lookup(key="textRun", document=tables)
-        content_values: list[str] = nested_lookup(
-            key="content", document=contents
-        )
+        content_values: list[str] = nested_lookup(key="content",
+                                                  document=contents)
 
         text = [
-            strip.replace("\u2019", "'")
-            for item in content_values
+            strip.replace("\u2019", "'") for item in content_values
             if (strip := item.strip())
         ]
 
@@ -1741,14 +1735,11 @@ async def doc_convert(url: str) -> dict[str, Any]:
             types=set(),
             stats={
                 stat: stats_check(*value)
-                for index, item in enumerate(content_values)
-                if all(
-                    (
-                        stat := PLACEHOLDER_STATS.get(item.strip()),
-                        len(content_values) > index,
-                        len(value := content_values[index + 1 :][:1]) == 1,
-                    )
-                )
+                for index, item in enumerate(content_values) if all((
+                    stat := PLACEHOLDER_STATS.get(item.strip()),
+                    len(content_values) > index,
+                    len(value := content_values[index + 1:][:1]) == 1,
+                ))
             },
         )
 
