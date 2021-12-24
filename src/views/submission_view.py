@@ -70,7 +70,7 @@ class CharacterHandlerView(Complex):
                 oc=data[0],
             )
             await interaction.followup.send(
-                embed=oc.embed, view=mod_view, ephemeral=True
+                embed=data[0].embed, view=mod_view, ephemeral=True
             )
             self.stop()
 
