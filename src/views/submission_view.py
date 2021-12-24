@@ -165,12 +165,11 @@ class SubmissionView(View):
                 "You don't have characters to modify", ephemeral=True
             )
 
-        view = Complex(
+        view = CharacterHandlerView(
             bot=self.bot,
             member=ctx.user,
             target=ctx,
             values=values,
-            parser=lambda x: (x.name, repr(x)),
         )
 
         oc: Type[Character]
