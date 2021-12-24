@@ -112,7 +112,7 @@ def detection(kind: Type[SpeciesBase], exclude: Type[SpeciesBase] = None):
         def condition(item: SpeciesBase) -> bool:
             param = isinstance(item, kind)
             if exclude:
-                param &= isinstance(item, exclude)
+                param &= not isinstance(item, exclude)
             param &= not item.banned
             param &= item.name.startswith(data.title())
             return param
