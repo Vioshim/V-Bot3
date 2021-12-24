@@ -17,14 +17,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Optional, TypeVar, Union
 
-from discord import (
-    ButtonStyle,
-    Interaction,
-    InteractionResponse,
-    Member,
-    Message,
-    User,
-)
+from discord import ButtonStyle, Interaction, InteractionResponse, Member, Message, User
 from discord.abc import Messageable
 from discord.ui import Button, button
 

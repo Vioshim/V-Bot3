@@ -7,6 +7,9 @@
 # Local History for Pycharm
 .idea/
 
+# Poetry
+poetry.lock
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

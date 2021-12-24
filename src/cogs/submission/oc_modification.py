@@ -40,6 +40,7 @@ from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.views import ImageView
+from src.utils.functions import int_check
 
 SP_ABILITY_ITEMS = ["name", "origin", "description", "pros", "cons"]
 
@@ -321,7 +322,7 @@ class AgeMod(Mod):
         )
         async with handler as answer:
             if isinstance(answer, str):
-                oc.name = answer.title()
+                oc.age = int_check(answer, 1, 99)
                 return False
 
 

@@ -3,6 +3,7 @@
 ---
 
 [![image](https://img.shields.io/discord/719343092963999804?color=%237289DA&label=Parallel%20Yonder&logo=discord&logoColor=white)](https://discord.gg/CENcTvnarE)
+[![DeepSource](https://deepsource.io/gh/Vioshim/V-Bot3.svg/?label=active+issues&show_trend=true&token=j_zPUZHbW6IBcrdgQACcvBza)](https://deepsource.io/gh/Vioshim/V-Bot3/?ref=repository-badge)
 
 Good day, discord/github user
 

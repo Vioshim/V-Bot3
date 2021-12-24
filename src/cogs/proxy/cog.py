@@ -12,15 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from src.pagination.boolean import BooleanView
-from src.pagination.complex import Complex, ComplexInput
-from src.pagination.simple import Simple
-from src.pagination.view_base import Basic
+from discord.ext.commands import Cog
 
-__all__ = (
-    "Basic",
-    "BooleanView",
-    "Complex",
-    "ComplexInput",
-    "Simple",
-)
+from src.structures.bot import CustomBot
+
+
+class Proxy(Cog):
+    def __init__(self, bot: CustomBot):
+        self.bot = bot
+
+
+def setup(bot: CustomBot) -> None:
+    """Default Cog loader
+
+    Parameters
+    ----------
+    bot: CustomBot
+        Bot
+    """
+    bot.add_cog(Proxy(bot))

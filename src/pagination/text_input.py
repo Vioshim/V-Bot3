@@ -30,7 +30,7 @@ from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
-from src.utils.functions import text_check, embed_modifier
+from src.utils.functions import embed_modifier, text_check
 
 __all__ = ("TextInput",)
 

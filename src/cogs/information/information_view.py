@@ -24,8 +24,8 @@ from discord import (
 from discord.ui import Button, Select, View, select
 from discord.utils import utcnow
 
-from src.structures.bot import CustomBot
 from src.cogs.information.area_selection import AreaSelection
+from src.structures.bot import CustomBot
 
 
 class InformationView(View):

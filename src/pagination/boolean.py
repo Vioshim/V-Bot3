@@ -15,14 +15,7 @@
 from contextlib import asynccontextmanager
 from typing import Optional, TypeVar, Union
 
-from discord import (
-    ButtonStyle,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    Member,
-    User,
-)
+from discord import ButtonStyle, Embed, Interaction, InteractionResponse, Member, User
 from discord.abc import Messageable
 from discord.ui import Button, button
 

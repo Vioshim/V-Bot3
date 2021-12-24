@@ -16,9 +16,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Union
 
 from discord import PartialEmoji
-from typing import Union
 from frozendict import frozendict
 
 __all__ = ("Typing", "Z_MOVE_RANGE", "MAX_MOVE_RANGE1", "MAX_MOVE_RANGE2")
