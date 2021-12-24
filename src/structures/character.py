@@ -1655,7 +1655,7 @@ def oc_process(**kwargs):
             data["species"] = species
 
     if types := common_pop_get(data, "types", "type"):
-        data["types"] = frozenset(Types.deduce(types))
+        data["species"].types = frozenset(Types.deduce(types))
 
     if abilities := common_pop_get(data, "abilities", "ability"):
         data["abilities"] = frozenset(Abilities.deduce(abilities))
