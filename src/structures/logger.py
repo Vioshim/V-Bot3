@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from logging import INFO, Formatter, Logger, LogRecord, StreamHandler
+from pytz import UTC, timezone
+from datetime import datetime
 
 __all__ = ("ColoredLogger",)
 
@@ -64,7 +66,23 @@ class ColoredFormatter(Formatter):
         super().__init__(msg)
         self.use_color = use_color
 
-    # noinspection StrFormat
+    def converter(self, timestamp):
+        # Create datetime in UTC
+        dt = datetime.fromtimestamp(timestamp, tz=UTC)
+        # Change datetime's timezone
+        return dt.astimezone(timezone('America/Bogota'))
+
+    def formatTime(self, record: LogRecord, datefmt=None):
+        dt = self.converter(record.created)
+        if datefmt:
+            s = dt.strftime(datefmt)
+        else:
+            try:
+                s = dt.isoformat(timespec='milliseconds')
+            except TypeError:
+                s = dt.isoformat()
+        return s
+    
     def format(self, record: LogRecord) -> str:
         """Formatting Method
 
