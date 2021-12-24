@@ -1076,12 +1076,15 @@ class FakemonCharacter(Character):
             stats = {k.upper(): v for k, v in stats.items()}
             if species := data.pop("species", None):
                 movepool = await Movepool.fakemon_fetch(connection, fakemon_id)
-                data["species"] = Fakemon(
-                    id=fakemon_id,
-                    name=species,
-                    movepool=movepool,
-                    **stats,
-                )
+                try:
+                    data["species"] = Fakemon(
+                        id=fakemon_id,
+                        name=species,
+                        movepool=movepool,
+                        **stats,
+                    )
+                except Exception:
+                    print(stats, data)
             mon = FakemonCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
