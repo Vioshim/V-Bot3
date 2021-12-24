@@ -116,7 +116,8 @@ class Basic(Generic[_M], View):
         """
         if self._member != interaction.user:
             msg = f"This menu has been requested by {self.member}"
-            return await resp.send_message(msg, ephemeral=True)
+            await resp.send_message(msg, ephemeral=True)
+            return False
         return True
 
     async def send(

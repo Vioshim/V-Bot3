@@ -114,10 +114,14 @@ class SubmissionView(View):
         member: Member = ctx.user
         channel: TextChannel = ctx.channel
 
+        await resp.defer(ephemeral=True)
+        
         if channel.permissions_for(ctx.user).manage_messages:
-            await resp.send_message("Mention the User", ephemeral=True)
+            m = await channel.send("Mention the User", ephemeral=True)
             aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
+            self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
+            await m.delete()
             context = await self.bot.get_context(aux)
             member = await MemberConverter().convert(ctx=context, argument=aux.content)
             await aux.delete()
