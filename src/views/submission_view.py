@@ -61,12 +61,13 @@ class CharacterHandlerView(Complex):
 
     async def custom_choice(self, sct: Select, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        if oc := self.choice:
+        data = list(self.choices)
+        if data:
             await resp.defer(ephemeral=True)
             mod_view = ModifyView(
                 bot=self.bot,
                 member=interaction.user,
-                oc=oc,
+                oc=data[0],
             )
             await interaction.followup.send(
                 embed=oc.embed, view=mod_view, ephemeral=True

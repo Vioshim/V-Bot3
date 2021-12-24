@@ -567,6 +567,7 @@ class ImageMod(Mod):
             bot=bot,
             member=member,
             default_img=oc.image,
+            target=target,
         )
         aux: Optional[bool] = None
         async with view.send() as image:
