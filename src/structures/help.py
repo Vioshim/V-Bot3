@@ -49,7 +49,7 @@ class CustomHelp(HelpCommand):
             member=self.context.author,
             target=target,
             values=mapping.items(),
-            entries_per_age=10,
+            entries_per_page=10,
         )
         view.embed.title = "Help Command - Bot Options"
 
@@ -104,7 +104,7 @@ class CustomHelp(HelpCommand):
             member=self.context.author,
             values=values.items(),
             inline=False,
-            entries_per_age=10,
+            entries_per_page=10,
         )
         view.embed.title = f"Command {cmd.qualified_name!r}"
         view.embed.description = cmd.description
@@ -168,7 +168,7 @@ class CustomHelp(HelpCommand):
             member=self.context.author,
             values=cog.get_listeners(),
             inline=False,
-            entries_per_age=10,
+            entries_per_page=10,
         )
 
         view.embed.title = (f"Cog {cog.qualified_name} - Commands",)
@@ -218,7 +218,7 @@ class CustomHelp(HelpCommand):
             timeout=None,
             target=target,
             member=member,
-            entries_per_age=10,
+            entries_per_page=10,
         )
         view.embed.title = "Help Error"
         view.embed.description = f"> {error}"
