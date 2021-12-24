@@ -1074,7 +1074,7 @@ class FakemonCharacter(Character):
             fakemon_id = data["id"]
             stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
             stats = {k.upper(): v for k, v in stats.items()}
-            if species := data.pop("species", None):
+            if species := data.get("species", None):
                 movepool = await Movepool.fakemon_fetch(connection, fakemon_id)
                 data["species"] = Fakemon(
                     id=fakemon_id,

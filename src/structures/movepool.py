@@ -310,9 +310,11 @@ class Movepool:
             Generated movepool
         """
 
-        movepool = Movepool()
+        level = {k: frozenset(v) for k, v in kwargs.get("level", {}).items()}
+        
+        movepool = Movepool(level=frozendict(level))
         for item in ["tm", "event", "tutor", "egg", "levelup", "other"]:
-            movepool[item] = kwargs.get(item, set())
+            movepool[item] = frozenset(kwargs.get(item, set()))
         return movepool
 
     @property
