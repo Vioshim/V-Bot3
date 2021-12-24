@@ -47,6 +47,13 @@ __all__ = ("Information", "setup")
 URL = "https://www.conversationstarters.com/generator.php"
 
 
+channels = {
+    766018765690241034: "Question",
+    918703451830100028: "Poll",
+    728800301888307301: "Suggestion",
+}
+
+
 def map_find(ctx: AutocompleteContext):
     data: str = ctx.value or ""
     return [item for item in MAP_BUTTONS if item.name.startswith(data.title())]
@@ -58,7 +65,56 @@ class Information(Cog):
         self.join: dict[Member, Message] = {}
         self.view: Optional[InformationView] = None
 
-    # noinspection PyTypeChecker
+    @Cog.listener()
+    async def on_message(self, message: Message):
+
+        if not message.content:
+            return
+
+        if message.channel.id not in channels:
+            return
+
+        if message.webhook_id:
+            await message.delete()
+            return
+
+        if message.author.bot:
+            return
+
+        member: Member = message.author
+        guild: Guild = member.guild
+        self.bot.msg_cache_add(message)
+
+        word = channels.get(message.channel.id, "Question")
+
+        embed = Embed(
+            title=word,
+            description=message.content,
+            timestamp=message.created_at,
+            colour=message.author.colour,
+        )
+        embed.set_image(url=WHITE_BAR)
+        embed.set_author(name=f"{member}", icon_url=member.display_avatar.url)
+        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+
+        msg = await message.channel.send(
+            embed=embed,
+            files=[await item.to_file() for item in message.attachments],
+        )
+
+        thread = await msg.create_thread(name=f"{word} {msg.id}")
+
+        await thread.add_user(member)
+
+        view = View()
+        view.add_item(Button(label=f"Original {word}", url=msg.jump_url))
+        msg2 = await thread.send(embed=embed, view=view)
+
+        view = View()
+        view.add_item(Button(label="Go to Thread", url=msg2.jump_url))
+        await msg.edit(view=view)
+        await message.delete()
+
     async def daily_question(self) -> None:
         """This function generates a daily question from a website, and sends it to all guilds
         as long as they have the feature enabled.
