@@ -13,22 +13,22 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
+from contextlib import suppress
 from dataclasses import asdict
 from enum import Enum
 from typing import Optional, Type, Union
 
-from contextlib import suppress
 from discord import (
+    ButtonStyle,
+    DiscordException,
     Interaction,
     InteractionResponse,
     Member,
-    User,
-    Thread,
-    DiscordException,
     SelectOption,
-    ButtonStyle,
+    Thread,
+    User,
 )
-from discord.ui import Button, button, View, select, Select
+from discord.ui import Button, Select, View, button, select
 
 from src.enums.abilities import Abilities
 from src.enums.moves import Moves
@@ -750,7 +750,7 @@ class ModifyView(View):
                     await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
 
                 await cog.registration(ctx=ctx, oc=self.oc, standard_register=False)
-
+        self.used = False
         self.stop()
 
     @button(label="Don't make any changes", row=1)
@@ -764,7 +764,7 @@ class ModifyView(View):
         resp: InteractionResponse = ctx.response
         cog = self.bot.get_cog("Submission")
         cog.ocs.pop(self.oc.id, None)
-        cog.rpers.set_default(self.oc.author, set())
+        cog.rpers.setdefault(self.oc.author, set())
         cog.rpers[self.oc.author] -= {self.oc}
         async with self.bot.database() as db:
             await self.oc.delete(db)

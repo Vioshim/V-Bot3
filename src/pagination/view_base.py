@@ -216,7 +216,7 @@ class Basic(Generic[_M], View):
             else:
                 await target.followup.send(**data)
             if message := await target.original_message():
-                await message.edit(embed=self._embed)
+                await message.edit(embed=self._embed, view=self)
                 self.message = message
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
