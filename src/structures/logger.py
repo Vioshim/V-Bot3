@@ -88,9 +88,9 @@ class ColoredFormatter(Formatter):
 class ColoredLogger(Logger):
     FORMAT = (
         "%(asctime)s〕"
-        "$BOLD%(pathname)-10s$RESET]"
-        "$BOLD%(funcName)-20s$RESET]"
-        "[%(levelname)-18s]  %(message)s"
+        "$BOLD%(pathname)$RESET ::"
+        "$BOLD%(funcName)s$RESET ::"
+        "[%(levelname)s] %(message)s"
     )
     COLOR_FORMAT = formatter_message(FORMAT, True)
 
