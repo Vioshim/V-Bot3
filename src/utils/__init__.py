@@ -67,7 +67,6 @@ __all__ = (
     "check_valid",
     "text_check",
     "image_check",
-    "image_check2",
     "message_line",
     "embed_handler",
     "ImageKit",
