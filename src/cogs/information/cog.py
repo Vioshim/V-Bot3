@@ -18,7 +18,17 @@ from discord import (
     Option,
     TextChannel,
 )
-from discord.ext.commands import Cog, slash_command
+from discord.ext.commands import (
+    CheckFailure,
+    Cog,
+    CommandError,
+    CommandNotFound,
+    CommandOnCooldown,
+    DisabledCommand,
+    MaxConcurrencyReached,
+    UserInputError,
+    slash_command,
+)
 from discord.ui import Button, View
 from discord.utils import format_dt, utcnow
 from orjson import loads
@@ -409,13 +419,67 @@ class Information(Cog):
             )
 
     @Cog.listener()
-    async def on_ready(self) -> None:
-        """Loads the program in the scheduler
+    async def on_command_error(self, ctx: Context, error: CommandError) -> None:
+        """Command error handler
 
-        Returns
-        -------
-
+        Parameters
+        ----------
+        ctx: Context
+            Context
+        error: CommandError
+            Error
         """
+        error = getattr(error, "original", error)
+
+        if isinstance(error, CommandNotFound):
+            return
+
+        if isinstance(
+            error,
+            (
+                CheckFailure,
+                UserInputError,
+                CommandOnCooldown,
+                MaxConcurrencyReached,
+                DisabledCommand,
+            ),
+        ):
+            await ctx.send(
+                embed=Embed(
+                    color=Color.red(),
+                    title=f"Error - {ctx.command.qualified_name}",
+                    description=str(error),
+                )
+            )
+            return
+
+        if hasattr(ctx.command, "on_error"):
+            return
+
+        if cog := ctx.cog:
+            # noinspection PyProtectedMember
+            if cog._get_overridden_method(cog.cog_command_error):
+                return
+
+        if error_cause := error.__cause__:
+            await ctx.send(
+                embed=Embed(
+                    color=Color.red(),
+                    title=f"Unexpected error - {ctx.command.qualified_name}",
+                    description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
+                )
+            )
+
+        self.bot.logger.error(
+            "Command Error(%s, %s)",
+            ctx.command.qualified_name,
+            ", ".join(f"{k}={v!r}" for k, v in ctx.kwargs.items()),
+            exc_info=error,
+        )
+
+    @Cog.listener()
+    async def on_ready(self):
+        """Loads the program in the scheduler"""
         self.bot.add_view(
             view=PronounRoles(timeout=None),
             message_id=916482734933811232,

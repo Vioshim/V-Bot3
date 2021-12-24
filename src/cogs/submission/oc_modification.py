@@ -887,7 +887,7 @@ class ModifyView(View):
                 emoji="\N{PENCIL}",
             )
             for item in Modification
-            if item.check(oc)
+            if item.value.check(oc)
         ]
         self.edit.max_values = len(self.edit.options)
 
