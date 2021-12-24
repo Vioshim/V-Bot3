@@ -385,7 +385,10 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         ):
-            self.update_from_dict(dict(info))
+            data = dict(info)
+            if pronoun := data.get("pronoun"):
+                data["pronoun"] = Pronoun[pronoun]
+            self.update_from_dict(data)
             abilities: list[str] = await connection.fetch(
                 """--sql
                 SELECT ABILITY
