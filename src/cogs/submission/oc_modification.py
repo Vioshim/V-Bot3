@@ -226,7 +226,7 @@ class Mod(metaclass=ABCMeta):
     description: str = ""
 
     @abstractmethod
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -275,7 +275,7 @@ class NameMod(Mod):
     label: str = "Name"
     description: str = "Modify the OC's Name"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -331,7 +331,7 @@ class AgeMod(Mod):
     label: str = "Age"
     description: str = "Modify the OC's Age"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -387,7 +387,7 @@ class PronounMod(Mod):
     label: str = "Pronoun"
     description: str = "Modify the OC's Pronoun"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -452,7 +452,7 @@ class BackstoryMod(Mod):
     label: str = "Backstory"
     description: str = "Modify the OC's Backstory"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -508,7 +508,7 @@ class ExtraMod(Mod):
     label: str = "Extra Information"
     description: str = "Modify the OC's Extra Information"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -564,7 +564,7 @@ class MovesetMod(Mod):
     label: str = "Moveset"
     description: str = "Modify the OC's Moveset"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -626,7 +626,7 @@ class AbilitiesMod(Mod):
     label: str = "Abilities"
     description: str = "Modify the OC's Abilities"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -695,7 +695,7 @@ class ImageMod(Mod):
     label: str = "Image"
     description: str = "Modify the OC's Image"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -756,7 +756,7 @@ class SpAbilityMod(Mod):
     label: str = "Special Ability"
     description: str = "Modify/Add the OC's Special Abilities"
 
-    def check(oc: Type[Character]) -> bool:
+    def check(self, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -886,7 +886,8 @@ class ModifyView(View):
                 description=item.description,
                 emoji="\N{PENCIL}",
             )
-            for item in filter(lambda x: x.check(oc), Modification)
+            for item in Modification
+            if item.check(oc)
         ]
         self.edit.max_values = len(self.edit.options)
 
