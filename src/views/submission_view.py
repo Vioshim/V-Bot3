@@ -47,13 +47,13 @@ class CharacterHandlerView(Complex):
         self,
         bot: CustomBot,
         member: Member,
-        ctx: Interaction,
+        target: Interaction,
         values: set[Character],
     ):
         super(CharacterHandlerView, self).__init__(
             bot=bot,
             member=member,
-            ctx=ctx,
+            target=target,
             values=values,
             parser=lambda x: (x.name, repr(x)),
             timeout=None,
