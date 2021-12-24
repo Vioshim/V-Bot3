@@ -622,7 +622,10 @@ class Submission(Cog):
                 self.bot.add_view(view=view, message_id=thread_id)
 
             self.bot.logger.info(
-                "Finished loading all Profiles. Loading all characters"
+                "Finished loading all Profiles."
+            )
+            self.bot.logger.info(
+                "Loading all Characters."
             )
 
             for oc in await fetch_all(db):
@@ -658,6 +661,24 @@ class Submission(Cog):
                     mission.msg_id = msg.msg_id
                     await mission.upsert(db)
 
+        self.bot.logger.info("Finished loading claimed categories")
+
+        source = Path("resources/templates.json")
+        async with aiopen(source.resolve(), mode="r") as f:
+            contents = await f.read()
+            view = SubmissionView(
+                bot=self.bot,
+                ocs=self.ocs,
+                rpers=self.rpers,
+                oc_list=self.oc_list,
+                missions=self.missions,
+                **loads(contents),
+            )
+            w = await self.bot.fetch_webhook(857435846454280244)
+            await w.edit_message(903437849154711552, view=view)
+
+        self.bot.logger.info("Finished loading menu")
+        
         self.bot.logger.info("Loading claimed categories")
 
         for item in RP_CATEGORIES:
@@ -684,24 +705,6 @@ class Submission(Cog):
                             args=[ch.id],
                             conflict_policy=ConflictPolicy.replace,
                         )
-
-        self.bot.logger.info("Finished loading claimed categories")
-
-        source = Path("resources/templates.json")
-        async with aiopen(source.resolve(), mode="r") as f:
-            contents = await f.read()
-            view = SubmissionView(
-                bot=self.bot,
-                ocs=self.ocs,
-                rpers=self.rpers,
-                oc_list=self.oc_list,
-                missions=self.missions,
-                **loads(contents),
-            )
-            w = await self.bot.fetch_webhook(857435846454280244)
-            await w.edit_message(903437849154711552, view=view)
-
-        self.bot.logger.info("Finished loading menu")
 
     @Cog.listener()
     async def on_member_update(self, past: Member, now: Member) -> None:
