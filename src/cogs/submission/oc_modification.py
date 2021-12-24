@@ -761,13 +761,11 @@ class ModifyView(View):
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, _: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        await resp.send_message("Edit has been cancelled", ephemeral=True)
+        await ctx.followup.send("Edit has been cancelled", ephemeral=True)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, _: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
         cog = self.bot.get_cog("Submission")
         cog.ocs.pop(self.oc.id, None)
         cog.rpers.setdefault(self.oc.author, set())
@@ -775,7 +773,7 @@ class ModifyView(View):
         async with self.bot.database() as db:
             await self.oc.delete(db)
 
-        await resp.send_message("Character has been removed", ephemeral=True)
+        await ctx.followup.send("Character has been removed", ephemeral=True)
 
         with suppress(DiscordException):
             webhook = await self.bot.fetch_webhook(919280056558317658)
