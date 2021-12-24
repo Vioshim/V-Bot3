@@ -163,7 +163,7 @@ class SubmissionView(View):
             await aux.delete()
 
         if not (values := self.rpers.get(member.id, set())):
-            return await resp.send_message(
+            return await ctx.followup.send(
                 "You don't have characters to modify", ephemeral=True
             )
 
