@@ -566,7 +566,7 @@ class ExtraMod(Mod):
         origin = await target.original_message()
         handler = text_view.handle(
             title="Write the character's Extra information. Current below",
-            description=oc.backstory or "No extra information was provided.",
+            description=oc.extra or "No extra information was provided.",
             origin=origin,
         )
         async with handler as answer:
