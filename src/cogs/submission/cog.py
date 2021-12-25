@@ -663,7 +663,7 @@ class Submission(Cog):
         if oc := self.ocs.get(payload.message_id):
             if oc.thread == payload.channel_id:
                 del self.ocs[oc.id]
-                ocs = self.rpers.get(oc.author)
+                ocs = self.rpers[oc.author]
                 ocs.remove(oc)
                 async with self.bot.database() as db:
                     self.bot.logger.info(

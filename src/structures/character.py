@@ -550,7 +550,6 @@ class Character(metaclass=ABCMeta):
                 oc_id,
                 self.server,
             )
-            self.id = None
 
 
 @dataclass(unsafe_hash=True)
