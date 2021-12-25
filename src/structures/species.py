@@ -368,9 +368,9 @@ class Fusion(Species):
         self.movepool = mon1.movepool + mon2.movepool
         self.abilities = mon1.abilities | mon2.abilities
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
-            self.evolves_from = item1, item2
+            self.evolves_from = Fusion(item1, item2)
         if (item1 := mon1.evolves_to) and (item2 := mon2.evolves_to):
-            self.evolves_to = frozenset(zip(item1, item2))
+            self.evolves_to = frozenset(Fusion(a, b) for a, b in zip(item1, item2))
 
     @property
     def possible_types(self) -> list[set[Types]]:
