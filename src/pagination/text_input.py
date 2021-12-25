@@ -95,10 +95,11 @@ class TextInput(Basic):
         btn.disabled = True
         await resp.edit_message(view=self)
         try:
-            await resp.send_message(
-                content="Alright, now write down the information.",
-                ephemeral=True,
-            )
+            if not resp.is_done():
+                await resp.send_message(
+                    content="Alright, now write down the information.",
+                    ephemeral=True,
+                )
             message: Message = await self.bot.wait_for(
                 "message", check=text_check(interaction)
             )
