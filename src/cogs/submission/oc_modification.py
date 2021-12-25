@@ -79,7 +79,6 @@ class SPView(Basic):
             )
             return False
         self.used = True
-        await resp.defer(ephemeral=True)
         return True
 
     @button(label="Add", custom_id="add")
