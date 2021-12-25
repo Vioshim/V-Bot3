@@ -32,7 +32,7 @@ from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
 from src.utils.functions import embed_modifier, text_check
 
-__all__ = ("TextInput", )
+__all__ = ("TextInput",)
 
 _M = TypeVar("_M", bound=Messageable)
 
@@ -73,7 +73,10 @@ class TextInput(Basic):
 
         aux = TextInput(**data)
         try:
-            await aux.send()
+            if origin := kwargs.get("origin"):
+                await origin.edit(view=aux)
+            else:
+                await aux.send()
             await aux.wait()
             yield aux.text
         except Exception as e:
@@ -89,7 +92,7 @@ class TextInput(Basic):
     @button(label="Proceed with Message", style=ButtonStyle.green, row=0)
     async def confirm(self, btn: Button, interaction: Interaction):
         btn.disabled = True
-        await self.message.edit(view=self)
+        await interaction.message.edit(view=self)
         resp: InteractionResponse = interaction.response
         try:
             await resp.send_message(
@@ -97,7 +100,8 @@ class TextInput(Basic):
                 ephemeral=True,
             )
             message: Message = await self.bot.wait_for(
-                "message", check=text_check(interaction))
+                "message", check=text_check(interaction)
+            )
             self.text = message.content
             await message.delete()
         except DiscordException as e:
@@ -116,8 +120,9 @@ class TextInput(Basic):
     async def empty(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         self.text = ""
-        await resp.send_message(content="Default Value has been chosen",
-                                ephemeral=True)
+        await resp.send_message(
+            content="Default Value has been chosen", ephemeral=True
+        )
         try:
             await self.message.delete(delay=1)
         except DiscordException as e:

@@ -93,6 +93,7 @@ class SPView(Basic):
         ctx : Interaction
             Interaction
         """
+        resp: InteractionResponse = ctx.response
         backup = set(self.oc.abilities)
         if len(self.oc.abilities) > 1:
             view = ComplexInput(
@@ -120,6 +121,11 @@ class SPView(Basic):
                 else:
                     return self.stop()
 
+        else:
+            await resp.send_message("Proceeding", ephemeral=True)
+
+        message = await ctx.original_message()
+
         text_view = TextInput(
             bot=self.bot,
             member=self.member,
@@ -136,7 +142,7 @@ class SPView(Basic):
         for item in SP_ABILITY_ITEMS:
             word = "method" if item == "origin" else item
             title = f"Write the Special Ability's {item.title()}"
-            async with text_view.handle(title=title) as answer:
+            async with text_view.handle(title=title, origin=message) as answer:
                 data[word] = answer
                 if not isinstance(answer, str):
                     break
