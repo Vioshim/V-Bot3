@@ -97,6 +97,8 @@ class TextInput(Basic):
             message: Message = await self.bot.wait_for("message", check=text_check(interaction))
             self.text = message.content
             await message.delete()
+            msg = await interaction.original_message()
+            await msg.edit(content="Parameter has been added.", view=None, embed=None)
         except DiscordException as e:
             self.bot.logger.exception("Error deleting message", exc_info=e)
         finally:
