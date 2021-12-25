@@ -350,7 +350,7 @@ class Fusion(Species):
     evolves_to: frozenset[tuple[str, str]] = field(default_factory=frozenset)
 
     def __init__(self, mon1: Species, mon2: Species):
-        super(Fusion, self).__init__()
+        super(Fusion, self).__init__(evolves_from=None, evolves_to=frozenset())
         self.id = f"{mon1.id}_{mon2.id}"
         self.mon1 = mon1
         self.mon2 = mon2
