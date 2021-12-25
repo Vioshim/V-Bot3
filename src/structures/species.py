@@ -58,9 +58,14 @@ class Species(metaclass=ABCMeta):
     SPE: int = 0
     banned: bool = False
     evolves_from: Optional[str] = None
-    evolves_to: list[str] = field(default_factory=frozenset)
+    evolves_to: frozenset[str] = field(default_factory=frozenset)
     movepool: Movepool = field(default_factory=Movepool)
     abilities: frozenset[Abilities] = field(default_factory=frozenset)
+
+    def __post_init__(self):
+        self.evolves_to = frozenset(self.evolves_to)
+        self.types = frozenset(self.types)
+        self.abilities = frozenset(self.abilities)
 
     @property
     @abstractmethod
@@ -319,11 +324,18 @@ class Variant(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if Abilities.BEASTBOOST in self.abilities else self.base.max_amount_abilities
+        return (
+            1
+            if Abilities.BEASTBOOST in self.abilities
+            else self.base.max_amount_abilities
+        )
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return Abilities.BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
+        return (
+            Abilities.BEASTBOOST not in self.abilities
+            and self.base.can_have_special_abilities
+        )
 
 
 @dataclass(unsafe_hash=True)
