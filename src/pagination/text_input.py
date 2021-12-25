@@ -90,22 +90,11 @@ class TextInput(Basic):
             await aux.delete()
 
     @button(label="Proceed with Message", style=ButtonStyle.green, row=0)
-    async def confirm(self, btn: Button, interaction: Interaction):
+    async def confirm(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        btn.disabled = True
-        await resp.edit_message(view=self)
+        await resp.edit_message(content="Alright, now write down the information.", view=None)
         try:
-            if not resp.is_done():
-                await resp.send_message(
-                    content="Alright, now write down the information.",
-                    ephemeral=True,
-                )
-            else:
-                message = await interaction.original_message()
-                await message.edit(content="Alright, now write down the information.")
-            message: Message = await self.bot.wait_for(
-                "message", check=text_check(interaction)
-            )
+            message: Message = await self.bot.wait_for("message", check=text_check(interaction))
             self.text = message.content
             await message.delete()
         except DiscordException as e:
@@ -116,7 +105,7 @@ class TextInput(Basic):
     @button(label="Cancel the Process", style=ButtonStyle.red, row=0)
     async def cancel(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.send_message(content="Process Concluded", ephemeral=True)
+        await resp.edit_message(content="Process Concluded", view=None, embed=None)
         self.text = None
         self.stop()
 
@@ -124,9 +113,7 @@ class TextInput(Basic):
     async def empty(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         self.text = ""
-        await resp.send_message(
-            content="Default Value has been chosen", ephemeral=True
-        )
+        await resp.edit_message(content="Default Value has been chosen", view=None)
         try:
             await self.message.delete(delay=1)
         except DiscordException as e:
