@@ -126,11 +126,11 @@ class Submission(Cog):
         embed.set_author(name=member.display_name)
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
-        view = RPView(self.bot, member.id, self.oc_list)
         webhook = await self.bot.fetch_webhook(919280056558317658)
         if oc_list := self.oc_list.get(member.id, None):
             try:
-                await webhook.edit_message(oc_list, embed=embed, view=None)
+                view = RPView(self.bot, member.id, self.oc_list)
+                await webhook.edit_message(oc_list, embed=embed, view=view)
                 return
             except DiscordException:
                 with suppress(DiscordException):
@@ -143,11 +143,11 @@ class Submission(Cog):
             wait=True,
             embed=embed,
             allowed_mentions=AllowedMentions(users=True),
-            view=view,
         )
         thread = await message.create_thread(name=f"OCs⎱{member.id}")
         await thread.add_user(member)
         self.oc_list[member.id] = thread.id
+        view = RPView(self.bot, member.id, self.oc_list)
         await message.edit(view=view)
         async with self.bot.database() as db:
             await db.execute(

@@ -321,9 +321,11 @@ class NameMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = TextInput(bot=bot, member=member, target=target)
+        origin = await target.original_message()
         handler = text_view.handle(
             title="Write the character's Name. Current below",
             description=f"> {oc.name}",
+            origin=origin,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -377,9 +379,11 @@ class AgeMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = TextInput(bot=bot, member=member, target=target)
+        origin = await target.original_message()
         handler = text_view.handle(
             title="Write the character's Age. Current below",
             description=f"> {oc.age or 'Unknown'}",
+            origin=origin,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -441,14 +445,14 @@ class PronounMod(Mod):
             parser=lambda x: (name := x.name, f"Sets Pronoun as {name}"),
         )
         aux: Optional[bool] = None
-        async with view.send(
-            title="Write the character's Pronoun. Current below",
-            description=f"> {oc.pronoun.name}",
-            single=True,
-        ) as item:
-            if isinstance(item, Pronoun):
-                aux = item != oc.pronoun
-                oc.pronoun = item
+        origin = await target.original_message()
+        view.embed.title = ("Write the character's Pronoun. Current below",)
+        view.embed.description = (f"> {oc.pronoun.name}",)
+        await origin.edit(embed=view.embed)
+        await view.wait()
+        if isinstance(item := view.choice, Pronoun):
+            aux = item != oc.pronoun
+            oc.pronoun = item
         return aux
 
 
@@ -498,9 +502,11 @@ class BackstoryMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = TextInput(bot=bot, member=member, target=target)
+        origin = await target.original_message()
         handler = text_view.handle(
             title="Write the character's Backstory. Current below",
             description=oc.backstory or "No backstory was provided.",
+            origin=origin,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -554,9 +560,11 @@ class ExtraMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = TextInput(bot=bot, member=member, target=target)
+        origin = await target.original_message()
         handler = text_view.handle(
             title="Write the character's Extra information. Current below",
             description=oc.backstory or "No extra information was provided.",
+            origin=origin,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -609,21 +617,26 @@ class MovesetMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        moves_view = ComplexInput(
+        moves = oc.movepool() or Moves
+
+        view = ComplexInput(
             bot=bot,
             member=member,
-            values=oc.movepool() or [item for item in Moves if not item.banned],
+            values=(item for item in moves if not item.banned),
             timeout=None,
             target=target,
             max_values=6,
         )
-        async with moves_view.send(
-            title="Select the Moves. Current Moves below",
-            description="\n".join(repr(item) for item in oc.moveset)
-            or "No moves",
-        ) as moves:
-            if isinstance(moves, set):
-                oc.moveset = frozenset(moves)
+        aux: Optional[bool] = None
+        origin = await target.original_message()
+        view.embed.title = "Write the character's Pronoun. Current below"
+        view.embed.description = f"> {oc.pronoun.name}"
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
+        if isinstance(moves := view.choices, set):
+            oc.moveset = frozenset(moves)
+        return aux
 
 
 @dataclass(unsafe_hash=True)
@@ -680,19 +693,19 @@ class AbilitiesMod(Mod):
             max_values=oc.max_amount_abilities,
             parser=lambda x: (x.value.name, x.description),
         )
-        async with view.send(
-            title="Select the abilities. Current ones below",
-            fields=[
-                dict(
-                    name=f"Ability {index} - {item.value.name}",
-                    value=item.description,
-                    inline=False,
-                )
-                for index, item in enumerate(oc.abilities, start=1)
-            ],
-        ) as abilities:
-            if isinstance(abilities, set):
-                oc.abilities = frozenset(abilities)
+        origin = await target.original_message()
+        view.embed.title = "Select the abilities. Current ones below"
+        for index, item in enumerate(oc.abilities, start=1):
+            view.embed.add_field(
+                name=f"Ability {index} - {item.value.name}",
+                value=item.description,
+                inline=False
+            )
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
+        if isinstance(abilities := view.choices, set):
+            oc.abilities = frozenset(abilities)
 
 
 @dataclass(unsafe_hash=True)
@@ -746,13 +759,16 @@ class ImageMod(Mod):
             default_img=oc.image,
             target=target,
         )
+        origin = await target.original_message()
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
         aux: Optional[bool] = None
-        async with view.send() as image:
-            if isinstance(image, str):
-                if msg := view.received:
-                    await msg.delete(delay=100)
-                aux = oc.image != image
-                oc.image = image
+        if isinstance(image := view.text, str):
+            if msg := view.received:
+                await msg.delete(delay=100)
+            aux = oc.image != image
+            oc.image = image
         return aux
 
 
@@ -968,7 +984,7 @@ class ModifyView(View):
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, _: Button, ctx: Interaction):
-        await ctx.followup.send("Edit has been cancelled", ephemeral=True)
+        await ctx.delete_original_message()
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
@@ -978,5 +994,5 @@ class ModifyView(View):
         if thread.archived:
             await thread.edit(archived=False)
         await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
-        await ctx.followup.send("Character has been removed", ephemeral=True)
+        await ctx.delete_original_message()
         return self.stop()
