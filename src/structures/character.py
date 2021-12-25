@@ -47,12 +47,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -100,6 +95,8 @@ class Character(metaclass=ABCMeta):
             self.server = 719343092963999804
         if not self.created_at:
             self.created_at = utcnow()
+        if isinstance(self.sp_ability, dict):
+            self.sp_ability = SpAbility(**self.sp_ability)
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun[self.pronoun]
         if isinstance(self.age, int):
