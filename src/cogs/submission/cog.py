@@ -455,10 +455,9 @@ class Submission(Cog):
         await self.list_update(member)
         webhook = await self.bot.fetch_webhook(919280056558317658)
         thread_id = self.oc_list[member.id]
+        oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
