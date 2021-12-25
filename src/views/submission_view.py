@@ -66,8 +66,7 @@ class CharacterHandlerView(Complex):
             member=interaction.user,
             oc=data[0],
         )
-        message = await interaction.original_message()
-        await message.edit(view=view, embed=data[0].embed)
+        await self.message.edit(view=view, embed=data[0].embed)
 
 
 class SubmissionView(View):
