@@ -34,6 +34,7 @@ from discord import (
     WebhookMessage,
 )
 from discord.ext.commands import Cog
+from discord.ext.commands.converter import MemberConverter
 from discord.utils import utcnow
 from jishaku.codeblocks import codeblock_converter
 from orjson import loads
@@ -191,8 +192,10 @@ class Submission(Cog):
                 return
             return await ctx.channel.send(msg, delete_after=delete_after)
 
-        if not (member := getattr(ctx, "author", None)):
-            member: Member = ctx.user
+        member: Member = ctx.guild.get_member(oc.author)
+
+        if not (user := getattr(ctx, "author", None)):
+            user: Member = ctx.user
 
         if not self.ready:
             await ctx_send(
@@ -206,13 +209,13 @@ class Submission(Cog):
                     "Character has been loaded successfully", delete_after=5
                 )
             else:
-                text_view = TextInput(bot=self.bot, member=member, target=ctx)
+                text_view = TextInput(bot=self.bot, member=user, target=ctx)
                 await ctx_send("Starting submission process", delete_after=5)
 
                 if isinstance(oc, FakemonCharacter):
                     stats_view = StatsView(
                         bot=self.bot,
-                        member=member,
+                        member=user,
                         target=ctx,
                     )
                     async with stats_view:
@@ -246,7 +249,7 @@ class Submission(Cog):
                     mode = isinstance(values, list)
                     view = ComplexInput(
                         bot=self.bot,
-                        member=member,
+                        member=user,
                         target=ctx,
                         values=values,
                         max_values=1 if mode else 2,
@@ -299,7 +302,7 @@ class Submission(Cog):
                     else:
                         ability_view = ComplexInput(
                             bot=self.bot,
-                            member=member,
+                            member=user,
                             values=(
                                 Abilities
                                 if oc.any_ability_at_first
@@ -346,7 +349,7 @@ class Submission(Cog):
                     and len(oc.abilities) == 1
                 ):
                     bool_view = BooleanView(
-                        bot=self.bot, member=member, target=ctx
+                        bot=self.bot, member=user, target=ctx
                     )
                     bool_view.embed.title = (
                         "Does the character have an Special Ability?'"
@@ -390,7 +393,7 @@ class Submission(Cog):
 
                     moves_view = ComplexInput(
                         bot=self.bot,
-                        member=member,
+                        member=user,
                         values=movepool(),
                         timeout=None,
                         target=ctx,
@@ -447,7 +450,7 @@ class Submission(Cog):
                 if not oc.image:
                     image_view = ImageView(
                         bot=self.bot,
-                        member=member,
+                        member=user,
                         target=ctx,
                         default_img=oc.default_image,
                     )
@@ -713,14 +716,35 @@ class Submission(Cog):
             else:
                 msg_data = safe_load(text)
 
+            channel: TextChannel = message.channel
+
             if isinstance(msg_data, dict):
+
+                author = message.author
+
+                if channel.permissions_for(author).manage_messages:
+                    m = await channel.send("Mention the User")
+                    aux: Message = await self.bot.wait_for(
+                        "message",
+                        check=lambda m: m.channel == channel
+                        and m.author == author,
+                    )
+                    self.bot.msg_cache_add(m)
+                    self.bot.msg_cache_add(aux)
+                    await m.delete()
+                    context = await self.bot.get_context(aux)
+                    converter = MemberConverter()
+                    author = await converter.convert(
+                        ctx=context, argument=aux.content
+                    )
+                    await aux.delete()
 
                 if images := message.attachments:
                     msg_data["image"] = images[0].url
 
                 self.ignore.add(message.author.id)
                 if oc := oc_process(**msg_data):
-                    oc.author = message.author.id
+                    oc.author = author.id
                     oc.server = message.guild.id
                     await self.registration(ctx=message, oc=oc)
                     await message.delete()
