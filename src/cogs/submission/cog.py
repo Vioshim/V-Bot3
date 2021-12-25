@@ -74,7 +74,10 @@ class Submission(Cog):
         self.rpers: dict[int, set[Character]] = {}
         self.oc_list: dict[int, int] = {}
 
-    async def unclaiming(self, channel: Union[TextChannel, int]):
+    async def unclaiming(
+        self,
+        channel: Union[TextChannel, int],
+    ):
         """This method is used when a channel has been inactivate for 3 days.
 
         Parameters
@@ -101,7 +104,10 @@ class Submission(Cog):
             )
         )
 
-    async def list_update(self, member: Member):
+    async def list_update(
+        self,
+        member: Member,
+    ):
         """This function updates an user's character list message
 
         Parameters
@@ -457,7 +463,9 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
@@ -587,7 +595,11 @@ class Submission(Cog):
                         )
 
     @Cog.listener()
-    async def on_member_update(self, past: Member, now: Member) -> None:
+    async def on_member_update(
+        self,
+        past: Member,
+        now: Member,
+    ) -> None:
         if any(
             (
                 past.display_name != now.display_name,
@@ -599,7 +611,10 @@ class Submission(Cog):
                 await self.list_update(now)
 
     @Cog.listener()
-    async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent) -> None:
+    async def on_raw_thread_delete(
+        self,
+        payload: RawThreadDeleteEvent,
+    ) -> None:
         """Detects if threads were removed
 
         Parameters
@@ -635,7 +650,8 @@ class Submission(Cog):
 
     @Cog.listener()
     async def on_raw_message_delete(
-        self, payload: RawMessageDeleteEvent
+        self,
+        payload: RawMessageDeleteEvent,
     ) -> None:
         """Detects if ocs or lists were deleted
 
@@ -672,7 +688,10 @@ class Submission(Cog):
                     await oc.delete(db)
 
     @Cog.listener()
-    async def on_message(self, message: Message) -> None:
+    async def on_message(
+        self,
+        message: Message,
+    ) -> None:
         """This method processes character submissions
 
         Attributes
