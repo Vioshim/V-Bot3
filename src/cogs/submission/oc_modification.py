@@ -207,7 +207,7 @@ class SPView(Basic):
                         backup[word] = answer
 
             else:
-                self.oc.sp_ability = SpAbility(**data)
+                self.oc.sp_ability = SpAbility(**backup)
 
         self.stop()
 
