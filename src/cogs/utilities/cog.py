@@ -49,7 +49,7 @@ class Utilities(Cog):
         )
         embed.add_field(name="Power", value=f"{move.base}")
         embed.add_field(name="Accuracy", value=f"{move.accuracy}")
-        embed.set_footer(text=move.category.title())
+        embed.set_footer(text=move.category.name.title())
         embed.add_field(name="PP", value=f"{move.pp}")
         embed.set_thumbnail(url=move.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
