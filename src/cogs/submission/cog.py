@@ -661,17 +661,16 @@ class Submission(Cog):
             Information
         """
         if oc := self.ocs.get(payload.message_id):
-            if oc.thread == payload.channel_id:
-                del self.ocs[oc.id]
-                ocs = self.rpers[oc.author]
-                ocs.remove(oc)
-                async with self.bot.database() as db:
-                    self.bot.logger.info(
-                        "Character Removed as message was removed! > %s > %s",
-                        str(type(oc)),
-                        oc.url or "None",
-                    )
-                    await oc.delete(db)
+            del self.ocs[oc.id]
+            ocs = self.rpers[oc.author]
+            ocs.remove(oc)
+            async with self.bot.database() as db:
+                self.bot.logger.info(
+                    "Character Removed as message was removed! > %s > %s",
+                    str(type(oc)),
+                    oc.url or "None",
+                )
+                await oc.delete(db)
         if payload.message_id in self.oc_list.values():
             author_id: int = [
                 k for k, v in self.oc_list.items() if v == payload.message_id
