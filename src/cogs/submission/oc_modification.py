@@ -181,17 +181,18 @@ class SPView(Basic):
             required=True,
         )
         backup = asdict(self.oc.sp_ability)
-        data: dict[str, str] = {}
         text_view.embed.description = (
             "If you need to write too much, "
             "I recommend to move to Google documents, otherwise, try to be concise."
         )
-        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
+        async with view.send(
+            title="Sp.Ability Modify", ephemeral=True
+        ) as elements:
             if not isinstance(elements, set):
                 return self.stop()
-            
+
             msg = await ctx.original_message()
-            
+
             for item in elements:
                 word: str = "method" if item == "origin" else item
                 title = f"Special Ability's {item}. Current Below".title()
