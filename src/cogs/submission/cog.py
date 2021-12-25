@@ -603,15 +603,18 @@ class Submission(Cog):
         past: Member,
         now: Member,
     ) -> None:
-        if any(
-            (
-                past.display_name != now.display_name,
-                past.display_avatar != now.display_avatar,
-                past.colour != now.colour,
-            )
-        ):
-            if self.oc_list.get(now.id):
-                await self.list_update(now)
+        try:
+            if any(
+                (
+                    past.display_name != now.display_name,
+                    past.display_avatar != now.display_avatar,
+                    past.colour != now.colour,
+                )
+            ):
+                if self.oc_list.get(now.id):
+                    await self.list_update(now)
+        except Exception as e:
+            self.bot.logger.exception(exc_info=e)
 
     @Cog.listener()
     async def on_raw_thread_delete(
