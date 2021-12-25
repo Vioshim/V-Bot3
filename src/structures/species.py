@@ -347,7 +347,7 @@ class Fusion(Species):
     mon1: Optional[Species] = None
     mon2: Optional[Species] = None
     evolves_from: Optional[tuple[str, str]] = None
-    evolves_to: list[tuple[str, str]] = field(default_factory=list)
+    evolves_to: frozenset[tuple[str, str]] = field(default_factory=frozenset)
 
     def __init__(self, mon1: Species, mon2: Species):
         super(Fusion, self).__init__()
@@ -367,14 +367,19 @@ class Fusion(Species):
         self.SPE = round((mon1.SPE + mon2.SPE) / 2)
         self.movepool = mon1.movepool + mon2.movepool
         self.abilities = mon1.abilities | mon2.abilities
-        
-    def __post_init__(self):
+
+    @property
+    def evolves_to(self):
+        item1 = self.mon1.evolves_to
+        item2 = self.mon2.evolves_to
+        return frozenset(Fusion(a, b) for a, b in zip(item1, item2))
+
+    @property
+    def evolves_from(self) -> Optional[Fusion]:
         mon1 = self.mon1
         mon2 = self.mon2
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
-            self.evolves_from = Fusion(item1, item2)
-        if (item1 := mon1.evolves_to) and (item2 := mon2.evolves_to):
-            self.evolves_to = frozenset(Fusion(a, b) for a, b in zip(item1, item2))
+            return Fusion(item1, item2)
 
     @property
     def possible_types(self) -> list[set[Types]]:
