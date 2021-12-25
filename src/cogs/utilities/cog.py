@@ -14,17 +14,50 @@
 
 from d20 import MarkdownStringifier, RollSyntaxError, roll
 from d20.utils import simplify_expr
-from discord import HTTPException, Option
+from discord import Embed, HTTPException, Option
 from discord.commands import slash_command
 from discord.ext.commands import Cog
+from discord.utils import utcnow
 
 from src.context import ApplicationContext
+from src.enums.moves import Moves
 from src.structures.bot import CustomBot
+from src.structures.move import Move
+from src.utils.etc import WHITE_BAR
 
 
 class Utilities(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
+
+    @slash_command(
+        guild_ids=[719343092963999804],
+        description="Allows to use metronome",
+    )
+    async def metronome(
+        self,
+        ctx: ApplicationContext,
+    ):
+        item = Moves.metronome_fetch()
+        move: Move = item.value
+        description = move.desc or move.shortDesc
+        embed = Embed(
+            title=move.name,
+            description=description,
+            color=move.type.color,
+            timestamp=utcnow(),
+        )
+        embed.add_field(
+            name="Power", value=f"{move.base}" if move.base else "None"
+        )
+        embed.add_field(
+            name="Accuracy", value=f"{move.acc}" if move.acc else "None"
+        )
+        embed.set_footer(text=move.category.title())
+        embed.add_field(name="PP", value=f"{move.pp}" if move.pp else "None")
+        embed.set_thumbnail(url=move.type.emoji.url)
+        embed.set_image(url=WHITE_BAR)
+        await ctx.respond(embed=embed)
 
     @slash_command(
         guild_ids=[719343092963999804],

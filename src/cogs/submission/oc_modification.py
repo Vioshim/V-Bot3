@@ -27,7 +27,6 @@ from discord import (
     SelectOption,
     Thread,
     User,
-    interactions,
 )
 from discord.ui import Button, Select, View, button, select
 
@@ -630,7 +629,9 @@ class MovesetMod(Mod):
         aux: Optional[bool] = None
         origin = await target.original_message()
         view.embed.title = "Write the character's moveset. Current below"
-        view.embed.description = "\n".join(repr(move) for move in oc.moveset) or "No Moves"
+        view.embed.description = (
+            "\n".join(repr(move) for move in oc.moveset) or "No Moves"
+        )
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
@@ -699,7 +700,7 @@ class AbilitiesMod(Mod):
             view.embed.add_field(
                 name=f"Ability {index} - {item.value.name}",
                 value=item.description,
-                inline=False
+                inline=False,
             )
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()

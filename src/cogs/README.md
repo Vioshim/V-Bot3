@@ -62,3 +62,13 @@ In this project, the cogs are Cog instances which implement a setup method and t
 </p>
 
 </details>
+
+<details closed> <summary>Utilities</summary>
+
+<p>
+
+General purpose normal / slash commands implemented outside of the other categories
+
+</p>
+
+</details>
