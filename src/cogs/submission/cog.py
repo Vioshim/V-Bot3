@@ -186,7 +186,7 @@ class Submission(Cog):
             return await ctx.channel.send(msg, delete_after=delete_after)
 
         if not (member := getattr(ctx, "author", None)):
-            member = ctx.user
+            member: Member = ctx.user
 
         if not self.ready:
             await ctx_send(
@@ -462,7 +462,7 @@ class Submission(Cog):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
-                content=ctx.author.mention,
+                content=member.mention,
                 embed=embed,
                 file=file,
                 thread=thread,
@@ -695,10 +695,12 @@ class Submission(Cog):
                 msg_data = await doc_convert(doc_data.group(1))
             else:
                 msg_data = safe_load(text)
-            if images := message.attachments:
-                msg_data["image"] = images[0].url
 
             if isinstance(msg_data, dict):
+
+                if images := message.attachments:
+                    msg_data["image"] = images[0].url
+
                 self.ignore.add(message.author.id)
                 if oc := oc_process(**msg_data):
                     oc.author = message.author.id

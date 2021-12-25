@@ -80,6 +80,7 @@ COGS = [
     "information",
     "bumps",
     "roles",
+    "utilities",
 ]
 
 

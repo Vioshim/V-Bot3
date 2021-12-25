@@ -32,6 +32,7 @@ beautifulsoup4 = "^4.10.0"
 pyaml = "^21.10.1"
 yapf = "^0.31.0"
 pytz = "^2021.3"
+d20 = {git = "https://github.com/avrae/d20.git"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
