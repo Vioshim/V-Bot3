@@ -74,7 +74,6 @@ class TextInput(Basic):
         aux = TextInput(**data)
         try:
             if origin := kwargs.get("origin"):
-                await origin.edit(embed=aux.embed, view=aux)
                 await origin.edit(content=None, embed=aux.embed, view=aux)
                 await aux.wait()
                 await origin.edit(content="Text added", embed=None, view=None)

@@ -59,22 +59,14 @@ class CharacterHandlerView(Complex):
             timeout=None,
         )
 
-    async def custom_choice(self, sct: Select, interaction: Interaction):
-        resp: InteractionResponse = interaction.response
+    async def custom_choice(self, _: Select, interaction: Interaction):
         data = list(self.choices)
-        if data:
-            await resp.defer(ephemeral=True)
-            mod_view = ModifyView(
-                bot=self.bot,
-                member=interaction.user,
-                oc=data[0],
-            )
-            await interaction.followup.send(
-                embed=data[0].embed,
-                view=mod_view,
-                ephemeral=True,
-            )
-            self.stop()
+        view = ModifyView(
+            bot=self.bot,
+            member=interaction.user,
+            oc=data[0],
+        )
+        await interaction.edit_original_message(view=view, embed=data[0].embed)
 
 
 class SubmissionView(View):
