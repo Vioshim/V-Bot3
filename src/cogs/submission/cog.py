@@ -480,7 +480,7 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(member.id, frozenset())
+            self.rpers.setdefault(member.id, set())
             self.rpers[member.id].add(oc)
             self.ocs[oc.id] = oc
             self.bot.logger.info(
