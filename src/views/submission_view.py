@@ -60,13 +60,15 @@ class CharacterHandlerView(Complex):
         )
 
     async def custom_choice(self, _: Select, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
         data = list(self.choices)
         view = ModifyView(
             bot=self.bot,
             member=interaction.user,
             oc=data[0],
         )
-        await self.message.edit(view=view, embed=data[0].embed)
+        await resp.send_message(embed=data[0].embed, view=view, ephemeral=True)
+        await self.message.edit(content="Character has been Selected", view=None, embed=None)
 
 
 class SubmissionView(View):
