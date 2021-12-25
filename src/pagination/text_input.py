@@ -100,6 +100,9 @@ class TextInput(Basic):
                     content="Alright, now write down the information.",
                     ephemeral=True,
                 )
+            else:
+                await resp.edit_message(content="Alright, now write down the information.")
+                await interaction.followup.edit_message()
             message: Message = await self.bot.wait_for(
                 "message", check=text_check(interaction)
             )
