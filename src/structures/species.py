@@ -374,11 +374,14 @@ class Fusion(Species):
                 item2 = Species[item2]
             self.evolves_from = Fusion(item1, item2)
         if (item1 := mon1.evolves_to) and (item2 := mon2.evolves_to):
-            if isinstance(item1, str):
-                item1 = Species[item1]
-            if isinstance(item2, str):
-                item2 = Species[item2]
-            self.evolves_to = Fusion(item1, item2)
+            data = set()
+            for item1, item2 in zip(item1, item2):
+                if isinstance(item1, str):
+                    item1 = Species[item1]
+                if isinstance(item2, str):
+                    item2 = Species[item2]
+                data.add(Fusion(item1, item2))
+            self.evolves_to = frozenset(data)
 
     def __post_init__(self):
         self.types = frozenset(self.types)
