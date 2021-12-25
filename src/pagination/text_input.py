@@ -91,9 +91,9 @@ class TextInput(Basic):
 
     @button(label="Proceed with Message", style=ButtonStyle.green, row=0)
     async def confirm(self, btn: Button, interaction: Interaction):
-        btn.disabled = True
-        await interaction.message.edit(view=self)
         resp: InteractionResponse = interaction.response
+        btn.disabled = True
+        await resp.edit_message(view=self)
         try:
             await resp.send_message(
                 content="Alright, now write down the information.",
