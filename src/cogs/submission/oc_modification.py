@@ -189,6 +189,9 @@ class SPView(Basic):
         async with view.send(title="Sp.Ability Modify") as elements:
             if not isinstance(elements, set):
                 return self.stop()
+            
+            msg = await ctx.original_message()
+            
             for item in elements:
                 word: str = "method" if item == "origin" else item
                 title = f"Special Ability's {item}. Current Below".title()
@@ -196,6 +199,7 @@ class SPView(Basic):
                 async with text_view.handle(
                     title=title,
                     description=description,
+                    origin=msg,
                 ) as answer:
                     if not isinstance(answer, str):
                         break
