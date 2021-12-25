@@ -603,7 +603,7 @@ class Submission(Cog):
         if any(
             (
                 past.display_name != now.display_name,
-                past.display_name != now.display_avatar,
+                past.display_avatar != now.display_avatar,
                 past.colour != now.colour,
             )
         ):
