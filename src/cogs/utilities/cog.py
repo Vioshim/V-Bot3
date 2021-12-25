@@ -38,16 +38,15 @@ class Utilities(Cog):
             description="Expression (Example: d20)",
         ),
     ):
-        value = roll(expr=expression)
-        data = MarkdownStringifier()
+        value = roll(expr=expression, stringifier=MarkdownStringifier())
         try:
-            await ctx.respond(data.stringify(value))
+            await ctx.respond(value.result)
         except RollSyntaxError:
             await ctx.respond("Invalid expression", ephemeral=True)
         except HTTPException:
             expr = value.expr
             simplify_expr(expr)
-            await ctx.respond(data.stringify(expr))
+            await ctx.respond(value.result)
 
 
 def setup(bot: CustomBot) -> None:
