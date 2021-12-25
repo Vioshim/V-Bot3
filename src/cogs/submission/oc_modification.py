@@ -27,6 +27,7 @@ from discord import (
     SelectOption,
     Thread,
     User,
+    interactions,
 )
 from discord.ui import Button, Select, View, button, select
 
@@ -219,7 +220,6 @@ class SPView(Basic):
             Interaction
         """
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
         self.oc.sp_ability = None
         await resp.send_message("Special Ability removed.", ephemeral=True)
         self.stop()
