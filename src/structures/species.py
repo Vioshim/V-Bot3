@@ -346,8 +346,6 @@ class Fusion(Species):
 
     mon1: Optional[Species] = None
     mon2: Optional[Species] = None
-    evolves_from: Optional[tuple[str, str]] = None
-    evolves_to: frozenset[tuple[str, str]] = field(default_factory=frozenset)
 
     def __init__(self, mon1: Species, mon2: Species):
         super(Fusion, self).__init__(evolves_from=None, evolves_to=frozenset())
