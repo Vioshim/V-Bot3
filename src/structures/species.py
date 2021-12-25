@@ -367,13 +367,19 @@ class Fusion(Species):
         self.SPE = round((mon1.SPE + mon2.SPE) / 2)
         self.movepool = mon1.movepool + mon2.movepool
         self.abilities = mon1.abilities | mon2.abilities
-        if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
+
+    def __post_init__(self):
+        self.types = frozenset(self.types)
+        self.abilities = frozenset(self.abilities)
+        if (item1 := self.mon1.evolves_from) and (
+            item2 := self.mon2.evolves_from
+        ):
             if isinstance(item1, str):
                 item1 = Species[item1]
             if isinstance(item2, str):
                 item2 = Species[item2]
             self.evolves_from = Fusion(item1, item2)
-        if (item1 := mon1.evolves_to) and (item2 := mon2.evolves_to):
+        if (item1 := self.mon1.evolves_to) and (item2 := self.mon2.evolves_to):
             data = set()
             for item1, item2 in zip(item1, item2):
                 if isinstance(item1, str):
@@ -382,10 +388,6 @@ class Fusion(Species):
                     item2 = Species[item2]
                 data.add(Fusion(item1, item2))
             self.evolves_to = frozenset(data)
-
-    def __post_init__(self):
-        self.types = frozenset(self.types)
-        self.abilities = frozenset(self.abilities)
 
     @property
     def possible_types(self) -> list[set[Types]]:
