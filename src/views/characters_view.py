@@ -114,10 +114,10 @@ class CharactersView(Complex):
             target=target,
             values=ocs,
             timeout=None,
-            title="Select a character",
             parser=lambda x: (x.name, repr(x)),
             image=WHITE_BAR,
         )
+        self.embed.title = "Select a character",
 
     async def custom_choice(self, _: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
