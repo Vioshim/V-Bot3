@@ -847,6 +847,11 @@ class Submission(Cog):
             if message.channel.is_news():
                 return
 
+            context = await self.bot.get_context(message)
+            
+            if context.command:
+                return
+            
             def checker(value: Message) -> bool:
                 if value.webhook_id:
                     if content := message.content:
