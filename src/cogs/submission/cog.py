@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from asyncio import TimeoutError
 from contextlib import suppress
 from datetime import timedelta
 from pathlib import Path
