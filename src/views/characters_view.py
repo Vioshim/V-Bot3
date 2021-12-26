@@ -115,7 +115,6 @@ class CharactersView(Complex):
             values=ocs,
             timeout=None,
             parser=lambda x: (x.name, repr(x)),
-            image=WHITE_BAR,
         )
         self.embed.title = "Select a character",
 
