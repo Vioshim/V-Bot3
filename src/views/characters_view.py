@@ -30,7 +30,6 @@ from discord.ui import Button, Select, View, button
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import WHITE_BAR
 
 __all__ = ("CharactersView", "PingView")
 
@@ -91,7 +90,7 @@ class PingView(View):
             return
         try:
             await resp.send_message("Deleted character", ephemeral=True)
-            thread = await ctx.guild.fetch_channel(self.oc.thread_id)
+            thread = await ctx.guild.fetch_channel(self.oc.thread)
             message = await thread.fetch_message(self.oc.id)
             await message.delete()
         except DiscordException:
@@ -116,7 +115,7 @@ class CharactersView(Complex):
             timeout=None,
             parser=lambda x: (x.name, repr(x)),
         )
-        self.embed.title = "Select a character",
+        self.embed.title = "Select a character"
 
     async def custom_choice(self, _: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
