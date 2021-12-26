@@ -83,9 +83,9 @@ class ImageView(Basic):
     @button(label="I'll send an Image", row=0)
     async def insert_image(self, btn: Button, ctx: Interaction):
         btn.disabled = True
-        await ctx.edit_original_message(
-            content="Alright, now send the URL or Attach an image.", view=self
-        )
+        resp: InteractionResponse = ctx.response
+        await self.target.edit_original_message(view=None)
+        await resp.send_message(content="Alright, now send the URL or Attach an image.")
         received: Message = await self.bot.wait_for("message", check=check(ctx))
         if attachments := received.attachments:
             self.text = attachments[0].url
