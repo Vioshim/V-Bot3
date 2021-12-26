@@ -50,7 +50,7 @@ class Roles(Cog):
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
 
-    async def load(self, ocs: dict[int, dict[int, Character]]):
+    async def load(self, rpers: dict[int, dict[int, Character]]):
         self.bot.logger.info("Loading existing RP Searches")
         async with self.bot.database() as db:
             for query in QUERIES:
@@ -63,22 +63,17 @@ class Roles(Cog):
                         item["created_at"],
                     )
 
-                    self.bot.logger.info("Data: %s", str(item))
                     if not (guild := self.bot.get_guild(server_id)):
                         continue
-                    self.bot.logger.info("Guild: %s", str(item))
 
                     if not (member := guild.get_member(member_id)):
                         continue
-                    self.bot.logger.info("Member: %s", str(item))
 
                     if not (role := guild.get_role(role_id)):
                         continue
-                    self.bot.logger.info("Role: %s", str(item))
 
-                    if not (values := ocs.get(member.id, {}).values()):
+                    if not (values := rpers.get(member.id, {}).values()):
                         continue
-                    self.bot.logger.info("Values: %s", str(item))
 
                     if item := self.role_cool_down.get(role_id):
                         if item < created_at:
@@ -91,8 +86,6 @@ class Roles(Cog):
                             self.cool_down[member_id] = created_at
                     else:
                         self.cool_down[member_id] = created_at
-
-                    self.bot.logger.info("Assign: %s", str(item))
 
                     view = RoleManage(bot=self.bot, role=role, ocs=values)
                     self.bot.add_view(view=view, message_id=msg_id)

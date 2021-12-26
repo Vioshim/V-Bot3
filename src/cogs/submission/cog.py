@@ -583,7 +583,7 @@ class Submission(Cog):
 
             cog = self.bot.get_cog("Roles")
 
-            await cog.load(ocs=self.ocs)
+            await cog.load(rpers=self.rpers)
 
             self.bot.logger.info("Loading claimed missions")
 
