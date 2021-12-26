@@ -1095,6 +1095,7 @@ class ModifyView(View):
         bot: CustomBot,
         member: Member,
         oc: Character,
+        target: Interaction,
     ):
         """Modification view
 
@@ -1111,6 +1112,7 @@ class ModifyView(View):
         self.bot = bot
         self.member = member
         self.oc = oc
+        self.target = target
 
         self.edit.options = [
             SelectOption(
@@ -1130,11 +1132,12 @@ class ModifyView(View):
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
             return False
+        await resp.defer(ephemeral=True)
         return True
 
     @select(placeholder="Select Fields to Edit", row=0)
     async def edit(self, _: Select, ctx: Interaction):
-        await ctx.edit_original_message(view=None)
+        await self.target.edit_original_message(view=None)
         modifying: bool = False
         for item in ctx.data.get("values", []):
             mod = Modification[item]
@@ -1204,19 +1207,17 @@ class ModifyView(View):
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, _: Button, ctx: Interaction):
-        await ctx.edit_original_message(
-            content="Alright, no changes", embed=None, view=None
-        )
+        await self.target.edit_original_message(view=None)
+        await ctx.followup.send("Alright, no changes.", ephemeral=True)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, _: Button, ctx: Interaction):
+        await self.target.edit_original_message(view=None)
         webhook = await self.bot.fetch_webhook(919280056558317658)
         thread: Thread = await self.bot.fetch_channel(self.oc.thread)
         if thread.archived:
             await thread.edit(archived=False)
         await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
-        await ctx.edit_original_message(
-            content="Character Has been Deleted", embed=None, view=None
-        )
+        await ctx.followup.send("Character Has been Deleted", ephemeral=True)
         return self.stop()

@@ -66,6 +66,7 @@ class CharacterHandlerView(Complex):
             bot=self.bot,
             member=interaction.user,
             oc=data[0],
+            target=interaction,
         )
         await resp.send_message(embed=data[0].embed, view=view, ephemeral=True)
         await view.wait()
