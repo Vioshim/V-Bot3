@@ -504,7 +504,7 @@ class RoleManage(View):
         super(RoleManage, self).__init__(timeout=None)
         self.bot = bot
         self.role = role
-        self.ocs = ocs
+        self.ocs = set(ocs)
         self.role_add.label = f"Get {role.name} Role"
         self.role_remove.label = f"Remove {role.name} Role"
 
@@ -532,13 +532,14 @@ class RoleManage(View):
 
     @button(label="Click here to view all the user's characters.", row=1)
     async def check_ocs(self, _: Button, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
         view = CharactersView(
             bot=self.bot,
             member=ctx.user,
             target=ctx,
             ocs=self.ocs,
         )
-        await view.send(ephemeral=True)
+        await resp.send_message(embed=view.embed, ephemeral=True, view=view)
 
 
 class RoleButton(Button):

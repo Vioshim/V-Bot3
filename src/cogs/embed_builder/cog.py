@@ -25,7 +25,6 @@ from discord import (
     Guild,
     Member,
     Message,
-    MessageReference,
     PartialEmoji,
     TextChannel,
     Thread,
@@ -48,15 +47,11 @@ from src.context import Context
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import RAINBOW, WHITE_BAR
-
-# from classes.converters import AnyDateCall, UserCaller
-# from classes.methods import RAINBOW, embed_handler
 from src.utils.functions import embed_handler
 
 __all__ = ("EmbedBuilder", "setup")
 
 
-# noinspection PyTypeChecker
 class EmbedBuilder(Cog):
     """Cog for embed building based on webhooks"""
 
@@ -420,7 +415,7 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        if reference := ctx.message.reference:  # type: MessageReference
+        if reference := ctx.message.reference:
             if isinstance(reference.resolved, Message):
                 message = reference.resolved
             else:

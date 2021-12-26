@@ -14,7 +14,7 @@
 
 from datetime import datetime
 
-from discord import AllowedMentions, Embed, TextChannel
+from discord import AllowedMentions, Embed, Message, Role, TextChannel
 from discord.commands import (
     ApplicationContext,
     Option,
@@ -66,13 +66,13 @@ class Roles(Cog):
             required=True,
         ),
     ):
-        role = ctx.guild.get_role(int(role_id))
+        role: Role = ctx.guild.get_role(int(role_id))
         cog = self.bot.get_cog(name="Submission")
         channel: TextChannel = ctx.channel
         await ctx.defer(ephemeral=True)
         if channel.permissions_for(ctx.user).manage_messages:
             await ctx.respond("Provide the user pinging", ephemeral=True)
-            m = await self.bot.wait_for(
+            m: Message = await self.bot.wait_for(
                 "message",
                 check=text_check(ctx),
             )
