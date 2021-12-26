@@ -675,7 +675,7 @@ class Submission(Cog):
                 if self.oc_list.get(now.id):
                     await self.list_update(now)
         except Exception as e:
-            self.bot.logger.exception(exc_info=e)
+            self.bot.logger.exception("Exception updating", exc_info=e)
 
     @Cog.listener()
     async def on_raw_thread_delete(
