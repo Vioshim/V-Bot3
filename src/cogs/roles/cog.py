@@ -63,6 +63,8 @@ class Roles(Cog):
                         item["created_at"],
                     )
 
+                    self.bot.logger.info("Data: %s", str(item))
+
                     if not (guild := self.bot.get_guild(server_id)):
                         continue
                     if not (member := guild.get_member(member_id)):
@@ -72,13 +74,21 @@ class Roles(Cog):
                     if not (values := ocs.get(member.id, {}).values()):
                         continue
 
+                    self.bot.logger.info("Parameters: %s", str(item))
+
                     if item := self.role_cool_down.get(role_id):
                         if item < created_at:
                             self.role_cool_down[role_id] = created_at
+                    else:
+                        self.role_cool_down[role_id] = created_at
 
                     if item := self.cool_down.get(member_id):
                         if item < created_at:
                             self.cool_down[member_id] = created_at
+                    else:
+                        self.cool_down[member_id] = created_at
+
+                    self.bot.logger.info("Assign: %s", str(item))
 
                     view = RoleManage(bot=self.bot, role=role, ocs=values)
                     self.bot.add_view(view=view, message_id=msg_id)
