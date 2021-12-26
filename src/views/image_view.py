@@ -21,7 +21,7 @@ from discord import (
     ButtonStyle,
     Interaction,
     InteractionResponse,
-    Member,
+    Member,HTTPException,
     Message,
     User,
 )
@@ -67,9 +67,15 @@ class ImageView(Basic):
     @asynccontextmanager
     async def send(self):
         try:
-            await super(ImageView, self).send()
-            await self.wait()
-            yield self.text
+            try:
+                await super(ImageView, self).send()
+            except HTTPException:
+                self.embed.remove_image()
+                self.default_image.disabled = True
+                await super(ImageView, self).send()
+            finally:
+                await self.wait()
+                yield self.text
         except Exception as e:
             self.bot.logger.exception(
                 "Exception occurred, target: %s, user: %s",
