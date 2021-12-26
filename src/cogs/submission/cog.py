@@ -856,9 +856,7 @@ class Submission(Cog):
                 return False
 
             try:
-                msg: Message = await self.bot.wait_for(
-                    "message", check=checker, timeout=3
-                )
+                msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
                 self.bot.msg_cache_add(message)
 
                 if isinstance(channel := message.channel, TextChannel):
@@ -899,14 +897,9 @@ class Submission(Cog):
                                 current.add(item)
 
                             if len(previous) == 0:
-                                time = utcnow() + timedelta(minutes=3)
-                                await self.bot.scheduler.add_schedule(
-                                    self.unclaiming,
-                                    DateTrigger(time),
-                                    id=f"RP[{channel.id}]",
-                                    args=[channel],
-                                    conflict_policy=ConflictPolicy.replace,
-                                )
+                                with suppress(Exception):
+                                    await self.unclaiming(channel)
+                                    await self.bot.scheduler.remove_schedule(f"RP[{channel.id}]")
 
                             async with self.bot.database() as db:
                                 item.location = msg.channel.id
