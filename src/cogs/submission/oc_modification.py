@@ -1164,7 +1164,6 @@ class ModifyView(View):
                     repr(self.oc),
                     self.oc.name,
                 )
-                self.bot.logger.info()
                 modifying |= result
         else:
             try:
