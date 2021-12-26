@@ -277,7 +277,6 @@ class Submission(Cog):
                         if not types:
                             return
                         species.types = frozenset(types)
-
                 elif isinstance(species, Fusion):
                     values = species.possible_types
                     if oc.types not in values:

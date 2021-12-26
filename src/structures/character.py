@@ -47,7 +47,12 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1650,9 +1655,9 @@ def oc_process(**kwargs):
         elif species := Species.deduce(species_name):
             data["species"] = species
 
-    if types := common_pop_get(data, "types", "type"):
-        data["species"].types = frozenset(Types.deduce(types))
-
+    if isinstance(species := data["species"], (Fakemon, Fusion, Variant, CustomMega)):
+        if types := common_pop_get(data, "types", "type"):
+            species.types = frozenset(Types.deduce(types))
     if abilities := common_pop_get(data, "abilities", "ability"):
         data["abilities"] = frozenset(Abilities.deduce(abilities))
 
@@ -1676,7 +1681,7 @@ def oc_process(**kwargs):
 
     data = {k: v for k, v in data.items() if v}
 
-    return kind_deduce(data.get("species"), **data)
+    return kind_deduce(species, **data)
 
 
 def check(value: Optional[str]) -> bool:
