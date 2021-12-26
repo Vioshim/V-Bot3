@@ -229,8 +229,6 @@ class Complex(Simple):
 
             # Now we start to add the information of the current page in the paginator.
 
-            self.bot.logger.info("%s | %s", str(self._pos), str(elements))
-
             for index, item in enumerate(elements[self._pos]):
                 # In each cycle, we proceed to convert the name and value (as we use its index)
                 # and determine the emoji, based on the current implementation of emoji_parser
