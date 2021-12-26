@@ -519,7 +519,7 @@ class RoleManage(View):
         self.role_add.label = f"Get {role.name} Role"
         self.role_remove.label = f"Remove {role.name} Role"
 
-    @button(emoji="\N{WHITE HEAVY CHECK MARK}", row=0)
+    @button(emoji="\N{WHITE HEAVY CHECK MARK}", row=0, custom_id="role_add")
     async def role_add(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
@@ -531,7 +531,7 @@ class RoleManage(View):
             "Role added, you'll get pinged next time.", ephemeral=True
         )
 
-    @button(emoji="\N{CROSS MARK}", row=0)
+    @button(emoji="\N{CROSS MARK}", row=0, custom_id="role_remove")
     async def role_remove(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
@@ -541,7 +541,11 @@ class RoleManage(View):
             return
         await resp.send_message("You don't have that role.", ephemeral=True)
 
-    @button(label="Click here to view all the user's characters.", row=1)
+    @button(
+        label="Click here to view all the user's characters.",
+        row=1,
+        custom_id="check_ocs",
+    )
     async def check_ocs(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         view = CharactersView(

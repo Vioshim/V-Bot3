@@ -88,7 +88,10 @@ class Roles(Cog):
                         self.cool_down[member_id] = created_at
 
                     view = RoleManage(bot=self.bot, role=role, ocs=values)
-                    self.bot.add_view(view=view, message_id=msg_id)
+                    channel = await self.bot.fetch_channel(722617383738540092)
+                    msg = await channel.fetch_message(msg_id)
+                    await msg.edit(view=view)
+                    # self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @slash_command(
