@@ -17,7 +17,14 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import Optional, TypeVar, Union
 
-from discord import ButtonStyle, Interaction, InteractionResponse, Member, Message, User
+from discord import (
+    ButtonStyle,
+    Interaction,
+    InteractionResponse,
+    Member,
+    Message,
+    User,
+)
 from discord.abc import Messageable
 from discord.ui import Button, button
 
@@ -76,19 +83,17 @@ class ImageView(Basic):
     @button(label="I'll send an Image", row=0)
     async def insert_image(self, btn: Button, ctx: Interaction):
         btn.disabled = True
-        await self.message.edit(view=self)
-        resp: InteractionResponse = ctx.response
-        await resp.send_message(
-            content="Alright, now send the URL or Attach an image.",
-            ephemeral=True,
+        await ctx.edit_original_message(
+            content="Alright, now send the URL or Attach an image.", view=self
         )
-        received: Message = await self.bot.wait_for("message",
-                                                    check=check(ctx))
+        received: Message = await self.bot.wait_for("message", check=check(ctx))
         if attachments := received.attachments:
             self.text = attachments[0].url
             self.received = received
-        elif file := await self.bot.get_file(url=received.content,
-                                             filename="image"):
+        elif file := await self.bot.get_file(
+            url=received.content,
+            filename="image",
+        ):
             self.received = await ctx.channel.send(file=file)
             self.text = self.received.attachments[0].url
             await received.delete()

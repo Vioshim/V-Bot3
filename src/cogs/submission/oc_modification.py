@@ -39,6 +39,7 @@ from src.pagination.view_base import Basic
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character
+from src.structures.species import Fusion
 from src.utils.functions import int_check
 from src.views import ImageView
 
@@ -779,6 +780,212 @@ class ImageMod(Mod):
 
 
 @dataclass(unsafe_hash=True)
+class EvolutionMod(Mod):
+    label: str = "Evolution"
+    description: str = "Used to Evolve OCs"
+
+    def check(self, oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return bool(oc.species.evolves_to)
+
+    async def method(
+        self,
+        oc: Type[Character],
+        bot: CustomBot,
+        member: Union[User, Member],
+        target: Interaction,
+    ) -> Optional[bool]:
+        """Method
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+        bot : CustomBot
+            Bot
+        member : Union[User, Member]
+            User
+        target : T
+            Context
+
+        Returns
+        -------
+        Optional[bool]
+            Bool If Updatable, None if cancelled
+        """
+        species = oc.species
+        if isinstance(species, Fusion):
+            values = set(species.fusion_evolves_to)
+        else:
+            values = set(species.evolves_to)
+
+        origin = await target.original_message()
+
+        if len(values) == 1:
+            species = list(values)[0]
+        else:
+            view = ComplexInput(
+                bot=bot,
+                member=member,
+                values=values,
+                timeout=None,
+                target=target,
+                parser=lambda x: (x.name, f"Evolve to {x.name}"),
+            )
+            view.embed.title = "Select the Evolution"
+            await origin.edit(content=None, embed=view.embed, view=view)
+            await view.wait()
+            if not (species := view.choice):
+                return
+
+        oc.species = species
+        if types := species.types:
+            oc.types = types
+        elif isinstance(species, Fusion):
+            possible_types = species.possible_types
+            if oc.types not in possible_types:
+                view = ComplexInput(
+                    bot=bot,
+                    member=member,
+                    values=possible_types,
+                    timeout=None,
+                    target=target,
+                    parser=lambda x: (
+                        name := "/".join(i.name for i in x).title(),
+                        f"Sets the typing to {name}",
+                    ),
+                )
+                view.embed.title = "Select the Fusion's new typing"
+                await origin.edit(content=None, embed=view.embed, view=view)
+                await view.wait()
+                if not (types := view.choice):
+                    return
+                oc.types = types
+
+        view = ImageView(
+            bot=bot,
+            member=member,
+            default_img=oc.default_image,
+            target=target,
+        )
+
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
+        if isinstance(image := view.text, str):
+            if msg := view.received:
+                await msg.delete(delay=100)
+            oc.image = image
+        return True
+
+
+@dataclass(unsafe_hash=True)
+class DevolutionMod(Mod):
+    label: str = "Devolve"
+    description: str = "Used to devolve OCs"
+
+    def check(self, oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        return bool(oc.species.evolves_from)
+
+    async def method(
+        self,
+        oc: Type[Character],
+        bot: CustomBot,
+        member: Union[User, Member],
+        target: Interaction,
+    ) -> Optional[bool]:
+        """Method
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+        bot : CustomBot
+            Bot
+        member : Union[User, Member]
+            User
+        target : T
+            Context
+
+        Returns
+        -------
+        Optional[bool]
+            Bool If Updatable, None if cancelled
+        """
+        if isinstance(current := oc.species, Fusion):
+            species = oc.species.fusion_evolves_from
+        else:
+            species = oc.species.evolves_from
+
+        origin = await target.original_message()
+
+        oc.species = species
+        if types := species.types:
+            oc.types = types
+        elif isinstance(species, Fusion):
+            possible_types = species.possible_types
+            if oc.types not in possible_types:
+                view = ComplexInput(
+                    bot=bot,
+                    member=member,
+                    values=possible_types,
+                    timeout=None,
+                    target=target,
+                    parser=lambda x: (
+                        name := "/".join(i.name for i in x).title(),
+                        f"Sets the typing to {name}",
+                    ),
+                )
+                view.embed.title = "Select the Fusion's new typing"
+                await origin.edit(content=None, embed=view.embed, view=view)
+                await view.wait()
+                if not (types := view.choice):
+                    return
+                oc.types = types
+
+        oc.moveset &= set(oc.species.movepool()) & set(current.movepool())
+
+        view = ImageView(
+            bot=bot,
+            member=member,
+            default_img=oc.default_image,
+            target=target,
+        )
+
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
+        if isinstance(image := view.text, str):
+            if msg := view.received:
+                await msg.delete(delay=100)
+            oc.image = image
+        return True
+
+
+@dataclass(unsafe_hash=True)
 class SpAbilityMod(Mod):
     label: str = "Special Ability"
     description: str = "Modify/Add the OC's Special Abilities"
@@ -841,6 +1048,8 @@ class Modification(Enum):
     Moveset = MovesetMod()
     Abilities = AbilitiesMod()
     Image = ImageMod()
+    Evolution = EvolutionMod()
+    Devolution = DevolutionMod()
     SpAbility = SpAbilityMod()
 
     @property
@@ -990,7 +1199,9 @@ class ModifyView(View):
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, _: Button, ctx: Interaction):
-        await ctx.edit_original_message(content="Alright, no changes", embed=None, view=None)
+        await ctx.edit_original_message(
+            content="Alright, no changes", embed=None, view=None
+        )
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
@@ -1000,5 +1211,7 @@ class ModifyView(View):
         if thread.archived:
             await thread.edit(archived=False)
         await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
-        await ctx.edit_original_message(content="Character Has been Deleted", embed=None, view=None)
+        await ctx.edit_original_message(
+            content="Character Has been Deleted", embed=None, view=None
+        )
         return self.stop()
