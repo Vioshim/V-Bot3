@@ -874,11 +874,9 @@ class Submission(Cog):
                         conflict_policy=ConflictPolicy.replace,
                     )
             except TimeoutError:
-                if self.rpers.get(message.author.id):
+                if not self.rpers.get(message.author.id):
                     role = message.guild.get_role(719642423327719434)
-                    await message.author.remove_roles(
-                        role, reason="Without OCs, user isn't registered."
-                    )
+                    await message.author.remove_roles(role, reason="Without OCs, user isn't registered.")
                     for cat_id in RP_CATEGORIES:
                         if ch := self.bot.get_channel(cat_id):
                             await ch.set_permissions(
