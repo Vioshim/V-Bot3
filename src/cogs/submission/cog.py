@@ -45,6 +45,7 @@ from yaml.error import MarkedYAMLError
 
 from src.context import ApplicationContext
 from src.enums import Abilities, Moves, Types
+from src.structures.species import Fakemon, Fusion
 from src.pagination.boolean import BooleanView
 from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
@@ -222,7 +223,7 @@ class Submission(Cog):
                 text_view = TextInput(bot=self.bot, member=user, target=ctx)
                 await ctx_send("Starting submission process", delete_after=5)
 
-                if isinstance(oc, FakemonCharacter):
+                if isinstance(species := oc.species, Fakemon):
                     stats_view = StatsView(
                         bot=self.bot,
                         member=user,
@@ -231,29 +232,25 @@ class Submission(Cog):
                     async with stats_view:
                         if not (stats := stats_view.choice):
                             return
-                        oc.species.set_stats(*stats.value)
+                        species.set_stats(*stats.value)
 
                     types = None
                     while types is None:
-                        text_view.embed.title = (
-                            "Write the character's types (Min 1, Max 2)"
-                        )
-                        text_view.embed.description = (
-                            "For example: Fire, Psychic"
-                        )
+                        text_view.embed.title = "Write the character's types (Min 1, Max 2)"
+                        text_view.embed.description = "For example: Fire, Psychic"
                         async with text_view.handle(required=True) as answer:
                             if not answer:
                                 return
                             types = Types.deduce(answer)
                             if 1 <= len(types) <= 2:
-                                oc.types = types
+                                species.types = types
                             else:
                                 types = None
 
                 if not oc.types:
                     values = (
-                        oc.possible_types
-                        if isinstance(oc, FusionCharacter)
+                        species.possible_types
+                        if isinstance(species, Fusion)
                         else Types
                     )
                     mode = isinstance(values, list)
@@ -276,30 +273,18 @@ class Submission(Cog):
                     ) as types:
                         if not types:
                             return
-                        oc.species.types = frozenset(types)
+                        species.types = frozenset(types)
 
-                elif oc.has_default_types:
-                    if isinstance(oc, FusionCharacter):
-                        values = oc.possible_types
-                        if oc.types not in values:
-                            items = ", ".join(
-                                "/".join(i.name for i in item)
-                                for item in values
-                            ).title()
-                            await ctx_send(
-                                f"Invalid typing for the fusion, valid types are {items}",
-                                delete_after=5,
-                            )
-                            return
-                    elif oc.types != oc.species.types:
-                        items = "/".join(
-                            i.name for i in oc.species.types
-                        ).title()
-                        await ctx_send(
-                            f"Invalid typing for the character, valid types is {items}",
-                            delete_after=5,
-                        )
+                elif isinstance(species, Fusion):
+                    values = species.possible_types
+                    if oc.types not in values:
+                        items = ", ".join("/".join(i.name for i in item) for item in values).title()
+                        await ctx_send(f"Invalid typing for the fusion, valid types are {items}", delete_after=5)
                         return
+                elif oc.types != species.types:
+                    items = "/".join(i.name for i in oc.species.types).title()
+                    await ctx_send(f"Invalid typing for the character, valid types is {items}", delete_after=5)
+                    return
 
                 max_ab = oc.max_amount_abilities
                 if not oc.abilities:
