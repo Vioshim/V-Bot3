@@ -843,10 +843,10 @@ class Submission(Cog):
                         with suppress(DiscordException):
                             await m.delete()
                     await self.bot.scheduler.add_schedule(
-                        self.method,
+                        self.unclaiming,
                         DateTrigger(time),
                         id=f"RP[{channel.id}]",
-                        args=[channel.id],
+                        args=[channel],
                         conflict_policy=ConflictPolicy.replace,
                     )
             except TimeoutError:
