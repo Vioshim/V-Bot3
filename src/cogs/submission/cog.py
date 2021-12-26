@@ -542,6 +542,10 @@ class Submission(Cog):
     @Cog.listener()
     async def on_ready(self) -> None:
         """This method loads all the characters from the database."""
+
+        if self.ready:
+            return
+
         async with self.bot.database() as db:
 
             self.bot.logger.info("Loading All Profiles")
@@ -574,6 +578,10 @@ class Submission(Cog):
             self.bot.logger.info("Finished loading all characters")
 
             self.ready = True
+
+            cog = self.bot.get_cog("Roles")
+
+            await cog.load()
 
             self.bot.logger.info("Loading claimed missions")
 

@@ -41,7 +41,20 @@ __all__ = (
     "RPSearchRoles",
     "RoleView",
     "RP_SEARCH_ROLES",
+    "QUERIES",
 )
+
+
+QUERIES = [
+    """--sql
+DELETE FROM RP_SEARCH
+WHERE (CREATED_AT + INTERVAL '1 day') <= CURRENT_TIMESTAMP
+RETURNING *;
+""",
+    """--sql
+SELECT * FROM RP_SEARCH;
+""",
+]
 
 
 def hours(test: datetime = None) -> int:
@@ -331,8 +344,6 @@ COLORS = [
 
 
 class PronounRoles(View):
-
-    # noinspection DuplicatedCode
     @select(
         placeholder="Select Pronoun/s",
         custom_id="pronouns",
@@ -342,12 +353,12 @@ class PronounRoles(View):
             SelectOption(
                 label="He",
                 value="738230651840626708",
-                emoji="\N{MALE SIGN}️",
+                emoji="\N{MALE SIGN}",
             ),
             SelectOption(
                 label="She",
                 value="738230653916807199",
-                emoji="\N{FEMALE SIGN}️",
+                emoji="\N{FEMALE SIGN}",
             ),
             SelectOption(
                 label="Them",
@@ -594,11 +605,19 @@ class RoleButton(Button):
         view = View()
         view.add_item(Button(label="Jump URL", url=msg.jump_url))
 
-        await ctx.followup.send(
-            content="Ping has been done successfully.",
-            view=view,
-            ephemeral=True,
-        )
+        async with self.bot.database() as db:
+            await db.execute(
+                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
+                msg.id,
+                member.id,
+                role.id,
+                member.guild.id,
+            )
+            await ctx.followup.send(
+                content="Ping has been done successfully.",
+                view=view,
+                ephemeral=True,
+            )
 
 
 class RoleView(View):

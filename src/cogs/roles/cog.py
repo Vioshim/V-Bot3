@@ -26,6 +26,7 @@ from discord.ui import Button, View
 from discord.utils import utcnow
 
 from src.cogs.roles.roles import (
+    QUERIES,
     RP_SEARCH_ROLES,
     BasicRoles,
     ColorRoles,
@@ -47,6 +48,37 @@ class Roles(Cog):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
+
+    async def load(self):
+        async with self.bot.database() as db:
+            for query in QUERIES:
+                async for item in db.cursor(query):
+                    msg_id, member_id, role_id, server_id, created_at = (
+                        item["id"],
+                        item["member"],
+                        item["role"],
+                        item["server"],
+                        item["created_at"],
+                    )
+
+                    guild = self.bot.get_guild(server_id)
+                    if not (member := guild.get_member(member_id)):
+                        continue
+                    if not (role := guild.get_role(role_id)):
+                        continue
+                    if not (ocs := self.ocs.get(member.id, {}).values()):
+                        continue
+
+                    if item := self.role_cool_down.get(role_id):
+                        if item < created_at:
+                            self.role_cool_down[role_id] = created_at
+
+                    if item := self.cool_down.get(member_id):
+                        if item < created_at:
+                            self.cool_down[member_id] = created_at
+
+                    view = RoleManage(bot=self.bot, role=role, ocs=ocs)
+                    self.bot.add_view(view=view, message_id=msg_id)
 
     @slash_command(
         guild_ids=[719343092963999804],
@@ -123,11 +155,21 @@ class Roles(Cog):
         self.role_cool_down[role.id] = utcnow()
         view = View()
         view.add_item(Button(label="Jump URL", url=msg.jump_url))
-        await ctx.respond(
-            content="Ping has been done successfully.",
-            ephemeral=True,
-            view=view,
-        )
+
+        async with self.bot.database() as db:
+            await db.execute(
+                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
+                msg.id,
+                member.id,
+                role.id,
+                member.guild.id,
+            )
+
+            await ctx.respond(
+                content="Ping has been done successfully.",
+                ephemeral=True,
+                view=view,
+            )
 
     @Cog.listener()
     async def on_ready(self):
