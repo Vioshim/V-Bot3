@@ -850,28 +850,25 @@ class EvolutionMod(Mod):
                 return
 
         oc.species = species
-        if types := species.types:
-            oc.types = types
-        elif isinstance(species, Fusion):
+        if not oc.types and isinstance(species, Fusion):
             possible_types = species.possible_types
-            if oc.types not in possible_types:
-                view = ComplexInput(
-                    bot=bot,
-                    member=member,
-                    values=possible_types,
-                    timeout=None,
-                    target=target,
-                    parser=lambda x: (
-                        name := "/".join(i.name for i in x).title(),
-                        f"Sets the typing to {name}",
-                    ),
-                )
-                view.embed.title = "Select the Fusion's new typing"
-                await origin.edit(content=None, embed=view.embed, view=view)
-                await view.wait()
-                if not (types := view.choice):
-                    return
-                oc.types = types
+            view = ComplexInput(
+                bot=bot,
+                member=member,
+                values=possible_types,
+                timeout=None,
+                target=target,
+                parser=lambda x: (
+                    name := "/".join(i.name for i in x).title(),
+                    f"Sets the typing to {name}",
+                ),
+            )
+            view.embed.title = "Select the Fusion's new typing"
+            await origin.edit(content=None, embed=view.embed, view=view)
+            await view.wait()
+            if not (types := view.choice):
+                return
+            species.types = types
 
         view = ImageView(
             bot=bot,
@@ -936,35 +933,32 @@ class DevolutionMod(Mod):
             Bool If Updatable, None if cancelled
         """
         if isinstance(current := oc.species, Fusion):
-            species = oc.species.fusion_evolves_from
+            species = current.fusion_evolves_from
         else:
-            species = oc.species.evolves_from
+            species = current.evolves_from
 
         origin = await target.original_message()
 
         oc.species = species
-        if types := species.types:
-            oc.types = types
-        elif isinstance(species, Fusion):
+        if not oc.types and isinstance(species, Fusion):
             possible_types = species.possible_types
-            if oc.types not in possible_types:
-                view = ComplexInput(
-                    bot=bot,
-                    member=member,
-                    values=possible_types,
-                    timeout=None,
-                    target=target,
-                    parser=lambda x: (
-                        name := "/".join(i.name for i in x).title(),
-                        f"Sets the typing to {name}",
-                    ),
-                )
-                view.embed.title = "Select the Fusion's new typing"
-                await origin.edit(content=None, embed=view.embed, view=view)
-                await view.wait()
-                if not (types := view.choice):
-                    return
-                oc.types = types
+            view = ComplexInput(
+                bot=bot,
+                member=member,
+                values=possible_types,
+                timeout=None,
+                target=target,
+                parser=lambda x: (
+                    name := "/".join(i.name for i in x).title(),
+                    f"Sets the typing to {name}",
+                ),
+            )
+            view.embed.title = "Select the Fusion's new typing"
+            await origin.edit(content=None, embed=view.embed, view=view)
+            await view.wait()
+            if not (types := view.choice):
+                return
+            species.types = types
 
         oc.moveset &= set(oc.species.movepool()) & set(current.movepool())
 

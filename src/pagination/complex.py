@@ -153,7 +153,6 @@ class Complex(Simple):
     def menu_format(self) -> None:
         """Default Formatter"""
         self.buttons_format()
-
         # First, the current stored values in each option get cleared.
         # aside of changing the placeholder text
 
@@ -229,6 +228,8 @@ class Complex(Simple):
                 )
 
             # Now we start to add the information of the current page in the paginator.
+
+            self.bot.logger.info("%s | %s", str(self._pos), str(elements))
 
             for index, item in enumerate(elements[self._pos]):
                 # In each cycle, we proceed to convert the name and value (as we use its index)
@@ -449,16 +450,12 @@ class Complex(Simple):
 class ComplexInput(Complex):
     """This class allows written input."""
 
-    def menu_format(self) -> None:
-        """Default Formatter"""
-        self.message_handler.disabled = False
-        super(ComplexInput, self).menu_format()
-
     # noinspection PyTypeChecker
     @button(
         label="Click here to write down the choice instead.",
         emoji="\N{PENCIL}",
         custom_id="writer",
+        disabled=False,
     )
     async def message_handler(self, btn: Button, ctx: Interaction):
         response: InteractionResponse = ctx.response
@@ -507,7 +504,9 @@ class ComplexInput(Complex):
         return await self.edit(page=self._pos)
 
     async def custom_message_handler(
-        self, btn: Button, interaction: Interaction
+        self,
+        btn: Button,
+        interaction: Interaction,
     ):
         """
         Method used to reach next first of the pagination

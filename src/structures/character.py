@@ -108,7 +108,7 @@ class Character(metaclass=ABCMeta):
             self.sp_ability = None
 
     def __eq__(self, other: Character):
-        return self.id == other.id and self.thread == other.thread
+        return self.id == other.id
 
     def randomize_abilities(self):
         if abilities := list(self.species.abilities):
