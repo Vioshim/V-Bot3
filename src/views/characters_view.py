@@ -135,8 +135,6 @@ class CharactersView(Complex):
                 self.bot.logger.exception(
                     "Type: %s, Str: %s", type(item), str(item), exc_info=e
                 )
-            finally:
-                await self.edit(ctx, self._pos)
 
     @property
     def choice(self) -> Optional[Character]:
