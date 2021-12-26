@@ -224,6 +224,9 @@ class Simple(Basic):
         try:
             if message := self.message:
                 await message.edit(embed=self._embed, view=self)
+            elif isinstance(target := self.target, Interaction):
+                if message := await target.original_message():
+                    await message.edit(embed=self._embed, view=self)
         except DiscordException as e:
             self.bot.logger.exception(
                 "Exception while editing view %s",
