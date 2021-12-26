@@ -1000,5 +1000,5 @@ class ModifyView(View):
         if thread.archived:
             await thread.edit(archived=False)
         await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
-        await ctx.delete_original_message()
+        await ctx.edit_original_message(content="Character Has been Deleted", embed=None, view=None)
         return self.stop()
