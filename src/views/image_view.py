@@ -104,6 +104,7 @@ class ImageView(Basic):
     @button(label="I like the default one", row=0)
     async def default_image(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
+        await self.target.edit_original_message(view=None)
         await resp.send_message(
             content="Keeping default image.",
             ephemeral=True,
@@ -113,6 +114,7 @@ class ImageView(Basic):
     @button(label="Cancel Submission", style=ButtonStyle.red, row=0)
     async def cancel(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
+        await self.target.edit_original_message(view=None)
         await resp.send_message(
             content="Submission has been concluded.",
             ephemeral=True,
