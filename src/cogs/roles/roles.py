@@ -511,14 +511,17 @@ class RPSearchRoles(View):
 
 
 class RoleManage(View):
-    def __init__(self, bot: CustomBot, role: Role, ocs: set[Character]):
+    def __init__(
+        self, bot: CustomBot, role: Role, ocs: set[Character], member: Member
+    ):
         super(RoleManage, self).__init__(timeout=None)
         self.bot = bot
         self.role = role
         self.ocs = set(ocs)
+        self.member = member
         self.role_add.label = f"Get {role.name} Role"
         self.role_remove.label = f"Remove {role.name} Role"
-
+    
     @button(emoji="\N{WHITE HEAVY CHECK MARK}", row=0, custom_id="role_add")
     async def role_add(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
@@ -554,7 +557,10 @@ class RoleManage(View):
             target=ctx,
             ocs=self.ocs,
         )
-        await resp.send_message(embed=view.embed, ephemeral=True, view=view)
+        embed = view.embed
+        embed.set_author(name=self.member.display_name)
+        embed.set_thumbnail(url=self.member.display_avatar.url)
+        await resp.send_message(embed=embed, ephemeral=True, view=view)
 
 
 class RoleButton(Button):
@@ -587,7 +593,7 @@ class RoleButton(Button):
         channel: TextChannel = self.bot.get_channel(722617383738540092)
 
         characters = cog.rpers.get(member.id, {}).values()
-        view = RoleManage(self.bot, role, characters)
+        view = RoleManage(self.bot, role, characters, member)
 
         embed = Embed(
             title=role.name,

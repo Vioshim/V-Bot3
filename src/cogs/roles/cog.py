@@ -87,11 +87,10 @@ class Roles(Cog):
                     else:
                         self.cool_down[member_id] = created_at
 
-                    view = RoleManage(bot=self.bot, role=role, ocs=values)
-                    channel = await self.bot.fetch_channel(722617383738540092)
-                    msg = await channel.fetch_message(msg_id)
-                    await msg.edit(view=view)
-                    # self.bot.add_view(view=view, message_id=msg_id)
+                    view = RoleManage(
+                        bot=self.bot, role=role, ocs=values, member=member
+                    )
+                    self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @slash_command(
@@ -149,7 +148,7 @@ class Roles(Cog):
         channel = self.bot.get_channel(722617383738540092)
 
         ocs = cog.rpers.get(ctx.user.id, {}).values()
-        view = RoleManage(self.bot, role, ocs)
+        view = RoleManage(self.bot, role, ocs, member)
 
         embed = Embed(
             title=role.name,
