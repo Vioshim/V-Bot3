@@ -93,8 +93,8 @@ class ImageView(Basic):
         resp: InteractionResponse = ctx.response
         if isinstance(target := self.target, Interaction):
             await target.edit_original_message(view=None)
-        elif isinstance(target, Message):
-            await target.edit(view=None)
+        else:
+            await self.message.edit(view=None)
         await resp.send_message(
             content="Alright, now send the URL or Attach an image.",
             ephemeral=True,
@@ -119,8 +119,8 @@ class ImageView(Basic):
         resp: InteractionResponse = ctx.response
         if isinstance(target := self.target, Interaction):
             await target.edit_original_message(view=None)
-        elif isinstance(target, Message):
-            await target.edit(view=None)
+        else:
+            await self.message.edit(view=None)
         await resp.send_message(
             content="Keeping default image.",
             ephemeral=True,
@@ -132,8 +132,8 @@ class ImageView(Basic):
         resp: InteractionResponse = ctx.response
         if isinstance(target := self.target, Interaction):
             await target.edit_original_message(view=None)
-        elif isinstance(target, Message):
-            await target.edit(view=None)
+        else:
+            await self.message.edit(view=None)
         await resp.send_message(
             content="Submission has been concluded.",
             ephemeral=True,
