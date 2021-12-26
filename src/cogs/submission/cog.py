@@ -45,7 +45,6 @@ from yaml.error import MarkedYAMLError
 
 from src.context import ApplicationContext
 from src.enums import Abilities, Moves, Types
-from src.structures.species import Fakemon, Fusion
 from src.pagination.boolean import BooleanView
 from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
@@ -54,7 +53,6 @@ from src.structures.bot import CustomBot
 from src.structures.character import (
     Character,
     FakemonCharacter,
-    FusionCharacter,
     VariantCharacter,
     doc_convert,
     fetch_all,
@@ -62,6 +60,7 @@ from src.structures.character import (
 )
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
+from src.structures.species import Fakemon, Fusion
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.matches import G_DOCUMENT
 from src.views import (
@@ -236,8 +235,12 @@ class Submission(Cog):
 
                     types = None
                     while types is None:
-                        text_view.embed.title = "Write the character's types (Min 1, Max 2)"
-                        text_view.embed.description = "For example: Fire, Psychic"
+                        text_view.embed.title = (
+                            "Write the character's types (Min 1, Max 2)"
+                        )
+                        text_view.embed.description = (
+                            "For example: Fire, Psychic"
+                        )
                         async with text_view.handle(required=True) as answer:
                             if not answer:
                                 return
@@ -278,12 +281,20 @@ class Submission(Cog):
                 elif isinstance(species, Fusion):
                     values = species.possible_types
                     if oc.types not in values:
-                        items = ", ".join("/".join(i.name for i in item) for item in values).title()
-                        await ctx_send(f"Invalid typing for the fusion, valid types are {items}", delete_after=5)
+                        items = ", ".join(
+                            "/".join(i.name for i in item) for item in values
+                        ).title()
+                        await ctx_send(
+                            f"Invalid typing for the fusion, valid types are {items}",
+                            delete_after=5,
+                        )
                         return
                 elif oc.types != species.types:
                     items = "/".join(i.name for i in oc.species.types).title()
-                    await ctx_send(f"Invalid typing for the character, valid types is {items}", delete_after=5)
+                    await ctx_send(
+                        f"Invalid typing for the character, valid types is {items}",
+                        delete_after=5,
+                    )
                     return
 
                 max_ab = oc.max_amount_abilities
