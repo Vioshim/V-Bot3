@@ -508,10 +508,11 @@ class Submission(Cog):
         await webhook.edit_message(oc.id, embed=embed, thread=thread)
 
     @slash_command(
+        name="ocs",
         guild_ids=[719343092963999804],
         description="Allows to show characters",
     )
-    async def ocs(
+    async def get_ocs(
         self,
         ctx: ApplicationContext,
         member: Option(
@@ -582,7 +583,7 @@ class Submission(Cog):
 
             cog = self.bot.get_cog("Roles")
 
-            await cog.load()
+            await cog.load(ocs=self.ocs)
 
             self.bot.logger.info("Loading claimed missions")
 

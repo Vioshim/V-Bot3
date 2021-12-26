@@ -38,6 +38,7 @@ from src.cogs.roles.roles import (
     seconds,
 )
 from src.structures.bot import CustomBot
+from src.structures.character import Character
 from src.utils.functions import text_check
 
 __all__ = ("Roles", "setup")
@@ -49,7 +50,7 @@ class Roles(Cog):
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
 
-    async def load(self):
+    async def load(self, ocs: dict[int, dict[int, Character]]):
         async with self.bot.database() as db:
             for query in QUERIES:
                 async for item in db.cursor(query):
@@ -66,7 +67,7 @@ class Roles(Cog):
                         continue
                     if not (role := guild.get_role(role_id)):
                         continue
-                    if not (ocs := self.ocs.get(member.id, {}).values()):
+                    if not (values := ocs.get(member.id, {}).values()):
                         continue
 
                     if item := self.role_cool_down.get(role_id):
@@ -77,7 +78,7 @@ class Roles(Cog):
                         if item < created_at:
                             self.cool_down[member_id] = created_at
 
-                    view = RoleManage(bot=self.bot, role=role, ocs=ocs)
+                    view = RoleManage(bot=self.bot, role=role, ocs=values)
                     self.bot.add_view(view=view, message_id=msg_id)
 
     @slash_command(
