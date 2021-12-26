@@ -84,6 +84,7 @@ class Submission(Cog):
         self.ocs: dict[int, Character] = {}
         self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
+        self.located: dict[int, set[Character]] = {}
 
     async def unclaiming(
         self,
@@ -576,6 +577,9 @@ class Submission(Cog):
                 self.ocs[oc.id] = oc
                 self.rpers.setdefault(oc.author, {})
                 self.rpers[oc.author][oc.id] = oc
+                if location := oc.location:
+                    self.located.setdefault(location, set())
+                    self.located[location].add(oc)
 
             self.bot.logger.info("Finished loading all characters")
 
@@ -584,6 +588,24 @@ class Submission(Cog):
             cog = self.bot.get_cog("Roles")
 
             await cog.load(rpers=self.rpers)
+
+            self.bot.logger.info("Loading Submission menu")
+
+            source = Path("resources/templates.json")
+            async with aiopen(source.resolve(), mode="r") as f:
+                contents = await f.read()
+                view = SubmissionView(
+                    bot=self.bot,
+                    ocs=self.ocs,
+                    rpers=self.rpers,
+                    oc_list=self.oc_list,
+                    missions=self.missions,
+                    **loads(contents),
+                )
+                w = await self.bot.fetch_webhook(857435846454280244)
+                await w.edit_message(903437849154711552, view=view)
+
+            self.bot.logger.info("Finished loading Submission menu")
 
             self.bot.logger.info("Loading claimed missions")
 
@@ -603,26 +625,10 @@ class Submission(Cog):
                         wait=True,
                         allowed_mentions=AllowedMentions(users=True),
                     )
-                    mission.msg_id = msg.msg_id
+                    mission.msg_id = msg.id
                     await mission.upsert(db)
 
         self.bot.logger.info("Finished loading claimed categories")
-
-        source = Path("resources/templates.json")
-        async with aiopen(source.resolve(), mode="r") as f:
-            contents = await f.read()
-            view = SubmissionView(
-                bot=self.bot,
-                ocs=self.ocs,
-                rpers=self.rpers,
-                oc_list=self.oc_list,
-                missions=self.missions,
-                **loads(contents),
-            )
-            w = await self.bot.fetch_webhook(857435846454280244)
-            await w.edit_message(903437849154711552, view=view)
-
-        self.bot.logger.info("Finished loading menu")
 
         self.bot.logger.info("Loading claimed categories")
 
@@ -642,6 +648,7 @@ class Submission(Cog):
                     elif (raw := utcnow() - m.created_at) > timedelta(days=3):
                         await self.unclaiming(ch)
                     elif date := utcnow() + (timedelta(days=3) - raw):
+
                         trigger = DateTrigger(date)
                         await self.bot.scheduler.add_schedule(
                             self.unclaiming,
@@ -701,6 +708,10 @@ class Submission(Cog):
 
                 for oc in self.rpers.pop(author_id, {}).values():
                     del self.ocs[oc.id]
+                    if location := oc.location:
+                        self.located.setdefault(location, set())
+                        if oc in self.located[location]:
+                            self.located[location].remove(oc)
                     self.bot.logger.info(
                         "Character Removed as Thread was removed! > %s > %s",
                         str(type(oc)),
@@ -722,6 +733,10 @@ class Submission(Cog):
         """
         if oc := self.ocs.get(payload.message_id):
             del self.ocs[oc.id]
+            if location := oc.location:
+                self.located.setdefault(location, set())
+                if oc in self.located[location]:
+                    self.located[location].remove(oc)
             self.rpers.setdefault(oc.author, {})
             self.rpers[oc.author].pop(oc.id, None)
             async with self.bot.database() as db:
@@ -739,6 +754,10 @@ class Submission(Cog):
             async with self.bot.database() as db:
                 for oc in self.rpers.pop(author_id, {}).values():
                     del self.ocs[oc.id]
+                    if location := oc.location:
+                        self.located.setdefault(location, set())
+                        if oc in self.located[location]:
+                            self.located[location].remove(oc)
                     self.bot.logger.info(
                         "Character Removed as Thread was removed! > %s > %s",
                         str(type(oc)),
@@ -874,6 +893,23 @@ class Submission(Cog):
                         )
                     ):
                         if item.location != msg.channel.id:
+                            previous = self.located.get(item.location, set())
+                            current = self.located.get(msg.channel.id, set())
+                            if item in previous:
+                                previous.remove(item)
+                            if item not in current:
+                                current.add(item)
+
+                            if len(previous) == 0:
+                                time = utcnow() + timedelta(minutes=3)
+                                await self.bot.scheduler.add_schedule(
+                                    self.unclaiming,
+                                    DateTrigger(time),
+                                    id=f"RP[{channel.id}]",
+                                    args=[channel],
+                                    conflict_policy=ConflictPolicy.replace,
+                                )
+
                             async with self.bot.database() as db:
                                 item.location = msg.channel.id
                                 await self.oc_update(item)
