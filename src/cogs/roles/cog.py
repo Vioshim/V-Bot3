@@ -51,6 +51,7 @@ class Roles(Cog):
         self.role_cool_down: dict[int, datetime] = {}
 
     async def load(self, ocs: dict[int, dict[int, Character]]):
+        self.bot.logger.info("Loading existing RP Searches")
         async with self.bot.database() as db:
             for query in QUERIES:
                 async for item in db.cursor(query):
@@ -62,7 +63,8 @@ class Roles(Cog):
                         item["created_at"],
                     )
 
-                    guild = self.bot.get_guild(server_id)
+                    if not (guild := self.bot.get_guild(server_id)):
+                        continue
                     if not (member := guild.get_member(member_id)):
                         continue
                     if not (role := guild.get_role(role_id)):
@@ -80,6 +82,7 @@ class Roles(Cog):
 
                     view = RoleManage(bot=self.bot, role=role, ocs=values)
                     self.bot.add_view(view=view, message_id=msg_id)
+        self.bot.logger.info("Finished loading existing RP Searches")
 
     @slash_command(
         guild_ids=[719343092963999804],
