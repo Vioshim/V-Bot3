@@ -85,7 +85,7 @@ class ImageView(Basic):
         btn.disabled = True
         resp: InteractionResponse = ctx.response
         await self.target.edit_original_message(view=None)
-        await resp.send_message(content="Alright, now send the URL or Attach an image.")
+        await resp.send_message(content="Alright, now send the URL or Attach an image.", ephemeral=True)
         received: Message = await self.bot.wait_for("message", check=check(ctx))
         if attachments := received.attachments:
             self.text = attachments[0].url
