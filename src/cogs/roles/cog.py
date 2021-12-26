@@ -64,17 +64,21 @@ class Roles(Cog):
                     )
 
                     self.bot.logger.info("Data: %s", str(item))
-
                     if not (guild := self.bot.get_guild(server_id)):
                         continue
+                    self.bot.logger.info("Guild: %s", str(item))
+
                     if not (member := guild.get_member(member_id)):
                         continue
+                    self.bot.logger.info("Member: %s", str(item))
+
                     if not (role := guild.get_role(role_id)):
                         continue
+                    self.bot.logger.info("Role: %s", str(item))
+
                     if not (values := ocs.get(member.id, {}).values()):
                         continue
-
-                    self.bot.logger.info("Parameters: %s", str(item))
+                    self.bot.logger.info("Values: %s", str(item))
 
                     if item := self.role_cool_down.get(role_id):
                         if item < created_at:
