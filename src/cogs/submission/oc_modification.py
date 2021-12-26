@@ -664,7 +664,7 @@ class AbilitiesMod(Mod):
         bool
             If it can be used or not
         """
-        return True
+        return len(oc.species.abilities) > 1
 
     async def method(
         self,
@@ -870,10 +870,12 @@ class EvolutionMod(Mod):
                 return
             species.types = types
 
+        default_image: str = oc.default_image or oc.image
+
         view = ImageView(
             bot=bot,
             member=member,
-            default_img=oc.default_image,
+            default_img=default_image,
             target=target,
         )
 
@@ -882,7 +884,7 @@ class EvolutionMod(Mod):
         await origin.edit(content="Modification done", embed=None, view=None)
         if isinstance(image := view.text, str):
             if msg := view.received:
-                await msg.delete(delay=100)
+                await msg.delete(delay=30)
             oc.image = image
         return True
 
@@ -962,10 +964,12 @@ class DevolutionMod(Mod):
 
         oc.moveset &= set(oc.species.movepool()) & set(current.movepool())
 
+        default_image = oc.default_image or oc.image
+
         view = ImageView(
             bot=bot,
             member=member,
-            default_img=oc.default_image,
+            default_img=default_image,
             target=target,
         )
 
@@ -974,7 +978,7 @@ class DevolutionMod(Mod):
         await origin.edit(content="Modification done", embed=None, view=None)
         if isinstance(image := view.text, str):
             if msg := view.received:
-                await msg.delete(delay=100)
+                await msg.delete(delay=30)
             oc.image = image
         return True
 
@@ -1107,7 +1111,6 @@ class ModifyView(View):
         self.bot = bot
         self.member = member
         self.oc = oc
-        self.used = False
 
         self.edit.options = [
             SelectOption(
@@ -1127,29 +1130,38 @@ class ModifyView(View):
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
             return False
-        if self.used:
-            await resp.send_message(
-                "You're already using the options.",
-                ephemeral=True,
-            )
-            return False
-        self.used = True
-        await resp.defer(ephemeral=True)
         return True
 
     @select(placeholder="Select Fields to Edit", row=0)
     async def edit(self, _: Select, ctx: Interaction):
+        await ctx.edit_original_message(view=None)
         modifying: bool = False
         for item in ctx.data.get("values", []):
-            result = await Modification[item].method(
+            mod = Modification[item]
+            result = await mod.method(
                 oc=self.oc,
                 bot=self.bot,
                 member=self.member,
                 target=ctx,
             )
             if result is None:
+                self.bot.logger.info(
+                    "At %s, %s cancelled modifications to Character(%s) aka %s",
+                    mod.label,
+                    str(ctx.user),
+                    repr(self.oc),
+                    self.oc.name,
+                )
                 break
             else:
+                self.bot.logger.info(
+                    "Field %s, modified by %s to Character(%s) aka %s",
+                    mod.label,
+                    str(ctx.user),
+                    repr(self.oc),
+                    self.oc.name,
+                )
+                self.bot.logger.info()
                 modifying |= result
         else:
             try:
@@ -1174,8 +1186,8 @@ class ModifyView(View):
             if modifying:
                 cog = self.bot.get_cog("Submission")
                 cog.ocs.pop(self.oc.id, None)
-                cog.rpers.setdefault(self.oc.author, set())
-                cog.rpers[self.oc.author] -= {self.oc}
+                cog.rpers.setdefault(self.oc.author, {})
+                cog.rpers[self.oc.author].pop(self.oc.id, None)
                 async with self.bot.database() as db:
                     await self.oc.delete(db)
 
@@ -1188,7 +1200,6 @@ class ModifyView(View):
                 await cog.registration(
                     ctx=ctx, oc=self.oc, standard_register=False
                 )
-        self.used = False
         self.stop()
 
     @button(label="Don't make any changes", row=1)

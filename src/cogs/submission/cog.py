@@ -27,12 +27,14 @@ from discord import (
     Embed,
     Member,
     Message,
+    Option,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     TextChannel,
     Thread,
     WebhookMessage,
 )
+from discord.commands import slash_command
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
 from discord.utils import utcnow
@@ -61,7 +63,14 @@ from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.matches import G_DOCUMENT
-from src.views import ImageView, MissionView, RPView, StatsView, SubmissionView
+from src.views import (
+    CharactersView,
+    ImageView,
+    MissionView,
+    RPView,
+    StatsView,
+    SubmissionView,
+)
 
 
 class Submission(Cog):
@@ -72,7 +81,7 @@ class Submission(Cog):
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
-        self.rpers: dict[int, set[Character]] = {}
+        self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
 
     async def unclaiming(
@@ -171,7 +180,8 @@ class Submission(Cog):
         standard_register: bool = True,
     ):
         async def ctx_send(
-            msg: str, delete_after: int = None
+            msg: str,
+            delete_after: int = None,
         ) -> Optional[Message]:
             """This is a handler for sending messages depending on the context
 
@@ -480,8 +490,8 @@ class Submission(Cog):
                 wait=True,
             )
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(member.id, set())
-            self.rpers[member.id].add(oc)
+            self.rpers.setdefault(member.id, {})
+            self.rpers[member.id][oc.id] = oc
             self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character has been registered! > %s > %s > %s",
@@ -491,6 +501,48 @@ class Submission(Cog):
             )
             async with self.bot.database() as conn:
                 await oc.update(connection=conn, idx=msg_oc.id)
+
+    async def oc_update(self, oc: Type[Character]):
+        webhook = await self.bot.fetch_webhook(919280056558317658)
+        embed: Embed = oc.embed
+        embed.set_image(url="attachment://image.png")
+        thread: Thread = await self.bot.fetch_channel(oc.thread)
+        if thread.archived:
+            await thread.edit(archived=False)
+        await webhook.edit_message(oc.id, embed=embed, thread=thread)
+
+    @slash_command(
+        guild_ids=[719343092963999804],
+        description="Allows to show characters",
+    )
+    async def ocs(
+        self,
+        ctx: ApplicationContext,
+        member: Option(
+            Member,
+            description="Member, if not provided, it's current user.",
+            required=False,
+        ),
+    ):
+        if member is None:
+            member: Member = ctx.author
+        await ctx.defer(ephemeral=True)
+        if ocs := self.rpers.get(member.id, {}).values():
+            view = CharactersView(
+                bot=self.bot,
+                member=ctx.author,
+                ocs=ocs,
+                target=ctx.interaction,
+            )
+            embed = view.embed
+            embed.color = member.color
+            embed.set_author(name=member.display_name)
+            embed.set_thumbnail(url=member.display_avatar.url)
+            await ctx.respond(embed=embed, view=view, ephemeral=True)
+        else:
+            await ctx.respond(
+                f"{member.mention} has no characters.", ephemeral=True
+            )
 
     @Cog.listener()
     async def on_ready(self) -> None:
@@ -521,11 +573,8 @@ class Submission(Cog):
 
             for oc in await fetch_all(db):
                 self.ocs[oc.id] = oc
-                self.rpers.setdefault(oc.author, set())
-                try:
-                    self.rpers[oc.author].add(oc)
-                except Exception as e:
-                    self.bot.logger.exception(f"Error with {oc!r}", exc_info=e)
+                self.rpers.setdefault(oc.author, {})
+                self.rpers[oc.author][oc.id] = oc
 
             self.bot.logger.info("Finished loading all characters")
 
@@ -645,7 +694,7 @@ class Submission(Cog):
                     payload.guild_id,
                 )
 
-                for oc in self.rpers.pop(author_id, set()):
+                for oc in self.rpers.pop(author_id, {}).values():
                     del self.ocs[oc.id]
                     self.bot.logger.info(
                         "Character Removed as Thread was removed! > %s > %s",
@@ -668,8 +717,8 @@ class Submission(Cog):
         """
         if oc := self.ocs.get(payload.message_id):
             del self.ocs[oc.id]
-            ocs = self.rpers[oc.author]
-            ocs.remove(oc)
+            self.rpers.setdefault(oc.author, {})
+            self.rpers[oc.author].pop(oc.id, None)
             async with self.bot.database() as db:
                 self.bot.logger.info(
                     "Character Removed as message was removed! > %s > %s",
@@ -683,7 +732,7 @@ class Submission(Cog):
             ][0]
             del self.oc_list[author_id]
             async with self.bot.database() as db:
-                for oc in self.rpers.pop(author_id, set()):
+                for oc in self.rpers.pop(author_id, {}).values():
                     del self.ocs[oc.id]
                     self.bot.logger.info(
                         "Character Removed as Thread was removed! > %s > %s",
@@ -706,60 +755,128 @@ class Submission(Cog):
         """
         if not self.ready:
             return
-        if message.channel.id != 852180971985043466:
+
+        if not message.guild:
             return
-        if message.author.id in self.ignore:
+
+        if message.mentions:
             return
-        if message.author.bot:
-            return
-        text: str = codeblock_converter(message.content or "").content
-        try:
-            if doc_data := G_DOCUMENT.match(text):
-                msg_data = await doc_convert(doc_data.group(1))
+
+        if message.channel.id == 852180971985043466:
+
+            if message.author.id in self.ignore:
+                return
+            if message.author.bot:
+                return
+
+            text: str = codeblock_converter(message.content or "").content
+            try:
+                if doc_data := G_DOCUMENT.match(text):
+                    msg_data = await doc_convert(doc_data.group(1))
+                else:
+                    msg_data = safe_load(text)
+
+                channel: TextChannel = message.channel
+
+                if isinstance(msg_data, dict):
+
+                    author = message.author
+
+                    if channel.permissions_for(author).manage_messages:
+                        m = await channel.send("Mention the User")
+                        aux: Message = await self.bot.wait_for(
+                            "message",
+                            check=lambda m: m.channel == channel
+                            and m.author == author,
+                        )
+                        self.bot.msg_cache_add(m)
+                        self.bot.msg_cache_add(aux)
+                        await m.delete()
+                        context = await self.bot.get_context(aux)
+                        converter = MemberConverter()
+                        author = await converter.convert(
+                            ctx=context, argument=aux.content
+                        )
+                        await aux.delete()
+
+                    if images := message.attachments:
+                        msg_data["image"] = images[0].url
+
+                    self.ignore.add(message.author.id)
+                    if oc := oc_process(**msg_data):
+                        oc.author = author.id
+                        oc.server = message.guild.id
+                        await self.registration(ctx=message, oc=oc)
+                        await message.delete()
+                    self.ignore.remove(message.author.id)
+            except MarkedYAMLError:
+                return
+            except Exception as e:
+                self.bot.logger.exception(
+                    "Exception processing character", exc_info=e
+                )
+                await message.reply(f"Exception:\n\n{e}", delete_after=10)
+                return
+        elif message.channel.category_id in RP_CATEGORIES:
+            if message.webhook_id:
+                return
+            if message.channel.is_news():
+                return
+
+            def checker(value: Message) -> bool:
+                if value.webhook_id:
+                    if content := message.content:
+                        return value.content in content
+                    elif message.attachments:
+                        return value.content is None and value.attachments
+                return False
+
+            try:
+                msg: Message = await self.bot.wait_for(
+                    "message", check=checker, timeout=3
+                )
+                self.bot.msg_cache_add(message)
+
+                if isinstance(channel := message.channel, TextChannel):
+                    time = utcnow() + timedelta(days=3)
+                    if m := self.data_msg.get(channel.id):
+                        with suppress(DiscordException):
+                            await m.delete()
+                    await self.bot.scheduler.add_schedule(
+                        self.method,
+                        DateTrigger(time),
+                        id=f"RP[{channel.id}]",
+                        args=[channel.id],
+                        conflict_policy=ConflictPolicy.replace,
+                    )
+            except TimeoutError:
+                if self.rpers.get(message.author.id):
+                    role = message.guild.get_role(719642423327719434)
+                    await message.author.remove_roles(
+                        role, reason="Without OCs, user isn't registered."
+                    )
+                    for cat_id in RP_CATEGORIES:
+                        if ch := self.bot.get_channel(cat_id):
+                            await ch.set_permissions(
+                                message.author, overwrite=None
+                            )
             else:
-                msg_data = safe_load(text)
-
-            channel: TextChannel = message.channel
-
-            if isinstance(msg_data, dict):
-
-                author = message.author
-
-                if channel.permissions_for(author).manage_messages:
-                    m = await channel.send("Mention the User")
-                    aux: Message = await self.bot.wait_for(
-                        "message",
-                        check=lambda m: m.channel == channel
-                        and m.author == author,
-                    )
-                    self.bot.msg_cache_add(m)
-                    self.bot.msg_cache_add(aux)
-                    await m.delete()
-                    context = await self.bot.get_context(aux)
-                    converter = MemberConverter()
-                    author = await converter.convert(
-                        ctx=context, argument=aux.content
-                    )
-                    await aux.delete()
-
-                if images := message.attachments:
-                    msg_data["image"] = images[0].url
-
-                self.ignore.add(message.author.id)
-                if oc := oc_process(**msg_data):
-                    oc.author = author.id
-                    oc.server = message.guild.id
-                    await self.registration(ctx=message, oc=oc)
-                    await message.delete()
-                self.ignore.remove(message.author.id)
-        except MarkedYAMLError:
-            return
-        except Exception as e:
-            self.bot.logger.exception(
-                "Exception processing character", exc_info=e
-            )
-            await message.reply(f"Exception:\n\n{e}", delete_after=10)
-            return
+                for item in self.rpers.get(message.author.id, {}).values():
+                    if any(
+                        (
+                            item.name.title() in msg.author.name.title(),
+                            msg.author.name.title() in item.name.title(),
+                        )
+                    ):
+                        if item.location != msg.channel.id:
+                            async with self.bot.database() as db:
+                                item.location = msg.channel.id
+                                await self.oc_update(item)
+                                await item.upsert(db)
+            finally:
+                if message.author != self.bot.user:
+                    with suppress(DiscordException):
+                        await message.delete()
 
 
 def setup(bot: CustomBot) -> None:

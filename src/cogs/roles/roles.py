@@ -570,7 +570,7 @@ class RoleButton(Button):
         cog = self.bot.get_cog(name="Submission")
         channel: TextChannel = self.bot.get_channel(722617383738540092)
 
-        characters = cog.rpers.get(member.id, set())
+        characters = cog.rpers.get(member.id, {}).values()
         view = RoleManage(self.bot, role, characters)
 
         embed = Embed(

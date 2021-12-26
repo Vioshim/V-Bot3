@@ -76,7 +76,7 @@ class SubmissionView(View):
         self,
         bot: CustomBot,
         ocs: dict[int, Character],
-        rpers: dict[int, set[Character]],
+        rpers: dict[int, dict[int, Character]],
         oc_list: dict[int, int],
         missions: set[Mission],
         **kwargs: Union[str, dict],
@@ -159,7 +159,7 @@ class SubmissionView(View):
             )
             await aux.delete()
 
-        if not (values := self.rpers.get(member.id, set())):
+        if not (values := self.rpers.get(member.id, {}).values()):
             return await ctx.followup.send(
                 "You don't have characters to modify", ephemeral=True
             )
@@ -176,7 +176,7 @@ class SubmissionView(View):
             title="Select Character to modify", single=True
         ) as oc:
             self.bot.logger.info(
-                "%s is modifying a Character(%s)", str(ctx.user), repr(oc)
+                "%s is modifying a Character(%s) aka %s", str(ctx.user), repr(oc), oc.name
             )
         await view.wait()
 
