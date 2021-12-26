@@ -76,10 +76,14 @@ MENTIONS = AllowedMentions(
 )
 
 COGS = [
-    "submission",
-    "information",
     "bumps",
+    "embed_builder",
+    "information",
+    "inviter",
+    "moderation",
+    "proxy",
     "roles",
+    "submission",
     "utilities",
 ]
 
@@ -108,7 +112,7 @@ async def main(
     """
     bot = CustomBot(
         pool=pool,
-        command_prefix=when_mentioned_or("%"),
+        command_prefix=when_mentioned_or("?"),
         scheduler=scheduler,
         description="This is Vioshim's bot",
         command_attrs=dict(hidden=True),

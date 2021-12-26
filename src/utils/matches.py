@@ -25,6 +25,7 @@ __all__ = (
     "REGEX_URL",
     "DISCORD_MSG_URL",
     "DATA_FINDER",
+    "INVITE"
 )
 
 DATA_FINDER = compile(r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE)
@@ -50,4 +51,8 @@ DISCORD_MSG_URL = compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"
     r"(?:[0-9]{15,20}|@me)"
     r"/(?P<channel_id>[0-9]{15,20})/(?P<message_id>[0-9]{15,20})/?"
+)
+INVITE = compile(
+    r"(https?://)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com/invite)/([^\s/]+?(?=\b))",
+    IGNORECASE,
 )

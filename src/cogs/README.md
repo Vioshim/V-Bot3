@@ -23,12 +23,42 @@ In this project, the cogs are Cog instances which implement a setup method and t
 </p>
 </details>
 
+<details closed> <summary> Embed Builder </summary>
+
+<p>
+
+> This cog is pretty much as the name says, an embed builder, it works through the power of databases and webhooks in order to be able to keep editing embeds within discord itself.
+
+</p>
+
+</details>
+
 
 <details closed> <summary> Information </summary>
 
 <p>
 
 > A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules.
+</p>
+
+</details>
+
+<details closed> <summary> Inviter </summary>
+
+<p>
+
+> A RegEx powered Discord Invites handler, which easies the partnering process while also making sure that all invites posted get deleted.
+
+</p>
+
+</details>
+
+<details closed> <summary> Moderation </summary>
+
+<p>
+
+> Implementation of basic commands for moderation which are designed upon the server's needs, from regex cleaning to even proper ways to report.
+
 </p>
 
 </details>
@@ -67,7 +97,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 <p>
 
-General purpose normal / slash commands implemented outside of the other categories
+> General purpose normal / slash commands implemented outside of the other categories
 
 </p>
 
