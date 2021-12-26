@@ -889,6 +889,7 @@ class Submission(Cog):
                         )
                     ):
                         if item.location != msg.channel.id:
+                            former_channel = message.guild.get_channel(item.location)
                             previous = self.located.get(item.location, set())
                             current = self.located.get(msg.channel.id, set())
                             if item in previous:
@@ -898,8 +899,8 @@ class Submission(Cog):
 
                             if len(previous) == 0:
                                 with suppress(Exception):
-                                    await self.unclaiming(channel)
-                                    await self.bot.scheduler.remove_schedule(f"RP[{channel.id}]")
+                                    await self.unclaiming(former_channel)
+                                    await self.bot.scheduler.remove_schedule(f"RP[{former_channel.id}]")
 
                             async with self.bot.database() as db:
                                 item.location = msg.channel.id
