@@ -990,7 +990,7 @@ class ModifyView(View):
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, _: Button, ctx: Interaction):
-        await ctx.delete_original_message()
+        await ctx.edit_original_message(content="Alright, no changes", embed=None, view=None)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
