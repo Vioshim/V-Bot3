@@ -190,7 +190,9 @@ class SPView(Basic):
 
             msg = await ctx.original_message()
 
-            for item in elements:
+            for item in SP_ABILITY_ITEMS:
+                if item not in elements:
+                    continue
                 word: str = "method" if item == "origin" else item
                 title = f"Special Ability's {item}. Current Below".title()
                 description = backup.get(word)
