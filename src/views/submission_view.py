@@ -118,7 +118,7 @@ class SubmissionView(View):
                 color=ctx.user.color,
                 timestamp=utcnow(),
             )
-            if slash := template.get("Slash"):
+            if slash := template.get("Description"):
                 embed.set_footer(
                     text=f"Alternatively, there's also the command {slash}"
                 )
