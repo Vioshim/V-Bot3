@@ -12,7 +12,7 @@
             "Standard": "1-Ebq40ONEzl0klHqUatG0Sy54mffal6AC2iX2aDHNas",
             "W/ Sp. Ability": "1prCYzbqJAAetv_c3HRsXIU22dN7Co-tqykhxWo2SrwY"
         },
-        "Slash": "/register pokemon"
+        "Description": "The residents of this world."
     },
     "Legendary": {
         "Template": {
@@ -24,7 +24,7 @@
         "Document": {
             "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM"
         },
-        "Slash": "/register legendary"
+        "Description": "Legendaries that came from other world which want a new home/purpose."
     },
     "Mythical": {
         "Template": {
@@ -36,7 +36,7 @@
         "Document": {
             "Standard": "1rVdi3XMXBadIZc03SrZl-vz3b-AcM2WgBSAfvdgW5Fs"
         },
-        "Slash": "/register mythical"
+        "Description": "Mythicals that came from other world which want a new home/purpose."
     },
     "Ultra Beast": {
         "Template": {
@@ -48,7 +48,7 @@
         "Document": {
             "Standard": "1Xi25gAj6qoh14xYSXsinfMZ3-6loJ_CTCdrRdPlEhW8"
         },
-        "Slash": "/register ultra_beast"
+        "Description": "Ultra Beasts that came from other world which want a new home/purpose."
     },
     "Mega": {
         "Template": {
@@ -61,7 +61,7 @@
         "Document": {
             "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM"
         },
-        "Slash": "/register mega"
+        "Description": "People that mega evolved and kept stuck like this."
     },
     "Fusion": {
         "Template": {
@@ -76,7 +76,7 @@
         "Document": {
             "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04"
         },
-        "Slash": "/register fusion"
+        "Description": "Each one has its own reason to exist, but they are a 2 in 1"
     },
     "Fakemon": {
         "Template": {
@@ -92,7 +92,7 @@
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
             "W/ Sp. Ability": "12EJpXCJmtDksb1VZjdr8DrMiJeRlpIWI3544r47MVns"
         },
-        "Slash": "/register fakemon custom_pokemon"
+        "Description": "Community created species which are assumed to be foreigners"
     },
     "Custom Legendary": {
         "Template": {
@@ -106,7 +106,7 @@
         "Document": {
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
         },
-        "Slash": "/register fakemon custom_legendary"
+        "Description": "Community created species which are assumed to be foreigners"
     },
     "Custom Mythical": {
         "Template": {
@@ -120,7 +120,7 @@
         "Document": {
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
         },
-        "Slash": "/register fakemon custom_mythical"
+        "Description": "Community created species which are assumed to be foreigners"
     },
     "Custom Ultra Beast": {
         "Template": {
@@ -134,7 +134,7 @@
         "Document": {
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
         },
-        "Slash": "/register fakemon custom_ultra_beast"
+        "Description": "Community created species which are assumed to be foreigners"
     },
     "Custom Mega": {
         "Template": {
@@ -148,20 +148,21 @@
         "Document": {
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
         },
-        "Slash": "/register fakemon custom_mega"
+        "Description": "Community created species which are assumed to be foreigners"
     },
     "Variant": {
         "Template": {
             "Name": "Name",
-            "Fakemon": "Variant Species",
+            "Variant": "Variant Species",
             "Types": "Type, Type",
             "Pronoun": "He/She/Them",
             "Ability": "Ability, Ability",
             "Moveset": "Move, Move, Move, Move, Move, Move"
         },
         "Document": {
-            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s"
+            "Standard": "1zLNd_5QZ39aBuDEHt3RC4cmymBjRlFmxuesbfSDgDbA",
+            "W/ Sp. Ability": "12MwUc3uDUOAobHo-fyiwXxh-jI6Tfj5zimOmQHJUWTc"
         },
-        "Slash": "/register fakemon variant"
+        "Description": "Community created variants which are assumed to be foreigners"
     }
 }

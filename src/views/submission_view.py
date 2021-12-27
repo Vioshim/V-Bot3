@@ -93,7 +93,7 @@ class SubmissionView(View):
         self.show_template.options = [
             SelectOption(
                 label=f"{key} Template",
-                description=value["Slash"][:100],
+                description=value["Description"][:100],
                 value=key,
                 emoji="\N{SPIRAL NOTE PAD}",
             )
