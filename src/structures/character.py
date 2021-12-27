@@ -1679,6 +1679,9 @@ def oc_process(**kwargs):
     if isinstance(species := data["species"], (Fakemon, Fusion, Variant, CustomMega)):
         if types := common_pop_get(data, "types", "type"):
             species.types = frozenset(Types.deduce(types))
+    
+    print(species, type(species))
+    
     if abilities := common_pop_get(data, "abilities", "ability"):
         data["abilities"] = frozenset(Abilities.deduce(abilities))
 
