@@ -27,13 +27,13 @@ from discord import (
     DiscordException,
     Embed,
     Guild,
+    Interaction,
     Member,
     Message,
     Option,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     TextChannel,
-    Interaction,
     Thread,
     WebhookMessage,
 )
@@ -54,12 +54,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
@@ -356,10 +351,11 @@ class Submission(Cog):
             if len(oc.abilities) > max_ab:
                 await ctx.reply(f"Max Amount of Abilities for the current Species is {max_ab}")
                 return
-            elif ability_errors := [ability.value.name for ability in oc.abilities if ability not in species.abilities]:
-                text = ", ".join(ability_errors)
-                await ctx.reply(f"the abilities [{text}] were not found in the species")
-                return
+            elif not oc.any_ability_at_first:
+                if ability_errors := [ability.value.name for ability in oc.abilities if ability not in species.abilities]:
+                    text = ", ".join(ability_errors)
+                    await ctx.reply(f"the abilities [{text}] were not found in the species")
+                    return
 
             text_view = TextInput(bot=self.bot, member=user, target=ctx)
 
@@ -423,11 +419,12 @@ class Submission(Cog):
             if isinstance(species, (Variant, Fakemon)):
                 species.movepool += Movepool(event=oc.moveset)
 
-            moves_movepool = species.movepool()
-            if move_errors := [move.value.name for move in oc.moveset if move not in moves_movepool]:
-                text = ", ".join(move_errors)
-                await ctx.reply(f"the moves [{text}] were not found in the movepool")
-                return
+            if not oc.any_move_at_first:
+                moves_movepool = species.movepool()
+                if move_errors := [move.value.name for move in oc.moveset if move not in moves_movepool]:
+                    text = ", ".join(move_errors)
+                    await ctx.reply(f"the moves [{text}] were not found in the movepool")
+                    return
 
             if not oc.backstory:
                 async with text_view.handle(
