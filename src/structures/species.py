@@ -310,7 +310,7 @@ class Variant(Species):
     def __init__(self, base: Species, name: str):
         super(Variant, self).__init__(
             id=base.id,
-            name=base.name,
+            name=name.title(),
             shape=base.shape,
             color=base.color,
             height=base.height,
