@@ -5,7 +5,7 @@ description = ""
 authors = ["Vioshim <Krangelj@unicartagena.edu.co>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 isort = { git = "https://github.com/PyCQA/isort.git", rev = "main", extras = ["requirements_deprecated_finder", "pipfile_deprecated_finder"] }
 flake8 = { git = "https://github.com/PyCQA/flake8.git", rev = "main" }
 py-cord = { git = "https://github.com/Pycord-Development/pycord.git", extras = ["voice", "speed"] }
@@ -46,7 +46,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 
 line-length = 120 # override black's default line-length
-target-version = ["py39"]
+target-version = ["py310"]
 exclude = '''
 /(
     \.git
@@ -65,7 +65,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 
 
 [tool.isort]
