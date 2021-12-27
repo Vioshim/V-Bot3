@@ -1162,6 +1162,8 @@ class ModifyView(View):
         try:
             webhook = await self.bot.fetch_webhook(919280056558317658)
             thread: Thread = await self.bot.fetch_channel(self.oc.thread)
+            if thread.archived:
+                await thread.edit(archived=False)
             embed = self.oc.embed
             embed.set_image(url="attachment://image.png")
             await webhook.edit_message(self.oc.id, embed=embed, thread=thread)
