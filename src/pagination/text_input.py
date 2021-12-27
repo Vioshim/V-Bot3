@@ -129,10 +129,10 @@ class TextInput(Basic):
     async def empty(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         self.text = ""
-        await resp.edit_message(
-            content="Default Value has been chosen", view=None
-        )
         try:
+            await resp.edit_message(
+                content="Default Value has been chosen", view=None
+            )
             await self.message.delete(delay=1)
         except DiscordException as e:
             self.bot.logger.exception("Error deleting message", exc_info=e)

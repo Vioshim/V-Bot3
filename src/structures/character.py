@@ -1232,7 +1232,7 @@ class VariantCharacter(Character):
 
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
-        return f"Custom: {self.species.name}, Types: {types}".title()
+        return f"Variant: {self.species.name}, Types: {types}".title()
 
     @property
     def kind(self) -> str:
@@ -1276,7 +1276,7 @@ class VariantCharacter(Character):
         c_embed = super(VariantCharacter, self).embed
         c_embed.set_field_at(
             index=2,
-            name="Fakemon Species",
+            name="Variant Species",
             value=f"> {self.species.name}".title(),
         )
         return c_embed
@@ -1298,7 +1298,7 @@ class VariantCharacter(Character):
         characters: list[VariantCharacter] = []
         async for item in connection.cursor(
             """--sql
-            SELECT C.*, F.SPECIES AS SPECIES
+            SELECT C.*, F.SPECIES AS SPECIES, F.NAME AS VARIANT
             FROM VARIANT_CHARACTER F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
@@ -1306,8 +1306,9 @@ class VariantCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = Variant(Species[species])
+            species = data.pop("species", None)
+            variant = data.pop("variant", None)
+            data["species"] = Variant(base=Species[species], name=variant)
             mon = VariantCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -1538,6 +1539,7 @@ PLACEHOLDER_NAMES = {
     "Backstory": "backstory",
     "Additional Information": "extra",
     "F. Species": "fakemon",
+    "Variant": "variant",
     "Artist": "artist",
     "Website": "website",
 }
@@ -1551,6 +1553,7 @@ PLACEHOLDER_DEFAULTS = {
     "backstory": "Character's backstory",
     "extra": "Character's extra information",
     "fakemon": "OC's Fakemon Species",
+    "variant": "OC's Variant Species",
     "artist": "Artist's Name",
     "website": "Art's Website",
 }
@@ -1637,21 +1640,24 @@ def oc_process(**kwargs):
         Character given the paraneters
     """
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
-    fakemon_mode: bool = "fakemon" in data
     if species_name := common_pop_get(
         data,
         "fakemon",
         "species",
         "fusion",
+        "variant"
     ):
-        if fakemon_mode:
+        if "fakemon" in kwargs:
             name: str = species_name.title()
             if name.startswith("Mega"):
                 data["species"] = CustomMega(Species.deduce(name[5:]))
-            elif name.startswith("Variant"):
-                data["species"] = Variant(Species.deduce(name[8:]))
             else:
                 data["species"] = Fakemon(name=name)
+        elif "variant" in kwargs:
+            for item in species_name.split(" "):
+                if species := Species.deduce(item):
+                    data["species"] = Variant(base=species, name=species_name)
+                    break
         elif species := Species.deduce(species_name):
             data["species"] = species
 

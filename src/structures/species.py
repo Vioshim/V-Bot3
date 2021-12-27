@@ -248,6 +248,10 @@ class Fakemon(Species):
         self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE = stats
 
     @property
+    def stats(self):
+        return self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
+
+    @property
     def requires_image(self) -> bool:
         return True
 
@@ -301,10 +305,10 @@ class Variant(Species):
     This class Represents a Variant
     """
 
-    def __init__(self, base: Species):
+    def __init__(self, base: Species, name: str):
         self.base = base
         self.id = f"VARIANT_{base.id}"
-        self.name = f"Variant {base.name}"
+        self.name = name
         self.shape: str = base.shape
         self.color: str = base.color
         self.height: int = base.height

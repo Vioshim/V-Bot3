@@ -54,7 +54,7 @@ class NoDateFound(UserInputError):
         super().__init__(f"No date {argument!r} was found.")
 
 
-class CharacterException(Exception):
+class SubmissionConcluded(Exception):
     """
-    This represents an exception related to a character
+    This represents an exception related to concluding a character creation
     """

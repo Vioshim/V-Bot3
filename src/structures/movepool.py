@@ -22,7 +22,7 @@ from frozendict import frozendict
 
 from src.enums.moves import Moves
 
-__all__ = ("Movepool", )
+__all__ = ("Movepool",)
 
 
 # noinspection PyArgumentList
@@ -32,8 +32,7 @@ class Movepool:
     Class which represents a movepool
     """
 
-    level: frozendict[int,
-                      frozenset[Moves]] = field(default_factory=frozendict)
+    level: frozendict[int, frozenset[Moves]] = field(default_factory=frozendict)
     tm: frozenset[Moves] = field(default_factory=frozenset)
     event: frozenset[Moves] = field(default_factory=frozenset)
     tutor: frozenset[Moves] = field(default_factory=frozenset)
@@ -43,8 +42,8 @@ class Movepool:
 
     def __post_init__(self):
         self.level = frozendict(
-            {k: frozenset(v)
-             for k, v in self.level.items()})
+            {k: frozenset(v) for k, v in self.level.items()}
+        )
         self.tm = frozenset(self.tm)
         self.event = frozenset(self.event)
         self.tutor = frozenset(self.tutor)
@@ -93,8 +92,9 @@ class Movepool:
     def operator(
         self,
         other: Movepool,
-        method: Callable[[frozenset[Moves], frozenset[Moves]],
-                         frozenset[Moves]],
+        method: Callable[
+            [frozenset[Moves], frozenset[Moves]], frozenset[Moves]
+        ],
     ) -> Movepool:
         """This method allows to perform operations on the movepool
 
@@ -204,7 +204,7 @@ class Movepool:
                 for level in item.values():
                     moves.update(level)
         moves = list(moves)
-        moves.sort(key=lambda move: move.name)
+        moves.sort(key=str)
         return moves
 
     def __contains__(self, item: Moves) -> bool:
@@ -349,27 +349,28 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items: dict[str, Union[set[Moves], dict[int,
-                                                set[Moves]]]] = dict(level={})
+        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(
+            level={}
+        )
         async for item in connection.cursor(
-                """--sql
+            """--sql
                 SELECT MOVE, METHOD
                 FROM FAKEMON_MOVEPOOL
                 WHERE FAKEMON = $1 AND METHOD != 'LEVEL';
                 """,
-                id,
+            id,
         ):
             move, method = item["move"], item["method"]
             items.setdefault(method, set())
             items[method].add(Moves[move])
 
         async for item in connection.cursor(
-                """--sql
+            """--sql
                 SELECT MOVE, LEVEL
                 FROM FAKEMON_LEARNSET
                 WHERE FAKEMON = $1;
                 """,
-                id,
+            id,
         ):
             move, level = item["move"], item["level"]
             items["level"].setdefault(level, set())
@@ -420,14 +421,17 @@ class Movepool:
 
             if isinstance(value, frozendict):
                 for level, values in value.items():
-                    entries = ((id, m.name, level) for m in values
-                               if not m.banned)
+                    entries = (
+                        (id, m.name, level) for m in values if not m.banned
+                    )
                     learnset_elements.extend(entries)
                     movepool_elements.extend(
-                        (x, y, "LEVEL") for x, y, _ in entries)
+                        (x, y, "LEVEL") for x, y, _ in entries
+                    )
             elif isinstance(value, frozenset):
                 movepool_elements.extend(
-                    (id, m.name, key) for m in value if not m.banned)
+                    (id, m.name, key) for m in value if not m.banned
+                )
 
         if movepool_elements:
             await connection.executemany(

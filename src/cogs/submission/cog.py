@@ -16,7 +16,7 @@ from asyncio import TimeoutError
 from contextlib import suppress
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional, Type, Union
+from typing import Type, Union
 
 from aiofiles import open as aiopen
 from apscheduler.enums import ConflictPolicy
@@ -26,6 +26,7 @@ from discord import (
     CategoryChannel,
     DiscordException,
     Embed,
+    Guild,
     Member,
     Message,
     Option,
@@ -35,9 +36,10 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import slash_command
+from discord.commands import has_role, slash_command
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
+from discord.ui import Button, View
 from discord.utils import utcnow
 from jishaku.codeblocks import codeblock_converter
 from orjson import loads
@@ -53,16 +55,14 @@ from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import (
     Character,
-    FakemonCharacter,
-    VariantCharacter,
     doc_convert,
     fetch_all,
     oc_process,
 )
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion
-from src.utils.etc import RP_CATEGORIES, WHITE_BAR
+from src.structures.species import Fakemon, Fusion, Variant
+from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES, WHITE_BAR
 from src.utils.matches import G_DOCUMENT
 from src.views import (
     CharactersView,
@@ -85,6 +85,76 @@ class Submission(Cog):
         self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
         self.located: dict[int, set[Character]] = {}
+
+    @slash_command(
+        guild_ids=[719343092963999804],
+        description="Grants registered role to an user",
+    )
+    @has_role("Moderation")
+    async def register(
+        self,
+        ctx: ApplicationContext,
+        member: Option(
+            Member,
+            description="User to register",
+        ),
+    ) -> None:
+        """Register Command
+
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        member : Member
+            Member
+        """
+        guild: Guild = ctx.guild
+        role = guild.get_role(719642423327719434)
+        author: Member = ctx.author
+        await ctx.defer(ephemeral=True)
+        if role not in member.roles:
+            await member.add_roles(role, reason=f"Registered by {author}")
+            embed = Embed(
+                description="You can try to use /ping `<role>` for finding a RP. "
+                "(<#910914713234325504> also works)",
+                colour=member.colour,
+                timestamp=utcnow(),
+            )
+            embed.set_image(url=REGISTERED_IMG)
+            embed.set_author(
+                name=author.display_name, icon_url=author.avatar.url
+            )
+            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+            files, embed = await self.bot.embed_raw(embed)
+
+            view = View()
+            view.add_item(
+                Button(
+                    label="Maps",
+                    url="https://discord.com/channels/719343092963999804/812180282739392522/906430640898056222",
+                )
+            )
+            view.add_item(
+                Button(
+                    label="Story-lines",
+                    url="https://discord.com/channels/719343092963999804/903627523911458816/",
+                )
+            )
+
+            view.add_item(
+                Button(
+                    label="RP Planning",
+                    url="https://discord.com/channels/719343092963999804/722617383738540092/",
+                )
+            )
+
+            with suppress(DiscordException):
+                await member.send(embed=embed, files=files, view=view)
+            await ctx.send_followup("User has been registered", ephemeral=True)
+        else:
+            await ctx.send_followup(
+                "User is already registered", ephemeral=True
+            )
 
     async def unclaiming(
         self,
@@ -173,300 +243,265 @@ class Submission(Cog):
                 guild.id,
             )
 
-    async def registration(
-        self,
-        ctx: Union[ApplicationContext, Message],
-        oc: Type[Character],
-        sp_ability: bool = True,
-        moveset: bool = True,
-        standard_register: bool = True,
-    ):
-        async def ctx_send(
-            msg: str,
-            delete_after: int = None,
-        ) -> Optional[Message]:
-            """This is a handler for sending messages depending on the context
+    async def registration(self, ctx: Message, oc: Type[Character]):
+        """This is the function which handles the registration process,
+        it will try to autocomplete data it can deduce, or ask about what
+        can not be deduced.
 
-            Parameters
-            ----------
-            msg : str
-                message to send
-            delete_after : int, optional
-                If it will be deleted after some time, by default None
-
-            Returns
-            -------
-            Optional[Message]
-                If non interaction, returns the message
-            """
-            if isinstance(ctx, ApplicationContext):
-                await ctx.respond(msg, ephemeral=True)
-                return
-            return await ctx.channel.send(msg, delete_after=delete_after)
+        Parameters
+        ----------
+        ctx : Message
+            Message that is being interacted with
+        oc : Type[Character]
+            Character
+        """
 
         member: Member = ctx.guild.get_member(oc.author)
-
-        if not (user := getattr(ctx, "author", None)):
-            user: Member = ctx.user
+        user: Member = ctx.author
 
         if not self.ready:
-            await ctx_send(
-                "Bot is restarting, please be patient", delete_after=5
+            await ctx.reply(
+                "Bot is restarting, please be patient",
+                delete_after=5,
             )
             return
 
-        if standard_register:
-            if oc.url:
-                await ctx_send(
-                    "Character has been loaded successfully", delete_after=5
+        await ctx.reply(
+            "Starting submission process",
+            delete_after=5,
+        )
+
+        if isinstance(species := oc.species, Fakemon):
+            if not oc.url:
+                stats_view = StatsView(
+                    bot=self.bot,
+                    member=user,
+                    target=ctx,
                 )
+                async with stats_view:
+                    if not (stats := stats_view.choice):
+                        return
+                    species.set_stats(*stats.value)
+            if (
+                sum(species.stats) > 18
+                or min(species.stats) < 1
+                or max(species.stats) > 5
+            ):
+                await ctx.reply("Max stats is 18. Min 1. Max 5", delete_after=5)
+                return
+            if not 1 <= len(species.types) <= 2:
+                view = ComplexInput(
+                    bot=self.bot,
+                    member=user,
+                    target=ctx,
+                    values=Types,
+                    max_values=2,
+                    timeout=None,
+                    parser=lambda x: (
+                        name := str(x),
+                        f"Adds the typing {name}",
+                    ),
+                )
+                async with view.send(
+                    title="Select Typing",
+                    description="Press the skip button in case you're going for single type.",
+                ) as types:
+                    if not types:
+                        return
+                    species.types = frozenset(types)
+        elif isinstance(species, Fusion):
+            values = species.possible_types
+            if not species.types:
+                view = ComplexInput(
+                    bot=self.bot,
+                    member=user,
+                    target=ctx,
+                    values=values,
+                    max_values=1,
+                    timeout=None,
+                    parser=lambda x: (
+                        name := "/".join(str(i) for i in x),
+                        f"Adds the typing {name}",
+                    ),
+                )
+                async with view.send(
+                    single=True,
+                    title="Select Typing",
+                ) as types:
+                    if not types:
+                        return
+                    species.types = frozenset(types)
+            elif oc.types not in values:
+                items = ", ".join(
+                    "/".join(i.name for i in item) for item in values
+                ).title()
+                await ctx.reply(
+                    f"Invalid typing for the fusion, valid types are {items}",
+                    delete_after=5,
+                )
+                return
+
+        max_ab = oc.max_amount_abilities
+        if not oc.abilities:
+            if not isinstance(species, Fakemon) and max_ab == 1:
+                oc.abilities = species.abilities
             else:
-                text_view = TextInput(bot=self.bot, member=user, target=ctx)
-                await ctx_send("Starting submission process", delete_after=5)
+                ability_view = ComplexInput(
+                    bot=self.bot,
+                    member=user,
+                    values=(
+                        Abilities
+                        if oc.any_ability_at_first
+                        else oc.species.abilities
+                    ),
+                    target=ctx,
+                    max_values=max_ab,
+                    parser=lambda x: (x.value.name, x.value.description),
+                )
 
-                if isinstance(species := oc.species, Fakemon):
-                    stats_view = StatsView(
-                        bot=self.bot,
-                        member=user,
-                        target=ctx,
-                    )
-                    async with stats_view:
-                        if not (stats := stats_view.choice):
-                            return
-                        species.set_stats(*stats.value)
+                async with ability_view.send(
+                    title=f"Select the Abilities (Max {max_ab})",
+                    description="If you press the write button, you can add multiple by adding commas.",
+                ) as abilities:
+                    if not abilities:
+                        return
+                    oc.abilities = frozenset(abilities)
+        if len(oc.abilities) > max_ab:
+            await ctx.reply(
+                f"Max Amount of Abilities for the current Species is {max_ab}"
+            )
+            return
+        elif ability_errors := [
+            ability.value.name
+            for ability in oc.abilities
+            if ability not in species.abilities
+        ]:
+            text = ", ".join(ability_errors)
+            await ctx.reply(
+                f"the abilities [{text}] were not found in the species"
+            )
+            return
 
-                    types = None
-                    while types is None:
-                        text_view.embed.title = (
-                            "Write the character's types (Min 1, Max 2)"
-                        )
-                        text_view.embed.description = (
-                            "For example: Fire, Psychic"
-                        )
-                        async with text_view.handle(required=True) as answer:
+        text_view = TextInput(bot=self.bot, member=user, target=ctx)
+
+        if (
+            not oc.sp_ability
+            and not oc.url
+            and oc.can_have_special_abilities
+            and len(oc.abilities) == 1
+        ):
+            bool_view = BooleanView(bot=self.bot, member=user, target=ctx)
+            async with bool_view.handle(
+                title="Does the character have an Special Ability?",
+                description=(
+                    "Special abilities are basically unique traits that their OC's kind usually can't do, "
+                    "it's like being born with an unique power that could have been obtained by different "
+                    "reasons, they are known for having pros and cons."
+                ),
+            ) as answer:
+                if answer is None:
+                    return
+                if answer:
+                    data: dict[str, str] = {}
+                    for item in [
+                        "name",
+                        "description",
+                        "method",
+                        "pros",
+                        "cons",
+                    ]:
+                        if item == "method":
+                            word = "origin"
+                        async with text_view.handle(
+                            title=f"Special Ability's {word.title()}",
+                            description=(
+                                f"Here you'll define the Special Ability's {word.title()}, "
+                                "make sure it is actually understandable."
+                            ),
+                            required=True,
+                        ) as answer:
                             if not answer:
                                 return
-                            types = Types.deduce(answer)
-                            if 1 <= len(types) <= 2:
-                                species.types = types
-                            else:
-                                types = None
+                            data[item] = answer
+                    oc.sp_ability = SpAbility(**data)
 
-                if not oc.types:
-                    values = (
-                        species.possible_types
-                        if isinstance(species, Fusion)
-                        else Types
-                    )
-                    mode = isinstance(values, list)
-                    view = ComplexInput(
-                        bot=self.bot,
-                        member=user,
-                        target=ctx,
-                        values=values,
-                        max_values=1 if mode else 2,
-                        timeout=None,
-                        parser=lambda x: (
-                            name := "/".join(str(i) for i in x)
-                            if isinstance(x, set)
-                            else str(x),
-                            f"Adds the typing {name}",
-                        ),
-                    )
-                    async with view.send(
-                        single=mode, title="Select Typing"
-                    ) as types:
-                        if not types:
-                            return
-                        species.types = frozenset(types)
-                elif isinstance(species, Fusion):
-                    values = species.possible_types
-                    if oc.types not in values:
-                        items = ", ".join(
-                            "/".join(i.name for i in item) for item in values
-                        ).title()
-                        await ctx_send(
-                            f"Invalid typing for the fusion, valid types are {items}",
-                            delete_after=5,
-                        )
-                        return
-                elif oc.types != species.types:
-                    items = "/".join(i.name for i in oc.species.types).title()
-                    await ctx_send(
-                        f"Invalid typing for the character, valid types is {items}",
-                        delete_after=5,
-                    )
+        if not oc.moveset:
+            if not (movepool := species.movepool):
+                movepool = Movepool(event=frozenset(Moves))
+
+            moves_view = ComplexInput(
+                bot=self.bot,
+                member=user,
+                values=movepool(),
+                timeout=None,
+                target=ctx,
+                max_values=6,
+            )
+
+            async with moves_view.send(
+                title="Select the Moves",
+                description="If you press the write button, you can add multiple by adding commas.",
+            ) as moves:
+                if not moves:
                     return
+                oc.moveset = frozenset(moves)
 
-                max_ab = oc.max_amount_abilities
-                if not oc.abilities:
+        if isinstance(species, (Variant, Fakemon)):
+            species.movepool += Movepool(event=oc.moveset)
 
-                    if (
-                        not isinstance(oc, FakemonCharacter)
-                        and oc.max_amount_abilities == 1
-                    ):
-                        oc.abilities = oc.species.abilities
-                    else:
-                        ability_view = ComplexInput(
-                            bot=self.bot,
-                            member=user,
-                            values=(
-                                Abilities
-                                if oc.any_ability_at_first
-                                else oc.species.abilities
-                            ),
-                            target=ctx,
-                            max_values=max_ab,
-                        )
-                        ability_view.set_parser(
-                            lambda x: (x.value.name, x.value.description)
-                        )
-                        ability_view.embed.title = (
-                            f"Select the Abilities (Max {max_ab})"
-                        )
-                        if max_ab == 2:
-                            ability_view.embed.description = "If you press the write button, you can add multiple by adding commas."
+        moves_movepool = species.movepool()
+        if move_errors := [
+            move.value.name for move in oc.moveset if move not in moves_movepool
+        ]:
+            text = ", ".join(move_errors)
+            await ctx.reply(
+                f"the moves [{text}] were not found in the movepool"
+            )
+            return
 
-                        async with ability_view as abilities:
-                            if not abilities:
-                                return
-                            oc.abilities = frozenset(abilities)
-
-                if len(oc.abilities) > oc.max_amount_abilities:
-                    await ctx_send(
-                        f"Max Amount of Abilities for the current Species is {oc.max_amount_abilities}"
-                    )
-                    return
-
-                if not oc.any_ability_at_first:
-                    ability_errors: set[Moves] = set()
-                    for item in oc.abilities:
-                        if item not in oc.species.abilities:
-                            ability_errors.add(item)
-
-                    if text := ", ".join(i.value.name for i in ability_errors):
-                        await ctx_send(
-                            f"the abilities [{text}] were not found in the species"
-                        )
-                        return
-
-                if (
-                    sp_ability
-                    and oc.can_have_special_abilities
-                    and len(oc.abilities) == 1
-                ):
-                    bool_view = BooleanView(
-                        bot=self.bot, member=user, target=ctx
-                    )
-                    bool_view.embed.title = (
-                        "Does the character have an Special Ability?'"
-                    )
-                    bool_view.embed.description = (
-                        "Special abilities are basically unique traits that their OC's kind usually can't do,"
-                        " it's like being born with an unique power that could have been obtained by different"
-                        " reasons, they are known for having pros and cons."
-                    )
-                    async with bool_view.send() as answer:
-                        if answer is None:
-                            return
-                        if answer:
-                            data: dict[str, str] = {}
-                            for item in [
-                                "name",
-                                "description",
-                                "method",
-                                "pros",
-                                "cons",
-                            ]:
-                                if item == "method":
-                                    word = "origin"
-                                text_view.embed.title = (
-                                    f"Special Ability's {word.title()}"
-                                )
-                                text_view.embed.description = f"Here you'll define the Special Ability's {word.title()}, make sure it is actually understandable."
-                                async with text_view.handle(
-                                    required=True
-                                ) as answer:
-                                    if not answer:
-                                        return
-                                    data[item] = answer
-                            oc.sp_ability = SpAbility(**data)
-
-                if moveset and not oc.moveset:
-                    if oc.any_move_at_first:
-                        movepool = Movepool(event=frozenset(Moves))
-                    elif not (movepool := oc.movepool):
-                        movepool = Movepool(event=frozenset(Moves))
-
-                    moves_view = ComplexInput(
-                        bot=self.bot,
-                        member=user,
-                        values=movepool(),
-                        timeout=None,
-                        target=ctx,
-                        max_values=6,
-                    )
-                    moves_view.embed.title = "Select the Moves"
-                    moves_view.embed.description = "If you press the write button, you can add multiple by adding commas."
-
-                    async with moves_view as moves:
-                        if not moves:
-                            return
-                        oc.moveset = frozenset(moves)
-
-                    if isinstance(oc, (VariantCharacter, FakemonCharacter)):
-                        oc.species.movepool += Movepool(event=oc.moveset)
-
-                if not oc.any_move_at_first:
-                    move_errors: set[Moves] = set()
-                    for item in oc.moveset:
-                        if item not in oc.movepool:
-                            move_errors.add(item)
-
-                    if text := ", ".join(i.value.name for i in move_errors):
-                        await ctx_send(
-                            f"the moves [{text}] were not found in the movepool"
-                        )
-                        return
-
-                # Ask for backstory
-                text_view.embed.title = "Character's backstory"
-                text_view.embed.description = (
+        if not oc.backstory:
+            async with text_view.handle(
+                title="Character's Backstory",
+                description=(
                     "Don't worry about having to write too much, this is just a summary of information "
                     "that people can keep in mind when interacting with your character. You can provide "
                     "information about how they are, information of their past, or anything you'd like to add."
-                )
-                async with text_view.handle(required=False) as text:
-                    if text is None:
-                        return
-                    if text:
-                        oc.backstory = text
+                ),
+                required=False,
+            ) as text:
+                if text is None:
+                    return
+                if text:
+                    oc.backstory = text
 
-                text_view.embed.title = "Character's extra information"
-                text_view.embed.description = (
+        if not oc.extra:
+            async with text_view.handle(
+                title="Character's extra information",
+                description=(
                     "In this area, you can write down information you want people to consider when they are rping with them, "
                     "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
                     "or simply just writing down that your character has a goal in specific."
-                )
-                async with text_view.handle(required=False) as text:
-                    if text is None:
-                        return
-                    if text:
-                        oc.extra = text
+                ),
+                required=False,
+            ) as text:
+                if text is None:
+                    return
+                if text:
+                    oc.extra = text
 
-                if not oc.image:
-                    image_view = ImageView(
-                        bot=self.bot,
-                        member=user,
-                        target=ctx,
-                        default_img=oc.default_image,
-                    )
-                    async with image_view.send() as image:
-                        if image is None:
-                            return
-                        oc.image = image
-                    if received := image_view.received:
-                        await received.delete(delay=10)
+        if not oc.image:
+            image_view = ImageView(
+                bot=self.bot,
+                member=user,
+                target=ctx,
+                default_img=oc.default_image,
+            )
+            async with image_view.send() as image:
+                if image is None:
+                    return
+                oc.image = image
+            if received := image_view.received:
+                await received.delete(delay=10)
 
         await self.list_update(member)
         webhook = await self.bot.fetch_webhook(919280056558317658)

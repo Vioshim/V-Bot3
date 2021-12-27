@@ -19,14 +19,14 @@ __all__ = (
     "DICE_NUMBERS",
     "RP_CATEGORIES",
     "MAP_BUTTONS",
+    "REGISTERED_IMG",
 )
 
 from discord import OptionChoice, PartialEmoji
 
+REGISTERED_IMG = "https://cdn.discordapp.com/attachments/797618220382027839/867427444579106856/registered_1.png"
 RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/863415224626184192/image.gif"
-WHITE_BAR = (
-    "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
-)
+WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
 NUMBERS = [
     PartialEmoji(name="one", id=861932320373866497),
     PartialEmoji(name="two", id=861932320420266015),
