@@ -307,7 +307,7 @@ class Variant(Species):
 
     def __init__(self, base: Species, name: str):
         self.base = base
-        self.id = f"VARIANT_{base.id}"
+        self.id = base.id
         self.name = name
         self.shape: str = base.shape
         self.color: str = base.color

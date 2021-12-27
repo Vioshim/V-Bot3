@@ -47,12 +47,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1281,6 +1276,26 @@ class VariantCharacter(Character):
         )
         return c_embed
 
+    async def upsert(self, connection: Connection):
+        """Upsert method for PokemonCharacter
+
+        Attributes
+        ----------
+        connection : Connection
+            asyncpg connection
+        """
+        await super(VariantCharacter, self).upsert(connection)
+        await connection.execute(
+            """--sql
+            INSERT INTO VARIANT_CHARACTER(ID, SPECIES, NAME)
+            VALUES ($1, $2, $3) ON CONFLICT (ID)
+            DO UPDATE SET SPECIES = $2, NAME = $3;
+            """,
+            self.id,
+            self.species.id,
+            self.species.name,
+        )
+    
     @classmethod
     async def fetch_all(cls, connection: Connection):
         """Obtains all Pokemon characters.
