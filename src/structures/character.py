@@ -302,7 +302,9 @@ class Character(metaclass=ABCMeta):
             URL
         """
         if image := self.image or self.default_image:
-            if image.startswith(f"https://cdn.discordapp.com/attachments/{self.thread}/"):
+            if image.startswith(
+                f"https://cdn.discordapp.com/attachments/{self.thread}/"
+            ):
                 return image
 
             kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
@@ -401,7 +403,9 @@ class Character(metaclass=ABCMeta):
                 """,
                 self.id,
             )
-            self.abilities = frozenset({Abilities[item["ability"]] for item in abilities})
+            self.abilities = frozenset(
+                {Abilities[item["ability"]] for item in abilities}
+            )
 
             if not self.has_default_types:
                 mon_types = await connection.fetch(
@@ -413,7 +417,9 @@ class Character(metaclass=ABCMeta):
                     """,
                     self.id,
                 )
-                self.species.types = frozenset({Types[item["type"]] for item in mon_types})
+                self.species.types = frozenset(
+                    {Types[item["type"]] for item in mon_types}
+                )
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
@@ -478,7 +484,10 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [(self.id, item.name, not main) for main, item in enumerate(self.types)]:
+        if entries := [
+            (self.id, item.name, not main)
+            for main, item in enumerate(self.types)
+        ]:
             await connection.executemany(
                 """--sql
                 INSERT INTO CHARACTER_TYPES(CHARACTER, TYPE, MAIN)
@@ -493,7 +502,10 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [(self.id, item.name, bool(main)) for main, item in enumerate(self.abilities)]:
+        if entries := [
+            (self.id, item.name, bool(main))
+            for main, item in enumerate(self.abilities)
+        ]:
             await connection.executemany(
                 """--sql
                 INSERT INTO CHARACTER_ABILITIES(ID, ABILITY, SLOT)
@@ -509,7 +521,10 @@ class Character(metaclass=ABCMeta):
             """,
             self.id,
         )
-        if entries := [(self.id, value.name, key) for key, value in enumerate(self.moveset, start=1)]:
+        if entries := [
+            (self.id, value.name, key)
+            for key, value in enumerate(self.moveset, start=1)
+        ]:
             await connection.executemany(
                 """--sql
                 INSERT INTO MOVESET(CHARACTER, MOVE, SLOT)
@@ -1642,7 +1657,9 @@ def oc_process(**kwargs):
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
     fakemon = "fakemon" in data
     variant = "variant" in data
-    if species_name := common_pop_get(data, "fakemon", "species", "fusion", "variant"):
+    if species_name := common_pop_get(
+        data, "fakemon", "species", "fusion", "variant"
+    ):
         if fakemon:
             name: str = species_name.title()
             if name.startswith("Mega"):
@@ -1657,11 +1674,11 @@ def oc_process(**kwargs):
         elif species := Species.deduce(species_name):
             data["species"] = species
 
-    if isinstance(species := data["species"], (Fakemon, Fusion, Variant, CustomMega)):
+    if isinstance(
+        species := data["species"], (Fakemon, Fusion, Variant, CustomMega)
+    ):
         if types := common_pop_get(data, "types", "type"):
             species.types = frozenset(Types.deduce(types))
-
-    print(species, type(species))
 
     if abilities := common_pop_get(data, "abilities", "ability"):
         data["abilities"] = frozenset(Abilities.deduce(abilities))
@@ -1679,7 +1696,9 @@ def oc_process(**kwargs):
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", {"event": data.get("moveset", set())}):
+        if movepool := data.pop(
+            "movepool", {"event": data.get("moveset", set())}
+        ):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1734,7 +1753,11 @@ async def doc_convert(url: str) -> dict[str, Any]:
             document=contents,
         )
 
-        text = [strip.replace("\u2019", "'") for item in content_values if (strip := item.strip())]
+        text = [
+            strip.replace("\u2019", "'")
+            for item in content_values
+            if (strip := item.strip())
+        ]
 
         movepool_typing = dict[str, Union[set[str], dict[int, set[str]]]]
         raw_kwargs: dict[str, Union[str, set[str], movepool_typing]] = dict(
