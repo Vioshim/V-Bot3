@@ -118,10 +118,8 @@ class SubmissionView(View):
                 color=ctx.user.color,
                 timestamp=utcnow(),
             )
-            if slash := template.get("Description"):
-                embed.set_footer(
-                    text=f"Alternatively, there's also the command {slash}"
-                )
+            if desc := template.get("Description"):
+                embed.set_footer(text=desc)
             view = View()
             for k, v in template.get("Document", {}).items():
                 btn = Button(
