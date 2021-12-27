@@ -536,9 +536,9 @@ class Submission(Cog):
             embed.color = member.color
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
-            await ctx.respond(embed=embed, view=view, ephemeral=True)
+            await ctx.send_followup(embed=embed, view=view, ephemeral=True)
         else:
-            await ctx.respond(
+            await ctx.send_followup(
                 f"{member.mention} has no characters.", ephemeral=True
             )
 
@@ -848,10 +848,10 @@ class Submission(Cog):
                 return
 
             context = await self.bot.get_context(message)
-            
+
             if context.command:
                 return
-            
+
             def checker(value: Message) -> bool:
                 if value.webhook_id:
                     if content := message.content:
@@ -861,7 +861,9 @@ class Submission(Cog):
                 return False
 
             try:
-                msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
+                msg: Message = await self.bot.wait_for(
+                    "message", check=checker, timeout=3
+                )
                 self.bot.msg_cache_add(message)
 
                 if isinstance(channel := message.channel, TextChannel):
@@ -879,7 +881,9 @@ class Submission(Cog):
             except TimeoutError:
                 if not self.rpers.get(message.author.id):
                     role = message.guild.get_role(719642423327719434)
-                    await message.author.remove_roles(role, reason="Without OCs, user isn't registered.")
+                    await message.author.remove_roles(
+                        role, reason="Without OCs, user isn't registered."
+                    )
                     for cat_id in RP_CATEGORIES:
                         if ch := self.bot.get_channel(cat_id):
                             await ch.set_permissions(
@@ -894,7 +898,9 @@ class Submission(Cog):
                         )
                     ):
                         if item.location != msg.channel.id:
-                            former_channel = message.guild.get_channel(item.location)
+                            former_channel = message.guild.get_channel(
+                                item.location
+                            )
                             previous = self.located.get(item.location, set())
                             current = self.located.get(msg.channel.id, set())
                             if item in previous:
@@ -905,7 +911,9 @@ class Submission(Cog):
                             if len(previous) == 0:
                                 with suppress(Exception):
                                     await self.unclaiming(former_channel)
-                                    await self.bot.scheduler.remove_schedule(f"RP[{former_channel.id}]")
+                                    await self.bot.scheduler.remove_schedule(
+                                        f"RP[{former_channel.id}]"
+                                    )
 
                             async with self.bot.database() as db:
                                 item.location = msg.channel.id

@@ -49,7 +49,6 @@ class Moderation(Cog):
         self.bot = bot
         self.loaded: bool = False
 
-    @slash_command()
     @slash_command(
         guild_ids=[719343092963999804],
         description="Reports a situation to staff.",
@@ -85,7 +84,7 @@ class Moderation(Cog):
 
         await channel.send(embed=embed)
 
-        await ctx.respond(
+        await ctx.send_followup(
             "Report has been sent successfully!. This is how it looks.",
             embed=embed,
             ephemeral=True,

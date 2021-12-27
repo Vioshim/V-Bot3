@@ -178,7 +178,7 @@ class Roles(Cog):
                 member.guild.id,
             )
 
-            await ctx.respond(
+            await ctx.send_followup(
                 content="Ping has been done successfully.",
                 ephemeral=True,
                 view=view,

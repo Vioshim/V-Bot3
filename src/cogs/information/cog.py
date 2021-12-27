@@ -188,7 +188,7 @@ class Information(Cog):
         await ctx.defer(ephemeral=True)
 
         if not area:
-            await ctx.respond(
+            await ctx.send_followup(
                 "https://cdn.discordapp.com/attachments/823629617629495386/918221231210246184/5x4zl8.png",
                 ephemeral=True,
             )
@@ -213,7 +213,7 @@ class Information(Cog):
         ):
             view.add_item(info_btn)
 
-        return await ctx.respond(embed=embed, view=view, ephemeral=True)
+        await ctx.send_followup(embed=embed, view=view, ephemeral=True)
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
