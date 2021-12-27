@@ -1165,43 +1165,40 @@ class ModifyView(View):
                     self.oc.name,
                 )
                 modifying |= result
-        else:
-            try:
+        try:
+            webhook = await self.bot.fetch_webhook(919280056558317658)
+            thread: Thread = await self.bot.fetch_channel(self.oc.thread)
+            embed = self.oc.embed
+            embed.set_image(url="attachment://image.png")
+            await webhook.edit_message(self.oc.id, embed=embed, thread=thread)
+            async with self.bot.database() as db:
+                await self.oc.update(db)
+        except DiscordException as e:
+            self.bot.logger.exception(
+                "Error at updating %s's %s, will re-register",
+                str(self.member),
+                str(type(self.oc)),
+                exc_info=e,
+            )
+            modifying = True
+
+        if modifying:
+            cog = self.bot.get_cog("Submission")
+            cog.ocs.pop(self.oc.id, None)
+            cog.rpers.setdefault(self.oc.author, {})
+            cog.rpers[self.oc.author].pop(self.oc.id, None)
+            async with self.bot.database() as db:
+                await self.oc.delete(db)
+
+            with suppress(DiscordException):
                 webhook = await self.bot.fetch_webhook(919280056558317658)
-                thread: Thread = await self.bot.fetch_channel(self.oc.thread)
-                embed = self.oc.embed
-                embed.set_image(url="attachment://image.png")
-                await webhook.edit_message(
-                    self.oc.id, embed=embed, thread=thread
+                await webhook.delete_message(
+                    self.oc.id, thread_id=self.oc.thread
                 )
-                async with self.bot.database() as db:
-                    await self.oc.update(db)
-            except DiscordException as e:
-                self.bot.logger.exception(
-                    "Error at updating %s's %s, will re-register",
-                    str(self.member),
-                    str(type(self.oc)),
-                    exc_info=e,
-                )
-                modifying = True
 
-            if modifying:
-                cog = self.bot.get_cog("Submission")
-                cog.ocs.pop(self.oc.id, None)
-                cog.rpers.setdefault(self.oc.author, {})
-                cog.rpers[self.oc.author].pop(self.oc.id, None)
-                async with self.bot.database() as db:
-                    await self.oc.delete(db)
+            self.oc.id = None
 
-                with suppress(DiscordException):
-                    webhook = await self.bot.fetch_webhook(919280056558317658)
-                    await webhook.delete_message(
-                        self.oc.id, thread_id=self.oc.thread
-                    )
-
-                await cog.registration(
-                    ctx=ctx, oc=self.oc, standard_register=False
-                )
+            await cog.registration(ctx=ctx, oc=self.oc)
         self.stop()
 
     @button(label="Don't make any changes", row=1)
