@@ -53,12 +53,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
@@ -663,8 +658,6 @@ class Submission(Cog):
                     mission.msg_id = msg.id
                     await mission.upsert(db)
 
-        self.bot.logger.info("Finished loading claimed categories")
-
         self.bot.logger.info("Loading claimed categories")
 
         for item in RP_CATEGORIES:
@@ -692,6 +685,8 @@ class Submission(Cog):
                             args=[ch.id],
                             conflict_policy=ConflictPolicy.replace,
                         )
+
+        self.bot.logger.info("Finished loading claimed categories")
 
     @Cog.listener()
     async def on_member_update(
