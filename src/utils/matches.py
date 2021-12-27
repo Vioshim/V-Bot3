@@ -25,7 +25,7 @@ __all__ = (
     "REGEX_URL",
     "DISCORD_MSG_URL",
     "DATA_FINDER",
-    "INVITE"
+    "INVITE",
 )
 
 DATA_FINDER = compile(r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE)
@@ -43,9 +43,7 @@ G_DOCUMENT = compile(r"https://docs\.google\.com/document/d/(.+)/", IGNORECASE)
 
 EMOJI_REGEX = compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")
 
-REGEX_URL = compile(
-    r"http[s]?://" r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
-)
+REGEX_URL = compile(r"http[s]?://" r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+")
 
 DISCORD_MSG_URL = compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"

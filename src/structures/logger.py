@@ -50,9 +50,7 @@ def formatter_message(message: str, use_color=True) -> str:
     return message
 
 
-COLORS = dict(
-    WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED
-)
+COLORS = dict(WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED)
 
 
 class ColoredFormatter(Formatter):
@@ -101,9 +99,7 @@ class ColoredFormatter(Formatter):
         """
         level_name: str = record.levelname
         if self.use_color and level_name in COLORS:
-            level_name_color: str = (
-                COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
-            )
+            level_name_color: str = COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
             record.levelname = level_name_color
             pathname = record.pathname.replace("/root/V-Bot3/src/", "")
             record.pathname = pathname.replace("/root/V-Bot3/", "")

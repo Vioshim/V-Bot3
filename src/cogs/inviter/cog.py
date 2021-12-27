@@ -67,12 +67,8 @@ class Inviter(Cog):
         recruiter_role = guild.get_role(788215077336514570)
         partnered_role = guild.get_role(725582056620294204)
         mod_ch: TextChannel = self.bot.get_channel(799091737875447808)
-        webhook_pokemon = await self.bot.webhook(
-            855197800907407360, reason="Partners"
-        )
-        webhook_standard = await self.bot.webhook(
-            855199463978041355, reason="Partners"
-        )
+        webhook_pokemon = await self.bot.webhook(855197800907407360, reason="Partners")
+        webhook_standard = await self.bot.webhook(855199463978041355, reason="Partners")
 
         generator = Embed(
             title=f"__**{guild.name} is now officially partnered with {invite_guild.name}**__",
@@ -81,9 +77,7 @@ class Inviter(Cog):
             timestamp=utcnow(),
         )
         files = []
-        if file := await self.bot.get_file(
-            invite_guild.icon.url, "server_icon"
-        ):
+        if file := await self.bot.get_file(invite_guild.icon.url, "server_icon"):
             generator.set_thumbnail(url=f"attachment://{file.filename}")
             files.append(file)
         if attachments := ctx.attachments:
@@ -110,26 +104,18 @@ class Inviter(Cog):
                 )
             await ctx.delete()
         else:
-            generator.set_footer(
-                text=author.display_name, icon_url=author.avatar.url
-            )
+            generator.set_footer(text=author.display_name, icon_url=author.avatar.url)
             embed = Embed(
                 title="Server Invite Detected - Possible Partner/Advertiser",
                 color=author.color,
                 description=ctx.content,
                 timestamp=utcnow(),
             )
-            embed.set_author(
-                name=author.display_name, icon_url=author.avatar.url
-            )
-            embed.set_footer(
-                text=f"ID: {author.id}", icon_url=invite_guild.icon.url
-            )
+            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
+            embed.set_footer(text=f"ID: {author.id}", icon_url=invite_guild.icon.url)
             embed.add_field(name="Posted at", value=ctx.channel.mention)
             if user := invite.inviter:
-                embed.add_field(
-                    name=f"Invite creator - {user.name!r}", value=user.mention
-                )
+                embed.add_field(name=f"Invite creator - {user.name!r}", value=user.mention)
             embed.set_thumbnail(url=invite_guild.icon.url)
 
             if images := ctx.attachments:
@@ -142,9 +128,7 @@ class Inviter(Cog):
                     style=ButtonStyle.green,
                     row=0,
                 )
-                async def partner1(
-                    self, btn: Button, inter: Interaction
-                ) -> None:
+                async def partner1(self, btn: Button, inter: Interaction) -> None:
                     """Pokemon Partnership
 
                     Parameters
@@ -167,16 +151,12 @@ class Inviter(Cog):
                             view=link_view,
                             files=files,
                         )
-                        await resp.send_message(
-                            f"{btn.label} has been added by {member.display_name}"
-                        )
+                        await resp.send_message(f"{btn.label} has been added by {member.display_name}")
                         await author.add_roles(partnered_role)
                         await inter.message.delete()
                         self.stop()
                     else:
-                        await resp.send_message(
-                            "You don't have recruiter role.", ephemeral=True
-                        )
+                        await resp.send_message("You don't have recruiter role.", ephemeral=True)
 
                 @button(
                     label="Standard Partnership",
@@ -206,25 +186,19 @@ class Inviter(Cog):
                             view=link_view,
                             files=files,
                         )
-                        await resp.send_message(
-                            f"{btn.label} has been added by {member.display_name}"
-                        )
+                        await resp.send_message(f"{btn.label} has been added by {member.display_name}")
                         await author.add_roles(partnered_role)
                         await inter.message.delete()
                         self.stop()
                     else:
-                        await resp.send_message(
-                            "You don't have recruiter role.", ephemeral=True
-                        )
+                        await resp.send_message("You don't have recruiter role.", ephemeral=True)
 
                 @button(
                     label="Not interested...",
                     style=ButtonStyle.red,
                     row=0,
                 )
-                async def accident(
-                    self, btn: Button, inter: Interaction
-                ) -> None:
+                async def accident(self, btn: Button, inter: Interaction) -> None:
                     """Conclude Partnership
 
                     :param btn: Button
@@ -234,21 +208,15 @@ class Inviter(Cog):
                     member: Member = inter.user
                     resp: InteractionResponse = inter.response
                     if recruiter_role in member.roles:
-                        await resp.send_message(
-                            f"{btn.label!r} has been chosen by {member.display_name}"
-                        )
+                        await resp.send_message(f"{btn.label!r} has been chosen by {member.display_name}")
                         await inter.message.delete()
                         self.stop()
                     else:
-                        await resp.send_message(
-                            "You don't have recruiter role.", ephemeral=True
-                        )
+                        await resp.send_message("You don't have recruiter role.", ephemeral=True)
 
             files_embed, embed = await self.bot.embed_raw(embed=embed)
             view = InviteView(timeout=None)
-            await mod_ch.send(
-                content=invite.url, embed=embed, files=files_embed, view=view
-            )
+            await mod_ch.send(content=invite.url, embed=embed, files=files_embed, view=view)
             await ctx.delete()
             await view.wait()
 

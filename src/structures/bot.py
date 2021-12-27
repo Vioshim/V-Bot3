@@ -160,9 +160,7 @@ class CustomBot(Bot):
 
         return files, embed
 
-    async def get_file(
-        self, url: str, filename: str = None, spoiler: bool = False
-    ) -> Optional[File]:
+    async def get_file(self, url: str, filename: str = None, spoiler: bool = False) -> Optional[File]:
         """Early Implementation of an image downloader with size specified
 
         Parameters
@@ -220,9 +218,7 @@ class CustomBot(Bot):
             Connection
         """
         connection: Connection = await self.pool.acquire(timeout=timeout)
-        transaction = connection.transaction(
-            isolation=isolation, readonly=readonly, deferrable=deferrable
-        )
+        transaction = connection.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable)
         await transaction.start()
         try:
             yield connection
@@ -264,9 +260,7 @@ class CustomBot(Bot):
             if item.user == self.user:
                 return item
         image = await self.user.display_avatar.read()
-        return await channel.create_webhook(
-            name=self.user.display_name, avatar=image, reason=reason
-        )
+        return await channel.create_webhook(name=self.user.display_name, avatar=image, reason=reason)
 
     def __repr__(self) -> str:
         """Representation of V-Bot

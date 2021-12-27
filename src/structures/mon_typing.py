@@ -22,40 +22,46 @@ from frozendict import frozendict
 
 __all__ = ("Typing", "Z_MOVE_RANGE", "MAX_MOVE_RANGE1", "MAX_MOVE_RANGE2")
 
-Z_MOVE_RANGE = frozendict({
-    0: 0,
-    55: 100,
-    65: 120,
-    75: 140,
-    85: 160,
-    95: 175,
-    100: 190,
-    110: 195,
-    125: 190,
-    130: 195,
-    140: 200,
-    250: 200,
-})
-MAX_MOVE_RANGE1 = frozendict({
-    0: 0,
-    40: 90,
-    50: 100,
-    60: 110,
-    70: 120,
-    100: 130,
-    140: 140,
-    250: 150,
-})
-MAX_MOVE_RANGE2 = frozendict({
-    0: 0,
-    40: 70,
-    50: 75,
-    60: 80,
-    70: 85,
-    100: 90,
-    140: 95,
-    250: 100,
-})
+Z_MOVE_RANGE = frozendict(
+    {
+        0: 0,
+        55: 100,
+        65: 120,
+        75: 140,
+        85: 160,
+        95: 175,
+        100: 190,
+        110: 195,
+        125: 190,
+        130: 195,
+        140: 200,
+        250: 200,
+    }
+)
+MAX_MOVE_RANGE1 = frozendict(
+    {
+        0: 0,
+        40: 90,
+        50: 100,
+        60: 110,
+        70: 120,
+        100: 130,
+        140: 140,
+        250: 150,
+    }
+)
+MAX_MOVE_RANGE2 = frozendict(
+    {
+        0: 0,
+        40: 70,
+        50: 75,
+        60: 80,
+        70: 85,
+        100: 90,
+        140: 95,
+        250: 100,
+    }
+)
 
 
 @dataclass(unsafe_hash=True)
@@ -110,11 +116,8 @@ class Typing:
         if (a := self.chart) != (b := other.chart):
             return Typing(
                 name=f"{self.name}/{other.name}",
-                color=((self.color + other.color)**2) / 2,
-                chart=frozendict({
-                    x: multi
-                    for x in a | b if (multi := a.get(x, 1) * b.get(x, 1)) != 1
-                }),
+                color=((self.color + other.color) ** 2) / 2,
+                chart=frozendict({x: multi for x in a | b if (multi := a.get(x, 1) * b.get(x, 1)) != 1}),
             )
         return self
 

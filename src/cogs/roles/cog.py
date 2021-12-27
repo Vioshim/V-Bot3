@@ -87,9 +87,7 @@ class Roles(Cog):
                     else:
                         self.cool_down[member_id] = created_at
 
-                    view = RoleManage(
-                        bot=self.bot, role=role, ocs=values, member=member
-                    )
+                    view = RoleManage(bot=self.bot, role=role, ocs=values, member=member)
                     self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
 
@@ -104,10 +102,7 @@ class Roles(Cog):
         role_id: Option(
             str,
             description="Role to be pinged",
-            choices=[
-                OptionChoice(name=name, value=str(value))
-                for name, value in RP_SEARCH_ROLES.items()
-            ],
+            choices=[OptionChoice(name=name, value=str(value)) for name, value in RP_SEARCH_ROLES.items()],
             required=True,
         ),
     ):
@@ -153,8 +148,7 @@ class Roles(Cog):
         embed = Embed(
             title=role.name,
             color=member.color,
-            description=f"{member.display_name} is looking "
-            "to RP with their registered character(s).",
+            description=f"{member.display_name} is looking " "to RP with their registered character(s).",
             timestamp=utcnow(),
         )
         embed.set_thumbnail(url=member.display_avatar.url)

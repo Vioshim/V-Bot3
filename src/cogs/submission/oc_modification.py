@@ -133,8 +133,7 @@ class SPView(Basic):
             required=True,
         )
         text_view.embed.description = (
-            "If you need to write too much, "
-            "I recommend to move to Google documents, otherwise, try to be concise."
+            "If you need to write too much, " "I recommend to move to Google documents, otherwise, try to be concise."
         )
 
         data: dict[str, str] = {}
@@ -183,12 +182,9 @@ class SPView(Basic):
         )
         backup = asdict(self.oc.sp_ability)
         text_view.embed.description = (
-            "If you need to write too much, "
-            "I recommend to move to Google documents, otherwise, try to be concise."
+            "If you need to write too much, " "I recommend to move to Google documents, otherwise, try to be concise."
         )
-        async with view.send(
-            title="Sp.Ability Modify", ephemeral=True
-        ) as elements:
+        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
@@ -635,9 +631,7 @@ class MovesetMod(Mod):
         aux: Optional[bool] = None
         origin = await target.original_message()
         view.embed.title = "Write the character's moveset. Current below"
-        view.embed.description = (
-            "\n".join(repr(move) for move in oc.moveset) or "No Moves"
-        )
+        view.embed.description = "\n".join(repr(move) for move in oc.moveset) or "No Moves"
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
@@ -1192,9 +1186,7 @@ class ModifyView(View):
 
             with suppress(DiscordException):
                 webhook = await self.bot.fetch_webhook(919280056558317658)
-                await webhook.delete_message(
-                    self.oc.id, thread_id=self.oc.thread
-                )
+                await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
 
             self.oc.id = None
 

@@ -98,19 +98,13 @@ class TextInput(Basic):
     @button(label="Proceed with Message", style=ButtonStyle.green, row=0)
     async def confirm(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.edit_message(
-            content="Alright, now write down the information.", view=None
-        )
+        await resp.edit_message(content="Alright, now write down the information.", view=None)
         try:
-            message: Message = await self.bot.wait_for(
-                "message", check=text_check(interaction)
-            )
+            message: Message = await self.bot.wait_for("message", check=text_check(interaction))
             self.text = message.content
             await message.delete()
             msg = await interaction.original_message()
-            await msg.edit(
-                content="Parameter has been added.", view=None, embed=None
-            )
+            await msg.edit(content="Parameter has been added.", view=None, embed=None)
         except DiscordException as e:
             self.bot.logger.exception("Error deleting message", exc_info=e)
         finally:
@@ -119,9 +113,7 @@ class TextInput(Basic):
     @button(label="Cancel the Process", style=ButtonStyle.red, row=0)
     async def cancel(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.edit_message(
-            content="Process Concluded", view=None, embed=None
-        )
+        await resp.edit_message(content="Process Concluded", view=None, embed=None)
         self.text = None
         self.stop()
 
@@ -130,9 +122,7 @@ class TextInput(Basic):
         resp: InteractionResponse = interaction.response
         self.text = ""
         try:
-            await resp.edit_message(
-                content="Default Value has been chosen", view=None
-            )
+            await resp.edit_message(content="Default Value has been chosen", view=None)
             await self.message.delete(delay=1)
         except DiscordException as e:
             self.bot.logger.exception("Error deleting message", exc_info=e)

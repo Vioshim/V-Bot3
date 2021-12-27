@@ -214,9 +214,7 @@ class AfterDateCall(Converter[datetime]):
         NoDateFound
             If no date was found
         """
-        if date := parse(
-            argument, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc")
-        ):
+        if date := parse(argument, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc")):
             return date
         raise NoDateFound(argument)
 
@@ -242,9 +240,7 @@ class BeforeDateCall(Converter[datetime]):
         NoDateFound
             If no date was found
         """
-        if date := parse(
-            argument, settings=dict(PREFER_DATES_FROM="past", TIMEZONE="utc")
-        ):
+        if date := parse(argument, settings=dict(PREFER_DATES_FROM="past", TIMEZONE="utc")):
             return date
         raise NoDateFound(argument)
 

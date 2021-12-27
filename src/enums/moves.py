@@ -22,7 +22,7 @@ from typing import Iterable, Optional, Union
 from src.enums.mon_types import Types
 from src.structures.move import Category, Move
 
-__all__ = ("Moves", )
+__all__ = ("Moves",)
 
 
 class Moves(Enum):
@@ -73,9 +73,9 @@ class Moves(Enum):
         if isinstance(move, Moves):
             return move
         for data in get_close_matches(
-                word=move.upper().replace("-", "").replace(" ", ""),
-                possibilities=Moves.__members__,
-                n=1,
+            word=move.upper().replace("-", "").replace(" ", ""),
+            possibilities=Moves.__members__,
+            n=1,
         ):
             return Moves[data]
 
@@ -97,10 +97,7 @@ class Moves(Enum):
             name = name.title()
         elif isinstance(name, Iterable):
             name = ",".join(name).title()
-        return {
-            data
-            for item in name.split(",") if (data := cls.fetch_by_name(item))
-        }
+        return {data for item in name.split(",") if (data := cls.fetch_by_name(item))}
 
     ABSORB = Move(
         desc=r"The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down.",

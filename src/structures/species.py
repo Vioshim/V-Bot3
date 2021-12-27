@@ -271,20 +271,22 @@ class CustomMega(Species):
     """
 
     def __init__(self, base: Species):
-        self.id: str = f"C_MEGA_{base.id}"
-        self.name: str = f"Mega {base.name}"
-        self.shape: str = base.shape
-        self.color: str = base.color
-        self.height: int = base.height
-        self.weight: int = base.weight
-        self.HP: int = base.HP
-        self.ATK: int = base.ATK
-        self.DEF: int = base.DEF
-        self.SPA: int = base.SPA
-        self.SPD: int = base.SPD
-        self.SPE: int = base.SPE
-        self.movepool: Movepool = base.movepool
-        self.abilities: frozenset[Abilities] = copy(base.abilities)
+        super(CustomMega, self).__init__(
+            id=f"C_MEGA_{base.id}",
+            name=f"Mega {base.name}",
+            shape=base.shape,
+            color=base.color,
+            height=base.height,
+            weight=base.weight,
+            HP=base.HP,
+            ATK=base.ATK,
+            DEF=base.DEF,
+            SPA=base.SPA,
+            SPD=base.SPD,
+            SPE=base.SPE,
+            movepool=base.movepool,
+            abilities=copy(base.abilities),
+        )
 
     @property
     def requires_image(self) -> bool:
@@ -306,21 +308,23 @@ class Variant(Species):
     """
 
     def __init__(self, base: Species, name: str):
+        super(Variant, self).__init__(
+            id=base.id,
+            name=base.name,
+            shape=base.shape,
+            color=base.color,
+            height=base.height,
+            weight=base.weight,
+            HP=base.HP,
+            ATK=base.ATK,
+            DEF=base.DEF,
+            SPA=base.SPA,
+            SPD=base.SPD,
+            SPE=base.SPE,
+            movepool=copy(base.movepool),
+            abilities=copy(base.abilities),
+        )
         self.base = base
-        self.id = base.id
-        self.name = name
-        self.shape: str = base.shape
-        self.color: str = base.color
-        self.height: int = base.height
-        self.weight: int = base.weight
-        self.HP: int = base.HP
-        self.ATK: int = base.ATK
-        self.DEF: int = base.DEF
-        self.SPA: int = base.SPA
-        self.SPD: int = base.SPD
-        self.SPE: int = base.SPE
-        self.movepool: Movepool = copy(base.movepool)
-        self.abilities: frozenset[Abilities] = copy(base.abilities)
 
     @property
     def requires_image(self) -> bool:
@@ -352,23 +356,26 @@ class Fusion(Species):
     mon2: Optional[Species] = None
 
     def __init__(self, mon1: Species, mon2: Species):
-        super(Fusion, self).__init__(evolves_from=None, evolves_to=frozenset())
-        self.id = f"{mon1.id}_{mon2.id}"
+        super(Fusion, self).__init__(
+            id=f"{mon1.id}_{mon2.id}",
+            name=f"{mon1.name}/{mon2.name}",
+            height=round((mon1.height + mon2.height) / 2),
+            weight=round((mon1.weight + mon2.weight) / 2),
+            HP=round((mon1.HP + mon2.HP) / 2),
+            ATK=round((mon1.ATK + mon2.ATK) / 2),
+            DEF=round((mon1.DEF + mon2.DEF) / 2),
+            SPA=round((mon1.SPA + mon2.SPA) / 2),
+            SPD=round((mon1.SPD + mon2.SPD) / 2),
+            SPE=round((mon1.SPE + mon2.SPE) / 2),
+            movepool=mon1.movepool + mon2.movepool,
+            abilities=mon1.abilities | mon2.abilities,
+            evolves_from=None,
+            evolves_to=frozenset(),
+        )
         self.mon1 = mon1
         self.mon2 = mon2
-        self.name = f"{mon1.name}/{mon2.name}"
-        self.height = round((mon1.height + mon2.height) / 2)
-        self.weight = round((mon1.weight + mon2.weight) / 2)
         if len(items := self.possible_types) == 1:
             self.types = frozenset(items[0])
-        self.HP = round((mon1.HP + mon2.HP) / 2)
-        self.ATK = round((mon1.ATK + mon2.ATK) / 2)
-        self.DEF = round((mon1.DEF + mon2.DEF) / 2)
-        self.SPA = round((mon1.SPA + mon2.SPA) / 2)
-        self.SPD = round((mon1.SPD + mon2.SPD) / 2)
-        self.SPE = round((mon1.SPE + mon2.SPE) / 2)
-        self.movepool = mon1.movepool + mon2.movepool
-        self.abilities = mon1.abilities | mon2.abilities
         item1 = self.mon1.evolves_to
         item2 = self.mon2.evolves_to
         self.evolves_to = frozenset(zip(item1, item2))

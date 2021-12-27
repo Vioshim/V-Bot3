@@ -61,9 +61,7 @@ class Proxy(Cog):
 
         guild = self.bot.get_guild(payload.guild_id)
         registered = guild.get_role(719642423327719434)
-        channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(
-            payload.channel_id
-        )
+        channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(payload.channel_id)
         if isinstance(channel, Thread):
             if registered not in channel.parent.overwrites:
                 pass
@@ -81,27 +79,19 @@ class Proxy(Cog):
                     await message.clear_reaction(emoji=emoji)
                     if user := guild.get_member(data):
                         view = View()
-                        view.add_item(
-                            Button(label="Jump URL", url=message.jump_url)
-                        )
+                        view.add_item(Button(label="Jump URL", url=message.jump_url))
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)
             except NotFound:
-                await payload.member.send(
-                    "That proxy was sent by an user who is no longer in discord."
-                )
+                await payload.member.send("That proxy was sent by an user who is no longer in discord.")
 
-    async def handler(
-        self, ctx: Context, name: str, avatar_url: str, content: str
-    ):
+    async def handler(self, ctx: Context, name: str, avatar_url: str, content: str):
         webhook = await self.bot.webhook(ctx.channel, reason="NPC")
         message: Message = ctx.message
         view = View()
         if reference := message.reference:
-            view.add_item(
-                item=Button(label="Replying to", url=reference.jump_url)
-            )
+            view.add_item(item=Button(label="Replying to", url=reference.jump_url))
 
         data = dict(
             username=name,
@@ -117,9 +107,7 @@ class Proxy(Cog):
 
         proxy_msg = await webhook.send(**data)
 
-        self.npc_info[
-            NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)
-        ] = ctx.author.id
+        self.npc_info[NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)] = ctx.author.id
 
         self.bot.msg_cache.add(message.id)
         with suppress(DiscordException):

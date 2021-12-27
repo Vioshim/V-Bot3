@@ -113,9 +113,7 @@ class Mission:
     @property
     def jump_url(self):
         if self.msg_id:
-            return (
-                f"https://discord.com/channels/719343092963999804/908498210211909642/{self.msg_id}"
-            )
+            return f"https://discord.com/channels/719343092963999804/908498210211909642/{self.msg_id}"
 
     @property
     def emoji(self):
@@ -160,14 +158,10 @@ class Mission:
         return entries
 
     @classmethod
-    async def fetch_by_author(
-        cls, connection: Connection, author: Union[User, int]
-    ) -> list[Mission]:
+    async def fetch_by_author(cls, connection: Connection, author: Union[User, int]) -> list[Mission]:
         if not isinstance(author, int):
             author = author.id
         entries = []
-        async for item in connection.cursor(
-            "SELECT * FROM MISSIONS where author = $1 order by created_at;", author
-        ):
+        async for item in connection.cursor("SELECT * FROM MISSIONS where author = $1 order by created_at;", author):
             entries.append(Mission(**dict(item)))
         return entries

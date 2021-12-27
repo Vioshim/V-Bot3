@@ -69,9 +69,7 @@ class AreaSelection(View):
 
         self.selection.options = [
             SelectOption(
-                label=f"{len(self.entries.get(str(item.id), [])):02d}{item.name[1:]}".replace(
-                    "-", " "
-                ).title(),
+                label=f"{len(self.entries.get(str(item.id), [])):02d}{item.name[1:]}".replace("-", " ").title(),
                 value=str(item.id),
                 description=topic[:50] if (topic := item.topic) else "No description yet.",
                 emoji=item.name[0],
@@ -128,9 +126,7 @@ class AreaSelection(View):
             perms = permissions.get(ctx.user, PermissionOverwrite())
             if not perms.read_messages:
                 perms.read_messages = True
-                await category.set_permissions(
-                    ctx.user, overwrite=perms, reason="Region Selection"
-                )
+                await category.set_permissions(ctx.user, overwrite=perms, reason="Region Selection")
         await ctx.followup.send("Now you can see all the areas", ephemeral=True)
 
     # noinspection PyTypeChecker
@@ -144,7 +140,5 @@ class AreaSelection(View):
             perms = permissions.get(ctx.user, PermissionOverwrite())
             if perms.read_messages is not False:
                 perms.read_messages = False
-                await category.set_permissions(
-                    ctx.user, overwrite=perms, reason="Region Selection"
-                )
+                await category.set_permissions(ctx.user, overwrite=perms, reason="Region Selection")
         await ctx.followup.send("Now you can't see all the areas", ephemeral=True)
