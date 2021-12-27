@@ -1188,7 +1188,10 @@ class ModifyView(View):
 
             with suppress(DiscordException):
                 webhook = await self.bot.fetch_webhook(919280056558317658)
-                await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
+                thread: Thread = await self.bot.fetch_channel(self.oc.thread)
+                if thread.archived:
+                    await thread.edit(archived=False)
+                await webhook.delete_message(self.oc.id, thread_id=thread.id)
 
             self.oc.id = None
 
