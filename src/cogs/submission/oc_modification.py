@@ -1195,8 +1195,6 @@ class ModifyView(View):
                     await thread.edit(archived=False)
                 await webhook.delete_message(self.oc.id, thread_id=thread.id)
 
-            self.oc.id = None
-
             await cog.registration(ctx=ctx, oc=self.oc)
         self.stop()
 

@@ -489,6 +489,7 @@ class Submission(Cog):
                 allowed_mentions=AllowedMentions(users=True),
                 wait=True,
             )
+            oc.id = msg_oc.id
             oc.image = msg_oc.embeds[0].image.url
             self.rpers.setdefault(member.id, {})
             self.rpers[member.id][oc.id] = oc

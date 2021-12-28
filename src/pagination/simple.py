@@ -230,7 +230,7 @@ class Simple(Basic):
         except DiscordException as e:
             self.bot.logger.exception(
                 "Exception while editing view %s",
-                self.message.jump_url,
+                repr(self.message),
                 exc_info=e,
             )
 
