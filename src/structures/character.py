@@ -47,7 +47,12 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1295,6 +1300,26 @@ class VariantCharacter(Character):
             self.species.id,
             self.species.name,
         )
+        await connection.execute(
+            """--sql
+            DELETE FROM VARIANT_MOVEPOOL
+            WHERE ID = $1;
+            """,
+            self.id,
+        )
+        reference = set(self.species.movepool()) | set(self.moveset)
+        if moves := reference - set(self.species.base.movepool()):
+            await connection.executemany(
+                """--sql
+                INSERT INTO VARIANT_MOVEPOOL(ID, MOVE, SLOT)
+                VALUES ($1, $2, $3) ON CONFLICT (ID, SLOT)
+                DO UPDATE SET SPECIES = $2;
+                """,
+                [
+                    (self.id, item.name, index)
+                    for index, item in enumerate(moves, start=1)
+                ],
+            )
 
     @classmethod
     async def fetch_all(cls, connection: Connection):
@@ -1323,8 +1348,23 @@ class VariantCharacter(Character):
             data.pop("kind", None)
             species = data.pop("species", None)
             variant = data.pop("variant", None)
-            data["species"] = Variant(base=Species[species], name=variant)
+            mon_species = Variant(base=Species[species], name=variant)
             mon = VariantCharacter(**data)
+            if moves := await connection.fetchval(
+                """--sql
+                SELECT array_agg(move)
+                FROM VARIANT_MOVEPOOL
+                WHERE ID = $1;
+                """,
+                mon.id,
+            ):
+                mon_species.movepool += Movepool(
+                    event=frozenset(
+                        move
+                        for item in moves
+                        if not (move := Moves[item]).banned
+                    )
+                )
             await mon.retrieve(connection)
             characters.append(mon)
 
