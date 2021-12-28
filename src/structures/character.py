@@ -47,7 +47,12 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1343,7 +1348,9 @@ class VariantCharacter(Character):
             data.pop("kind", None)
             species = data.pop("species", None)
             variant = data.pop("variant", None)
-            mon_species = Variant(base=Species[species], name=variant)
+            data["species"] = mon_species = Variant(
+                base=Species[species], name=variant
+            )
             mon = VariantCharacter(**data)
             if moves := await connection.fetchval(
                 """--sql
