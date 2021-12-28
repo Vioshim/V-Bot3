@@ -92,6 +92,7 @@ class TextInput(Basic):
                 str(self.member),
                 exc_info=e,
             )
+            yield None
         finally:
             await aux.delete()
 
