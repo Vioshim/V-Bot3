@@ -111,14 +111,14 @@ class PingBump(View):
     async def send(
         self,
     ):
-        view = View()
         if url := self.embed.url:
             btn = Button(label="Click Here to Review us!", url=url)
-            view.add_item(item=btn)
-            self.message = await self.message.channel.send(
-                embed=self.embed,
-                view=view,
-            )
+            self.add_item(btn)
+            
+        self.message = await self.message.channel.send(
+            embed=self.embed,
+            view=self,
+        )
         await self.wait()
 
     @button(

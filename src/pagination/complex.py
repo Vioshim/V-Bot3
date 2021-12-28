@@ -445,7 +445,11 @@ class ComplexInput(Complex):
         if response.is_done():
             return
         btn.disabled = True
-        await ctx.message.edit(view=self)
+        if message := self.message:
+            await message.edit(view=self)
+        elif isinstance(target := self.target, Interaction):
+            if message := await target.original_message():
+                await message.edit(view=self)
         await response.send_message(content="Write down the choice in that case.", ephemeral=True)
         message: Message = await self.bot.wait_for(
             event="message",
