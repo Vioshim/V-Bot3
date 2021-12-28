@@ -1313,7 +1313,7 @@ class VariantCharacter(Character):
                 """--sql
                 INSERT INTO VARIANT_MOVEPOOL(ID, MOVE, SLOT)
                 VALUES ($1, $2, $3) ON CONFLICT (ID, SLOT)
-                DO UPDATE SET SPECIES = $2;
+                DO UPDATE SET MOVE = $2;
                 """,
                 [
                     (self.id, item.name, index)
