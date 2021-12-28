@@ -1312,8 +1312,7 @@ class VariantCharacter(Character):
             await connection.executemany(
                 """--sql
                 INSERT INTO VARIANT_MOVEPOOL(ID, MOVE, SLOT)
-                VALUES ($1, $2, $3) ON CONFLICT (ID, SLOT)
-                DO UPDATE SET MOVE = $2;
+                VALUES ($1, $2, $3);
                 """,
                 [
                     (self.id, item.name, index)
