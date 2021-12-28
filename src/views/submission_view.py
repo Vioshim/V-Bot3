@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import suppress
 from typing import Type, Union
 
 from discord import (
     AllowedMentions,
     CategoryChannel,
+    DiscordException,
     Embed,
     Guild,
     Interaction,
@@ -70,9 +72,11 @@ class CharacterHandlerView(Complex):
         )
         await resp.send_message(embed=data[0].embed, view=view, ephemeral=True)
         await view.wait()
-        await self.message.edit(
-            content="Process concluded.", view=None, embed=data[0].embed
-        )
+        await self.message.edit(content="Process concluded.", view=None)
+        with suppress(DiscordException):
+            await interaction.edit_original_message(
+                embed=data[0].embed, view=None
+            )
 
 
 class SubmissionView(View):
