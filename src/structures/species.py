@@ -272,7 +272,7 @@ class CustomMega(Species):
 
     def __init__(self, base: Species):
         super(CustomMega, self).__init__(
-            id=f"C_MEGA_{base.id}",
+            id=base.id,
             name=f"Mega {base.name}",
             shape=base.shape,
             color=base.color,
