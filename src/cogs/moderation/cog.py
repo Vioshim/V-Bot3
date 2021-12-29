@@ -163,7 +163,10 @@ class Meeting(View):
         embed2.description = "\n".join(i.mention for i in self.defend)
         mode = "Moderation" if self.moderator else "Votation"
 
-        if method is False or (len(self.attack) + len(self.defend) == 0 and len(self.attack) < len(self.defend)):
+        if method is False or (
+            len(self.attack) + len(self.defend) == 0
+            and len(self.attack) < len(self.defend)
+        ):
             self.embed.title = f"{sus} was not banned! ({mode})"
             if moderator := self.moderator:
                 text = f"Ban Prevented. {moderator.mention} intervened"
@@ -219,9 +222,9 @@ class Moderation(Cog):
             )
             return
         moderation: Role = get(ctx.guild.roles, name="Moderation")
-        if moderation in member.roles:
+        if member.top_role > ctx.author.top_role:
             await resp.send_message(
-                content="That user is a moderator.",
+                content="Member has a higher role than yours.",
                 ephemeral=True,
             )
             return
