@@ -1165,7 +1165,7 @@ class CustomMegaCharacter(Character):
 
     @property
     def embed(self) -> Embed:
-        c_embed = super(FusionCharacter, self).embed
+        c_embed = super(CustomMegaCharacter, self).embed
         c_embed.set_field_at(
             index=2,
             name="Fakemon Species",
