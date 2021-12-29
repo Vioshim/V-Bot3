@@ -192,6 +192,7 @@ class SubmissionView(View):
         emoji="✉",
         row=1,
         custom_id="3ec81ed922f2f2cde42a2fc3ed3392c4",
+        disabled=True,
     )
     async def mission_create(self, _: Button, ctx: Interaction):
         guild: Guild = ctx.guild
