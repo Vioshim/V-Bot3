@@ -65,7 +65,7 @@ class Meeting(View):
         self.guild = reporter.guild
         self.message: Optional[Message] = None
         embed = Embed(
-            title=f"Meeting for {imposter} (Duration 60 segs)",
+            title=f"Meeting for {imposter}",
             description=(
                 "This is a serious concern, if the user is "
                 "raiding or similar proceed to vote, otherwise disagree. "
