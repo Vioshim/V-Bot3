@@ -41,7 +41,7 @@ from discord.ext.commands import (
     slash_command,
 )
 from discord.ui import Button, View, button
-from discord.utils import get, utcnow, format_dt
+from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
 
 from src.context import ApplicationContext, Context
@@ -148,7 +148,7 @@ class Meeting(View):
         channel = self.guild.get_channel(877376320093425685)
         embed = Embed(
             title=f"Users that Agreed with {sus}'s Votation",
-            content="\n".join(i.mention for i in self.attack),
+            description="\n".join(i.mention for i in self.attack),
         )
         embed.set_author(
             name=hero.display_name,
@@ -206,7 +206,7 @@ class Moderation(Cog):
         resp: InteractionResponse = ctx.response
         moderation: Role = get(ctx.guild.roles, name="Moderation")
         view = Meeting(reporter=ctx.user, imposter=member, reason=reason)
-        
+
         time = format_dt(utcnow() + timedelta(seconds=120), style="R")
         await resp.send_message(
             content=f"{moderation.mention}  -  {time}",
