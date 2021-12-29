@@ -1691,25 +1691,25 @@ def oc_process(**kwargs):
         Character given the paraneters
     """
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
-    if fakemon := data.get("fakemon", ""):
+    if fakemon := data.pop("fakemon", ""):
         name: str = fakemon.title()
         if name.startswith("Mega"):
             data["species"] = CustomMega(Species.deduce(name[5:]))
         else:
             data["species"] = Fakemon(name=name)
-    elif variant := data.get("variant", ""):
+    elif variant := data.pop("variant", ""):
         for item in variant.split(" "):
             if species := Species.deduce(item):
                 data["species"] = Variant(base=species, name=variant)
                 break
-    elif fusion := data.get("fusion", []):
+    elif fusion := data.pop("fusion", []):
         species_fusion = set(species for item in fusion if (species := Species.deduce(item)))
         if len(species_fusion) == 2:
             item_1, item_2 = species_fusion
             data["species"] = Fusion(item_1, item_2)
         elif species_fusion:
             data["species"] = Species.deduce(species_fusion.pop())
-    elif pokemon := data.get("pokemon", ""):
+    elif pokemon := data.pop("pokemon", ""):
         data["species"] = Species.deduce(pokemon)
     
     if types := common_pop_get(data, "types", "type"):
