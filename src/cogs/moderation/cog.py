@@ -204,9 +204,21 @@ class Moderation(Cog):
     ):
         interaction: Interaction = ctx.interaction
         resp: InteractionResponse = ctx.response
+        if member.bot:
+            await resp.send_message(
+                content="That's a bot, if it's here was added by staff.",
+                ephemeral=True,
+            )
+            return
+        registered: Role = ctx.guild.get_role(719642423327719434)
+        if registered in member.roles:
+            await resp.send_message(
+                content="That user is registered, doubt it's raiding.",
+                ephemeral=True,
+            )
+            return
         moderation: Role = get(ctx.guild.roles, name="Moderation")
         view = Meeting(reporter=ctx.user, imposter=member, reason=reason)
-
         time = format_dt(utcnow() + timedelta(seconds=60), style="R")
         await resp.send_message(
             content=f"{moderation.mention}  -  {time}",
