@@ -211,7 +211,7 @@ class Moderation(Cog):
         await resp.send_message(
             content=f"{moderation.mention}  -  {time}",
             embed=view.embed,
-            allowed_mentions=AllowedMentions(roles=True),
+            allowed_mentions=AllowedMentions(roles=False),
         )
         msg = await interaction.original_message()
         thread = await msg.create_thread(name=f"Discuss {member.id}")
