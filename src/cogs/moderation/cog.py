@@ -150,6 +150,7 @@ class Meeting(View):
             title=f"Users that Agreed with {sus}'s Votation",
             description="\n".join(i.mention for i in self.attack),
         )
+        embed.set_image(url=WHITE_BAR)
         embed.set_author(
             name=hero.display_name,
             icon_url=hero.display_avatar.url,
@@ -162,7 +163,7 @@ class Meeting(View):
         embed2.description = "\n".join(i.mention for i in self.defend)
         mode = "Moderation" if self.moderator else "Votation"
 
-        if method is False or len(self.attack) < len(self.defend):
+        if method is False or (len(self.attack) + len(self.defend) == 0 and len(self.attack) < len(self.defend)):
             self.embed.title = f"{sus} was not banned! ({mode})"
             if moderator := self.moderator:
                 text = f"Ban Prevented. {moderator.mention} intervened"
@@ -183,7 +184,7 @@ class Meeting(View):
         view = View()
         view.add_item(Button(label="Jump URL", url=self.message.jump_url))
         await channel.send(content=text, embeds=[embed, embed2], view=view)
-        self.message.edit(embed=self.embed, view=None)
+        await self.message.edit(embed=self.embed, view=None)
 
 
 class Moderation(Cog):
