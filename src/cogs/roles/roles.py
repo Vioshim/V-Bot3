@@ -169,7 +169,7 @@ async def required_role_menu(
         else:
             await member.add_roles(selected, reason="Self Roles")
             return await resp.send_message(f"Role {selected.mention} added", ephemeral=True)
-    return await resp.send_message(f"You need {required.mention} to use this role.", ephemeral=True)
+    return await resp.send_message(f"You need {required.mention} to use this role. Make a Character at <#852180971985043466>", ephemeral=True)
 
 
 PRONOUN_ROLES = dict(
