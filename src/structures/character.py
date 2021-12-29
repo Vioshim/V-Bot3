@@ -1703,12 +1703,10 @@ def oc_process(**kwargs):
                 data["species"] = Variant(base=species, name=variant)
                 break
     elif fusion := data.pop("fusion", []):
-        species_fusion = set(species for item in fusion if (species := Species.deduce(item)))
-        if len(species_fusion) == 2:
-            item_1, item_2 = species_fusion
-            data["species"] = Fusion(item_1, item_2)
-        elif species_fusion:
-            data["species"] = Species.deduce(species_fusion.pop())
+        item = Species.deduce(",".join(fusion))
+        if not isinstance(item, Fusion):
+            raise Exception("Unable to determine the fusions' species")
+        data["species"] = item
     elif pokemon := data.pop("pokemon", ""):
         data["species"] = Species.deduce(pokemon)
     
