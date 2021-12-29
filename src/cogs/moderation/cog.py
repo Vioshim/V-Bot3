@@ -214,17 +214,10 @@ class Moderation(Cog):
                 ephemeral=True,
             )
             return
-        registered: Role = ctx.guild.get_role(719642423327719434)
-        if registered in member.roles:
-            await resp.send_message(
-                content="That user is registered, doubt it's raiding.",
-                ephemeral=True,
-            )
-            return
         moderation: Role = get(ctx.guild.roles, name="Moderation")
-        if member.top_role > ctx.author.top_role:
+        if member.top_role >= ctx.author.top_role:
             await resp.send_message(
-                content="Member has a higher role than yours.",
+                content="Member has a higher or same role than yours.",
                 ephemeral=True,
             )
             return
