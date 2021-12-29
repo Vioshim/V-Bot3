@@ -29,6 +29,7 @@ from discord import (
     Guild,
     Interaction,
     Member,
+    Status,
     Message,
     Option,
     RawMessageDeleteEvent,
@@ -834,7 +835,11 @@ class Submission(Cog):
                 self.bot.logger.exception("Exception processing character", exc_info=e)
                 await message.reply(f"Exception:\n\n{e}", delete_after=10)
                 return
-        elif message.channel.category_id in RP_CATEGORIES:
+        
+        if message.guild.get_member(431544605209788416).status != Status.online:
+            return
+        
+        if message.channel.category_id in RP_CATEGORIES:
             if message.webhook_id:
                 return
             if message.channel.is_news():
