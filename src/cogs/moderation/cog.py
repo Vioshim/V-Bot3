@@ -218,6 +218,12 @@ class Moderation(Cog):
             )
             return
         moderation: Role = get(ctx.guild.roles, name="Moderation")
+        if moderation in member.roles:
+            await resp.send_message(
+                content="That user is a moderator.",
+                ephemeral=True,
+            )
+            return
         view = Meeting(reporter=ctx.user, imposter=member, reason=reason)
         time = format_dt(utcnow() + timedelta(seconds=60), style="R")
         await resp.send_message(
