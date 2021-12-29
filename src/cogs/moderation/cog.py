@@ -208,6 +208,12 @@ class Moderation(Cog):
     ):
         interaction: Interaction = ctx.interaction
         resp: InteractionResponse = ctx.response
+        if member == ctx.author:
+            await resp.send_message(
+                content="You can't report yourself. Tool isn't a joke",
+                ephemeral=True,
+            )
+            return
         if member.bot:
             await resp.send_message(
                 content="That's a bot, if it's here was added by staff.",
