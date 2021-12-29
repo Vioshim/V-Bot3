@@ -47,12 +47,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1696,29 +1691,29 @@ def oc_process(**kwargs):
         Character given the paraneters
     """
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
-    fakemon = "fakemon" in data
-    variant = "variant" in data
-    if species_name := common_pop_get(
-        data, "fakemon", "species", "fusion", "variant"
-    ):
-        if fakemon:
-            name: str = species_name.title()
-            if name.startswith("Mega"):
-                data["species"] = CustomMega(Species.deduce(name[5:]))
-            else:
-                data["species"] = Fakemon(name=name)
-        elif variant:
-            for item in species_name.split(" "):
-                if species := Species.deduce(item):
-                    data["species"] = Variant(base=species, name=species_name)
-                    break
-        elif species := Species.deduce(species_name):
-            data["species"] = species
-
-    if isinstance(
-        species := data["species"], (Fakemon, Fusion, Variant, CustomMega)
-    ):
-        if types := common_pop_get(data, "types", "type"):
+    if fakemon := data.get("fakemon", ""):
+        name: str = fakemon.title()
+        if name.startswith("Mega"):
+            data["species"] = CustomMega(Species.deduce(name[5:]))
+        else:
+            data["species"] = Fakemon(name=name)
+    elif variant := data.get("variant", ""):
+        for item in variant.split(" "):
+            if species := Species.deduce(item):
+                data["species"] = Variant(base=species, name=variant)
+                break
+    elif fusion := data.get("fusion", []):
+        species_fusion = set(species for item in fusion if (species := Species.deduce(item)))
+        if len(species_fusion) == 2:
+            item_1, item_2 = species_fusion
+            data["species"] = Fusion(item_1, item_2)
+        elif species_fusion:
+            data["species"] = Species.deduce(species_fusion.pop())
+    elif pokemon := data.get("pokemon", ""):
+        data["species"] = Species.deduce(pokemon)
+    
+    if types := common_pop_get(data, "types", "type"):
+        if isinstance(species := data["species"], (Fakemon, Fusion, Variant, CustomMega)):
             species.types = frozenset(Types.deduce(types))
 
     if abilities := common_pop_get(data, "abilities", "ability"):
