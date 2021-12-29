@@ -207,7 +207,7 @@ class Moderation(Cog):
         moderation: Role = get(ctx.guild.roles, name="Moderation")
         view = Meeting(reporter=ctx.user, imposter=member, reason=reason)
 
-        time = format_dt(utcnow() + timedelta(seconds=120), style="R")
+        time = format_dt(utcnow() + timedelta(seconds=60), style="R")
         await resp.send_message(
             content=f"{moderation.mention}  -  {time}",
             embed=view.embed,
