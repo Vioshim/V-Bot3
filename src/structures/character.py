@@ -1707,7 +1707,7 @@ def oc_process(**kwargs):
         if not isinstance(item, Fusion):
             raise Exception("Unable to determine the fusions' species")
         data["species"] = item
-    elif pokemon := data.pop("pokemon", ""):
+    elif pokemon := common_pop_get(data, "species", "pokemon"):
         data["species"] = Species.deduce(pokemon)
     
     if types := common_pop_get(data, "types", "type"):
