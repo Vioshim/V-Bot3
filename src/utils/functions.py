@@ -48,10 +48,9 @@ def fix(text: str) -> str:
     str
         formatted string
     """
+    text: str = str(text).upper().strip()
     values = {"Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U"}
-    return "".join(
-        values.get(e, e) for e in str(text).upper().strip() if e.isalnum()
-    )
+    return "".join(x for e in text if (x := values.get(e, e)).isalnum())
 
 
 def common_get(item: dict[str, _T], *args: str) -> Optional[_T]:
