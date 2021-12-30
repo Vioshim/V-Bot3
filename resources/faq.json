@@ -187,13 +187,6 @@
             "title": "What perks do I obtain for boosting?",
             "content": "Believe it or not, people here boost the server because they are aware it helps its stability.\n\nYep, there's no Pay to Win mechanism here or anything of that regard, but yet cool people decide to boost the server.\n\nThat's the reason that we give a custom role to them, because they decided to help without any interest.",
             "thumbnail": "https://media.discordapp.net/attachments/913420609994756106/913428255233687582/thumbnail.png",
-            "fields": [
-                {
-                    "name": "Note",
-                    "value": "Starting today, now nitro users can make their own channel, that channel can be used for any purpose that the user would like to\n\n• Posting their own content\n• Making an out of canon RP ( or even \"What If\" worlds within them)\n• Making a Questions and Answers channel about their ocs.\n• Making a channel in which you can hold debates\n\nThese are just suggestion, but anything similar can be done in those channels, as long as they abide by our server rules and discord TOS.",
-                    "inline": false
-                }
-            ],
             "buttons": [
                 {
                     "label": "Ko-Fi Support",
