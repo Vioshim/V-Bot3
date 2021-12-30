@@ -111,7 +111,7 @@ class Roles(Cog):
         channel: TextChannel = ctx.channel
         await ctx.defer(ephemeral=True)
         if channel.permissions_for(ctx.user).manage_messages:
-            await ctx.respond("Provide the user pinging", ephemeral=True)
+            await ctx.send_followup("Provide the user pinging", ephemeral=True)
             m: Message = await self.bot.wait_for(
                 "message",
                 check=text_check(ctx),
