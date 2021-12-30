@@ -25,7 +25,6 @@ from asyncpg import Connection, Pool
 from discord import Embed, File, Message, PartialMessage, TextChannel, Thread, Webhook
 from discord.abc import Messageable
 from discord.ext.commands import Bot
-from discord.commands import Bot
 from discord.utils import format_dt, utcnow
 from mystbin import Client as MystBinClient
 from orjson import dumps
