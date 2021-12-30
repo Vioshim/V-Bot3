@@ -142,7 +142,7 @@ class Roles(Cog):
 
         channel = self.bot.get_channel(722617383738540092)
 
-        ocs = cog.rpers.get(ctx.user.id, {}).values()
+        ocs = cog.rpers.get(member.id, {}).values()
         view = RoleManage(self.bot, role, ocs, member)
 
         embed = Embed(
