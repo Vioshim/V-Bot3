@@ -126,7 +126,7 @@ class Roles(Cog):
 
         if hours((val := self.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
-            await ctx.respond(
+            await ctx.send_followup(
                 "You're in cool down, you pinged one of the roles recently."
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
@@ -134,7 +134,7 @@ class Roles(Cog):
             return
         elif hours((val := self.role_cool_down.get(role.id))) < 2:
             s = 7200 - seconds(val)
-            await ctx.respond(
+            await ctx.send_followup(
                 f"{role.mention} is in cool down, check the latest ping at <#722617383738540092>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
