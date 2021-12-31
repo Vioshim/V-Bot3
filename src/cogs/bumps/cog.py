@@ -48,7 +48,6 @@ class Bump(Cog):
                 await ctx.delete()
                 await bump.send()
             elif date := bump.date:
-                self.bot.logger.info("Scheduling bump from error")
                 await self.bot.scheduler.add_schedule(
                     bump.send,
                     trigger=DateTrigger(date),
@@ -79,7 +78,6 @@ class Bump(Cog):
                 await bump.send()
                 await bump.wait()
             elif date := bump.date:
-                self.bot.logger.info("Scheduling bump from error")
                 await self.bot.scheduler.add_schedule(
                     bump.on_timeout,
                     trigger=DateTrigger(date),
