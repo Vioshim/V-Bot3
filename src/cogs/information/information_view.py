@@ -113,7 +113,8 @@ class InformationView(View):
             self.bot.logger.info("%s is reading %s[%s]", str(ctx.user), key, idx := data[0])
             info_embed = self.embeds[key][idx].copy()
             info_embed.colour = ctx.user.colour
-            info_embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            if guild := ctx.guild:
+                info_embed.set_footer(text=guild.name, icon_url=guild.icon.url)
 
             view = View(timeout=None)
             for info_btn in self.buttons[key].get(idx, []):
