@@ -29,11 +29,11 @@ from discord import (
     Guild,
     Interaction,
     Member,
-    Status,
     Message,
     Option,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
+    Status,
     TextChannel,
     Thread,
     WebhookMessage,
@@ -381,6 +381,7 @@ class Submission(Cog):
                             "pros",
                             "cons",
                         ]:
+                            word = item
                             if item == "method":
                                 word = "origin"
                             async with text_view.handle(
