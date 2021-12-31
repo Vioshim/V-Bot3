@@ -20,6 +20,7 @@ from discord import (
     PermissionOverwrite,
     SelectOption,
     TextChannel,
+    User,
 )
 from discord.ui import Button, Select, View, button, select
 from discord.utils import utcnow
@@ -39,7 +40,11 @@ class AreaSelection(View):
         self.bot = bot
         self.cat = cat
         self.member = member
-        registered = member.guild.get_role(719642423327719434)
+        if isinstance(member, User):
+            guild = member.mutual_guilds[0]
+        else:
+            guild = member.guild
+        registered = guild.get_role(719642423327719434)
         if registered not in member.roles:
             self.remove_item(self.read_one)
             self.remove_item(self.read_all)
@@ -62,7 +67,7 @@ class AreaSelection(View):
         self.entries: dict[str, set[Character]] = {}
         self.total: int = 0
         for location, ocs in cog.located.items():
-            if ch := cat.guild.get_channel(location):
+            if ch := guild.get_channel(location):
                 if cat == ch.category:
                     self.entries[str(ch.id)] = ocs
                     self.total += len(ocs)
@@ -121,12 +126,16 @@ class AreaSelection(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         for item in MAP_BUTTONS:
-            category: CategoryChannel = ctx.guild.get_channel(int(item.value))
+            if isinstance(member := ctx.user, User):
+                guild = member.mutual_guilds[0]
+            else:
+                guild = member.guild
+            category: CategoryChannel = guild.get_channel(int(item.value))
             permissions = category.overwrites
             perms = permissions.get(ctx.user, PermissionOverwrite())
             if not perms.read_messages:
                 perms.read_messages = True
-                await category.set_permissions(ctx.user, overwrite=perms, reason="Region Selection")
+                await category.set_permissions(member, overwrite=perms, reason="Region Selection")
         await ctx.followup.send("Now you can see all the areas", ephemeral=True)
 
     # noinspection PyTypeChecker
@@ -135,10 +144,14 @@ class AreaSelection(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         for item in MAP_BUTTONS:
-            category: CategoryChannel = ctx.guild.get_channel(int(item.value))
+            if isinstance(member := ctx.user, User):
+                guild = member.mutual_guilds[0]
+            else:
+                guild = member.guild
+            category: CategoryChannel = guild.get_channel(int(item.value))
             permissions = category.overwrites
-            perms = permissions.get(ctx.user, PermissionOverwrite())
+            perms = permissions.get(member, PermissionOverwrite())
             if perms.read_messages is not False:
                 perms.read_messages = False
-                await category.set_permissions(ctx.user, overwrite=perms, reason="Region Selection")
+                await category.set_permissions(member, overwrite=perms, reason="Region Selection")
         await ctx.followup.send("Now you can't see all the areas", ephemeral=True)
