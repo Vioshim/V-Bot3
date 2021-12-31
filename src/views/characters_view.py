@@ -124,13 +124,12 @@ class CharactersView(Complex):
                 amount = self.entries_per_page * self._pos
                 chunk = self.values[amount : amount + self.entries_per_page]
                 item: Character = chunk[int(index)]
-                if item := self.choice:
-                    view = PingView(item, ctx.user.id == item.author)
-                    await response.send_message(
-                        embed=item.embed,
-                        view=view,
-                        ephemeral=True,
-                    )
+                view = PingView(item, ctx.user.id == item.author)
+                await response.send_message(
+                    embed=item.embed,
+                    view=view,
+                    ephemeral=True,
+                )
             except Exception as e:
                 self.bot.logger.exception(
                     "Type: %s, Str: %s",
