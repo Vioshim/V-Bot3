@@ -43,7 +43,7 @@ class Bump(Cog):
 
         if item := BUMPS.get(ctx.author.id):
             self.bot.msg_cache_add(ctx)
-            bump = PingBump(after=ctx, bump=item)
+            bump = PingBump(after=ctx, data=item)
             if bump.valid:
                 await ctx.delete()
                 await bump.send()
@@ -72,7 +72,7 @@ class Bump(Cog):
 
         if item := BUMPS.get(after.author.id):
             self.bot.msg_cache_add(after)
-            bump = PingBump(before=before, after=after, bump=item)
+            bump = PingBump(before=before, after=after, data=item)
             if bump.valid:
                 await after.delete()
                 await bump.send()
