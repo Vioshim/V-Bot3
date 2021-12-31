@@ -504,7 +504,6 @@ class RoleManage(View):
         custom_id="check_ocs",
     )
     async def check_ocs(self, _: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
         view = CharactersView(
             bot=self.bot,
             member=ctx.user,
@@ -514,7 +513,9 @@ class RoleManage(View):
         embed = view.embed
         embed.set_author(name=self.member.display_name)
         embed.set_thumbnail(url=self.member.display_avatar.url)
-        await resp.send_message(embed=embed, ephemeral=True, view=view)
+        async with view.send(ephemeral=True, single=True) as data:
+            if isinstance(data, Character):
+                self.bot.logger.info("User %s is currently reading %s's character %s [%s]", str(ctx.user), str(self.member), data.name, repr(data))
 
 
 class RoleButton(Button):
