@@ -43,8 +43,8 @@ class Bump(Cog):
 
         if item := BUMPS.get(ctx.author.id):
             self.bot.msg_cache_add(ctx)
-            bump = PingBump(ctx, item)
-            if item.on_message(ctx):
+            bump = PingBump(after=ctx, bump=item)
+            if bump.valid:
                 await ctx.delete()
                 await bump.send()
             elif date := bump.date:
@@ -72,8 +72,8 @@ class Bump(Cog):
 
         if item := BUMPS.get(after.author.id):
             self.bot.msg_cache_add(after)
-            bump = PingBump(after, item)
-            if item.on_message_edit(before, after):
+            bump = PingBump(before=before, after=after, bump=item)
+            if bump.valid:
                 await after.delete()
                 await bump.send()
                 await bump.wait()

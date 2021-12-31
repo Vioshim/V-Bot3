@@ -102,16 +102,30 @@ class Bump(metaclass=ABCMeta):
 
 
 class PingBump(View):
-    def __init__(self, ctx: Message, data: Bump):
+    def __init__(
+        self,
+        *,
+        before: Message = None,
+        after: Message = None,
+        data: Bump = None,
+    ):
         super(PingBump, self).__init__(timeout=data.hours * 3600.0)
         self.mentions: set[Member] = set()
-        self.embed = data.adapt_embed(ctx)
-        self.message: Optional[Message] = ctx
+        self.embed = data.adapt_embed(after)
+        self.before = before
+        self.after = after
         self.data = data
+        self.message: Optional[Message] = None
+
+    @property
+    def valid(self) -> bool:
+        if before := self.before:
+            self.data.on_message_edit(before, self.after)
+        return self.data.on_message(self.after)
 
     @property
     def date(self) -> datetime:
-        if embeds := self.message.embeds:
+        if embeds := self.after.embeds:
             if data := self.data.format_date.search(embeds[0].description):
                 return parse(
                     data.group(1),
@@ -126,7 +140,7 @@ class PingBump(View):
             btn = Button(label="Click Here to Review us!", url=url)
             self.add_item(btn)
 
-        self.message = await self.message.channel.send(
+        self.message = await self.after.channel.send(
             embed=self.embed,
             view=self,
         )
@@ -145,7 +159,7 @@ class PingBump(View):
         )
 
     async def on_timeout(self) -> None:
-        text = f"**Bump Reminder (Prefix is {self.prefix}):**\n"
+        text = f"**Bump Reminder (Prefix is {self.data.prefix}):**\n"
         channel: TextChannel = self.message.channel
         if mentions := ", ".join(item.mention for item in self.mentions):
             text += f"Notifying: {mentions}"
