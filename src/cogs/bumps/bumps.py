@@ -13,16 +13,18 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from enum import Enum
+from datetime import datetime
+from re import IGNORECASE, MULTILINE, compile
 from typing import Optional
 
+from dateparser import parse
 from discord import (
     AllowedMentions,
+    Embed,
     Interaction,
     InteractionResponse,
     Member,
     Message,
-    PartialEmoji,
     TextChannel,
 )
 from discord.ui import Button, View, button
@@ -30,23 +32,23 @@ from discord.utils import utcnow
 
 from src.utils.etc import WHITE_BAR
 
-__all__ = ("BumpsEnum",)
+__all__ = ("BUMPS",)
 
 
 class Bump(metaclass=ABCMeta):
     def __init__(
         self,
-        id: int,
         name: str,
+        prefix: str,
         url: Optional[str] = None,
-        prefix: str = "!bump",
         hours: float = 2.0,
+        format_date: str = "",
     ):
-        self.id = id
         self.name = name
-        self.url = url
         self.prefix = prefix
+        self.url = url
         self.hours = hours
+        self.format_date = compile(format_date, IGNORECASE | MULTILINE)
 
     @abstractmethod
     def on_message(self, message: Message) -> bool:
@@ -62,7 +64,6 @@ class Bump(metaclass=ABCMeta):
         bool
             If applicable
         """
-        return message.author.id == self.id
 
     @abstractmethod
     def on_message_edit(self, before: Message, after: Message) -> bool:
@@ -79,9 +80,8 @@ class Bump(metaclass=ABCMeta):
         -------
             If applicable
         """
-        return after.author.id == self.id
 
-    def adapt_embed(self, ctx: Message):
+    def adapt_embed(self, ctx: Message) -> Embed:
         embed = ctx.embeds[0]
         embed.timestamp = utcnow()
         if not embed.image:
@@ -104,31 +104,34 @@ class PingBump(View):
         super(PingBump, self).__init__(timeout=data.hours * 3600.0)
         self.mentions: set[Member] = set()
         self.embed = data.adapt_embed(ctx)
-        self.prefix = data.prefix
         self.message: Optional[Message] = ctx
         self.data = data
 
-    async def send(
-        self,
-    ):
+    @property
+    def date(self) -> datetime:
+        if embeds := self.message.embeds:
+            if data := self.data.format_date.search(embeds[0].description):
+                return parse(
+                    data.group(1),
+                    settings=dict(
+                        PREFER_DATES_FROM="future",
+                        TIMEZONE="utc",
+                    ),
+                )
+
+    async def send(self):
         if url := self.embed.url:
             btn = Button(label="Click Here to Review us!", url=url)
             self.add_item(btn)
-            
+
         self.message = await self.message.channel.send(
             embed=self.embed,
             view=self,
         )
         await self.wait()
 
-    @button(
-        emoji=PartialEmoji(
-            name="SZD_desk_bell",
-            animated=True,
-            id=769116713639215124,
-        )
-    )
-    async def reminder(self, _, inter: Interaction) -> None:
+    @button(emoji="a:SZD_desk_bell:769116713639215124")
+    async def reminder(self, _: Button, inter: Interaction) -> None:
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)
@@ -154,16 +157,15 @@ class PingBump(View):
 class Disboard(Bump):
     def __init__(self):
         super(Disboard, self).__init__(
-            id=302050872383242240,
             name="Disboard",
             url="https://disboard.org/server/{server}",
             prefix="!d bump",
+            format_date=r"(\d+ minutes)",
         )
 
     def on_message(self, message: Message) -> bool:
-        if super(Disboard, self).on_message(message):
-            if embeds := message.embeds:
-                return ":thumbsup:" in embeds[0].description
+        if embeds := message.embeds:
+            return ":thumbsup:" in embeds[0].description
         return False
 
     def on_message_edit(self, _before: Message, _now: Message) -> bool:
@@ -173,16 +175,16 @@ class Disboard(Bump):
 class DiscordServer(Bump):
     def __init__(self):
         super(DiscordServer, self).__init__(
-            id=315926021457051650,
             name="Discord-Server",
             url="https://discord-server.com/{server}#reviews",
             hours=4.0,
+            prefix="!bump",
+            format_date=r"(\d{2}:\d{2}:\d{2})",
         )
 
     def on_message(self, message: Message) -> bool:
-        if super(DiscordServer, self).on_message(message):
-            if embeds := message.embeds:
-                return ":thumbsup:" in embeds[0].description
+        if embeds := message.embeds:
+            return ":thumbsup:" in embeds[0].description
         return False
 
     def on_message_edit(self, _before: Message, _now: Message) -> bool:
@@ -192,17 +194,16 @@ class DiscordServer(Bump):
 class ListIO(Bump):
     def __init__(self):
         super(ListIO, self).__init__(
-            id=212681528730189824,
             name="Discord List IO",
             url="https://discordlist.io/leaderboard/Pokemon-Parallel-Yonder",
             hours=8.0,
             prefix="dlm!bump",
+            format_date=r"Available in: (\d+ hours \d+ minutes)",
         )
 
     def on_message(self, message: Message) -> bool:
-        if super(ListIO, self).on_message(message):
-            if embeds := message.embeds:
-                return "Server bumped!" in embeds[0].description
+        if embeds := message.embeds:
+            return "Server bumped!" in embeds[0].description
         return False
 
     def on_message_edit(self, _before: Message, _now: Message) -> bool:
@@ -212,31 +213,25 @@ class ListIO(Bump):
 class ServerMate(Bump):
     def __init__(self):
         super(ServerMate, self).__init__(
-            id=481810078031282176,
             name="Discord List IO",
             url="https://discordlist.io/leaderboard/Pokemon-Parallel-Yonder",
             hours=8.0,
-            prefix="dlm!bump",
+            prefix="!bump",
+            format_date=r"Available in: (\d+ hours \d+ minutes)",
         )
 
     def on_message(self, message: Message) -> bool:
         return False
 
     def on_message_edit(self, before: Message, now: Message) -> bool:
-        if super(ServerMate, self).on_message_edit(before, now):
-            if embeds := now.embeds:
-                return embeds[0].author.name == "Server Bumped"
+        if embeds := now.embeds:
+            return embeds[0].author.name == "Server Bumped"
         return False
 
 
-class BumpsEnum(Enum):
-    DISBOARD = Disboard()
-    DISCORDSERVER = DiscordServer()
-    LISTIO = ListIO()
-    SERVERMATE = ServerMate()
-
-    def on_message(self, message: Message) -> bool:
-        return self.value.on_message(message)
-
-    def on_message_edit(self, before: Message, now: Message) -> bool:
-        return self.value.on_message_edit(before, now)
+BUMPS: dict[int, Bump] = {
+    302050872383242240: Disboard(),
+    315926021457051650: DiscordServer(),
+    212681528730189824: ListIO(),
+    481810078031282176: ServerMate(),
+}

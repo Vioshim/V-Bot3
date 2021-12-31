@@ -139,6 +139,7 @@ class Roles(Cog):
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
+            return
 
         channel = self.bot.get_channel(722617383738540092)
 
@@ -148,7 +149,7 @@ class Roles(Cog):
         embed = Embed(
             title=role.name,
             color=member.color,
-            description=f"{member.display_name} is looking " "to RP with their registered character(s).",
+            description=f"{member.display_name} is looking to RP with their registered character(s).",
             timestamp=utcnow(),
         )
         embed.set_thumbnail(url=member.display_avatar.url)
@@ -165,7 +166,10 @@ class Roles(Cog):
 
         async with self.bot.database() as db:
             await db.execute(
-                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
+                """--sql
+                INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER)
+                VALUES ($1, $2, $3, $4);
+                """,
                 msg.id,
                 member.id,
                 role.id,

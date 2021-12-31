@@ -211,22 +211,28 @@ class Simple(Basic):
                 name, value = self.parser(item)
                 self.embed.add_field(name=name, value=value, inline=self._inline)
 
-    async def edit(self, page: int) -> None:
+    async def edit(self, page: Optional[int] = None) -> None:
         """This method edits the pagination's page given an index.
 
         Parameters
         ----------
-        page : int
-            page's index
+        page : int, optional
+            page's index, defaults to None
         """
-        self._pos = page
-        self.menu_format()
         try:
-            if message := self.message:
-                await message.edit(embed=self._embed, view=self)
+            if isinstance(page, int):
+                self._pos = page
+                self.menu_format()
+                if message := self.message:
+                    await message.edit(embed=self._embed, view=self)
+                elif isinstance(target := self.target, Interaction):
+                    if message := await target.original_message():
+                        await message.edit(embed=self._embed, view=self)
+            elif message := self.message:
+                await message.edit(embed=self._embed, view=None)
             elif isinstance(target := self.target, Interaction):
                 if message := await target.original_message():
-                    await message.edit(embed=self._embed, view=self)
+                    await message.edit(embed=self._embed, view=None)
         except DiscordException as e:
             self.bot.logger.exception(
                 "Exception while editing view %s",

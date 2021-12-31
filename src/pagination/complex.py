@@ -245,14 +245,14 @@ class Complex(Simple):
                 default=True,
             )
 
-    async def edit(self, page: int) -> None:
+    async def edit(self, page: Optional[int] = None) -> None:
         """
         Method used to edit the pagination
 
         Parameters
         ----------
-        page: int
-            Page to be accessed.
+        page: int, optional
+            Page to be accessed, defaults to None
         """
         amount = len(self._choices or set())
         if amount < self._max_values:

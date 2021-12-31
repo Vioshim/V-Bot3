@@ -72,11 +72,10 @@ class CharacterHandlerView(Complex):
         )
         await resp.send_message(embed=data[0].embed, view=view, ephemeral=True)
         await view.wait()
-        await self.message.edit(content="Process concluded.", view=None)
         with suppress(DiscordException):
-            await interaction.edit_original_message(
-                embed=data[0].embed, view=None
-            )
+            await self.edit(page=None)
+        with suppress(DiscordException):
+            await interaction.edit_original_message(embed=data[0].embed, view=None)
 
 
 class SubmissionView(View):

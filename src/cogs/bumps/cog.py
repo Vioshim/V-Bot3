@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from apscheduler.enums import ConflictPolicy
+from apscheduler.triggers.date import DateTrigger
 from discord import Message
 from discord.ext.commands import Cog
 
-from src.cogs.bumps.bumps import BumpsEnum, PingBump
+from src.cogs.bumps.bumps import BUMPS, PingBump
 from src.structures.bot import CustomBot
 
 
@@ -39,12 +41,19 @@ class Bump(Cog):
         if not (ctx.author.bot and ctx.embeds):
             return
 
-        for item in BumpsEnum:
+        if item := BUMPS.get(ctx.author.id):
+            self.bot.msg_cache_add(ctx)
+            bump = PingBump(ctx, item)
             if item.on_message(ctx):
-                bump = PingBump(ctx, item.value)
-                self.bot.msg_cache_add(ctx)
                 await ctx.delete()
                 await bump.send()
+            elif date := bump.date:
+                await self.bot.scheduler.add_schedule(
+                    bump.send,
+                    trigger=DateTrigger(date),
+                    id=f"Bump[{ctx.id}]",
+                    conflict_policy=ConflictPolicy.replace,
+                )
 
     @Cog.listener()
     async def on_message_edit(self, before: Message, after: Message):
@@ -61,12 +70,19 @@ class Bump(Cog):
         if not (after.author.bot and after.embeds):
             return
 
-        for item in BumpsEnum:
+        if item := BUMPS.get(after.author.id):
+            self.bot.msg_cache_add(after)
+            bump = PingBump(after, item)
             if item.on_message_edit(before, after):
-                bump = PingBump(after, item.value)
-                self.bot.msg_cache_add(after)
                 await after.delete()
                 await bump.send()
+            elif date := bump.date:
+                await self.bot.scheduler.add_schedule(
+                    bump.send,
+                    trigger=DateTrigger(date),
+                    id=f"Bump[{after.id}]",
+                    conflict_policy=ConflictPolicy.replace,
+                )
 
 
 def setup(bot: CustomBot) -> None:
