@@ -67,7 +67,7 @@ def wrap_session(
     @wraps(func)
     async def wrapper() -> None:
         """Function Wrapper"""
-        async with AsyncScheduler(logger=logger) as scheduler:
+        async with AsyncScheduler() as scheduler:
             async with create_pool(getenv("POSTGRES_POOL_URI")) as pool:
                 await func(pool=pool, scheduler=scheduler)
 
