@@ -93,7 +93,9 @@ class Bump(metaclass=ABCMeta):
                 value=f"> If you like the server, "
                 f"feel free to let us know your opinion by rating/reviewing the server in {self.name}.",
             )
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
+        embed.set_author(
+            name=ctx.author.display_name, icon_url=ctx.author.avatar.url
+        )
         if guild := ctx.guild:
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         return embed
@@ -128,16 +130,19 @@ class PingBump(View):
             embed=self.embed,
             view=self,
         )
-        await self.wait()
 
     @button(emoji="a:SZD_desk_bell:769116713639215124")
     async def reminder(self, _: Button, inter: Interaction) -> None:
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)
-            return await resp.send_message("Alright, you won't get notified", ephemeral=True)
+            return await resp.send_message(
+                "Alright, you won't get notified", ephemeral=True
+            )
         self.mentions.add(inter.user)
-        return await resp.send_message("Alright, you will get notified", ephemeral=True)
+        return await resp.send_message(
+            "Alright, you will get notified", ephemeral=True
+        )
 
     async def on_timeout(self) -> None:
         text = f"**Bump Reminder (Prefix is {self.prefix}):**\n"
@@ -146,7 +151,8 @@ class PingBump(View):
             text += f"Notifying: {mentions}"
         self.mentions.clear()
         self.reminder.disabled = True
-        await self.message.edit(view=self)
+        if message := self.message:
+            await message.edit(view=self)
         await channel.send(
             content=text,
             allowed_mentions=AllowedMentions(users=True),

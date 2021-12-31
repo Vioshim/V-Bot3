@@ -76,9 +76,10 @@ class Bump(Cog):
             if item.on_message_edit(before, after):
                 await after.delete()
                 await bump.send()
+                await bump.wait()
             elif date := bump.date:
                 await self.bot.scheduler.add_schedule(
-                    bump.send,
+                    bump.on_timeout,
                     trigger=DateTrigger(date),
                     id=f"Bump[{after.id}]",
                     conflict_policy=ConflictPolicy.replace,
