@@ -267,7 +267,9 @@ class Basic(Generic[_M], View):
     async def delete(self) -> None:
         """This method deletes the view, and stops it."""
         try:
-            if message := self.message:
+            if isinstance(target := self.target, Interaction):
+                await target.delete_original_message()
+            elif message := self.message:
                 await message.delete()
             self.message = None
         except NotFound:
