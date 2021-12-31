@@ -29,12 +29,9 @@ from discord.utils import format_dt, utcnow
 from mystbin import Client as MystBinClient
 from orjson import dumps
 
-from src.structures.logger import ColoredLogger
+from logging import Logger
 
 __all__ = ("CustomBot",)
-
-setLoggerClass(ColoredLogger)
-
 
 class CustomBot(Bot):
     """
@@ -64,15 +61,20 @@ class CustomBot(Bot):
         Soon to be patched
         """
 
-    def __init__(self, **options):
+    def __init__(
+        self, 
+        scheduler: AsyncScheduler,
+        pool: Pool,
+        logger: Logger,
+        **options,
+    ):
         super().__init__(**options)
-        self.logger = getLogger(__name__)
-        self.scheduler: AsyncScheduler = options.pop("scheduler")
-        # noinspection PyTypeChecker
+        self.scheduler = scheduler
+        self.pool = pool
+        self.logger = logger
         self.session = ClientSession(json_serialize=dumps)
         self.m_bin = MystBinClient(session=self.session)
         self.start_time = utcnow()
-        self.pool: Pool = options.pop("pool")
         self.msg_cache: set[int] = set()
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
 

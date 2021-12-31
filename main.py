@@ -13,8 +13,9 @@
 # limitations under the License.
 
 
-from asyncio import run, set_event_loop_policy
+from asyncio import run
 from functools import wraps
+from logging import getLogger, setLoggerClass
 from os import getenv
 from os import name as system_os
 from typing import Any, Callable, Coroutine
@@ -28,19 +29,27 @@ from dotenv import load_dotenv
 
 from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
+from src.structures.logger import ColoredLogger
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 if system_os != "nt":
-    # noinspection PyUnresolvedReferences,PyPackageRequirements
     from uvloop import EventLoopPolicy
+    from asyncio import set_event_loop_policy
 
     set_event_loop_policy(EventLoopPolicy())
+    logger.info("Using uvloop")
 else:
-    print("Unable to use uvloop in Windows")
+    logger.info("Unable to use uvloop in Windows")
 
 load_dotenv()
 
 
-def wrap_session(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[[], Coroutine[Any, Any, None]]:
+def wrap_session(
+    func: Callable[..., Coroutine[Any, Any, None]]
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Bot wrapper, this allows the bot to start up
     its asynchronous methods
 
@@ -58,7 +67,7 @@ def wrap_session(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[[],
     @wraps(func)
     async def wrapper() -> None:
         """Function Wrapper"""
-        async with AsyncScheduler() as scheduler:
+        async with AsyncScheduler(logger=logger) as scheduler:
             async with create_pool(getenv("POSTGRES_POOL_URI")) as pool:
                 await func(pool=pool, scheduler=scheduler)
 
@@ -96,7 +105,9 @@ EXCEPTIONS = {
 
 
 @wrap_session
-async def main(pool: Pool, scheduler: AsyncScheduler) -> None:  # , scheduler: AsyncScheduler) -> None:
+async def main(
+    pool: Pool, scheduler: AsyncScheduler
+) -> None:  # , scheduler: AsyncScheduler) -> None:
     """Main Execution function
 
     Parameters
@@ -106,27 +117,30 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:  # , scheduler: A
     scheduler : AsyncScheduler
         scheduler
     """
-    bot = CustomBot(
-        pool=pool,
-        command_prefix=when_mentioned_or("?"),
-        scheduler=scheduler,
-        description="This is Vioshim's bot",
-        command_attrs=dict(hidden=True),
-        case_insensitive=True,
-        help_command=CustomHelp(),
-        owner_ids={678374009045254198},
-        allowed_mentions=MENTIONS,
-        intents=INTENTS,
-    )
     try:
+        bot = CustomBot(
+            scheduler=scheduler,
+            pool=pool,
+            logger=logger,
+            command_prefix=when_mentioned_or("?"),
+            description="This is Vioshim's bot",
+            command_attrs=dict(hidden=True),
+            case_insensitive=True,
+            help_command=CustomHelp(),
+            owner_ids={678374009045254198},
+            allowed_mentions=MENTIONS,
+            intents=INTENTS,
+        )
         bot.load_extension("jishaku")
         for cog in COGS:
             bot.load_extension(f"src.cogs.{cog}.cog")
-            bot.logger.info("Successfully loaded %s", cog)
+            logger.info("Successfully loaded %s", cog)
         await bot.start(getenv("DISCORD_TOKEN"))
     except Exception as e:
-        msg = EXCEPTIONS.get(type(e), "An exception occurred while trying to connect")
-        bot.logger.critical(msg=msg, exc_info=e)
+        msg = EXCEPTIONS.get(
+            type(e), "An exception occurred while trying to connect"
+        )
+        logger.critical(msg=msg, exc_info=e)
 
 
 if __name__ == "__main__":
