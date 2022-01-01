@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path
+from os import path, remove
 from re import IGNORECASE, compile, escape
 from unicodedata import name as u_name
 
@@ -163,6 +163,8 @@ class Utilities(Cog):
                 f.write(file.fp.getbuffer())
             result = detect.detect(file.filename, mode="fase")
             await ctx.reply(str(result))
+            if path.exists(file.filename):
+                remove(file.filename)
 
     @command()
     async def charinfo(self, ctx: Context, *, characters: str):
