@@ -18,11 +18,12 @@ from unicodedata import name as u_name
 
 from d20 import MarkdownStringifier, RollSyntaxError, roll
 from d20.utils import simplify_expr
-from discord import Embed, HTTPException, Option, OptionChoice
-from discord.commands import slash_command
+from discord import Embed, HTTPException, Option, OptionChoice, slash_command
 from discord.commands.permissions import is_owner
 from discord.ext.commands import Cog, command
+from discord.ext.commands import is_owner as cmd_is_owner
 from discord.utils import utcnow
+from nudenet.detector import Detector
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.context import ApplicationContext, Context
@@ -154,6 +155,16 @@ class Utilities(Cog):
         await ctx.send_followup(embed=e)
 
     @command()
+    @cmd_is_owner()
+    async def check_sus(self, ctx: Context, url: str):
+        detect = Detector()
+        if file := await ctx.bot.get_file(url):
+            with open(file.filename, "wb") as f:
+                f.write(file.fp.getbuffer())
+            result = detect.detect(file.filename, mode="fase")
+            await ctx.reply(str(result))
+
+    @command()
     async def charinfo(self, ctx: Context, *, characters: str):
         """Shows you information about a number of characters.
         Only up to 25 characters at a time.
@@ -196,7 +207,6 @@ class Utilities(Cog):
         ctx: ApplicationContext,
         key: Option(
             str,
-            description="Site",
             required=False,
             choices=[
                 OptionChoice(

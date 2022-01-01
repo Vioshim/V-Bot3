@@ -30,7 +30,6 @@ from discord import (
     Member,
     Message,
     MessageReference,
-    NotFound,
     PartialMessage,
     StickerItem,
     User,

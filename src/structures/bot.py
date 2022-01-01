@@ -14,7 +14,7 @@
 
 from contextlib import asynccontextmanager
 from io import BytesIO
-from logging import getLogger, setLoggerClass
+from logging import Logger
 from os import getenv
 from typing import Literal, Optional, Union
 
@@ -22,16 +22,23 @@ from aiohttp import ClientSession
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncdagpi import Client as DagpiClient
 from asyncpg import Connection, Pool
-from discord import Embed, File, Message, PartialMessage, TextChannel, Thread, Webhook
+from discord import (
+    Embed,
+    File,
+    Message,
+    PartialMessage,
+    TextChannel,
+    Thread,
+    Webhook,
+)
 from discord.abc import Messageable
 from discord.ext.commands import Bot
 from discord.utils import format_dt, utcnow
 from mystbin import Client as MystBinClient
 from orjson import dumps
 
-from logging import Logger
-
 __all__ = ("CustomBot",)
+
 
 class CustomBot(Bot):
     """
@@ -62,7 +69,7 @@ class CustomBot(Bot):
         """
 
     def __init__(
-        self, 
+        self,
         scheduler: AsyncScheduler,
         pool: Pool,
         logger: Logger,
@@ -72,7 +79,10 @@ class CustomBot(Bot):
         self.scheduler = scheduler
         self.pool = pool
         self.logger = logger
-        self.session = ClientSession(json_serialize=dumps)
+        self.session = ClientSession(
+            json_serialize=dumps,
+            raise_for_status=True,
+        )
         self.m_bin = MystBinClient(session=self.session)
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
@@ -92,7 +102,9 @@ class CustomBot(Bot):
             self.msg_cache.add(message.id)
 
     async def embed_raw(
-        self, embed: Embed, *exclude: Literal["thumbnail", "author", "footer", "image"]
+        self,
+        embed: Embed,
+        *exclude: Literal["thumbnail", "author", "footer", "image"],
     ) -> tuple[list[File], Embed]:
         """Asynchronous function for fetching files of an embed,
         and attached to itself
@@ -149,7 +161,9 @@ class CustomBot(Bot):
                 name=embed.author.name,
                 url=embed.author.url,
             ),
-            footer=wrapper(func=embed.set_footer, arg="icon_url", text=embed.footer.text),
+            footer=wrapper(
+                func=embed.set_footer, arg="icon_url", text=embed.footer.text
+            ),
         )
         for item in set(properties) - set(exclude):
             if image := properties[item]:
@@ -162,7 +176,12 @@ class CustomBot(Bot):
 
         return files, embed
 
-    async def get_file(self, url: str, filename: str = None, spoiler: bool = False) -> Optional[File]:
+    async def get_file(
+        self,
+        url: str,
+        filename: str = None,
+        spoiler: bool = False,
+    ) -> Optional[File]:
         """Early Implementation of an image downloader with size specified
 
         Parameters
@@ -185,8 +204,14 @@ class CustomBot(Bot):
                 fp = BytesIO(data)
                 text = resp.content_type.split("/")
                 if filename:
-                    return File(fp=fp, filename=f"{filename}.{text[-1]}", spoiler=spoiler)
-                return File(fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler)
+                    return File(
+                        fp=fp,
+                        filename=f"{filename}.{text[-1]}",
+                        spoiler=spoiler,
+                    )
+                return File(
+                    fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler
+                )
 
     # noinspection PyBroadException
     @asynccontextmanager
@@ -194,7 +219,9 @@ class CustomBot(Bot):
         self,
         *,
         timeout: float = None,
-        isolation: Literal["read_committed", "serializable", "repeatable_read"] = None,
+        isolation: Literal[
+            "read_committed", "serializable", "repeatable_read"
+        ] = None,
         readonly: bool = False,
         deferrable: bool = False,
         raise_on_error: bool = False,
@@ -220,12 +247,16 @@ class CustomBot(Bot):
             Connection
         """
         connection: Connection = await self.pool.acquire(timeout=timeout)
-        transaction = connection.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable)
+        transaction = connection.transaction(
+            isolation=isolation, readonly=readonly, deferrable=deferrable
+        )
         await transaction.start()
         try:
             yield connection
         except Exception as e:
-            self.logger.exception("An exception occurred in the transaction", exc_info=e)
+            self.logger.exception(
+                "An exception occurred in the transaction", exc_info=e
+            )
             if not connection.is_closed():
                 await transaction.rollback()
             if raise_on_error:
@@ -237,7 +268,9 @@ class CustomBot(Bot):
             await self.pool.release(connection)
 
     # noinspection PyTypeChecker
-    async def webhook(self, channel: Union[Messageable, int], *, reason: str = None) -> Webhook:
+    async def webhook(
+        self, channel: Union[Messageable, int], *, reason: str = None
+    ) -> Webhook:
         """Function which returns first webhook of a
         channel creates one if there's no webhook
 
@@ -262,7 +295,9 @@ class CustomBot(Bot):
             if item.user == self.user:
                 return item
         image = await self.user.display_avatar.read()
-        return await channel.create_webhook(name=self.user.display_name, avatar=image, reason=reason)
+        return await channel.create_webhook(
+            name=self.user.display_name, avatar=image, reason=reason
+        )
 
     def __repr__(self) -> str:
         """Representation of V-Bot
