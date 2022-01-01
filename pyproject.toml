@@ -33,7 +33,6 @@ py-cord = {git = "https://github.com/Pycord-Development/pycord.git", extras = ["
 aiohttp = "^3.8.1"
 apscheduler = {git = "https://github.com/agronholm/apscheduler.git"}
 jishaku = "^2.3.2"
-NudeNet = "^2.0.9"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
