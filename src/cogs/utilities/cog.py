@@ -14,17 +14,18 @@
 
 from os import path
 from re import IGNORECASE, compile, escape
+from unicodedata import name as u_name
 
 from d20 import MarkdownStringifier, RollSyntaxError, roll
 from d20.utils import simplify_expr
-from discord import Embed, HTTPException, Member, Option, OptionChoice
-from discord.commands import slash_command
+from discord import Embed, HTTPException, Option, OptionChoice
+from discord.commands import command, slash_command
 from discord.commands.permissions import is_owner
 from discord.ext.commands import Cog
 from discord.utils import utcnow
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
-from src.context import ApplicationContext
+from src.context import ApplicationContext, Context
 from src.enums.moves import Moves
 from src.structures.bot import CustomBot
 from src.structures.move import Move
@@ -138,15 +139,52 @@ class Utilities(Cog):
 
         cache = list(self._rtfm_cache[key].items())
 
-        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
+        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[
+            :8
+        ]
 
         e = Embed(colour=0x05FFF0)
         e.set_image(url=WHITE_BAR)
         if len(self.matches) == 0:
             return await ctx.send_followup("Could not find anything. Sorry.")
-        
-        e.description = "\n".join(f"[`{key}`]({url})" for key, url in self.matches)
+
+        e.description = "\n".join(
+            f"[`{key}`]({url})" for key, url in self.matches
+        )
         await ctx.send_followup(embed=e)
+
+    @command()
+    async def charinfo(self, ctx: Context, *, characters: str):
+        """Shows you information about a number of characters.
+        Only up to 25 characters at a time.
+        """
+
+        def to_string(c: str) -> str:
+            """To String Method
+
+            Parameters
+            ----------
+            c : str
+                Character
+
+            Returns
+            -------
+            str
+                Parameters
+            """
+            digit = f"{ord(c):x}"
+            name = u_name(c, "Name not found.")
+            # noinspection HttpUrlsUsage
+            return (
+                f"`\\U{digit:>08}`: {name} - {c}"
+                " \N{EM DASH} "
+                f"<http://www.fileformat.info/info/unicode/char/{digit}>"
+            )
+
+        msg = "\n".join(map(to_string, characters))
+        if len(msg) > 2000:
+            return await ctx.send("Output too long to display.")
+        await ctx.send(msg)
 
     @slash_command(
         guild_ids=[719343092963999804],
