@@ -268,7 +268,7 @@ class Basic(Generic[_M], View):
         """This method deletes the view, and stops it."""
         try:
             if isinstance(target := self.target, Interaction):
-                await target.delete_original_message()
+                await target.edit_original_message(view=None)
             elif message := self.message:
                 await message.delete()
             self.message = None
