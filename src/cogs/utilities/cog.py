@@ -19,9 +19,9 @@ from unicodedata import name as u_name
 from d20 import MarkdownStringifier, RollSyntaxError, roll
 from d20.utils import simplify_expr
 from discord import Embed, HTTPException, Option, OptionChoice
-from discord.commands import command, slash_command
+from discord.commands import slash_command
 from discord.commands.permissions import is_owner
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, command
 from discord.utils import utcnow
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
