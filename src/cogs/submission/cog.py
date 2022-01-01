@@ -56,12 +56,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
@@ -81,6 +76,7 @@ def oc_autocomplete(ctx: AutocompleteContext):
     member_id = ctx.options.get("member", ctx.interaction.user.id)
     cog: Submission = ctx.bot.get_cog("Submission")
     text: str = ctx.value or ""
+    ctx.bot.logger.info(member_id)
     ocs = cog.rpers.get(member_id, {}).values()
     ctx.bot.logger.info(str(ocs))
     return [
