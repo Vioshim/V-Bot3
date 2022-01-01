@@ -154,6 +154,7 @@ class Utilities(Cog):
         await ctx.send_followup(embed=e)
 
     @slash_command(
+        guild_ids=[719343092963999804],
         description="Executes a manual query",
     )
     @is_owner()
