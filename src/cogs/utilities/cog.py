@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path, remove
+from os import path
 from re import IGNORECASE, compile, escape
 from unicodedata import name as u_name
 
@@ -21,9 +21,7 @@ from d20.utils import simplify_expr
 from discord import Embed, HTTPException, Option, OptionChoice, slash_command
 from discord.commands.permissions import is_owner
 from discord.ext.commands import Cog, command
-from discord.ext.commands import is_owner as cmd_is_owner
 from discord.utils import utcnow
-from nudenet import NudeDetector
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.context import ApplicationContext, Context
@@ -153,18 +151,6 @@ class Utilities(Cog):
             f"[`{key}`]({url})" for key, url in self.matches
         )
         await ctx.send_followup(embed=e)
-
-    @command()
-    @cmd_is_owner()
-    async def check_sus(self, ctx: Context, url: str):
-        detect = NudeDetector()
-        if file := await ctx.bot.get_file(url):
-            with open(file.filename, "wb") as f:
-                f.write(file.fp.getbuffer())
-            result = detect.detect(file.filename, mode="fast")
-            await ctx.reply(str(result))
-            if path.exists(file.filename):
-                remove(file.filename)
 
     @command()
     async def charinfo(self, ctx: Context, *, characters: str):
