@@ -77,13 +77,8 @@ from src.views import (
 
 
 async def oc_autocomplete(ctx: AutocompleteContext):
-    member = ctx.options.get("member", ctx.interaction.user.id)
-    if hasattr(member, "id"):
-        ctx.bot.logger.info("Classes")
-        member = member.id
-    else:
-        ctx.bot.logger.info("Ints")
-    ocs: list[Character] = ctx.bot.cog("Submission").rpers.get(member, {}).values()
+    member_id = ctx.options.get("member", ctx.interaction.user.id)
+    ocs: list[Character] = ctx.bot.get_cog("Submission").rpers.get(member_id, {}).values()
     entries = []
     text: str = ctx.value or ""
     for oc in ocs:
