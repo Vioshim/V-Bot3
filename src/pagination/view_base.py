@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Generic, Optional, TypeVar, Union
+from contextlib import suppress
 
 from discord import (
     AllowedMentions,
@@ -266,22 +267,13 @@ class Basic(Generic[_M], View):
 
     async def delete(self) -> None:
         """This method deletes the view, and stops it."""
-        try:
+        with suppress(DiscordException):
             if isinstance(target := self.target, Interaction):
                 await target.edit_original_message(view=None)
             elif message := self.message:
                 await message.delete()
-            self.message = None
-        except NotFound:
-            return
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Exception occurred while deleting %s",
-                self.message.jump_url,
-                exc_info=e,
-            )
-        finally:
-            return self.stop()
+        self.message = None
+        return self.stop()
 
     async def on_timeout(self) -> None:
         await self.delete()
