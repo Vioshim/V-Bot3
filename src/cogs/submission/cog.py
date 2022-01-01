@@ -78,12 +78,11 @@ from src.views import (
 
 
 def oc_autocomplete(ctx: AutocompleteContext):
-    member_id = ctx.options.get("member") or ctx.interaction.user.id
+    member_id = ctx.options.get("member") or ctx.interaction.user
+    member_id = getattr(member_id, "id", member_id)
     cog: Submission = ctx.bot.get_cog("Submission")
     text: str = ctx.value or ""
-    ctx.bot.logger.info(member_id)
     ocs = cog.rpers.get(member_id, {}).values()
-    ctx.bot.logger.info(str(cog.rpers))
     return [
         OptionChoice(name=oc.name, value=str(oc.id))
         for oc in ocs
