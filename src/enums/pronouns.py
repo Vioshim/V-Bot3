@@ -67,7 +67,10 @@ class Pronoun(Enum):
         emoji="\N{FEMALE SIGN}",
         role_id=738230653916807199,
     )
-    Them = PronounItem(role_id=874721683381030973)
+    Them = PronounItem(
+        emoji="\N{BLACK SQUARE BUTTON}",
+        role_id=874721683381030973,
+    )
 
     @classmethod
     def deduce(cls, item: str) -> Pronoun:
