@@ -23,7 +23,7 @@ from discord.commands.permissions import is_owner
 from discord.ext.commands import Cog, command
 from discord.ext.commands import is_owner as cmd_is_owner
 from discord.utils import utcnow
-from nudenet.detector import Detector
+from nudenet import NudeDetector
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.context import ApplicationContext, Context
@@ -157,11 +157,11 @@ class Utilities(Cog):
     @command()
     @cmd_is_owner()
     async def check_sus(self, ctx: Context, url: str):
-        detect = Detector()
+        detect = NudeDetector()
         if file := await ctx.bot.get_file(url):
             with open(file.filename, "wb") as f:
                 f.write(file.fp.getbuffer())
-            result = detect.detect(file.filename, mode="fase")
+            result = detect.detect(file.filename, mode="fast")
             await ctx.reply(str(result))
             if path.exists(file.filename):
                 remove(file.filename)
