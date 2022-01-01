@@ -31,11 +31,12 @@ from discord import (
     Member,
     Message,
     Option,
+    OptionChoice,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     Status,
     TextChannel,
-    Thread,OptionChoice,
+    Thread,
     WebhookMessage,
 )
 from discord.commands import has_role, slash_command
@@ -55,12 +56,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
@@ -76,16 +72,15 @@ from src.views import (
 )
 
 
-async def oc_autocomplete(ctx: AutocompleteContext):
+def oc_autocomplete(ctx: AutocompleteContext):
     member_id = ctx.options.get("member", ctx.interaction.user.id)
-    ocs: list[Character] = ctx.bot.get_cog("Submission").rpers.get(member_id, {}).values()
-    entries = []
+    cog: Submission = ctx.bot.get_cog("Submission")
     text: str = ctx.value or ""
-    for oc in ocs:
-        choice = OptionChoice(name=oc.name, value=str(oc.id))
-        if oc.name.startswith(text.title()):
-            entries.append(choice)
-    return entries
+    return [
+        OptionChoice(name=oc.name, value=str(oc.id))
+        for oc in cog.rpers.get(member_id, {}).values()
+        if oc.name.startswith(text.title())
+    ]
 
 
 class Submission(Cog):
@@ -111,7 +106,7 @@ class Submission(Cog):
         member: Option(
             Member,
             description="User to register",
-        )
+        ),
     ) -> None:
         """Register Command
 
@@ -596,7 +591,7 @@ class Submission(Cog):
         if member is None:
             member: Member = ctx.author
         await ctx.defer(ephemeral=True)
-        if character and (oc := self.ocs.get(int(character))):
+        if (character or "").isdigit() and (oc := self.ocs.get(int(character))):
             return await ctx.send_followup(embed=oc.embed)
         if ocs := self.rpers.get(member.id, {}).values():
             view = CharactersView(
