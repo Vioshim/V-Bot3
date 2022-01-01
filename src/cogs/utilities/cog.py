@@ -130,8 +130,7 @@ class Utilities(Cog):
     async def do_rtfm(self, ctx: ApplicationContext, key: str, obj: str):
 
         if obj is None:
-            await ctx.send(PAGE_TYPES[key])
-            return
+            return await ctx.send_followup(PAGE_TYPES[key])
 
         if not self._rtfm_cache:
             await ctx.trigger_typing()
@@ -146,7 +145,7 @@ class Utilities(Cog):
         e = Embed(colour=0x05FFF0)
         e.set_thumbnail(url="https://i.imgur.com/hTC4xoX.gif")
         if len(self.matches) == 0:
-            return await ctx.send("Could not find anything. Sorry.")
+            return await ctx.send_followup("Could not find anything. Sorry.")
 
         e.description = "\n".join(
             f"[`{key}`]({url})" for key, url in self.matches
