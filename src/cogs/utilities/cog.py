@@ -138,18 +138,14 @@ class Utilities(Cog):
 
         cache = list(self._rtfm_cache[key].items())
 
-        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[
-            :8
-        ]
+        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
 
         e = Embed(colour=0x05FFF0)
-        e.set_thumbnail(url="https://i.imgur.com/hTC4xoX.gif")
+        e.set_image(url=WHITE_BAR)
         if len(self.matches) == 0:
             return await ctx.send_followup("Could not find anything. Sorry.")
-
-        e.description = "\n".join(
-            f"[`{key}`]({url})" for key, url in self.matches
-        )
+        
+        e.description = "\n".join(f"[`{key}`]({url})" for key, url in self.matches)
         await ctx.send_followup(embed=e)
 
     @slash_command(
