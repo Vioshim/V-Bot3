@@ -73,9 +73,7 @@ from src.views import (
 
 
 def oc_autocomplete(ctx: AutocompleteContext):
-    member_id = ctx.options.get("member") or ctx.interaction.user
-    member_id = getattr(member_id, "id", member_id)
-    ctx.bot.logger.info(str(type(member_id)))
+    member_id = int(ctx.options.get("member") or ctx.interaction.user.id)
     cog: Submission = ctx.bot.get_cog("Submission")
     text: str = ctx.value or ""
     ocs = cog.rpers.get(member_id, {}).values()
