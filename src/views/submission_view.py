@@ -75,7 +75,9 @@ class CharacterHandlerView(Complex):
         with suppress(DiscordException):
             await self.edit(page=None)
         with suppress(DiscordException):
-            await interaction.edit_original_message(embed=data[0].embed, view=None)
+            await interaction.edit_original_message(
+                embed=data[0].embed, view=None
+            )
 
 
 class SubmissionView(View):
@@ -184,7 +186,6 @@ class SubmissionView(View):
                 repr(oc),
                 oc.name,
             )
-        await view.wait()
 
     @button(
         label="Create Mission",
