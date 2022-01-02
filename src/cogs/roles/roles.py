@@ -169,7 +169,9 @@ async def required_role_menu(
         else:
             await member.add_roles(selected, reason="Self Roles")
             return await resp.send_message(f"Role {selected.mention} added", ephemeral=True)
-    return await resp.send_message(f"You need {required.mention} to use this role. Make a Character at <#852180971985043466>", ephemeral=True)
+    return await resp.send_message(
+        f"You need {required.mention} to use this role. Make a Character at <#852180971985043466>", ephemeral=True
+    )
 
 
 PRONOUN_ROLES = dict(
@@ -515,7 +517,13 @@ class RoleManage(View):
         embed.set_thumbnail(url=self.member.display_avatar.url)
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
-                self.bot.logger.info("User %s is currently reading %s's character %s [%s]", str(ctx.user), str(self.member), data.name, repr(data))
+                self.bot.logger.info(
+                    "User %s is currently reading %s's character %s [%s]",
+                    str(ctx.user),
+                    str(self.member),
+                    data.name,
+                    repr(data),
+                )
 
 
 class RoleButton(Button):

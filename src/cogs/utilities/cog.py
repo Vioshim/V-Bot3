@@ -84,9 +84,7 @@ class Utilities(Cog):
 
         line = stream.readline()
         if "zlib" not in line:
-            raise RuntimeError(
-                "Invalid objects.inv file, not z-lib compatible."
-            )
+            raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
         entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
@@ -118,9 +116,7 @@ class Utilities(Cog):
         for key, page in page_types.items():
             async with self.bot.session.get(page + "/objects.inv") as resp:
                 if resp.status != 200:
-                    raise RuntimeError(
-                        "Cannot build rtfm lookup table, try again later."
-                    )
+                    raise RuntimeError("Cannot build rtfm lookup table, try again later.")
 
                 stream = SphinxObjectFileReader(await resp.read())
                 cache[key] = self.parse_object_inv(stream, page)
@@ -138,18 +134,14 @@ class Utilities(Cog):
 
         cache = list(self._rtfm_cache[key].items())
 
-        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[
-            :8
-        ]
+        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
 
         e = Embed(colour=0x05FFF0)
         e.set_image(url=WHITE_BAR)
         if len(self.matches) == 0:
             return await ctx.send_followup("Could not find anything. Sorry.")
 
-        e.description = "\n".join(
-            f"[`{key}`]({url})" for key, url in self.matches
-        )
+        e.description = "\n".join(f"[`{key}`]({url})" for key, url in self.matches)
         await ctx.send_followup(embed=e)
 
     @command()

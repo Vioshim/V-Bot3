@@ -75,9 +75,7 @@ class CharacterHandlerView(Complex):
         with suppress(DiscordException):
             await self.edit(page=None)
         with suppress(DiscordException):
-            await interaction.edit_original_message(
-                embed=data[0].embed, view=None
-            )
+            await interaction.edit_original_message(embed=data[0].embed, view=None)
 
 
 class SubmissionView(View):
@@ -153,9 +151,7 @@ class SubmissionView(View):
 
         if channel.permissions_for(ctx.user).manage_messages:
             m = await channel.send("Mention the User")
-            aux: Message = await self.bot.wait_for(
-                "message", check=text_check(ctx)
-            )
+            aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
             self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
             await m.delete()
@@ -165,9 +161,7 @@ class SubmissionView(View):
             await aux.delete()
 
         if not (values := self.rpers.get(member.id, {}).values()):
-            return await ctx.followup.send(
-                "You don't have characters to modify", ephemeral=True
-            )
+            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
 
         view = CharacterHandlerView(
             bot=self.bot,
@@ -177,9 +171,7 @@ class SubmissionView(View):
         )
 
         oc: Type[Character]
-        async with view.send(
-            title="Select Character to modify", single=True
-        ) as oc:
+        async with view.send(title="Select Character to modify", single=True) as oc:
             self.bot.logger.info(
                 "%s is modifying a Character(%s) aka %s",
                 str(ctx.user),
@@ -199,13 +191,9 @@ class SubmissionView(View):
         role = guild.get_role(719642423327719434)
         resp: InteractionResponse = ctx.response
         if role not in ctx.user.roles:
-            await resp.send_message(
-                "You don't have a character registered", ephemeral=True
-            )
+            await resp.send_message("You don't have a character registered", ephemeral=True)
             return
-        locations: list[CategoryChannel] = [
-            guild.get_channel(item) for item in RP_CATEGORIES
-        ]
+        locations: list[CategoryChannel] = [guild.get_channel(item) for item in RP_CATEGORIES]
         view = ComplexInput(
             bot=self.bot,
             member=ctx.user,
@@ -226,12 +214,7 @@ class SubmissionView(View):
                 member=ctx.user,
                 target=ctx.channel,
                 values=[
-                    item
-                    for item in choice.channels
-                    if (
-                        "-ooc" not in item.name
-                        and isinstance(item, TextChannel)
-                    )
+                    item for item in choice.channels if ("-ooc" not in item.name and isinstance(item, TextChannel))
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
@@ -292,9 +275,7 @@ class SubmissionView(View):
                     parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
                     title="Mission's Difficulty",
                 )
-                async with view.send(
-                    title="Mission's difficulty", single=True
-                ) as item:
+                async with view.send(title="Mission's difficulty", single=True) as item:
                     if not item:
                         return
                     mission.difficulty = item

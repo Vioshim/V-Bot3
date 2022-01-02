@@ -77,11 +77,7 @@ def oc_autocomplete(ctx: AutocompleteContext):
     cog: Submission = ctx.bot.get_cog("Submission")
     text: str = ctx.value or ""
     ocs = cog.rpers.get(member_id, {}).values()
-    return [
-        OptionChoice(name=oc.name, value=str(oc.id))
-        for oc in ocs
-        if oc.name.startswith(text.title())
-    ]
+    return [OptionChoice(name=oc.name, value=str(oc.id)) for oc in ocs if oc.name.startswith(text.title())]
 
 
 class Submission(Cog):
@@ -125,15 +121,12 @@ class Submission(Cog):
         if role not in member.roles:
             await member.add_roles(role, reason=f"Registered by {author}")
             embed = Embed(
-                description="You can try to use /ping `<role>` for finding a RP. "
-                "(<#910914713234325504> also works)",
+                description="You can try to use /ping `<role>` for finding a RP. " "(<#910914713234325504> also works)",
                 colour=member.colour,
                 timestamp=utcnow(),
             )
             embed.set_image(url=REGISTERED_IMG)
-            embed.set_author(
-                name=author.display_name, icon_url=author.avatar.url
-            )
+            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
@@ -162,9 +155,7 @@ class Submission(Cog):
                 await member.send(embed=embed, files=files, view=view)
             await ctx.send_followup("User has been registered", ephemeral=True)
         else:
-            await ctx.send_followup(
-                "User is already registered", ephemeral=True
-            )
+            await ctx.send_followup("User is already registered", ephemeral=True)
 
     async def unclaiming(
         self,
@@ -227,9 +218,7 @@ class Submission(Cog):
             except DiscordException:
                 with suppress(DiscordException):
                     thread = await self.bot.fetch_channel(oc_list)
-                    await thread.delete(
-                        reason="Former OC List Message was removed."
-                    )
+                    await thread.delete(reason="Former OC List Message was removed.")
         message: WebhookMessage = await webhook.send(
             content=member.mention,
             wait=True,
@@ -253,9 +242,7 @@ class Submission(Cog):
                 guild.id,
             )
 
-    async def registration(
-        self, ctx: Union[Interaction, Message], oc: Type[Character]
-    ):
+    async def registration(self, ctx: Union[Interaction, Message], oc: Type[Character]):
         """This is the function which handles the registration process,
         it will try to autocomplete data it can deduce, or ask about what
         can not be deduced.
@@ -297,14 +284,8 @@ class Submission(Cog):
                         if not (stats := stats_view.choice):
                             return
                         species.set_stats(*stats.value)
-                if (
-                    sum(species.stats) > 18
-                    or min(species.stats) < 1
-                    or max(species.stats) > 5
-                ):
-                    await ctx.reply(
-                        "Max stats is 18. Min 1. Max 5", delete_after=5
-                    )
+                if sum(species.stats) > 18 or min(species.stats) < 1 or max(species.stats) > 5:
+                    await ctx.reply("Max stats is 18. Min 1. Max 5", delete_after=5)
                     return
                 if not 1 <= len(species.types) <= 2:
                     view = ComplexInput(
@@ -349,9 +330,7 @@ class Submission(Cog):
                             return
                         species.types = frozenset(types)
                 elif oc.types not in values:
-                    items = ", ".join(
-                        "/".join(i.name for i in item) for item in values
-                    ).title()
+                    items = ", ".join("/".join(i.name for i in item) for item in values).title()
                     await ctx.reply(
                         f"Invalid typing for the fusion, valid types are {items}",
                         delete_after=5,
@@ -366,11 +345,7 @@ class Submission(Cog):
                     ability_view = ComplexInput(
                         bot=self.bot,
                         member=user,
-                        values=(
-                            Abilities
-                            if oc.any_ability_at_first
-                            else oc.species.abilities
-                        ),
+                        values=(Abilities if oc.any_ability_at_first else oc.species.abilities),
                         target=ctx,
                         max_values=max_ab,
                         parser=lambda x: (x.value.name, x.value.description),
@@ -384,30 +359,19 @@ class Submission(Cog):
                             return
                         oc.abilities = frozenset(abilities)
             if len(oc.abilities) > max_ab:
-                await ctx.reply(
-                    f"Max Amount of Abilities for the current Species is {max_ab}"
-                )
+                await ctx.reply(f"Max Amount of Abilities for the current Species is {max_ab}")
                 return
             elif not oc.any_ability_at_first:
                 if ability_errors := [
-                    ability.value.name
-                    for ability in oc.abilities
-                    if ability not in species.abilities
+                    ability.value.name for ability in oc.abilities if ability not in species.abilities
                 ]:
                     text = ", ".join(ability_errors)
-                    await ctx.reply(
-                        f"the abilities [{text}] were not found in the species"
-                    )
+                    await ctx.reply(f"the abilities [{text}] were not found in the species")
                     return
 
             text_view = TextInput(bot=self.bot, member=user, target=ctx)
 
-            if (
-                not oc.sp_ability
-                and not oc.url
-                and oc.can_have_special_abilities
-                and len(oc.abilities) == 1
-            ):
+            if not oc.sp_ability and not oc.url and oc.can_have_special_abilities and len(oc.abilities) == 1:
                 bool_view = BooleanView(bot=self.bot, member=user, target=ctx)
                 async with bool_view.handle(
                     title="Does the character have an Special Ability?",
@@ -470,15 +434,9 @@ class Submission(Cog):
 
             if not oc.any_move_at_first:
                 moves_movepool = species.movepool()
-                if move_errors := [
-                    move.value.name
-                    for move in oc.moveset
-                    if move not in moves_movepool
-                ]:
+                if move_errors := [move.value.name for move in oc.moveset if move not in moves_movepool]:
                     text = ", ".join(move_errors)
-                    await ctx.reply(
-                        f"the moves [{text}] were not found in the movepool"
-                    )
+                    await ctx.reply(f"the moves [{text}] were not found in the movepool")
                     return
 
             if not oc.backstory:
@@ -533,9 +491,7 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
@@ -607,9 +563,7 @@ class Submission(Cog):
             embed.set_thumbnail(url=member.display_avatar.url)
             await ctx.send_followup(embed=embed, view=view, ephemeral=True)
         else:
-            await ctx.send_followup(
-                f"{member.mention} has no characters.", ephemeral=True
-            )
+            await ctx.send_followup(f"{member.mention} has no characters.", ephemeral=True)
 
     @Cog.listener()
     async def on_ready(self) -> None:
@@ -761,9 +715,7 @@ class Submission(Cog):
         if payload.parent_id != 919277769735680050:
             return
         if payload.thread_id in self.oc_list.values():
-            author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.message_id
-            ][0]
+            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
             async with self.bot.database() as db:
                 del self.oc_list[author_id]
                 await db.execute(
@@ -816,9 +768,7 @@ class Submission(Cog):
                 )
                 await oc.delete(db)
         if payload.message_id in self.oc_list.values():
-            author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.message_id
-            ][0]
+            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
             del self.oc_list[author_id]
             async with self.bot.database() as db:
                 for oc in self.rpers.pop(author_id, {}).values():
@@ -879,17 +829,14 @@ class Submission(Cog):
                         m = await channel.send("Mention the User")
                         aux: Message = await self.bot.wait_for(
                             "message",
-                            check=lambda m: m.channel == channel
-                            and m.author == author,
+                            check=lambda m: m.channel == channel and m.author == author,
                         )
                         self.bot.msg_cache_add(m)
                         self.bot.msg_cache_add(aux)
                         await m.delete()
                         context = await self.bot.get_context(aux)
                         converter = MemberConverter()
-                        author = await converter.convert(
-                            ctx=context, argument=aux.content
-                        )
+                        author = await converter.convert(ctx=context, argument=aux.content)
                         await aux.delete()
 
                     if images := message.attachments:
@@ -905,9 +852,7 @@ class Submission(Cog):
             except MarkedYAMLError:
                 return
             except Exception as e:
-                self.bot.logger.exception(
-                    "Exception processing character", exc_info=e
-                )
+                self.bot.logger.exception("Exception processing character", exc_info=e)
                 await message.reply(f"Exception:\n\n{e}", delete_after=10)
                 return
 
@@ -934,9 +879,7 @@ class Submission(Cog):
                 return False
 
             try:
-                msg: Message = await self.bot.wait_for(
-                    "message", check=checker, timeout=3
-                )
+                msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
                 self.bot.msg_cache_add(message)
 
                 if isinstance(channel := message.channel, TextChannel):
@@ -954,14 +897,10 @@ class Submission(Cog):
             except TimeoutError:
                 if not self.rpers.get(message.author.id):
                     role = message.guild.get_role(719642423327719434)
-                    await message.author.remove_roles(
-                        role, reason="Without OCs, user isn't registered."
-                    )
+                    await message.author.remove_roles(role, reason="Without OCs, user isn't registered.")
                     for cat_id in RP_CATEGORIES:
                         if ch := self.bot.get_channel(cat_id):
-                            await ch.set_permissions(
-                                message.author, overwrite=None
-                            )
+                            await ch.set_permissions(message.author, overwrite=None)
             else:
                 for item in self.rpers.get(message.author.id, {}).values():
                     if any(
@@ -971,9 +910,7 @@ class Submission(Cog):
                         )
                     ):
                         if item.location != msg.channel.id:
-                            former_channel = message.guild.get_channel(
-                                item.location
-                            )
+                            former_channel = message.guild.get_channel(item.location)
                             previous = self.located.get(item.location, set())
                             current = self.located.get(msg.channel.id, set())
                             if item in previous:
@@ -984,9 +921,7 @@ class Submission(Cog):
                             if len(previous) == 0:
                                 with suppress(Exception):
                                     await self.unclaiming(former_channel)
-                                    await self.bot.scheduler.remove_schedule(
-                                        f"RP[{former_channel.id}]"
-                                    )
+                                    await self.bot.scheduler.remove_schedule(f"RP[{former_channel.id}]")
 
                             async with self.bot.database() as db:
                                 item.location = msg.channel.id

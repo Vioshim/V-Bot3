@@ -332,18 +332,11 @@ class Variant(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return (
-            1
-            if Abilities.BEASTBOOST in self.abilities
-            else self.base.max_amount_abilities
-        )
+        return 1 if Abilities.BEASTBOOST in self.abilities else self.base.max_amount_abilities
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return (
-            Abilities.BEASTBOOST not in self.abilities
-            and self.base.can_have_special_abilities
-        )
+        return Abilities.BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
 
 
 @dataclass(unsafe_hash=True)

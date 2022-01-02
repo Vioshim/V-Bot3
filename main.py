@@ -47,9 +47,7 @@ else:
 load_dotenv()
 
 
-def wrap_session(
-    func: Callable[..., Coroutine[Any, Any, None]]
-) -> Callable[[], Coroutine[Any, Any, None]]:
+def wrap_session(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[[], Coroutine[Any, Any, None]]:
     """Bot wrapper, this allows the bot to start up
     its asynchronous methods
 
@@ -105,9 +103,7 @@ EXCEPTIONS = {
 
 
 @wrap_session
-async def main(
-    pool: Pool, scheduler: AsyncScheduler
-) -> None:  # , scheduler: AsyncScheduler) -> None:
+async def main(pool: Pool, scheduler: AsyncScheduler) -> None:  # , scheduler: AsyncScheduler) -> None:
     """Main Execution function
 
     Parameters
@@ -137,9 +133,7 @@ async def main(
             logger.info("Successfully loaded %s", cog)
         await bot.start(getenv("DISCORD_TOKEN"))
     except Exception as e:
-        msg = EXCEPTIONS.get(
-            type(e), "An exception occurred while trying to connect"
-        )
+        msg = EXCEPTIONS.get(type(e), "An exception occurred while trying to connect")
         logger.critical(msg=msg, exc_info=e)
 
 
