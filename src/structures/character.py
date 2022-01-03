@@ -153,7 +153,7 @@ class Character(metaclass=ABCMeta):
     @property
     @abstractmethod
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -573,7 +573,7 @@ class PokemonCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -671,7 +671,7 @@ class LegendaryCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -765,7 +765,7 @@ class MythicalCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -865,7 +865,7 @@ class UltraBeastCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -969,7 +969,7 @@ class FakemonCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -1064,16 +1064,16 @@ class FakemonCharacter(Character):
             """,
             "FAKEMON",
         ):
-            data: dict[str, int] = dict(item)
+            data: dict[str, Union[str, int]] = dict(item)
             data.pop("kind", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
             stats = {k.upper(): v for k, v in stats.items()}
-            if species := data.get("species", None):
+            if species := data.get("species", ""):
                 movepool = await Movepool.fakemon_fetch(connection, fakemon_id)
                 data["species"] = Fakemon(
                     id=fakemon_id,
-                    name=species,
+                    name=str(species),
                     movepool=movepool,
                     **stats,
                 )
@@ -1125,7 +1125,7 @@ class CustomMegaCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -1233,7 +1233,7 @@ class VariantCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -1295,8 +1295,8 @@ class VariantCharacter(Character):
         )
         await connection.execute(
             """--sql
-            DELETE FROM VARIANT_MOVEPOOL
-            WHERE ID = $1;
+            DELETE FROM FAKEMON_MOVEPOOL
+            WHERE FAKEMON = $1;
             """,
             self.id,
         )
@@ -1304,12 +1304,12 @@ class VariantCharacter(Character):
         if moves := reference - set(self.species.base.movepool()):
             await connection.executemany(
                 """--sql
-                INSERT INTO VARIANT_MOVEPOOL(ID, MOVE, SLOT)
+                INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, MOVE, METHOD)
                 VALUES ($1, $2, $3);
                 """,
                 [
-                    (self.id, item.name, index)
-                    for index, item in enumerate(moves, start=1)
+                    (self.id, item.name, "EVENT")
+                    for item in moves
                 ],
             )
 
@@ -1345,8 +1345,8 @@ class VariantCharacter(Character):
             if moves := await connection.fetchval(
                 """--sql
                 SELECT array_agg(move)
-                FROM VARIANT_MOVEPOOL
-                WHERE ID = $1;
+                FROM FAKEMON_MOVEPOOL
+                WHERE FAKEMON = $1;
                 """,
                 mon.id,
             ):
@@ -1375,7 +1375,7 @@ class FusionCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------
@@ -1446,8 +1446,8 @@ class FusionCharacter(Character):
         ):
             data: dict[str, int] = dict(item)
             data.pop("kind", None)
-            mon1 = data.pop("species1", None)
-            mon2 = data.pop("species2", None)
+            mon1: str = data.pop("species1", None)
+            mon2: str = data.pop("species2", None)
             data["species"] = Fusion(Species[mon1], Species[mon2])
             mon = FusionCharacter(**data)
             await mon.retrieve(connection)
@@ -1491,7 +1491,7 @@ class MegaCharacter(Character):
 
     @property
     def has_default_types(self) -> bool:
-        """Wether if the species have a default type
+        """If the species have a default type
 
         Returns
         -------

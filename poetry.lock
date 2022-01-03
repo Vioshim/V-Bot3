@@ -777,7 +777,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "py-cord"
-version = "2.0.0a4732+g640c73ad"
+version = "2.0.0a4734+ga52f3cac"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -801,7 +801,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/Pycord-Development/pycord.git"
 reference = "master"
-resolved_reference = "640c73ad5a5e664ace7d563e1d9575f50ea3707c"
+resolved_reference = "a52f3cac3bf0761cb338e2b9666b2de74b2122e4"
 
 [[package]]
 name = "pyaml"
@@ -1233,7 +1233,7 @@ version = "1.7.2"
 description = "Yet another URL library"
 category = "main"
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.6"
 
 [package.dependencies]
 idna = ">=2.0"
@@ -1241,8 +1241,8 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.10.1"
-content-hash = "b5ede873a02e72f310b6a1b2e87e51d0bb98dd18cc2877ebf2234438f8ae741e"
+python-versions = "^3.10"
+content-hash = "8eb0099a85ae54b82d9d8cfe7cd4548abe2390cefa84dbebfb56926b7a23d821"
 
 [metadata.files]
 aiodns = [
