@@ -16,9 +16,11 @@ from __future__ import annotations
 
 from difflib import get_close_matches
 from enum import Enum
+from re import split
 from typing import Iterable, Union
 
 from src.structures.ability import Ability
+from src.utils.functions import fix
 
 __all__ = ("Abilities",)
 
@@ -64,13 +66,16 @@ class Abilities(Enum):
 
         info = set()
         elements = {x.value.name: x for x in Abilities}
-        for elem in item.split(","):
-            for data in get_close_matches(
-                word=elem.title().strip(),
-                possibilities=elements,
-                n=1,
-            ):
-                info.add(elements[data])
+        for elem in split(r"\s*[,|\/]\s*", item):
+            try:
+                info.add(Abilities[fix(elem)])
+            except KeyError:
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=elements,
+                    n=1,
+                ):
+                    info.add(elements[data])
         return info
 
     NOABILITY = Ability(name="No Ability", description="Does nothing.")
@@ -351,7 +356,9 @@ class Abilities(Enum):
         name="Full Metal Body",
         description="Prevents other Pokemon from lowering this Pokemon's stat stages.",
     )
-    FURCOAT = Ability(name="Fur Coat", description="This Pokemon's Defense is doubled.")
+    FURCOAT = Ability(
+        name="Fur Coat", description="This Pokemon's Defense is doubled."
+    )
     GALEWINGS = Ability(
         name="Gale Wings",
         description="If this Pokemon is at full HP, its Flying-type moves have their priority increased by 1.",
@@ -407,7 +414,9 @@ class Abilities(Enum):
     HEAVYMETAL = Ability(
         name="Heavy Metal", description="This Pokemon's weight is doubled."
     )
-    HONEYGATHER = Ability(name="Honey Gather", description="No competitive use.")
+    HONEYGATHER = Ability(
+        name="Honey Gather", description="No competitive use."
+    )
     HUGEPOWER = Ability(
         name="Huge Power", description="This Pokemon's Attack is doubled."
     )

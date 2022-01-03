@@ -3,6 +3,7 @@
 
 # Local History for Visual Studio Code
 .history/
+*.bak
 
 # Local History for Pycharm
 .idea/

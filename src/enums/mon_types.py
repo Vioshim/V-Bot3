@@ -17,13 +17,14 @@ from __future__ import annotations
 
 from difflib import get_close_matches
 from enum import Enum
-from re import compile
+from re import split
 from typing import Optional, Union
 
 from discord import PartialEmoji
 from frozendict import frozendict
 
 from src.structures.mon_typing import Typing
+from src.utils.functions import fix
 
 """
 from src.structures.mon_typing import (
@@ -34,7 +35,6 @@ from src.structures.mon_typing import (
 )
 """
 
-MATCHER = compile(r"(\w+)")
 MAX_MOVE_RANGE1 = []
 MAX_MOVE_RANGE2 = []
 Z_MOVE_RANGE = []
@@ -740,10 +740,15 @@ class Types(Enum):
         """
         info = set()
         if isinstance(item, str):
-            item = MATCHER.findall(item)
+            item = split(r"\s*[,|\/]\s*", item)
         for elem in item:
-            for data in get_close_matches(
-                word=elem.upper().strip(), possibilities=Types.__members__, n=1
-            ):
-                info.add(Types[data])
+            try:
+                info.add(Types[fix(item)])
+            except KeyError:
+                for data in get_close_matches(
+                    word=fix(elem),
+                    possibilities=Types.__members__,
+                    n=1,
+                ):
+                    info.add(Types[data])
         return info
