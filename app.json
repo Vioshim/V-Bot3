@@ -1,0 +1,12 @@
+{
+    "name": "V-bot 3",
+    "description": "A Discord bot for Parallel Yonder",
+    "image": "heroku/python",
+    "repository": "https://github.com/Vioshim/V-Bot3",
+    "keywords": [
+        "python"
+    ],
+    "addons": [
+        "heroku-postgresql"
+    ]
+}
