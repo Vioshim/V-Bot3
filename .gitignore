@@ -134,7 +134,3 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Google docs' credentials
-credentials.json
-token.json
