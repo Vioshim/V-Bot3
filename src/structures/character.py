@@ -18,7 +18,6 @@ from abc import ABCMeta, abstractmethod
 from asyncio import to_thread
 from dataclasses import dataclass, field
 from datetime import datetime
-from os import urandom
 from random import sample
 from typing import Any, Optional, Type, Union
 
@@ -47,7 +46,12 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -475,7 +479,8 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, not main) for main, item in enumerate(self.types)
+            (self.id, item.name, not main)
+            for main, item in enumerate(self.types)
         ]:
             await connection.executemany(
                 """--sql
@@ -492,7 +497,8 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, bool(main)) for main, item in enumerate(self.abilities)
+            (self.id, item.name, bool(main))
+            for main, item in enumerate(self.abilities)
         ]:
             await connection.executemany(
                 """--sql
@@ -1297,10 +1303,7 @@ class VariantCharacter(Character):
                 INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, MOVE, METHOD)
                 VALUES ($1, $2, $3);
                 """,
-                [
-                    (self.id, item.name, "EVENT")
-                    for item in moves
-                ],
+                [(self.id, item.name, "EVENT") for item in moves],
             )
 
     @classmethod
@@ -1330,7 +1333,9 @@ class VariantCharacter(Character):
             data.pop("kind", None)
             species = data.pop("species", None)
             variant = data.pop("variant", None)
-            data["species"] = mon_species = Variant(base=Species[species], name=variant)
+            data["species"] = mon_species = Variant(
+                base=Species[species], name=variant
+            )
             mon = VariantCharacter(**data)
             if moves := await connection.fetchval(
                 """--sql
@@ -1342,7 +1347,9 @@ class VariantCharacter(Character):
             ):
                 mon_species.movepool += Movepool(
                     event=frozenset(
-                        move for item in moves if not (move := Moves[item]).banned
+                        move
+                        for item in moves
+                        if not (move := Moves[item]).banned
                     )
                 )
             await mon.retrieve(connection)
@@ -1716,7 +1723,9 @@ def oc_process(**kwargs):
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", {"event": data.get("moveset", set())}):
+        if movepool := data.pop(
+            "movepool", {"event": data.get("moveset", set())}
+        ):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
