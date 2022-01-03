@@ -1605,7 +1605,7 @@ PLACEHOLDER_DEFAULTS = {
 PLACEHOLDER_SP = {
     "What is it Called?": "name",
     "How is it Called?": "name",
-    "How did they obtain it?": "method",
+    "How did they obtain it?": "origin",
     "What does the Special Ability do?": "description",
     "How does it make the character's life easier?": "pros",
     "How does it make the character's life harder?": "cons",

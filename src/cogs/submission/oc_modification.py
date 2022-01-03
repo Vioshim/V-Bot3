@@ -140,10 +140,9 @@ class SPView(Basic):
         data: dict[str, str] = {}
 
         for item in SP_ABILITY_ITEMS:
-            word = "method" if item == "origin" else item
             title = f"Write the Special Ability's {item.title()}"
             async with text_view.handle(title=title, origin=message) as answer:
-                data[word] = answer
+                data[item] = answer
                 if not isinstance(answer, str):
                     break
         else:
@@ -195,9 +194,8 @@ class SPView(Basic):
             for item in SP_ABILITY_ITEMS:
                 if item not in elements:
                     continue
-                word: str = "method" if item == "origin" else item
                 title = f"Special Ability's {item}. Current Below".title()
-                description = backup.get(word)
+                description = backup.get(item)
                 async with text_view.handle(
                     title=title,
                     description=description,
@@ -206,7 +204,7 @@ class SPView(Basic):
                     if not isinstance(answer, str):
                         break
                     elif answer:
-                        backup[word] = answer
+                        backup[item] = answer
 
             else:
                 self.oc.sp_ability = SpAbility(**backup)

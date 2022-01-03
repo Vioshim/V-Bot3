@@ -414,17 +414,14 @@ class Submission(Cog):
                         for item in [
                             "name",
                             "description",
-                            "method",
+                            "origin",
                             "pros",
                             "cons",
                         ]:
-                            word = item
-                            if item == "method":
-                                word = "origin"
                             async with text_view.handle(
-                                title=f"Special Ability's {word.title()}",
+                                title=f"Special Ability's {item.title()}",
                                 description=(
-                                    f"Here you'll define the Special Ability's {word.title()}, "
+                                    f"Here you'll define the Special Ability's {item.title()}, "
                                     "make sure it is actually understandable."
                                 ),
                                 required=True,

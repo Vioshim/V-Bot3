@@ -51,7 +51,7 @@ class SpAbility(Ability):
 
     name: str = field(default_factory=str)  # Name of the special ability
     description: str = field(default_factory=str)  # Description of the special ability
-    method: str = field(default_factory=str)  # Method to obtain the special ability
+    origin: str = field(default_factory=str)  # Method to obtain the special ability
     pros: str = field(default_factory=str)  # Pros of the special ability
     cons: str = field(default_factory=str)  # Cons of the special ability
 
@@ -72,17 +72,17 @@ class SpAbility(Ability):
         SpAbility
             converted element
         """
-        name, description, method, pros, cons = (
+        name, description, origin, pros, cons = (
             record["name"],
             record["description"],
-            record["method"],
+            record["origin"],
             record["pros"],
             record["cons"],
         )
         return SpAbility(
             name=name,
             description=description,
-            method=method,
+            origin=origin,
             pros=pros,
             cons=cons,
         )
@@ -130,15 +130,15 @@ class SpAbility(Ability):
         """
         return await connection.execute(
             """--sql
-            INSERT INTO SPECIAL_ABILITIES(ID, NAME, DESCRIPTION, METHOD, PROS, CONS)
+            INSERT INTO SPECIAL_ABILITIES(ID, NAME, DESCRIPTION, ORIGIN, PROS, CONS)
             VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (ID) DO UPDATE
-            SET NAME = $2, DESCRIPTION = $3, METHOD = $4, PROS = $5, CONS = $6;
+            SET NAME = $2, DESCRIPTION = $3, ORIGIN = $4, PROS = $5, CONS = $6;
             """,
             idx,
             self.name,
             self.description,
-            self.method,
+            self.origin,
             self.pros,
             self.cons,
         )
