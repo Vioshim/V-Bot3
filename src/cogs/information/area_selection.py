@@ -74,9 +74,13 @@ class AreaSelection(View):
 
         self.selection.options = [
             SelectOption(
-                label=f"{len(self.entries.get(str(item.id), [])):02d}{item.name[1:]}".replace("-", " ").title(),
+                label=f"{len(self.entries.get(str(item.id), [])):02d}{item.name[1:]}".replace(
+                    "-", " "
+                ).title(),
                 value=str(item.id),
-                description=topic[:50] if (topic := item.topic) else "No description yet.",
+                description=topic[:50]
+                if (topic := item.topic)
+                else "No description yet.",
                 emoji=item.name[0],
             )
             for item in cat.channels
@@ -105,7 +109,9 @@ class AreaSelection(View):
             embed.description = channel.topic or "No description yet"
             embed.color = ctx.user.color
             embed.timestamp = utcnow()
-            embed.set_author(name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url)
+            embed.set_author(
+                name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url
+            )
             embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
             await resp.send_message(embed=embed, view=view, ephemeral=True)
 
@@ -135,7 +141,9 @@ class AreaSelection(View):
             perms = permissions.get(ctx.user, PermissionOverwrite())
             if not perms.read_messages:
                 perms.read_messages = True
-                await category.set_permissions(member, overwrite=perms, reason="Region Selection")
+                await category.set_permissions(
+                    member, overwrite=perms, reason="Region Selection"
+                )
         await ctx.followup.send("Now you can see all the areas", ephemeral=True)
 
     # noinspection PyTypeChecker
@@ -153,5 +161,7 @@ class AreaSelection(View):
             perms = permissions.get(member, PermissionOverwrite())
             if perms.read_messages is not False:
                 perms.read_messages = False
-                await category.set_permissions(member, overwrite=perms, reason="Region Selection")
+                await category.set_permissions(
+                    member, overwrite=perms, reason="Region Selection"
+                )
         await ctx.followup.send("Now you can't see all the areas", ephemeral=True)

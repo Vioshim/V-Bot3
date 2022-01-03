@@ -78,7 +78,9 @@ class Complex(Simple):
         max_values: int = 1,
         entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = None,
-        emoji_parser: Union[str, Callable[[_T], Union[str, PartialEmoji, Emoji]]] = None,
+        emoji_parser: Union[
+            str, Callable[[_T], Union[str, PartialEmoji, Emoji]]
+        ] = None,
     ):
         self._choices: set[_T] = None
         self._max_values = max_values
@@ -101,7 +103,9 @@ class Complex(Simple):
     def emoji_parser(self, item: _T) -> str:
         return self._emoji_parser(item)
 
-    def set_emoji_parser(self, item: Callable[[_T], Union[str, PartialEmoji, Emoji]] = None) -> None:
+    def set_emoji_parser(
+        self, item: Callable[[_T], Union[str, PartialEmoji, Emoji]] = None
+    ) -> None:
         """Function used for setting a parser
 
         Parameters
@@ -120,7 +124,9 @@ class Complex(Simple):
         await self.wait()
         return self._choices
 
-    async def __aexit__(self, exc_type: type, exc_val: Exception, exc_tb: TracebackType) -> None:
+    async def __aexit__(
+        self, exc_type: type, exc_val: Exception, exc_tb: TracebackType
+    ) -> None:
         if exc_type:
             self.bot.logger.exception(
                 "Exception occurred, target: %s, user: %s",
@@ -450,7 +456,9 @@ class ComplexInput(Complex):
         elif isinstance(target := self.target, Interaction):
             if message := await target.original_message():
                 await message.edit(view=self)
-        await response.send_message(content="Write down the choice in that case.", ephemeral=True)
+        await response.send_message(
+            content="Write down the choice in that case.", ephemeral=True
+        )
         message: Message = await self.bot.wait_for(
             event="message",
             check=text_check(ctx),

@@ -15,6 +15,19 @@
 from discord.ext.commands.errors import UserInputError
 
 
+class NoMoveFound(UserInputError):
+    def __init__(self, argument: str):
+        """Init Method
+
+        Parameters
+        ----------
+        argument : str
+            Invalid String
+        """
+        self.argument = argument
+        super().__init__(f"No Moves with the name {argument!r} were found.")
+
+
 class NoSpeciesFound(UserInputError):
     def __init__(self, argument: str):
         """Init Method

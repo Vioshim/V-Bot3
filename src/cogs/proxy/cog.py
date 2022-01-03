@@ -61,7 +61,9 @@ class Proxy(Cog):
 
         guild = self.bot.get_guild(payload.guild_id)
         registered = guild.get_role(719642423327719434)
-        channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(payload.channel_id)
+        channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(
+            payload.channel_id
+        )
         if isinstance(channel, Thread):
             if registered not in channel.parent.overwrites:
                 pass
@@ -84,7 +86,9 @@ class Proxy(Cog):
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)
             except NotFound:
-                await payload.member.send("That proxy was sent by an user who is no longer in discord.")
+                await payload.member.send(
+                    "That proxy was sent by an user who is no longer in discord."
+                )
 
     async def handler(self, ctx: Context, name: str, avatar_url: str, content: str):
         webhook = await self.bot.webhook(ctx.channel, reason="NPC")
@@ -107,7 +111,9 @@ class Proxy(Cog):
 
         proxy_msg = await webhook.send(**data)
 
-        self.npc_info[NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)] = ctx.author.id
+        self.npc_info[
+            NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)
+        ] = ctx.author.id
 
         self.bot.msg_cache.add(message.id)
         with suppress(DiscordException):

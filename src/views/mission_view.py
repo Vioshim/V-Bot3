@@ -36,13 +36,19 @@ class MissionView(View):
         cog = self.bot.get_cog("Submission")
         member: Member = interaction.user
         if not (ocs := cog.oc_slots.get(member.id, set())):
-            await interaction.response.send_message("You don't have registered characters", ephemeral=True)
+            await interaction.response.send_message(
+                "You don't have registered characters", ephemeral=True
+            )
             return
 
         async with self.bot.database() as db:
 
-            if await db.fetchval("SELECT COUNT(*) > 1 FROM MISSIONS WHERE CLAIMED = $1;", member.id):
-                await interaction.response.send_message("You are already doing a mission.", ephemeral=True)
+            if await db.fetchval(
+                "SELECT COUNT(*) > 1 FROM MISSIONS WHERE CLAIMED = $1;", member.id
+            ):
+                await interaction.response.send_message(
+                    "You are already doing a mission.", ephemeral=True
+                )
                 return
 
         view_select = Complex(
@@ -101,9 +107,13 @@ class MissionView(View):
         ch: TextChannel = interaction.channel
         if not ch.permissions_for(member).manage_messages:
             if member.id != self.mission.author:
-                await interaction.response.send_message("It's not yours.", ephemeral=True)
+                await interaction.response.send_message(
+                    "It's not yours.", ephemeral=True
+                )
                 return
         async with self.bot.database() as db:
             await self.mission.remove(db)
             await interaction.message.delete()
-        await interaction.response.send_message("Mission has been removed.", ephemeral=True)
+        await interaction.response.send_message(
+            "Mission has been removed.", ephemeral=True
+        )

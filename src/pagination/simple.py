@@ -95,7 +95,9 @@ class Simple(Basic):
         parser : Callable[[_T], tuple[str, str]]
             Parser method, defaults to lambda x: str(x), repr(x)
         """
-        super().__init__(bot=bot, member=member, target=target, timeout=timeout, embed=embed)
+        super().__init__(
+            bot=bot, member=member, target=target, timeout=timeout, embed=embed
+        )
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")

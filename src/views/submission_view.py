@@ -161,7 +161,9 @@ class SubmissionView(View):
             await aux.delete()
 
         if not (values := self.rpers.get(member.id, {}).values()):
-            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
+            return await ctx.followup.send(
+                "You don't have characters to modify", ephemeral=True
+            )
 
         view = CharacterHandlerView(
             bot=self.bot,
@@ -191,9 +193,13 @@ class SubmissionView(View):
         role = guild.get_role(719642423327719434)
         resp: InteractionResponse = ctx.response
         if role not in ctx.user.roles:
-            await resp.send_message("You don't have a character registered", ephemeral=True)
+            await resp.send_message(
+                "You don't have a character registered", ephemeral=True
+            )
             return
-        locations: list[CategoryChannel] = [guild.get_channel(item) for item in RP_CATEGORIES]
+        locations: list[CategoryChannel] = [
+            guild.get_channel(item) for item in RP_CATEGORIES
+        ]
         view = ComplexInput(
             bot=self.bot,
             member=ctx.user,
@@ -214,7 +220,9 @@ class SubmissionView(View):
                 member=ctx.user,
                 target=ctx.channel,
                 values=[
-                    item for item in choice.channels if ("-ooc" not in item.name and isinstance(item, TextChannel))
+                    item
+                    for item in choice.channels
+                    if ("-ooc" not in item.name and isinstance(item, TextChannel))
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),

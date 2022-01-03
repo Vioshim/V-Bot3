@@ -87,7 +87,9 @@ class Roles(Cog):
                     else:
                         self.cool_down[member_id] = created_at
 
-                    view = RoleManage(bot=self.bot, role=role, ocs=values, member=member)
+                    view = RoleManage(
+                        bot=self.bot, role=role, ocs=values, member=member
+                    )
                     self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
 
@@ -102,7 +104,10 @@ class Roles(Cog):
         role_id: Option(
             str,
             description="Role to be pinged",
-            choices=[OptionChoice(name=name, value=str(value)) for name, value in RP_SEARCH_ROLES.items()],
+            choices=[
+                OptionChoice(name=name, value=str(value))
+                for name, value in RP_SEARCH_ROLES.items()
+            ],
             required=True,
         ),
     ):

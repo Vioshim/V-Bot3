@@ -147,21 +147,29 @@ class Mission:
 
     @classmethod
     async def fetch(cls, connection: Connection, mission_id: int) -> Optional[Mission]:
-        if entry := await connection.fetchrow("SELECT * FROM MISSIONS where id = $1", mission_id):
+        if entry := await connection.fetchrow(
+            "SELECT * FROM MISSIONS where id = $1", mission_id
+        ):
             return Mission(**dict(entry))
 
     @classmethod
     async def fetch_all(cls, connection: Connection) -> list[Mission]:
         entries = []
-        async for item in connection.cursor(query="SELECT * FROM MISSIONS order by created_at;"):
+        async for item in connection.cursor(
+            query="SELECT * FROM MISSIONS order by created_at;"
+        ):
             entries.append(Mission(**dict(item)))
         return entries
 
     @classmethod
-    async def fetch_by_author(cls, connection: Connection, author: Union[User, int]) -> list[Mission]:
+    async def fetch_by_author(
+        cls, connection: Connection, author: Union[User, int]
+    ) -> list[Mission]:
         if not isinstance(author, int):
             author = author.id
         entries = []
-        async for item in connection.cursor("SELECT * FROM MISSIONS where author = $1 order by created_at;", author):
+        async for item in connection.cursor(
+            "SELECT * FROM MISSIONS where author = $1 order by created_at;", author
+        ):
             entries.append(Mission(**dict(item)))
         return entries

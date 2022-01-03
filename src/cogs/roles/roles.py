@@ -131,12 +131,16 @@ async def unique_role_button(
         class Confirmation(View):
             @button(label="Keep role", emoji=":small_check_mark:811367963235713124")
             async def keep(self, _: Button, inter: Interaction):
-                await inter.response.send_message(f"Role {role.mention} was not removed.", ephemeral=True)
+                await inter.response.send_message(
+                    f"Role {role.mention} was not removed.", ephemeral=True
+                )
 
             @button(label="Remove Role", emoji=":small_x_mark:811367596866797658")
             async def remove(self, _: Button, inter: Interaction):
                 await ctx.user.remove_roles(role, reason="Self Roles interaction")
-                await inter.response.send_message(f"Role {role.mention} was removed.", ephemeral=True)
+                await inter.response.send_message(
+                    f"Role {role.mention} was removed.", ephemeral=True
+                )
 
         view = Confirmation()
         await resp.send_message(
@@ -147,7 +151,9 @@ async def unique_role_button(
         return await view.wait()
     elif role:
         await ctx.user.add_roles(role, reason="Self Roles interaction")
-        await resp.send_message(f"Role {role.mention} was added to your account.", ephemeral=True)
+        await resp.send_message(
+            f"Role {role.mention} was added to your account.", ephemeral=True
+        )
     if data := set(x.id for x in ctx.user.roles).intersection(roles):
         await ctx.user.remove_roles(
             *(role_item for item in data if (role_item := ctx.guild.get_role(item))),
@@ -165,12 +171,17 @@ async def required_role_menu(
     if required in ctx.user.roles:
         if selected in member.roles:
             await member.remove_roles(selected, reason="Self Roles")
-            return await resp.send_message(f"Role {selected.mention} removed", ephemeral=True)
+            return await resp.send_message(
+                f"Role {selected.mention} removed", ephemeral=True
+            )
         else:
             await member.add_roles(selected, reason="Self Roles")
-            return await resp.send_message(f"Role {selected.mention} added", ephemeral=True)
+            return await resp.send_message(
+                f"Role {selected.mention} added", ephemeral=True
+            )
     return await resp.send_message(
-        f"You need {required.mention} to use this role. Make a Character at <#852180971985043466>", ephemeral=True
+        f"You need {required.mention} to use this role. Make a Character at <#852180971985043466>",
+        ephemeral=True,
     )
 
 
@@ -350,8 +361,14 @@ class PronounRoles(View):
     async def pronoun(self, _: Select, ctx: Interaction):
         data: list[str] = ctx.data.get("values", [])
         guild: Guild = ctx.guild
-        roles: list[Role] = [role for item in data if (role := guild.get_role(int(item)))]
-        total: list[Role] = [role for item in PRONOUN_ROLES.values() if (role := guild.get_role(int(item)))]
+        roles: list[Role] = [
+            role for item in data if (role := guild.get_role(int(item)))
+        ]
+        total: list[Role] = [
+            role
+            for item in PRONOUN_ROLES.values()
+            if (role := guild.get_role(int(item)))
+        ]
         return await role_menu(ctx, roles, total)
 
 
@@ -410,8 +427,12 @@ class BasicRoles(View):
     async def basic(self, _, ctx: Interaction):
         data: list[str] = ctx.data.get("values", [])
         guild: Guild = ctx.guild
-        roles: list[Role] = [role for item in data if (role := guild.get_role(int(item)))]
-        total: list[Role] = [role for item in BASIC_ROLES.values() if (role := guild.get_role(int(item)))]
+        roles: list[Role] = [
+            role for item in data if (role := guild.get_role(int(item)))
+        ]
+        total: list[Role] = [
+            role for item in BASIC_ROLES.values() if (role := guild.get_role(int(item)))
+        ]
         return await role_menu(ctx, roles, total)
 
 
@@ -457,8 +478,14 @@ class RPSearchRoles(View):
     async def rp_search(self, _: Select, ctx: Interaction):
         data: list[str] = ctx.data.get("values", [])
         guild: Guild = ctx.guild
-        roles: list[Role] = [role for item in data if (role := guild.get_role(int(item)))]
-        total: list[Role] = [role for item in RP_SEARCH_ROLES.values() if (role := guild.get_role(int(item)))]
+        roles: list[Role] = [
+            role for item in data if (role := guild.get_role(int(item)))
+        ]
+        total: list[Role] = [
+            role
+            for item in RP_SEARCH_ROLES.values()
+            if (role := guild.get_role(int(item)))
+        ]
         return await role_menu(ctx, roles, total)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -466,7 +493,9 @@ class RPSearchRoles(View):
         required: Role = interaction.guild.get_role(719642423327719434)
         if required in interaction.user.roles:
             return True
-        await resp.send_message(f"You need {required.mention} to use this role.", ephemeral=True)
+        await resp.send_message(
+            f"You need {required.mention} to use this role.", ephemeral=True
+        )
         return False
 
 
@@ -488,7 +517,9 @@ class RoleManage(View):
             await resp.send_message("You already have the role", ephemeral=True)
             return
         await member.add_roles(self.role)
-        await resp.send_message("Role added, you'll get pinged next time.", ephemeral=True)
+        await resp.send_message(
+            "Role added, you'll get pinged next time.", ephemeral=True
+        )
 
     @button(emoji="\N{CROSS MARK}", row=0, custom_id="role_remove")
     async def role_remove(self, _: Button, interaction: Interaction):
@@ -561,7 +592,8 @@ class RoleButton(Button):
         embed = Embed(
             title=role.name,
             color=ctx.user.color,
-            description=f"{ctx.user.display_name} is looking " "to RP with their registered character(s).",
+            description=f"{ctx.user.display_name} is looking "
+            "to RP with their registered character(s).",
             timestamp=utcnow(),
         )
         embed.set_thumbnail(url=ctx.user.avatar.url)

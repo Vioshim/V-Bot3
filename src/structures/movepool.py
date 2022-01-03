@@ -419,7 +419,9 @@ class Movepool:
                     learnset_elements.extend(entries)
                     movepool_elements.extend((x, y, "LEVEL") for x, y, _ in entries)
             elif isinstance(value, frozenset):
-                movepool_elements.extend((id, m.name, key) for m in value if not m.banned)
+                movepool_elements.extend(
+                    (id, m.name, key) for m in value if not m.banned
+                )
 
         if movepool_elements:
             await connection.executemany(

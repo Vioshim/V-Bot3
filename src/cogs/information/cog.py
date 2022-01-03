@@ -194,7 +194,9 @@ class Information(Cog):
         embed.colour = ctx.user.colour
 
         category: CategoryChannel = ctx.guild.get_channel(int(area))
-        self.bot.logger.info("%s is reading /Map Information of %s", str(ctx.user), category.name)
+        self.bot.logger.info(
+            "%s is reading /Map Information of %s", str(ctx.user), category.name
+        )
 
         view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
 

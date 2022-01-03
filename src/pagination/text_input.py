@@ -99,9 +99,13 @@ class TextInput(Basic):
     @button(label="Proceed with Message", style=ButtonStyle.green, row=0)
     async def confirm(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        await resp.edit_message(content="Alright, now write down the information.", view=None)
+        await resp.edit_message(
+            content="Alright, now write down the information.", view=None
+        )
         try:
-            message: Message = await self.bot.wait_for("message", check=text_check(interaction))
+            message: Message = await self.bot.wait_for(
+                "message", check=text_check(interaction)
+            )
             self.text = message.content
             await message.delete()
             msg = await interaction.original_message()

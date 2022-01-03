@@ -101,7 +101,9 @@ class InformationView(View):
             SelectOption(
                 label=value["label"],
                 value=str(value.get("category")),
-                description=item if (item := value.get("summary")) else value.get("content", "")[:50],
+                description=item
+                if (item := value.get("summary"))
+                else value.get("content", "")[:50],
                 emoji=lookup(value["emoji"]),
             )
             for value in raw_data.get("Map Information", [])
@@ -110,7 +112,9 @@ class InformationView(View):
     async def read(self, ctx: Interaction, key: str):
         resp: InteractionResponse = ctx.response
         if data := ctx.data.get("values", []):
-            self.bot.logger.info("%s is reading %s[%s]", str(ctx.user), key, idx := data[0])
+            self.bot.logger.info(
+                "%s is reading %s[%s]", str(ctx.user), key, idx := data[0]
+            )
             info_embed = self.embeds[key][idx].copy()
             info_embed.colour = ctx.user.colour
             if guild := ctx.guild:
@@ -164,7 +168,9 @@ class InformationView(View):
 
             view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
 
-            info_embed.set_footer(text=f"There's a total of {view.total:02d} OCs in this area.")
+            info_embed.set_footer(
+                text=f"There's a total of {view.total:02d} OCs in this area."
+            )
 
             for info_btn in self.buttons.get(item.placeholder, {}).get(idx, []):
                 view.add_item(info_btn)

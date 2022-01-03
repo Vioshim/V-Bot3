@@ -742,6 +742,8 @@ class Types(Enum):
         if isinstance(item, str):
             item = MATCHER.findall(item)
         for elem in item:
-            for data in get_close_matches(word=elem.upper().strip(), possibilities=Types.__members__, n=1):
+            for data in get_close_matches(
+                word=elem.upper().strip(), possibilities=Types.__members__, n=1
+            ):
                 info.add(Types[data])
         return info

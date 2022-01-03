@@ -47,7 +47,9 @@ else:
 load_dotenv()
 
 
-def wrap_session(func: Callable[..., Coroutine[Any, Any, None]]) -> Callable[[], Coroutine[Any, Any, None]]:
+def wrap_session(
+    func: Callable[..., Coroutine[Any, Any, None]]
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Bot wrapper, this allows the bot to start up
     its asynchronous methods
 
@@ -103,7 +105,9 @@ EXCEPTIONS = {
 
 
 @wrap_session
-async def main(pool: Pool, scheduler: AsyncScheduler) -> None:  # , scheduler: AsyncScheduler) -> None:
+async def main(
+    pool: Pool, scheduler: AsyncScheduler
+) -> None:  # , scheduler: AsyncScheduler) -> None:
     """Main Execution function
 
     Parameters

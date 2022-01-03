@@ -115,7 +115,9 @@ class Inviter(Cog):
             embed.set_footer(text=f"ID: {author.id}", icon_url=invite_guild.icon.url)
             embed.add_field(name="Posted at", value=ctx.channel.mention)
             if user := invite.inviter:
-                embed.add_field(name=f"Invite creator - {user.name!r}", value=user.mention)
+                embed.add_field(
+                    name=f"Invite creator - {user.name!r}", value=user.mention
+                )
             embed.set_thumbnail(url=invite_guild.icon.url)
 
             if images := ctx.attachments:
@@ -151,12 +153,16 @@ class Inviter(Cog):
                             view=link_view,
                             files=files,
                         )
-                        await resp.send_message(f"{btn.label} has been added by {member.display_name}")
+                        await resp.send_message(
+                            f"{btn.label} has been added by {member.display_name}"
+                        )
                         await author.add_roles(partnered_role)
                         await inter.message.delete()
                         self.stop()
                     else:
-                        await resp.send_message("You don't have recruiter role.", ephemeral=True)
+                        await resp.send_message(
+                            "You don't have recruiter role.", ephemeral=True
+                        )
 
                 @button(
                     label="Standard Partnership",
@@ -186,12 +192,16 @@ class Inviter(Cog):
                             view=link_view,
                             files=files,
                         )
-                        await resp.send_message(f"{btn.label} has been added by {member.display_name}")
+                        await resp.send_message(
+                            f"{btn.label} has been added by {member.display_name}"
+                        )
                         await author.add_roles(partnered_role)
                         await inter.message.delete()
                         self.stop()
                     else:
-                        await resp.send_message("You don't have recruiter role.", ephemeral=True)
+                        await resp.send_message(
+                            "You don't have recruiter role.", ephemeral=True
+                        )
 
                 @button(
                     label="Not interested...",
@@ -208,15 +218,21 @@ class Inviter(Cog):
                     member: Member = inter.user
                     resp: InteractionResponse = inter.response
                     if recruiter_role in member.roles:
-                        await resp.send_message(f"{btn.label!r} has been chosen by {member.display_name}")
+                        await resp.send_message(
+                            f"{btn.label!r} has been chosen by {member.display_name}"
+                        )
                         await inter.message.delete()
                         self.stop()
                     else:
-                        await resp.send_message("You don't have recruiter role.", ephemeral=True)
+                        await resp.send_message(
+                            "You don't have recruiter role.", ephemeral=True
+                        )
 
             files_embed, embed = await self.bot.embed_raw(embed=embed)
             view = InviteView(timeout=None)
-            await mod_ch.send(content=invite.url, embed=embed, files=files_embed, view=view)
+            await mod_ch.send(
+                content=invite.url, embed=embed, files=files_embed, view=view
+            )
             await ctx.delete()
             await view.wait()
 

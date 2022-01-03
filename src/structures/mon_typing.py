@@ -117,7 +117,13 @@ class Typing:
             return Typing(
                 name=f"{self.name}/{other.name}",
                 color=((self.color + other.color) ** 2) / 2,
-                chart=frozendict({x: multi for x in a | b if (multi := a.get(x, 1) * b.get(x, 1)) != 1}),
+                chart=frozendict(
+                    {
+                        x: multi
+                        for x in a | b
+                        if (multi := a.get(x, 1) * b.get(x, 1)) != 1
+                    }
+                ),
             )
         return self
 

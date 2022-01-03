@@ -21,6 +21,7 @@ from typing import Iterable, Optional, Union
 
 from src.enums.mon_types import Types
 from src.structures.move import Category, Move
+from src.utils.functions import fix
 
 __all__ = ("Moves",)
 
@@ -35,6 +36,10 @@ class Moves(Enum):
     @property
     def emoji(self):
         return self.value.type.emoji
+
+    @property
+    def embed(self):
+        return self.value.embed
 
     @property
     def banned(self) -> bool:
@@ -72,12 +77,15 @@ class Moves(Enum):
         """
         if isinstance(move, Moves):
             return move
-        for data in get_close_matches(
-            word=move.upper().replace("-", "").replace(" ", ""),
-            possibilities=Moves.__members__,
-            n=1,
-        ):
-            return Moves[data]
+        try:
+            return Moves[fix(move)]
+        except KeyError:
+            for data in get_close_matches(
+                word=fix(move),
+                possibilities=Moves.__members__,
+                n=1,
+            ):
+                return Moves[data]
 
     @classmethod
     def deduce(cls, name: Union[str, Iterable[str]]) -> set[Moves]:

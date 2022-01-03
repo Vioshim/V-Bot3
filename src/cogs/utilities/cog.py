@@ -21,13 +21,11 @@ from d20.utils import simplify_expr
 from discord import Embed, HTTPException, Option, OptionChoice, slash_command
 from discord.commands.permissions import is_owner
 from discord.ext.commands import Cog, command
-from discord.utils import utcnow
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.context import ApplicationContext, Context
 from src.enums.moves import Moves
 from src.structures.bot import CustomBot
-from src.structures.move import Move
 from src.utils.etc import WHITE_BAR
 
 PAGE_TYPES: dict[str, str] = {
@@ -116,7 +114,9 @@ class Utilities(Cog):
         for key, page in page_types.items():
             async with self.bot.session.get(page + "/objects.inv") as resp:
                 if resp.status != 200:
-                    raise RuntimeError("Cannot build rtfm lookup table, try again later.")
+                    raise RuntimeError(
+                        "Cannot build rtfm lookup table, try again later."
+                    )
 
                 stream = SphinxObjectFileReader(await resp.read())
                 cache[key] = self.parse_object_inv(stream, page)
@@ -216,21 +216,7 @@ class Utilities(Cog):
         ctx: ApplicationContext,
     ):
         item = Moves.metronome_fetch()
-        move: Move = item.value
-        description = move.desc or move.shortDesc
-        embed = Embed(
-            title=move.name,
-            description=description,
-            color=move.type.color,
-            timestamp=utcnow(),
-        )
-        embed.add_field(name="Power", value=f"{move.base}")
-        embed.add_field(name="Accuracy", value=f"{move.accuracy}")
-        embed.set_footer(text=move.category.name.title())
-        embed.add_field(name="PP", value=f"{move.pp}")
-        embed.set_thumbnail(url=move.type.emoji.url)
-        embed.set_image(url=WHITE_BAR)
-        await ctx.respond(embed=embed)
+        await ctx.respond(embed=item.embed)
 
     @slash_command(
         guild_ids=[719343092963999804],

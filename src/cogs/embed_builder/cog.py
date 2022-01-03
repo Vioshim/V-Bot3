@@ -90,7 +90,9 @@ class EmbedBuilder(Cog):
                             member.guild.id,
                         )
 
-            self.blame = {k: v for k, v in self.blame.items() if v != (member.id, member.guild.id)}
+            self.blame = {
+                k: v for k, v in self.blame.items() if v != (member.id, member.guild.id)
+            }
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -170,17 +172,23 @@ class EmbedBuilder(Cog):
         if self.loaded:
             return
         async with self.bot.database() as session:
-            async for item in session.cursor("SELECT AUTHOR, SERVER, CHANNEL, MESSAGE FROM EMBED_BUILDER;"):
+            async for item in session.cursor(
+                "SELECT AUTHOR, SERVER, CHANNEL, MESSAGE FROM EMBED_BUILDER;"
+            ):
                 author, guild, channel, message = tuple(item)
                 item_blame = author, guild
                 with suppress(DiscordException):
                     if channel := self.bot.get_channel(channel):
-                        webhook: Webhook = await self.bot.webhook(channel, reason="Embed Builder")
+                        webhook: Webhook = await self.bot.webhook(
+                            channel, reason="Embed Builder"
+                        )
                         if isinstance(channel, Thread):
                             thread_id = channel.id
                         else:
                             thread_id = None
-                        item_cache: WebhookMessage = await webhook.fetch_message(message, thread_id=thread_id)
+                        item_cache: WebhookMessage = await webhook.fetch_message(
+                            message, thread_id=thread_id
+                        )
                         self.cache[item_blame] = item_cache
                         self.blame[item_cache] = item_blame
 
@@ -320,7 +328,9 @@ class EmbedBuilder(Cog):
             icon_url=ctx.guild.icon,
         )
         if data := self.cache.get((ctx.author.id, ctx.guild.id)):
-            embed.description = f"{data.channel.mention} -> **[Message]" f'({data.jump_url} "Go to")**'
+            embed.description = (
+                f"{data.channel.mention} -> **[Message]" f'({data.jump_url} "Go to")**'
+            )
         await ctx.reply(embed=embed)
 
     @embed.command(name="new", aliases=["create"])
@@ -342,7 +352,9 @@ class EmbedBuilder(Cog):
 
         """
         embed = Embed(title=title, description=description)
-        webhook = await self.bot.webhook(ctx.channel.id, reason="Created by Embed Builder")
+        webhook = await self.bot.webhook(
+            ctx.channel.id, reason="Created by Embed Builder"
+        )
         author: Member = ctx.author
 
         if not isinstance(thread := ctx.channel, Thread):
@@ -390,7 +402,9 @@ class EmbedBuilder(Cog):
             if isinstance(reference.resolved, Message):
                 message = reference.resolved
             else:
-                channel: Union[Thread, TextChannel] = self.bot.get_channel(reference.channel_id)
+                channel: Union[Thread, TextChannel] = self.bot.get_channel(
+                    reference.channel_id
+                )
                 message = await channel.fetch_message(reference.message_id)
 
         if isinstance(message, Message):
@@ -401,7 +415,9 @@ class EmbedBuilder(Cog):
                         thread_id = message.channel.id
                     else:
                         thread_id = None
-                    message: WebhookMessage = await webhook.fetch_message(message.id, thread_id=thread_id)
+                    message: WebhookMessage = await webhook.fetch_message(
+                        message.id, thread_id=thread_id
+                    )
                     await self.write(message, ctx.author)
                     await ctx.reply("Message has been set", delete_after=3)
                 except DiscordException:
@@ -574,7 +590,9 @@ class EmbedBuilder(Cog):
         async with self.edit(ctx) as embed:  # type: Embed
             embed.colour = color or Color.default()
 
-    @embed.group(name="timestamp", aliases=["date", "time"], invoke_without_command=True)
+    @embed.group(
+        name="timestamp", aliases=["date", "time"], invoke_without_command=True
+    )
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
     async def embed_timestamp(self, ctx: Context, *, date: AfterDateCall = None):
         """Allows to edit the embed's timestamp
@@ -657,7 +675,9 @@ class EmbedBuilder(Cog):
 
     @embed_author.command(name="user")
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_author_user(self, ctx: Context, *, author: Union[Member, User] = None):
+    async def embed_author_user(
+        self, ctx: Context, *, author: Union[Member, User] = None
+    ):
         """Allows to set an user as author of an embed
 
         Parameters
@@ -729,7 +749,9 @@ class EmbedBuilder(Cog):
 
     @embed_author.command(name="icon")
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_author_icon(self, ctx: Context, *, icon: Union[Emoji, PartialEmoji, str] = None):
+    async def embed_author_icon(
+        self, ctx: Context, *, icon: Union[Emoji, PartialEmoji, str] = None
+    ):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -743,7 +765,11 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        async with (self.raw_edit(ctx) if (attachments := ctx.message.attachments) else self.edit(ctx)) as embed:
+        async with (
+            self.raw_edit(ctx)
+            if (attachments := ctx.message.attachments)
+            else self.edit(ctx)
+        ) as embed:
             if author := embed.author:
                 if attachments:
                     embed.set_author(
@@ -752,7 +778,9 @@ class EmbedBuilder(Cog):
                         icon_url=attachments[-1].proxy_url,
                     )
                 elif isinstance(icon, (Emoji, PartialEmoji)):
-                    embed.set_author(name=author.name, url=author.url, icon_url=icon.url)
+                    embed.set_author(
+                        name=author.name, url=author.url, icon_url=icon.url
+                    )
                 elif icon:
                     embed.set_author(name=author.name, url=author.url, icon_url=icon)
                 else:
@@ -782,7 +810,9 @@ class EmbedBuilder(Cog):
 
     @embed_footer.command(name="user")
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_footer_user(self, ctx: Context, *, user: Union[Member, User] = None):
+    async def embed_footer_user(
+        self, ctx: Context, *, user: Union[Member, User] = None
+    ):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -822,7 +852,9 @@ class EmbedBuilder(Cog):
 
     @embed_footer.command(name="icon")
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_footer_icon(self, ctx: Context, *, icon: Union[Emoji, PartialEmoji, str] = None):
+    async def embed_footer_icon(
+        self, ctx: Context, *, icon: Union[Emoji, PartialEmoji, str] = None
+    ):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -836,10 +868,16 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        async with (self.raw_edit(ctx) if (attachments := ctx.message.attachments) else self.edit(ctx)) as embed:
+        async with (
+            self.raw_edit(ctx)
+            if (attachments := ctx.message.attachments)
+            else self.edit(ctx)
+        ) as embed:
             if footer := embed.footer:
                 if attachments:
-                    embed.set_footer(text=footer.text, icon_url=attachments[-1].proxy_url)
+                    embed.set_footer(
+                        text=footer.text, icon_url=attachments[-1].proxy_url
+                    )
                 elif isinstance(icon, (Emoji, PartialEmoji)):
                     embed.set_footer(text=footer.text, icon_url=icon.url)
                 elif icon:
@@ -864,7 +902,9 @@ class EmbedBuilder(Cog):
 
     @embed.group(name="thumbnail", invoke_without_command=True)
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_thumbnail(self, ctx: Context, *, thumbnail: Union[Emoji, PartialEmoji, str] = None):
+    async def embed_thumbnail(
+        self, ctx: Context, *, thumbnail: Union[Emoji, PartialEmoji, str] = None
+    ):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -879,7 +919,9 @@ class EmbedBuilder(Cog):
 
         """
         async with (
-            self.raw_edit(ctx) if (attachments := ctx.message.attachments) else self.edit(ctx)
+            self.raw_edit(ctx)
+            if (attachments := ctx.message.attachments)
+            else self.edit(ctx)
         ) as embed:  # type: Embed
             if attachments:
                 embed.set_thumbnail(url=attachments[-1].proxy_url)
@@ -894,7 +936,9 @@ class EmbedBuilder(Cog):
 
     @embed_thumbnail.group(name="user", invoke_without_command=True)
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_thumbnail_user(self, ctx: Context, *, user: Union[Member, User] = None):
+    async def embed_thumbnail_user(
+        self, ctx: Context, *, user: Union[Member, User] = None
+    ):
         """Allows to edit an embed's thumbnail by an user
 
         Parameters
@@ -911,7 +955,9 @@ class EmbedBuilder(Cog):
             user = user or ctx.author  # type: User
             embed.set_thumbnail(url=user.display_avatar.url)
 
-    @embed_thumbnail.group(name="guild", aliases=["server"], invoke_without_command=True)
+    @embed_thumbnail.group(
+        name="guild", aliases=["server"], invoke_without_command=True
+    )
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
     async def embed_thumbnail_guild(self, ctx: Context, *, guild: Guild = None):
         """Allows to edit an embed's thumbnail by an user
@@ -932,7 +978,9 @@ class EmbedBuilder(Cog):
 
     @embed.group(name="image", invoke_without_command=True)
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def embed_image(self, ctx: Context, *, image: Union[Emoji, PartialEmoji, str] = None):
+    async def embed_image(
+        self, ctx: Context, *, image: Union[Emoji, PartialEmoji, str] = None
+    ):
         """Allows to edit an embed's image
 
         Parameters
@@ -945,7 +993,11 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        method = self.raw_edit(ctx) if (attachments := ctx.message.attachments) else self.edit(ctx)
+        method = (
+            self.raw_edit(ctx)
+            if (attachments := ctx.message.attachments)
+            else self.edit(ctx)
+        )
         async with method as embed:  # type: Embed
             if attachments:
                 embed.set_image(url=attachments[-1].proxy_url)
@@ -1048,7 +1100,9 @@ class EmbedBuilder(Cog):
             if fields := embed.fields:
                 await ctx.send(
                     "```yaml\n{data}\n```".format(
-                        data="\n".join(f"• {i}){f.name} > {f.value}" for i, f in enumerate(fields)),
+                        data="\n".join(
+                            f"• {i}){f.name} > {f.value}" for i, f in enumerate(fields)
+                        ),
                     )
                 )
 
@@ -1221,7 +1275,9 @@ class EmbedBuilder(Cog):
 
     @fields_index.command(name="add", aliases=["a"])
     @has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    async def fields_index_add(self, ctx: Context, index: int, name: str, *, value: str):
+    async def fields_index_add(
+        self, ctx: Context, index: int, name: str, *, value: str
+    ):
         """Allows to insert a field to an embed based on its index
 
         Parameters

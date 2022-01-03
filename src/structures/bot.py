@@ -161,7 +161,9 @@ class CustomBot(Bot):
                 name=embed.author.name,
                 url=embed.author.url,
             ),
-            footer=wrapper(func=embed.set_footer, arg="icon_url", text=embed.footer.text),
+            footer=wrapper(
+                func=embed.set_footer, arg="icon_url", text=embed.footer.text
+            ),
         )
         for item in set(properties) - set(exclude):
             if image := properties[item]:
@@ -241,12 +243,16 @@ class CustomBot(Bot):
             Connection
         """
         connection: Connection = await self.pool.acquire(timeout=timeout)
-        transaction = connection.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable)
+        transaction = connection.transaction(
+            isolation=isolation, readonly=readonly, deferrable=deferrable
+        )
         await transaction.start()
         try:
             yield connection
         except Exception as e:
-            self.logger.exception("An exception occurred in the transaction", exc_info=e)
+            self.logger.exception(
+                "An exception occurred in the transaction", exc_info=e
+            )
             if not connection.is_closed():
                 await transaction.rollback()
             if raise_on_error:
@@ -258,7 +264,9 @@ class CustomBot(Bot):
             await self.pool.release(connection)
 
     # noinspection PyTypeChecker
-    async def webhook(self, channel: Union[Messageable, int], *, reason: str = None) -> Webhook:
+    async def webhook(
+        self, channel: Union[Messageable, int], *, reason: str = None
+    ) -> Webhook:
         """Function which returns first webhook of a
         channel creates one if there's no webhook
 
@@ -283,7 +291,9 @@ class CustomBot(Bot):
             if item.user == self.user:
                 return item
         image = await self.user.display_avatar.read()
-        return await channel.create_webhook(name=self.user.display_name, avatar=image, reason=reason)
+        return await channel.create_webhook(
+            name=self.user.display_name, avatar=image, reason=reason
+        )
 
     def __repr__(self) -> str:
         """Representation of V-Bot

@@ -148,7 +148,9 @@ class PingBump(View):
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)
-            return await resp.send_message("Alright, you won't get notified", ephemeral=True)
+            return await resp.send_message(
+                "Alright, you won't get notified", ephemeral=True
+            )
         self.mentions.add(inter.user)
         return await resp.send_message("Alright, you will get notified", ephemeral=True)
 

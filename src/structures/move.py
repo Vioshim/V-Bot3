@@ -18,7 +18,11 @@ from dataclasses import dataclass
 from enum import IntEnum, auto
 from typing import Optional
 
+from discord import Embed
+from discord.utils import utcnow
+
 from src.enums.mon_types import Types
+from src.utils.etc import WHITE_BAR
 
 __all__ = (
     "Category",
@@ -49,6 +53,23 @@ class Move:
     pp: Optional[int] = None
     banned: bool = False
     metronome: bool = True
+
+    @property
+    def embed(self):
+        description = self.desc or self.shortDesc
+        embed = Embed(
+            title=self.name,
+            description=description,
+            color=self.type.color,
+            timestamp=utcnow(),
+        )
+        embed.add_field(name="Power", value=f"{self.base}")
+        embed.add_field(name="Accuracy", value=f"{self.accuracy}")
+        embed.set_footer(text=self.category.name.title())
+        embed.add_field(name="PP", value=f"{self.pp}")
+        embed.set_thumbnail(url=self.type.emoji.url)
+        embed.set_image(url=WHITE_BAR)
+        return embed
 
     def __str__(self):
         return self.name
