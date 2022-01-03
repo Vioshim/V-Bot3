@@ -124,6 +124,6 @@ class ColoredLogger(Logger):
             Logger's Name
         """
         super().__init__(name, INFO)
-        console = SysLogHandler(addresss=("logsN.papertrailapp.com", 514))
+        console = SysLogHandler(address=("logsN.papertrailapp.com", 514))
         console.setFormatter(ColoredFormatter(self.COLOR_FORMAT))
         self.addHandler(console)
