@@ -14,7 +14,6 @@
 
 from datetime import datetime
 from logging import INFO, Formatter, Logger, LogRecord, StreamHandler
-from logging.handlers import SysLogHandler
 
 from pytz import UTC, timezone
 
@@ -51,7 +50,13 @@ def formatter_message(message: str, use_color=True) -> str:
     return message
 
 
-COLORS = dict(WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED)
+COLORS = dict(
+    WARNING=YELLOW,
+    INFO=BLUE,
+    DEBUG=WHITE,
+    CRITICAL=YELLOW,
+    ERROR=RED,
+)
 
 
 class ColoredFormatter(Formatter):
