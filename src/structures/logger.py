@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from datetime import datetime
-from logging import INFO, Formatter, Logger, LogRecord, StreamHandler
+from logging import INFO, Formatter, Logger, LogRecord
+from logging.handlers import SysLogHandler
 
 from pytz import UTC, timezone
 
@@ -50,7 +51,9 @@ def formatter_message(message: str, use_color=True) -> str:
     return message
 
 
-COLORS = dict(WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED)
+COLORS = dict(
+    WARNING=YELLOW, INFO=WHITE, DEBUG=BLUE, CRITICAL=YELLOW, ERROR=RED
+)
 
 
 class ColoredFormatter(Formatter):
@@ -109,7 +112,7 @@ class ColoredFormatter(Formatter):
 
 
 class ColoredLogger(Logger):
-    FORMAT = "%(asctime)s〕$BOLD%(pathname)s$RESET|$BOLD%(funcName)s$RESET[%(levelname)s] %(message)s"
+    FORMAT = "$BOLD%(pathname)s$RESET|$BOLD%(funcName)s$RESET %(message)s"
     COLOR_FORMAT = formatter_message(FORMAT, True)
 
     def __init__(self, name: str):
@@ -121,7 +124,6 @@ class ColoredLogger(Logger):
             Logger's Name
         """
         super().__init__(name, INFO)
-        color_formatter = ColoredFormatter(self.COLOR_FORMAT)
-        console = StreamHandler()
-        console.setFormatter(color_formatter)
+        console = SysLogHandler(addresss=("logsN.papertrailapp.com", 514))
+        console.setFormatter(ColoredFormatter(self.COLOR_FORMAT))
         self.addHandler(console)
