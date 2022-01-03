@@ -251,7 +251,7 @@ class Character(metaclass=ABCMeta):
             )
             c_embed.add_field(
                 name="Sp.Ability - Origin",
-                value=sp_ability.method[:200],
+                value=sp_ability.origin[:200],
                 inline=False,
             )
             c_embed.add_field(
