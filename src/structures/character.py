@@ -81,16 +81,10 @@ class Character(metaclass=ABCMeta):
     sp_ability: Optional[SpAbility] = None
     url: Optional[str] = None
     image: Optional[str] = None
-    ping_button: Optional[str] = None
-    delete_button: Optional[str] = None
     location: Optional[int] = None
     created_at: datetime = None
 
     def __post_init__(self):
-        if not self.ping_button:
-            self.ping_button = urandom(32).hex()
-        if not self.delete_button:
-            self.delete_button = urandom(32).hex()
         if not self.server:
             self.server = 719343092963999804
         if not self.created_at:
@@ -449,16 +443,14 @@ class Character(metaclass=ABCMeta):
             """--sql
             INSERT INTO CHARACTER(
                 ID, NAME, AGE, PRONOUN, BACKSTORY, EXTRA,
-                KIND, AUTHOR, SERVER, URL, IMAGE, PING_BUTTON,
-                DELETE_BUTTON, CREATED_AT, LOCATION, THREAD)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+                KIND, AUTHOR, SERVER, URL, IMAGE, CREATED_AT, LOCATION, THREAD)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             ON CONFLICT (ID) DO UPDATE
             SET
                 ID = $1, NAME = $2, AGE = $3, PRONOUN = $4,
                 BACKSTORY = $5, EXTRA = $6, KIND = $7, AUTHOR = $8,
-                SERVER = $9, URL = $10, IMAGE = $11, ping_button = $12,
-                DELETE_BUTTON = $13, CREATED_AT = $14,
-                LOCATION = $15, THREAD = $16;
+                SERVER = $9, URL = $10, IMAGE = $11, CREATED_AT = $12,
+                LOCATION = $13, THREAD = $14;
             """,
             self.id,
             self.name,
@@ -471,8 +463,6 @@ class Character(metaclass=ABCMeta):
             self.server,
             self.url,
             self.image,
-            self.ping_button,
-            self.delete_button,
             self.created_at,
             self.location,
             self.thread,
