@@ -5,7 +5,7 @@ description = ""
 authors = ["Vioshim <Krangelj@unicartagena.edu.co>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 pyright = "^0.0.13"
 beautifulsoup4 = "^4.10.0"
 pyaml = "^21.10.1"
@@ -44,7 +44,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 
 # line-length = 120 # override black's default line-length
-target-version = ["py39"]
+target-version = ["py310"]
 exclude = '''
 /(
     \.git
@@ -63,7 +63,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.9"
+pythonVersion = "3.10.1"
 
 
 [tool.isort]
