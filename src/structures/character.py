@@ -46,7 +46,12 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1370,7 +1375,7 @@ class VariantCharacter(Character):
             species = data.pop("species", None)
             variant = data.pop("variant", None)
             data["species"] = mon_species = Variant(
-                base=Species[species], name=variant
+                species=Species[species], name=variant
             )
             mon = VariantCharacter(**data)
             if moves := await connection.fetchval(
@@ -1732,13 +1737,13 @@ def oc_process(**kwargs):
         if base := Species.deduce(data.get("base")):
             name = variant.title().replace(base.name, "").strip()
             data["species"] = Variant(
-                base=base, name=f"{name} {base.name}".title()
+                species=base, name=f"{name} {base.name}".title()
             )
         else:
             for item in variant.split(" "):
                 if species := Species.deduce(item):
                     data["species"] = Variant(
-                        base=species, name=variant.title()
+                        species=species, name=variant.title()
                     )
                     break
             else:
@@ -1759,7 +1764,7 @@ def oc_process(**kwargs):
         elif species.types != types:
             types_txt = "/".join(i.value.name for i in types)
             species = Variant(
-                base=species, name=f"{types_txt}-Typed {species.name}"
+                species=species, name=f"{types_txt}-Typed {species.name}"
             )
             species.types = types
             data["species"] = species
@@ -1769,12 +1774,10 @@ def oc_process(**kwargs):
             if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
                 species.abilities = abilities
             elif abilities_txt := "/".join(
-                x.value.name
-                for x in abilities
-                if x not in species.abilities
+                x.value.name for x in abilities if x not in species.abilities
             ):
                 species = Variant(
-                    base=species,
+                    species=species,
                     name=f"{abilities_txt}-Granted {species.name}",
                 )
                 species.abilities = abilities
