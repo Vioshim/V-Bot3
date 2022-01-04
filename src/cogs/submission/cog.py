@@ -56,7 +56,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
@@ -131,7 +136,9 @@ class Submission(Cog):
                 timestamp=utcnow(),
             )
             embed.set_image(url=REGISTERED_IMG)
-            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
+            embed.set_author(
+                name=author.display_name, icon_url=author.avatar.url
+            )
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
@@ -160,7 +167,9 @@ class Submission(Cog):
                 await member.send(embed=embed, files=files, view=view)
             await ctx.send_followup("User has been registered", ephemeral=True)
         else:
-            await ctx.send_followup("User is already registered", ephemeral=True)
+            await ctx.send_followup(
+                "User is already registered", ephemeral=True
+            )
 
     async def unclaiming(
         self,
@@ -223,7 +232,9 @@ class Submission(Cog):
             except DiscordException:
                 with suppress(DiscordException):
                     thread = await self.bot.fetch_channel(oc_list)
-                    await thread.delete(reason="Former OC List Message was removed.")
+                    await thread.delete(
+                        reason="Former OC List Message was removed."
+                    )
         message: WebhookMessage = await webhook.send(
             content=member.mention,
             wait=True,
@@ -247,7 +258,9 @@ class Submission(Cog):
                 guild.id,
             )
 
-    async def registration(self, ctx: Union[Interaction, Message], oc: Type[Character]):
+    async def registration(
+        self, ctx: Union[Interaction, Message], oc: Type[Character]
+    ):
         """This is the function which handles the registration process,
         it will try to autocomplete data it can deduce, or ask about what
         can not be deduced.
@@ -294,7 +307,9 @@ class Submission(Cog):
                     or min(species.stats) < 1
                     or max(species.stats) > 5
                 ):
-                    await ctx.reply("Max stats is 18. Min 1. Max 5", delete_after=5)
+                    await ctx.reply(
+                        "Max stats is 18. Min 1. Max 5", delete_after=5
+                    )
                     return
                 if not 1 <= len(species.types) <= 2:
                     view = ComplexInput(
@@ -392,6 +407,43 @@ class Submission(Cog):
 
             text_view = TextInput(bot=self.bot, member=user, target=ctx)
 
+            if not oc.moveset:
+                if not (movepool := species.movepool):
+                    movepool = Movepool(event=frozenset(Moves))
+
+                moves_view = ComplexInput(
+                    bot=self.bot,
+                    member=user,
+                    values=movepool(),
+                    timeout=None,
+                    target=ctx,
+                    max_values=6,
+                )
+
+                async with moves_view.send(
+                    title="Select the Moves",
+                    description="If you press the write button, you can add multiple by adding commas.",
+                ) as moves:
+                    if not moves:
+                        return
+                    oc.moveset = frozenset(moves)
+
+            if isinstance(species, (Variant, Fakemon)):
+                species.movepool += Movepool(event=oc.moveset)
+
+            if not oc.any_move_at_first:
+                moves_movepool = species.movepool()
+                if move_errors := [
+                    move.value.name
+                    for move in oc.moveset
+                    if move not in moves_movepool
+                ]:
+                    text = ", ".join(move_errors)
+                    await ctx.reply(
+                        f"the moves [{text}] were not found in the movepool"
+                    )
+                    return
+
             if (
                 not oc.sp_ability
                 and not oc.url
@@ -430,41 +482,6 @@ class Submission(Cog):
                                     return
                                 data[item] = answer
                         oc.sp_ability = SpAbility(**data)
-
-            if not oc.moveset:
-                if not (movepool := species.movepool):
-                    movepool = Movepool(event=frozenset(Moves))
-
-                moves_view = ComplexInput(
-                    bot=self.bot,
-                    member=user,
-                    values=movepool(),
-                    timeout=None,
-                    target=ctx,
-                    max_values=6,
-                )
-
-                async with moves_view.send(
-                    title="Select the Moves",
-                    description="If you press the write button, you can add multiple by adding commas.",
-                ) as moves:
-                    if not moves:
-                        return
-                    oc.moveset = frozenset(moves)
-
-            if isinstance(species, (Variant, Fakemon)):
-                species.movepool += Movepool(event=oc.moveset)
-
-            if not oc.any_move_at_first:
-                moves_movepool = species.movepool()
-                if move_errors := [
-                    move.value.name for move in oc.moveset if move not in moves_movepool
-                ]:
-                    text = ", ".join(move_errors)
-                    await ctx.reply(
-                        f"the moves [{text}] were not found in the movepool"
-                    )
-                    return
 
             if not oc.backstory:
                 async with text_view.handle(
@@ -518,7 +535,9 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
@@ -862,7 +881,8 @@ class Submission(Cog):
                         m = await channel.send("Mention the User")
                         aux: Message = await self.bot.wait_for(
                             "message",
-                            check=lambda m: m.channel == channel and m.author == author,
+                            check=lambda m: m.channel == channel
+                            and m.author == author,
                         )
                         self.bot.msg_cache_add(m)
                         self.bot.msg_cache_add(aux)
@@ -887,7 +907,9 @@ class Submission(Cog):
             except MarkedYAMLError:
                 return
             except Exception as e:
-                self.bot.logger.exception("Exception processing character", exc_info=e)
+                self.bot.logger.exception(
+                    "Exception processing character", exc_info=e
+                )
                 await message.reply(f"Exception:\n\n{e}", delete_after=10)
                 return
 
@@ -939,7 +961,10 @@ class Submission(Cog):
                     )
                     for cat_id in RP_CATEGORIES:
                         if ch := self.bot.get_channel(cat_id):
-                            await ch.set_permissions(message.author, overwrite=None)
+                            await ch.set_permissions(
+                                message.author,
+                                overwrite=None,
+                            )
             else:
                 for item in self.rpers.get(message.author.id, {}).values():
                     if any(
@@ -949,7 +974,9 @@ class Submission(Cog):
                         )
                     ):
                         if item.location != msg.channel.id:
-                            former_channel = message.guild.get_channel(item.location)
+                            former_channel = message.guild.get_channel(
+                                item.location
+                            )
                             previous = self.located.get(item.location, set())
                             current = self.located.get(msg.channel.id, set())
                             if item in previous:
