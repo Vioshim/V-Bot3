@@ -89,7 +89,8 @@ class TemplateView(View):
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
         await interaction.edit_original_message(
-            f"```yaml\n{text}\n```", view=None
+            content=f"```yaml\n{text}\n```",
+            view=None,
         )
         self.stop()
 
@@ -104,7 +105,8 @@ class TemplateView(View):
             )
             view.add_item(btn)
         await interaction.edit_original_message(
-            "**__Available Templates__**", view=view
+            content="**__Available Templates__**",
+            view=view,
         )
         self.stop()
 
