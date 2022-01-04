@@ -85,17 +85,18 @@ class TemplateView(View):
         self.template = template
 
     @button(label="Through Google Documents", row=0, style=ButtonStyle.blurple)
-    async def mode1(self, btn: Button, interaction: Interaction):
+    async def mode1(self, _: Button, interaction: Interaction):
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
-        await interaction.edit_original_message(
+        message = await interaction.original_message()
+        await message.edit(
             content=f"```yaml\n{text}\n```",
             view=None,
         )
         self.stop()
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
-    async def mode2(self, btn: Button, interaction: Interaction):
+    async def mode2(self, _: Button, interaction: Interaction):
         view = View()
         for k, v in self.template.get("Document", {}).items():
             btn = Button(
@@ -104,7 +105,8 @@ class TemplateView(View):
                 emoji="\N{PAGE FACING UP}",
             )
             view.add_item(btn)
-        await interaction.edit_original_message(
+        message = await interaction.original_message()
+        await message.edit(
             content="**__Available Templates__**",
             view=view,
         )
