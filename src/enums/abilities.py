@@ -59,12 +59,16 @@ class Abilities(Enum):
         set[Abilities]
             set with the abilities
         """
+        info = set()
+
+        if not item:
+            return info
+
         if isinstance(item, str):
             item = item.title()
         elif isinstance(item, Iterable):
             item = ",".join(item).title()
 
-        info = set()
         elements = {x.value.name: x for x in Abilities}
         for elem in split(r"\s*[,|\/]\s*", item):
             try:

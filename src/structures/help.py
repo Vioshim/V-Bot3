@@ -20,7 +20,7 @@ from discord import SlashCommand
 
 if TYPE_CHECKING:
     from discord.ext.commands import Command, Group, Cog
-    from src.type_hinting.context import Context
+    from src.context.context import Context
 
 from discord.ext.commands import HelpCommand
 

@@ -64,7 +64,7 @@ MAX_MOVE_RANGE2 = frozendict(
 )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Typing:
     """This is the basic information a type has.
 

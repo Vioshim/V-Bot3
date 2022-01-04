@@ -23,7 +23,7 @@ from asyncpg import Connection, Record
 __all__ = ("Ability", "SpAbility")
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Ability:
     """
     Ability class which represents the game provided ones.
@@ -43,15 +43,19 @@ class Ability:
         return f"Ability({self.name!r})"
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class SpAbility(Ability):
     """
     Special Ability class which inherits from Ability
     """
 
     name: str = field(default_factory=str)  # Name of the special ability
-    description: str = field(default_factory=str)  # Description of the special ability
-    origin: str = field(default_factory=str)  # Method to obtain the special ability
+    description: str = field(
+        default_factory=str
+    )  # Description of the special ability
+    origin: str = field(
+        default_factory=str
+    )  # Method to obtain the special ability
     pros: str = field(default_factory=str)  # Pros of the special ability
     cons: str = field(default_factory=str)  # Cons of the special ability
 
@@ -88,7 +92,9 @@ class SpAbility(Ability):
         )
 
     @classmethod
-    async def fetch(cls, connection: Connection, idx: int) -> Optional[SpAbility]:
+    async def fetch(
+        cls, connection: Connection, idx: int
+    ) -> Optional[SpAbility]:
         """This method calls database to obtain information
 
         Parameters

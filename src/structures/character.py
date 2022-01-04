@@ -19,7 +19,7 @@ from asyncio import to_thread
 from dataclasses import dataclass, field
 from datetime import datetime
 from random import sample
-from typing import Any, Optional, Type, Union
+from typing import Any, Iterable, Optional, Type, Union
 
 from asyncpg import Connection
 from discord import Color, Embed
@@ -46,12 +46,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -68,7 +63,7 @@ __all__ = (
 )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Character(metaclass=ABCMeta):
     species: Union[Type[SpeciesBase], Species] = None
     id: Optional[int] = None
@@ -120,6 +115,30 @@ class Character(metaclass=ABCMeta):
             amount = min(6, len(moves))
             items = sample(moves, k=amount)
             self.moveset = frozenset(items)
+
+    @property
+    def evolves_from(self) -> Optional[Species | Type[SpeciesBase] | Fusion]:
+        if data := self.species.evolves_from:
+            if isinstance(data, SpeciesBase):
+                return data
+            if isinstance(data, str):
+                return Species[data]
+            if isinstance(data, Iterable):
+                mon1, mon2 = data
+                return Fusion(mon1, mon2)
+
+    @property
+    def evolves_to(self) -> list[Species | Type[SpeciesBase] | Fusion]:
+        elements = []
+        for data in self.species.evolves_to:
+            if isinstance(data, SpeciesBase):
+                elements.append(data)
+            elif isinstance(data, str):
+                elements.append(Species[data])
+            elif isinstance(data, Iterable):
+                mon1, mon2 = data
+                elements.append(Fusion(mon1, mon2))
+        return elements
 
     @property
     def emoji(self):
@@ -555,7 +574,7 @@ class Character(metaclass=ABCMeta):
             )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class PokemonCharacter(Character):
     species: Pokemon = None
 
@@ -653,7 +672,7 @@ class PokemonCharacter(Character):
         )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class LegendaryCharacter(Character):
     species: Legendary = None
 
@@ -751,7 +770,7 @@ class LegendaryCharacter(Character):
             )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class MythicalCharacter(Character):
     species: Mythical = None
 
@@ -847,7 +866,7 @@ class MythicalCharacter(Character):
             )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class UltraBeastCharacter(Character):
     species: UltraBeast = None
 
@@ -946,7 +965,7 @@ class UltraBeastCharacter(Character):
             )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class FakemonCharacter(Character):
     species: Fakemon = None
 
@@ -957,7 +976,10 @@ class FakemonCharacter(Character):
     def __post_init__(self):
         super(FakemonCharacter, self).__post_init__()
         self.species.id = self.id
-        self.abilities = self.abilities or self.species.abilities
+        if not self.abilities:
+            self.abilities = self.species.abilities
+        if evolves_from := self.evolves_from:
+            self.movepool += evolves_from.movepool
 
     @property
     def kind(self) -> str:
@@ -999,9 +1021,13 @@ class FakemonCharacter(Character):
     @property
     def embed(self) -> Embed:
         c_embed = super(FakemonCharacter, self).embed
+        if evolves_from := self.evolves_from:
+            name = f"Fakemon Evolution - {evolves_from.name}"
+        else:
+            name = "Fakemon Species"
         c_embed.set_field_at(
             index=2,
-            name="Fakemon Species",
+            name=name,
             value=self.species.name,
         )
         c_embed.insert_field_at(
@@ -1062,6 +1088,7 @@ class FakemonCharacter(Character):
         ):
             data: dict[str, Union[str, int]] = dict(item)
             data.pop("kind", None)
+            evolves_from: Optional[str] = data.pop("evolves_from", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
             stats = {k.upper(): v for k, v in stats.items()}
@@ -1071,16 +1098,19 @@ class FakemonCharacter(Character):
                     id=fakemon_id,
                     name=str(species),
                     movepool=movepool,
+                    evolves_from=evolves_from,
                     **stats,
                 )
             mon = FakemonCharacter(**data)
+            if mon_origin := mon.evolves_from:
+                mon.movepool += mon_origin.movepool
             await mon.retrieve(connection)
             characters.append(mon)
 
         return characters
 
     async def upsert(self, connection: Connection):
-        """Upsert method for MegaCharacter
+        """Upsert method for FakemonCharacter
 
         Attributes
         ----------
@@ -1091,9 +1121,9 @@ class FakemonCharacter(Character):
             await super(FakemonCharacter, self).upsert(connection)
             await connection.execute(
                 """--sql
-                INSERT INTO FAKEMON(ID, NAME, HP, ATK, DEF, SPA, SPD, SPE)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
-                NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8;
+                INSERT INTO FAKEMON(ID, NAME, HP, ATK, DEF, SPA, SPD, SPE, EVOLVES_FROM)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (ID) DO UPDATE SET
+                NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8, EVOLVES_FROM = $9;
                 """,
                 oc_id,
                 self.name,
@@ -1103,11 +1133,17 @@ class FakemonCharacter(Character):
                 self.species.SPA,
                 self.species.SPD,
                 self.species.SPE,
+                getattr(self.evolves_from, "id", None),
             )
-            await self.movepool.upsert(connection, oc_id)
+            movepool = self.movepool
+
+            if evolves_from := self.evolves_from:
+                movepool = movepool.without_moves(evolves_from.movepool)
+
+            await movepool.upsert(connection, oc_id)
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class CustomMegaCharacter(Character):
     species: CustomMega = None
 
@@ -1215,7 +1251,7 @@ class CustomMegaCharacter(Character):
         )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class VariantCharacter(Character):
     species: Variant = None
 
@@ -1358,7 +1394,7 @@ class VariantCharacter(Character):
         return characters
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class FusionCharacter(Character):
     species: Fusion = None
 
@@ -1474,7 +1510,7 @@ class FusionCharacter(Character):
         )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class MegaCharacter(Character):
     species: Mega = None
 
@@ -1581,6 +1617,7 @@ PLACEHOLDER_NAMES = {
     "Backstory": "backstory",
     "Additional Information": "extra",
     "F. Species": "fakemon",
+    "F. Base": "base",
     "Variant": "variant",
     "Artist": "artist",
     "Website": "website",
@@ -1595,6 +1632,7 @@ PLACEHOLDER_DEFAULTS = {
     "backstory": "Character's backstory",
     "extra": "Character's extra information",
     "fakemon": "OC's Fakemon Species",
+    "base": "OC's Base Species",
     "variant": "OC's Variant Species",
     "artist": "Artist's Name",
     "website": "Art's Website",
@@ -1684,15 +1722,27 @@ def oc_process(**kwargs):
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
     if fakemon := data.pop("fakemon", ""):
         name: str = fakemon.title()
-        if name.startswith("Mega"):
+        if name.startswith("Mega "):
             data["species"] = CustomMega(Species.deduce(name[5:]))
         else:
-            data["species"] = Fakemon(name=name)
+            if base := Species.deduce(data.get("base")):
+                base = base.id
+            data["species"] = Fakemon(name=name.title(), evolves_from=base)
     elif variant := data.pop("variant", ""):
-        for item in variant.split(" "):
-            if species := Species.deduce(item):
-                data["species"] = Variant(base=species, name=variant)
-                break
+        if base := Species.deduce(data.get("base")):
+            name = variant.title().replace(base.name, "").strip()
+            data["species"] = Variant(
+                base=base, name=f"{name} {base.name}".title()
+            )
+        else:
+            for item in variant.split(" "):
+                if species := Species.deduce(item):
+                    data["species"] = Variant(
+                        base=species, name=variant.title()
+                    )
+                    break
+            else:
+                raise Exception("Unable to determine the variant' species")
     elif fusion := data.pop("fusion", []):
         item = Species.deduce(fusion)
         if not isinstance(item, Fusion):
@@ -1701,14 +1751,36 @@ def oc_process(**kwargs):
     elif pokemon := common_pop_get(data, "species", "pokemon"):
         data["species"] = Species.deduce(pokemon)
 
-    if types := common_pop_get(data, "types", "type"):
+    if types := frozenset(Types.deduce(common_pop_get(data, "types", "type"))):
         if isinstance(
             species := data["species"], (Fakemon, Fusion, Variant, CustomMega)
         ):
-            species.types = frozenset(Types.deduce(types))
+            species.types = types
+        elif species.types != types:
+            types_txt = "/".join(i.value.name for i in types)
+            species = Variant(
+                base=species, name=f"{types_txt}-Typed {species.name}"
+            )
+            species.types = types
+            data["species"] = species
 
     if abilities := common_pop_get(data, "abilities", "ability"):
-        data["abilities"] = frozenset(Abilities.deduce(abilities))
+        if abilities := frozenset(Abilities.deduce(abilities)):
+            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+                species.abilities = abilities
+            elif abilities_txt := "/".join(
+                x.value.name
+                for x in abilities
+                if x not in species.abilities
+            ):
+                species = Variant(
+                    base=species,
+                    name=f"{abilities_txt}-Granted {species.name}",
+                )
+                species.abilities = abilities
+                data["species"] = species
+
+            data["abilities"] = abilities
 
     if moveset := common_pop_get(data, "moveset", "moves"):
         data["moveset"] = frozenset(Moves.deduce(moveset))
@@ -1817,23 +1889,23 @@ async def doc_convert(url: str) -> dict[str, Any]:
                 raw_kwargs["sp_ability"][element] = next_value
             elif element := DATA_FINDER.match(item):
                 argument = next_value.title()
-                x, y = element.groups()
-                if x == "Level":
-                    idx = int(y)
-                    raw_kwargs["movepool"].setdefault("level", {})
-                    raw_kwargs["movepool"]["level"].setdefault(idx, set())
-                    raw_kwargs["movepool"]["level"][idx].add(argument)
-                elif x == "Move":
-                    raw_kwargs["moveset"].add(argument)
-                elif x == "Ability":
-                    raw_kwargs["abilities"].add(next_value)
-                elif x == "Species":
-                    raw_kwargs["fusion"].add(next_value)
-                elif x == "Type":
-                    raw_kwargs["types"].add(next_value.upper())
-                else:
-                    raw_kwargs["movepool"].setdefault(x.lower(), set())
-                    raw_kwargs["movepool"][x.lower()].add(argument)
+                match element.groups():
+                    case ["Level", y]:
+                        idx = int(y)
+                        raw_kwargs["movepool"].setdefault("level", {})
+                        raw_kwargs["movepool"]["level"].setdefault(idx, set())
+                        raw_kwargs["movepool"]["level"][idx].add(argument)
+                    case ["Move", _]:
+                        raw_kwargs["moveset"].add(argument)
+                    case ["Ability", _]:
+                        raw_kwargs["abilities"].add(next_value)
+                    case ["Species", _]:
+                        raw_kwargs["fusion"].add(next_value)
+                    case ["Type", _]:
+                        raw_kwargs["types"].add(next_value.upper())
+                    case [x, _]:
+                        raw_kwargs["movepool"].setdefault(x.lower(), set())
+                        raw_kwargs["movepool"][x.lower()].add(argument)
 
         raw_kwargs.pop("artist", None)
         raw_kwargs.pop("website", None)

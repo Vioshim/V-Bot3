@@ -36,8 +36,9 @@ setLoggerClass(ColoredLogger)
 logger = getLogger(__name__)
 
 if system_os != "nt":
-    from uvloop import EventLoopPolicy
     from asyncio import set_event_loop_policy
+
+    from uvloop import EventLoopPolicy
 
     set_event_loop_policy(EventLoopPolicy())
     logger.info("Using uvloop")
@@ -105,9 +106,7 @@ EXCEPTIONS = {
 
 
 @wrap_session
-async def main(
-    pool: Pool, scheduler: AsyncScheduler
-) -> None:  # , scheduler: AsyncScheduler) -> None:
+async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
     """Main Execution function
 
     Parameters
@@ -137,7 +136,9 @@ async def main(
             logger.info("Successfully loaded %s", cog)
         await bot.start(getenv("DISCORD_TOKEN"))
     except Exception as e:
-        msg = EXCEPTIONS.get(type(e), "An exception occurred while trying to connect")
+        msg = EXCEPTIONS.get(
+            type(e), "An exception occurred while trying to connect"
+        )
         logger.critical(msg=msg, exc_info=e)
 
 

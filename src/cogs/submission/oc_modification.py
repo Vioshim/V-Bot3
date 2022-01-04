@@ -185,7 +185,9 @@ class SPView(Basic):
             "If you need to write too much, "
             "I recommend to move to Google documents, otherwise, try to be concise."
         )
-        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
+        async with view.send(
+            title="Sp.Ability Modify", ephemeral=True
+        ) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
@@ -228,7 +230,7 @@ class SPView(Basic):
         self.stop()
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Mod(metaclass=ABCMeta):
     label: str = ""
     description: str = ""
@@ -278,7 +280,7 @@ class Mod(metaclass=ABCMeta):
         """
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class NameMod(Mod):
     label: str = "Name"
     description: str = "Modify the OC's Name"
@@ -336,7 +338,7 @@ class NameMod(Mod):
                 return False
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class AgeMod(Mod):
     label: str = "Age"
     description: str = "Modify the OC's Age"
@@ -394,7 +396,7 @@ class AgeMod(Mod):
                 return False
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class PronounMod(Mod):
     label: str = "Pronoun"
     description: str = "Modify the OC's Pronoun"
@@ -459,7 +461,7 @@ class PronounMod(Mod):
         return aux
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class BackstoryMod(Mod):
     label: str = "Backstory"
     description: str = "Modify the OC's Backstory"
@@ -517,7 +519,7 @@ class BackstoryMod(Mod):
                 return False
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class ExtraMod(Mod):
     label: str = "Extra Information"
     description: str = "Modify the OC's Extra Information"
@@ -575,7 +577,7 @@ class ExtraMod(Mod):
                 return False
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class MovesetMod(Mod):
     label: str = "Moveset"
     description: str = "Modify the OC's Moveset"
@@ -644,7 +646,7 @@ class MovesetMod(Mod):
         return aux
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class AbilitiesMod(Mod):
     label: str = "Abilities"
     description: str = "Modify the OC's Abilities"
@@ -713,7 +715,7 @@ class AbilitiesMod(Mod):
             oc.abilities = frozenset(abilities)
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class ImageMod(Mod):
     label: str = "Image"
     description: str = "Modify the OC's Image"
@@ -777,7 +779,7 @@ class ImageMod(Mod):
         return aux
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class EvolutionMod(Mod):
     label: str = "Evolution"
     description: str = "Used to Evolve OCs"
@@ -887,7 +889,7 @@ class EvolutionMod(Mod):
         return True
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class DevolutionMod(Mod):
     label: str = "Devolve"
     description: str = "Used to devolve OCs"
@@ -981,7 +983,7 @@ class DevolutionMod(Mod):
         return True
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class SpAbilityMod(Mod):
     label: str = "Special Ability"
     description: str = "Modify/Add the OC's Special Abilities"

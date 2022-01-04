@@ -37,7 +37,7 @@ __all__ = (
 )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Species(metaclass=ABCMeta):
     id: str = ""
     name: str = ""
@@ -104,7 +104,7 @@ class Species(metaclass=ABCMeta):
         """
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Pokemon(Species):
     """
     This class Represents a common Pokemon
@@ -123,7 +123,7 @@ class Pokemon(Species):
         return min(len(self.abilities), 2)
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Legendary(Species):
     """
     This class Represents a legendary
@@ -142,7 +142,7 @@ class Legendary(Species):
         return min(len(self.abilities), 2)
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Mythical(Species):
     """
     This class Represents a Mythical
@@ -161,7 +161,7 @@ class Mythical(Species):
         return min(len(self.abilities), 2)
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Mega(Species):
     """
     This class Represents a legendary
@@ -180,7 +180,7 @@ class Mega(Species):
         return 1
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class UltraBeast(Species):
     """
     This class Represents a legendary
@@ -206,7 +206,7 @@ class UltraBeast(Species):
         return 1
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Fakemon(Species):
     """
     This class Represents a fakemon
@@ -218,6 +218,7 @@ class Fakemon(Species):
     SPA: int = 3
     SPD: int = 3
     SPE: int = 3
+    evolves_from: Optional[str] = None
 
     def __post_init__(self):
         stats = self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
@@ -264,7 +265,7 @@ class Fakemon(Species):
         return Abilities.BEASTBOOST not in self.abilities
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class CustomMega(Species):
     """
     This class Represents a Custom Mega
@@ -301,7 +302,7 @@ class CustomMega(Species):
         return False
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Variant(Species):
     """
     This class Represents a Variant
@@ -346,7 +347,7 @@ class Variant(Species):
         )
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Fusion(Species):
     """
     This class Represents a fusion

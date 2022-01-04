@@ -27,7 +27,7 @@ from src.utils.etc import DICE_NUMBERS, WHITE_BAR
 __all__ = ("Mission",)
 
 
-@dataclass(repr=False, unsafe_hash=True)
+@dataclass(repr=False, unsafe_hash=True, slots=True)
 class Mission:
     id: Optional[int] = None
     author: Optional[int] = None

@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, astuple, dataclass, field
-from typing import Callable, Union
+from typing import Callable, Iterable, Union
 
 from asyncpg.connection import Connection
 from frozendict import frozendict
@@ -26,7 +26,7 @@ __all__ = ("Movepool",)
 
 
 # noinspection PyArgumentList
-@dataclass(unsafe_hash=True, repr=False)
+@dataclass(unsafe_hash=True, repr=False, slots=True)
 class Movepool:
     """
     Class which represents a movepool
@@ -303,6 +303,33 @@ class Movepool:
         if item == "other":
             return self.other
         raise KeyError(key)
+
+    def without_moves(self, to_remove: Iterable[Moves] | Movepool):
+
+        total_remove = to_remove
+
+        if isinstance(to_remove, Movepool):
+            total_remove = total_remove()
+
+        movepool = Movepool(
+            level=frozendict(
+                {
+                    k: entry
+                    for k, v in self.level.items()
+                    if (
+                        entry := frozenset(
+                            {x for x in v if x not in total_remove}
+                        )
+                    )
+                }
+            ),
+            tm=frozenset({x for x in self.tm if x not in total_remove}),
+            event=frozenset({x for x in self.event if x not in total_remove}),
+            tutor=frozenset({x for x in self.tutor if x not in total_remove}),
+            egg=frozenset({x for x in self.egg if x not in total_remove}),
+            other=frozenset({x for x in self.other if x not in total_remove}),
+        )
+        return movepool
 
     @classmethod
     def from_dict(cls, **kwargs) -> Movepool:

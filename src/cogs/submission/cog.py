@@ -463,13 +463,7 @@ class Submission(Cog):
                         return
                     if answer:
                         data: dict[str, str] = {}
-                        for item in [
-                            "name",
-                            "description",
-                            "origin",
-                            "pros",
-                            "cons",
-                        ]:
+                        for item in SpAbility.__slots__:
                             async with text_view.handle(
                                 title=f"Special Ability's {item.title()}",
                                 description=(
@@ -535,9 +529,7 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(

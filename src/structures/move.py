@@ -39,7 +39,7 @@ class Category(IntEnum):
 
 
 # noinspection PyArgumentList
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Move:
     """Class that represents a Move"""
 

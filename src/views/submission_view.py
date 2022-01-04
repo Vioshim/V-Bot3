@@ -17,9 +17,9 @@ from typing import Type, Union
 
 from discord import (
     AllowedMentions,
+    ButtonStyle,
     CategoryChannel,
     DiscordException,
-    Embed,
     Guild,
     Interaction,
     InteractionResponse,
@@ -30,7 +30,6 @@ from discord import (
 )
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, Select, View, button, select
-from discord.utils import utcnow
 from yaml import dump
 
 from src.cogs.submission.oc_modification import ModifyView
@@ -75,7 +74,39 @@ class CharacterHandlerView(Complex):
         with suppress(DiscordException):
             await self.edit(page=None)
         with suppress(DiscordException):
-            await interaction.edit_original_message(embed=data[0].embed, view=None)
+            await interaction.edit_original_message(
+                embed=data[0].embed, view=None
+            )
+
+
+class TemplateView(View):
+    def __init__(self, template: dict):
+        super().__init__(timeout=None)
+        self.template = template
+
+    @button(label="Through Google Documents", row=0, style=ButtonStyle.blurple)
+    async def mode1(self, btn: Button, interaction: Interaction):
+        info = self.template.get("Template", {})
+        text = dump(info, sort_keys=False)
+        await interaction.edit_original_message(
+            f"```yaml\n{text}\n```", view=None
+        )
+        self.stop()
+
+    @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
+    async def mode2(self, btn: Button, interaction: Interaction):
+        view = View()
+        for k, v in self.template.get("Document", {}).items():
+            btn = Button(
+                label=f"G-Docs {k}",
+                url=f"https://docs.google.com/document/d/{v}/edit?usp=sharing",
+                emoji="\N{PAGE FACING UP}",
+            )
+            view.add_item(btn)
+        await interaction.edit_original_message(
+            "**__Available Templates__**", view=view
+        )
+        self.stop()
 
 
 class SubmissionView(View):
@@ -98,11 +129,11 @@ class SubmissionView(View):
         self.show_template.options = [
             SelectOption(
                 label=f"{key} Template",
-                description=value["Description"][:100],
+                description=f"Press to get {key} Template.",
                 value=key,
                 emoji="\N{SPIRAL NOTE PAD}",
             )
-            for key, value in kwargs.items()
+            for key in kwargs
         ]
 
     @select(
@@ -116,24 +147,12 @@ class SubmissionView(View):
         if raw_data := ctx.data.get("values", []):
             template = self.kwargs.get(raw_data[0], {})
             info = template.get("Template", {})
-            text = dump(info, sort_keys=False)
-            embed = Embed(
-                title=f"{raw_data[0]} Template",
-                description=f"```yaml\n{text}\n```",
-                color=ctx.user.color,
-                timestamp=utcnow(),
+            view = TemplateView(info)
+            await ctx.followup.send(
+                "__How do you want to register your character?__",
+                view=view,
+                ephemeral=True,
             )
-            if desc := template.get("Description"):
-                embed.set_footer(text=desc)
-            view = View()
-            for k, v in template.get("Document", {}).items():
-                btn = Button(
-                    label=f"G-Docs {k}",
-                    url=f"https://docs.google.com/document/d/{v}/edit?usp=sharing",
-                    emoji="\N{PAGE FACING UP}",
-                )
-                view.add_item(btn)
-            await ctx.followup.send(embed=embed, view=view, ephemeral=True)
 
     @button(
         label="Modify Character",
@@ -151,7 +170,9 @@ class SubmissionView(View):
 
         if channel.permissions_for(ctx.user).manage_messages:
             m = await channel.send("Mention the User")
-            aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
+            aux: Message = await self.bot.wait_for(
+                "message", check=text_check(ctx)
+            )
             self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
             await m.delete()
@@ -173,7 +194,9 @@ class SubmissionView(View):
         )
 
         oc: Type[Character]
-        async with view.send(title="Select Character to modify", single=True) as oc:
+        async with view.send(
+            title="Select Character to modify", single=True
+        ) as oc:
             self.bot.logger.info(
                 "%s is modifying a Character(%s) aka %s",
                 str(ctx.user),
@@ -222,7 +245,10 @@ class SubmissionView(View):
                 values=[
                     item
                     for item in choice.channels
-                    if ("-ooc" not in item.name and isinstance(item, TextChannel))
+                    if (
+                        "-ooc" not in item.name
+                        and isinstance(item, TextChannel)
+                    )
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
@@ -283,7 +309,9 @@ class SubmissionView(View):
                     parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
                     title="Mission's Difficulty",
                 )
-                async with view.send(title="Mission's difficulty", single=True) as item:
+                async with view.send(
+                    title="Mission's difficulty", single=True
+                ) as item:
                     if not item:
                         return
                     mission.difficulty = item
