@@ -156,8 +156,7 @@ class SubmissionView(View):
         await resp.defer(ephemeral=True)
         if raw_data := ctx.data.get("values", []):
             template = self.kwargs.get(raw_data[0], {})
-            info = template.get("Template", {})
-            view = TemplateView(ctx, info)
+            view = TemplateView(template, info)
             await ctx.followup.send(
                 "__How do you want to register your character?__",
                 view=view,
