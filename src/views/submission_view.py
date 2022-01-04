@@ -100,21 +100,17 @@ class TemplateView(View):
     @button(label="Through Google Documents", row=1, style=ButtonStyle.blurple)
     async def mode2(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        view = View()
-        for index, (k, v) in enumerate(
-            self.template.get("Document", {}).items()
-        ):
-            btn = Button(
-                label=f"G-Docs {k}",
-                row=index,
-                url=f"https://docs.google.com/document/d/{v}/edit?usp=sharing",
-                emoji="\N{PAGE FACING UP}",
-            )
-            view.add_item(btn)
-        await self.target.edit_original_message(
-            content="**__Available Templates__**",
-            view=view,
+
+        content = (
+            "**__Available Templates__**\n\n"
+            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
         )
+        for item in self.template.get("Document", {}).values():
+            content += (
+                f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
+            )
+
+        await self.target.edit_original_message(content=content, view=None)
         await resp.pong()
         self.stop()
 
