@@ -1724,11 +1724,11 @@ def oc_process(**kwargs):
         if name.startswith("Mega "):
             data["species"] = CustomMega(Species.deduce(name[5:]))
         else:
-            if base := Species.deduce(data.get("base")):
+            if base := Species.deduce(data.pop("base", None)):
                 base = base.id
             data["species"] = Fakemon(name=name.title(), evolves_from=base)
     elif variant := data.pop("variant", ""):
-        if base := Species.deduce(data.get("base")):
+        if base := Species.deduce(data.pop("base", None)):
             name = variant.title().replace(base.name, "").strip()
             data["species"] = Variant(
                 base=base, name=f"{name} {base.name}".title()
