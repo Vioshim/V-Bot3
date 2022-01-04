@@ -979,7 +979,7 @@ class FakemonCharacter(Character):
         if not self.abilities:
             self.abilities = self.species.abilities
         if evolves_from := self.evolves_from:
-            self.movepool += evolves_from.movepool
+            self.species.movepool += evolves_from.movepool
 
     @property
     def kind(self) -> str:
