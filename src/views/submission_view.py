@@ -90,7 +90,7 @@ class TemplateView(View):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
-        self.target.edit_original_message(
+        await self.target.edit_original_message(
             content=f"```yaml\n{text}\n```",
             view=None,
         )
@@ -111,7 +111,7 @@ class TemplateView(View):
                 emoji="\N{PAGE FACING UP}",
             )
             view.add_item(btn)
-        self.target.edit_original_message(
+        await self.target.edit_original_message(
             content="**__Available Templates__**",
             view=view,
         )
