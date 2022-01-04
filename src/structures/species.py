@@ -307,6 +307,7 @@ class Variant(Species):
     """
     This class Represents a Variant
     """
+    base: Species = None
 
     def __init__(self, base: Species, name: str):
         super(Variant, self).__init__(

@@ -1369,7 +1369,8 @@ class VariantCharacter(Character):
             data.pop("kind", None)
             species = data.pop("species", None)
             variant = data.pop("variant", None)
-            data["species"] = mon_species = Variant(base=Species[species], name=variant)
+            mon_species = Variant(base=Species[species], name=variant)
+            data["species"] = mon_species
             mon = VariantCharacter(**data)
             if moves := await connection.fetchval(
                 """--sql
