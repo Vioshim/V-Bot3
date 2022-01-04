@@ -85,7 +85,7 @@ class TemplateView(View):
         self.target = target
         self.template = template
 
-    @button(label="Through Google Documents", row=0, style=ButtonStyle.blurple)
+    @button(label="Through Discord Message", row=0, style=ButtonStyle.blurple)
     async def mode1(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
@@ -97,7 +97,7 @@ class TemplateView(View):
         await resp.pong()
         self.stop()
 
-    @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
+    @button(label="Through Google Documents", row=1, style=ButtonStyle.blurple)
     async def mode2(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         view = View()
