@@ -80,36 +80,42 @@ class CharacterHandlerView(Complex):
 
 
 class TemplateView(View):
-    def __init__(self, template: dict):
+    def __init__(self, target: Interaction, template: dict):
         super().__init__(timeout=None)
+        self.target = target
         self.template = template
 
     @button(label="Through Google Documents", row=0, style=ButtonStyle.blurple)
     async def mode1(self, _: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
-        message = await interaction.original_message()
-        await message.edit(
+        self.target.edit_original_message(
             content=f"```yaml\n{text}\n```",
             view=None,
         )
+        await resp.pong()
         self.stop()
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
     async def mode2(self, _: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
         view = View()
-        for k, v in self.template.get("Document", {}).items():
+        for index, (k, v) in enumerate(
+            self.template.get("Document", {}).items()
+        ):
             btn = Button(
                 label=f"G-Docs {k}",
+                row=index,
                 url=f"https://docs.google.com/document/d/{v}/edit?usp=sharing",
                 emoji="\N{PAGE FACING UP}",
             )
             view.add_item(btn)
-        message = await interaction.original_message()
-        await message.edit(
+        self.target.edit_original_message(
             content="**__Available Templates__**",
             view=view,
         )
+        await resp.pong()
         self.stop()
 
 
@@ -151,7 +157,7 @@ class SubmissionView(View):
         if raw_data := ctx.data.get("values", []):
             template = self.kwargs.get(raw_data[0], {})
             info = template.get("Template", {})
-            view = TemplateView(info)
+            view = TemplateView(ctx, info)
             await ctx.followup.send(
                 "__How do you want to register your character?__",
                 view=view,
