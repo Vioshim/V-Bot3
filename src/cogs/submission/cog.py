@@ -529,7 +529,9 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
@@ -776,8 +778,9 @@ class Submission(Cog):
                         if oc in self.located[location]:
                             self.located[location].remove(oc)
                     self.bot.logger.info(
-                        "Character Removed as Thread was removed! > %s > %s",
-                        str(type(oc)),
+                        "Character Removed as Thread was removed! > %s - %s > %s",
+                        oc.name,
+                        repr(oc),
                         oc.url or "None",
                     )
                     await oc.delete(db)
@@ -804,8 +807,9 @@ class Submission(Cog):
             self.rpers[oc.author].pop(oc.id, None)
             async with self.bot.database() as db:
                 self.bot.logger.info(
-                    "Character Removed as message was removed! > %s > %s",
-                    str(type(oc)),
+                    "Character Removed as message was removed! > %s - %s > %s",
+                    oc.name,
+                    repr(oc),
                     oc.url or "None",
                 )
                 await oc.delete(db)
