@@ -66,7 +66,7 @@ class Inviter(Cog):
             return
         recruiter_role = guild.get_role(788215077336514570)
         partnered_role = guild.get_role(725582056620294204)
-        mod_ch: TextChannel = self.bot.get_channel(799091737875447808)
+        mod_ch: TextChannel = self.bot.get_channel(877376320093425685)
         webhook_pokemon = await self.bot.webhook(855197800907407360, reason="Partners")
         webhook_standard = await self.bot.webhook(855199463978041355, reason="Partners")
 
