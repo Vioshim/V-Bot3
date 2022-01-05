@@ -1598,7 +1598,7 @@ class MegaCharacter(Character):
         connection : Connection
             asyncpg connection
         """
-        await super().upsert(connection)
+        await super(MegaCharacter, self).upsert(connection)
         await connection.execute(
             """--sql
             INSERT INTO POKEMON_CHARACTER(ID, SPECIES)
