@@ -777,7 +777,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "py-cord"
-version = "2.0.0a4743+gc0ea3d8b"
+version = "2.0.0a4744+g9aafd033"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -801,7 +801,7 @@ voice = ["PyNaCl (>=1.3.0,<1.5)"]
 type = "git"
 url = "https://github.com/Vioshim/pycord.git"
 reference = "master"
-resolved_reference = "c0ea3d8b3c331c07f0d408614736dfb592d78355"
+resolved_reference = "9aafd033e77be75ffcb4956a012be24378e55d5d"
 
 [[package]]
 name = "pyaml"
