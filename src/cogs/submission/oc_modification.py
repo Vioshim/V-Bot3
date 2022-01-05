@@ -797,7 +797,7 @@ class EvolutionMod(Mod):
         bool
             If it can be used or not
         """
-        return bool(oc.species.evolves_to)
+        return bool(oc.evolves_to)
 
     async def method(
         self,
@@ -825,20 +825,16 @@ class EvolutionMod(Mod):
             Bool If Updatable, None if cancelled
         """
         species = oc.species
-        if isinstance(species, Fusion):
-            values = set(species.fusion_evolves_to)
-        else:
-            values = set(species.evolves_to)
 
         origin = await target.original_message()
 
-        if len(values) == 1:
-            species = list(values)[0]
+        if len(values := oc.evolves_to) == 1:
+            species = values[0]
         else:
             view = ComplexInput(
                 bot=bot,
                 member=member,
-                values=values,
+                values=set(values),
                 timeout=None,
                 target=target,
                 parser=lambda x: (x.name, f"Evolve to {x.name}"),
@@ -907,7 +903,7 @@ class DevolutionMod(Mod):
         bool
             If it can be used or not
         """
-        return bool(oc.species.evolves_from)
+        return bool(oc.evolves_from)
 
     async def method(
         self,
@@ -934,16 +930,12 @@ class DevolutionMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        if isinstance(current := oc.species, Fusion):
-            species = current.fusion_evolves_from
-        else:
-            species = current.evolves_from
-
         origin = await target.original_message()
 
-        oc.species = species
-        if not oc.types and isinstance(species, Fusion):
-            possible_types = species.possible_types
+        current = oc.species
+        oc.species = oc.evolves_from
+        if not oc.types and isinstance(oc.species, Fusion):
+            possible_types = oc.species.possible_types
             view = ComplexInput(
                 bot=bot,
                 member=member,
@@ -960,7 +952,7 @@ class DevolutionMod(Mod):
             await view.wait()
             if not (types := view.choice):
                 return
-            species.types = types
+            oc.species.types = types
 
         oc.moveset &= set(oc.species.movepool()) & set(current.movepool())
 
