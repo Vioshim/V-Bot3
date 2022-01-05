@@ -451,8 +451,8 @@ class PronounMod(Mod):
         )
         aux: Optional[bool] = None
         origin = await target.original_message()
-        view.embed.title = ("Write the character's Pronoun. Current below",)
-        view.embed.description = (f"> {oc.pronoun.name}",)
+        view.embed.title = "Write the character's Pronoun. Current below"
+        view.embed.description = f"> {oc.pronoun.name}"
         await origin.edit(embed=view.embed)
         await view.wait()
         if isinstance(item := view.choice, Pronoun):
