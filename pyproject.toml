@@ -29,10 +29,10 @@ wheel = "^0.37.1"
 google-api-python-client = "^2.33.0"
 google-auth-httplib2 = "^0.1.0"
 google-auth-oauthlib = "^0.4.6"
-py-cord = {git = "https://github.com/Pycord-Development/pycord.git", extras = ["voice", "speed"]}
 aiohttp = "^3.8.1"
 apscheduler = {git = "https://github.com/agronholm/apscheduler.git"}
 jishaku = "^2.3.2"
+py-cord = {git = "https://github.com/Vioshim/pycord.git", extras = ["voice", "speed"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
