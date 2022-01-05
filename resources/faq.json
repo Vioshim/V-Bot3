@@ -215,13 +215,13 @@
 		{
 			"label": "Technology in RP",
 			"title": "How developed is technology in the RP?",
-			"content": "This is a topic that has been quite ambiguous since the server was created, but after some discussion with the moderation team we have decided to settle in which level of technology we are.\n\nIt's not a futuristic RP, but it takes reference modern times, and the reason why most citizens in Despa don't know about Phones and such, it's because they have been too focused in solving the monster problem that they slack in upadting themselves.\n\nTowns like Estelia however focus on keeping things updated as they believe science is the answer for their problems, (And pixy that buys tech from them).",
+			"content": "This is a topic that has been quite ambiguous since the server was created, but after some discussion with the moderation team we have decided to settle in which level of technology we are.\n\nIt's not a futuristic RP, but it takes reference modern times, and the reason why most citizens in Despa don't know about Phones and such, it's because they have been too focused in solving the monster problem as they slack in updating themselves.\n\nTowns like Estelia however focus on keeping things updated as they believe science is the answer for their problems, (And pixy that buys tech from them).",
 			"thumbnail": "https://cdn.discordapp.com/emojis/852764921837649920.png",
 			"fields": [
 				{
 					"name": "Note",
 					"value": "Nuclear, controversial and things of the similar nature aren't allowed, and staff can intervene at any time to point out contradictions.",
-                    "inline": false
+					"inline": false
 				}
 			]
 		},
