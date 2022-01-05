@@ -38,7 +38,7 @@ from src.cogs.information.area_selection import AreaSelection
 from src.cogs.information.information_view import InformationView
 from src.context import ApplicationContext, AutocompleteContext, Context
 from src.structures.bot import CustomBot
-from src.utils.etc import MAP_BUTTONS, WHITE_BAR
+from src.utils.etc import MAP_BUTTONS, MAP_URL, WHITE_BAR
 from src.utils.functions import message_line
 from src.utils.imagekit import ImageKit
 
@@ -192,11 +192,13 @@ class Information(Cog):
             embed = Embed(
                 title="Despa's Map",
                 color=Color.blurple(),
-                timestamp=utcnow()
+                timestamp=utcnow(),
             )
-            embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/928328216916148244/Untitled147_20220105092850.png")
+            embed.set_image(url=MAP_URL)
             if artist := guild.get_member(536565959004127232):
-                embed.set_author(name=artist.display_name, icon_url=artist.display_avatar.url)
+                embed.set_author(
+                    name=artist.display_name, icon_url=artist.display_avatar.url
+                )
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             await ctx.send_followup(
                 embed=embed,
