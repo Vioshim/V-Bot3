@@ -218,7 +218,6 @@ class Fakemon(Species):
     SPA: int = 3
     SPD: int = 3
     SPE: int = 3
-    evolves_from: Optional[str] = None
 
     def __post_init__(self):
         stats = self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
@@ -307,6 +306,7 @@ class Variant(Species):
     """
     This class Represents a Variant
     """
+
     base: Species = None
 
     def __init__(self, base: Species, name: str):

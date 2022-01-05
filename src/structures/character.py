@@ -46,7 +46,12 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1079,7 +1084,7 @@ class FakemonCharacter(Character):
         characters: list[FakemonCharacter] = []
         async for item in connection.cursor(
             """--sql
-            SELECT C.*, F.NAME AS SPECIES,
+            SELECT C.*, F.NAME AS SPECIES, F.EVOLVES_FROM,
             F.HP, F.ATK, F.DEF, F.SPA, F.SPD, F.SPE
             FROM FAKEMON F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
@@ -1102,8 +1107,6 @@ class FakemonCharacter(Character):
                     **stats,
                 )
             mon = FakemonCharacter(**data)
-            if mon_origin := mon.evolves_from:
-                mon.movepool += mon_origin.movepool
             await mon.retrieve(connection)
             characters.append(mon)
 
