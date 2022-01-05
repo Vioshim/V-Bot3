@@ -1749,10 +1749,9 @@ def oc_process(**kwargs):
     elif pokemon := common_pop_get(data, "species", "pokemon"):
         data["species"] = Species.deduce(pokemon)
 
+    species = data["species"]
     if types := frozenset(Types.deduce(common_pop_get(data, "types", "type"))):
-        if isinstance(
-            species := data["species"], (Fakemon, Fusion, Variant, CustomMega)
-        ):
+        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.types = types
         elif species.types != types:
             types_txt = "/".join(i.value.name for i in types)
