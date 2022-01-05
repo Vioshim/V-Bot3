@@ -1726,22 +1726,18 @@ def oc_process(**kwargs):
         name: str = fakemon.title()
         if name.startswith("Mega "):
             data["species"] = CustomMega(Species.deduce(name[5:]))
+        elif mon := Species.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
+            data["species"] = Fakemon(name=name.title(), evolves_from=mon.id)
         else:
-            if base := Species.deduce(data.pop("base", None)):
-                base = base.id
-            data["species"] = Fakemon(name=name.title(), evolves_from=base)
+            data["species"] = Fakemon(name=name.title())
     elif variant := data.pop("variant", ""):
-        if base := Species.deduce(data.pop("base", None)):
-            name = variant.title().replace(base.name, "").strip()
-            data["species"] = Variant(
-                base=base, name=f"{name} {base.name}".title()
-            )
+        if mon := Species.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
+            name = variant.title().replace(mon.name, "").strip()
+            data["species"] = Variant(base=mon, name=f"{name} {mon.name}".title())
         else:
             for item in variant.split(" "):
                 if species := Species.deduce(item):
-                    data["species"] = Variant(
-                        base=species, name=variant.title()
-                    )
+                    data["species"] = Variant(base=species, name=variant.title())
                     break
             else:
                 raise Exception("Unable to determine the variant' species")
