@@ -1126,7 +1126,7 @@ class FakemonCharacter(Character):
                 NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8, EVOLVES_FROM = $9;
                 """,
                 oc_id,
-                self.name,
+                self.species.name,
                 self.species.HP,
                 self.species.ATK,
                 self.species.DEF,
