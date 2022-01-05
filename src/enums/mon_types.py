@@ -739,6 +739,8 @@ class Types(Enum):
             set with the typings
         """
         info = set()
+        if not item:
+            return info
         if isinstance(item, str):
             item = split(r"\s*[,|\/]\s*", item)
         for elem in item:
