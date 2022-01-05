@@ -188,8 +188,18 @@ class Information(Cog):
         await ctx.defer(ephemeral=True)
 
         if not area:
+            guild: Guild = ctx.guild
+            embed = Embed(
+                title="Despa's Map",
+                color=Color.blurple(),
+                timestamp=utcnow()
+            )
+            embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/928328216916148244/Untitled147_20220105092850.png")
+            if artist := guild.get_member(536565959004127232):
+                embed.set_author(name=artist.display_name, icon_url=artist.display_avatar.url)
+            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             await ctx.send_followup(
-                "https://cdn.discordapp.com/attachments/823629617629495386/918221231210246184/5x4zl8.png",
+                embed=embed,
                 ephemeral=True,
             )
             return
