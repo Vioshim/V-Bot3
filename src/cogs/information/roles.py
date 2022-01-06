@@ -104,7 +104,7 @@ class SelfRoles(View):
                 f"Role {role.mention} was added to your account.",
                 ephemeral=True,
             )
-        if data := set(x.id for x in member.roles).intersection(roles):
+        if data := set(member.roles).intersection(roles):
             await member.remove_roles(
                 *(
                     role_item
