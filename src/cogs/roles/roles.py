@@ -14,7 +14,7 @@
 
 from datetime import datetime
 from time import mktime
-from typing import Iterable, Optional
+from typing import Optional
 
 from discord import (
     AllowedMentions,
