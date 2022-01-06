@@ -69,6 +69,7 @@ class FAQComplex(Complex):
         item.callback = self.read(item.placeholder)
         view.add_item(item)
         await self.target.edit_original_message(view=view)
+        self.message = None
         await resp.pong()
 
     def read(self, key: str):
