@@ -148,6 +148,15 @@ class InformationView(View):
 
         self.embeds = embeds
         self.buttons = buttons
+        self.map_information = [
+            SelectOption(
+                label=item["label"],
+                value=str(item["category"]),
+                description=item.get("content", "No description")[:100],
+                emoji=lookup(item["emoji"]),
+            )
+            for item in self.raw_data.pop("Map Information", [])
+        ]
         self.faq_data = [
             Select(
                 placeholder=k,
@@ -162,20 +171,15 @@ class InformationView(View):
                 ],
             )
             for k, v in raw_data.items()
-            if k != "Map Information"
-        ]
-        self.map_information = [
-            SelectOption(
-                label=item["label"],
-                value=str(item["category"]),
-                description=item.get("content", "No description")[:100],
-                emoji=lookup(item["emoji"]),
-            )
-            for item in self.raw_data.get("Map Information", [])
         ]
         btn = Button(
             label="Self Roles",
             url="https://discord.com/channels/719343092963999804/719709333369258015/",
+        )
+        self.add_item(btn)
+        btn = Button(
+            label="Character Creation",
+            url="https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552",
         )
         self.add_item(btn)
 
@@ -263,7 +267,11 @@ class InformationView(View):
         item.callback = self.map_callback(ctx)
         view.add_item(item)
 
-        embed = Embed(title="Parallel Yonder's Map", color=Color.blurple())
+        embed = Embed(
+            title="Parallel Yonder's Map",
+            color=Color.blurple(),
+            url=MAP_URL,
+        )
         with suppress(NotFound):
             artist = await self.bot.fetch_user(536565959004127232)
             embed.set_author(
