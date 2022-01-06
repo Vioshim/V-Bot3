@@ -66,13 +66,13 @@ class FAQComplex(Complex):
         chunk = self.values[amount : amount + self.entries_per_page]
         item: Select = chunk[int(index)]
         view = View(timeout=None)
-        item.callback = self.read(item.placeholder)
+        item.callback = self.read(item.placeholder, ctx)
         view.add_item(item)
         await resp.pong()
         await self.target.edit_original_message(view=view)
         await view.wait()
 
-    def read(self, key: str):
+    def read(self, key: str, interaction: Interaction):
         """Method to read from the existing FAQ Data
 
         Parameters
@@ -97,7 +97,9 @@ class FAQComplex(Complex):
                 for info_btn in self.buttons[key].get(idx, []):
                     view.add_item(info_btn)
 
-                await ctx.edit_original_message(embed=info_embed, view=view)
+                await ctx.response.pong()
+                await interaction.edit_original_message(embed=info_embed, view=view)
+                self.stop()
 
         return inner
 
