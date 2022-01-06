@@ -66,9 +66,9 @@ class FAQComplex(Complex):
         chunk = self.values[amount : amount + self.entries_per_page]
         item: Select = chunk[int(index)]
         view = View(timeout=None)
+        await resp.pong()
         item.callback = self.read(item.placeholder)
         view.add_item(item)
-        await resp.pong()
         await self.target.edit_original_message(view=view)
 
     def read(self, key: str):
