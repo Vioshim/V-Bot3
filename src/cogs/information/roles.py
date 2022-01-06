@@ -61,7 +61,7 @@ class SelfRoles(View):
         ctx: Interaction,
     ):
         roles = map(lambda x: self.guild.get_role(int(x)), sct.values)
-        total = map(lambda x: self.guild.get_role(int(x)), sct.options)
+        total = map(lambda x: self.guild.get_role(int(x.value)), sct.options)
         resp: InteractionResponse = ctx.response
         if remove := (set(total) - set(roles)) & set(self.member.roles):
             await self.member.remove_roles(*remove, reason="Self Roles")
