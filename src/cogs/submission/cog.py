@@ -650,7 +650,7 @@ class Submission(Cog):
 
             self.ready = True
 
-            cog = self.bot.get_cog("Roles")
+            cog = self.bot.get_cog("RPSearch")
 
             await cog.load(rpers=self.rpers)
 
