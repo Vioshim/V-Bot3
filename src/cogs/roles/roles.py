@@ -89,67 +89,6 @@ def seconds(test: datetime) -> int:
     return int((utcnow() - test).total_seconds())
 
 
-async def role_menu(
-    ctx: Interaction,
-    roles: Iterable[Role],
-    total: Iterable[Role],
-):
-    member: Member = ctx.user
-    resp: InteractionResponse = ctx.response
-    if remove := (set(total) - set(roles)) & set(member.roles):
-        await member.remove_roles(*remove, reason="Self Roles")
-    if add := set(roles) - set(member.roles):
-        await member.add_roles(*add, reason="Self Roles")
-    text: str = ", ".join(role.mention for role in roles)
-    await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
-
-
-async def unique_role_button(
-    ctx: Interaction,
-    role: Role,
-    roles: Iterable[Role],
-) -> None:
-    resp: InteractionResponse = ctx.response
-
-    if role in ctx.user.roles:
-
-        class Confirmation(View):
-            @button(
-                label="Keep role", emoji=":small_check_mark:811367963235713124"
-            )
-            async def keep(self, _: Button, inter: Interaction):
-                await inter.response.send_message(
-                    f"Role {role.mention} was not removed.", ephemeral=True
-                )
-                self.stop()
-
-            @button(
-                label="Remove Role", emoji=":small_x_mark:811367596866797658"
-            )
-            async def remove(self, _: Button, inter: Interaction):
-                await ctx.user.remove_roles(
-                    role, reason="Self Roles interaction"
-                )
-                await inter.response.send_message(
-                    f"Role {role.mention} was removed.", ephemeral=True
-                )
-                self.stop()
-
-        view = Confirmation()
-        await resp.send_message(
-            f"You have the role {role.mention} already",
-            ephemeral=True,
-            view=view,
-        )
-    elif role:
-        await ctx.user.add_roles(role, reason="Self Roles interaction")
-        await resp.send_message(
-            f"Role {role.mention} was added to your account.", ephemeral=True
-        )
-        if data := set(ctx.user.roles).intersection(roles):
-            await ctx.user.remove_roles(*data, reason="Self Roles")
-
-
 PRONOUN_ROLES = dict(
     He=738230651840626708,
     She=738230653916807199,
@@ -302,11 +241,19 @@ class PronounRoles(View):
         ],
     )
     async def pronoun(self, sct: Select, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
         guild: Guild = ctx.guild
-        roles = map(lambda x: guild.get_role(int(x)), sct.values)
-        total = map(lambda x: guild.get_role(int(x.value)), sct.options)
-
-        return await role_menu(ctx, roles, total)
+        roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
+        total = {
+            item for x in sct.options if (item := guild.get_role(int(x.value)))
+        }
+        if add := roles - set(member.roles):
+            await member.add_roles(*add, reason="Self Roles")
+        if remove := (total - roles) & set(member.roles):
+            await member.remove_roles(*remove, reason="Self Roles")
+        text: str = ", ".join(role.mention for role in roles)
+        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
 
 
 class ColorRoles(View):
@@ -416,11 +363,19 @@ class BasicRoles(View):
         ],
     )
     async def basic(self, sct: Select, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
         guild: Guild = ctx.guild
-        roles = map(lambda x: guild.get_role(int(x)), sct.values)
-        total = map(lambda x: guild.get_role(int(x.value)), sct.options)
-
-        return await role_menu(ctx, roles, total)
+        roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
+        total = {
+            item for x in sct.options if (item := guild.get_role(int(x.value)))
+        }
+        if add := roles - set(member.roles):
+            await member.add_roles(*add, reason="Self Roles")
+        if remove := (total - roles) & set(member.roles):
+            await member.remove_roles(*remove, reason="Self Roles")
+        text: str = ", ".join(role.mention for role in roles)
+        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
 
 
 class RPSearchRoles(View):
@@ -463,11 +418,19 @@ class RPSearchRoles(View):
         ],
     )
     async def rp_search(self, sct: Select, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
         guild: Guild = ctx.guild
-        roles = map(lambda x: guild.get_role(int(x)), sct.values)
-        total = map(lambda x: guild.get_role(int(x.value)), sct.options)
-
-        return await role_menu(ctx, roles, total)
+        roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
+        total = {
+            item for x in sct.options if (item := guild.get_role(int(x.value)))
+        }
+        if add := roles - set(member.roles):
+            await member.add_roles(*add, reason="Self Roles")
+        if remove := (total - roles) & set(member.roles):
+            await member.remove_roles(*remove, reason="Self Roles")
+        text: str = ", ".join(role.mention for role in roles)
+        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
