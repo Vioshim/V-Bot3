@@ -33,7 +33,7 @@ from discord.utils import utcnow
 from src.cogs.information.area_selection import AreaSelection
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
-from src.utils.etc import MAP_URL, WHITE_BAR
+from src.utils.etc import MAP_URL
 
 
 class FAQComplex(Complex):
@@ -270,10 +270,9 @@ class InformationView(View):
                 name=f"Drawn by {artist}",
                 icon_url=artist.display_avatar.url,
             )
-        embed.set_image(url=WHITE_BAR)
+        embed.set_image(url=MAP_URL)
 
         await resp.send_message(
-            content=MAP_URL,
             embed=embed,
             view=view,
             ephemeral=True,
