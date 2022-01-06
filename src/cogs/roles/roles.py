@@ -229,20 +229,20 @@ RP_SEARCH_ROLES = dict(
 )
 
 
-class PronounButton(Button):
+class PronounButton(Button["PronounRoles"]):
     async def callback(self, ctx: Interaction):
         role = ctx.guild.get_role(int(self.custom_id))
         return await unique_role_button(ctx, role, PRONOUN_ROLES.values())
 
 
-class ColorButton(Button):
+class ColorButton(Button["ColorRoles"]):
     async def callback(self, ctx: Interaction):
         guild: Guild = ctx.guild
         role = guild.get_role(int(self.custom_id))
         return await unique_role_button(ctx, role, COLOR_ROLES.values())
 
 
-class RPSearchButton(Button):
+class RPSearchButton(Button["RPSearchRoles"]):
     async def callback(self, ctx: Interaction):
         guild: Guild = ctx.guild
         role = guild.get_role(int(self.custom_id))
@@ -557,7 +557,7 @@ class RoleManage(View):
                 )
 
 
-class RoleButton(Button):
+class RoleButton(Button["RoleView"]):
     def __init__(
         self,
         bot: CustomBot,

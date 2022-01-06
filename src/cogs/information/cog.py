@@ -164,12 +164,15 @@ class Information(Cog):
         for key, value in data.items():
             text += f"\n{key}: {value:03d}"
         embed.description = f"```yaml{text}\n```"
-        source = Path("resources/faq.json")
-        async with aiopen(source.resolve(), mode="r") as f:
-            contents = await f.read()
-            raw_data = loads(contents)
-            self.view = InformationView(bot=self.bot, raw_data=raw_data)
-            await message.edit(embed=embed, view=self.view)
+        if not self.view:
+            source = Path("resources/faq.json")
+            async with aiopen(source.resolve(), mode="r") as f:
+                contents = await f.read()
+                raw_data = loads(contents)
+                self.view = InformationView(bot=self.bot, raw_data=raw_data)
+                await message.edit(embed=embed, view=self.view)
+        else:
+            await message.edit(embed=embed)
 
     @slash_command(
         guild_ids=[719343092963999804],

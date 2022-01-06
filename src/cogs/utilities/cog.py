@@ -26,20 +26,7 @@ from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.context import ApplicationContext, Context
 from src.enums.moves import Moves
 from src.structures.bot import CustomBot
-from src.utils.etc import WHITE_BAR
-
-PAGE_TYPES: dict[str, str] = {
-    "discord": "https://pycord.readthedocs.io/en/master/",
-    "python": "https://docs.python.org/3",
-    "apscheduler": "https://apscheduler.readthedocs.io/en/3.x/",
-    "bs4": "https://www.crummy.com/software/BeautifulSoup/bs4/doc/",
-    "dateparser": "https://dateparser.readthedocs.io/en/latest/",
-    "asyncpg": "https://magicstack.github.io/asyncpg/current/",
-    "black": "https://black.readthedocs.io/en/stable/",
-    "uvloop": "https://uvloop.readthedocs.io/",
-    "d20": "https://d20.readthedocs.io/en/latest/",
-    "aiohttp": "https://docs.aiohttp.org/en/stable/",
-}
+from src.utils.etc import RTFM_PAGES, WHITE_BAR
 
 
 class Utilities(Cog):
@@ -82,7 +69,9 @@ class Utilities(Cog):
 
         line = stream.readline()
         if "zlib" not in line:
-            raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
+            raise RuntimeError(
+                "Invalid objects.inv file, not z-lib compatible."
+            )
 
         entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
@@ -109,9 +98,9 @@ class Utilities(Cog):
 
         return result
 
-    async def build_rtfm_lookup_table(self, page_types: dict[str, str]):
+    async def build_rtfm_lookup_table(self, RTFM_PAGES: dict[str, str]):
         cache = {}
-        for key, page in page_types.items():
+        for key, page in RTFM_PAGES.items():
             async with self.bot.session.get(page + "/objects.inv") as resp:
                 if resp.status != 200:
                     raise RuntimeError(
@@ -126,22 +115,26 @@ class Utilities(Cog):
     async def do_rtfm(self, ctx: ApplicationContext, key: str, obj: str):
 
         if obj is None:
-            return await ctx.send_followup(PAGE_TYPES[key])
+            return await ctx.send_followup(RTFM_PAGES[key])
 
         if not self._rtfm_cache:
             await ctx.trigger_typing()
-            await self.build_rtfm_lookup_table(PAGE_TYPES)
+            await self.build_rtfm_lookup_table(RTFM_PAGES)
 
         cache = list(self._rtfm_cache[key].items())
 
-        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
+        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[
+            :8
+        ]
 
         e = Embed(colour=0x05FFF0)
         e.set_image(url=WHITE_BAR)
         if len(self.matches) == 0:
             return await ctx.send_followup("Could not find anything. Sorry.")
 
-        e.description = "\n".join(f"[`{key}`]({url})" for key, url in self.matches)
+        e.description = "\n".join(
+            f"[`{key}`]({url})" for key, url in self.matches
+        )
         await ctx.send_followup(embed=e)
 
     @command()
@@ -193,13 +186,13 @@ class Utilities(Cog):
                     name=item.title(),
                     value=item,
                 )
-                for item in PAGE_TYPES
+                for item in RTFM_PAGES
             ],
         ),
         query: str = None,
     ):
         await ctx.defer()
-        if not key or key.lower() not in PAGE_TYPES:
+        if not key or key.lower() not in RTFM_PAGES:
             query = query or ""
             key = key or ""
             query = key + query

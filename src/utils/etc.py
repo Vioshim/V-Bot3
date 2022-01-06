@@ -21,6 +21,7 @@ __all__ = (
     "RP_CATEGORIES",
     "MAP_BUTTONS",
     "REGISTERED_IMG",
+    "RTFM_PAGES",
 )
 
 from discord import OptionChoice, PartialEmoji
@@ -69,6 +70,19 @@ RP_CATEGORIES = [
     909302744676986890,
     874018024649265172,
 ]
+
+RTFM_PAGES: dict[str, str] = {
+    "discord": "https://pycord.readthedocs.io/en/master/",
+    "python": "https://docs.python.org/3",
+    "apscheduler": "https://apscheduler.readthedocs.io/en/3.x/",
+    "bs4": "https://www.crummy.com/software/BeautifulSoup/bs4/doc/",
+    "dateparser": "https://dateparser.readthedocs.io/en/latest/",
+    "asyncpg": "https://magicstack.github.io/asyncpg/current/",
+    "black": "https://black.readthedocs.io/en/stable/",
+    "uvloop": "https://uvloop.readthedocs.io/",
+    "d20": "https://d20.readthedocs.io/en/latest/",
+    "aiohttp": "https://docs.aiohttp.org/en/stable/",
+}
 
 MAP_BUTTONS = [
     OptionChoice(
