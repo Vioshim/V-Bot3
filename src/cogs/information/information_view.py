@@ -24,14 +24,17 @@ from discord import (
     Member,
     SelectOption,
     User,
+    NotFound
 )
 from discord.ui import Button, Select, View, button
 from discord.utils import utcnow
+from contextlib import suppress
 
 from src.cogs.information.area_selection import AreaSelection
+from src.cogs.information.roles import SelfRoles
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
-from src.utils.etc import MAP_URL
+from src.utils.etc import MAP_URL, WHITE_BAR
 
 
 class FAQComplex(Complex):
@@ -184,9 +187,13 @@ class InformationView(View):
     ):
         resp: InteractionResponse = interaction.response
 
+        if isinstance(member := interaction.user, User):
+            guild = member.mutual_guilds[0]
+            member = guild.get_member(member.id)
+
         view = FAQComplex(
             bot=self.bot,
-            member=interaction.user,
+            member=member,
             values=self.faq_data,
             target=interaction,
             embeds=self.embeds,
@@ -205,17 +212,23 @@ class InformationView(View):
             if data := ctx.data.get("values", []):
                 idx: str = data[0]
                 info_embed = self.embeds["Map Information"][idx].copy()
-                info_embed.colour = ctx.user.colour
+                if isinstance(member := ctx.user, User):
+                    guild = member.mutual_guilds[0]
+                    member = guild.get_member(member.id)
+
+                info_embed.colour = member.colour
 
                 category: CategoryChannel = self.bot.get_channel(int(idx))
                 self.bot.logger.info(
                     "%s is reading Map Information of %s",
-                    str(ctx.user),
+                    str(member),
                     category.name,
                 )
 
                 view = AreaSelection(
-                    bot=self.bot, cat=category, member=ctx.user
+                    bot=self.bot,
+                    cat=category,
+                    member=member,
                 )
 
                 info_embed.set_footer(
@@ -247,5 +260,30 @@ class InformationView(View):
         view.add_item(item)
 
         embed = Embed(title="Parallel Yonder's Map", color=Color.blurple())
-        embed.set_image(url=MAP_URL)
-        await resp.send_message(embed=embed, view=view, ephemeral=True)
+        with suppress(NotFound):
+            artist = await self.bot.fetch_user(536565959004127232)
+            embed.set_author(
+                name=f"Drawn by {artist}",
+                icon_url=artist.display_avatar.url,
+            )
+        embed.set_image(url=WHITE_BAR)
+
+        await resp.send_message(
+            content=MAP_URL,
+            embed=embed,
+            view=view,
+            ephemeral=True,
+        )
+
+    @button(
+        label="Self Roles",
+        custom_id="Self Roles",
+        style=ButtonStyle.blurple,
+    )
+    async def self_roles(self, btn: Button, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        await resp.send_message(
+            content=f"**__{btn.label}__**",
+            view=SelfRoles(ctx.user),
+            ephemeral=True,
+        )

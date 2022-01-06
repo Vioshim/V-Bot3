@@ -90,7 +90,7 @@ COGS = [
     "inviter",
     "moderation",
     "proxy",
-    "roles",
+    "rp_search",
     "submission",
     "utilities",
 ]

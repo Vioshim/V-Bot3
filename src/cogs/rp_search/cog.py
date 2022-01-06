@@ -14,37 +14,32 @@
 
 from datetime import datetime
 
-from discord import AllowedMentions, Embed, Message, Role, TextChannel
+from discord import AllowedMentions, Embed, Member, Role, TextChannel
 from discord.commands import (
     ApplicationContext,
     Option,
     OptionChoice,
     slash_command,
 )
-from discord.ext.commands import Cog, MemberConverter, has_role
+from discord.ext.commands import Cog, has_role
 from discord.ui import Button, View
 from discord.utils import utcnow
 
-from src.cogs.roles.roles import (
+from src.cogs.rp_search.roles import (
     QUERIES,
     RP_SEARCH_ROLES,
-    BasicRoles,
-    ColorRoles,
-    PronounRoles,
     RoleManage,
     RoleView,
-    RPSearchRoles,
     hours,
     seconds,
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.functions import text_check
 
-__all__ = ("Roles", "setup")
+__all__ = ("RPSearch", "setup")
 
 
-class Roles(Cog):
+class RPSearch(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
@@ -110,21 +105,42 @@ class Roles(Cog):
             ],
             required=True,
         ),
+        member: Option(
+            Member,
+            description="Member to be pinged",
+            required=False,
+        ),
     ):
+        if not member:
+            member: Member = ctx.user
         role: Role = ctx.guild.get_role(int(role_id))
         cog = self.bot.get_cog(name="Submission")
         channel: TextChannel = ctx.channel
         await ctx.defer(ephemeral=True)
-        if channel.permissions_for(ctx.user).manage_messages:
-            await ctx.send_followup("Provide the user pinging", ephemeral=True)
-            m: Message = await self.bot.wait_for(
-                "message",
-                check=text_check(ctx),
-            )
-            ctx = await self.bot.get_context(m)
-            member = await MemberConverter().convert(ctx, m.content)
-        else:
-            member = ctx.user
+
+        channel = self.bot.get_channel(722617383738540092)
+
+        ocs = cog.rpers.get(member.id, {}).values()
+        view = RoleManage(self.bot, role, ocs, member)
+
+        embed = Embed(
+            title=role.name,
+            color=member.color,
+            description=f"{member.display_name} is looking to RP with their registered character(s).",
+            timestamp=utcnow(),
+        )
+        embed.set_thumbnail(url=member.display_avatar.url)
+
+        if member != ctx.user:
+            if not channel.permissions_for(ctx.user).manage_messages:
+                embed.description = f"{member.display_name} is looking to RP with you, using their registered character(s)."
+                await channel.send(
+                    content=f"{member.mention} is being pinged by {ctx.user.mention}",
+                    embed=embed,
+                    allowed_mentions=AllowedMentions(users=True),
+                    view=view,
+                )
+                return
 
         if role not in member.roles:
             await member.add_roles(role, reason="Rp Searching")
@@ -146,18 +162,6 @@ class Roles(Cog):
             )
             return
 
-        channel = self.bot.get_channel(722617383738540092)
-
-        ocs = cog.rpers.get(member.id, {}).values()
-        view = RoleManage(self.bot, role, ocs, member)
-
-        embed = Embed(
-            title=role.name,
-            color=member.color,
-            description=f"{member.display_name} is looking to RP with their registered character(s).",
-            timestamp=utcnow(),
-        )
-        embed.set_thumbnail(url=member.display_avatar.url)
         msg = await channel.send(
             content=f"{role.mention} is being pinged by {member.mention}",
             embed=embed,
@@ -191,22 +195,6 @@ class Roles(Cog):
     async def on_ready(self):
         """Loads the views"""
         self.bot.add_view(
-            view=PronounRoles(timeout=None),
-            message_id=916482734933811232,
-        )
-        self.bot.add_view(
-            view=BasicRoles(timeout=None),
-            message_id=916482736309534762,
-        )
-        self.bot.add_view(
-            view=ColorRoles(timeout=None),
-            message_id=916482737811120128,
-        )
-        self.bot.add_view(
-            view=RPSearchRoles(timeout=None),
-            message_id=916482738876477483,
-        )
-        self.bot.add_view(
             view=RoleView(
                 bot=self.bot,
                 cool_down=self.cool_down,
@@ -228,4 +216,4 @@ def setup(bot: CustomBot) -> None:
     -------
 
     """
-    bot.add_cog(Roles(bot))
+    bot.add_cog(RPSearch(bot))

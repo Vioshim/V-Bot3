@@ -2,7 +2,7 @@
 
 [![image](https://img.shields.io/discord/719343092963999804?color=%237289DA&label=Parallel%20Yonder&logo=discord&logoColor=white)](https://discord.gg/CENcTvnarE)
 
-> A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules and roles.
+> A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules, self roles and common daily activities.
 
 |        File           |           Description           |
 |-----------------------|---------------------------------|

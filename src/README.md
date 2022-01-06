@@ -5,6 +5,7 @@
 > If you're reading this repository is most likely due to given permissions from the developer Vioshim, for any questions feel free to reach him at his server.
 
 ## Folders
+
 ---
 
 |        Folder        |                     Description                        |

@@ -38,7 +38,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 <p>
 
-> A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules.
+> A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules, self roles and common daily activities.
 </p>
 
 </details>
@@ -73,11 +73,11 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Roles</summary>
+<details closed> <summary>RP Search</summary>
 
 <p>
 
-> Implementation of Self Roles through Discord's Views and implementation of a RP search system through pings.
+> A mechanism which allows users to ping for RP, obtain their characters, and be able to keep track of the pings that have been used.
 
 </p>
 
