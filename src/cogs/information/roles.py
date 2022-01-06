@@ -57,26 +57,17 @@ class SelfRoles(View):
 
     async def role_menu(
         self,
+        sct: Select,
         ctx: Interaction,
-        roles: Iterable[Role],
-        total: Iterable[Role],
     ):
-        """Method to add/remove multiple roles.
-
-        Parameters
-        ----------
-        ctx: Interaction
-            Discord Interaction
-        roles: Iterable[Role]
-            Selected Roles
-        total: Iterable[int]
-            Role IDs from the group
-        """
+        roles = map(lambda x: self.guild.get_role(int(x)), sct.values)
+        total = map(lambda x: self.guild.get_role(int(x)), sct.options)
         resp: InteractionResponse = ctx.response
         if remove := (set(total) - set(roles)) & set(self.member.roles):
             await self.member.remove_roles(*remove, reason="Self Roles")
         await self.member.add_roles(*roles, reason="Self Roles")
-        await resp.send_message("Roles has been set!", ephemeral=True)
+        text: str = ", ".join(role.mention for role in roles)
+        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
 
     @select(
         placeholder="Select Pronoun/s",
@@ -101,10 +92,7 @@ class SelfRoles(View):
         ],
     )
     async def pronoun(self, sct: Select, interaction: Interaction):
-        guild = self.guild
-        roles = map(guild.get_role, sct.values)
-        total = map(guild.get_role, sct.options)
-        return await self.role_menu(interaction, roles, total)
+        await self.role_menu(sct, interaction)
 
     @select(
         placeholder="Select Basic Roles",
@@ -150,10 +138,7 @@ class SelfRoles(View):
         ],
     )
     async def basic(self, sct: Select, interaction: Interaction):
-        guild = self.guild
-        roles = map(guild.get_role, sct.values)
-        total = map(guild.get_role, sct.options)
-        return await self.role_menu(interaction, roles, total)
+        await self.role_menu(sct, interaction)
 
     @select(
         placeholder="Select Color Roles",
@@ -257,10 +242,7 @@ class SelfRoles(View):
         ],
     )
     async def color_roles(self, sct: Select, interaction: Interaction):
-        guild = self.guild
-        roles = map(guild.get_role, sct.values)
-        total = map(guild.get_role, sct.options)
-        return await self.role_menu(interaction, roles, total)
+        await self.role_menu(sct, interaction)
 
     @select(
         placeholder="Select RP Search Roles",
@@ -300,7 +282,4 @@ class SelfRoles(View):
         ],
     )
     async def rp_search(self, sct: Select, interaction: Interaction):
-        guild = self.guild
-        roles = map(guild.get_role, sct.values)
-        total = map(guild.get_role, sct.options)
-        return await self.role_menu(interaction, roles, total)
+        await self.role_menu(sct, interaction)
