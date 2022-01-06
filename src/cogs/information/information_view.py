@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import suppress
 from unicodedata import lookup
 
 from discord import (
@@ -22,16 +23,14 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    NotFound,
     SelectOption,
     User,
-    NotFound
 )
 from discord.ui import Button, Select, View, button
 from discord.utils import utcnow
-from contextlib import suppress
 
 from src.cogs.information.area_selection import AreaSelection
-from src.cogs.information.roles import SelfRoles
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.utils.etc import MAP_URL, WHITE_BAR
@@ -174,6 +173,11 @@ class InformationView(View):
             )
             for item in self.raw_data.get("Map Information", [])
         ]
+        btn = Button(
+            label="Self Roles",
+            url="https://discord.com/channels/719343092963999804/719709333369258015/",
+        )
+        self.add_item(btn)
 
     @button(
         label="F.A.Q.",
@@ -245,7 +249,6 @@ class InformationView(View):
     @button(
         label="Map Information",
         custom_id="Map Information",
-        style=ButtonStyle.blurple,
     )
     async def map_info(
         self,
@@ -271,20 +274,6 @@ class InformationView(View):
         await resp.send_message(
             content=MAP_URL,
             embed=embed,
-            view=view,
-            ephemeral=True,
-        )
-
-    @button(
-        label="Self Roles",
-        custom_id="Self Roles",
-        style=ButtonStyle.blurple,
-    )
-    async def self_roles(self, btn: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        view = SelfRoles(member=ctx.user)
-        await resp.send_message(
-            content=f"**__{btn.label}__**",
             view=view,
             ephemeral=True,
         )

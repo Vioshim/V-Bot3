@@ -56,12 +56,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
@@ -650,7 +645,7 @@ class Submission(Cog):
 
             self.ready = True
 
-            cog = self.bot.get_cog("RPSearch")
+            cog = self.bot.get_cog("Roles")
 
             await cog.load(rpers=self.rpers)
 

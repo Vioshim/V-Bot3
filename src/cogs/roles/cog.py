@@ -25,21 +25,25 @@ from discord.ext.commands import Cog, has_role
 from discord.ui import Button, View
 from discord.utils import utcnow
 
-from src.cogs.rp_search.roles import (
+from src.cogs.roles.roles import (
     QUERIES,
     RP_SEARCH_ROLES,
+    BasicRoles,
+    ColorRoles,
+    PronounRoles,
     RoleManage,
     RoleView,
+    RPSearchRoles,
     hours,
     seconds,
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 
-__all__ = ("RPSearch", "setup")
+__all__ = ("Roles", "setup")
 
 
-class RPSearch(Cog):
+class Roles(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
@@ -195,6 +199,22 @@ class RPSearch(Cog):
     async def on_ready(self):
         """Loads the views"""
         self.bot.add_view(
+            view=PronounRoles(timeout=None),
+            message_id=916482734933811232,
+        )
+        self.bot.add_view(
+            view=BasicRoles(timeout=None),
+            message_id=916482736309534762,
+        )
+        self.bot.add_view(
+            view=ColorRoles(timeout=None),
+            message_id=916482737811120128,
+        )
+        self.bot.add_view(
+            view=RPSearchRoles(timeout=None),
+            message_id=916482738876477483,
+        )
+        self.bot.add_view(
             view=RoleView(
                 bot=self.bot,
                 cool_down=self.cool_down,
@@ -211,9 +231,5 @@ def setup(bot: CustomBot) -> None:
     ----------
     bot: CustomBot
         Bot
-
-    Returns
-    -------
-
     """
-    bot.add_cog(RPSearch(bot))
+    bot.add_cog(Roles(bot))
