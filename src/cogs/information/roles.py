@@ -43,7 +43,7 @@ class SelfRoles(View):
                     label="Go to OC-Submission in order to get access to the RP.",
                     url="https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552",
                     emoji="\N{OPEN BOOK}",
-                    row=4
+                    row=4,
                 )
             )
 
@@ -93,36 +93,11 @@ class SelfRoles(View):
         resp: InteractionResponse = ctx.response
         member = self.member
         if role in member.roles:
-
-            class Confirmation(View):
-                @button(
-                    label="Keep role",
-                    emoji=":small_check_mark:811367963235713124",
-                )
-                async def keep(self, _: Button, inter: Interaction):
-                    await inter.response.send_message(
-                        f"Role {role.mention} was not removed.", ephemeral=True
-                    )
-
-                @button(
-                    label="Remove Role",
-                    emoji=":small_x_mark:811367596866797658",
-                )
-                async def remove(self, _: Button, inter: Interaction):
-                    await member.remove_roles(
-                        role, reason="Self Roles interaction"
-                    )
-                    await inter.response.send_message(
-                        f"Role {role.mention} was removed.", ephemeral=True
-                    )
-
-            view = Confirmation()
+            await member.remove_roles(role, reason="Self Roles interaction")
             await resp.send_message(
-                f"You have the role {role.mention} already",
+                f"Role {role.mention} was removed from your account.",
                 ephemeral=True,
-                view=view,
             )
-            return await view.wait()
         elif role:
             await member.add_roles(role, reason="Self Roles interaction")
             await resp.send_message(
@@ -161,7 +136,7 @@ class SelfRoles(View):
             ),
         ],
     )
-    async def pronoun(self, sct: Select, ctx: Interaction):
+    async def pronoun(self, sct: Select, interaction: Interaction):
         guild = self.guild
         roles: list[Role] = [
             role for item in sct.values if (role := guild.get_role(int(item)))
@@ -171,7 +146,7 @@ class SelfRoles(View):
             for item in sct.options
             if (role := guild.get_role(int(item.value)))
         ]
-        return await self.role_menu(ctx, roles, total)
+        return await self.role_menu(interaction, roles, total)
 
     @select(
         placeholder="Select Basic Roles",
@@ -216,7 +191,7 @@ class SelfRoles(View):
             ),
         ],
     )
-    async def basic(self, sct: Select, ctx: Interaction):
+    async def basic(self, sct: Select, interaction: Interaction):
         guild = self.guild
         roles: list[Role] = [
             role for item in sct.values if (role := guild.get_role(int(item)))
@@ -226,7 +201,7 @@ class SelfRoles(View):
             for item in sct.options
             if (role := guild.get_role(int(item.value)))
         ]
-        return await self.role_menu(ctx, roles, total)
+        return await self.role_menu(interaction, roles, total)
 
     @select(
         placeholder="Select Color Roles",
@@ -329,7 +304,7 @@ class SelfRoles(View):
             ),
         ],
     )
-    async def color_roles(self, sct: Select, ctx: Interaction):
+    async def color_roles(self, sct: Select, interaction: Interaction):
         guild = self.guild
         if role := guild.get_role(int(sct.values[0])):
             total: list[Role] = [
@@ -337,7 +312,7 @@ class SelfRoles(View):
                 for item in sct.options
                 if (role := guild.get_role(int(item.value)))
             ]
-            return await self.unique_role_button(ctx, role, total)
+            return await self.unique_role_button(interaction, role, total)
 
     @select(
         placeholder="Select RP Search Roles",
@@ -376,7 +351,7 @@ class SelfRoles(View):
             ),
         ],
     )
-    async def rp_search(self, sct: Select, ctx: Interaction):
+    async def rp_search(self, sct: Select, interaction: Interaction):
         guild = self.guild
         roles: list[Role] = [
             role for item in sct.values if (role := guild.get_role(int(item)))
@@ -386,4 +361,4 @@ class SelfRoles(View):
             for item in sct.options
             if (role := guild.get_role(int(item.value)))
         ]
-        return await self.role_menu(ctx, roles, total)
+        return await self.role_menu(interaction, roles, total)
