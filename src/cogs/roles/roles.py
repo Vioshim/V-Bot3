@@ -322,7 +322,7 @@ class ColorRoles(View):
             guild = ctx.guild
             role = guild.get_role(int(btn.custom_id))
             total = set(map(guild.get_role, COLOR_ROLES.values()))
-            total.pop(role)
+            total.remove(role)
             if role in ctx.user.roles:
 
                 class Confirmation(View):

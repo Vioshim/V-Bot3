@@ -249,6 +249,7 @@ class InformationView(View):
     @button(
         label="Map Information",
         custom_id="Map Information",
+        style=ButtonStyle.blurple,
     )
     async def map_info(
         self,
