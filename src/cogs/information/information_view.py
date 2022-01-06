@@ -68,9 +68,9 @@ class FAQComplex(Complex):
         view = View(timeout=None)
         item.callback = self.read(item.placeholder)
         view.add_item(item)
-        await self.target.edit_original_message(view=view)
-        self.message = None
         await resp.pong()
+        await self.target.edit_original_message(view=view)
+        await view.wait()
 
     def read(self, key: str):
         """Method to read from the existing FAQ Data
