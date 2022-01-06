@@ -68,11 +68,10 @@ class FAQComplex(Complex):
         view = View(timeout=None)
         item.callback = self.read(item.placeholder)
         view.add_item(item)
-        await resp.send_message(
-            content="Select the option you'd like to read..!",
-            view=view,
-            ephemeral=True,
-        )
+        self.embed.title = item.placeholder
+        await resp.pong()
+        await self.target.edit_original_message(embed=self.embed, view=view)
+        await view.wait()
 
     def read(self, key: str):
         """Method to read from the existing FAQ Data
@@ -103,7 +102,7 @@ class FAQComplex(Complex):
                 await resp.send_message(
                     embed=info_embed, view=view, ephemeral=True
                 )
-                self.stop()
+            self.stop()
 
         return inner
 
