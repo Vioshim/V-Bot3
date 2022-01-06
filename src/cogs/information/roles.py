@@ -24,7 +24,12 @@ from discord import (
 )
 from discord.ui import Button, Select, View, button, select
 
+from src.pagination.complex import Complex
+
 __all__ = ("SelfRoles",)
+
+
+PRONOUN_ROLES = {}
 
 
 class SelfRoles(View):
@@ -73,47 +78,6 @@ class SelfRoles(View):
         await self.member.add_roles(*roles, reason="Self Roles")
         await resp.send_message("Roles has been set!", ephemeral=True)
 
-    async def unique_role_button(
-        self,
-        ctx: Interaction,
-        role: Optional[Role],
-        roles: Iterable[Role],
-    ) -> None:
-        """Method to add/remove a single role.
-
-        Parameters
-        ----------
-        ctx: Interaction
-            Discord Interaction
-        role: Role
-            Selected Role
-        roles: Iterable[Role]
-            Role IDs from the group
-        """
-        resp: InteractionResponse = ctx.response
-        member = self.member
-        if role in member.roles:
-            await member.remove_roles(role, reason="Self Roles interaction")
-            await resp.send_message(
-                f"Role {role.mention} was removed from your account.",
-                ephemeral=True,
-            )
-        elif role:
-            await member.add_roles(role, reason="Self Roles interaction")
-            await resp.send_message(
-                f"Role {role.mention} was added to your account.",
-                ephemeral=True,
-            )
-        if data := set(member.roles).intersection(roles):
-            await member.remove_roles(
-                *(
-                    role_item
-                    for item in data
-                    if (role_item := ctx.guild.get_role(item))
-                ),
-                reason="Self Roles",
-            )
-
     @select(
         placeholder="Select Pronoun/s",
         min_values=0,
@@ -138,14 +102,8 @@ class SelfRoles(View):
     )
     async def pronoun(self, sct: Select, interaction: Interaction):
         guild = self.guild
-        roles: list[Role] = [
-            role for item in sct.values if (role := guild.get_role(int(item)))
-        ]
-        total: list[Role] = [
-            role
-            for item in sct.options
-            if (role := guild.get_role(int(item.value)))
-        ]
+        roles = map(guild.get_role, sct.values)
+        total = map(guild.get_role, sct.options)
         return await self.role_menu(interaction, roles, total)
 
     @select(
@@ -193,14 +151,8 @@ class SelfRoles(View):
     )
     async def basic(self, sct: Select, interaction: Interaction):
         guild = self.guild
-        roles: list[Role] = [
-            role for item in sct.values if (role := guild.get_role(int(item)))
-        ]
-        total: list[Role] = [
-            role
-            for item in sct.options
-            if (role := guild.get_role(int(item.value)))
-        ]
+        roles = map(guild.get_role, sct.values)
+        total = map(guild.get_role, sct.options)
         return await self.role_menu(interaction, roles, total)
 
     @select(
@@ -306,13 +258,9 @@ class SelfRoles(View):
     )
     async def color_roles(self, sct: Select, interaction: Interaction):
         guild = self.guild
-        if role := guild.get_role(int(sct.values[0])):
-            total: list[Role] = [
-                role
-                for item in sct.options
-                if (role := guild.get_role(int(item.value)))
-            ]
-            return await self.unique_role_button(interaction, role, total)
+        roles = map(guild.get_role, sct.values)
+        total = map(guild.get_role, sct.options)
+        return await self.role_menu(interaction, roles, total)
 
     @select(
         placeholder="Select RP Search Roles",
@@ -353,12 +301,6 @@ class SelfRoles(View):
     )
     async def rp_search(self, sct: Select, interaction: Interaction):
         guild = self.guild
-        roles: list[Role] = [
-            role for item in sct.values if (role := guild.get_role(int(item)))
-        ]
-        total: list[Role] = [
-            role
-            for item in sct.options
-            if (role := guild.get_role(int(item.value)))
-        ]
+        roles = map(guild.get_role, sct.values)
+        total = map(guild.get_role, sct.options)
         return await self.role_menu(interaction, roles, total)
