@@ -61,7 +61,6 @@ class FAQComplex(Complex):
 
     async def custom_choice(self, _: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
         index: str = ctx.data["values"][0]
         amount = self.entries_per_page * self._pos
         chunk = self.values[amount : amount + self.entries_per_page]
