@@ -97,8 +97,7 @@ class FAQComplex(Complex):
                 for info_btn in self.buttons[key].get(idx, []):
                     view.add_item(info_btn)
 
-                self.target.edit_original_message(embed=info_embed, view=view)
-                await resp.pong()
+                ctx.edit_original_message(embed=info_embed, view=view)
 
         return inner
 
@@ -215,7 +214,7 @@ class InformationView(View):
                 text=f"There's a total of {view.total:02d} OCs in this area."
             )
 
-            ctx.edit_original_message(embed=info_embed, view=view)
+            await ctx.edit_original_message(embed=info_embed, view=view)
             await resp.pong()
 
     @button(
