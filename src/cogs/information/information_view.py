@@ -192,7 +192,7 @@ class InformationView(View):
         self.faq_data = [
             Select(
                 placeholder=k,
-                values=[
+                options=[
                     SelectOption(
                         label=item["label"],
                         value=str(index),
@@ -208,7 +208,7 @@ class InformationView(View):
         self.map_information = [
             Select(
                 placeholder=k,
-                values=[
+                options=[
                     SelectOption(
                         label=item["label"],
                         value=str(item["category"]),
