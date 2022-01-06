@@ -282,7 +282,7 @@ class InformationView(View):
     )
     async def self_roles(self, btn: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        view = SelfRoles(ctx.user)
+        view = SelfRoles(member=ctx.user)
         await resp.send_message(
             content=f"**__{btn.label}__**",
             view=view,

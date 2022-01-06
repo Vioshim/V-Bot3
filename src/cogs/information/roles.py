@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, Optional
-
 from discord import (
     Interaction,
     InteractionResponse,
@@ -22,14 +20,9 @@ from discord import (
     SelectOption,
     User,
 )
-from discord.ui import Button, Select, View, button, select
-
-from src.pagination.complex import Complex
+from discord.ui import Button, Select, View, select
 
 __all__ = ("SelfRoles",)
-
-
-PRONOUN_ROLES = {}
 
 
 class SelfRoles(View):
@@ -40,7 +33,7 @@ class SelfRoles(View):
             member = guild.get_member(member.id)
         self.guild = member.guild
         self.member = member
-        required: Role = member.guild.get_role(719642423327719434)
+        required: Role = self.guild.get_role(719642423327719434)
         if required not in member.roles:
             self.rp_search.disabled = True
             self.add_item(
@@ -58,16 +51,17 @@ class SelfRoles(View):
     async def role_menu(
         self,
         sct: Select,
-        ctx: Interaction,
+        interaction: Interaction,
     ):
         roles = map(lambda x: self.guild.get_role(int(x)), sct.values)
         total = map(lambda x: self.guild.get_role(int(x.value)), sct.options)
-        resp: InteractionResponse = ctx.response
+        resp: InteractionResponse = interaction.response
         if remove := (set(total) - set(roles)) & set(self.member.roles):
             await self.member.remove_roles(*remove, reason="Self Roles")
-        await self.member.add_roles(*roles, reason="Self Roles")
+        if add := set(roles) - set(self.member.roles):
+            await self.member.add_roles(*add, reason="Self Roles")
         text: str = ", ".join(role.mention for role in roles)
-        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
+        await resp.send_message(f"Roles [{text}] have been added!", ephemeral=True)
 
     @select(
         placeholder="Select Pronoun/s",
