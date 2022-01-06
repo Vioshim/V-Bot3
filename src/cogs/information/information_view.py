@@ -61,15 +61,19 @@ class FAQComplex(Complex):
 
     async def custom_choice(self, _: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
         index: str = ctx.data["values"][0]
         amount = self.entries_per_page * self._pos
         chunk = self.values[amount : amount + self.entries_per_page]
         item: Select = chunk[int(index)]
         view = View(timeout=None)
-        await resp.pong()
         item.callback = self.read(item.placeholder)
         view.add_item(item)
-        await self.target.edit_original_message(view=view)
+        await resp.send_message(
+            content="Select the option you'd like to read..!",
+            view=view,
+            ephemeral=True,
+        )
 
     def read(self, key: str):
         """Method to read from the existing FAQ Data
@@ -97,7 +101,9 @@ class FAQComplex(Complex):
                 for info_btn in self.buttons[key].get(idx, []):
                     view.add_item(info_btn)
 
-                await resp.send_message(embed=info_embed, view=view, ephemeral=True)
+                await resp.send_message(
+                    embed=info_embed, view=view, ephemeral=True
+                )
                 self.stop()
 
         return inner
