@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABCMeta, abstractmethod
 from unicodedata import lookup
 
 from discord import (
     ButtonStyle,
     CategoryChannel,
+    Color,
     Embed,
     Interaction,
     InteractionResponse,
@@ -34,7 +34,7 @@ from src.structures.bot import CustomBot
 from src.utils.etc import MAP_URL
 
 
-class ReaderComplex(Complex, metaclass=ABCMeta):
+class FAQComplex(Complex):
     def __init__(
         self,
         bot: CustomBot,
@@ -44,7 +44,7 @@ class ReaderComplex(Complex, metaclass=ABCMeta):
         embeds: dict[str, dict[str, Embed]],
         buttons: dict[str, dict[str, list[Button]]],
     ):
-        super(ReaderComplex, self).__init__(
+        super(FAQComplex, self).__init__(
             bot=bot,
             timeout=None,
             member=member,
@@ -71,18 +71,6 @@ class ReaderComplex(Complex, metaclass=ABCMeta):
         await self.target.edit_original_message(view=view)
         await response.pong()
 
-    @abstractmethod
-    def read(self, key: str):
-        """Method to read from the existing FAQ Data
-
-        Parameters
-        ----------
-        key : str
-            Item to read
-        """
-
-
-class FAQComplex(ReaderComplex):
     def read(self, key: str):
         """Method to read from the existing FAQ Data
 
@@ -107,41 +95,6 @@ class FAQComplex(ReaderComplex):
 
                 view = View(timeout=None)
                 for info_btn in self.buttons[key].get(idx, []):
-                    view.add_item(info_btn)
-
-                self.target.edit_original_message(embed=info_embed, view=view)
-                await resp.pong()
-
-        return inner
-
-
-class MapComplex(ReaderComplex):
-    def read(self, key: str):
-        async def inner(ctx: Interaction):
-            resp: InteractionResponse = ctx.response
-            if data := ctx.data.get("values", []):
-                idx: str = data[0]
-                info_embed = self.embeds[key][idx].copy()
-                info_embed.colour = ctx.user.colour
-
-                category: CategoryChannel = self.bot.get_channel(int(idx))
-                self.bot.logger.info(
-                    "%s is reading Map Information of %s",
-                    str(ctx.user),
-                    category.name,
-                )
-
-                view = AreaSelection(
-                    bot=self.bot,
-                    cat=category,
-                    member=ctx.user,
-                )
-
-                info_embed.set_footer(
-                    text=f"There's a total of {view.total:02d} OCs in this area."
-                )
-
-                for info_btn in self.buttons.get(key, {}).get(idx, []):
                     view.add_item(info_btn)
 
                 self.target.edit_original_message(embed=info_embed, view=view)
@@ -206,50 +159,14 @@ class InformationView(View):
             if k != "Map Information"
         ]
         self.map_information = [
-            Select(
-                placeholder=k,
-                options=[
-                    SelectOption(
-                        label=item["label"],
-                        value=str(item["category"]),
-                        description=item["content"][:100],
-                        emoji=lookup(item["emoji"]),
-                    )
-                    for item in value
-                ],
+            SelectOption(
+                label=item["label"],
+                value=str(item["category"]),
+                description=item.get("content", "No description")[:100],
+                emoji=lookup(item["emoji"]),
             )
-            for value in raw_data.get("Map Information", [])
+            for item in self.raw_data.get("Map Information", [])
         ]
-
-    async def read(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        resp: InteractionResponse = interaction.response
-        if btn.label == "F.A.Q.":
-            data = FAQComplex
-            values = self.faq_data
-        else:
-            data = MapComplex
-            values = self.map_information
-
-        view = data(
-            bot=self.bot,
-            member=interaction.user,
-            values=values,
-            target=interaction,
-            embeds=self.embeds,
-            buttons=self.buttons,
-        )
-        embed = view.embed
-        embed.title = f"Parallel Yonder's {btn.label}"
-        embed.description = (
-            "Select an option which you'd like to read more information about"
-        )
-        if isinstance(view, MapComplex):
-            embed.set_image(url=MAP_URL)
-        await resp.send_message(embed=embed, view=view, ephemeral=True)
 
     @button(
         label="F.A.Q.",
@@ -261,7 +178,45 @@ class InformationView(View):
         btn: Button,
         interaction: Interaction,
     ):
-        await self.read(btn, interaction)
+        resp: InteractionResponse = interaction.response
+
+        view = FAQComplex(
+            bot=self.bot,
+            member=interaction.user,
+            values=self.faq_data,
+            target=interaction,
+            embeds=self.embeds,
+            buttons=self.buttons,
+        )
+        embed = view.embed
+        embed.title = f"Parallel Yonder's {btn.label}"
+        embed.description = (
+            "Select an option which you'd like to read more information about"
+        )
+        await resp.send_message(embed=embed, view=view, ephemeral=True)
+
+    async def map_callback(self, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        if data := ctx.data.get("values", []):
+            idx: str = data[0]
+            info_embed = self.embeds["Map Information"][idx].copy()
+            info_embed.colour = ctx.user.colour
+
+            category: CategoryChannel = self.bot.get_channel(int(idx))
+            self.bot.logger.info(
+                "%s is reading Map Information of %s",
+                str(ctx.user),
+                category.name,
+            )
+
+            view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
+
+            info_embed.set_footer(
+                text=f"There's a total of {view.total:02d} OCs in this area."
+            )
+
+            ctx.edit_original_message(embed=info_embed, view=view)
+            await resp.pong()
 
     @button(
         label="Map Information",
@@ -271,6 +226,15 @@ class InformationView(View):
     async def map_info(
         self,
         btn: Button,
-        interaction: Interaction,
+        ctx: Interaction,
     ):
-        await self.read(btn, interaction)
+        resp: InteractionResponse = ctx.response
+
+        view = View(timeout=None)
+        item = Select(placeholder=btn.label, options=self.map_information)
+        item.callback = self.map_callback
+        view.add_item(item)
+
+        embed = Embed(title="Parallel Yonder's Map", color=Color.blurple())
+        embed.set_image(url=MAP_URL)
+        await resp.send_message(embed=embed, view=view, ephemeral=True)
