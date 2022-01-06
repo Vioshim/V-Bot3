@@ -60,7 +60,7 @@ class CharacterHandlerView(Complex):
             timeout=None,
         )
 
-    async def custom_choice(self, _: Select, interaction: Interaction):
+    async def custom_choice(self, sct: Select, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         data: list[Type[Character]] = list(self.choices)
         view = ModifyView(

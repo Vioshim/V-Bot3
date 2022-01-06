@@ -115,9 +115,9 @@ class CharactersView(Complex):
         )
         self.embed.title = "Select a character"
 
-    async def custom_choice(self, _: Select, ctx: Interaction):
+    async def custom_choice(self, sct: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
-        for index in ctx.data.get("values", []):  # type: str
+        for index in sct.values:
             try:
                 amount = self.entries_per_page * self._pos
                 chunk = self.values[amount : amount + self.entries_per_page]

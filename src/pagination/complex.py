@@ -367,13 +367,12 @@ class Complex(Simple):
             Current interaction of the user
         """
         response: InteractionResponse = interaction.response
-        answer: list[str] = interaction.data.get("values", [])
         if self._choices is None:
             self._choices = set()
         entries = []
         amount = self.entries_per_page * self._pos
         chunk = self.values[amount : amount + self.entries_per_page]
-        for index in answer:  # type: str
+        for index in sct.values:
             item: _T = chunk[int(index)]
             name, _ = self.parser(item)
             entries.append(str(name))
@@ -387,7 +386,7 @@ class Complex(Simple):
             )
 
         self.values = set(self.values) - self.choices
-        if len(answer) == self.entries_per_page:
+        if len(sct.values) == self.entries_per_page:
             self._pos -= 1
         await self.edit(page=self._pos)
 

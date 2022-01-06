@@ -162,10 +162,9 @@ class SelfRoles(View):
         ],
     )
     async def pronoun(self, sct: Select, ctx: Interaction):
-        data: list[str] = ctx.data.get("values", [])
         guild = self.guild
         roles: list[Role] = [
-            role for item in data if (role := guild.get_role(int(item)))
+            role for item in sct.values if (role := guild.get_role(int(item)))
         ]
         total: list[Role] = [
             role
@@ -218,10 +217,9 @@ class SelfRoles(View):
         ],
     )
     async def basic(self, sct: Select, ctx: Interaction):
-        data: list[str] = ctx.data.get("values", [])
         guild = self.guild
         roles: list[Role] = [
-            role for item in data if (role := guild.get_role(int(item)))
+            role for item in sct.values if (role := guild.get_role(int(item)))
         ]
         total: list[Role] = [
             role
@@ -332,9 +330,8 @@ class SelfRoles(View):
         ],
     )
     async def color_roles(self, sct: Select, ctx: Interaction):
-        data: list[str] = ctx.data.get("values", [])
         guild = self.guild
-        if role := guild.get_role(int(data[0])):
+        if role := guild.get_role(int(sct.values[0])):
             total: list[Role] = [
                 role
                 for item in sct.options
@@ -380,10 +377,9 @@ class SelfRoles(View):
         ],
     )
     async def rp_search(self, sct: Select, ctx: Interaction):
-        data: list[str] = ctx.data.get("values", [])
         guild = self.guild
         roles: list[Role] = [
-            role for item in data if (role := guild.get_role(int(item)))
+            role for item in sct.values if (role := guild.get_role(int(item)))
         ]
         total: list[Role] = [
             role
