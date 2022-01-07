@@ -223,7 +223,7 @@ class SectionComplex(Complex):
             emoji_parser=item.emoji,
         )
         view.embed.title, view.embed.description = item.tuple
-        await self.target.edit_original_message(embed=view.embed, view=view)
+        await ctx.edit_original_message(embed=view.embed, view=view)
         await view.wait()
         if isinstance(element := view.choice, FAQ):
             embed = element.embed.copy()
