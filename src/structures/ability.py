@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 from asyncpg import Connection, Record
@@ -29,8 +29,8 @@ class Ability:
     Ability class which represents the game provided ones.
     """
 
-    name: str = field(default_factory=str)  # Name of the ability
-    description: str = field(default_factory=str)  # Description of the ability
+    name: str = ""
+    description: str = ""
 
     def __repr__(self) -> str:
         """Repr Method
@@ -49,11 +49,11 @@ class SpAbility(Ability):
     Special Ability class which inherits from Ability
     """
 
-    name: str = field(default_factory=str)  # Name of the special ability
-    description: str = field(default_factory=str)  # Description of the special ability
-    origin: str = field(default_factory=str)  # Method to obtain the special ability
-    pros: str = field(default_factory=str)  # Pros of the special ability
-    cons: str = field(default_factory=str)  # Cons of the special ability
+    name: str = ""
+    description: str = ""
+    origin: str = ""
+    pros: str = ""
+    cons: str = ""
 
     def __repr__(self) -> str:
         return f"SPAbility(name={self.name})"
@@ -88,7 +88,11 @@ class SpAbility(Ability):
         )
 
     @classmethod
-    async def fetch(cls, connection: Connection, idx: int) -> Optional[SpAbility]:
+    async def fetch(
+        cls,
+        connection: Connection,
+        idx: int,
+    ) -> Optional[SpAbility]:
         """This method calls database to obtain information
 
         Parameters
@@ -113,7 +117,11 @@ class SpAbility(Ability):
         ):
             return cls.convert(entry)
 
-    async def upsert(self, connection: Connection, idx: int) -> str:
+    async def upsert(
+        self,
+        connection: Connection,
+        idx: int,
+    ) -> str:
         """This method calls database to set information
 
         Parameters

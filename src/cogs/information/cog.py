@@ -151,10 +151,14 @@ class Information(Cog):
             message = await channel.send(embed=embed, delete_after=3600 * 24)
             thread = await message.create_thread(name=date.strftime("%d-%m-%Y"))
             view = View()
-            view.add_item(Button(label="Back to Information", url=message.jump_url))
+            view.add_item(
+                Button(label="Back to Information", url=message.jump_url)
+            )
             data = await thread.send(view=view, embed=embed)
             view = View()
-            view.add_item(Button(label="Join the Discussion", url=data.jump_url))
+            view.add_item(
+                Button(label="Join the Discussion", url=data.jump_url)
+            )
             await message.edit(view=view)
 
     async def member_count(self):
@@ -219,22 +223,22 @@ class Information(Cog):
             )
             return
 
-        embed = self.view.embeds["Map Information"][area].copy()
-        embed.colour = ctx.user.colour
-
-        category: CategoryChannel = ctx.guild.get_channel(int(area))
-        self.bot.logger.info(
-            "%s is reading /Map Information of %s", str(ctx.user), category.name
-        )
-
-        view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
-
-        embed.set_footer(text=f"There's a total of {view.total:02d} OCs in this area.")
-
-        for info_btn in self.view.buttons.get("Map Information", {}).get(area, []):
-            view.add_item(info_btn)
-
-        await ctx.send_followup(embed=embed, view=view, ephemeral=True)
+        if items := [
+            i for i in self.view.map_information if i.category == int(area)
+        ]:
+            embed = items[0].embed.copy()
+            embed.colour = ctx.user.colour
+            category: CategoryChannel = ctx.guild.get_channel(items[0].category)
+            self.bot.logger.info(
+                "%s is reading /Map Information of %s",
+                str(ctx.user),
+                category.name,
+            )
+            view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
+            embed.set_footer(
+                text=f"There's a total of {view.total:02d} OCs in this area."
+            )
+            await ctx.send_followup(embed=embed, view=view, ephemeral=True)
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
@@ -252,7 +256,9 @@ class Information(Cog):
         )
         if text := "\n".join(f"> **•** {role.mention}" for role in roles[::-1]):
             embed.description = text
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.set_author(
+            name=member.display_name, icon_url=member.display_avatar.url
+        )
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
         if file := await self.bot.get_file(
@@ -286,7 +292,9 @@ class Information(Cog):
                 value=format_dt(member.created_at, style="R"),
             )
             message = await log.send(embed=embed, file=file)
-            image = ImageKit(base="welcome_TW8HUQOuU.png", weight=1920, height=1080)
+            image = ImageKit(
+                base="welcome_TW8HUQOuU.png", weight=1920, height=1080
+            )
             image.add_text(
                 font="unifont_HcfNyZlJoK.otf",
                 text=member.display_name,
@@ -302,7 +310,9 @@ class Information(Cog):
                 x=1308,
                 y=65,
             )
-            if file := await self.bot.get_file(image.url, filename=str(member.id)):
+            if file := await self.bot.get_file(
+                image.url, filename=str(member.id)
+            ):
                 embed = Embed(
                     color=Color.blurple(),
                     timestamp=utcnow(),
@@ -377,7 +387,9 @@ class Information(Cog):
                 )
                 embed.set_image(url=WHITE_BAR)
                 embed.add_field(name="Channel", value=ch.mention)
-                embed.add_field(name="Amount", value=f"{len(messages)} messages")
+                embed.add_field(
+                    name="Amount", value=f"{len(messages)} messages"
+                )
                 embed.set_author(name=guild.name, icon_url=guild.icon.url)
                 await channel.send(embed=embed)
             self.bot.msg_cache -= ids
@@ -421,7 +433,9 @@ class Information(Cog):
                 embed.set_author(name=user.display_name)
             embed.add_field(name="Channel", value=ctx.channel.mention)
             embed.add_field(name="Embed", value=f"**{len(embeds)}**")
-            embed.add_field(name="Attachments", value=f"**{len(ctx.attachments)}**")
+            embed.add_field(
+                name="Attachments", value=f"**{len(ctx.attachments)}**"
+            )
             embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
             files = []
             for item in ctx.attachments:
