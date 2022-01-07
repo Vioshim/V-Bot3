@@ -277,11 +277,18 @@ class Basic(Generic[_M], View):
         except DiscordException:
             with suppress(DiscordException):
                 if message := self.message:
-                    await message.edit(view=None)
+                    view = self.from_message(message)
+                    if view.children == self.children:
+                        await message.edit(view=None)
                 self.message = None
         finally:
-            if not self.message:
-                if isinstance(target := self.target, Interaction):
+            if (
+                isinstance(target := self.target, Interaction)
+                and not self.message
+            ):
+                message = await target.original_message()
+                view = self.from_message(message)
+                if view.children == self.children:
                     await target.edit_original_message(view=None)
             self.message = None
             return self.stop()
