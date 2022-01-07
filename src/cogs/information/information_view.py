@@ -191,6 +191,7 @@ class MapComplex(Complex):
         await resp.send_message(
             embed=embed,
             view=view,
+            ephemeral=True,
         )
 
 
