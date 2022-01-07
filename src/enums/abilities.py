@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -360,9 +360,7 @@ class Abilities(Enum):
         name="Full Metal Body",
         description="Prevents other Pokemon from lowering this Pokemon's stat stages.",
     )
-    FURCOAT = Ability(
-        name="Fur Coat", description="This Pokemon's Defense is doubled."
-    )
+    FURCOAT = Ability(name="Fur Coat", description="This Pokemon's Defense is doubled.")
     GALEWINGS = Ability(
         name="Gale Wings",
         description="If this Pokemon is at full HP, its Flying-type moves have their priority increased by 1.",
@@ -418,9 +416,7 @@ class Abilities(Enum):
     HEAVYMETAL = Ability(
         name="Heavy Metal", description="This Pokemon's weight is doubled."
     )
-    HONEYGATHER = Ability(
-        name="Honey Gather", description="No competitive use."
-    )
+    HONEYGATHER = Ability(name="Honey Gather", description="No competitive use.")
     HUGEPOWER = Ability(
         name="Huge Power", description="This Pokemon's Attack is doubled."
     )

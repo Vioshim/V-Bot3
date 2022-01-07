@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,9 +41,7 @@ class Movepool:
     other: frozenset[Moves] = field(default_factory=frozenset)
 
     def __post_init__(self):
-        self.level = frozendict(
-            {k: frozenset(v) for k, v in self.level.items()}
-        )
+        self.level = frozendict({k: frozenset(v) for k, v in self.level.items()})
         self.tm = frozenset(self.tm)
         self.event = frozenset(self.event)
         self.tutor = frozenset(self.tutor)
@@ -92,9 +90,7 @@ class Movepool:
     def operator(
         self,
         other: Movepool,
-        method: Callable[
-            [frozenset[Moves], frozenset[Moves]], frozenset[Moves]
-        ],
+        method: Callable[[frozenset[Moves], frozenset[Moves]], frozenset[Moves]],
     ) -> Movepool:
         """This method allows to perform operations on the movepool
 
@@ -316,11 +312,7 @@ class Movepool:
                 {
                     k: entry
                     for k, v in self.level.items()
-                    if (
-                        entry := frozenset(
-                            {x for x in v if x not in total_remove}
-                        )
-                    )
+                    if (entry := frozenset({x for x in v if x not in total_remove}))
                 }
             ),
             tm=frozenset({x for x in self.tm if x not in total_remove}),
@@ -376,9 +368,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(
-            level={}
-        )
+        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(level={})
         async for item in connection.cursor(
             """--sql
                 SELECT MOVE, METHOD

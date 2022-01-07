@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -245,9 +245,7 @@ class PronounRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add, reason="Self Roles")
         if remove := (total - roles) & set(member.roles):
@@ -367,9 +365,7 @@ class BasicRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add, reason="Self Roles")
         if remove := (total - roles) & set(member.roles):
@@ -422,9 +418,7 @@ class RPSearchRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add, reason="Self Roles")
         if remove := (total - roles) & set(member.roles):

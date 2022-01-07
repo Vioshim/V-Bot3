@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ from __future__ import annotations
 from difflib import get_close_matches
 from enum import Enum
 from random import choice
-from typing import Iterable, Optional, Union
 from re import split
+from typing import Iterable, Optional, Union
 
 from src.enums.mon_types import Types
 from src.structures.move import Category, Move
@@ -106,7 +106,11 @@ class Moves(Enum):
             name = name.title()
         elif isinstance(name, Iterable):
             name = ",".join(name).title()
-        return {data for item in split(r"\s*[,|\/]\s*", name) if (data := cls.fetch_by_name(item))}
+        return {
+            data
+            for item in split(r"\s*[,|\/]\s*", name)
+            if (data := cls.fetch_by_name(item))
+        }
 
     ABSORB = Move(
         desc=r"The user recovers 1/2 the HP lost by the target, rounded half up. If Big Root is held by the user, the HP recovered is 1.3x normal, rounded half down.",

@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,8 +23,10 @@ from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncdagpi import Client as DagpiClient
 from asyncpg import Connection, Pool
 from discord import (
+    AllowedMentions,
     Embed,
     File,
+    Intents,
     Message,
     PartialMessage,
     TextChannel,
@@ -75,7 +77,16 @@ class CustomBot(Bot):
         logger: Logger,
         **options,
     ):
-        super().__init__(**options)
+        super().__init__(
+            **options,
+            intents=Intents.all(),
+            allowed_mentions=AllowedMentions(
+                users=False,
+                roles=False,
+                everyone=False,
+                replied_user=True,
+            ),
+        )
         self.scheduler = scheduler
         self.pool = pool
         self.logger = logger

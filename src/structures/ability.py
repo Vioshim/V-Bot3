@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,12 +50,8 @@ class SpAbility(Ability):
     """
 
     name: str = field(default_factory=str)  # Name of the special ability
-    description: str = field(
-        default_factory=str
-    )  # Description of the special ability
-    origin: str = field(
-        default_factory=str
-    )  # Method to obtain the special ability
+    description: str = field(default_factory=str)  # Description of the special ability
+    origin: str = field(default_factory=str)  # Method to obtain the special ability
     pros: str = field(default_factory=str)  # Pros of the special ability
     cons: str = field(default_factory=str)  # Cons of the special ability
 
@@ -92,9 +88,7 @@ class SpAbility(Ability):
         )
 
     @classmethod
-    async def fetch(
-        cls, connection: Connection, idx: int
-    ) -> Optional[SpAbility]:
+    async def fetch(cls, connection: Connection, idx: int) -> Optional[SpAbility]:
         """This method calls database to obtain information
 
         Parameters

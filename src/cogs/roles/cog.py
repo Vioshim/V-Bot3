@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,7 @@
 from datetime import datetime
 
 from discord import AllowedMentions, Embed, Member, Role, TextChannel
-from discord.commands import (
-    ApplicationContext,
-    Option,
-    OptionChoice,
-    slash_command,
-)
+from discord.commands import ApplicationContext, Option, OptionChoice, slash_command
 from discord.ext.commands import Cog, has_role
 from discord.ui import Button, View
 from discord.utils import utcnow

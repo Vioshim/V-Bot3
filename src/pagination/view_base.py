@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import datetime
 from typing import Generic, Optional, TypeVar, Union
-from contextlib import suppress
 
 from discord import (
     AllowedMentions,
@@ -139,6 +139,7 @@ class Basic(Generic[_M], View):
         avatar_url: str = None,
         ephemeral: bool = False,
         thread: Snowflake = None,
+        editing_original: bool = False,
     ) -> None:
         """Sends the paginator towards the defined destination
 
@@ -213,13 +214,16 @@ class Basic(Generic[_M], View):
 
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
-            if not resp.is_done():
-                await resp.send_message(**data)
+            if editing_original:
+                if message := await target.edit_original_message(**data):
+                    self.message = message
+            elif resp.is_done():
+                if message := await target.followup.send(**data, wait=True):
+                    self.message = message
             else:
-                await target.followup.send(**data)
-            if message := await target.original_message():
-                await message.edit(embed=self._embed, view=self)
-                self.message = message
+                ctx = await resp.send_message(**data)
+                if message := await ctx.original_message():
+                    self.message = message
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:
@@ -266,13 +270,21 @@ class Basic(Generic[_M], View):
 
     async def delete(self) -> None:
         """This method deletes the view, and stops it."""
-        with suppress(DiscordException):
-            if isinstance(target := self.target, Interaction):
-                await target.edit_original_message(view=None)
-            elif message := self.message:
+        try:
+            if message := self.message:
                 await message.delete()
-        self.message = None
-        return self.stop()
+            self.message = None
+        except DiscordException:
+            with suppress(DiscordException):
+                if message := self.message:
+                    await message.edit(view=None)
+                self.message = None
+        finally:
+            if not self.message:
+                if isinstance(target := self.target, Interaction):
+                    await target.edit_original_message(view=None)
+            self.message = None
+            return self.stop()
 
     async def on_timeout(self) -> None:
         await self.delete()

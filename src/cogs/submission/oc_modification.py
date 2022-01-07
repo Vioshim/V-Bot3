@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -185,9 +185,7 @@ class SPView(Basic):
             "If you need to write too much, "
             "I recommend to move to Google documents, otherwise, try to be concise."
         )
-        async with view.send(
-            title="Sp.Ability Modify", ephemeral=True
-        ) as elements:
+        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 

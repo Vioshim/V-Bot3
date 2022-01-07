@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,12 +46,7 @@ from src.structures.species import (
 from src.structures.species import Species as SpeciesBase
 from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -503,8 +498,7 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, not main)
-            for main, item in enumerate(self.types)
+            (self.id, item.name, not main) for main, item in enumerate(self.types)
         ]:
             await connection.executemany(
                 """--sql
@@ -521,8 +515,7 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, bool(main))
-            for main, item in enumerate(self.abilities)
+            (self.id, item.name, bool(main)) for main, item in enumerate(self.abilities)
         ]:
             await connection.executemany(
                 """--sql
@@ -1385,9 +1378,7 @@ class VariantCharacter(Character):
             ):
                 mon_species.movepool += Movepool(
                     event=frozenset(
-                        move
-                        for item in moves
-                        if not (move := Moves[item]).banned
+                        move for item in moves if not (move := Moves[item]).banned
                     )
                 )
             await mon.retrieve(connection)
@@ -1726,12 +1717,16 @@ def oc_process(**kwargs):
         name: str = fakemon.title()
         if name.startswith("Mega "):
             data["species"] = CustomMega(Species.deduce(name[5:]))
-        elif mon := Species.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
+        elif mon := Species.deduce(
+            common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")
+        ):
             data["species"] = Fakemon(name=name.title(), evolves_from=mon.id)
         else:
             data["species"] = Fakemon(name=name.title())
     elif variant := data.pop("variant", ""):
-        if mon := Species.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
+        if mon := Species.deduce(
+            common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")
+        ):
             name = variant.title().replace(mon.name, "").strip()
             data["species"] = Variant(base=mon, name=f"{name} {mon.name}".title())
         else:
@@ -1755,9 +1750,7 @@ def oc_process(**kwargs):
             species.types = types
         elif species.types != types:
             types_txt = "/".join(i.value.name for i in types)
-            species = Variant(
-                base=species, name=f"{types_txt}-Typed {species.name}"
-            )
+            species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
             species.types = types
             data["species"] = species
 
@@ -1790,9 +1783,7 @@ def oc_process(**kwargs):
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop(
-            "movepool", {"event": data.get("moveset", set())}
-        ):
+        if movepool := data.pop("movepool", {"event": data.get("moveset", set())}):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}

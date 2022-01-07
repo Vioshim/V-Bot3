@@ -17,13 +17,10 @@ from asyncio import run
 from functools import wraps
 from logging import getLogger, setLoggerClass
 from os import getenv
-from os import name as system_os
-from typing import Any, Callable, Coroutine
+from pathlib import Path
 
-from aiohttp.client_exceptions import ClientConnectionError
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncpg import Pool, create_pool
-from discord import AllowedMentions, Intents, LoginFailure
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
 
@@ -35,22 +32,19 @@ setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 
-if system_os != "nt":
+try:
     from asyncio import set_event_loop_policy
 
-    from uvloop import EventLoopPolicy
+    from uvloop import EventLoopPolicy  # type: ignore
 
     set_event_loop_policy(EventLoopPolicy())
-    logger.info("Using uvloop")
-else:
-    logger.info("Unable to use uvloop in Windows")
+except ModuleNotFoundError:
+    logger.info("Uvloop was not found")
+finally:
+    load_dotenv()
 
-load_dotenv()
 
-
-def wrap_session(
-    func: Callable[..., Coroutine[Any, Any, None]]
-) -> Callable[[], Coroutine[Any, Any, None]]:
+def wrap_session(func):
     """Bot wrapper, this allows the bot to start up
     its asynchronous methods
 
@@ -75,36 +69,6 @@ def wrap_session(
     return wrapper
 
 
-INTENTS = Intents.all()
-MENTIONS = AllowedMentions(
-    users=False,
-    roles=False,
-    everyone=False,
-    replied_user=True,
-)
-
-COGS = [
-    "bumps",
-    "embed_builder",
-    "information",
-    "inviter",
-    "moderation",
-    "proxy",
-    "roles",
-    "submission",
-    "utilities",
-]
-
-
-EXCEPTIONS = {
-    LoginFailure: "Login failed. The discord token is invalid.",
-    SystemExit: "Bot has been interrupted by system.",
-    KeyboardInterrupt: "Bot has been interrupted by the user.",
-    ClientConnectionError: "Unable to connect to discord.",
-    AttributeError: "Bot had issues when reading the cogs.",
-}
-
-
 @wrap_session
 async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
     """Main Execution function
@@ -127,19 +91,18 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
             case_insensitive=True,
             help_command=CustomHelp(),
             owner_ids={678374009045254198},
-            allowed_mentions=MENTIONS,
-            intents=INTENTS,
         )
         bot.load_extension("jishaku")
-        for cog in COGS:
-            bot.load_extension(f"src.cogs.{cog}.cog")
-            logger.info("Successfully loaded %s", cog)
-        await bot.start(getenv("DISCORD_TOKEN"))
+        path = Path("src/cogs")
+        path.resolve()
+        for cog in path.glob("*/cog.py"):
+            item = str(cog).removesuffix(".py").replace("\\", ".")
+            bot.load_extension(item)
+            logger.info("Successfully loaded %s", item)
+        await bot.login(getenv("DISCORD_TOKEN"))
+        await bot.connect()
     except Exception as e:
-        msg = EXCEPTIONS.get(
-            type(e), "An exception occurred while trying to connect"
-        )
-        logger.critical(msg=msg, exc_info=e)
+        logger.critical("An exception occurred while trying to connect", exc_info=e)
 
 
 if __name__ == "__main__":

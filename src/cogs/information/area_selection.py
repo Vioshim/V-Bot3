@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from discord import (
     ButtonStyle,
     CategoryChannel,
@@ -25,7 +26,6 @@ from discord import (
 from discord.ui import Button, Select, View, button, select
 from discord.utils import utcnow
 
-from src.cogs.submission.cog import Submission
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import MAP_BUTTONS
@@ -63,7 +63,7 @@ class AreaSelection(View):
         else:
             self.read_one.label = "Toggle ON"
             self.read_one.style = ButtonStyle.green
-        cog: Submission = bot.get_cog("Submission")
+        cog = bot.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
         self.total: int = 0
         for location, ocs in cog.located.items():

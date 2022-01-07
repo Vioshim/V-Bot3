@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,9 +69,7 @@ class Utilities(Cog):
 
         line = stream.readline()
         if "zlib" not in line:
-            raise RuntimeError(
-                "Invalid objects.inv file, not z-lib compatible."
-            )
+            raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
         entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
@@ -123,18 +121,14 @@ class Utilities(Cog):
 
         cache = list(self._rtfm_cache[key].items())
 
-        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[
-            :8
-        ]
+        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
 
         e = Embed(colour=0x05FFF0)
         e.set_image(url=WHITE_BAR)
         if len(self.matches) == 0:
             return await ctx.send_followup("Could not find anything. Sorry.")
 
-        e.description = "\n".join(
-            f"[`{key}`]({url})" for key, url in self.matches
-        )
+        e.description = "\n".join(f"[`{key}`]({url})" for key, url in self.matches)
         await ctx.send_followup(embed=e)
 
     @command()

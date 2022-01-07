@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -232,5 +232,5 @@ class CustomHelp(HelpCommand):
             Exception that occurred
         """
         ctx.bot.logger.exception(
-            "Help Command > %s > %s", ctx.author, error, exc_info=error
+            "Help Command > %s > %s", str(ctx.author), error, exc_info=error
         )
