@@ -37,7 +37,7 @@ from src.structures.bot import CustomBot
 from src.utils.etc import MAP_URL, WHITE_BAR
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Map:
     label: str
     category: int
@@ -64,7 +64,7 @@ class Map:
         self.embed = embed
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class FAQ:
     index: int
     label: Optional[str] = None
@@ -120,7 +120,7 @@ class FAQ:
         return self.label, self.content
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(unsafe_hash=True)
 class Section:
     title: str
     emoji: Optional[str] = None
