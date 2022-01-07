@@ -193,52 +193,6 @@ class MapComplex(Complex):
         )
 
 
-class SectionComplex(Complex):
-    def __init__(
-        self,
-        bot: CustomBot,
-        member: Member | User,
-        values: list[Section],
-        target: Interaction,
-    ):
-        super(SectionComplex, self).__init__(
-            bot=bot,
-            timeout=None,
-            member=member,
-            values=values,
-            target=target,
-            parser=lambda x: x.tuple,
-        )
-
-    async def custom_choice(self, sct: Select, ctx: Interaction):
-        index: str = sct.values[0]
-        item: Section = self.current_chunk[int(index)]
-        view = Complex(
-            bot=self.bot,
-            member=self.member,
-            values=item.items_ordered,
-            target=ctx,
-            timeout=None,
-            parser=lambda x: x.tuple,
-            emoji_parser=item.emoji,
-        )
-        view.embed.title, view.embed.description = item.tuple
-        await ctx.edit_original_message(embed=view.embed, view=view)
-        await view.wait()
-        if isinstance(element := view.choice, FAQ):
-            embed = element.embed.copy()
-            embed.colour = ctx.user.colour
-            if guild := ctx.guild:
-                embed.set_footer(
-                    text=guild.name,
-                    icon_url=guild.icon.url,
-                )
-            await ctx.edit_original_message(
-                embed=element.embed,
-                view=element.view,
-            )
-
-
 class InformationView(View):
     def __init__(
         self,
@@ -294,21 +248,55 @@ class InformationView(View):
         ctx : Interaction
             User Interaction
         """
-        resp: InteractionResponse = interaction.response
-
         if isinstance(member := interaction.user, User):
             guild = member.mutual_guilds[0]
             member = guild.get_member(member.id)
+        else:
+            guild = member.guild
 
-        view = SectionComplex(
+        view = Complex(
             bot=self.bot,
             member=member,
+            timeout=None,
             values=self.elements,
             target=interaction,
+            parser=lambda x: x.tuple,
         )
         embed = view.embed
-        embed.title = f"Parallel Yonder's {btn.label}"
-        await resp.send_message(embed=embed, view=view, ephemeral=True)
+        async with view.send(
+            title=f"Parallel Yonder's {btn.label}",
+            single=True,
+            ephemeral=True,
+        ) as choice:
+            if isinstance(choice, Section):
+                view = Complex(
+                    bot=self.bot,
+                    member=member,
+                    values=choice.items_ordered,
+                    target=interaction,
+                    timeout=None,
+                    parser=lambda x: x.tuple,
+                    emoji_parser=choice.emoji,
+                )
+                title, description = choice.tuple
+                async with view.send(
+                    title=title,
+                    description=description,
+                    single=True,
+                    ephemeral=True,
+                    editing_original=True,
+                ) as item:
+                    if isinstance(item, FAQ):
+                        embed = item.embed.copy()
+                        embed.colour = member.colour
+                        embed.set_footer(
+                            text=guild.name,
+                            icon_url=guild.icon.url,
+                        )
+                        await interaction.edit_original_message(
+                            embed=embed,
+                            view=item.view,
+                        )
 
     @button(
         label="Map Information",

@@ -295,6 +295,7 @@ class Complex(Simple):
         ephemeral: bool = False,
         thread: Snowflake = None,
         single: bool = False,
+        editing_original: bool = False,
         **kwargs,
     ):
         """Sends the paginator towards the defined destination
@@ -336,6 +337,8 @@ class Complex(Simple):
             if message is sent to a thread, defaults to None
         single: bool, Optional
             If returning an object or a set of objects
+        editing_original: bool, optional
+            If the message is gonna be edited, defaults to False
         """
         try:
             embed = embed or self.embed
@@ -357,6 +360,7 @@ class Complex(Simple):
                 avatar_url=avatar_url,
                 ephemeral=ephemeral,
                 thread=thread,
+                editing_original=editing_original,
             )
             await self.wait()
             yield self.choice if single else self.choices
