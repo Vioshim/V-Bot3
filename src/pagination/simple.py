@@ -289,7 +289,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_finish(btn, interaction)
         if not resp.is_done():
-            await self.delete()
+            await self.delete(force=True)
 
     @button(emoji=":fastforward:861938354085953557", row=0, custom_id="next")
     async def next(self, btn: Button, interaction: Interaction) -> None:

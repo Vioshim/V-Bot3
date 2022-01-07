@@ -268,7 +268,7 @@ class Basic(Generic[_M], View):
     def embed(self, embed: Embed):
         self._embed = embed
 
-    async def delete(self) -> None:
+    async def delete(self, force: bool = False) -> None:
         """This method deletes the view, and stops it."""
         try:
             if message := self.message:
@@ -278,7 +278,7 @@ class Basic(Generic[_M], View):
             with suppress(DiscordException):
                 if message := self.message:
                     view = self.from_message(message)
-                    if view.children == self.children:
+                    if force or view.children == self.children:
                         await message.edit(view=None)
                 self.message = None
         finally:
@@ -288,7 +288,7 @@ class Basic(Generic[_M], View):
             ):
                 message = await target.original_message()
                 view = self.from_message(message)
-                if view.children == self.children:
+                if force or view.children == self.children:
                     await target.edit_original_message(view=None)
             self.message = None
             return self.stop()
