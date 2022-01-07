@@ -283,7 +283,6 @@ class InformationView(View):
                     title=title,
                     description=description,
                     single=True,
-                    ephemeral=True,
                     editing_original=True,
                 ) as item:
                     if isinstance(item, FAQ):
