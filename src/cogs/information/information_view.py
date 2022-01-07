@@ -53,7 +53,7 @@ class Map:
             self.emoji = emoji
         embed = Embed(
             title=self.label,
-            content=self.content,
+            description=self.content,
             timestamp=utcnow(),
         )
         embed.set_footer(text=f"ID: {self.category}")
