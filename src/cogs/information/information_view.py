@@ -37,7 +37,7 @@ from src.structures.bot import CustomBot
 from src.utils.etc import MAP_URL, WHITE_BAR
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Map:
     label: str
     category: int
@@ -64,7 +64,7 @@ class Map:
         self.embed = embed
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class FAQ:
     index: int
     label: Optional[str] = None
@@ -120,7 +120,7 @@ class FAQ:
         return self.label, self.content
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(unsafe_hash=True, slots=True)
 class Section:
     title: str
     emoji: Optional[str] = None
@@ -169,9 +169,7 @@ class MapComplex(Complex):
     async def custom_choice(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         index: str = sct.values[0]
-        amount = self.entries_per_page * self._pos
-        chunk = self.values[amount : amount + self.entries_per_page]
-        item: Map = chunk[int(index)]
+        item: Map = self.current_chunk[int(index)]
         category: CategoryChannel = self.bot.get_channel(item.category)
         self.bot.logger.info(
             "%s is reading Map Information of %s",
@@ -214,9 +212,7 @@ class SectionComplex(Complex):
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
         index: str = sct.values[0]
-        amount = self.entries_per_page * self._pos
-        chunk = self.values[amount : amount + self.entries_per_page]
-        item: Section = chunk[int(index)]
+        item: Section = self.current_chunk[int(index)]
         view = Complex(
             bot=self.bot,
             member=self.member,
@@ -226,19 +222,21 @@ class SectionComplex(Complex):
             parser=lambda x: x.tuple,
             emoji_parser=item.emoji,
         )
-        async with view.send(ephemeral=True, single=True) as element:
-            if isinstance(element, FAQ):
-                embed = element.embed.copy()
-                embed.colour = ctx.user.colour
-                if guild := ctx.guild:
-                    embed.set_footer(
-                        text=guild.name,
-                        icon_url=guild.icon.url,
-                    )
-                await ctx.edit_original_message(
-                    embed=element.embed,
-                    view=element.view,
+        view.embed.title, view.embed.description = item.tuple
+        await self.target.edit_original_message(embed=view.embed, view=view)
+        await view.wait()
+        if isinstance(element := view.choice, FAQ):
+            embed = element.embed.copy()
+            embed.colour = ctx.user.colour
+            if guild := ctx.guild:
+                embed.set_footer(
+                    text=guild.name,
+                    icon_url=guild.icon.url,
                 )
+            await ctx.edit_original_message(
+                embed=element.embed,
+                view=element.view,
+            )
 
 
 class InformationView(View):

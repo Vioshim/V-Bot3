@@ -99,6 +99,11 @@ class Complex(Simple):
             parser=parser,
         )
 
+    @property
+    def current_chunk(self) -> list[_T]:
+        amount = self.entries_per_page * self._pos
+        return self.values[amount : amount + self.entries_per_page]
+
     # noinspection PyMethodMayBeStatic
     def emoji_parser(self, item: _T) -> str:
         return self._emoji_parser(item)
@@ -169,7 +174,9 @@ class Complex(Simple):
 
         # Then gets defined the amount of entries an user can pick
 
-        foo.max_values = min(self.max_values - len(choices), self.entries_per_page)
+        foo.max_values = min(
+            self.max_values - len(choices), self.entries_per_page
+        )
 
         # Now we get the indexes that each page should start with
 
@@ -214,7 +221,9 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
-                page_text = f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                page_text = (
+                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                )
                 pages.add_option(
                     label=page_text[:100],
                     value=f"{index}"[:100],
@@ -356,7 +365,9 @@ class Complex(Simple):
 
     # noinspection PyTypeChecker
     @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, sct: Select, interaction: Interaction) -> None:
+    async def select_choice(
+        self, sct: Select, interaction: Interaction
+    ) -> None:
         """Method used to select values from the pagination
 
         Parameters
@@ -409,7 +420,9 @@ class Complex(Simple):
             if items[0].isdigit():
                 return await self.edit(page=int(items[0]))
 
-    async def custom_choice(self, sct: Select, interaction: Interaction) -> None:
+    async def custom_choice(
+        self, sct: Select, interaction: Interaction
+    ) -> None:
         """
         Method used to reach next first of the pagination
 
@@ -421,7 +434,9 @@ class Complex(Simple):
             Current interaction of the user
         """
 
-    async def custom_navigate(self, sct: Select, interaction: Interaction) -> None:
+    async def custom_navigate(
+        self, sct: Select, interaction: Interaction
+    ) -> None:
         """
         Method used to reach next first of the pagination
 
