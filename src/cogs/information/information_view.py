@@ -145,7 +145,7 @@ class Section:
     @property
     def items_ordered(self):
         data = list(self.items)
-        data.sort(int)
+        data.sort(key=int)
         return data
 
 
