@@ -224,7 +224,7 @@ class Information(Cog):
             return
 
         if items := [
-            i for i in self.view.map_information if i.category == int(area)
+            i for i in self.view.map_information if str(i.category) == area
         ]:
             embed = items[0].embed.copy()
             embed.colour = ctx.user.colour

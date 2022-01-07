@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from contextlib import suppress
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Optional, Type, Union
@@ -185,7 +184,9 @@ class SPView(Basic):
             "If you need to write too much, "
             "I recommend to move to Google documents, otherwise, try to be concise."
         )
-        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
+        async with view.send(
+            title="Sp.Ability Modify", ephemeral=True
+        ) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
@@ -1155,6 +1156,7 @@ class ModifyView(View):
                     self.oc.name,
                 )
                 modifying |= result
+
         try:
             webhook = await self.bot.fetch_webhook(919280056558317658)
             thread: Thread = await self.bot.fetch_channel(self.oc.thread)
@@ -1162,33 +1164,36 @@ class ModifyView(View):
                 await thread.edit(archived=False)
             embed = self.oc.embed
             embed.set_image(url="attachment://image.png")
-            await webhook.edit_message(self.oc.id, embed=embed, thread=thread)
+            if not modifying:
+                msg = await webhook.edit_message(
+                    self.oc.id, embed=embed, thread=thread
+                )
+            elif file := await self.bot.get_file(self.oc.generated_image):
+                msg = await webhook.edit_message(
+                    self.oc.id,
+                    file=file,
+                    attachments=[],
+                    embed=embed,
+                    thread=thread,
+                )
+            else:
+                msg = await webhook.edit_message(
+                    self.oc.id,
+                    embed=embed,
+                    thread=thread,
+                )
+            self.oc.image = msg.embeds[0].image.url
             async with self.bot.database() as db:
                 await self.oc.update(db)
         except DiscordException as e:
             self.bot.logger.exception(
-                "Error at updating %s's %s, will re-register",
+                "Error at updating %s's %s named %s, will re-register",
                 str(self.member),
-                str(type(self.oc)),
+                repr(self.oc),
+                self.oc.name,
                 exc_info=e,
             )
-            modifying = True
-
-        if modifying:
             cog = self.bot.get_cog("Submission")
-            cog.ocs.pop(self.oc.id, None)
-            cog.rpers.setdefault(self.oc.author, {})
-            cog.rpers[self.oc.author].pop(self.oc.id, None)
-            async with self.bot.database() as db:
-                await self.oc.delete(db)
-
-            with suppress(DiscordException):
-                webhook = await self.bot.fetch_webhook(919280056558317658)
-                thread: Thread = await self.bot.fetch_channel(self.oc.thread)
-                if thread.archived:
-                    await thread.edit(archived=False)
-                await webhook.delete_message(self.oc.id, thread_id=thread.id)
-
             await cog.registration(ctx=ctx, oc=self.oc)
         self.stop()
 
