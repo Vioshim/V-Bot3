@@ -81,7 +81,9 @@ class Complex(Simple):
         emoji_parser: Union[
             str, Callable[[_T], Union[str, PartialEmoji, Emoji]]
         ] = None,
+        silent_mode: bool = False,
     ):
+        self._silent_mode = silent_mode
         self._choices: set[_T] = None
         self._max_values = max_values
         if isinstance(emoji_parser, str):
@@ -98,6 +100,14 @@ class Complex(Simple):
             entries_per_page=entries_per_page,
             parser=parser,
         )
+
+    @property
+    def silent_mode(self) -> bool:
+        return self._silent_mode
+
+    @silent_mode.setter
+    def silent_mode(self, silent_mode: bool):
+        self._silent_mode = silent_mode
 
     @property
     def current_chunk(self) -> list[_T]:
@@ -393,12 +403,15 @@ class Complex(Simple):
             entries.append(str(name))
             self._choices.add(item)
         await self.custom_choice(sct, interaction)
-        if not response.is_done():
+        if not (self.silent_mode or response.is_done()):
             text = ", ".join(entries)
             await response.send_message(
                 content=f"Great! you have selected **{text}**.",
                 ephemeral=True,
             )
+
+        if not response.is_done():
+            await response.pong()
 
         self.values = set(self.values) - self.choices
         if len(sct.values) == self.entries_per_page:

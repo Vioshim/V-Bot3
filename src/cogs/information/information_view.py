@@ -261,6 +261,7 @@ class InformationView(View):
             values=self.elements,
             target=interaction,
             parser=lambda x: x.tuple,
+            silent_mode=True,
         )
         embed = view.embed
         async with view.send(
@@ -277,6 +278,7 @@ class InformationView(View):
                     timeout=None,
                     parser=lambda x: x.tuple,
                     emoji_parser=choice.emoji,
+                    silent_mode=True,
                 )
                 title, description = choice.tuple
                 async with view.send(
