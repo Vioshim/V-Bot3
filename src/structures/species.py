@@ -156,8 +156,12 @@ class Species(metaclass=ABCMeta):
             elif isinstance(elem, cls):
                 items.add(elem)
 
-        MOD1 = {k: v for k, v in ALL_SPECIES.items() if isinstance(v, cls)}
-        MOD2 = {k: v for k, v in SPECIES_BY_NAME.items() if isinstance(v, cls)}
+        MOD1 = {
+            k: v for k, v in ALL_SPECIES.items() if isinstance(v, cls)
+        } or ALL_SPECIES
+        MOD2 = {
+            k: v for k, v in SPECIES_BY_NAME.items() if isinstance(v, cls)
+        } or SPECIES_BY_NAME
 
         methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
             (MOD1, fix),
