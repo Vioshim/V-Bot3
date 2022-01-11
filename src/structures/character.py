@@ -47,6 +47,7 @@ from src.structures.species import (
 from src.utils.doc_reader import docs_reader
 from src.utils.functions import (
     common_pop_get,
+    fix,
     int_check,
     multiple_pop,
     stats_check,
