@@ -123,8 +123,10 @@ class FAQ:
 @dataclass(unsafe_hash=True)
 class Section:
     title: str
+    description: str
     emoji: Optional[str] = None
     items: frozenset[FAQ] = field(default_factory=frozenset)
+    embed: Embed = field(init=False)
 
     def __post_init__(self):
         if emoji := self.emoji:
@@ -134,6 +136,13 @@ class Section:
                 self.emoji = emoji
         else:
             self.emoji = "\N{BLUE BOOK}"
+
+        self.embed = Embed(
+            title=self.title,
+            content=self.description,
+            timestamp=utcnow(),
+        )
+        self.embed.set_image(url=WHITE_BAR)
 
     @property
     def tuple(self):
@@ -164,6 +173,7 @@ class MapComplex(Complex):
             values=values,
             target=target,
             parser=lambda x: (x.label, x.content),
+            silent_mode=True,
         )
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
@@ -188,6 +198,84 @@ class MapComplex(Complex):
         )
         await resp.send_message(
             embed=embed,
+            view=view,
+            ephemeral=True,
+        )
+
+
+class FAQComplex(Complex):
+    def __init__(
+        self,
+        bot: CustomBot,
+        member: Member | User,
+        values: list[FAQ],
+        target: Interaction,
+    ):
+        super(SectionComplex, self).__init__(
+            bot=bot,
+            timeout=None,
+            member=member,
+            values=values,
+            target=target,
+            parser=lambda x: x.tuple,
+            silent_mode=True,
+        )
+
+    async def custom_choice(self, sct: Select, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        index: str = sct.values[0]
+        item: FAQ = self.current_chunk[int(index)]
+        self.bot.logger.info(
+            "%s is reading its entry [%s]: %s",
+            str(self.member),
+            str(item.index),
+            item.title,
+        )
+        embed = item.embed.copy()
+        embed.color = self.member.color
+
+        await resp.send_message(
+            embed=embed,
+            view=item.view,
+            ephemeral=True,
+        )
+
+
+class SectionComplex(Complex):
+    def __init__(
+        self,
+        bot: CustomBot,
+        member: Member | User,
+        values: list[Section],
+        target: Interaction,
+    ):
+        super(SectionComplex, self).__init__(
+            bot=bot,
+            timeout=None,
+            member=member,
+            values=values,
+            target=target,
+            parser=lambda x: x.tuple,
+            silent_mode=True,
+        )
+
+    async def custom_choice(self, sct: Select, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        index: str = sct.values[0]
+        item: Section = self.current_chunk[int(index)]
+        self.bot.logger.info(
+            "%s is reading %s",
+            str(self.member),
+            item.title,
+        )
+        view = FAQComplex(
+            bot=self.bot,
+            member=self.member,
+            values=item.items_ordered,
+            target=ctx,
+        )
+        await resp.send_message(
+            embed=view.embed,
             view=view,
             ephemeral=True,
         )
@@ -236,68 +324,36 @@ class InformationView(View):
     )
     async def faq(
         self,
-        btn: Button,
+        _: Button,
         interaction: Interaction,
     ):
         """Function for F.A.Q. information
 
         Parameters
         ----------
-        btn : Button
+        _ : Button
             Button
         ctx : Interaction
             User Interaction
         """
+        resp: InteractionResponse = interaction.response
+
         if isinstance(member := interaction.user, User):
             guild = member.mutual_guilds[0]
             member = guild.get_member(member.id)
-        else:
-            guild = member.guild
 
-        view = Complex(
+        view = SectionComplex(
             bot=self.bot,
             member=member,
-            timeout=None,
             values=self.elements,
             target=interaction,
-            parser=lambda x: x.tuple,
-            silent_mode=True,
         )
-        embed = view.embed
-        async with view.send(
-            title=f"Parallel Yonder's {btn.label}",
-            single=True,
+
+        await resp.send_message(
+            embed=view.embed,
+            view=view,
             ephemeral=True,
-        ) as choice:
-            if isinstance(choice, Section):
-                view = Complex(
-                    bot=self.bot,
-                    member=member,
-                    values=choice.items_ordered,
-                    target=interaction,
-                    timeout=None,
-                    parser=lambda x: x.tuple,
-                    emoji_parser=choice.emoji,
-                    silent_mode=True,
-                )
-                title, description = choice.tuple
-                async with view.send(
-                    title=title,
-                    description=description,
-                    single=True,
-                    editing_original=True,
-                ) as item:
-                    if isinstance(item, FAQ):
-                        embed = item.embed.copy()
-                        embed.colour = member.colour
-                        embed.set_footer(
-                            text=guild.name,
-                            icon_url=guild.icon.url,
-                        )
-                        await interaction.edit_original_message(
-                            embed=embed,
-                            view=item.view,
-                        )
+        )
 
     @button(
         label="Map Information",

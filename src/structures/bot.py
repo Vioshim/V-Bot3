@@ -173,7 +173,9 @@ class CustomBot(Bot):
                 url=embed.author.url,
             ),
             footer=wrapper(
-                func=embed.set_footer, arg="icon_url", text=embed.footer.text
+                func=embed.set_footer,
+                arg="icon_url",
+                text=embed.footer.text,
             ),
         )
         for item in set(properties) - set(exclude):
@@ -220,18 +222,23 @@ class CustomBot(Bot):
                         filename=f"{filename}.{text[-1]}",
                         spoiler=spoiler,
                     )
-                return File(fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler)
+                return File(
+                    fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler
+                )
 
-    # noinspection PyBroadException
     @asynccontextmanager
     async def database(
         self,
         *,
         timeout: float = None,
-        isolation: Literal["read_committed", "serializable", "repeatable_read"] = None,
+        isolation: Literal[
+            "read_committed",
+            "serializable",
+            "repeatable_read",
+        ] = None,
         readonly: bool = False,
         deferrable: bool = False,
-        raise_on_error: bool = False,
+        raise_on_error: bool = True,
     ):
         """Database connection function
 

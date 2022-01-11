@@ -1,7 +1,8 @@
 {
 	"Server F.A.Q.": {
 		"emoji": "BLUE BOOK",
-		"items": [
+		"description": "This is a summary of the basic heads up that you have to keep in mind for being here, rules and blah blah. This rules and guidelines, will always be used as reference, and Ignorance does not excuse you from them.",
+        "items": [
 			{
 				"label": "Rules - SFW",
 				"title": "Is this Server SFW?",
@@ -201,6 +202,7 @@
 	},
 	"RP F.A.Q.": {
 		"emoji": "CLOSED BOOK",
+        "description": "This is a set of rules and heads up that we are gonna keep in mind in the RPs that happen in our server, mostly as a way to clarify how things work and such.",
 		"items": [
 			{
 				"label": "Lore",
@@ -462,7 +464,8 @@
 	},
 	"OC Creation F.A.Q.": {
 		"emoji": "GREEN BOOK",
-		"items": [
+		"description": "This is common asked questions about our character creation system, feel free to take a look at here for any questions you may face.",
+        "items": [
 			{
 				"label": "Human Related OCs",
 				"title": "Can I use an oc that was human but-...",
@@ -601,6 +604,7 @@
 	},
 	"NPC F.A.Q.": {
 		"emoji": "ORANGE BOOK",
+        "description": "Due to the amount of guidelines towards NPCs in Rp, we decided to make our own guideline for this.",
 		"items": [
 			{
 				"label": "NPC",
@@ -670,6 +674,27 @@
 			}
 		]
 	},
+    "Magic F.A.Q.": {
+        "emoji": "MAGIC WAND",
+        "description": "This is a set of basic guidelines that users have specified about how Magic works in our RP server.",
+        "items": [
+            {
+				"label": "Magic",
+				"title": "What is Magic?",
+				"content": "According to Oxford's dictionary, Magic is being able to do things by using mysterious or supernatural forces. In the pokemon world, there's a lot of things which are assumed to be normal, from lizards throwing fire, to even turtles throwing water, so the definition of what is normal and what not, may differ a lot in comparison to real life.\n\nAs result of this, in this RP, Magic is defined as everything that happens in a methodic way with a specific goal, for example wanting to heal someone with energy despite not having healing moves, wanting to impress others with tricks that no one can do, and such."
+			},
+            {
+				"label": "Mana Usage",
+				"title": "What is Mana?",
+				"content": "Pokemon use their typings' energy for casting their moves and be able to continue standing on foot, by this reason this energy is usually referred as Mana by RPG geeks, which basically determines how much of that energy can be used. It's important to keep in mind that the heavy focus in magic makes the pokemon slack in using moves, so a magic user is always assumed to not necessarily be great in raw Move-oriented combat."
+			},
+            {
+				"label": "Common Spell: Move weapon",
+				"title": "Move Weapon Spell",
+				"content": "Most pokemon don't recognize this technique as magic, but according to Tomalia's standards it matches the definition of magic.\n\nThis spell curiously works outside of Tomalia, which may indicate that magic can be used outside of Tomalia but the energy that allows it to work it's limited for some reason that people may have to figure out."
+			}
+        ]
+    },
 	"Map Information": [
 		{
 			"label": "Ashouria",
