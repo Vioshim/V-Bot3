@@ -218,7 +218,7 @@ class Species(metaclass=ABCMeta):
                 values = ALL_SPECIES
             items = {x for i in item.split("_") if (x := values.get(i))}
             if len(items) == 2:
-                items = {Fusion(**items)}
+                items = {Fusion(*items)}
             if items and isinstance(data := items.pop(), cls):
                 return data
 
@@ -400,8 +400,8 @@ class Fakemon(Species):
             Result
         """
         if mon := Species.deduce(item):
-            if not isinstance(mon, Fusion):
-                return Fakemon(evolves_from=mon.id)
+            if not isinstance(mon, cls):
+                return cls(evolves_from=mon.id)
 
     @classmethod
     def from_ID(cls, item: str) -> None:
@@ -468,8 +468,8 @@ class CustomMega(Species):
             Result
         """
         if mon := Species.deduce(item):
-            if not isinstance(mon, Fusion):
-                return CustomMega(base=mon)
+            if not isinstance(mon, cls):
+                return cls(base=mon)
 
     @classmethod
     def from_ID(cls, item: str) -> None:
@@ -546,8 +546,8 @@ class Variant(Species):
             Result
         """
         if mon := Species.deduce(item):
-            if not isinstance(mon, Fusion):
-                return Variant(base=mon, name=f"Variant {mon.name.title()}")
+            if not isinstance(mon, cls):
+                return cls(base=mon, name=f"Variant {mon.name.title()}")
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Variant]:
