@@ -18,7 +18,7 @@ from abc import ABCMeta, abstractmethod
 from asyncio import to_thread
 from dataclasses import dataclass, field
 from datetime import datetime
-from random import choice, sample
+from random import sample
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
@@ -1129,11 +1129,8 @@ class CustomMegaCharacter(Character):
 
     def __post_init__(self):
         super(CustomMegaCharacter, self).__post_init__()
-        base = self.species.base
-        if not self.abilities:
-            self.abilities = frozenset({choice(base.abilities)})
         if not self.types:
-            self.types = base.types
+            self.types = self.species.base.types
 
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
