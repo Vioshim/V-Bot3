@@ -88,15 +88,19 @@ class Meeting(View):
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
-        if interaction.user == self.reporter:
-            await resp.send_message("You are the one reporting.", ephemeral=True)
+        member: Member = interaction.user
+        if member == self.reporter:
+            await resp.send_message(
+                "You are the one reporting.", ephemeral=True
+            )
             return False
-        elif interaction.user == self.imposter:
-            await resp.send_message("You are the one reporting.", ephemeral=True)
+        elif member == self.imposter:
+            await resp.send_message("You are the one reported.", ephemeral=True)
             return False
-        elif interaction.user in self.attack | self.defense:
-            await resp.send_message("You already voted.", ephemeral=True)
-            return False
+        if member in self.attack:
+            self.attack.remove(member)
+        if interaction.user in self.defend:
+            self.defend.remove(member)
         return True
 
     @button(label="Agreed")
@@ -159,17 +163,7 @@ class Meeting(View):
         embed2.description = "\n".join(i.mention for i in self.defend)
         mode = "Moderation" if self.moderator else "Votation"
 
-        if method is False or (
-            len(self.attack) + len(self.defend) == 0
-            and len(self.attack) < len(self.defend)
-        ):
-            self.embed.title = f"{sus} was not banned! ({mode})"
-            if moderator := self.moderator:
-                text = f"Ban Prevented. {moderator.mention} intervened"
-            else:
-                text = "Ban Prevented. No moderator intervened"
-
-        elif method is True or len(self.attack) >= len(self.defend):
+        if method or len(self.attack) > len(self.defend):
             self.embed.title = f"{sus} has been banned successfully! ({mode})"
             if moderator := self.moderator:
                 text = f"Ban Done. {moderator.mention} intervened"
@@ -179,6 +173,13 @@ class Meeting(View):
                 reason=f"{sus} banned upon {mode}. Started by {hero}|{hero.id}.",
                 delete_message_days=1,
             )
+
+        else:
+            self.embed.title = f"{sus} was not banned! ({mode})"
+            if moderator := self.moderator:
+                text = f"Ban Prevented. {moderator.mention} intervened"
+            else:
+                text = "Ban Prevented. No moderator intervened"
 
         view = View()
         view.add_item(Button(label="Jump URL", url=self.message.jump_url))
@@ -244,7 +245,9 @@ class Moderation(Cog):
     async def report(
         self,
         ctx: ApplicationContext,
-        text: Option(str, description="Message to be sent to staff", required=True),
+        text: Option(
+            str, description="Message to be sent to staff", required=True
+        ),
         anonymous: Option(
             bool,
             description="If you want staff to know you reported it.",
@@ -302,7 +305,9 @@ class Moderation(Cog):
         async with ctx.typing():
             await ctx.message.delete()
             deleted = await ctx.channel.purge(limit=amount)
-        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
+        await ctx.channel.send(
+            f"Deleted {len(deleted)} message(s)", delete_after=3
+        )
 
     @clean.command(name="bot")
     @has_guild_permissions(manage_messages=True)
@@ -319,7 +324,9 @@ class Moderation(Cog):
             deleted = await ctx.channel.purge(
                 limit=amount, check=lambda m: m.author.bot
             )
-        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
+        await ctx.channel.send(
+            f"Deleted {len(deleted)} message(s)", delete_after=3
+        )
 
     @clean.command(name="user")
     @has_guild_permissions(manage_messages=True)
@@ -405,7 +412,9 @@ class Moderation(Cog):
     @command(name="kick")
     @has_guild_permissions(kick_members=True)
     @bot_has_guild_permissions(kick_members=True)
-    async def kick(self, ctx: Context, member: Member, *, reason: str = None) -> None:
+    async def kick(
+        self, ctx: Context, member: Member, *, reason: str = None
+    ) -> None:
         """Kicks a member from the server.
 
         :param ctx: Context
@@ -419,7 +428,9 @@ class Moderation(Cog):
             )
             return
         with suppress(DiscordException):
-            await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
+            await member.send(
+                f"Kicked from {ctx.guild} by the reason: {reason}"
+            )
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
         await member.kick(
             reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}"
@@ -514,7 +525,9 @@ class Moderation(Cog):
     @command(name="unban")
     @bot_has_guild_permissions(ban_members=True)
     @has_guild_permissions(ban_members=True)
-    async def unban(self, ctx: Context, user: User, *, reason: str = None) -> None:
+    async def unban(
+        self, ctx: Context, user: User, *, reason: str = None
+    ) -> None:
         """Removes a ban to an a user from the server.
 
         :param ctx: Context
@@ -527,7 +540,9 @@ class Moderation(Cog):
                 user=user,
                 reason=f"{user.display_name} was unbanned by {ctx.author} ({ctx.author.id}). Reason: {reason}",
             )
-            await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
+            await ctx.send(
+                f"Unbanned {user} for the reason: {reason}", delete_after=3
+            )
         else:
             await ctx.reply("Unable to retrieve the user.")
         await ctx.message.delete()
@@ -535,7 +550,9 @@ class Moderation(Cog):
     @command(name="warn")
     @bot_has_guild_permissions(manage_roles=True)
     @has_guild_permissions(manage_roles=True)
-    async def warn(self, ctx: Context, user: Member, *, reason: str = None) -> None:
+    async def warn(
+        self, ctx: Context, user: Member, *, reason: str = None
+    ) -> None:
         """Warn an user, providing warn roles
 
         :param ctx: Context
