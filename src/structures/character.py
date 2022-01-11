@@ -18,7 +18,7 @@ from abc import ABCMeta, abstractmethod
 from asyncio import to_thread
 from dataclasses import dataclass, field
 from datetime import datetime
-from random import sample
+from random import choice, sample
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
@@ -45,7 +45,12 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1122,6 +1127,14 @@ class FakemonCharacter(Character):
 class CustomMegaCharacter(Character):
     species: CustomMega = None
 
+    def __post_init__(self):
+        super(CustomMegaCharacter, self).__post_init__()
+        base = self.species.base
+        if not self.abilities:
+            self.abilities = frozenset({choice(base.abilities)})
+        if not self.types:
+            self.types = base.types
+
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
         return f"Custom: {self.species.name}, Types: {types}".title()
@@ -1229,6 +1242,15 @@ class CustomMegaCharacter(Character):
 @dataclass(unsafe_hash=True, slots=True)
 class VariantCharacter(Character):
     species: Variant = None
+
+    def __post_init__(self):
+        super(CustomMegaCharacter, self).__post_init__()
+        base = self.species.base
+        if not self.abilities:
+            amount = min(2, self.max_amount_abilities)
+            self.abilities = frozenset(sample(base.abilities, k=amount))
+        if not self.types:
+            self.types = base.types
 
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
