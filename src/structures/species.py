@@ -156,42 +156,48 @@ class Species(metaclass=ABCMeta):
             elif isinstance(elem, cls):
                 items.add(elem)
 
-        MOD1 = {
-            k: v for k, v in ALL_SPECIES.items() if isinstance(v, cls)
-        } or ALL_SPECIES
-        MOD2 = {
-            k: v for k, v in SPECIES_BY_NAME.items() if isinstance(v, cls)
-        } or SPECIES_BY_NAME
+        if not (
+            MOD1 := {k: v for k, v in ALL_SPECIES.items() if isinstance(v, cls)}
+        ):
+            MOD1 = ALL_SPECIES
+        if not (
+            MOD2 := {
+                k: v for k, v in SPECIES_BY_NAME.items() if isinstance(v, cls)
+            }
+        ):
+            MOD2 = SPECIES_BY_NAME
 
         methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
             (MOD1, fix),
-            (MOD2, lambda x: str(x).title()),
+            (MOD2, lambda x: str(x).strip().title()),
         ]
 
-        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+        for word in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
 
-            if not elem:
+            if not word:
                 continue
 
             for elems, method in methods:
 
-                elem = method(elem)
+                if word.startswith(item := method("Galarian ")):
+                    word = f"{word.replace(item, '')} Galar"
+                elif word.startswith(item := method("Hisuian ")):
+                    word = f"{word.replace(item, '')} Hisui"
+                elif word.startswith(item := method("Kantoian ")):
+                    word = word.replace(item, "")
 
-                if (value := elem.removeprefix(method("Galarian"))) != elem:
-                    elem = method(f"{value} Galar")
-                if (value := elem.removeprefix(method("Hisuian"))) != elem:
-                    elem = method(f"{value} Hisui")
-                elem = elem.removeprefix(method("Kantoian"))
+                word = method(word)
 
-                if data := elems.get(elem):
+                if data := elems.get(word):
                     items.add(data)
-                for data in get_close_matches(
-                    word=elem,
-                    possibilities=elems,
-                    n=1,
-                    cutoff=0.85,
-                ):
-                    items.add(elems[data])
+                else:
+                    for data in get_close_matches(
+                        word=word,
+                        possibilities=elems,
+                        n=1,
+                        cutoff=0.85,
+                    ):
+                        items.add(elems[data])
 
         if len(items) == 2:
             mon1, mon2 = items
