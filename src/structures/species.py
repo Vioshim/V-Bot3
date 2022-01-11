@@ -306,6 +306,8 @@ class UltraBeast(Species):
     """
 
     def __post_init__(self):
+        self.evolves_to = frozenset(self.evolves_to)
+        self.types = frozenset(self.types)
         self.abilities = frozenset(
             {
                 _BEASTBOOST,
@@ -340,6 +342,8 @@ class Fakemon(Species):
 
     def __post_init__(self):
         stats = self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
+        self.evolves_to = frozenset(self.evolves_to)
+        self.types = frozenset(self.types)
         if sum(stats) > 18:
             raise Exception("Stats are very high, total max is 18")
         if min(stats) < 1:
