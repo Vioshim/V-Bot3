@@ -45,12 +45,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -625,8 +620,11 @@ class PokemonCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = Pokemon.from_ID(species)
+            species_id = data.pop("species", None)
+            if species := Pokemon.from_ID(species_id):
+                data["species"] = species
+            else:
+                print(species_id)
             mon = PokemonCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
