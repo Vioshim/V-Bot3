@@ -445,7 +445,7 @@ class Movepool:
         ):
             move, method = item["move"], item["method"]
             items.setdefault(method, set())
-            items[method].add(Move.from_id(move))
+            items[method].add(Move.from_ID(move))
 
         async for item in connection.cursor(
             """--sql
@@ -457,7 +457,7 @@ class Movepool:
         ):
             move, level = item["move"], item["level"]
             items["level"].setdefault(level, set())
-            items["level"][level].add(Move.from_id(move))
+            items["level"][level].add(Move.from_ID(move))
 
         return cls.from_dict(**items)
 
