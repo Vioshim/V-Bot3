@@ -621,7 +621,7 @@ class PokemonCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = Species[species]
+                data["species"] = Pokemon.from_ID(species)
             mon = PokemonCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -719,7 +719,7 @@ class LegendaryCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = Species[species]
+                data["species"] = Legendary.from_ID[species]
             mon = LegendaryCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -817,7 +817,7 @@ class MythicalCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = Species[species]
+                data["species"] = Mythical.from_ID(species)
             mon = MythicalCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -913,7 +913,7 @@ class UltraBeastCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = Species[species]
+                data["species"] = UltraBeast.from_ID(species)
             mon = UltraBeastCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -1198,7 +1198,7 @@ class CustomMegaCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = CustomMega(Species[species])
+                data["species"] = CustomMega.from_ID(species)
             mon = CustomMegaCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -1341,25 +1341,27 @@ class VariantCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            species = data.pop("species", None)
             variant = data.pop("variant", None)
-            mon_species = Variant(base=Species[species], name=variant)
-            data["species"] = mon_species
-            mon = VariantCharacter(**data)
-            if moves := await connection.fetchval(
-                """--sql
-                SELECT array_agg(move)
-                FROM FAKEMON_MOVEPOOL
-                WHERE FAKEMON = $1;
-                """,
-                mon.id,
-            ):
-                moves = Move.deduce_many(*moves)
-                mon_species.movepool += Movepool(
-                    event=frozenset(item for item in moves if not item.banned)
-                )
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := Variant.from_ID(data.pop("species", None)):
+                species.name = variant
+                data["species"] = species
+                mon = VariantCharacter(**data)
+                if moves := await connection.fetchval(
+                    """--sql
+                    SELECT array_agg(move)
+                    FROM FAKEMON_MOVEPOOL
+                    WHERE FAKEMON = $1;
+                    """,
+                    mon.id,
+                ):
+                    moves = Move.deduce_many(*moves)
+                    species.movepool += Movepool(
+                        event=frozenset(
+                            item for item in moves if not item.banned
+                        )
+                    )
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -1451,7 +1453,7 @@ class FusionCharacter(Character):
             data.pop("kind", None)
             mon1: str = data.pop("species1", None)
             mon2: str = data.pop("species2", None)
-            data["species"] = Fusion(Species[mon1], Species[mon2])
+            data["species"] = Fusion.from_ID(f"{mon1}_{mon2}")
             mon = FusionCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
@@ -1551,7 +1553,7 @@ class MegaCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = Species[species]
+                data["species"] = Mega.from_ID(species)
             mon = MegaCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
