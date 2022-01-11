@@ -70,7 +70,11 @@ class BooleanView(Basic):
         aux = BooleanView(**data)
         try:
             if origin := kwargs.get("origin"):
-                await origin.edit(content=None, embed=aux.embed, view=aux)
+                await origin.edit(
+                    content=None,
+                    embed=aux.embed,
+                    view=aux,
+                )
                 await aux.wait()
                 await origin.edit(
                     content="Process concluded with success.",
@@ -91,8 +95,15 @@ class BooleanView(Basic):
         finally:
             await aux.delete()
 
-    @button(label="Yes", row=0)
-    async def confirm(self, _: Button, interaction: Interaction):
+    @button(
+        label="Yes",
+        row=0,
+    )
+    async def confirm(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
         resp: InteractionResponse = interaction.response
         try:
             self.value = True
@@ -109,8 +120,15 @@ class BooleanView(Basic):
         finally:
             self.stop()
 
-    @button(label="No", row=0)
-    async def deny(self, _: Button, interaction: Interaction):
+    @button(
+        label="No",
+        row=0,
+    )
+    async def deny(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
         resp: InteractionResponse = interaction.response
         try:
             self.value = False
@@ -127,8 +145,16 @@ class BooleanView(Basic):
         finally:
             self.stop()
 
-    @button(label="Cancel Process", style=ButtonStyle.red, row=0)
-    async def cancel(self, _: Button, interaction: Interaction):
+    @button(
+        label="Cancel Process",
+        style=ButtonStyle.red,
+        row=0,
+    )
+    async def cancel(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
         resp: InteractionResponse = interaction.response
         try:
             self.value = None

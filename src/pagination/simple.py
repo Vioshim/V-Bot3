@@ -36,7 +36,9 @@ _M = TypeVar("_M", bound=Messageable)
 __all__ = ("Simple",)
 
 
-def default_parser(item: _T) -> tuple[str, str]:
+def default_parser(
+    item: _T,
+) -> tuple[str, str]:
     """Standard parser for elements
 
     Parameters
@@ -55,7 +57,6 @@ def default_parser(item: _T) -> tuple[str, str]:
     return str(item), repr(item)
 
 
-# noinspection DuplicatedCode,PyTypeChecker
 class Simple(Basic):
     """A Paginator for View-only purposes"""
 
@@ -96,7 +97,11 @@ class Simple(Basic):
             Parser method, defaults to lambda x: str(x), repr(x)
         """
         super().__init__(
-            bot=bot, member=member, target=target, timeout=timeout, embed=embed
+            bot=bot,
+            member=member,
+            target=target,
+            timeout=timeout,
+            embed=embed,
         )
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
@@ -111,7 +116,11 @@ class Simple(Basic):
             self.sort()
         self.menu_format()
 
-    def sort(self, key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
+    def sort(
+        self,
+        key: Callable[[_T], Any] = None,
+        reverse: bool = False,
+    ) -> None:
         """Sort method used for the view's values
 
         Attributes
@@ -126,7 +135,10 @@ class Simple(Basic):
         except TypeError:
             self.values.sort(key=lambda x: str(x), reverse=reverse)
 
-    def set_parser(self, item: Callable[[_T], tuple[str, str]] = None) -> None:
+    def set_parser(
+        self,
+        item: Callable[[_T], tuple[str, str]] = None,
+    ) -> None:
         """Function used for setting a parser
 
         Parameters
@@ -140,8 +152,10 @@ class Simple(Basic):
             self._parser = default_parser
         self.menu_format()
 
-    # noinspection PyMethodMayBeStatic
-    def parser(self, item: _T) -> tuple[str, str]:
+    def parser(
+        self,
+        item: _T,
+    ) -> tuple[str, str]:
         """This method parses an item and returns a tuple which will set
         values and description for the select choices
 
@@ -162,7 +176,10 @@ class Simple(Basic):
         return self._values
 
     @values.setter
-    def values(self, values: Iterable[_T]):
+    def values(
+        self,
+        values: Iterable[_T],
+    ):
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
@@ -211,9 +228,14 @@ class Simple(Basic):
             amount = self._entries_per_page * self._pos
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
-                self.embed.add_field(name=name, value=value, inline=self._inline)
+                self.embed.add_field(
+                    name=name, value=value, inline=self._inline
+                )
 
-    async def edit(self, page: Optional[int] = None) -> None:
+    async def edit(
+        self,
+        page: Optional[int] = None,
+    ) -> None:
         """This method edits the pagination's page given an index.
 
         Parameters
@@ -240,8 +262,16 @@ class Simple(Basic):
                 exc_info=e,
             )
 
-    @button(emoji=":lasttrack:861938354609717258", row=0, custom_id="first")
-    async def first(self, btn: Button, interaction: Interaction) -> None:
+    @button(
+        emoji=":lasttrack:861938354609717258",
+        row=0,
+        custom_id="first",
+    )
+    async def first(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ) -> None:
         """
         Method used to reach next first of the pagination
 
@@ -257,8 +287,16 @@ class Simple(Basic):
         if not resp.is_done():
             return await self.edit(page=0)
 
-    @button(emoji=":fastreverse:861938354136416277", row=0, custom_id="previous")
-    async def previous(self, btn: Button, interaction: Interaction) -> None:
+    @button(
+        emoji=":fastreverse:861938354136416277",
+        row=0,
+        custom_id="previous",
+    )
+    async def previous(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ) -> None:
         """
         Method used to reach previous page of the pagination
 
@@ -274,8 +312,16 @@ class Simple(Basic):
         if not resp.is_done():
             return await self.edit(page=self._pos - 1)
 
-    @button(emoji=":stop:861938354244943913", row=0, custom_id="finish")
-    async def finish(self, btn: Button, interaction: Interaction) -> None:
+    @button(
+        emoji=":stop:861938354244943913",
+        row=0,
+        custom_id="finish",
+    )
+    async def finish(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ) -> None:
         """
         Method used to conclude the pagination
 
@@ -291,8 +337,16 @@ class Simple(Basic):
         if not resp.is_done():
             await self.delete(force=True)
 
-    @button(emoji=":fastforward:861938354085953557", row=0, custom_id="next")
-    async def next(self, btn: Button, interaction: Interaction) -> None:
+    @button(
+        emoji=":fastforward:861938354085953557",
+        row=0,
+        custom_id="next",
+    )
+    async def next(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ) -> None:
         """
         Method used to reach next page of the pagination
 
@@ -308,8 +362,16 @@ class Simple(Basic):
         if not resp.is_done():
             return await self.edit(page=self._pos + 1)
 
-    @button(emoji=":nexttrack:861938354210603028", row=0, custom_id="last")
-    async def last(self, btn: Button, interaction: Interaction) -> None:
+    @button(
+        emoji=":nexttrack:861938354210603028",
+        row=0,
+        custom_id="last",
+    )
+    async def last(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ) -> None:
         """
         Method used to reach last page of the pagination
 
@@ -323,9 +385,15 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_last(btn, interaction)
         if not resp.is_done():
-            return await self.edit(page=len(self.values[:: self._entries_per_page]) - 1)
+            return await self.edit(
+                page=len(self.values[:: self._entries_per_page]) - 1
+            )
 
-    async def custom_previous(self, btn: Button, interaction: Interaction):
+    async def custom_previous(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ):
         """Placeholder for custom defined operations
 
         Parameters
@@ -336,7 +404,11 @@ class Simple(Basic):
             interaction that triggered the button
         """
 
-    async def custom_first(self, btn: Button, interaction: Interaction):
+    async def custom_first(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ):
         """Placeholder for custom defined operations
 
         Parameters
@@ -347,7 +419,11 @@ class Simple(Basic):
             interaction that triggered the button
         """
 
-    async def custom_finish(self, btn: Button, interaction: Interaction):
+    async def custom_finish(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ):
         """Placeholder for custom defined operations
 
         Parameters
@@ -358,7 +434,11 @@ class Simple(Basic):
             interaction that triggered the button
         """
 
-    async def custom_next(self, btn: Button, interaction: Interaction):
+    async def custom_next(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ):
         """Placeholder for custom defined operations
 
         Parameters
@@ -369,7 +449,11 @@ class Simple(Basic):
             interaction that triggered the button
         """
 
-    async def custom_last(self, btn: Button, interaction: Interaction):
+    async def custom_last(
+        self,
+        btn: Button,
+        interaction: Interaction,
+    ):
         """Placeholder for custom defined operations
 
         Parameters

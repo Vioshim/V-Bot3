@@ -74,7 +74,11 @@ class TextInput(Basic):
         aux = TextInput(**data)
         try:
             if origin := kwargs.get("origin"):
-                await origin.edit(content=None, embed=aux.embed, view=aux)
+                await origin.edit(
+                    content=None,
+                    embed=aux.embed,
+                    view=aux,
+                )
                 await aux.wait()
                 await origin.edit(
                     content="Process concluded with success.",
@@ -96,11 +100,20 @@ class TextInput(Basic):
         finally:
             await aux.delete()
 
-    @button(label="Proceed with Message", style=ButtonStyle.green, row=0)
-    async def confirm(self, _: Button, interaction: Interaction):
+    @button(
+        label="Proceed with Message",
+        style=ButtonStyle.green,
+        row=0,
+    )
+    async def confirm(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(
-            content="Alright, now write down the information.", view=None
+            content="Alright, now write down the information.",
+            view=None,
         )
         try:
             message: Message = await self.bot.wait_for(
@@ -109,27 +122,59 @@ class TextInput(Basic):
             self.text = message.content
             await message.delete()
             msg = await interaction.original_message()
-            await msg.edit(content="Parameter has been added.", view=None, embed=None)
+            await msg.edit(
+                content="Parameter has been added.",
+                view=None,
+                embed=None,
+            )
         except DiscordException as e:
-            self.bot.logger.exception("Error deleting message", exc_info=e)
+            self.bot.logger.exception(
+                "Error deleting message",
+                exc_info=e,
+            )
         finally:
             self.stop()
 
-    @button(label="Cancel the Process", style=ButtonStyle.red, row=0)
-    async def cancel(self, _: Button, interaction: Interaction):
+    @button(
+        label="Cancel the Process",
+        style=ButtonStyle.red,
+        row=0,
+    )
+    async def cancel(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
         resp: InteractionResponse = interaction.response
-        await resp.edit_message(content="Process Concluded", view=None, embed=None)
+        await resp.edit_message(
+            content="Process Concluded",
+            view=None,
+            embed=None,
+        )
         self.text = None
         self.stop()
 
-    @button(label="Continue without Message", row=0)
-    async def empty(self, _: Button, interaction: Interaction):
+    @button(
+        label="Continue without Message",
+        row=0,
+    )
+    async def empty(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
         resp: InteractionResponse = interaction.response
         self.text = ""
         try:
-            await resp.edit_message(content="Default Value has been chosen", view=None)
+            await resp.edit_message(
+                content="Default Value has been chosen",
+                view=None,
+            )
             await self.message.delete(delay=1)
         except DiscordException as e:
-            self.bot.logger.exception("Error deleting message", exc_info=e)
+            self.bot.logger.exception(
+                "Error deleting message",
+                exc_info=e,
+            )
         finally:
             self.stop()

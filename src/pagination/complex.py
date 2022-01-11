@@ -124,12 +124,12 @@ class Complex(Simple):
         amount = self.entries_per_page * self._pos
         return self.values[amount : amount + self.entries_per_page]
 
-    # noinspection PyMethodMayBeStatic
     def emoji_parser(self, item: _T) -> str:
         return self._emoji_parser(item)
 
     def set_emoji_parser(
-        self, item: Callable[[_T], Union[str, PartialEmoji, Emoji]] = None
+        self,
+        item: Callable[[_T], Union[str, PartialEmoji, Emoji]] = None,
     ) -> None:
         """Function used for setting a parser
 
@@ -150,7 +150,10 @@ class Complex(Simple):
         return self._choices
 
     async def __aexit__(
-        self, exc_type: type, exc_val: Exception, exc_tb: TracebackType
+        self,
+        exc_type: type,
+        exc_val: Exception,
+        exc_tb: TracebackType,
     ) -> None:
         if exc_type:
             self.bot.logger.exception(
@@ -174,7 +177,6 @@ class Complex(Simple):
     def max_values(self):
         return self._max_values
 
-    # noinspection PyTypeChecker,DuplicatedCode
     def menu_format(self) -> None:
         """Default Formatter"""
         self.buttons_format()
@@ -391,7 +393,11 @@ class Complex(Simple):
             await self.delete()
 
     # noinspection PyTypeChecker
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
     async def select_choice(
         self,
         sct: Select,
@@ -438,8 +444,16 @@ class Complex(Simple):
                 self._pos -= 1
         await self.edit(page=self._pos)
 
-    @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
-    async def navigate(self, sct: Select, interaction: Interaction) -> None:
+    @select(
+        placeholder="Press to scroll pages",
+        row=2,
+        custom_id="navigate",
+    )
+    async def navigate(
+        self,
+        sct: Select,
+        interaction: Interaction,
+    ) -> None:
         """Method used to select values from the pagination
 
         Parameters
@@ -457,7 +471,9 @@ class Complex(Simple):
                 return await self.edit(page=int(items[0]))
 
     async def custom_choice(
-        self, sct: Select, interaction: Interaction
+        self,
+        sct: Select,
+        interaction: Interaction,
     ) -> None:
         """
         Method used to reach next first of the pagination
@@ -471,7 +487,9 @@ class Complex(Simple):
         """
 
     async def custom_navigate(
-        self, sct: Select, interaction: Interaction
+        self,
+        sct: Select,
+        interaction: Interaction,
     ) -> None:
         """
         Method used to reach next first of the pagination
@@ -495,7 +513,11 @@ class ComplexInput(Complex):
         custom_id="writer",
         disabled=False,
     )
-    async def message_handler(self, btn: Button, ctx: Interaction):
+    async def message_handler(
+        self,
+        btn: Button,
+        ctx: Interaction,
+    ):
         response: InteractionResponse = ctx.response
         await self.custom_message_handler(btn, ctx)
         if response.is_done():

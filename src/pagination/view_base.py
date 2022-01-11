@@ -47,7 +47,6 @@ _M = TypeVar("_M", bound=Messageable)
 __all__ = ("Basic",)
 
 
-# noinspection DuplicatedCode,PyTypeChecker
 class Basic(Generic[_M], View):
     """A Paginator for View-only purposes"""
 
@@ -105,7 +104,10 @@ class Basic(Generic[_M], View):
         self._target = target
         self._message: Optional[Message] = None
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
+    async def interaction_check(
+        self,
+        interaction: Interaction,
+    ) -> bool:
         resp: InteractionResponse = interaction.response
         """Verification for the interaction user
 
@@ -268,7 +270,10 @@ class Basic(Generic[_M], View):
     def embed(self, embed: Embed):
         self._embed = embed
 
-    async def delete(self, force: bool = False) -> None:
+    async def delete(
+        self,
+        force: bool = False,
+    ) -> None:
         """This method deletes the view, and stops it."""
         try:
             if message := self.message:
