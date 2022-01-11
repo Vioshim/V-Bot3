@@ -288,9 +288,7 @@ class Character(metaclass=ABCMeta):
 
         if isinstance(self.extra, str):
             if extra := self.extra[: min(1000, len(c_embed) - 100)]:
-                index = len(c_embed.fields) - 1
-                c_embed.insert_field_at(
-                    index=index,
+                c_embed.add_field(
                     name="Extra Information",
                     value=extra,
                     inline=False,
