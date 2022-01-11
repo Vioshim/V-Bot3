@@ -21,7 +21,7 @@ from typing import Any, Callable, Iterable, Union
 from asyncpg.connection import Connection
 from frozendict import frozendict
 
-from src.structures.move import Move, deduceMove, getMove
+from src.structures.move import Move
 
 __all__ = (
     "Movepool",
@@ -254,7 +254,7 @@ class Movepool:
 
                     moves = set()
                     for item in value:
-                        if data := deduceMove(item):
+                        if data := Move.deduce(item):
                             if not data.banned:
                                 moves.add(data)
                     level[int(key)] = frozenset(moves)
@@ -262,7 +262,7 @@ class Movepool:
         else:
             moves = set()
             for item in value:
-                if data := deduceMove(item):
+                if data := Move.deduce(item):
                     if not data.banned:
                         moves.add(data)
 
@@ -445,7 +445,7 @@ class Movepool:
         ):
             move, method = item["move"], item["method"]
             items.setdefault(method, set())
-            items[method].add(getMove(move))
+            items[method].add(Move.from_id(move))
 
         async for item in connection.cursor(
             """--sql
@@ -457,7 +457,7 @@ class Movepool:
         ):
             move, level = item["move"], item["level"]
             items["level"].setdefault(level, set())
-            items["level"][level].add(getMove(move))
+            items["level"][level].add(Move.from_id(move))
 
         return cls.from_dict(**items)
 
