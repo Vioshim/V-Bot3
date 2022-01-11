@@ -45,7 +45,12 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -913,11 +918,11 @@ class UltraBeastCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = UltraBeast.from_ID(species)
-            mon = UltraBeastCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := UltraBeast.from_ID(data.pop("species", None)):
+                data["species"] = species
+                mon = UltraBeastCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 

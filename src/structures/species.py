@@ -82,13 +82,12 @@ class Species(metaclass=ABCMeta):
 
     @classmethod
     def all(cls):
-        return frozenset(i for i in ALL_SPECIES.values() if isinstance(i, cls))
+        items = filter(lambda x: isinstance(x, cls), ALL_SPECIES.values())
+        return frozenset(items)
 
     @property
     def species_evolves_to(self) -> list[Species]:
-        return [
-            mon for item in self.evolves_to if (mon := self.from_ID(item))
-        ]
+        return [mon for item in self.evolves_to if (mon := self.from_ID(item))]
 
     @property
     def species_evolves_from(self) -> Optional[Species]:
