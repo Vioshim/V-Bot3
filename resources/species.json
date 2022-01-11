@@ -26854,7 +26854,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "SNOWCLOAK"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ARTICUNOGALAR",
@@ -26939,7 +26939,7 @@
 			"other": []
 		},
 		"abilities": ["COMPETITIVE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ZAPDOS",
@@ -27118,7 +27118,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "STATIC"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ZAPDOSGALAR",
@@ -27207,7 +27207,7 @@
 			"other": []
 		},
 		"abilities": ["DEFIANT"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MOLTRES",
@@ -27375,7 +27375,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "FLAMEBODY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MOLTRESGALAR",
@@ -27456,7 +27456,7 @@
 			"other": []
 		},
 		"abilities": ["BERSERK"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "DRATINI",
@@ -28261,7 +28261,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "UNNERVE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MEW",
@@ -28740,7 +28740,7 @@
 			"other": []
 		},
 		"abilities": ["SYNCHRONIZE"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "CHIKORITA",
@@ -43151,7 +43151,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "INNERFOCUS"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ENTEI",
@@ -43311,7 +43311,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "INNERFOCUS"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "SUICUNE",
@@ -43469,7 +43469,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "INNERFOCUS"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "LARVITAR",
@@ -44231,7 +44231,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "MULTISCALE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "TREECKO",
@@ -45483,7 +45483,7 @@
 			"other": []
 		},
 		"abilities": ["NATURALCURE"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "MUDKIP",
@@ -62836,7 +62836,7 @@
 			"other": []
 		},
 		"abilities": ["CLEARBODY", "STURDY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "REGICE",
@@ -62997,7 +62997,7 @@
 			"other": []
 		},
 		"abilities": ["CLEARBODY", "ICEBODY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "REGISTEEL",
@@ -63165,7 +63165,7 @@
 			"other": []
 		},
 		"abilities": ["LIGHTMETAL", "CLEARBODY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "LATIAS",
@@ -63359,7 +63359,7 @@
 			"other": []
 		},
 		"abilities": ["LEVITATE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "LATIOS",
@@ -63554,7 +63554,7 @@
 			"other": []
 		},
 		"abilities": ["LEVITATE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "KYOGRE",
@@ -63698,7 +63698,7 @@
 			"other": []
 		},
 		"abilities": ["DRIZZLE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "GROUDON",
@@ -63874,7 +63874,7 @@
 			"other": []
 		},
 		"abilities": ["DROUGHT"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "RAYQUAZA",
@@ -64064,7 +64064,7 @@
 			"other": []
 		},
 		"abilities": ["AIRLOCK"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "JIRACHI",
@@ -64258,7 +64258,7 @@
 			"other": []
 		},
 		"abilities": ["SERENEGRACE"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "DEOXYS",
@@ -64451,7 +64451,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "TURTWIG",
@@ -77935,7 +77935,7 @@
 			"other": []
 		},
 		"abilities": ["LEVITATE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MESPRIT",
@@ -78098,7 +78098,7 @@
 			"other": []
 		},
 		"abilities": ["LEVITATE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "AZELF",
@@ -78269,7 +78269,7 @@
 			"other": []
 		},
 		"abilities": ["LEVITATE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "HEATRAN",
@@ -78413,7 +78413,7 @@
 			"other": []
 		},
 		"abilities": ["FLAMEBODY", "FLASHFIRE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "REGIGIGAS",
@@ -78578,7 +78578,7 @@
 			"other": []
 		},
 		"abilities": ["SLOWSTART"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "CRESSELIA",
@@ -78714,7 +78714,7 @@
 			"other": []
 		},
 		"abilities": ["LEVITATE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "PHIONE",
@@ -78810,7 +78810,7 @@
 			"other": []
 		},
 		"abilities": ["HYDRATION"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "DIALGA",
@@ -78970,7 +78970,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "PALKIA",
@@ -79133,7 +79133,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MANAPHY",
@@ -79250,7 +79250,7 @@
 			"other": []
 		},
 		"abilities": ["HYDRATION"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "DARKRAI",
@@ -79395,7 +79395,7 @@
 			"other": []
 		},
 		"abilities": ["BADDREAMS"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "SHAYMIN",
@@ -79505,7 +79505,7 @@
 			"other": []
 		},
 		"abilities": ["NATURALCURE"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "VICTINI",
@@ -79675,7 +79675,7 @@
 			"other": []
 		},
 		"abilities": ["VICTORYSTAR"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "SNIVY",
@@ -98070,7 +98070,7 @@
 			"other": []
 		},
 		"abilities": ["JUSTIFIED"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "TERRAKION",
@@ -98199,7 +98199,7 @@
 			"other": []
 		},
 		"abilities": ["JUSTIFIED"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "VIRIZION",
@@ -98330,7 +98330,7 @@
 			"other": []
 		},
 		"abilities": ["JUSTIFIED"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "TORNADUS",
@@ -98475,7 +98475,7 @@
 			"other": []
 		},
 		"abilities": ["PRANKSTER", "DEFIANT"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "THUNDURUS",
@@ -98630,7 +98630,7 @@
 			"other": []
 		},
 		"abilities": ["PRANKSTER", "DEFIANT"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "RESHIRAM",
@@ -98781,7 +98781,7 @@
 			"other": []
 		},
 		"abilities": ["TURBOBLAZE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ZEKROM",
@@ -98932,7 +98932,7 @@
 			"other": []
 		},
 		"abilities": ["TERAVOLT"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "LANDORUS",
@@ -99217,7 +99217,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "KELDEO",
@@ -99353,7 +99353,7 @@
 			"other": []
 		},
 		"abilities": ["JUSTIFIED"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "MELOETTA",
@@ -99496,7 +99496,7 @@
 			"other": []
 		},
 		"abilities": ["SERENEGRACE"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "GENESECT",
@@ -99641,7 +99641,7 @@
 			"other": []
 		},
 		"abilities": ["DOWNLOAD"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "CHESPIN",
@@ -107959,7 +107959,7 @@
 			"other": []
 		},
 		"abilities": ["FAIRYAURA"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "YVELTAL",
@@ -108091,7 +108091,7 @@
 			"other": []
 		},
 		"abilities": ["DARKAURA"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ZYGARDE",
@@ -108238,7 +108238,7 @@
 			"other": []
 		},
 		"abilities": ["POWERCONSTRUCT", "AURABREAK"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "DIANCIE",
@@ -108369,7 +108369,7 @@
 			"other": []
 		},
 		"abilities": ["CLEARBODY"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "HOOPA",
@@ -108505,7 +108505,7 @@
 			"other": []
 		},
 		"abilities": ["MAGICIAN"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "VOLCANION",
@@ -108642,7 +108642,7 @@
 			"other": []
 		},
 		"abilities": ["WATERABSORB"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "ROWLET",
@@ -113973,7 +113973,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "XURKITREE",
@@ -114084,7 +114084,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "CELESTEELA",
@@ -114208,7 +114208,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "KARTANA",
@@ -114309,7 +114309,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "GUZZLORD",
@@ -114447,7 +114447,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "MAGEARNA",
@@ -114580,7 +114580,7 @@
 			"other": []
 		},
 		"abilities": ["SOULHEART"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "MAGEARNAORIGINAL",
@@ -114692,7 +114692,7 @@
 			"other": []
 		},
 		"abilities": ["SOULHEART"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "MARSHADOW",
@@ -114845,7 +114845,7 @@
 			"other": []
 		},
 		"abilities": ["TECHNICIAN"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "POIPOLE",
@@ -114939,7 +114939,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "NAGANADEL",
@@ -115075,7 +115075,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "STAKATAKA",
@@ -115204,7 +115204,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "BLACEPHALON",
@@ -115327,7 +115327,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "ZERAORA",
@@ -115472,7 +115472,7 @@
 			"other": []
 		},
 		"abilities": ["VOLTABSORB"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "MELTAN",
@@ -115528,7 +115528,7 @@
 			"other": []
 		},
 		"abilities": ["MAGNETPULL"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "MELMETAL",
@@ -115624,7 +115624,7 @@
 			"other": []
 		},
 		"abilities": ["IRONFIST"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "THWACKEY",
@@ -122509,7 +122509,7 @@
 			"other": []
 		},
 		"abilities": ["INTREPIDSWORD"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ZAMAZENTA",
@@ -122605,7 +122605,7 @@
 			"other": []
 		},
 		"abilities": ["DAUNTLESSSHIELD"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "KUBFU",
@@ -122687,7 +122687,7 @@
 			"other": []
 		},
 		"abilities": ["INNERFOCUS"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "URSHIFU",
@@ -122807,7 +122807,7 @@
 			"other": []
 		},
 		"abilities": ["UNSEENFIST"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "URSHIFURAPIDSTRIKE",
@@ -122914,7 +122914,7 @@
 			"other": []
 		},
 		"abilities": ["UNSEENFIST"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "ZARUDE",
@@ -123020,7 +123020,7 @@
 			"other": []
 		},
 		"abilities": ["LEAFGUARD"],
-		"kind": "Pokemon"
+		"kind": "Mythical"
 	},
 	{
 		"id": "REGIELEKI",
@@ -123099,7 +123099,7 @@
 			"other": []
 		},
 		"abilities": ["TRANSISTOR"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "REGIDRAGO",
@@ -123172,7 +123172,7 @@
 			"other": []
 		},
 		"abilities": ["DRAGONSMAW"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "GLASTRIER",
@@ -123258,7 +123258,7 @@
 			"other": []
 		},
 		"abilities": ["CHILLINGNEIGH"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "SPECTRIER",
@@ -123338,7 +123338,7 @@
 			"other": []
 		},
 		"abilities": ["GRIMNEIGH"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "CALYREX",
@@ -123500,7 +123500,7 @@
 			"other": []
 		},
 		"abilities": ["UNNERVE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MRMIMEGALAR",
@@ -124404,7 +124404,7 @@
 			"other": []
 		},
 		"abilities": ["TELEPATHY", "MISTYSURGE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MAREANIE",
@@ -125383,7 +125383,7 @@
 			"other": []
 		},
 		"abilities": ["BATTLEARMOR"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "TAPUKOKO",
@@ -125518,7 +125518,7 @@
 			"other": []
 		},
 		"abilities": ["ELECTRICSURGE", "TELEPATHY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "COSMOG",
@@ -125553,7 +125553,7 @@
 			"other": []
 		},
 		"abilities": ["UNAWARE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "SALAZZLE",
@@ -125825,7 +125825,7 @@
 			"other": []
 		},
 		"abilities": ["TELEPATHY", "GRASSYSURGE"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "MINIOR",
@@ -126068,7 +126068,7 @@
 			"other": []
 		},
 		"abilities": ["RKSSYSTEM"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "VENUSAURMEGA",
@@ -127566,7 +127566,7 @@
 			"other": []
 		},
 		"abilities": ["PSYCHICSURGE", "TELEPATHY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "NIHILEGO",
@@ -127695,7 +127695,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "LUNALA",
@@ -127840,7 +127840,7 @@
 			"other": []
 		},
 		"abilities": ["SHADOWSHIELD"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "COSMOEM",
@@ -127876,7 +127876,7 @@
 			"other": []
 		},
 		"abilities": ["STURDY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "BUZZWOLE",
@@ -128002,7 +128002,7 @@
 			"other": []
 		},
 		"abilities": ["BEASTBOOST"],
-		"kind": "Pokemon"
+		"kind": "UltraBeast"
 	},
 	{
 		"id": "TSAREENA",
@@ -133655,7 +133655,7 @@
 			"other": []
 		},
 		"abilities": ["PRESSURE", "REGENERATOR"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "BOUNSWEET",
@@ -133902,7 +133902,7 @@
 			"other": []
 		},
 		"abilities": ["FULLMETALBODY"],
-		"kind": "Pokemon"
+		"kind": "Legendary"
 	},
 	{
 		"id": "FLOETTEETERNAL",
@@ -134011,7 +134011,7 @@
 		"SPA": 145,
 		"SPD": 95,
 		"SPE": 130,
-		"banned": true,
+		"banned": false,
 		"evolves_from": null,
 		"evolves_to": [],
 		"movepool": {
