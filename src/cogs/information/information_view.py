@@ -211,7 +211,7 @@ class FAQComplex(Complex):
         values: list[FAQ],
         target: Interaction,
     ):
-        super(SectionComplex, self).__init__(
+        super(FAQComplex, self).__init__(
             bot=bot,
             timeout=None,
             member=member,
