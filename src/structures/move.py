@@ -297,9 +297,8 @@ class MoveDecoder(JSONDecoder):
         Any
             Result
         """
-        if all(i in dct for i in Move.__slots__):
-            if mon_type := dct.get("type"):
-                dct["type"] = Typing.from_ID(mon_type)
+        if mon_type := dct.get("type"):
+            dct["type"] = Typing.from_ID(mon_type)
             return Move(**dct)
         return dct
 
