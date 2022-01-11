@@ -394,15 +394,15 @@ class Character(metaclass=ABCMeta):
             if pronoun := data.get("pronoun"):
                 data["pronoun"] = Pronoun[pronoun]
             self.update_from_dict(data)
-            abilities: list[str] = await connection.fetchval(
+            if abilities := await connection.fetchval(
                 """--sql
                 SELECT ARRAY_AGG(ABILITY)
                 FROM CHARACTER_ABILITIES
                 WHERE ID = $1;
                 """,
                 self.id,
-            )
-            self.abilities = Ability.deduce_many(*abilities)
+            ):
+                self.abilities = Ability.deduce_many(*abilities)
 
             if not self.has_default_types:
                 mon_types = await connection.fetchval(
@@ -417,15 +417,15 @@ class Character(metaclass=ABCMeta):
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
-            moveset: list[str] = await connection.fetchval(
+            if moveset := await connection.fetchval(
                 """--sql
                 SELECT ARRAY_AGG(MOVE)
                 FROM MOVESET
                 WHERE CHARACTER = $1;
                 """,
                 self.id,
-            )
-            self.moveset = Move.deduce_many(*moveset)
+            ):
+                self.moveset = Move.deduce_many(*moveset)
             self.sp_ability = await SpAbility.fetch(connection, idx=self.id)
 
     @abstractmethod
