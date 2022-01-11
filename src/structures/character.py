@@ -623,11 +623,9 @@ class PokemonCharacter(Character):
             species_id = data.pop("species", None)
             if species := Pokemon.from_ID(species_id):
                 data["species"] = species
-            else:
-                print(species_id)
-            mon = PokemonCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+                mon = PokemonCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -721,11 +719,11 @@ class LegendaryCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = Legendary.from_ID(species)
-            mon = LegendaryCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := Legendary.from_ID(data.pop("species", None)):
+                data["species"] = species
+                mon = LegendaryCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -819,11 +817,11 @@ class MythicalCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = Mythical.from_ID(species)
-            mon = MythicalCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := Mythical.from_ID(data.pop("species", None)):
+                data["species"] = species
+                mon = MythicalCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -1080,9 +1078,9 @@ class FakemonCharacter(Character):
                     evolves_from=evolves_from,
                     **stats,
                 )
-            mon = FakemonCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+                mon = FakemonCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -1200,11 +1198,11 @@ class CustomMegaCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = CustomMega.from_ID(species)
-            mon = CustomMegaCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := CustomMega.from_ID(data.pop("species", None)):
+                data["species"] = species
+                mon = CustomMegaCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -1456,10 +1454,11 @@ class FusionCharacter(Character):
             data.pop("kind", None)
             mon1: str = data.pop("species1", None)
             mon2: str = data.pop("species2", None)
-            data["species"] = Fusion.from_ID(f"{mon1}_{mon2}")
-            mon = FusionCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := Fusion.from_ID(f"{mon1}_{mon2}"):
+                data["species"] = species
+                mon = FusionCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
@@ -1555,11 +1554,11 @@ class MegaCharacter(Character):
         ):
             data = dict(item)
             data.pop("kind", None)
-            if species := data.pop("species", None):
-                data["species"] = Mega.from_ID(species)
-            mon = MegaCharacter(**data)
-            await mon.retrieve(connection)
-            characters.append(mon)
+            if species := Mega.from_ID(data.pop("species", None)):
+                data["species"] = species
+                mon = MegaCharacter(**data)
+                await mon.retrieve(connection)
+                characters.append(mon)
 
         return characters
 
