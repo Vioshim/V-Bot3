@@ -1230,15 +1230,6 @@ class CustomMegaCharacter(Character):
 class VariantCharacter(Character):
     species: Variant = None
 
-    def __post_init__(self):
-        super(CustomMegaCharacter, self).__post_init__()
-        base = self.species.base
-        if not self.abilities:
-            amount = min(2, self.max_amount_abilities)
-            self.abilities = frozenset(sample(base.abilities, k=amount))
-        if not self.types:
-            self.types = base.types
-
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
         return f"Variant: {self.species.name}, Types: {types}".title()

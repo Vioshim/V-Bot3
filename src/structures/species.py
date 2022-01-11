@@ -510,6 +510,7 @@ class Variant(Species):
             SPA=base.SPA,
             SPD=base.SPD,
             SPE=base.SPE,
+            types=base.types,
             movepool=copy(base.movepool),
             abilities=copy(base.abilities),
         )
