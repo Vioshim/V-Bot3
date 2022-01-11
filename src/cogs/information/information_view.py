@@ -139,7 +139,7 @@ class Section:
 
         self.embed = Embed(
             title=self.title,
-            content=self.description,
+            description=self.description,
             timestamp=utcnow(),
         )
         self.embed.set_image(url=WHITE_BAR)
