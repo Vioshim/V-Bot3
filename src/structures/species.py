@@ -158,15 +158,11 @@ class Species(metaclass=ABCMeta):
             elif isinstance(elem, cls):
                 items.add(elem)
 
-        if not (
-            MOD1 := {k: v for k, v in ALL_SPECIES.items() if isinstance(v, cls)}
-        ):
+        if entries := cls.all():
+            MOD1 = {i.id: i for i in entries}
+            MOD2 = {i.name: i for i in entries}
+        else:
             MOD1 = ALL_SPECIES
-        if not (
-            MOD2 := {
-                k: v for k, v in SPECIES_BY_NAME.items() if isinstance(v, cls)
-            }
-        ):
             MOD2 = SPECIES_BY_NAME
 
         methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
@@ -181,14 +177,14 @@ class Species(metaclass=ABCMeta):
 
             for elems, method in methods:
 
+                word = method(word)
+
                 if word.startswith(item := method("Galarian ")):
-                    word = f"{word.replace(item, '')} Galar"
+                    word = method(f"{word.replace(item, '')} Galar")
                 elif word.startswith(item := method("Hisuian ")):
-                    word = f"{word.replace(item, '')} Hisui"
+                    word = method(f"{word.replace(item, '')} Hisui")
                 elif word.startswith(item := method("Kantoian ")):
                     word = word.replace(item, "")
-
-                word = method(word)
 
                 if data := elems.get(word):
                     items.add(data)
@@ -601,6 +597,7 @@ class Fusion(Species):
             SPA=round((mon1.SPA + mon2.SPA) / 2),
             SPD=round((mon1.SPD + mon2.SPD) / 2),
             SPE=round((mon1.SPE + mon2.SPE) / 2),
+            banned=mon1.banned or mon2.banned,
             movepool=mon1.movepool + mon2.movepool,
             abilities=mon1.abilities | mon2.abilities,
             evolves_from=None,

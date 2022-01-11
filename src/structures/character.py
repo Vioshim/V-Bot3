@@ -1752,6 +1752,9 @@ def oc_process(**kwargs):
     else:
         raise Exception("Unable to determine the species")
 
+    if species.banned:
+        raise Exception(f"The Species {species.name!r} is banned currently.")
+
     if types := Typing.deduce_many(
         common_pop_get(
             data,
