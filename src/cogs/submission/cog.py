@@ -611,6 +611,7 @@ class Submission(Cog):
                 member=ctx.author,
                 ocs=ocs,
                 target=ctx.interaction,
+                keep_working=True,
             )
             embed = view.embed
             embed.color = member.color

@@ -486,6 +486,7 @@ class RoleManage(View):
             member=ctx.user,
             target=ctx,
             ocs=self.ocs,
+            keep_working=True,
         )
         embed = view.embed
         embed.set_author(name=self.member.display_name)

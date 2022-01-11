@@ -393,20 +393,23 @@ class InformationView(View):
             target=ctx,
         )
 
+        embed = view.embed
+
         with suppress(NotFound):
-            artist = await self.bot.fetch_user(536565959004127232)
-            view.embed.set_author(
+            if not (artist := member.guild.get_member(536565959004127232)):
+                artist = await self.bot.fetch_user(536565959004127232)
+            embed.set_author(
                 name=f"Drawn by {artist}",
                 icon_url=artist.display_avatar.url,
             )
 
-        view.embed.title = f"Parallel Yonder's {btn.label}"
-        view.embed.color = Color.blurple()
-        view.embed.url = MAP_URL
-        view.embed.set_image(url=MAP_URL)
+        embed.title = f"Parallel Yonder's {btn.label}"
+        embed.color = Color.blurple()
+        embed.url = MAP_URL
+        embed.set_image(url=MAP_URL)
 
         await resp.send_message(
-            embed=view.embed,
+            embed=embed,
             view=view,
             ephemeral=True,
         )

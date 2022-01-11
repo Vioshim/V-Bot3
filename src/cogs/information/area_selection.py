@@ -91,7 +91,6 @@ class AreaSelection(View):
             if not item.is_news()
         ]
 
-    # noinspection PyTypeChecker
     @select(placeholder="Select a location to check", row=0)
     async def selection(self, _: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -110,6 +109,7 @@ class AreaSelection(View):
                 member=ctx.user,
                 ocs=ocs,
                 bot=self.bot,
+                keep_working=True,
             )
 
             embed = view.embed

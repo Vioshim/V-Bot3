@@ -107,6 +107,7 @@ class CharactersView(Complex):
         member: Member,
         target: Union[Interaction, Webhook, TextChannel],
         ocs: set[Character],
+        keep_working: bool = False,
     ):
         super(CharactersView, self).__init__(
             bot=bot,
@@ -115,6 +116,7 @@ class CharactersView(Complex):
             values=ocs,
             timeout=None,
             parser=lambda x: (x.name, repr(x)),
+            keep_working=keep_working,
         )
         self.embed.title = "Select a character"
 
