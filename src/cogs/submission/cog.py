@@ -924,8 +924,9 @@ class Submission(Cog):
                 await message.reply(f"Exception:\n\n{e}", delete_after=10)
                 return
 
-        if message.guild.get_member(431544605209788416).status != Status.online:
-            return
+        if tupper := message.guild.get_member(431544605209788416):
+            if tupper.status != Status.online:
+                return
 
         if message.channel.category_id in RP_CATEGORIES:
             if message.webhook_id:

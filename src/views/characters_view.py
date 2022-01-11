@@ -53,7 +53,10 @@ class PingView(View):
                 "Owner of the OC is no longer in the Server", ephemeral=True
             )
             return False
-        await resp.send_message("You don't have registered role", ephemeral=True)
+        await resp.send_message(
+            "You don't have registered role",
+            ephemeral=True,
+        )
         return False
 
     @button(label="Ping to RP with the OC")
@@ -122,9 +125,16 @@ class CharactersView(Complex):
                 amount = self.entries_per_page * self._pos
                 chunk = self.values[amount : amount + self.entries_per_page]
                 item: Character = chunk[int(index)]
+                embed = item.embed
+                guild: Guild = self.member.guild
+                if author := guild.get_member(item.author):
+                    embed.set_author(
+                        name=author.display_name,
+                        icon_url=author.display_avatar.url,
+                    )
                 view = PingView(item, ctx.user.id == item.author)
                 await response.send_message(
-                    embed=item.embed,
+                    embed=embed,
                     view=view,
                     ephemeral=True,
                 )
