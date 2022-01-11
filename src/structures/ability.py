@@ -182,7 +182,9 @@ class SpAbility:
         SpAbility
             converted element
         """
-        return SpAbility(**dict(record))
+        items = dict(record)
+        items.pop("id", None)
+        return SpAbility(**items)
 
     @classmethod
     async def fetch(
