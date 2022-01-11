@@ -927,6 +927,8 @@ class Submission(Cog):
         if tupper := message.guild.get_member(431544605209788416):
             if tupper.status != Status.online:
                 return
+        else:
+            return
 
         if message.channel.category_id in RP_CATEGORIES:
             if message.webhook_id:
