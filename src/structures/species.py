@@ -399,7 +399,7 @@ class Fakemon(Species):
         Optional[Fakemon]
             Result
         """
-        if mon := cls.deduce(item):
+        if mon := Species.deduce(item):
             if not isinstance(mon, Fusion):
                 return Fakemon(evolves_from=mon.id)
 
@@ -412,7 +412,7 @@ class Fakemon(Species):
         item : str
             placeholder
         """
-        if mon := cls.from_ID(item):
+        if mon := Species.from_ID(item):
             if not isinstance(mon, Fusion):
                 return Fakemon(evolves_from=mon.id)
 
@@ -467,7 +467,7 @@ class CustomMega(Species):
         Optional[CustomMega]
             Result
         """
-        if mon := cls.deduce(item):
+        if mon := Species.deduce(item):
             if not isinstance(mon, Fusion):
                 return CustomMega(base=mon)
 
@@ -480,7 +480,7 @@ class CustomMega(Species):
         item : str
             placeholder
         """
-        if mon := cls.from_ID(item):
+        if mon := Species.from_ID(item):
             if not isinstance(mon, Fusion):
                 return CustomMega(base=mon)
 
@@ -545,7 +545,7 @@ class Variant(Species):
         Optional[Variant]
             Result
         """
-        if mon := cls.deduce(item):
+        if mon := Species.deduce(item):
             if not isinstance(mon, Fusion):
                 return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
@@ -563,7 +563,7 @@ class Variant(Species):
         Optional[Variant]
             Result
         """
-        if mon := cls.from_ID(item):
+        if mon := Species.from_ID(item):
             if not isinstance(mon, Fusion):
                 return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
@@ -675,7 +675,7 @@ class Fusion(Species):
         Optional[Fusion]
             result
         """
-        if isinstance(mon := cls.deduce(item), cls):
+        if isinstance(mon := Species.deduce(item), cls):
             return mon
 
 
