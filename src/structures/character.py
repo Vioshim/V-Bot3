@@ -45,12 +45,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.doc_reader import docs_reader
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1126,11 +1121,6 @@ class FakemonCharacter(Character):
 @dataclass(unsafe_hash=True, slots=True)
 class CustomMegaCharacter(Character):
     species: CustomMega = None
-
-    def __post_init__(self):
-        super(CustomMegaCharacter, self).__post_init__()
-        if not self.types:
-            self.types = self.species.base.types
 
     def __repr__(self):
         types = "/".join(i.name for i in self.types)
