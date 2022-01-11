@@ -126,7 +126,6 @@ class Section:
     description: str
     emoji: Optional[str] = None
     items: frozenset[FAQ] = field(default_factory=frozenset)
-    embed: Embed = field(init=False)
 
     def __post_init__(self):
         if emoji := self.emoji:
@@ -136,13 +135,6 @@ class Section:
                 self.emoji = emoji
         else:
             self.emoji = "\N{BLUE BOOK}"
-
-        self.embed = Embed(
-            title=self.title,
-            description=self.description,
-            timestamp=utcnow(),
-        )
-        self.embed.set_image(url=WHITE_BAR)
 
     @property
     def tuple(self):
@@ -277,8 +269,13 @@ class SectionComplex(Complex):
             values=item.items_ordered,
             target=ctx,
         )
+        embed = view.embed
+
+        embed.title = f"Parallel Yonder's {item.title}"
+        embed.description = item.description
+
         await resp.send_message(
-            embed=view.embed,
+            embed=embed,
             view=view,
             ephemeral=True,
         )
@@ -353,8 +350,13 @@ class InformationView(View):
             target=interaction,
         )
 
+        embed = view.embed
+
+        embed.title = "Parallel Yonder's FAQ"
+        embed.description = "This command is pretty much a summary of common things that tend to be asked or are enforced, feel free to take a look and have fun."
+
         await resp.send_message(
-            embed=view.embed,
+            embed=embed,
             view=view,
             ephemeral=True,
         )
