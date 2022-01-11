@@ -82,8 +82,10 @@ class Complex(Simple):
             str, Callable[[_T], Union[str, PartialEmoji, Emoji]]
         ] = None,
         silent_mode: bool = False,
+        keep_working: bool = False,
     ):
         self._silent_mode = silent_mode
+        self._keep_working = keep_working
         self._choices: set[_T] = None
         self._max_values = max_values
         if isinstance(emoji_parser, str):
@@ -108,6 +110,14 @@ class Complex(Simple):
     @silent_mode.setter
     def silent_mode(self, silent_mode: bool):
         self._silent_mode = silent_mode
+
+    @property
+    def keep_working(self):
+        return self._keep_working
+
+    @keep_working.setter
+    def keep_working(self, keep_working: bool):
+        self._keep_working = keep_working
 
     @property
     def current_chunk(self) -> list[_T]:
@@ -380,7 +390,9 @@ class Complex(Simple):
     # noinspection PyTypeChecker
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(
-        self, sct: Select, interaction: Interaction
+        self,
+        sct: Select,
+        interaction: Interaction,
     ) -> None:
         """Method used to select values from the pagination
 
@@ -397,28 +409,32 @@ class Complex(Simple):
         entries = []
         amount = self.entries_per_page * self._pos
         chunk = self.values[amount : amount + self.entries_per_page]
-        for index in sct.values:
-            item: _T = chunk[int(index)]
-            name, _ = self.parser(item)
-            entries.append(str(name))
-            self._choices.add(item)
+
+        if not self.keep_working:
+            for index in sct.values:
+                item: _T = chunk[int(index)]
+                name, _ = self.parser(item)
+                entries.append(str(name))
+                self._choices.add(item)
+
         await self.custom_choice(sct, interaction)
+
         if not (self.silent_mode or response.is_done()):
-            text = ", ".join(entries)
-            await response.send_message(
-                content=f"Great! you have selected **{text}**.",
-                ephemeral=True,
-            )
+            if text := ", ".join(entries):
+                await response.send_message(
+                    content=f"Great! you have selected **{text}**.",
+                    ephemeral=True,
+                )
 
         if not response.is_done():
             await response.pong()
 
         self.values = set(self.values) - self.choices
         if len(sct.values) == self.entries_per_page:
-            self._pos -= 1
+            if self._pos > 1:
+                self._pos -= 1
         await self.edit(page=self._pos)
 
-    # noinspection PyTypeChecker
     @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
     async def navigate(self, sct: Select, interaction: Interaction) -> None:
         """Method used to select values from the pagination

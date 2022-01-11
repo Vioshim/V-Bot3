@@ -174,6 +174,7 @@ class MapComplex(Complex):
             target=target,
             parser=lambda x: (x.label, x.content),
             silent_mode=True,
+            keep_working=True,
         )
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
@@ -219,6 +220,7 @@ class FAQComplex(Complex):
             target=target,
             parser=lambda x: x.tuple,
             silent_mode=True,
+            keep_working=True,
         )
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
@@ -257,6 +259,7 @@ class SectionComplex(Complex):
             target=target,
             parser=lambda x: x.tuple,
             silent_mode=True,
+            keep_working=True,
         )
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
