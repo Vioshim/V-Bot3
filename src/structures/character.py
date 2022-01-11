@@ -724,7 +724,7 @@ class LegendaryCharacter(Character):
             data = dict(item)
             data.pop("kind", None)
             if species := data.pop("species", None):
-                data["species"] = Legendary.from_ID[species]
+                data["species"] = Legendary.from_ID(species)
             mon = LegendaryCharacter(**data)
             await mon.retrieve(connection)
             characters.append(mon)
