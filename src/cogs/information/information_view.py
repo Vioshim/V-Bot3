@@ -299,6 +299,7 @@ class InformationView(View):
                     items.append(FAQ(**item, index=index))
                 section = Section(
                     emoji=values["emoji"],
+                    description=values["description"],
                     title=key,
                     items=frozenset(items),
                 )
