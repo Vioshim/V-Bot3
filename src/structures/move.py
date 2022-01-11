@@ -298,6 +298,7 @@ class MoveDecoder(JSONDecoder):
             Result
         """
         if mon_type := dct.get("type"):
+            dct["id"] = fix(dct["name"])
             dct["type"] = Typing.from_ID(mon_type)
             return Move(**dct)
         return dct
