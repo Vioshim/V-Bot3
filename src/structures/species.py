@@ -423,6 +423,8 @@ class CustomMega(Species):
     This class Represents a Custom Mega
     """
 
+    base: Species
+
     def __init__(self, base: Species):
         super(CustomMega, self).__init__(
             id=base.id,
@@ -440,6 +442,7 @@ class CustomMega(Species):
             movepool=base.movepool,
             abilities=copy(base.abilities),
         )
+        self.base = base
 
     @property
     def requires_image(self) -> bool:
