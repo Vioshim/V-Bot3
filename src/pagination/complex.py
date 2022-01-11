@@ -266,15 +266,18 @@ class Complex(Simple):
                     description=str(value).replace("\n", " ")[:100],
                     emoji=emoji,
                 )
+
+            pages.disabled = len(pages.options) == 1
         else:
 
             # This is the outcome for no provided values.
-
+            pages.disabled = True
             pages.add_option(
                 label="Page 01/01",
                 emoji="\N{PAGE FACING UP}",
                 default=True,
             )
+            foo.disabled = True
             foo.add_option(
                 label="Empty List",
                 default=True,
