@@ -423,7 +423,7 @@ class CustomMega(Species):
     This class Represents a Custom Mega
     """
 
-    base: Species
+    base: Species = None
 
     def __init__(self, base: Species):
         super(CustomMega, self).__init__(
