@@ -96,17 +96,17 @@ class Pronoun(Enum):
 
         if not isinstance(item, str):
             name = item.__class__.__name__
-            raise TypeError(f"Expected str but received {name} instead.")
+            raise TypeError(f"Expected str but received {name!r} instead.")
 
-        x = item.lower()
-
-        if "them" in x:
-            return Pronoun.Them
-        if "female" in x or "she" in x:
-            return Pronoun.She
-        if "male" in x or "he" in x:
-            return Pronoun.He
-        return Pronoun.Them
+        match item.lower():
+            case x if "them" in x:
+                return Pronoun.Them
+            case x if "female" in x or "she" in x:
+                return Pronoun.She
+            case x if "male" in x or "he" in x:
+                return Pronoun.He
+            case _:
+                return Pronoun.Them
 
     @property
     def emoji(self) -> Optional[str]:

@@ -30,7 +30,8 @@ from discord.ext.commands import (
 from discord.file import File
 
 from src.context.context import Context
-from src.enums import Moves, Species
+from src.structures.move import Move
+from src.structures.species import Species
 from src.structures.exceptions import (
     NoDateFound,
     NoImageFound,
@@ -40,7 +41,7 @@ from src.structures.exceptions import (
 from src.utils.matches import REGEX_URL
 
 
-class MovesCall(Converter[Moves]):
+class MovesCall(Converter[Move]):
     async def convert(self, ctx: Context, argument: str) -> str:
         """Function which converts to image url if possible
 
@@ -62,7 +63,7 @@ class MovesCall(Converter[Moves]):
             If no image was found
         """
 
-        if data := Moves.fetch_by_name(argument):
+        if data := Move.deduce(argument):
             return data
 
         raise NoMoveFound(argument)

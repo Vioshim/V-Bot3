@@ -29,8 +29,8 @@ from discord import (
 )
 from discord.ui import Button, Select, View, button, select
 
-from src.enums.abilities import Abilities
-from src.enums.moves import Moves
+from src.structures.move import ALL_MOVES
+from src.structures.ability import ALL_ABILITIES
 from src.enums.pronouns import Pronoun
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.text_input import TextInput
@@ -41,8 +41,6 @@ from src.structures.character import Character
 from src.structures.species import Fusion
 from src.utils.functions import int_check
 from src.views import ImageView
-
-SP_ABILITY_ITEMS = ["name", "origin", "description", "pros", "cons"]
 
 __all__ = ("Modification", "ModifyView")
 
@@ -138,7 +136,7 @@ class SPView(Basic):
 
         data: dict[str, str] = {}
 
-        for item in SP_ABILITY_ITEMS:
+        for item in SpAbility.__slots__:
             title = f"Write the Special Ability's {item.title()}"
             async with text_view.handle(title=title, origin=message) as answer:
                 data[item] = answer
@@ -164,7 +162,7 @@ class SPView(Basic):
         view = Complex(
             bot=self.bot,
             member=self.member,
-            values=SP_ABILITY_ITEMS,
+            values=SpAbility.__slots__,
             target=ctx,
             timeout=None,
             max_values=5,
@@ -192,7 +190,7 @@ class SPView(Basic):
 
             msg = await ctx.original_message()
 
-            for item in SP_ABILITY_ITEMS:
+            for item in SpAbility.__slots__:
                 if item not in elements:
                     continue
                 title = f"Special Ability's {item}. Current Below".title()
@@ -621,7 +619,7 @@ class MovesetMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        moves = oc.movepool() or Moves
+        moves = oc.movepool() or ALL_MOVES.values()
 
         view = ComplexInput(
             bot=bot,
@@ -693,7 +691,7 @@ class AbilitiesMod(Mod):
         view = ComplexInput(
             bot=bot,
             member=member,
-            values=oc.species.abilities or Abilities,
+            values=oc.species.abilities or ALL_ABILITIES.values(),
             timeout=None,
             target=target,
             max_values=oc.max_amount_abilities,
@@ -827,7 +825,7 @@ class EvolutionMod(Mod):
 
         origin = await target.original_message()
 
-        if len(values := oc.evolves_to) == 1:
+        if len(values := oc.species.species_evolves_to) == 1:
             species = values[0]
         else:
             view = ComplexInput(
@@ -932,7 +930,7 @@ class DevolutionMod(Mod):
         origin = await target.original_message()
 
         current = oc.species
-        oc.species = oc.evolves_from
+        oc.species = oc.species.species_evolves_from
         if not oc.types and isinstance(oc.species, Fusion):
             possible_types = oc.species.possible_types
             view = ComplexInput(

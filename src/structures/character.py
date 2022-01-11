@@ -19,7 +19,7 @@ from asyncio import to_thread
 from dataclasses import dataclass, field
 from datetime import datetime
 from random import sample
-from typing import Any, Iterable, Optional, Type, Union
+from typing import Any, Optional, Type
 
 from asyncpg import Connection
 from discord import Color, Embed
@@ -27,12 +27,10 @@ from discord.utils import utcnow
 from frozendict import frozendict
 from nested_lookup import nested_lookup
 
-from src.enums.abilities import Abilities
-from src.enums.mon_types import Types
-from src.enums.moves import Moves
 from src.enums.pronouns import Pronoun
-from src.enums.species import Species
-from src.structures.ability import SpAbility
+from src.structures.ability import Ability, SpAbility
+from src.structures.mon_typing import Typing
+from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import (
     CustomMega,
@@ -42,9 +40,10 @@ from src.structures.species import (
     Mega,
     Mythical,
     Pokemon,
+    Species,
+    UltraBeast,
+    Variant,
 )
-from src.structures.species import Species as SpeciesBase
-from src.structures.species import UltraBeast, Variant
 from src.utils.doc_reader import docs_reader
 from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
@@ -65,7 +64,7 @@ __all__ = (
 
 @dataclass(unsafe_hash=True, slots=True)
 class Character(metaclass=ABCMeta):
-    species: Union[Type[SpeciesBase], Species] = None
+    species: Species = None
     id: Optional[int] = None
     author: Optional[int] = None
     thread: Optional[int] = None
@@ -75,8 +74,8 @@ class Character(metaclass=ABCMeta):
     pronoun: Pronoun = Pronoun.Them
     backstory: Optional[str] = None
     extra: Optional[str] = None
-    abilities: frozenset[Abilities] = field(default_factory=frozenset)
-    moveset: frozenset[Moves] = field(default_factory=frozenset)
+    abilities: frozenset[Ability] = field(default_factory=frozenset)
+    moveset: frozenset[Move] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
     url: Optional[str] = None
     image: Optional[str] = None
@@ -117,28 +116,12 @@ class Character(metaclass=ABCMeta):
             self.moveset = frozenset(items)
 
     @property
-    def evolves_from(self) -> Optional[Species | Type[SpeciesBase] | Fusion]:
-        if data := self.species.evolves_from:
-            if isinstance(data, SpeciesBase):
-                return data
-            if isinstance(data, str):
-                return Species[data]
-            if isinstance(data, Iterable):
-                mon1, mon2 = data
-                return Fusion(mon1, mon2)
+    def evolves_from(self) -> Optional[Type[Species]]:
+        return self.species.species_evolves_from
 
     @property
-    def evolves_to(self) -> list[Species | Type[SpeciesBase] | Fusion]:
-        elements = []
-        for data in self.species.evolves_to:
-            if isinstance(data, SpeciesBase):
-                elements.append(data)
-            elif isinstance(data, str):
-                elements.append(Species[data])
-            elif isinstance(data, Iterable):
-                mon1, mon2 = data
-                elements.append(Fusion(mon1, mon2))
-        return elements
+    def evolves_to(self) -> list[Type[Species]]:
+        return self.species.species_evolves_to
 
     @property
     def emoji(self):
@@ -156,7 +139,7 @@ class Character(metaclass=ABCMeta):
         """
 
     @property
-    def types(self) -> frozenset[Types]:
+    def types(self) -> frozenset[Typing]:
         return self.species.types
 
     @property
@@ -258,7 +241,7 @@ class Character(metaclass=ABCMeta):
         c_embed.add_field(name="Species", value=self.species.name)
         for index, ability in enumerate(self.abilities, start=1):
             c_embed.add_field(
-                name=f"Ability {index} - {ability.value.name}",
+                name=f"Ability {index} - {ability.name}",
                 value=f"> {ability.description}",
                 inline=False,
             )
@@ -411,45 +394,38 @@ class Character(metaclass=ABCMeta):
             if pronoun := data.get("pronoun"):
                 data["pronoun"] = Pronoun[pronoun]
             self.update_from_dict(data)
-            abilities: list[str] = await connection.fetch(
+            abilities: list[str] = await connection.fetchval(
                 """--sql
-                SELECT ABILITY
+                SELECT ARRAY_AGG(ABILITY)
                 FROM CHARACTER_ABILITIES
-                WHERE ID = $1
-                ORDER BY SLOT;
+                WHERE ID = $1;
                 """,
                 self.id,
             )
-            self.abilities = frozenset(
-                {Abilities[item["ability"]] for item in abilities}
-            )
+            self.abilities = Ability.deduce_many(*abilities)
 
             if not self.has_default_types:
-                mon_types = await connection.fetch(
+                mon_types = await connection.fetchval(
                     """--sql
-                    SELECT TYPE
+                    SELECT ARRAY_AGG(TYPE)
                     FROM CHARACTER_TYPES
-                    WHERE character = $1
-                    ORDER BY MAIN;
+                    WHERE character = $1;
                     """,
                     self.id,
                 )
-                self.species.types = frozenset(
-                    {Types[item["type"]] for item in mon_types}
-                )
+                self.species.types = Typing.deduce_many(*mon_types)
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
-            moveset: list[str] = await connection.fetch(
+            moveset: list[str] = await connection.fetchval(
                 """--sql
-                SELECT MOVE
+                SELECT ARRAY_AGG(MOVE)
                 FROM MOVESET
-                WHERE CHARACTER = $1
-                ORDER BY SLOT;
+                WHERE CHARACTER = $1;
                 """,
                 self.id,
             )
-            self.moveset = frozenset({Moves[item["move"]] for item in moveset})
+            self.moveset = Move.deduce_many(*moveset)
             self.sp_ability = await SpAbility.fetch(connection, idx=self.id)
 
     @abstractmethod
@@ -498,7 +474,8 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, not main) for main, item in enumerate(self.types)
+            (self.id, item.name, not main)
+            for main, item in enumerate(self.types)
         ]:
             await connection.executemany(
                 """--sql
@@ -515,7 +492,8 @@ class Character(metaclass=ABCMeta):
             self.id,
         )
         if entries := [
-            (self.id, item.name, bool(main)) for main, item in enumerate(self.abilities)
+            (self.id, item.name, bool(main))
+            for main, item in enumerate(self.abilities)
         ]:
             await connection.executemany(
                 """--sql
@@ -1084,7 +1062,7 @@ class FakemonCharacter(Character):
             """,
             "FAKEMON",
         ):
-            data: dict[str, Union[str, int]] = dict(item)
+            data: dict[str, str | int] = dict(item)
             data.pop("kind", None)
             evolves_from: Optional[str] = data.pop("evolves_from", None)
             fakemon_id = data["id"]
@@ -1376,10 +1354,9 @@ class VariantCharacter(Character):
                 """,
                 mon.id,
             ):
+                moves = Move.deduce_many(*moves)
                 mon_species.movepool += Movepool(
-                    event=frozenset(
-                        move for item in moves if not (move := Moves[item]).banned
-                    )
+                    event=frozenset(item for item in moves if not item.banned)
                 )
             await mon.retrieve(connection)
             characters.append(mon)
@@ -1433,7 +1410,7 @@ class FusionCharacter(Character):
         return False
 
     @property
-    def possible_types(self) -> list[set[Types]]:
+    def possible_types(self) -> list[set[Typing]]:
         return self.species.possible_types
 
     @property
@@ -1647,7 +1624,7 @@ PLACEHOLDER_STATS = {
     "Speed": "SPE",
 }
 
-ASSOCIATIONS: frozendict[Type[SpeciesBase], Type[Character]] = frozendict(
+ASSOCIATIONS: frozendict[Type[Species], Type[Character]] = frozendict(
     {
         Pokemon: PokemonCharacter,
         Mega: MegaCharacter,
@@ -1683,12 +1660,12 @@ async def fetch_all(connection: Connection):
     return data
 
 
-def kind_deduce(item: Optional[SpeciesBase], *args, **kwargs):
+def kind_deduce(item: Optional[Species], *args, **kwargs):
     """This class returns the character class based on the given species
 
     Attributes
     ----------
-    item : Optional[SpeciesBase]
+    item : Optional[Species]
         Species
     args : Any
         Args of the Character class
@@ -1713,80 +1690,119 @@ def oc_process(**kwargs):
         Character given the paraneters
     """
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
+
     if fakemon := data.pop("fakemon", ""):
+
         name: str = fakemon.title()
+
         if name.startswith("Mega "):
-            data["species"] = CustomMega(Species.deduce(name[5:]))
-        elif mon := Species.deduce(
-            common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")
+            species = CustomMega.deduce(name)
+        elif species := Fakemon.deduce(
+            common_pop_get(
+                data,
+                "base",
+                "preevo",
+                "pre evo",
+                "pre_evo",
+            )
         ):
-            data["species"] = Fakemon(name=name.title(), evolves_from=mon.id)
+            species.name = name.title()
         else:
-            data["species"] = Fakemon(name=name.title())
+            species = Fakemon(name=name.title())
+
+        if species is None:
+            raise Exception("Fakemon was not deduced by the bot.")
+
+        data["species"] = species
+
     elif variant := data.pop("variant", ""):
-        if mon := Species.deduce(
-            common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")
+
+        if species := Variant.deduce(
+            common_pop_get(
+                data,
+                "base",
+                "preevo",
+                "pre evo",
+                "pre_evo",
+            )
         ):
-            name = variant.title().replace(mon.name, "").strip()
-            data["species"] = Variant(base=mon, name=f"{name} {mon.name}".title())
+            name = variant.title().replace(species.name, "").strip()
+            species.name = f"{name} {species.name}".title()
         else:
             for item in variant.split(" "):
-                if species := Species.deduce(item):
-                    data["species"] = Variant(base=species, name=variant.title())
+                if species := Variant.deduce(item):
+                    species.name = variant.title()
                     break
             else:
                 raise Exception("Unable to determine the variant' species")
-    elif fusion := data.pop("fusion", []):
-        item = Species.deduce(fusion)
-        if not isinstance(item, Fusion):
-            raise Exception("Unable to determine the fusions' species")
-        data["species"] = item
-    elif pokemon := common_pop_get(data, "species", "pokemon"):
-        data["species"] = Species.deduce(pokemon)
 
-    species = data["species"]
-    if types := frozenset(Types.deduce(common_pop_get(data, "types", "type"))):
+        data["species"] = species
+    elif species := Fusion.deduce(data.pop("fusion", "")):
+        data["species"] = species
+    elif species := Species.deduce(common_pop_get(data, "species", "pokemon")):
+        data["species"] = species
+    else:
+        raise Exception("Unable to determine the species")
+
+    if types := Typing.deduce_many(
+        common_pop_get(
+            data,
+            "types",
+            "type",
+        ),
+    ):
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.types = types
         elif species.types != types:
-            types_txt = "/".join(i.value.name for i in types)
-            species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
+            types_txt = "/".join(i.name for i in types)
+            species = Variant(
+                base=species,
+                name=f"{types_txt}-Typed {species.name}",
+            )
             species.types = types
+
+    if abilities := Ability.deduce_many(
+        common_pop_get(
+            data,
+            "abilities",
+            "ability",
+        )
+    ):
+
+        data["abilities"] = abilities
+
+        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            species.abilities = abilities
+        elif abilities_txt := "/".join(
+            x.name for x in abilities if x not in species.abilities
+        ):
+            species = Variant(
+                base=species,
+                name=f"{abilities_txt}-Granted {species.name}",
+            )
+            species.abilities = abilities
             data["species"] = species
 
-    if abilities := common_pop_get(data, "abilities", "ability"):
-        if abilities := frozenset(Abilities.deduce(abilities)):
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
-                species.abilities = abilities
-            elif abilities_txt := "/".join(
-                x.value.name for x in abilities if x not in species.abilities
-            ):
-                species = Variant(
-                    base=species,
-                    name=f"{abilities_txt}-Granted {species.name}",
-                )
-                species.abilities = abilities
-                data["species"] = species
+    if moveset := Move.deduce_many(common_pop_get(data, "moveset", "moves")):
+        data["moveset"] = moveset
 
-            data["abilities"] = abilities
-
-    if moveset := common_pop_get(data, "moveset", "moves"):
-        data["moveset"] = frozenset(Moves.deduce(moveset))
-
-    if pronoun := common_pop_get(data, "pronoun", "gender"):
-        data["pronoun"] = Pronoun.deduce(pronoun)
+    if pronoun := Pronoun.deduce(common_pop_get(data, "pronoun", "gender")):
+        data["pronoun"] = pronoun
 
     if isinstance(age := data.get("age"), str):
-        data["age"] = int_check(age, 1, 99)
+        data["age"] = int_check(age, 13, 99)
 
-    if isinstance(species := data["species"], Fakemon):
+    if isinstance(species, Fakemon):
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", {"event": data.get("moveset", set())}):
+        if movepool := data.pop(
+            "movepool", dict(event=data.get("moveset", set()))
+        ):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
+    data["species"] = species
 
     return kind_deduce(species, **data)
 
@@ -1844,8 +1860,8 @@ async def doc_convert(url: str) -> dict[str, Any]:
             if (strip := item.strip())
         ]
 
-        movepool_typing = dict[str, Union[set[str], dict[int, set[str]]]]
-        raw_kwargs: dict[str, Union[str, set[str], movepool_typing]] = dict(
+        movepool_typing = dict[str, set[str] | dict[int, set[str]]]
+        raw_kwargs: dict[str, str | set[str] | movepool_typing] = dict(
             url=f"https://docs.google.com/document/d/{url}/edit?usp=sharing",
             moveset=set(),
             movepool={},

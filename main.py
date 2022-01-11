@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from asyncio import run
+from contextlib import suppress
 from functools import wraps
 from logging import getLogger, setLoggerClass
 from os import getenv
@@ -32,16 +32,19 @@ setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 
-try:
+with suppress(ModuleNotFoundError):
     from asyncio import set_event_loop_policy
 
     from uvloop import EventLoopPolicy  # type: ignore
 
     set_event_loop_policy(EventLoopPolicy())
-except ModuleNotFoundError:
-    logger.info("Uvloop was not found")
-finally:
-    load_dotenv()
+
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
+
+load_dotenv()
 
 
 def wrap_session(func):

@@ -15,6 +15,7 @@
 from asyncio import TimeoutError
 from contextlib import suppress
 from datetime import timedelta
+from difflib import get_close_matches
 from pathlib import Path
 from typing import Type, Union
 
@@ -50,14 +51,20 @@ from yaml import safe_load
 from yaml.error import MarkedYAMLError
 
 from src.context import ApplicationContext, AutocompleteContext
-from src.enums import Abilities, Moves, Types
 from src.pagination.boolean import BooleanView
 from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
-from src.structures.ability import SpAbility
+from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
+from src.structures.mon_typing import Typing
+from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES, WHITE_BAR
@@ -77,11 +84,26 @@ def oc_autocomplete(ctx: AutocompleteContext):
     cog: Submission = ctx.bot.get_cog("Submission")
     text: str = ctx.value or ""
     ocs = cog.rpers.get(member_id, {}).values()
-    return [
-        OptionChoice(name=oc.name, value=str(oc.id))
-        for oc in ocs
-        if oc.name.startswith(text.title())
-    ]
+    values: set[tuple[str, str]] = set()
+
+    if items := {oc.name: (oc.name, str(oc.id)) for oc in ocs}:
+        values.update(
+            items[item]
+            for item in get_close_matches(
+                word=text,
+                possibilities=items,
+                n=25,
+            )
+        )
+
+    if len(values) <= 5:
+        values.update(
+            (oc.name, str(oc.id))
+            for oc in ocs
+            if oc.name.startswith(text.title())
+        )
+
+    return map(lambda x: OptionChoice(*x), values)
 
 
 class Submission(Cog):
@@ -131,7 +153,9 @@ class Submission(Cog):
                 timestamp=utcnow(),
             )
             embed.set_image(url=REGISTERED_IMG)
-            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
+            embed.set_author(
+                name=author.display_name, icon_url=author.avatar.url
+            )
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
@@ -160,7 +184,9 @@ class Submission(Cog):
                 await member.send(embed=embed, files=files, view=view)
             await ctx.send_followup("User has been registered", ephemeral=True)
         else:
-            await ctx.send_followup("User is already registered", ephemeral=True)
+            await ctx.send_followup(
+                "User is already registered", ephemeral=True
+            )
 
     async def unclaiming(
         self,
@@ -223,7 +249,9 @@ class Submission(Cog):
             except DiscordException:
                 with suppress(DiscordException):
                     thread = await self.bot.fetch_channel(oc_list)
-                    await thread.delete(reason="Former OC List Message was removed.")
+                    await thread.delete(
+                        reason="Former OC List Message was removed."
+                    )
         message: WebhookMessage = await webhook.send(
             content=member.mention,
             wait=True,
@@ -247,7 +275,9 @@ class Submission(Cog):
                 guild.id,
             )
 
-    async def registration(self, ctx: Union[Interaction, Message], oc: Type[Character]):
+    async def registration(
+        self, ctx: Union[Interaction, Message], oc: Type[Character]
+    ):
         """This is the function which handles the registration process,
         it will try to autocomplete data it can deduce, or ask about what
         can not be deduced.
@@ -278,7 +308,7 @@ class Submission(Cog):
                 delete_after=5,
             )
 
-            if isinstance(species := oc.species, Fakemon):
+            if isinstance(species := oc.species, Fakemon):  # type: ignore
                 if not oc.url:
                     stats_view = StatsView(
                         bot=self.bot,
@@ -294,14 +324,16 @@ class Submission(Cog):
                     or min(species.stats) < 1
                     or max(species.stats) > 5
                 ):
-                    await ctx.reply("Max stats is 18. Min 1. Max 5", delete_after=5)
+                    await ctx.reply(
+                        "Max stats is 18. Min 1. Max 5", delete_after=5
+                    )
                     return
                 if not 1 <= len(species.types) <= 2:
                     view = ComplexInput(
                         bot=self.bot,
                         member=user,
                         target=ctx,
-                        values=Types,
+                        values=Typing.all(),
                         max_values=2,
                         timeout=None,
                         parser=lambda x: (
@@ -316,7 +348,7 @@ class Submission(Cog):
                         if not types:
                             return
                         species.types = frozenset(types)
-            elif isinstance(species, Fusion):
+            elif isinstance(species, Fusion):  # type: ignore
                 values = species.possible_types
                 if not species.types:
                     view = ComplexInput(
@@ -357,13 +389,13 @@ class Submission(Cog):
                         bot=self.bot,
                         member=user,
                         values=(
-                            Abilities
+                            Ability.all()
                             if oc.any_ability_at_first
                             else oc.species.abilities
                         ),
                         target=ctx,
                         max_values=max_ab,
-                        parser=lambda x: (x.value.name, x.value.description),
+                        parser=lambda x: (x.name, x.description),
                     )
 
                     async with ability_view.send(
@@ -379,14 +411,13 @@ class Submission(Cog):
                 )
                 return
             elif not oc.any_ability_at_first:
-                if ability_errors := [
-                    ability.value.name
+                if ability_errors := ", ".join(
+                    ability.name
                     for ability in oc.abilities
                     if ability not in species.abilities
-                ]:
-                    text = ", ".join(ability_errors)
+                ):
                     await ctx.reply(
-                        f"the abilities [{text}] were not found in the species"
+                        f"the abilities [{ability_errors}] were not found in the species"
                     )
                     return
 
@@ -394,7 +425,7 @@ class Submission(Cog):
 
             if not oc.moveset:
                 if not (movepool := species.movepool):
-                    movepool = Movepool(event=frozenset(Moves))
+                    movepool = Movepool(event=Move.all())
 
                 moves_view = ComplexInput(
                     bot=self.bot,
@@ -418,12 +449,13 @@ class Submission(Cog):
 
             if not oc.any_move_at_first:
                 moves_movepool = species.movepool()
-                if move_errors := [
-                    move.value.name for move in oc.moveset if move not in moves_movepool
-                ]:
-                    text = ", ".join(move_errors)
+                if move_errors := ", ".join(
+                    move.name
+                    for move in oc.moveset
+                    if move not in moves_movepool
+                ):
                     await ctx.reply(
-                        f"the moves [{text}] were not found in the movepool"
+                        f"the moves [{move_errors}] were not found in the movepool"
                     )
                     return
 
@@ -512,7 +544,9 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await webhook.send(
@@ -739,7 +773,7 @@ class Submission(Cog):
             return
         if payload.thread_id in self.oc_list.values():
             author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.message_id
+                k for k, v in self.oc_list.items() if v == payload.thread_id
             ][0]
             async with self.bot.database() as db:
                 del self.oc_list[author_id]
@@ -858,7 +892,8 @@ class Submission(Cog):
                         m = await channel.send("Mention the User")
                         aux: Message = await self.bot.wait_for(
                             "message",
-                            check=lambda m: m.channel == channel and m.author == author,
+                            check=lambda m: m.channel == channel
+                            and m.author == author,
                         )
                         self.bot.msg_cache_add(m)
                         self.bot.msg_cache_add(aux)
@@ -883,7 +918,9 @@ class Submission(Cog):
             except MarkedYAMLError:
                 return
             except Exception as e:
-                self.bot.logger.exception("Exception processing character", exc_info=e)
+                self.bot.logger.exception(
+                    "Exception processing character", exc_info=e
+                )
                 await message.reply(f"Exception:\n\n{e}", delete_after=10)
                 return
 
@@ -948,7 +985,9 @@ class Submission(Cog):
                         )
                     ):
                         if item.location != msg.channel.id:
-                            former_channel = message.guild.get_channel(item.location)
+                            former_channel = message.guild.get_channel(
+                                item.location
+                            )
                             previous = self.located.get(item.location, set())
                             current = self.located.get(msg.channel.id, set())
                             if item in previous:

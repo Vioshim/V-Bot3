@@ -4,11 +4,12 @@
 
 JSON files which contain Pokemon/Server related info
 
-| File              | Description                               |
-|-------------------|-------------------------------------------|
-| `faq.json`        | Information Cog's data                    |
-| `faq.json5`       | Information Cog's data                    |
-| `final.json`      | Information of Pokemon in JSON format     |
-| `final.json5`     | Information of Pokemon in JSON5 format    |
-| `templates.json`  | All valid Character written templates     |
-| `templates.json5` | All valid Character written templates     |
+| File             | Description                               |
+|------------------|-------------------------------------------|
+| `abilities.json` | Information Cog's data                    |
+| `faq.json`       | F.A.Q.'s Information                      |
+| `final.json`     | Information of Pokemon in JSON format     |
+| `moves.json`     | All Moves in JSON format                  |
+| `species.json`   | All Species in JSON format                |
+| `templates.json` | All valid Character written templates     |
+| `types.json`     | All Types in JSON format                  |

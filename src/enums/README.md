@@ -4,9 +4,5 @@
 
 | Function/Class |          Description             |
 |----------------|----------------------------------|
-| `Abilities`    | Enumeration of Pokemon Abilities |
-| `Types`        | Enumeration of Pokemon Types     |
-| `Moves`        | Enumeration of Pokemon Moves     |
 | `Stats`        | Enumeration of Fakemon Stats     |
 | `Pronoun`      | Enumeration of Pronouns          |
-| `Species`      | Enumeration of Pokemon Species   |

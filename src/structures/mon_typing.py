@@ -14,13 +14,25 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Union
+from dataclasses import asdict, dataclass, field
+from difflib import get_close_matches
+from json import JSONDecoder, JSONEncoder, load
+from re import split
+from typing import Any, Optional
 
 from discord import PartialEmoji
 from frozendict import frozendict
 
-__all__ = ("Typing", "Z_MOVE_RANGE", "MAX_MOVE_RANGE1", "MAX_MOVE_RANGE2")
+from src.utils.functions import fix
+
+__all__ = (
+    "Typing",
+    "Z_MOVE_RANGE",
+    "MAX_MOVE_RANGE1",
+    "MAX_MOVE_RANGE2",
+)
+
+ALL_TYPES = frozendict()
 
 Z_MOVE_RANGE = frozendict(
     {
@@ -89,16 +101,16 @@ class Typing:
         Typing's banner
     """
 
-    name: str = field(default_factory=str)
-    icon: str = field(default_factory=str)
-    id: int = 0
+    name: str = ""
+    icon: str = ""
+    id: Optional[int] = None
     color: int = 0
     emoji: PartialEmoji = PartialEmoji(name="\N{MEDIUM BLACK CIRCLE}")
-    z_move: str = field(default_factory=str)
-    max_move: str = field(default_factory=str)
+    z_move: str = ""
+    max_move: str = ""
     chart: frozendict[int, float] = field(default_factory=frozendict)
-    banner: str = field(default_factory=str)
-    icon: str = field(default_factory=str)
+    banner: str = ""
+    icon: str = ""
 
     def __add__(self, other: Typing) -> Typing:
         """Add Method
@@ -137,6 +149,9 @@ class Typing:
         """
         return self.name.upper()
 
+    def __repr__(self) -> str:
+        return f"Typing.{self}"
+
     def __contains__(self, other: Typing) -> bool:
         """contains method
 
@@ -165,7 +180,7 @@ class Typing:
     def __setitem__(
         self,
         type_id: Typing,
-        value: Union[int, float],
+        value: int | float,
     ) -> None:
         """Setitem method for assigning chart values
 
@@ -194,3 +209,173 @@ class Typing:
             chart value
         """
         return self.chart.get(int(other), 1.0)
+
+    def when_attacked_by(self, *others: Typing) -> float:
+        base = 1.0
+        for other in others:
+            if isinstance(other, str):
+                other = self.from_ID(other)
+            if isinstance(other, Typing):
+                base *= self.chart.get(other.id, 1.0)
+        return base
+
+    def when_attacking(self, *others: Typing | str) -> float:
+        base = 1.0
+        for other in others:
+            if isinstance(other, str):
+                other = self.from_ID(other)
+            if isinstance(other, Typing):
+                base *= other.chart.get(self.id, 1.0)
+        return base
+
+    @property
+    def terrain(self):
+        return {
+            "FAIRY": "Misty Terrain",
+            "GRASS": "Grassy Terrain",
+        }.get(item := str(self), f"{item} Terrain".title())
+
+    @classmethod
+    def all(cls):
+        return frozenset(ALL_TYPES.values())
+
+    def deduce(item: str) -> Optional[Typing]:
+        """This is a method that determines the Typing out of
+        the existing entries, it has a 85% of precision.
+
+        Parameters
+        ----------
+        item : str
+            String to search
+
+        Returns
+        -------
+        Optional[Typing]
+            Obtained result
+        """
+        if isinstance(item, Typing):
+            return item
+        if data := ALL_TYPES.get(fix(item)):
+            return data
+        for elem in get_close_matches(
+            item,
+            possibilities=ALL_TYPES,
+            n=1,
+            cutoff=0.85,
+        ):
+            return ALL_TYPES[elem]
+
+    def deduce_many(
+        *elems: str,
+        range_check: bool = False,
+    ) -> frozenset[Typing]:
+        """This is a method that determines the moves out of
+        the existing entries, it has a 85% of precision.
+
+        Parameters
+        ----------
+        elems : str
+            Strings to search
+        range_check : bool, optional
+            If it should limit to a max of 2 types.
+
+        Returns
+        -------
+        frozenset[ALL_TYPES]
+            Obtained result
+        """
+        items: list[Typing] = []
+        aux: list[str] = []
+
+        for elem in elems:
+            if isinstance(elem, Typing):
+                items.append(elem)
+            elif isinstance(elem, str):
+                aux.append(elem)
+
+        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+
+            if not elem:
+                continue
+
+            if data := ALL_TYPES.get(elem := fix(elem)):
+                items.append(data)
+            else:
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=ALL_TYPES,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    items.append(ALL_TYPES[data])
+
+        if range_check and len(items) > 2:
+            items = []
+
+        return frozenset(items)
+
+    def from_ID(item: str) -> Optional[Typing]:
+        """This is a method that returns a Move given an exact ID.
+
+        Parameters
+        ----------
+        item : str
+            Move ID to check
+
+        Returns
+        -------
+        Optional[Move]
+            Obtained result
+        """
+        if isinstance(item, Typing):
+            return item
+        if isinstance(item, str):
+            return ALL_TYPES.get(fix(item))
+
+
+class TypingEncoder(JSONEncoder):
+    """Typing encoder"""
+
+    def default(self, o):
+        if isinstance(o, Typing):
+            data = asdict(o)
+            data["emoji"] = str(o.emoji)
+            return data
+        return super(TypingEncoder, self).default(o)
+
+
+class TypingDecoder(JSONDecoder):
+    """Typing decoder"""
+
+    def __init__(self):
+        super(TypingDecoder, self).__init__(
+            object_hook=self.object_hook,
+        )
+
+    def object_hook(self, dct: dict[str, Any]):
+        """Decoder method for dicts
+
+        Parameters
+        ----------
+        dct : dict[str, Any]
+            Input
+
+        Returns
+        -------
+        Any
+            Result
+        """
+        if all(i in dct for i in Typing.__slots__):
+            if emoji := dct.get("emoji", ""):
+                dct["emoji"] = PartialEmoji.from_str(emoji)
+            if chart := dct.get("chart", {}):
+                dct["chart"] = frozendict(
+                    {int(k): float(v) for k, v in chart.items()}
+                )
+            return Typing(**dct)
+        return dct
+
+
+with open("resources/types.json") as f:
+    items: list[Typing] = load(f, cls=TypingDecoder)
+    ALL_TYPES = frozendict({str(item): item for item in items})

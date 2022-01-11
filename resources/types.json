@@ -1,0 +1,338 @@
+[
+    {
+        "name": "Normal",
+        "icon": "/Chart/NormalIC_lsh07JZFXF.png",
+        "id": 1,
+        "color": 11052922,
+        "emoji": "<:Normal:880800547450531900>",
+        "z_move": "Breakneck Blitz",
+        "max_move": "Max Strike",
+        "chart": {
+            "7": 2.0,
+            "14": 0
+        },
+        "banner": "/Banners/Normal_7WLut6aBRu9.png"
+    },
+    {
+        "name": "Fire",
+        "icon": "/Chart/FireIC_FSXZ0ewoZ.png",
+        "id": 2,
+        "color": 15630640,
+        "emoji": "<:Fire:880800547505049670>",
+        "z_move": "Inferno Overdrive",
+        "max_move": "Max Flare",
+        "chart": {
+            "3": 2.0,
+            "9": 2.0,
+            "13": 2.0,
+            "2": 0.5,
+            "5": 0.5,
+            "6": 0.5,
+            "12": 0.5,
+            "17": 0.5,
+            "18": 0.5
+        },
+        "banner": "/Banners/Fire_MWKQIWPHCI.png"
+    },
+    {
+        "name": "Water",
+        "icon": "/Chart/WaterIC_AePidQZ435.png",
+        "id": 3,
+        "color": 6525168,
+        "emoji": "<:Water:880800547555397652>",
+        "z_move": "Hydro Vortex",
+        "max_move": "Max Geyser",
+        "chart": {
+            "4": 2.0,
+            "5": 2.0,
+            "2": 0.5,
+            "3": 0.5,
+            "6": 0.5,
+            "17": 0.5
+        },
+        "banner": "/Banners/Water_QrO8_rrrQA.png"
+    },
+    {
+        "name": "Electric",
+        "icon": "/Chart/ElectricIC_SAqZW5RtMs.png",
+        "id": 4,
+        "color": 16240684,
+        "emoji": "<:Electric:880800547530223626>",
+        "z_move": "Gigavolt Havoc",
+        "max_move": "Max Lightning",
+        "chart": {
+            "9": 2.0,
+            "4": 0.5,
+            "10": 0.5,
+            "17": 0.5
+        },
+        "banner": "/Banners/Electric__HK82VrgVP.png"
+    },
+    {
+        "name": "Grass",
+        "icon": "/Chart/GrassIC_U9S3zw7Hqs.png",
+        "id": 5,
+        "color": 8046412,
+        "emoji": "<:Grass:880800547547021322>",
+        "z_move": "Bloom Doom",
+        "max_move": "Max Overgrowth",
+        "chart": {
+            "2": 2.0,
+            "6": 2.0,
+            "8": 2.0,
+            "11": 2.0,
+            "12": 2.0,
+            "4": 0.5,
+            "5": 0.5,
+            "9": 0.5,
+            "3": 0.5
+        },
+        "banner": "/Banners/Grass_MibpgmlZSu.png"
+    },
+    {
+        "name": "Ice",
+        "icon": "/Chart/IceIC_40f5wWdnqb.png",
+        "id": 6,
+        "color": 9886166,
+        "emoji": "<:Ice:880800547182112799>",
+        "z_move": "Subzero Slammer",
+        "max_move": "Max Hailstorm",
+        "chart": {
+            "2": 2.0,
+            "7": 2.0,
+            "13": 2.0,
+            "17": 2.0,
+            "6": 0.5
+        },
+        "banner": "/Banners/Ice_qf9cM_0BZ.png"
+    },
+    {
+        "name": "Fighting",
+        "icon": "/Chart/FightingIC_no8wYHEEg.png",
+        "id": 7,
+        "color": 12725800,
+        "emoji": "<:Fighting:880800547123388508>",
+        "z_move": "All-Out Pummeling",
+        "max_move": "Max Knuckle",
+        "chart": {
+            "10": 2.0,
+            "11": 2.0,
+            "18": 2.0,
+            "12": 0.5,
+            "13": 0.5,
+            "16": 0.5
+        },
+        "banner": "/Banners/Fighting_KadL0Lfvu.png"
+    },
+    {
+        "name": "Poison",
+        "icon": "/Chart/PoisonIC_oQDclvCSdq.png",
+        "id": 8,
+        "color": 10698401,
+        "emoji": "<:Poison:880800547127582761>",
+        "z_move": "Acid Downpour",
+        "max_move": "Max Ooze",
+        "chart": {
+            "9": 2.0,
+            "11": 2.0,
+            "5": 0.5,
+            "7": 0.5,
+            "8": 0.5,
+            "12": 0.5,
+            "18": 0.5
+        },
+        "banner": "/Banners/Poison_51HLU3KQT.png"
+    },
+    {
+        "name": "Ground",
+        "icon": "/Chart/GroundIC_s-APkZLs1S.png",
+        "id": 9,
+        "color": 14860133,
+        "emoji": "<:Ground:880800547614105600>",
+        "z_move": "Tectonic Rage",
+        "max_move": "Max Quake",
+        "chart": {
+            "3": 2.0,
+            "5": 2.0,
+            "6": 2.0,
+            "8": 0.5,
+            "13": 0.5,
+            "4": 0
+        },
+        "banner": "/Banners/Ground_0nzRnpGnrb.png"
+    },
+    {
+        "name": "Flying",
+        "icon": "/Chart/FlyingIC_c9yZsKBzO.png",
+        "id": 10,
+        "color": 11112435,
+        "emoji": "<:Flying:880800547341475892>",
+        "z_move": "Supersonic Skystrike",
+        "max_move": "Max Airstream",
+        "chart": {
+            "4": 2.0,
+            "6": 2.0,
+            "13": 2.0,
+            "5": 0.5,
+            "7": 0.5,
+            "12": 0.5,
+            "9": 0
+        },
+        "banner": "/Banners/Flying_ndzxuXXBd.png"
+    },
+    {
+        "name": "Psychic",
+        "icon": "/Chart/PsychicIC_DWslZRN75-.png",
+        "id": 11,
+        "color": 11112435,
+        "emoji": "<:Psychic:880800547505074256>",
+        "z_move": "Shattered Psyche",
+        "max_move": "Max Mindstorm",
+        "chart": {
+            "12": 2.0,
+            "14": 2.0,
+            "16": 2.0,
+            "7": 0.5,
+            "11": 0.5
+        },
+        "banner": "/Banners/Psychic_DZdtI2j5sN.png"
+    },
+    {
+        "name": "Bug",
+        "icon": "/Chart/BugIC_aYtpLtj9te.png",
+        "id": 12,
+        "color": 10926362,
+        "emoji": "<:Bug:880800547442163763>",
+        "z_move": "Savage Spin-Out",
+        "max_move": "Max Flutterby",
+        "chart": {
+            "2": 2.0,
+            "10": 2.0,
+            "13": 2.0,
+            "5": 0.5,
+            "7": 0.5,
+            "9": 0.5
+        },
+        "banner": "/Banners/Bug_NF9aQ4XCV0.png"
+    },
+    {
+        "name": "Rock",
+        "icon": "/Chart/RockIC_9g894kz-kf.png",
+        "id": 13,
+        "color": 11968822,
+        "emoji": "<:Rock:880800547387617360>",
+        "z_move": "Continental Crush",
+        "max_move": "Max Rockfall",
+        "chart": {
+            "3": 2.0,
+            "5": 2.0,
+            "7": 2.0,
+            "9": 2.0,
+            "17": 2.0,
+            "1": 0.5,
+            "2": 0.5,
+            "8": 0.5,
+            "10": 0.5
+        },
+        "banner": "/Banners/Rock_io2kdnYrTQ.png"
+    },
+    {
+        "name": "Ghost",
+        "icon": "/Chart/GhostIC_jeQRdkKWUU.png",
+        "id": 14,
+        "color": 7559063,
+        "emoji": "<:Ghost:880800547412774983>",
+        "z_move": "Never-Ending Nightmare",
+        "max_move": "Max Phantasm",
+        "chart": {
+            "14": 2.0,
+            "16": 2.0,
+            "8": 0.5,
+            "12": 0.5,
+            "1": 0,
+            "7": 0
+        },
+        "banner": "/Banners/Ghost_-8cmW_6pBqM.png"
+    },
+    {
+        "name": "Dragon",
+        "icon": "/Chart/DragonIC_n9B85giAn.png",
+        "id": 15,
+        "color": 7288316,
+        "emoji": "<:Dragon:880800547245031435>",
+        "z_move": "Devastating Drake",
+        "max_move": "Max Wyrmwind",
+        "chart": {
+            "6": 2.0,
+            "15": 2.0,
+            "18": 2.0,
+            "2": 0.5,
+            "3": 0.5,
+            "4": 0.5,
+            "5": 0.5
+        },
+        "banner": "/Banners/Dragon_fxDjF0oKbiw.png"
+    },
+    {
+        "name": "Dark",
+        "icon": "/Chart/DarkIC_FwzVeCOWx.png",
+        "id": 16,
+        "color": 7362374,
+        "emoji": "<:Dark:880800547572183050>",
+        "z_move": "Black Hole Eclipse",
+        "max_move": "Max Darkness",
+        "chart": {
+            "7": 2.0,
+            "12": 2.0,
+            "18": 2.0,
+            "14": 0.5,
+            "16": 0.5,
+            "11": 0
+        },
+        "banner": "/Banners/Dark_ZKw4hIYdnp.png"
+    },
+    {
+        "name": "Steel",
+        "icon": "/Chart/SteelIC_0wxMPLo8K.png",
+        "id": 17,
+        "color": 12040142,
+        "emoji": "<:Steel:880800547534430238>",
+        "z_move": "Corkscrew Crash",
+        "max_move": "Max Steelspike",
+        "chart": {
+            "2": 2.0,
+            "7": 2.0,
+            "9": 2.0,
+            "1": 0.5,
+            "5": 0.5,
+            "6": 0.5,
+            "10": 0.5,
+            "11": 0.5,
+            "12": 0.5,
+            "13": 0.5,
+            "15": 0.5,
+            "17": 0.5,
+            "18": 0.5,
+            "8": 0
+        },
+        "banner": "/Banners/Steel_lSEoLioGM.png"
+    },
+    {
+        "name": "Fairy",
+        "icon": "/Chart/FairyIC_eeeXGKfZv0.png",
+        "id": 18,
+        "color": 14058925,
+        "emoji": "<:Fairy:880800547505045504>",
+        "z_move": "Twinkle Tackle",
+        "max_move": "Max Starfall",
+        "chart": {
+            "8": 2.0,
+            "17": 2.0,
+            "7": 0.5,
+            "12": 0.5,
+            "16": 0.5,
+            "15": 0
+        },
+        "banner": "/Banners/Fairy_avtBHCy-TB.png"
+    }
+]

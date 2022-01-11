@@ -15,14 +15,21 @@
 from __future__ import annotations
 
 from dataclasses import asdict, astuple, dataclass, field
-from typing import Callable, Iterable, Union
+from json import JSONDecoder, JSONEncoder
+from typing import Any, Callable, Iterable, Union
 
 from asyncpg.connection import Connection
 from frozendict import frozendict
 
-from src.enums.moves import Moves
+from src.structures.move import Move, deduceMove, getMove
 
-__all__ = ("Movepool",)
+__all__ = (
+    "Movepool",
+    "MovepoolEncoder",
+    "MovepoolDecoder",
+)
+
+move_set = frozenset[Move]
 
 
 # noinspection PyArgumentList
@@ -32,16 +39,18 @@ class Movepool:
     Class which represents a movepool
     """
 
-    level: frozendict[int, frozenset[Moves]] = field(default_factory=frozendict)
-    tm: frozenset[Moves] = field(default_factory=frozenset)
-    event: frozenset[Moves] = field(default_factory=frozenset)
-    tutor: frozenset[Moves] = field(default_factory=frozenset)
-    egg: frozenset[Moves] = field(default_factory=frozenset)
-    levelup: frozenset[Moves] = field(default_factory=frozenset)
-    other: frozenset[Moves] = field(default_factory=frozenset)
+    level: frozendict[int, move_set] = field(default_factory=frozendict)
+    tm: move_set = field(default_factory=frozenset)
+    event: move_set = field(default_factory=frozenset)
+    tutor: move_set = field(default_factory=frozenset)
+    egg: move_set = field(default_factory=frozenset)
+    levelup: move_set = field(default_factory=frozenset)
+    other: move_set = field(default_factory=frozenset)
 
     def __post_init__(self):
-        self.level = frozendict({k: frozenset(v) for k, v in self.level.items()})
+        self.level = frozendict(
+            {k: frozenset(v) for k, v in self.level.items()}
+        )
         self.tm = frozenset(self.tm)
         self.event = frozenset(self.event)
         self.tutor = frozenset(self.tutor)
@@ -90,7 +99,7 @@ class Movepool:
     def operator(
         self,
         other: Movepool,
-        method: Callable[[frozenset[Moves], frozenset[Moves]], frozenset[Moves]],
+        method: Callable[[move_set, move_set], move_set],
     ) -> Movepool:
         """This method allows to perform operations on the movepool
 
@@ -98,7 +107,7 @@ class Movepool:
         ----------
         other : Movepool
             Movepool to apply operations against
-        method : Callable[ [frozenset[Moves], frozenset[Moves]], frozenset[Moves] ]
+        method : Callable[ [move_set, move_set], move_set ]
             Method to be used
 
         Returns
@@ -108,7 +117,10 @@ class Movepool:
         """
         level: dict[int, frozenset] = {}
 
-        for index in set(self.level) | set(other.level):
+        level_indexes: list[int] = list(self.level | other.level)
+        level_indexes.sort()
+
+        for index in level_indexes:
             first = self.level.get(index, set())
             last = other.level.get(index, set())
             if data := method(first, last):
@@ -184,12 +196,12 @@ class Movepool:
         """
         return self.operator(other, method=lambda x, y: x & y)
 
-    def __call__(self) -> list[Moves]:
+    def __call__(self) -> list[Move]:
         """Returns all moves that belong to this instance in alphabetical order.
 
         Returns
         -------
-        list[Moves]
+        list[Move]
             List of moves that belong to this instance.
         """
         moves = set()
@@ -203,13 +215,13 @@ class Movepool:
         moves.sort(key=str)
         return moves
 
-    def __contains__(self, item: Moves) -> bool:
+    def __contains__(self, item: Move) -> bool:
         """Check if movepool contains a move.
 
         Parameters
         ----------
-        item : Moves
-            Moves to check
+        item : Move
+            Move to check
 
         Returns
         -------
@@ -221,7 +233,7 @@ class Movepool:
     def __setitem__(
         self,
         key: str,
-        value: Union[set[Moves], dict[int, set[Moves]]],
+        value: Union[set[Move], dict[int, set[Move]]],
     ):
         """Assigning method for movepool
 
@@ -229,43 +241,46 @@ class Movepool:
         ----------
         key : str
             Element in specific to set
-        value : Union[frozenset[Moves], frozendict[int, frozenset[Moves]]]
+        value : Union[move_set, frozendict[int, move_set]]
             Values to set
         """
         if key == "level":
             if isinstance(value, dict):
                 level = {}
                 for key, value in value.items():
+                    key = str(key)
+                    if not key.isdigit():
+                        continue
+
                     moves = set()
                     for item in value:
-                        if data := Moves.fetch_by_name(item):
+                        if data := deduceMove(item):
                             if not data.banned:
                                 moves.add(data)
-                    level[key] = frozenset(moves)
+                    level[int(key)] = frozenset(moves)
                 self.level = frozendict(level)
         else:
             moves = set()
             for item in value:
-                if data := Moves.fetch_by_name(item):
+                if data := deduceMove(item):
                     if not data.banned:
                         moves.add(data)
 
             moves = frozenset(moves)
 
-            item = key.lower()
-
-            if item == "tm":
-                self.tm = moves
-            elif item == "event":
-                self.event = moves
-            elif item == "tutor":
-                self.tutor = moves
-            elif item == "egg":
-                self.egg = moves
-            elif item in ["levelup", "level-up"]:
-                self.levelup = moves
-            else:
-                self.other = moves
+            match key.lower():
+                case "tm":
+                    self.tm = moves
+                case "event":
+                    self.event = moves
+                case "tutor":
+                    self.tutor = moves
+                case "egg":
+                    self.egg = moves
+                case "levelup" | "level-up":
+                    self.levelup = moves
+                case _:
+                    self.other = moves
 
     def __getitem__(self, key: str):
         """Get method for movepool
@@ -277,7 +292,7 @@ class Movepool:
 
         Returns
         -------
-        Union[frozenset[Moves], frozendict[int, frozenset[Moves]]]
+        Union[move_set, frozendict[int, move_set]]
             Values that belong to the movepool
 
         Raises
@@ -285,34 +300,51 @@ class Movepool:
         KeyError
             If the provided key is not found
         """
-        item = key.lower()
-        if item == "tm":
-            return self.tm
-        if item == "event":
-            return self.event
-        if item == "tutor":
-            return self.tutor
-        if item == "egg":
-            return self.egg
-        if item in ["levelup", "level-up"]:
-            return self.levelup
-        if item == "other":
-            return self.other
-        raise KeyError(key)
+        match key.lower():
+            case "tm":
+                return self.tm
+            case "event":
+                return self.event
+            case "tutor":
+                return self.tutor
+            case "egg":
+                return self.egg
+            case "levelup" | "level-up":
+                return self.levelup
+            case "other":
+                return self.other
+            case _:
+                raise KeyError(key)
 
-    def without_moves(self, to_remove: Iterable[Moves] | Movepool):
+    def without_moves(self, to_remove: Iterable[Move] | Movepool) -> Movepool:
+        """This function returns a copy of the movepool without specific moves
+
+        Parameters
+        ----------
+        to_remove : Iterable[Move] | Movepool
+            moves to remove
+
+        Returns
+        -------
+        Movepool
+            resulting movepool
+        """
 
         total_remove = to_remove
 
         if isinstance(to_remove, Movepool):
             total_remove = total_remove()
 
-        movepool = Movepool(
+        return Movepool(
             level=frozendict(
                 {
                     k: entry
                     for k, v in self.level.items()
-                    if (entry := frozenset({x for x in v if x not in total_remove}))
+                    if (
+                        entry := frozenset(
+                            {x for x in v if x not in total_remove}
+                        )
+                    )
                 }
             ),
             tm=frozenset({x for x in self.tm if x not in total_remove}),
@@ -321,7 +353,6 @@ class Movepool:
             egg=frozenset({x for x in self.egg if x not in total_remove}),
             other=frozenset({x for x in self.other if x not in total_remove}),
         )
-        return movepool
 
     @classmethod
     def from_dict(cls, **kwargs) -> Movepool:
@@ -333,21 +364,56 @@ class Movepool:
             Generated movepool
         """
         movepool = Movepool()
-        movepool["level"] = kwargs.get("level", {})
-        for item in ["tm", "event", "tutor", "egg", "levelup", "other"]:
-            movepool[item] = kwargs.get(item, set())
+        for item in movepool.__slots__:
+            default = {} if item == "level" else set()
+            movepool[item] = kwargs.get(item, default)
         return movepool
 
     @property
-    def level_moves(self) -> frozenset[Moves]:
+    def as_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:
+        """Returns a Movepool as dict with moves as strings
+
+        Returns
+        -------
+        dict[str, list[str] | dict[int, list[str]]]
+            generated values
+        """
+
+        def foo(moves: frozenset[Move]) -> list[str]:
+            """Inner method for conversion
+
+            Parameters
+            ----------
+            moves : frozenset[Move]
+                moves to convert
+
+            Returns
+            -------
+            list[str]
+                List of move IDs
+            """
+            return [move.id for move in moves]
+
+        return dict(
+            level={k: foo(v) for k, v in self.level.items()},
+            egg=foo(self.egg),
+            event=foo(self.event),
+            tm=foo(self.tm),
+            tutor=foo(self.tutor),
+            levelup=foo(self.levelup),
+            other=foo(self.other),
+        )
+
+    @property
+    def level_moves(self) -> move_set:
         """Moves the pokemon can learn through level
 
         Returns
         -------
-        frozenset[Moves]
+        move_set
             Frozenset out of level moves
         """
-        moves: set[Moves] = set()
+        moves: set[Move] = set()
         for level in self.level.values():
             moves.update(level)
         return frozenset(moves)
@@ -368,7 +434,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items: dict[str, Union[set[Moves], dict[int, set[Moves]]]] = dict(level={})
+        items = dict(level={})
         async for item in connection.cursor(
             """--sql
                 SELECT MOVE, METHOD
@@ -379,7 +445,7 @@ class Movepool:
         ):
             move, method = item["move"], item["method"]
             items.setdefault(method, set())
-            items[method].add(Moves[move])
+            items[method].add(getMove(move))
 
         async for item in connection.cursor(
             """--sql
@@ -391,7 +457,7 @@ class Movepool:
         ):
             move, level = item["move"], item["level"]
             items["level"].setdefault(level, set())
-            items["level"][level].add(Moves[move])
+            items["level"][level].add(getMove(move))
 
         return cls.from_dict(**items)
 
@@ -423,9 +489,7 @@ class Movepool:
         movepool_elements = []
         learnset_elements = []
 
-        move_set = frozenset[Moves]
-        data: dict[str, Union[move_set, frozendict[int, move_set]]] = {
-            "LEVEL": self.level,
+        data = {
             "TM": self.tm,
             "EVENT": self.event,
             "TUTOR": self.tutor,
@@ -434,29 +498,27 @@ class Movepool:
             "OTHER": self.other,
         }
 
-        for key, value in data.items():
-
-            if isinstance(value, frozendict):
-                for level, values in value.items():
-                    learnset_elements.extend(
-                        (
-                            id,
-                            m.name,
-                            level,
-                        )
-                        for m in values
-                        if not m.banned
-                    )
-            elif isinstance(value, frozenset):
-                movepool_elements.extend(
-                    (
-                        id,
-                        m.name,
-                        key,
-                    )
-                    for m in value
-                    if not m.banned
+        for level, values in self.level.items():
+            learnset_elements.extend(
+                (
+                    id,
+                    m.name,
+                    level,
                 )
+                for m in values
+                if not m.banned
+            )
+
+        for key, value in data.items():
+            movepool_elements.extend(
+                (
+                    id,
+                    m.name,
+                    key,
+                )
+                for m in value
+                if not m.banned
+            )
 
         if movepool_elements:
             await connection.executemany(
@@ -476,3 +538,49 @@ class Movepool:
                 """,
                 learnset_elements,
             )
+
+
+class MovepoolEncoder(JSONEncoder):
+    """Movepool encoder"""
+
+    def default(self, o):
+        if isinstance(o, Movepool):
+            data = {}
+            for item in o.__slots__:
+                if isinstance(element := o[item], frozendict):
+                    data[item] = {
+                        k: sorted(map(lambda x: x.id, v))
+                        for k, v in element.items()
+                    }
+                elif isinstance(element, frozenset):
+                    data[item] = sorted(map(lambda x: x.id, element))
+            return data
+        return super(MovepoolEncoder, self).default(o)
+
+
+class MovepoolDecoder(JSONDecoder):
+    """Movepool decoder"""
+
+    def __init__(self, *args, **kwargs):
+        super(MovepoolDecoder, self).__init__(
+            object_hook=self.object_hook,
+            *args,
+            **kwargs,
+        )
+
+    def object_hook(self, dct: dict[str, Any]):
+        """Decoder method for dicts
+
+        Parameters
+        ----------
+        dct : dict[str, Any]
+            Input
+
+        Returns
+        -------
+        Any
+            Result
+        """
+        if any(i in dct for i in Movepool.__slots__):
+            return Movepool.from_dict(**dct)
+        return dct

@@ -16,12 +16,18 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from copy import copy
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import asdict, dataclass, field
+from difflib import get_close_matches
+from json import JSONDecoder, JSONEncoder, load
+from re import split
+from typing import Any, Callable, Iterable, Optional
 
-from src.enums.abilities import Abilities
-from src.enums.mon_types import Types
+from frozendict import frozendict
+
+from src.structures.ability import Ability
+from src.structures.mon_typing import Typing
 from src.structures.movepool import Movepool
+from src.utils.functions import fix
 
 __all__ = (
     "Species",
@@ -34,7 +40,14 @@ __all__ = (
     "Pokemon",
     "CustomMega",
     "Variant",
+    "ALL_SPECIES",
+    "SPECIES_BY_NAME",
 )
+
+ALL_SPECIES = frozendict()
+SPECIES_BY_NAME = frozendict()
+
+_BEASTBOOST = Ability.from_ID(item="BEASTBOOST")
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -47,7 +60,7 @@ class Species(metaclass=ABCMeta):
     base_image_shiny: Optional[str] = None
     female_image: Optional[str] = None
     female_image_shiny: Optional[str] = None
-    types: frozenset[Types] = field(default_factory=frozenset)
+    types: frozenset[Typing] = field(default_factory=frozenset)
     height: int = 0
     weight: int = 0
     HP: int = 0
@@ -60,12 +73,26 @@ class Species(metaclass=ABCMeta):
     evolves_from: Optional[str] = None
     evolves_to: frozenset[str] = field(default_factory=frozenset)
     movepool: Movepool = field(default_factory=Movepool)
-    abilities: frozenset[Abilities] = field(default_factory=frozenset)
+    abilities: frozenset[Ability] = field(default_factory=frozenset)
 
     def __post_init__(self):
         self.evolves_to = frozenset(self.evolves_to)
         self.types = frozenset(self.types)
         self.abilities = frozenset(self.abilities)
+
+    @classmethod
+    def all(cls):
+        return frozenset(i for i in ALL_SPECIES.values() if isinstance(i, cls))
+
+    @property
+    def species_evolves_to(self) -> list[Species]:
+        return [
+            mon for item in self.evolves_to if (mon := self.from_ID(item))
+        ]
+
+    @property
+    def species_evolves_from(self) -> Optional[Species]:
+        return self.from_ID(self.evolves_from)
 
     @property
     @abstractmethod
@@ -102,6 +129,99 @@ class Species(metaclass=ABCMeta):
         int
             value
         """
+
+    @classmethod
+    def deduce(cls, item: str):
+        """This is a function which allows to obtain the species given
+        an ID or multiple values.
+
+        Parameters
+        ----------
+        item : str
+            Item to look for
+
+        Returns
+        -------
+        Optional[Type[Species]]
+            result
+        """
+        aux: list[str] = []
+        items: set[cls] = set()
+
+        if not isinstance(item, Iterable):
+            item = [item]
+
+        for elem in item:
+            if isinstance(elem, str):
+                aux.append(elem)
+            elif isinstance(elem, cls):
+                items.add(elem)
+
+        if to_search := cls.all():
+            MOD1 = {i.id: i for i in to_search}
+            MOD2 = {i.name: i for i in to_search}
+        else:
+            MOD1 = ALL_SPECIES
+            MOD2 = SPECIES_BY_NAME
+
+        methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
+            (MOD1, fix),
+            (MOD2, lambda x: str(x).title()),
+        ]
+
+        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+
+            if not elem:
+                continue
+
+            for elems, method in methods:
+
+                elem = method(elem)
+
+                if (value := elem.removeprefix(method("Galarian"))) != elem:
+                    elem = method(f"{value} Galar")
+                if (value := elem.removeprefix(method("Hisuian"))) != elem:
+                    elem = method(f"{value} Hisui")
+                elem = elem.removeprefix(method("Kantoian"))
+
+                if data := elems.get(elem):
+                    items.add(data)
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=elems,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    items.add(elems[data])
+
+        if len(items) == 2:
+            mon1, mon2 = items
+            return Fusion(mon1=mon1, mon2=mon2)
+
+        if items:
+            return items.pop()
+
+    @classmethod
+    def from_ID(cls, item: str):
+        """This method returns the species given exact IDs
+
+        Returns
+        -------
+        Optional[Species]
+            result
+        """
+        if isinstance(item, cls):
+            return item
+        elif isinstance(item, str):
+            if to_search := cls.all():
+                values = {i.id: i for i in to_search}
+            else:
+                values = ALL_SPECIES
+            items = {x for i in item.split("_") if (x := values.get(i))}
+            if len(items) == 2:
+                items = {Fusion(**items)}
+            if items and isinstance(data := items.pop(), cls):
+                return data
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -189,7 +309,7 @@ class UltraBeast(Species):
     def __post_init__(self):
         self.abilities = frozenset(
             {
-                Abilities.BEASTBOOST,
+                _BEASTBOOST,
             }
         )
 
@@ -228,7 +348,6 @@ class Fakemon(Species):
         if max(stats) > 5:
             raise Exception("Maximum stat value is 5")
 
-    # noinspection PyPep8Naming
     def set_stats(
         self,
         HP: int = 3,
@@ -257,11 +376,42 @@ class Fakemon(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if Abilities.BEASTBOOST in self.abilities else 2
+        return 1 if _BEASTBOOST in self.abilities else 2
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return Abilities.BEASTBOOST not in self.abilities
+        return _BEASTBOOST not in self.abilities
+
+    @classmethod
+    def deduce(cls, item: str):
+        """Method deduce but filtered, (fakemon that evolved from a canon species)
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[Fakemon]
+            Result
+        """
+        if mon := super().deduce(item):
+            if not isinstance(mon, Fusion):
+                return Fakemon(evolves_from=mon.id)
+
+    @classmethod
+    def from_ID(cls, item: str) -> None:
+        """Method from ID but filtered, (fakemon that evolved from a canon species)
+
+        Parameters
+        ----------
+        item : str
+            placeholder
+        """
+        if mon := super().from_ID(item):
+            if not isinstance(mon, Fusion):
+                return Fakemon(evolves_from=mon.id)
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -300,6 +450,37 @@ class CustomMega(Species):
     def can_have_special_abilities(self) -> bool:
         return False
 
+    @classmethod
+    def deduce(cls, item: str) -> Optional[CustomMega]:
+        """Method deduce but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[CustomMega]
+            Result
+        """
+        if mon := super().deduce(item):
+            if not isinstance(mon, Fusion):
+                return CustomMega(base=mon)
+
+    @classmethod
+    def from_ID(cls, item: str) -> None:
+        """Method from ID but filtered
+
+        Parameters
+        ----------
+        item : str
+            placeholder
+        """
+        if mon := super().from_ID(item):
+            if not isinstance(mon, Fusion):
+                return CustomMega(base=mon)
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class Variant(Species):
@@ -336,16 +517,52 @@ class Variant(Species):
     def max_amount_abilities(self) -> int:
         return (
             1
-            if Abilities.BEASTBOOST in self.abilities
+            if _BEASTBOOST in self.abilities
             else self.base.max_amount_abilities
         )
 
     @property
     def can_have_special_abilities(self) -> bool:
         return (
-            Abilities.BEASTBOOST not in self.abilities
+            _BEASTBOOST not in self.abilities
             and self.base.can_have_special_abilities
         )
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[Variant]:
+        """Method deduce but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[Variant]
+            Result
+        """
+        if mon := super().deduce(item):
+            if not isinstance(mon, Fusion):
+                return Variant(base=mon, name=f"Variant {mon.name.title()}")
+
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[Variant]:
+        """Method from ID but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[Variant]
+            Result
+        """
+        if mon := super().from_ID(item):
+            if not isinstance(mon, Fusion):
+                return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -385,16 +602,27 @@ class Fusion(Species):
             self.evolves_from = item1, item2
 
     @property
-    def fusion_evolves_to(self):
-        return frozenset(Fusion(a, b) for a, b in self.evolves_to)
+    def species_evolves_to(self) -> list[Fusion]:
+        return [
+            Fusion(mon1=a, mon2=b)
+            for a, b in zip(
+                self.mon1.species_evolves_to,
+                self.mon2.species_evolves_to,
+            )
+        ]
 
     @property
-    def fusion_evolves_from(self) -> Optional[Fusion]:
-        if item := self.evolves_from:
-            return Fusion(*item)
+    def species_evolves_from(self) -> Optional[Fusion]:
+        if all(
+            (
+                mon1 := self.mon1.species_evolves_from,
+                mon2 := self.mon2.species_evolves_from,
+            )
+        ):
+            return Fusion(mon1=mon1, mon2=mon2)
 
     @property
-    def possible_types(self) -> list[set[Types]]:
+    def possible_types(self) -> list[set[Typing]]:
         """This returns a list of valid types for the pokemon
 
         Returns
@@ -404,7 +632,7 @@ class Fusion(Species):
         """
         types1 = self.mon1.types
         types2 = self.mon2.types
-        elements: list[set[Types]] = []
+        elements: list[set[Typing]] = []
         if items := set(types1) | set(types2):
             if len(items) <= 2:
                 elements.append(items)
@@ -426,3 +654,97 @@ class Fusion(Species):
     @property
     def max_amount_abilities(self) -> int:
         return 1
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[Fusion]:
+        """This is a function which allows to obtain the species given
+        an ID or multiple values.
+
+        Parameters
+        ----------
+        item : str
+            Item to look for
+        fusions_allowed : bool, optional
+            If fusions should be used
+
+        Returns
+        -------
+        Optional[Fusion]
+            result
+        """
+        if isinstance(mon := super().deduce(item), cls):
+            return mon
+
+
+class SpeciesEncoder(JSONEncoder):
+    """Species encoder"""
+
+    def default(self, o):
+        """[summary]
+
+        Parameters
+        ----------
+        o : [type]
+            [description]
+
+        Returns
+        -------
+        [type]
+            [description]
+        """
+        if isinstance(o, Species):
+            item = asdict(o)
+            item["abilities"] = [i.id for i in o.abilities]
+            item["types"] = [str(i) for i in o.types]
+            item["movepool"] = o.movepool.as_dict
+            return item
+        return super(SpeciesEncoder, self).default(o)
+
+
+class SpeciesDecoder(JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super(SpeciesDecoder, self).__init__(
+            object_hook=self.object_hook,
+            *args,
+            **kwargs,
+        )
+
+    def object_hook(self, dct: dict[str, Any]):
+        """Converter
+
+        Parameters
+        ----------
+        dct : dict[str, Any]
+            Input
+
+        Returns
+        -------
+        Any
+            Output
+        """
+        if all(i in dct for i in Species.__slots__):
+            dct["abilities"] = Ability.deduce_many(*dct.pop("abilities", []))
+            dct["movepool"] = Movepool.from_dict(**dct.pop("movepool", {}))
+            dct["types"] = Typing.deduce_many(*dct.pop("types", []))
+            match dct.pop("kind", ""):
+                case "Legendary":
+                    return Legendary(**dct)
+                case "Mythical":
+                    return Mythical(**dct)
+                case "UltraBeast":
+                    return UltraBeast(**dct)
+                case "Mega":
+                    return Mega(**dct)
+                case _:
+                    return Pokemon(**dct)
+        return dct
+
+
+with open("resources/species.json", mode="r") as f:
+    entries: list[Species] = load(f, cls=SpeciesDecoder)
+    ALL_SPECIES: frozendict[str, Species] = frozendict(
+        {item.id: item for item in entries}
+    )
+    SPECIES_BY_NAME: frozendict[str, Species] = frozendict(
+        {item.name: item for item in entries}
+    )

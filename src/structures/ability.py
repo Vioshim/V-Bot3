@@ -15,12 +15,26 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import asdict, dataclass
+from difflib import get_close_matches
+from json import JSONDecoder, JSONEncoder, load
+from re import split
+from typing import Any, Optional
 
 from asyncpg import Connection, Record
+from frozendict import frozendict
 
-__all__ = ("Ability", "SpAbility")
+from src.utils.functions import fix
+
+__all__ = (
+    "Ability",
+    "AbilityDecoder",
+    "AbilityEncoder",
+    "SpAbility",
+    "ALL_ABILITIES",
+)
+
+ALL_ABILITIES = frozendict()
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -29,6 +43,7 @@ class Ability:
     Ability class which represents the game provided ones.
     """
 
+    id: str = ""
     name: str = ""
     description: str = ""
 
@@ -42,9 +57,104 @@ class Ability:
         """
         return f"Ability({self.name!r})"
 
+    @classmethod
+    def all(cls) -> frozenset[Ability]:
+        return frozenset(ALL_ABILITIES.values())
+
+    @classmethod
+    def deduce_many(
+        cls,
+        *elems: str,
+        limit_range: Optional[int] = None,
+    ) -> frozenset[Ability]:
+        """This is a method that determines the abilities out of
+        the existing entries, it has a 85% of precision.
+
+        Parameters
+        ----------
+        item : str
+            String to search
+
+        limit_range : int, optional
+            max amount to deduce, defaults to None
+
+        Returns
+        -------
+        frozenset[Ability]
+            Obtained result
+        """
+        items: set[Ability] = set()
+        aux: list[str] = []
+
+        for elem in elems:
+            if isinstance(elem, str):
+                aux.append(elem)
+            elif isinstance(elem, Ability):
+                items.add(elem)
+
+        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+            if data := ALL_ABILITIES.get(elem := fix(elem)):
+                items.add(data)
+            else:
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=ALL_ABILITIES,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    items.add(ALL_ABILITIES[data])
+
+        return frozenset(list(items)[:limit_range])
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[Ability]:
+        """This is a method that determines the ability out of
+        the existing entries, it has a 85% of precision.
+
+        Parameters
+        ----------
+        item : str
+            String to search
+
+        Returns
+        -------
+        Optional[Ability]
+            Obtained result
+        """
+        if isinstance(item, Ability):
+            return item
+        if isinstance(item, str):
+            if data := ALL_ABILITIES.get(item := fix(item)):
+                return data
+            for elem in get_close_matches(
+                item,
+                possibilities=ALL_ABILITIES,
+                n=1,
+                cutoff=0.85,
+            ):
+                return ALL_ABILITIES[elem]
+
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[Ability]:
+        """This is a method that returns an ability given an exact ID.
+
+        Parameters
+        ----------
+        item : str
+            Ability ID to check
+
+        Returns
+        -------
+        Optional[Ability]
+            Obtained result
+        """
+        if isinstance(item, Ability):
+            return item
+        return ALL_ABILITIES.get(item)
+
 
 @dataclass(unsafe_hash=True, slots=True)
-class SpAbility(Ability):
+class SpAbility:
     """
     Special Ability class which inherits from Ability
     """
@@ -72,20 +182,7 @@ class SpAbility(Ability):
         SpAbility
             converted element
         """
-        name, description, origin, pros, cons = (
-            record["name"],
-            record["description"],
-            record["origin"],
-            record["pros"],
-            record["cons"],
-        )
-        return SpAbility(
-            name=name,
-            description=description,
-            origin=origin,
-            pros=pros,
-            cons=cons,
-        )
+        return SpAbility(**dict(record))
 
     @classmethod
     async def fetch(
@@ -109,10 +206,10 @@ class SpAbility(Ability):
         """
         if entry := await connection.fetchrow(
             """--sql
-                    SELECT *
-                    FROM SPECIAL_ABILITIES
-                    WHERE ID = $1;
-                    """,
+            SELECT *
+            FROM SPECIAL_ABILITIES
+            WHERE ID = $1;
+            """,
             idx,
         ):
             return cls.convert(entry)
@@ -150,3 +247,47 @@ class SpAbility(Ability):
             self.pros,
             self.cons,
         )
+
+
+class AbilityEncoder(JSONEncoder):
+    """Ability encoder"""
+
+    def default(self, o):
+        if isinstance(o, (Ability, SpAbility)):
+            return asdict(o)
+        return super(AbilityEncoder, self).default(o)
+
+
+class AbilityDecoder(JSONDecoder):
+    """Ability decoder"""
+
+    def __init__(self, *args, **kwargs):
+        super(AbilityDecoder, self).__init__(
+            object_hook=self.object_hook,
+            *args,
+            **kwargs,
+        )
+
+    def object_hook(self, dct: dict[str, Any]):
+        """Decoder method for dicts
+
+        Parameters
+        ----------
+        dct : dict[str, Any]
+            Input
+
+        Returns
+        -------
+        Any
+            Result
+        """
+        if all(x in dct for x in SpAbility.__slots__):
+            return SpAbility(**dct)
+        if all(x in dct for x in Ability.__slots__):
+            return Ability(**dct)
+        return dct
+
+
+with open("resources/abilities.json", mode="r") as f:
+    abilities: list[Ability] = load(f, cls=AbilityDecoder)
+    ALL_ABILITIES = frozendict({ab.id: ab for ab in abilities})
