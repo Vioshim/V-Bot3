@@ -147,7 +147,9 @@ class Species(metaclass=ABCMeta):
         aux: list[str] = []
         items: set[cls] = set()
 
-        if not isinstance(item, Iterable):
+        if isinstance(item, str):
+            item = [item]
+        elif not isinstance(item, Iterable):
             item = [item]
 
         for elem in item:
