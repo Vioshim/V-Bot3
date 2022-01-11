@@ -32,7 +32,6 @@ __all__ = (
 move_set = frozenset[Move]
 
 
-# noinspection PyArgumentList
 @dataclass(unsafe_hash=True, repr=False, slots=True)
 class Movepool:
     """
