@@ -27,11 +27,11 @@ from discord.utils import utcnow
 from frozendict import frozendict
 from nested_lookup import nested_lookup
 
-from src.enums.pronouns import Pronoun
 from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.movepool import Movepool
+from src.structures.pronouns import Pronoun
 from src.structures.species import (
     CustomMega,
     Fakemon,

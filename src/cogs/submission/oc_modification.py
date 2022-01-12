@@ -29,15 +29,14 @@ from discord import (
 )
 from discord.ui import Button, Select, View, button, select
 
-from src.structures.move import ALL_MOVES
-from src.structures.ability import ALL_ABILITIES
-from src.enums.pronouns import Pronoun
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.text_input import TextInput
 from src.pagination.view_base import Basic
-from src.structures.ability import SpAbility
+from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character
+from src.structures.move import ALL_MOVES
+from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
 from src.utils.functions import int_check
 from src.views import ImageView

@@ -9,6 +9,7 @@
 | `CustomBot`           | class instance of `discord.commands.ext.bot` |
 | `ASSOCIATIONS`        | dict of Species and Character                |
 | `Character`           | Character Class                              |
+| `Pronoun`             | Pronouns Enum Class                          |
 | `CustomMegaCharacter` | Custom Mega Character Class                  |
 | `FakemonCharacter`    | Fakemon Character Class                      |
 | `FusionCharacter`     | Fusion Character Class                       |

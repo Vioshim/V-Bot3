@@ -182,7 +182,7 @@ class Move:
         if isinstance(item, Move):
             return item
         if isinstance(item, str):
-            return ALL_MOVES.get(item)
+            return ALL_MOVES.get(fix(item))
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Move]:

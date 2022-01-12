@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
+from src.utils.functions import fix
 
 
 @dataclass(unsafe_hash=True)
@@ -98,12 +99,12 @@ class Pronoun(Enum):
             name = item.__class__.__name__
             raise TypeError(f"Expected str but received {name!r} instead.")
 
-        match item.lower():
-            case x if "them" in x:
+        match fix(item):
+            case x if "THEM" in x:
                 return Pronoun.Them
-            case x if "female" in x or "she" in x:
+            case x if "FEMALE" in x or "SHE" in x:
                 return Pronoun.She
-            case x if "male" in x or "he" in x:
+            case x if "MALE" in x or "HE" in x:
                 return Pronoun.He
             case _:
                 return Pronoun.Them

@@ -22,6 +22,7 @@ from asyncpg.connection import Connection
 from frozendict import frozendict
 
 from src.structures.move import Move
+from src.utils.functions import fix
 
 __all__ = (
     "Movepool",
@@ -29,7 +30,10 @@ __all__ = (
     "MovepoolDecoder",
 )
 
-move_set = frozenset[Move]
+move_set = set[Move]
+frozen_set = frozenset[Move]
+move_dict = dict[int, move_set]
+frozen_dict = frozendict[int, frozen_set]
 
 
 @dataclass(unsafe_hash=True, repr=False, slots=True)
@@ -38,24 +42,24 @@ class Movepool:
     Class which represents a movepool
     """
 
-    level: frozendict[int, move_set] = field(default_factory=frozendict)
-    tm: move_set = field(default_factory=frozenset)
-    event: move_set = field(default_factory=frozenset)
-    tutor: move_set = field(default_factory=frozenset)
-    egg: move_set = field(default_factory=frozenset)
-    levelup: move_set = field(default_factory=frozenset)
-    other: move_set = field(default_factory=frozenset)
+    level: frozen_dict = field(default_factory=frozen_dict)
+    tm: frozen_set = field(default_factory=frozen_set)
+    event: frozen_set = field(default_factory=frozen_set)
+    tutor: frozen_set = field(default_factory=frozen_set)
+    egg: frozen_set = field(default_factory=frozen_set)
+    levelup: frozen_set = field(default_factory=frozen_set)
+    other: frozen_set = field(default_factory=frozen_set)
 
     def __post_init__(self):
-        self.level = frozendict(
-            {k: frozenset(v) for k, v in self.level.items()}
+        self.level = frozen_dict(
+            {k: frozen_set(v) for k, v in self.level.items()}
         )
-        self.tm = frozenset(self.tm)
-        self.event = frozenset(self.event)
-        self.tutor = frozenset(self.tutor)
-        self.egg = frozenset(self.egg)
-        self.levelup = frozenset(self.levelup)
-        self.other = frozenset(self.other)
+        self.tm = frozen_set(self.tm)
+        self.event = frozen_set(self.event)
+        self.tutor = frozen_set(self.tutor)
+        self.egg = frozen_set(self.egg)
+        self.levelup = frozen_set(self.levelup)
+        self.other = frozen_set(self.other)
 
     def __repr__(self) -> str:
         """Repr Method
@@ -98,7 +102,7 @@ class Movepool:
     def operator(
         self,
         other: Movepool,
-        method: Callable[[move_set, move_set], move_set],
+        method: Callable[[frozen_set, frozen_set], frozen_set],
     ) -> Movepool:
         """This method allows to perform operations on the movepool
 
@@ -106,7 +110,7 @@ class Movepool:
         ----------
         other : Movepool
             Movepool to apply operations against
-        method : Callable[ [move_set, move_set], move_set ]
+        method : Callable[ [frozen_set, frozen_set], frozen_set ]
             Method to be used
 
         Returns
@@ -114,7 +118,7 @@ class Movepool:
         Movepool
             Resulting movepool
         """
-        level: dict[int, frozenset] = {}
+        level: frozen_dict = {}
 
         level_indexes: list[int] = list(self.level | other.level)
         level_indexes.sort()
@@ -123,10 +127,10 @@ class Movepool:
             first = self.level.get(index, set())
             last = other.level.get(index, set())
             if data := method(first, last):
-                level[index] = frozenset(data)
+                level[index] = frozen_set(data)
 
         return Movepool(
-            level=frozendict(level),
+            level=frozen_dict(level),
             tm=method(self.tm, other.tm),
             egg=method(self.egg, other.egg),
             event=method(self.event, other.event),
@@ -243,40 +247,42 @@ class Movepool:
         value : Union[move_set, frozendict[int, move_set]]
             Values to set
         """
-        if key == "level":
+        key = fix(key)
+
+        if key == "LEVEL":
             if isinstance(value, dict):
-                level = {}
+                level: move_dict = {}
                 for key, value in value.items():
                     key = str(key)
                     if not key.isdigit():
                         continue
 
-                    moves = set()
+                    moves = move_set()
                     for item in value:
                         if data := Move.deduce(item):
                             if not data.banned:
                                 moves.add(data)
-                    level[int(key)] = frozenset(moves)
-                self.level = frozendict(level)
+                    level[int(key)] = frozen_set(moves)
+                self.level = frozen_dict(level)
         else:
-            moves = set()
+            moves = move_set()
             for item in value:
                 if data := Move.deduce(item):
                     if not data.banned:
                         moves.add(data)
 
-            moves = frozenset(moves)
+            moves = frozen_set(moves)
 
-            match key.lower():
-                case "tm":
+            match key:
+                case "TM":
                     self.tm = moves
-                case "event":
+                case "EVENT":
                     self.event = moves
-                case "tutor":
+                case "TUTOR":
                     self.tutor = moves
-                case "egg":
+                case "EGG":
                     self.egg = moves
-                case "levelup" | "level-up":
+                case "LEVELUP":
                     self.levelup = moves
                 case _:
                     self.other = moves
@@ -299,18 +305,18 @@ class Movepool:
         KeyError
             If the provided key is not found
         """
-        match key.lower():
-            case "tm":
+        match fix(key):
+            case "TM":
                 return self.tm
-            case "event":
+            case "EVENT":
                 return self.event
-            case "tutor":
+            case "TUTOR":
                 return self.tutor
-            case "egg":
+            case "EGG":
                 return self.egg
-            case "levelup" | "level-up":
+            case "LEVELUP":
                 return self.levelup
-            case "other":
+            case "OTHER":
                 return self.other
             case _:
                 raise KeyError(key)
@@ -334,23 +340,23 @@ class Movepool:
         if isinstance(to_remove, Movepool):
             total_remove = total_remove()
 
+        def foo(moves: Iterable[Move]):
+            items = sorted(move for move in moves if move not in total_remove)
+            return frozen_set(items)
+
         return Movepool(
-            level=frozendict(
+            level=frozen_dict(
                 {
                     k: entry
-                    for k, v in self.level.items()
-                    if (
-                        entry := frozenset(
-                            {x for x in v if x not in total_remove}
-                        )
-                    )
+                    for k, v in sorted(self.level.items())
+                    if (entry := foo(v))
                 }
             ),
-            tm=frozenset({x for x in self.tm if x not in total_remove}),
-            event=frozenset({x for x in self.event if x not in total_remove}),
-            tutor=frozenset({x for x in self.tutor if x not in total_remove}),
-            egg=frozenset({x for x in self.egg if x not in total_remove}),
-            other=frozenset({x for x in self.other if x not in total_remove}),
+            tm=foo(self.tm),
+            event=foo(self.event),
+            tutor=foo(self.event),
+            egg=foo(self.egg),
+            other=foo(self.other),
         )
 
     @classmethod
@@ -364,8 +370,10 @@ class Movepool:
         """
         movepool = Movepool()
         for item in movepool.__slots__:
-            default = {} if item == "level" else set()
-            movepool[item] = kwargs.get(item, default)
+            if item == "level":
+                movepool[item] = kwargs.get(item, {})
+            else:
+                movepool[item] = kwargs.get(item, set())
         return movepool
 
     @property
@@ -391,10 +399,10 @@ class Movepool:
             list[str]
                 List of move IDs
             """
-            return [move.id for move in moves]
+            return sorted(move.id for move in moves)
 
         return dict(
-            level={k: foo(v) for k, v in self.level.items()},
+            level={k: foo(v) for k, v in sorted(self.level.items())},
             egg=foo(self.egg),
             event=foo(self.event),
             tm=foo(self.tm),
@@ -433,7 +441,17 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        items = dict(level={})
+        item_set = set[Move]
+        level_set = dict[str, item_set]
+        items = dict(
+            level=level_set(),
+            egg=item_set(),
+            event=item_set(),
+            tm=item_set(),
+            tutor=item_set(),
+            levelup=item_set(),
+            other=item_set(),
+        )
         async for item in connection.cursor(
             """--sql
                 SELECT MOVE, METHOD
@@ -488,14 +506,14 @@ class Movepool:
         movepool_elements = []
         learnset_elements = []
 
-        data = {
-            "TM": self.tm,
-            "EVENT": self.event,
-            "TUTOR": self.tutor,
-            "EGG": self.egg,
-            "LEVEL-UP": self.levelup,
-            "OTHER": self.other,
-        }
+        data = dict(
+            TM=self.tm,
+            EVENT=self.event,
+            TUTOR=self.tutor,
+            EGG=self.egg,
+            LEVELUP=self.levelup,
+            OTHER=self.other,
+        )
 
         for level, values in self.level.items():
             learnset_elements.extend(

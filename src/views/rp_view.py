@@ -58,7 +58,7 @@ class RPView(View):
         if not (member := interaction.guild.get_member(self.member_id)):
             await resp.send_message("User isn't here anymore.", ephemeral=True)
             return False
-        if registered not in member:
+        if registered not in member.roles:
             await resp.send_message("User is no longer registered.", ephemeral=True)
             return False
 
