@@ -1010,10 +1010,6 @@ class Submission(Cog):
                                 item.location = msg.channel.id
                                 await self.oc_update(item)
                                 await item.upsert(db)
-            finally:
-                if message.author != self.bot.user:
-                    with suppress(DiscordException):
-                        await message.delete()
 
 
 def setup(bot: CustomBot) -> None:

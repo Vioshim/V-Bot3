@@ -100,11 +100,11 @@ class Pronoun(Enum):
             raise TypeError(f"Expected str but received {name!r} instead.")
 
         match fix(item):
-            case x if "THEM" in x:
+            case x if "THEM" in x or "HELICOPTER" in x:
                 return Pronoun.Them
-            case x if "FEMALE" in x or "SHE" in x:
+            case x if "FEMALE" in x or "SHE" in x or "HER" in x or "HERS" in x:
                 return Pronoun.She
-            case x if "MALE" in x or "HE" in x:
+            case x if "MALE" in x or "HE" in x or "HIM" in x or "HIS" in x:
                 return Pronoun.He
             case _:
                 return Pronoun.Them
