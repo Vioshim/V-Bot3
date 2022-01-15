@@ -350,7 +350,7 @@ class InformationView(View):
                 title = f"{title} - Move Banned"
             fields = [
                 dict(name="Base", value=str(item.base)),
-                dict(name="Acc", value=str(item.acc)),
+                dict(name="Accuracy", value=str(item.accuracy)),
                 dict(name="PP", value=str(item.pp)),
             ]
             
