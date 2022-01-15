@@ -362,7 +362,7 @@ class InformationView(View):
                 index=index,
                 label=item.name,
                 title=title,
-                thumbnail=item.type.icon,
+                thumbnail=item.type.emoji.url,
                 content=item.desc,
                 fields=fields,
             )
