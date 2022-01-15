@@ -120,9 +120,6 @@ class CharactersView(Complex):
         )
         self.embed.title = "Select a character"
 
-    async def interaction_check(self, _: Interaction) -> bool:
-        return True
-
     async def custom_choice(self, sct: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
         for index in sct.values:
@@ -143,11 +140,12 @@ class CharactersView(Complex):
                     view=view,
                     ephemeral=True,
                 )
+            except IndexError:
+                pass
             except Exception as e:
                 self.bot.logger.exception(
-                    "Type: %s, Str: %s",
-                    type(item),
-                    str(item),
+                    "Chunk: %s",
+                    str(chunk),
                     exc_info=e,
                 )
 
