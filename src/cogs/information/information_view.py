@@ -310,7 +310,9 @@ class InformationView(View):
                 self.map_information = [Map(**info) for info in values]
 
         items = []
-        for index, item in enumerate(Ability.all()):
+        abilities = list(Ability.all())
+        abilities.sort(key=lambda x: x.name)
+        for index, item in enumerate(abilities):
             fields = []
             if battle := item.battle:
                 fields.append(
@@ -344,7 +346,9 @@ class InformationView(View):
         )
 
         items = []
-        for index, item in enumerate(Move.all()):
+        moves = list(Move.all())
+        moves.sort(key=lambda x: x.name)
+        for index, item in enumerate(moves):
             title = item.name
             if item.banned:
                 title = f"{title} - Move Banned"
@@ -353,7 +357,7 @@ class InformationView(View):
                 dict(name="Accuracy", value=str(item.accuracy)),
                 dict(name="PP", value=str(item.pp)),
             ]
-            
+
             element = FAQ(
                 index=index,
                 label=item.name,
