@@ -238,7 +238,7 @@ class Typing:
     def all(cls):
         return frozenset(ALL_TYPES.values())
 
-    @@classmethod
+    @classmethod
     def deduce(cls, item: str) -> Optional[Typing]:
         """This is a method that determines the Typing out of
         the existing entries, it has a 85% of precision.
