@@ -33,7 +33,9 @@ from discord.utils import utcnow
 
 from src.cogs.information.area_selection import AreaSelection
 from src.pagination.complex import Complex
+from src.structures.ability import Ability
 from src.structures.bot import CustomBot
+from src.structures.move import Move
 from src.utils.etc import MAP_URL, WHITE_BAR
 
 
@@ -306,6 +308,71 @@ class InformationView(View):
                 self.elements.append(section)
             elif isinstance(values, list):
                 self.map_information = [Map(**info) for info in values]
+
+        items = []
+        for index, item in enumerate(Ability.all()):
+            fields = []
+            if battle := item.battle:
+                fields.append(
+                    dict(name="In Battles", value=battle, inline=False)
+                )
+            if outside := item.outside:
+                fields.append(
+                    dict(name="Out of Battles", value=outside, inline=False)
+                )
+            if random_fact := item.random_fact:
+                fields.append(
+                    dict(name="Random Fact", value=random_fact, inline=False)
+                )
+            items.append(
+                FAQ(
+                    index=index,
+                    label=item.name,
+                    title=item.name,
+                    content=item.description,
+                    fields=fields,
+                )
+            )
+
+        self.elements.append(
+            Section(
+                emoji="<:pokeball:852189914157809705>",
+                description="This is a description of all abilities, of course I haven't defined every single one of them yet, but these descriptions should at least work as heads up.",
+                title="Abilities F.A.Q.",
+                items=frozenset(items),
+            )
+        )
+
+        items = []
+        for index, item in enumerate(Move.all()):
+            title = item.name
+            if item.banned:
+                title = f"{title} - Move Banned"
+            fields = [
+                dict(name="Base", value=str(item.base)),
+                dict(name="Acc", value=str(item.acc)),
+                dict(name="PP", value=str(item.pp)),
+            ]
+            
+            element = FAQ(
+                index=index,
+                label=item.name,
+                title=title,
+                thumbnail=item.type.icon,
+                content=item.desc,
+                fields=fields,
+            )
+            element.embed.color = item.type.color
+            items.append(element)
+
+        self.elements.append(
+            Section(
+                emoji="<:pokeball:852189914157809705>",
+                description="This is a description of all Moves, of course I haven't defined every single one of them yet, but these descriptions should at least work as heads up.",
+                title="Moves F.A.Q.",
+                items=frozenset(items),
+            )
+        )
 
         btn = Button(
             label="Self Roles",

@@ -1,6 +1,7 @@
 # **Cogs**
 
-[![image](https://img.shields.io/discord/719343092963999804?color=%237289DA&label=Parallel%20Yonder&logo=discord&logoColor=white)](https://discord.gg/CENcTvnarE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
+[![Discord](https://img.shields.io/discord/719343092963999804?color=%235865F2&label=Server&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/CENcTvnarE)
 
 This is the folder which contains all the Cogs that V-bot uses, these are done in order to answer to discord events, and answering to those. For more information check Discord.py's documentation for more details on the subject.
 

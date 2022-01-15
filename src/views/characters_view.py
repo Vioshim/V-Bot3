@@ -120,6 +120,9 @@ class CharactersView(Complex):
         )
         self.embed.title = "Select a character"
 
+    async def interaction_check(self, _: Interaction) -> bool:
+        return True
+
     async def custom_choice(self, sct: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
         for index in sct.values:

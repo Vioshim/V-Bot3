@@ -46,6 +46,9 @@ class Ability:
     id: str = ""
     name: str = ""
     description: str = ""
+    battle: str = ""
+    outside: str = ""
+    random_fact: str = ""
 
     def __repr__(self) -> str:
         """Repr Method
@@ -55,7 +58,7 @@ class Ability:
         str
             string representing the ability
         """
-        return f"Ability({self.name!r})"
+        return f"Ability(name={self.name!r})"
 
     @classmethod
     def all(cls) -> frozenset[Ability]:

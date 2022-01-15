@@ -110,7 +110,6 @@ class Typing:
     max_move: str = ""
     chart: frozendict[int, float] = field(default_factory=frozendict)
     banner: str = ""
-    icon: str = ""
 
     def __add__(self, other: Typing) -> Typing:
         """Add Method
@@ -266,6 +265,7 @@ class Typing:
             return ALL_TYPES[elem]
 
     def deduce_many(
+        cls,
         *elems: str,
         range_check: bool = False,
     ) -> frozenset[Typing]:
@@ -288,7 +288,7 @@ class Typing:
         aux: list[str] = []
 
         for elem in elems:
-            if isinstance(elem, Typing):
+            if isinstance(elem, cls):
                 items.append(elem)
             elif isinstance(elem, str):
                 aux.append(elem)

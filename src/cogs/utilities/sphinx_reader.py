@@ -44,8 +44,6 @@ class SphinxObjectFileReader:
         buf = b""
         for chunk in self.read_compressed_chunks():
             buf += chunk
-            pos = buf.find(b"\n")
-            while pos != -1:
+            while (pos := buf.find(b"\n")) != -1:
                 yield buf[:pos].decode("utf-8")
                 buf = buf[pos + 1 :]
-                pos = buf.find(b"\n")
