@@ -238,7 +238,8 @@ class Typing:
     def all(cls):
         return frozenset(ALL_TYPES.values())
 
-    def deduce(item: str) -> Optional[Typing]:
+    @@classmethod
+    def deduce(cls, item: str) -> Optional[Typing]:
         """This is a method that determines the Typing out of
         the existing entries, it has a 85% of precision.
 
@@ -252,7 +253,7 @@ class Typing:
         Optional[Typing]
             Obtained result
         """
-        if isinstance(item, Typing):
+        if isinstance(item, cls):
             return item
         if data := ALL_TYPES.get(fix(item)):
             return data
@@ -264,6 +265,7 @@ class Typing:
         ):
             return ALL_TYPES[elem]
 
+    @classmethod
     def deduce_many(
         cls,
         *elems: str,
@@ -314,7 +316,8 @@ class Typing:
 
         return frozenset(items)
 
-    def from_ID(item: str) -> Optional[Typing]:
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[Typing]:
         """This is a method that returns a Move given an exact ID.
 
         Parameters
@@ -327,7 +330,7 @@ class Typing:
         Optional[Move]
             Obtained result
         """
-        if isinstance(item, Typing):
+        if isinstance(item, cls):
             return item
         if isinstance(item, str):
             return ALL_TYPES.get(fix(item))
