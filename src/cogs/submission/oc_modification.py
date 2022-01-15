@@ -99,6 +99,7 @@ class SPView(Basic):
                 values=self.oc.abilities,
                 timeout=None,
                 parser=lambda x: (x.value.name, x.description),
+                silent_mode=True,
             )
             async with view.send(
                 title="Select an Ability to Remove.",
@@ -164,11 +165,11 @@ class SPView(Basic):
             values=SpAbility.__slots__,
             target=ctx,
             timeout=None,
-            max_values=5,
             parser=lambda x: (
                 name := str(x).title(),
                 f"Modify Sp. Ability's {name}",
             ),
+            silent_mode=True,
         )
         text_view = TextInput(
             bot=self.bot,
