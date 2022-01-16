@@ -329,9 +329,19 @@ class Moderation(Cog):
                 afk_role,
                 reason=f"Removed AFK as user replied at {message.channel}",
             )
-        elif mentions := ", ".join(
-            set(afk_role.members) & set(message.mentions)
-        ):
+
+        mentioned_users = message.mentions.copy()
+        if reference := message.reference:
+            with suppress(DiscordException):
+                if not (msg := message.reference.resolved):
+                    msg = await message.channel.fetch_message(
+                        reference.message_id
+                    )
+                mentioned_users.append(msg.author)
+
+        mentioned = set(afk_role.members) & set(mentioned_users)
+
+        if mentions := ", ".join(mentioned):
             await message.reply(
                 f"The users {mentions} are AFK. Check our Audit log for more information.",
                 delete_after=10,
