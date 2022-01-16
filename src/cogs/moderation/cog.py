@@ -341,7 +341,7 @@ class Moderation(Cog):
 
         mentioned = set(afk_role.members) & set(mentioned_users)
 
-        if mentions := ", ".join(mentioned):
+        if mentions := ", ".join(x.mention for x in mentioned):
             await message.reply(
                 f"The users {mentions} are AFK. Check our Audit log for more information.",
                 delete_after=10,
