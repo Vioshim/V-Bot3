@@ -133,7 +133,7 @@ class Submission(Cog):
             embed.color = member.color
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
-            async with view.send(ephemeral=True) as ocs:
+            async with view.send(ephemeral=True):
                 pass
         else:
             await ctx.send_followup(
@@ -641,7 +641,7 @@ class Submission(Cog):
             embed.color = member.color
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
-            async with view.send(ephemeral=True) as ocs:
+            async with view.send(ephemeral=True):
                 pass
         else:
             await ctx.send_followup(

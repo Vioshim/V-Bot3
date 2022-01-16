@@ -279,6 +279,68 @@ class Moderation(Cog):
             ephemeral=True,
         )
 
+    @slash_command(
+        guild_ids=[719343092963999804],
+        description="Sets yourself as AFK",
+    )
+    async def afk(
+        self,
+        ctx: ApplicationContext,
+        reason: Option(
+            str,
+            description="The reason why you are going AFK.",
+            required=False,
+        ),
+    ):
+        member: Member = ctx.author
+        afk_role: Role = member.guild.get_role(932324221168795668)
+        await ctx.defer(ephemeral=True)
+        if afk_role in member.roles:
+            await ctx.send_followup(
+                "You are already AFK. If you wanna remove the Role, simply send a message in the server.",
+                ephemeral=True,
+            )
+            return
+
+        if not reason:
+            reason = "No reason provided."
+
+        await member.add_roles(afk_role, reason=reason)
+        await ctx.send_followup(
+            "You are now AFK, the next time you send a message in the server, the role will be removed.",
+            ephemeral=True,
+        )
+
+    @Cog.listener()
+    async def on_message(self, message: Message):
+
+        guild: Guild = message.guild
+
+        if not guild:
+            return
+
+        afk_role: Role = guild.get_role(932324221168795668)
+
+        if not afk_role:
+            return
+
+        if message.author in afk_role.members:
+            await message.author.remove_roles(
+                afk_role,
+                reason=f"Removed AFK as user replied at {message.channel}",
+            )
+        elif mentions := ", ".join(
+            set(afk_role.members) & set(message.mentions)
+        ):
+            await message.reply(
+                f"The users {mentions} are AFK. Check our Audit log for more information.",
+                delete_after=10,
+                allowed_mentions=AllowedMentions(
+                    replied_user=True,
+                    users=False,
+                ),
+            )
+
     @command(name="cooldown", aliases=["sleep"])
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True)
@@ -332,7 +394,10 @@ class Moderation(Cog):
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True)
     async def clean_user(
-        self, ctx: Context, user: Union[Member, User], amount: int = None
+        self,
+        ctx: Context,
+        user: Union[Member, User],
+        amount: int = None,
     ) -> None:
         """Cleans a channel's user messages by a given amount
 
@@ -390,7 +455,11 @@ class Moderation(Cog):
     @has_guild_permissions(manage_messages=True)
     @bot_has_guild_permissions(manage_messages=True)
     async def clean_after(
-        self, ctx: Context, amount: int = None, *, message: Message = None
+        self,
+        ctx: Context,
+        amount: int = None,
+        *,
+        message: Message = None,
     ) -> None:
         """Cleans a channel's user messages after a message.
 
@@ -413,7 +482,11 @@ class Moderation(Cog):
     @has_guild_permissions(kick_members=True)
     @bot_has_guild_permissions(kick_members=True)
     async def kick(
-        self, ctx: Context, member: Member, *, reason: str = None
+        self,
+        ctx: Context,
+        member: Member,
+        *,
+        reason: str = None,
     ) -> None:
         """Kicks a member from the server.
 
@@ -440,7 +513,11 @@ class Moderation(Cog):
     @has_guild_permissions(ban_members=True)
     @bot_has_guild_permissions(ban_members=True)
     async def ban(
-        self, ctx: Context, user: Union[Member, User], *, reason: str = None
+        self,
+        ctx: Context,
+        user: Union[Member, User],
+        *,
+        reason: str = None,
     ) -> None:
         """Bans an user from the guild
 
@@ -481,7 +558,10 @@ class Moderation(Cog):
     @has_guild_permissions(ban_members=True)
     @bot_has_guild_permissions(ban_members=True)
     async def mass_ban(
-        self, ctx: Context, reason: str, *users: Union[User, Member]
+        self,
+        ctx: Context,
+        reason: str,
+        *users: Union[User, Member],
     ) -> None:
         """Bans many users from the guild
 
@@ -526,7 +606,11 @@ class Moderation(Cog):
     @bot_has_guild_permissions(ban_members=True)
     @has_guild_permissions(ban_members=True)
     async def unban(
-        self, ctx: Context, user: User, *, reason: str = None
+        self,
+        ctx: Context,
+        user: User,
+        *,
+        reason: str = None,
     ) -> None:
         """Removes a ban to an a user from the server.
 
@@ -551,7 +635,11 @@ class Moderation(Cog):
     @bot_has_guild_permissions(manage_roles=True)
     @has_guild_permissions(manage_roles=True)
     async def warn(
-        self, ctx: Context, user: Member, *, reason: str = None
+        self,
+        ctx: Context,
+        user: Member,
+        *,
+        reason: str = None,
     ) -> None:
         """Warn an user, providing warn roles
 
