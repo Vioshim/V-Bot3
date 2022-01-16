@@ -40,7 +40,7 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import has_role, slash_command
+from discord.commands import has_role, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, View
@@ -56,12 +56,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -118,6 +113,32 @@ class Submission(Cog):
         self.oc_list: dict[int, int] = {}
         self.located: dict[int, set[Character]] = {}
 
+    @user_command(
+        name="Check User's OCs",
+        guild_ids=[719343092963999804],
+    )
+    async def check_ocs(self, ctx: ApplicationContext, member: Member):
+        if member is None:
+            member: Member = ctx.author
+        await ctx.defer(ephemeral=True)
+        if ocs := self.rpers.get(member.id, {}).values():
+            view = CharactersView(
+                bot=self.bot,
+                member=ctx.author,
+                ocs=ocs,
+                target=ctx.interaction,
+                keep_working=True,
+            )
+            embed = view.embed
+            embed.color = member.color
+            embed.set_author(name=member.display_name)
+            embed.set_thumbnail(url=member.display_avatar.url)
+            await ctx.send_followup(embed=embed, view=view, ephemeral=True)
+        else:
+            await ctx.send_followup(
+                f"{member.mention} has no characters.", ephemeral=True
+            )
+    
     @slash_command(
         guild_ids=[719343092963999804],
         description="Grants registered role to an user",
@@ -276,7 +297,9 @@ class Submission(Cog):
             )
 
     async def registration(
-        self, ctx: Union[Interaction, Message], oc: Type[Character]
+        self,
+        ctx: Union[Interaction, Message],
+        oc: Type[Character],
     ):
         """This is the function which handles the registration process,
         it will try to autocomplete data it can deduce, or ask about what

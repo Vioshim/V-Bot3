@@ -28,10 +28,6 @@ from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 
-setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
-
 with suppress(ModuleNotFoundError):
     from asyncio import set_event_loop_policy
 
