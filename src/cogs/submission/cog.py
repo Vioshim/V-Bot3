@@ -133,12 +133,13 @@ class Submission(Cog):
             embed.color = member.color
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
-            await ctx.send_followup(embed=embed, view=view, ephemeral=True)
+            async with view.send(ephemeral=True) as ocs:
+                pass
         else:
             await ctx.send_followup(
                 f"{member.mention} has no characters.", ephemeral=True
             )
-    
+
     @slash_command(
         guild_ids=[719343092963999804],
         description="Grants registered role to an user",
@@ -640,7 +641,8 @@ class Submission(Cog):
             embed.color = member.color
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
-            await ctx.send_followup(embed=embed, view=view, ephemeral=True)
+            async with view.send(ephemeral=True) as ocs:
+                pass
         else:
             await ctx.send_followup(
                 f"{member.mention} has no characters.", ephemeral=True
