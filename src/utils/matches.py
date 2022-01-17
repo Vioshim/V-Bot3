@@ -26,12 +26,13 @@ __all__ = (
     "DISCORD_MSG_URL",
     "DATA_FINDER",
     "INVITE",
+    "YAML_HANDLER",
 )
 
 DATA_FINDER = compile(
     r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE
 )
-
+YAML_HANDLER = compile(r":\s*")
 IMAGEKIT_API = "https://ik.imagekit.io/vioshim"
 DISCORD_MATCH = compile(r"https://\w+\.discordapp\.\w+/(.*)", IGNORECASE)
 IMAGEKIT_MATCH = compile(f"{IMAGEKIT_API}/(.*)", IGNORECASE)
@@ -46,7 +47,8 @@ G_DOCUMENT = compile(r"https://docs\.google\.com/document/d/(.+)/", IGNORECASE)
 EMOJI_REGEX = compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")
 
 REGEX_URL = compile(
-    r"http[s]?://" r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
+    r"http[s]?://"
+    r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
 )
 
 DISCORD_MSG_URL = compile(

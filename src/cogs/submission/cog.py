@@ -63,7 +63,7 @@ from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES, WHITE_BAR
-from src.utils.matches import G_DOCUMENT
+from src.utils.matches import G_DOCUMENT, YAML_HANDLER
 from src.views import (
     CharactersView,
     ImageView,
@@ -962,9 +962,10 @@ class Submission(Cog):
 
             text: str = codeblock_converter(message.content or "").content
             try:
+                msg_data = None
                 if doc_data := G_DOCUMENT.match(text):
                     msg_data = await doc_convert(doc_data.group(1))
-                else:
+                elif text := YAML_HANDLER.sub(": ", text):
                     msg_data = safe_load(text)
 
                 channel: TextChannel = message.channel
