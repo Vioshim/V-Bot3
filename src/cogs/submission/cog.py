@@ -40,7 +40,12 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, View
@@ -56,7 +61,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -701,28 +711,10 @@ class Submission(Cog):
         if self.ready:
             return
 
+        guild: Guild = self.bot.get_guild(719343092963999804)
+
         async with self.bot.database() as db:
 
-            self.bot.logger.info("Loading All Profiles")
-
-            async for item in db.cursor(
-                """--sql
-                SELECT AUTHOR, ID
-                FROM THREAD_LIST
-                WHERE SERVER = $1;
-                """,
-                719343092963999804,
-            ):
-                author, thread_id = item
-                self.oc_list[author] = thread_id
-                view = RPView(
-                    bot=self.bot,
-                    member_id=author,
-                    oc_list=self.oc_list,
-                )
-                self.bot.add_view(view=view, message_id=thread_id)
-
-            self.bot.logger.info("Finished loading all Profiles.")
             self.bot.logger.info("Loading all Characters.")
 
             for oc in await fetch_all(db):
@@ -758,6 +750,29 @@ class Submission(Cog):
                 await w.edit_message(903437849154711552, view=view)
 
             self.bot.logger.info("Finished loading Submission menu")
+
+            self.bot.logger.info("Loading All Profiles")
+
+            async for item in db.cursor(
+                """--sql
+                SELECT AUTHOR, ID
+                FROM THREAD_LIST
+                WHERE SERVER = $1;
+                """,
+                guild.id,
+            ):
+                author, thread_id = item
+                self.oc_list[author] = thread_id
+                if member := guild.get_member(author):
+                    await self.list_update(member)
+                elif view := RPView(
+                    bot=self.bot,
+                    member_id=author,
+                    oc_list=self.oc_list,
+                ):
+                    self.bot.add_view(view=view, message_id=thread_id)
+
+            self.bot.logger.info("Finished loading all Profiles.")
 
             self.bot.logger.info("Loading claimed missions")
 
