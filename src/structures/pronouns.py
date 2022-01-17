@@ -17,7 +17,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Iterable, Optional
+
 from src.utils.functions import fix
 
 
@@ -96,8 +97,12 @@ class Pronoun(Enum):
             return item
 
         if not isinstance(item, str):
-            name = item.__class__.__name__
-            raise TypeError(f"Expected str but received {name!r} instead.")
+
+            if not isinstance(item, Iterable):
+                name = item.__class__.__name__
+                raise TypeError(f"Expected str but received {name!r} instead.")
+
+            name = "/".join(map(str, item))
 
         match fix(item):
             case x if "THEM" in x or "HELICOPTER" in x:

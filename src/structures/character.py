@@ -1794,13 +1794,26 @@ def oc_process(**kwargs):
             species.abilities = abilities
             data["species"] = species
 
-    if moveset := Move.deduce_many(common_pop_get(data, "moveset", "moves")):
+    if moveset := Move.deduce_many(
+        common_pop_get(
+            data,
+            "moveset",
+            "moves",
+        )
+    ):
         data["moveset"] = moveset
 
-    if pronoun := Pronoun.deduce(common_pop_get(data, "pronoun", "gender")):
+    if pronoun := Pronoun.deduce(
+        common_pop_get(
+            data,
+            "pronoun",
+            "gender",
+            "pronouns",
+        )
+    ):
         data["pronoun"] = pronoun
 
-    if isinstance(age := data.get("age"), str):
+    if age := common_pop_get(data, "age", "years"):
         data["age"] = int_check(age, 13, 99)
 
     if isinstance(species, Fakemon):
