@@ -57,6 +57,7 @@ class MissionView(View):
             target=interaction,
             values=ocs,
             parser=lambda x: (x.name, repr(x)),
+            sort_key=lambda x: x.name,
         )
 
         choice: Character

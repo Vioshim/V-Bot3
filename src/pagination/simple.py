@@ -72,6 +72,7 @@ class Simple(Basic):
         inline: bool = False,
         entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = default_parser,
+        sort_key: Callable[[_T], Any] = None,
     ):
         """Init Method
 
@@ -95,6 +96,8 @@ class Simple(Basic):
             The max amount of entries per page, defaults to 25
         parser : Callable[[_T], tuple[str, str]]
             Parser method, defaults to lambda x: str(x), repr(x)
+        sort_key : Callable[[_T], Any], optional
+            key used for sorting
         """
         super().__init__(
             bot=bot,
@@ -107,18 +110,19 @@ class Simple(Basic):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
         items: list[_T] = list(values)
+        self._sort_key = sort_key
         self._values = items
         self._inline = inline
         self._pos = 0
         self._parser = parser or default_parser
         self._entries_per_page = entries_per_page
-        if not isinstance(values, list):
-            self.sort()
+        if not isinstance(values, list) or sort_key:
+            self.sort(key=sort_key)
         self.menu_format()
 
     def sort(
         self,
-        key: Callable[[_T], Any] = None,
+        sort_key: Callable[[_T], Any] = None,
         reverse: bool = False,
     ) -> None:
         """Sort method used for the view's values
@@ -131,9 +135,11 @@ class Simple(Basic):
             sets the order to reverse, defaults to False
         """
         try:
-            self.values.sort(key=key, reverse=reverse)
+            self._sort_key = sort_key
+            self.values.sort(key=sort_key, reverse=reverse)
         except TypeError:
-            self.values.sort(key=lambda x: str(x), reverse=reverse)
+            self._sort_key = str
+            self.values.sort(key=str, reverse=reverse)
 
     def set_parser(
         self,

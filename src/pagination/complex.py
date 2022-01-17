@@ -15,7 +15,7 @@
 from contextlib import asynccontextmanager, suppress
 from difflib import get_close_matches
 from types import TracebackType
-from typing import Callable, Iterable, Optional, Sized, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
 
 from discord import (
     AllowedMentions,
@@ -83,6 +83,7 @@ class Complex(Simple):
         ] = None,
         silent_mode: bool = False,
         keep_working: bool = False,
+        sort_key: Callable[[_T], Any] = None,
     ):
         self._silent_mode = silent_mode
         self._keep_working = keep_working
@@ -101,6 +102,7 @@ class Complex(Simple):
             embed=embed,
             entries_per_page=entries_per_page,
             parser=parser,
+            sort_key=sort_key,
         )
 
     @property
@@ -197,7 +199,8 @@ class Complex(Simple):
         # Then gets defined the amount of entries an user can pick
 
         foo.max_values = min(
-            self.max_values - len(choices), self.entries_per_page
+            self.max_values - len(choices),
+            self.entries_per_page,
         )
 
         # Now we get the indexes that each page should start with

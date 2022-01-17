@@ -162,7 +162,7 @@ class SPView(Basic):
         view = Complex(
             bot=self.bot,
             member=self.member,
-            values=SpAbility.__slots__,
+            values=list(SpAbility.__slots__),
             target=ctx,
             timeout=None,
             parser=lambda x: (
@@ -445,6 +445,7 @@ class PronounMod(Mod):
             timeout=None,
             values=Pronoun,
             parser=lambda x: (name := x.name, f"Sets Pronoun as {name}"),
+            sort_key=lambda x: x.name,
         )
         aux: Optional[bool] = None
         origin = await target.original_message()

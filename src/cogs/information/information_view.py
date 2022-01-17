@@ -149,12 +149,6 @@ class Section:
             f"Function has {len(self.items):02d} choices to read.",
         )
 
-    @property
-    def items_ordered(self):
-        data = list(self.items)
-        data.sort(key=int)
-        return data
-
 
 class MapComplex(Complex):
     def __init__(
@@ -173,6 +167,7 @@ class MapComplex(Complex):
             parser=lambda x: (x.label, x.content),
             silent_mode=True,
             keep_working=True,
+            sort_key=lambda x: x.label,
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -222,6 +217,7 @@ class FAQComplex(Complex):
             parser=lambda x: x.tuple,
             silent_mode=True,
             keep_working=True,
+            sort_key=lambda x: x.index,
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -264,6 +260,7 @@ class SectionComplex(Complex):
             parser=lambda x: x.tuple,
             silent_mode=True,
             keep_working=True,
+            sort_key=lambda x: x.title,
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -281,7 +278,7 @@ class SectionComplex(Complex):
         view = FAQComplex(
             bot=self.bot,
             member=self.member,
-            values=item.items_ordered,
+            values=item.items,
             target=ctx,
         )
         embed = view.embed

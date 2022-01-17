@@ -47,6 +47,7 @@ class MoveView(Complex):
             timeout=None,
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
+            sort_key=lambda x: x.name,
         )
         self.embed.title = "Select a Move"
 

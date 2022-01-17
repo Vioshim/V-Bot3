@@ -40,12 +40,7 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, View
@@ -61,12 +56,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -140,9 +130,17 @@ class Submission(Cog):
                 if move.name in text.title() or move.id in text.upper()
             ]
         if len(moves) == 1:
+            view = View()
+            view.add_item(
+                Button(
+                    label="Click here to check more information at Bulbapedia.",
+                    url=moves[0].url,
+                )
+            )
             await ctx.send_followup(
                 embed=moves[0].embed,
                 ephemeral=True,
+                view=view,
             )
         elif moves:
             moves.sort(key=lambda x: x.name)

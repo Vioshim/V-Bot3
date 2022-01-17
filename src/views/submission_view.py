@@ -58,6 +58,7 @@ class CharacterHandlerView(Complex):
             values=values,
             parser=lambda x: (x.name, repr(x)),
             timeout=None,
+            sort_key=lambda x: x.name,
         )
 
     async def custom_choice(self, sct: Select, interaction: Interaction):
@@ -69,12 +70,19 @@ class CharacterHandlerView(Complex):
             oc=data[0],
             target=interaction,
         )
-        await resp.send_message(embed=data[0].embed, view=view, ephemeral=True)
+        await resp.send_message(
+            embed=data[0].embed,
+            view=view,
+            ephemeral=True,
+        )
         await view.wait()
         with suppress(DiscordException):
             await self.edit(page=None)
         with suppress(DiscordException):
-            await interaction.edit_original_message(embed=data[0].embed, view=None)
+            await interaction.edit_original_message(
+                embed=data[0].embed,
+                view=None,
+            )
 
 
 class TemplateView(View):
@@ -104,7 +112,9 @@ class TemplateView(View):
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
         )
         for item in self.template.get("Document", {}).values():
-            content += f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
+            content += (
+                f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
+            )
 
         await self.target.edit_original_message(content=content, view=None)
         await resp.pong()
@@ -171,7 +181,10 @@ class SubmissionView(View):
 
         if channel.permissions_for(ctx.user).manage_messages:
             m = await channel.send("Mention the User")
-            aux: Message = await self.bot.wait_for("message", check=text_check(ctx))
+            aux: Message = await self.bot.wait_for(
+                "message",
+                check=text_check(ctx),
+            )
             self.bot.msg_cache_add(m)
             self.bot.msg_cache_add(aux)
             await m.delete()
@@ -193,7 +206,9 @@ class SubmissionView(View):
         )
 
         oc: Type[Character]
-        async with view.send(title="Select Character to modify", single=True) as oc:
+        async with view.send(
+            title="Select Character to modify", single=True
+        ) as oc:
             self.bot.logger.info(
                 "%s is modifying a Character(%s) aka %s",
                 str(ctx.user),
@@ -242,7 +257,10 @@ class SubmissionView(View):
                 values=[
                     item
                     for item in choice.channels
-                    if ("-ooc" not in item.name and isinstance(item, TextChannel))
+                    if (
+                        "-ooc" not in item.name
+                        and isinstance(item, TextChannel)
+                    )
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
@@ -303,7 +321,9 @@ class SubmissionView(View):
                     parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
                     title="Mission's Difficulty",
                 )
-                async with view.send(title="Mission's difficulty", single=True) as item:
+                async with view.send(
+                    title="Mission's difficulty", single=True
+                ) as item:
                     if not item:
                         return
                     mission.difficulty = item
