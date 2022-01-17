@@ -159,7 +159,15 @@ class Submission(Cog):
         if member is None:
             member: Member = ctx.author
         await ctx.defer(ephemeral=True)
-        if ocs := self.rpers.get(member.id, {}).values():
+        ocs: list[Character] = list(self.rpers.get(member.id, {}).values())
+        if len(ocs) == 1:
+            await ctx.send_followup(
+                "The user only has one character",
+                ephemeral=True,
+                embed=ocs[0].embed,
+            )
+        elif ocs:
+            ocs.sort(key=lambda x: x.name)
             view = CharactersView(
                 bot=self.bot,
                 member=ctx.author,
