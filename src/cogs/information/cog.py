@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import suppress
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -78,6 +79,7 @@ class Information(Cog):
         self.bot = bot
         self.join: dict[Member, Message] = {}
         self.view: Optional[InformationView] = None
+        self.current_question: Optional[Message] = None
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -133,6 +135,12 @@ class Information(Cog):
         """This function generates a daily question from a website, and sends it to all guilds
         as long as they have the feature enabled.
         """
+        with suppress(DiscordException):
+            if message := self.current_question:
+                await message.delete()
+
+        self.current_question = None
+
         async with self.bot.session.get(url=URL) as r:
             content = await r.text()
             soup = BeautifulSoup(content, "html.parser")
@@ -148,7 +156,7 @@ class Information(Cog):
             channel: TextChannel = self.bot.get_channel(860590339327918100)
             if guild := channel.guild:
                 embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-            message = await channel.send(embed=embed, delete_after=3600 * 24)
+            self.current_question = message = await channel.send(embed=embed)
             thread = await message.create_thread(name=date.strftime("%d-%m-%Y"))
             view = View()
             view.add_item(
@@ -540,6 +548,24 @@ class Information(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
+        channel = await self.bot.fetch_channel(860590339327918100)
+
+        time = datetime.utcnow()
+        time = time.replace(
+            hour=13,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+        async for message in channel.history(
+            oldest_first=True,
+            limit=1,
+            before=time,
+        ):
+            if message.id != 913555643699458088 and message.author == self.user:
+                self.current_question = message
+
         await self.bot.scheduler.add_schedule(
             self.daily_question,
             trigger=CronTrigger(hour=13, minute=0, second=0),
