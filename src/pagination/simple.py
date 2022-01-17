@@ -117,7 +117,7 @@ class Simple(Basic):
         self._parser = parser or default_parser
         self._entries_per_page = entries_per_page
         if not isinstance(values, list) or sort_key:
-            self.sort(key=sort_key)
+            self.sort(sort_key=sort_key)
         self.menu_format()
 
     def sort(
