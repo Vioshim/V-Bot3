@@ -87,6 +87,11 @@ class Basic(Generic[_M], View):
             elif isinstance(target, Interaction):
                 member = target.user
 
+        if isinstance(member, User):
+            if guilds := member.mutual_guilds:
+                guild = guilds[0]
+                member = guild.get_member(member.id)
+
         embed.set_image(url=WHITE_BAR)
         embed.set_author(
             name=member.display_name,

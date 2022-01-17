@@ -26,7 +26,6 @@ from discord.utils import utcnow
 from frozendict import frozendict
 
 from src.structures.mon_typing import Typing
-from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
 
 __all__ = (
@@ -34,12 +33,14 @@ __all__ = (
     "MoveDecoder",
     "MoveEncoder",
     "ALL_MOVES",
+    "ALL_MOVES_BY_NAME",
     "MAX_MOVE_RANGE1",
     "MAX_MOVE_RANGE2",
     "Z_MOVE_RANGE",
 )
 
 ALL_MOVES = frozendict()
+ALL_MOVES_BY_NAME = frozendict()
 
 MAX_MOVE_RANGE1 = frozendict(
     {
@@ -87,9 +88,13 @@ Z_MOVE_RANGE = frozendict(
 class Move:
     """Class that represents a Move"""
 
+    index: int
     id: str
     name: str
     type: Typing
+    url: str
+    image: str
+    contest: str = None
     desc: Optional[str] = None
     shortDesc: Optional[str] = None
     accuracy: Optional[int] = None
@@ -103,6 +108,7 @@ class Move:
     def embed(self):
         description = self.desc or self.shortDesc
         embed = Embed(
+            url=self.url,
             title=self.name,
             description=description,
             color=self.type.color,
@@ -113,7 +119,7 @@ class Move:
         embed.set_footer(text=self.category.title())
         embed.add_field(name="PP", value=f"{self.pp}")
         embed.set_thumbnail(url=self.type.emoji.url)
-        embed.set_image(url=WHITE_BAR)
+        embed.set_image(url=self.image)
         return embed
 
     def __str__(self):
@@ -298,7 +304,6 @@ class MoveDecoder(JSONDecoder):
             Result
         """
         if mon_type := dct.get("type"):
-            dct["id"] = fix(dct["name"])
             dct["type"] = Typing.from_ID(mon_type)
             return Move(**dct)
         return dct
@@ -307,3 +312,4 @@ class MoveDecoder(JSONDecoder):
 with open("resources/moves.json") as f:
     items: list[Move] = load(f, cls=MoveDecoder)
     ALL_MOVES = frozendict({item.id: item for item in items})
+    ALL_MOVES_BY_NAME = frozendict({item.name: item for item in items})

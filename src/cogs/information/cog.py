@@ -70,7 +70,7 @@ channels = {
 
 def map_find(ctx: AutocompleteContext):
     data: str = ctx.value or ""
-    return [item for item in MAP_BUTTONS if item.name.startswith(data.title())]
+    return filter(lambda x: x.name.startswith(data), MAP_BUTTONS)
 
 
 class Information(Cog):

@@ -40,7 +40,12 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import has_role, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, View
@@ -56,7 +61,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -68,6 +78,7 @@ from src.views import (
     CharactersView,
     ImageView,
     MissionView,
+    MoveView,
     RPView,
     StatsView,
     SubmissionView,
@@ -112,6 +123,38 @@ class Submission(Cog):
         self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
         self.located: dict[int, set[Character]] = {}
+
+    @message_command(
+        guild_ids=[719343092963999804],
+        name="See Mentioned Moves",
+    )
+    async def moves_checker(self, ctx: ApplicationContext, message: Message):
+        await ctx.defer(ephemeral=True)
+        moves = []
+        if oc := self.ocs.get(message.id):
+            moves = list(oc.moveset.copy())
+        elif text := message.content:
+            moves = [
+                move
+                for move in Move.all()
+                if move.name in text.title() or move.id in text.upper()
+            ]
+        if moves:
+            moves.sort(key=lambda x: x.name)
+            view = MoveView(
+                bot=self.bot,
+                member=ctx.author,
+                moves=moves,
+                target=ctx.interaction,
+                keep_working=True,
+            )
+            async with view.send(ephemeral=True):
+                pass
+        else:
+            await ctx.send_followup(
+                "This message does not include moves.",
+                ephemeral=True,
+            )
 
     @user_command(
         name="Check User's OCs",
