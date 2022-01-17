@@ -394,7 +394,7 @@ class InformationView(View):
                 fields=fields,
                 buttons=[
                     Button(
-                        "Click here to read more in Bulbapedia",
+                        label="Click here to read more in Bulbapedia",
                         url=item.url,
                     )
                 ],
