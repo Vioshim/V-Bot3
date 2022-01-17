@@ -76,6 +76,7 @@ class FAQ:
     buttons: InitVar[Iterable[Button]] = None
     thumbnail: InitVar[str] = None
     image: InitVar[str] = None
+    url: InitVar[str] = None
     embed: Embed = field(init=False)
     view: View = field(init=False)
 
@@ -90,6 +91,7 @@ class FAQ:
         buttons: Iterable[Button] = None,
         thumbnail: str = None,
         image: str = None,
+        url: str = None,
     ):
         self.title = title
         self.content = content
@@ -103,6 +105,8 @@ class FAQ:
             colour=0xFFFFFE,
             timestamp=utcnow(),
         )
+        if url:
+            embed.url = url
         if thumbnail:
             embed.set_thumbnail(url=thumbnail)
         if image:
@@ -171,6 +175,9 @@ class MapComplex(Complex):
             keep_working=True,
         )
 
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return True
+
     async def custom_choice(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         index: str = sct.values[0]
@@ -217,6 +224,9 @@ class FAQComplex(Complex):
             keep_working=True,
         )
 
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return True
+
     async def custom_choice(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         index: str = sct.values[0]
@@ -255,6 +265,9 @@ class SectionComplex(Complex):
             silent_mode=True,
             keep_working=True,
         )
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return True
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -316,15 +329,27 @@ class InformationView(View):
             fields = []
             if battle := item.battle:
                 fields.append(
-                    dict(name="In Battles", value=battle, inline=False)
+                    dict(
+                        name="In Battles",
+                        value=battle,
+                        inline=False,
+                    )
                 )
             if outside := item.outside:
                 fields.append(
-                    dict(name="Out of Battles", value=outside, inline=False)
+                    dict(
+                        name="Out of Battles",
+                        value=outside,
+                        inline=False,
+                    )
                 )
             if random_fact := item.random_fact:
                 fields.append(
-                    dict(name="Random Fact", value=random_fact, inline=False)
+                    dict(
+                        name="Random Fact",
+                        value=random_fact,
+                        inline=False,
+                    )
                 )
             items.append(
                 FAQ(
@@ -351,7 +376,7 @@ class InformationView(View):
         for index, item in enumerate(moves):
             title = item.name
             if item.banned:
-                title = f"{title} - Move Banned"
+                title = f"{title!r} - Move Banned"
             fields = [
                 dict(name="Base", value=str(item.base)),
                 dict(name="Accuracy", value=str(item.accuracy)),
@@ -361,10 +386,18 @@ class InformationView(View):
             element = FAQ(
                 index=index,
                 label=item.name,
+                url=item.url,
                 title=title,
                 thumbnail=item.type.emoji.url,
+                image=item.image,
                 content=item.desc,
                 fields=fields,
+                buttons=[
+                    Button(
+                        "Click here to read more in Bulbapedia",
+                        url=item.url,
+                    )
+                ],
             )
             element.embed.color = item.type.color
             items.append(element)

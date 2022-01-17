@@ -129,7 +129,12 @@ class Submission(Cog):
                 for move in Move.all()
                 if move.name in text.title() or move.id in text.upper()
             ]
-        if moves:
+        if len(moves) == 1:
+            await ctx.send_followup(
+                embed=moves[0].embed,
+                ephemeral=True,
+            )
+        elif moves:
             moves.sort(key=lambda x: x.name)
             view = MoveView(
                 bot=self.bot,
