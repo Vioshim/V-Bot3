@@ -645,14 +645,14 @@ class Fusion(Species):
         types1 = self.mon1.types
         types2 = self.mon2.types
         elements: list[set[Typing]] = []
-        if items := set(types1) | set(types2):
+        if items := frozenset(types1) | frozenset(types2):
             if len(items) <= 2:
                 elements.append(items)
             elif common := types1.intersection(types2):
                 uncommon = items - common
-                elements.extend({x, y} for x in common for y in uncommon)
+                elements.extend(frozenset({x, y}) for x in common for y in uncommon)
             else:
-                elements.extend({x, y} for x in types1 for y in types2)
+                elements.extend(frozenset({x, y}) for x in types1 for y in types2)
         return elements
 
     @property
