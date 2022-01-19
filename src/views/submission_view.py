@@ -177,7 +177,7 @@ class SubmissionView(View):
 
         await resp.defer(ephemeral=True)
 
-        member = self.supporting(member, member)
+        member = self.supporting.get(member, member)
 
         if not (values := self.rpers.get(member.id, {}).values()):
             return await ctx.followup.send(
