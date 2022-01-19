@@ -1766,6 +1766,8 @@ def oc_process(**kwargs):
                 species.types = types
 
     if ability_info := common_pop_get(data, "abilities", "ability"):
+        if isinstance(ability_info, str):
+            ability_info = [ability_info]
         if abilities := Ability.deduce_many(*ability_info):
             data["abilities"] = abilities
 
@@ -1782,6 +1784,8 @@ def oc_process(**kwargs):
             data["species"] = species
 
     if move_info := common_pop_get(data, "moveset", "moves"):
+        if isinstance(move_info, str):
+            move_info = [move_info]
         if moveset := Move.deduce_many(*move_info):
             data["moveset"] = moveset
 
