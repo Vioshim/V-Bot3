@@ -24,11 +24,9 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    Message,
     SelectOption,
     TextChannel,
 )
-from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, Select, View, button, select
 from yaml import dump
 
@@ -39,7 +37,6 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mission import Mission
 from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
-from src.utils.functions import text_check
 from src.views.mission_view import MissionView
 
 
@@ -128,6 +125,7 @@ class SubmissionView(View):
         ocs: dict[int, Character],
         rpers: dict[int, dict[int, Character]],
         oc_list: dict[int, int],
+        supporting: dict[Member, Member],
         missions: set[Mission],
         **kwargs: Union[str, dict],
     ):
@@ -138,6 +136,7 @@ class SubmissionView(View):
         self.rpers = rpers
         self.oc_list = oc_list
         self.missions = missions
+        self.supporting = supporting
         self.show_template.options = [
             SelectOption(
                 label=f"{key} Template",
@@ -175,23 +174,10 @@ class SubmissionView(View):
         resp: InteractionResponse = ctx.response
 
         member: Member = ctx.user
-        channel: TextChannel = ctx.channel
 
         await resp.defer(ephemeral=True)
 
-        if channel.permissions_for(ctx.user).manage_messages:
-            m = await channel.send("Mention the User")
-            aux: Message = await self.bot.wait_for(
-                "message",
-                check=text_check(ctx),
-            )
-            self.bot.msg_cache_add(m)
-            self.bot.msg_cache_add(aux)
-            await m.delete()
-            context = await self.bot.get_context(aux)
-            converter = MemberConverter()
-            member = await converter.convert(ctx=context, argument=aux.content)
-            await aux.delete()
+        member = self.supporting(member, member)
 
         if not (values := self.rpers.get(member.id, {}).values()):
             return await ctx.followup.send(

@@ -774,6 +774,7 @@ class Submission(Cog):
                     ocs=self.ocs,
                     rpers=self.rpers,
                     oc_list=self.oc_list,
+                    supporting=self.supporting,
                     missions=self.missions,
                     **loads(contents),
                 )
