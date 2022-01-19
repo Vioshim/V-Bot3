@@ -56,6 +56,7 @@ class CharacterHandlerView(Complex):
             parser=lambda x: (x.name, repr(x)),
             timeout=None,
             sort_key=lambda x: x.name,
+            keep_working=True,
         )
 
     async def custom_choice(self, sct: Select, interaction: Interaction):
