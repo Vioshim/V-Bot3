@@ -604,19 +604,18 @@ class Submission(Cog):
                     if text:
                         oc.extra = text
 
-            if not oc.image:
-                image_view = ImageView(
-                    bot=self.bot,
-                    member=user,
-                    target=ctx,
-                    default_img=oc.default_image,
-                )
-                async with image_view.send() as image:
-                    if image is None:
-                        return
-                    oc.image = image
-                if received := image_view.received:
-                    await received.delete(delay=10)
+            image_view = ImageView(
+                bot=self.bot,
+                member=user,
+                target=ctx,
+                default_img=oc.image or oc.default_image,
+            )
+            async with image_view.send() as image:
+                if image is None:
+                    return
+                oc.image = image
+            if received := image_view.received:
+                await received.delete(delay=10)
 
         else:
             user = ctx.user
@@ -1022,9 +1021,7 @@ class Submission(Cog):
                         doc_part = doc.part
                         image_part = doc_part.related_parts[rID]
                         fp = BytesIO(image_part._blob)
-                        file = File(fp=fp, filename="image.png")
-                        aux = await message.reply(file=file, delete_after=10)
-                        msg_data["image"] = aux.attachments[0].url
+                        msg_data["image"] = File(fp=fp, filename="image.png")
 
                 channel: TextChannel = message.channel
 

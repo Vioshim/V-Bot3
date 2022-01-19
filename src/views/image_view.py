@@ -19,6 +19,7 @@ from typing import Optional, TypeVar, Union
 
 from discord import (
     ButtonStyle,
+    File,
     HTTPException,
     Interaction,
     InteractionResponse,
@@ -53,30 +54,32 @@ class ImageView(Basic):
         bot: CustomBot,
         member: Union[Member, User],
         target: _M,
-        default_img: str = None,
+        default_img: File | str = None,
     ):
         super(ImageView, self).__init__(
             bot=bot,
             member=member,
             target=target,
         )
-        self.embed.set_image(url=default_img)
+        if isinstance(default_img, str):
+            self.embed.set_image(url=default_img)
+        elif isinstance(default_img, File):
+            self.embed.set_image(url=f"attachment://{default_img.filename}")
         self.received: Optional[Message] = None
         self.text: Optional[str] = default_img
         self.default_image.disabled = not default_img
 
     @asynccontextmanager
     async def send(self):
+        file: Optional[file] = None
+        if isinstance(self.text, File):
+            file = self.text
         try:
-            try:
-                await super(ImageView, self).send()
-            except HTTPException:
-                self.embed.remove_image()
-                self.default_image.disabled = True
-                await super(ImageView, self).send()
-            finally:
-                await self.wait()
-                yield self.text
+            await super(ImageView, self).send(file=file)
+        except HTTPException:
+            self.embed.remove_image()
+            self.default_image.disabled = True
+            await super(ImageView, self).send(file=file)
         except Exception as e:
             self.bot.logger.exception(
                 "Exception occurred, target: %s, user: %s",
@@ -85,6 +88,9 @@ class ImageView(Basic):
                 exc_info=e,
             )
         finally:
+            self.text = self.message.embeds[0].image.url
+            await self.wait()
+            yield self.text
             await self.delete()
 
     @button(label="I'll send an Image", row=0)
@@ -110,6 +116,8 @@ class ImageView(Basic):
             self.received = await ctx.channel.send(file=file)
             self.text = self.received.attachments[0].url
             await received.delete()
+        elif image := self.message.embeds[0].image:
+            self.text = image.url
         else:
             self.text = None
         self.stop()
@@ -121,6 +129,7 @@ class ImageView(Basic):
             await target.edit_original_message(view=None)
         else:
             await self.message.edit(view=None)
+
         await resp.send_message(
             content="Keeping default image.",
             ephemeral=True,

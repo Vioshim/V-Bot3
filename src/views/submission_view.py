@@ -191,10 +191,11 @@ class SubmissionView(View):
             values=values,
         )
 
+        view.embed.title = "Select Character to modify"
+        view.embed.set_thumbnail(url=member.display_avatar.url)
+
         oc: Type[Character]
-        async with view.send(
-            title="Select Character to modify", single=True
-        ) as oc:
+        async with view.send(single=True) as oc:
             if isinstance(oc, Character):
                 self.bot.logger.info(
                     "%s is modifying a Character(%s) aka %s",
