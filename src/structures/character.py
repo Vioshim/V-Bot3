@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from asyncio import to_thread
 from dataclasses import dataclass, field
 from datetime import datetime
 from random import sample
@@ -24,8 +23,8 @@ from typing import Any, Optional, Type
 from asyncpg import Connection
 from discord import Color, Embed
 from discord.utils import utcnow
+from docx.document import Document
 from frozendict import frozendict
-from nested_lookup import nested_lookup
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import Typing
@@ -44,7 +43,6 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.doc_reader import docs_reader
 from src.utils.functions import (
     common_pop_get,
     fix,
@@ -1851,93 +1849,87 @@ def check(value: Optional[str]) -> bool:
     return data
 
 
-async def doc_convert(url: str) -> dict[str, Any]:
+def doc_convert(doc: Document, url: str = None) -> dict[str, Any]:
     """Google Convereter
 
     Parameters
     ----------
-    url : str
-        Google Document
+    doc : Document
+        docx Document
+    url : str, optional
+        If this was fetched from a Google Document
 
     Returns
     -------
     dict[str, Any]
         Info
     """
-    if doc := await to_thread(docs_reader, url):
-        tables = nested_lookup(
-            key="table",
-            document=doc["body"]["content"],
-        )
-        contents = nested_lookup(
-            key="textRun",
-            document=tables,
-        )
-        content_values: list[str] = nested_lookup(
-            key="content",
-            document=contents,
-        )
 
-        text = [
-            strip.replace("\u2019", "'")
-            for item in content_values
-            if (strip := item.strip())
-        ]
+    content_values = [
+        cell.text
+        for table in doc.tables
+        for row in table.rows
+        for cell in row.cells
+    ]
 
-        movepool_typing = dict[str, set[str] | dict[int, set[str]]]
-        raw_kwargs: dict[str, str | set[str] | movepool_typing] = dict(
-            url=f"https://docs.google.com/document/d/{url}/edit?usp=sharing",
-            moveset=set(),
-            movepool={},
-            abilities=set(),
-            fusion=set(),
-            types=set(),
-            stats={
-                stat: stats_check(*value)
-                for index, item in enumerate(content_values)
-                if all(
-                    (
-                        stat := PLACEHOLDER_STATS.get(item.strip()),
-                        len(content_values) > index,
-                        len(value := content_values[index + 1 :][:1]) == 1,
-                    )
+    text = [
+        strip.replace("\u2019", "'")
+        for item in content_values
+        if (strip := item.strip())
+    ]
+
+    movepool_typing = dict[str, set[str] | dict[int, set[str]]]
+    if url:
+        url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+    raw_kwargs: dict[str, str | set[str] | movepool_typing] = dict(
+        url=url,
+        moveset=set(),
+        movepool={},
+        abilities=set(),
+        fusion=set(),
+        types=set(),
+        stats={
+            stat: stats_check(*value)
+            for index, item in enumerate(content_values)
+            if all(
+                (
+                    stat := PLACEHOLDER_STATS.get(item.strip()),
+                    len(content_values) > index,
+                    len(value := content_values[index + 1 :][:1]) == 1,
                 )
-            },
-        )
+            )
+        },
+    )
 
-        for index, item in enumerate(text[:-1], start=1):
-            if not check(next_value := text[index]):
-                continue
-            if argument := PLACEHOLDER_NAMES.get(item):
-                raw_kwargs[argument] = next_value
-            elif element := PLACEHOLDER_SP.get(item):
-                raw_kwargs.setdefault("sp_ability", {})
-                raw_kwargs["sp_ability"][element] = next_value
-            elif element := DATA_FINDER.match(item):
-                argument = next_value.title()
-                match element.groups():
-                    case ["Level", y]:
-                        idx = int(y)
-                        raw_kwargs["movepool"].setdefault("level", {})
-                        raw_kwargs["movepool"]["level"].setdefault(idx, set())
-                        raw_kwargs["movepool"]["level"][idx].add(argument)
-                    case ["Move", _]:
-                        raw_kwargs["moveset"].add(argument)
-                    case ["Ability", _]:
-                        raw_kwargs["abilities"].add(next_value)
-                    case ["Species", _]:
-                        raw_kwargs["fusion"].add(next_value)
-                    case ["Type", _]:
-                        raw_kwargs["types"].add(next_value.upper())
-                    case [x, _]:
-                        raw_kwargs["movepool"].setdefault(x.lower(), set())
-                        raw_kwargs["movepool"][x.lower()].add(argument)
+    for index, item in enumerate(text[:-1], start=1):
+        if not check(next_value := text[index]):
+            continue
+        if argument := PLACEHOLDER_NAMES.get(item):
+            raw_kwargs[argument] = next_value
+        elif element := PLACEHOLDER_SP.get(item):
+            raw_kwargs.setdefault("sp_ability", {})
+            raw_kwargs["sp_ability"][element] = next_value
+        elif element := DATA_FINDER.match(item):
+            argument = next_value.title()
+            match element.groups():
+                case ["Level", y]:
+                    idx = int(y)
+                    raw_kwargs["movepool"].setdefault("level", {})
+                    raw_kwargs["movepool"]["level"].setdefault(idx, set())
+                    raw_kwargs["movepool"]["level"][idx].add(argument)
+                case ["Move", _]:
+                    raw_kwargs["moveset"].add(argument)
+                case ["Ability", _]:
+                    raw_kwargs["abilities"].add(next_value)
+                case ["Species", _]:
+                    raw_kwargs["fusion"].add(next_value)
+                case ["Type", _]:
+                    raw_kwargs["types"].add(next_value.upper())
+                case [x, _]:
+                    raw_kwargs["movepool"].setdefault(x.lower(), set())
+                    raw_kwargs["movepool"][x.lower()].add(argument)
 
-        raw_kwargs.pop("artist", None)
-        raw_kwargs.pop("website", None)
+    raw_kwargs.pop("artist", None)
+    raw_kwargs.pop("website", None)
 
-        if inline := doc.get("inlineObjects"):
-            if images := nested_lookup(key="contentUri", document=inline):
-                raw_kwargs["image"] = images[0]
-
-        return raw_kwargs
+    return raw_kwargs

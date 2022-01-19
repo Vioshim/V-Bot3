@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from asyncio import TimeoutError
+from asyncio import TimeoutError, to_thread
 from contextlib import suppress
 from datetime import timedelta
 from difflib import get_close_matches
+from io import BytesIO
 from pathlib import Path
 from typing import Type, Union
 
@@ -27,6 +28,7 @@ from discord import (
     CategoryChannel,
     DiscordException,
     Embed,
+    File,
     Guild,
     Interaction,
     Member,
@@ -40,11 +42,17 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, View
 from discord.utils import utcnow
+from docx import Document
 from jishaku.codeblocks import codeblock_converter
 from orjson import loads
 from yaml import safe_load
@@ -56,12 +64,18 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
+from src.utils.doc_reader import docs_reader
 from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES, WHITE_BAR
 from src.utils.matches import G_DOCUMENT, YAML_HANDLER
 from src.views import (
@@ -963,10 +977,34 @@ class Submission(Cog):
             text: str = codeblock_converter(message.content or "").content
             try:
                 msg_data = None
+                doc = None
                 if doc_data := G_DOCUMENT.match(text):
-                    msg_data = await doc_convert(doc_data.group(1))
+                    doc = await to_thread(docs_reader, doc_data.group(1))
+                    msg_data = doc_convert(doc, url=doc_data.group(1))
                 elif text := YAML_HANDLER.sub(": ", text):
                     msg_data = safe_load(text)
+                    if images := message.attachments:
+                        msg_data["image"] = images[0].url
+                elif attachments := message.attachments:
+                    with suppress(Exception):
+                        file = await attachments[0].to_file()
+                        doc = await to_thread(Document, file.fp)
+                        msg_data = doc_convert(doc)
+
+                if doc:
+                    with suppress(Exception):
+                        data = list(doc.inline_shapes)
+                        item = data[0]
+                        blip = (
+                            item._inline.graphic.graphicData.pic.blipFill.blip
+                        )
+                        rID = blip.embed
+                        doc_part = doc.part
+                        image_part = doc_part.related_parts[rID]
+                        fp = BytesIO(image_part._blob)
+                        file = File(fp=fp, filename="image.png")
+                        aux = await message.reply(file=file, delete_after=10)
+                        msg_data["image"] = aux.attachments[0].url
 
                 channel: TextChannel = message.channel
 
@@ -991,9 +1029,6 @@ class Submission(Cog):
                         )
                         await aux.delete()
 
-                    if images := message.attachments:
-                        msg_data["image"] = images[0].url
-
                     self.ignore.add(message.author.id)
                     if oc := oc_process(**msg_data):
                         oc.author = author.id
@@ -1008,6 +1043,7 @@ class Submission(Cog):
                     "Exception processing character", exc_info=e
                 )
                 await message.reply(f"Exception:\n\n{e}", delete_after=10)
+                self.ignore.remove(message.author.id)
                 return
 
         if tupper := message.guild.get_member(431544605209788416):
