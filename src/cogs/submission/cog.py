@@ -42,14 +42,8 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
-from discord.ext.commands.converter import MemberConverter
 from discord.ui import Button, View
 from discord.utils import utcnow
 from docx import Document
@@ -64,12 +58,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -127,6 +116,7 @@ class Submission(Cog):
         self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
         self.located: dict[int, set[Character]] = {}
+        self.supporting: dict[Member, Member] = {}
 
     @message_command(
         guild_ids=[719343092963999804],
@@ -716,6 +706,35 @@ class Submission(Cog):
                 f"{member.mention} has no characters.", ephemeral=True
             )
 
+    @slash_command(
+        name="submit_as",
+        guild_ids=[719343092963999804],
+        description="Allows to create OCs as an user",
+    )
+    @has_role("Moderation")
+    async def submit_as(
+        self,
+        ctx: ApplicationContext,
+        member: Option(
+            Member,
+            description="Member, if not provided, it's current user.",
+            required=False,
+        ),
+    ):
+        await ctx.defer(ephemeral=True)
+        if ctx.author == member or member is None:
+            self.supporting.pop(ctx.author, None)
+            await ctx.send_followup(
+                content="OCs registered now will be assigned to your account.!",
+                ephemeral=True,
+            )
+        else:
+            self.supporting[ctx.author] = member
+            await ctx.send_followup(
+                content=f"OCs registered now will be assigned to {member.mention}!",
+                ephemeral=True,
+            )
+
     @Cog.listener()
     async def on_ready(self) -> None:
         """This method loads all the characters from the database."""
@@ -1010,24 +1029,7 @@ class Submission(Cog):
 
                 if isinstance(msg_data, dict):
 
-                    author = message.author
-
-                    if channel.permissions_for(author).manage_messages:
-                        m = await channel.send("Mention the User")
-                        aux: Message = await self.bot.wait_for(
-                            "message",
-                            check=lambda m: m.channel == channel
-                            and m.author == author,
-                        )
-                        self.bot.msg_cache_add(m)
-                        self.bot.msg_cache_add(aux)
-                        await m.delete()
-                        context = await self.bot.get_context(aux)
-                        converter = MemberConverter()
-                        author = await converter.convert(
-                            ctx=context, argument=aux.content
-                        )
-                        await aux.delete()
+                    author = self.supporting.get(message.author, message.author)
 
                     self.ignore.add(message.author.id)
                     if oc := oc_process(**msg_data):
