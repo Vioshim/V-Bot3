@@ -195,19 +195,19 @@ class SubmissionView(View):
         async with view.send(
             title="Select Character to modify", single=True
         ) as oc:
-            self.bot.logger.info(
-                "%s is modifying a Character(%s) aka %s",
-                str(ctx.user),
-                repr(oc),
-                oc.name,
-            )
+            if isinstance(oc, Character):
+                self.bot.logger.info(
+                    "%s is modifying a Character(%s) aka %s",
+                    str(ctx.user),
+                    repr(oc),
+                    oc.name,
+                )
 
     @button(
         label="Create Mission",
         emoji="✉",
         row=1,
         custom_id="3ec81ed922f2f2cde42a2fc3ed3392c4",
-        disabled=True,
     )
     async def mission_create(self, _: Button, ctx: Interaction):
         guild: Guild = ctx.guild
