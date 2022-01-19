@@ -300,7 +300,7 @@ class Complex(Simple):
         amount = len(self._choices or set())
         if amount < self._max_values:
             return await super(Complex, self).edit(page=page)
-        await self.delete()
+        await self.delete(force=not self.keep_working)
 
     @asynccontextmanager
     async def send(
