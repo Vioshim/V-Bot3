@@ -559,7 +559,6 @@ class Information(Cog):
         )
 
         async for message in channel.history(
-            oldest_first=True,
             limit=1,
             before=time,
         ):
