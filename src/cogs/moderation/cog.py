@@ -216,7 +216,7 @@ class Moderation(Cog):
                 params={"X-Identity": "V-Bot"},
             ) as data:
                 entries = await data.json()
-                self.scam_urls = set(entries)
+                self.bot.scam_urls = set(entries)
 
         self.bot.scheduler.add_schedule(
             self.scam_changes,
