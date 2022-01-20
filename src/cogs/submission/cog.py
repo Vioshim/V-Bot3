@@ -119,7 +119,7 @@ class Submission(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.ready: bool = False
-        self.missions: list[Mission] = []
+        self.missions: set[Mission] = set()
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
