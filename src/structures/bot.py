@@ -12,18 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from io import BytesIO
 from logging import Logger
 from os import getenv
 from typing import Literal, Optional, Union
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientConnectorError
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncdagpi import Client as DagpiClient
 from asyncpg import Connection, Pool
+from bs4 import BeautifulSoup
 from discord import (
     AllowedMentions,
+    DiscordException,
     Embed,
     File,
     Intents,
@@ -38,6 +41,8 @@ from discord.ext.commands import Bot
 from discord.utils import format_dt, utcnow
 from mystbin import Client as MystBinClient
 from orjson import dumps
+
+from src.utils.matches import REGEX_URL, SCAM_FINDER
 
 __all__ = ("CustomBot",)
 
@@ -98,6 +103,56 @@ class CustomBot(Bot):
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
+
+    async def process_commands(self, message: Message) -> None:
+        """|coro|
+
+        This function processes the commands that have been registered
+        to the bot and other groups. Without this coroutine, none of the
+        commands will be triggered.
+
+        By default, this coroutine is called inside the :func:`.on_message`
+        event. If you choose to override the :func:`.on_message` event, then
+        you should invoke this coroutine as well.
+
+        This is built using other low level tools, and is equivalent to a
+        call to :meth:`~.Bot.get_context` followed by a call to :meth:`~.Bot.invoke`.
+
+        This also checks if the message's author is a bot and doesn't
+        call :meth:`~.Bot.get_context` or :meth:`~.Bot.invoke` if so.
+
+        Parameters
+        -----------
+        message: :class:`discord.Message`
+            The message to process commands for.
+        """
+
+        if message.author:
+            return
+
+        if message.content:
+            for url in REGEX_URL.findall(message.content):
+                with suppress(ClientConnectorError):
+                    async with self.session.get(url) as data:
+                        if data.status != 200:
+                            continue
+                        text = await data.text()
+                        soup = BeautifulSoup(text, "html.parser")
+                        if soup.find_all("script", attrs={"src": SCAM_FINDER}):
+                            if message.guild:
+                                try:
+                                    await message.author.ban(
+                                        delete_message_days=1,
+                                        reason="Nitro Scam victim",
+                                    )
+                                except DiscordException:
+                                    await message.delete()
+                            else:
+                                await message.reply("That's a Nitro Scam")
+                            return
+
+        ctx = await self.get_context(message)
+        await self.invoke(ctx)
 
     def msg_cache_add(self, message: Union[Message, PartialMessage, int], /):
         """Method to add a message to the message cache

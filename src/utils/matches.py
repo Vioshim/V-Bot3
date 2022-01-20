@@ -27,8 +27,9 @@ __all__ = (
     "DATA_FINDER",
     "INVITE",
     "YAML_HANDLER",
+    "SCAM_FINDER",
 )
-
+SCAM_FINDER = compile(r"hb\.bizmrg\.com", IGNORECASE)
 DATA_FINDER = compile(
     r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE
 )
