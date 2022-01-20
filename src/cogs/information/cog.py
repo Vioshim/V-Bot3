@@ -550,18 +550,7 @@ class Information(Cog):
         """Loads the program in the scheduler"""
         channel = await self.bot.fetch_channel(860590339327918100)
 
-        time = datetime.utcnow()
-        time = time.replace(
-            hour=13,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        async for message in channel.history(
-            limit=1,
-            before=time,
-        ):
+        async for message in channel.history(limit=1):
             if message.id != 913555643699458088 and message.author == self.user:
                 self.current_question = message
 
