@@ -104,13 +104,6 @@ class CustomBot(Bot):
         self.scam_urls: set[str] = set()
 
     async def on_message(self, message: Message):
-        if not self.scam_urls:
-            async with self.session.get(
-                "https://phish.sinking.yachts/v2/all",
-                params={"X-Identity": "V-Bot"},
-            ) as data:
-                entries = await data.json()
-                self.scam_urls = set(entries)
         for url in URL_DOMAIN_MATCH.findall(message.content or ""):
             if url in self.scam_urls:
                 if message.guild:

@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from re import MULTILINE, compile
 from typing import Optional, Union
 
+from apscheduler.triggers.cron import CronTrigger
 from discord import (
     AllowedMentions,
     DiscordException,
@@ -191,6 +192,37 @@ class Moderation(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.loaded: bool = False
+
+    async def scam_changes(self, seconds: str = 300):
+        url = f"https://phish.sinking.yachts/v2/recent/{seconds}"
+        async with self.bot.session.get(
+            url,
+            params={"X-Identity": "V-Bot"},
+        ) as data:
+            items: list[dict[str, str]] = await data.json()
+            for item in items:
+                handler = item.get("type")
+                domains: list[str] = set(item.get("domains", []))
+                if handler == "add":
+                    self.bot.scam_urls |= domains
+                elif handler == "delete":
+                    self.bot.scam_urls -= domains
+
+    @Cog.listener()
+    async def on_ready(self):
+        if not self.bot.scam_urls:
+            async with self.bot.session.get(
+                "https://phish.sinking.yachts/v2/all",
+                params={"X-Identity": "V-Bot"},
+            ) as data:
+                entries = await data.json()
+                self.scam_urls = set(entries)
+
+        self.bot.scheduler.add_schedule(
+            self.scam_changes,
+            id="Nitro Scam List",
+            trigger=CronTrigger(minute=",".join(range(0, 60, 5)), second=0),
+        )
 
     @slash_command(
         guild_ids=[719343092963999804],
