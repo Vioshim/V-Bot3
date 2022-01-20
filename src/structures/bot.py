@@ -19,11 +19,9 @@ from os import getenv
 from typing import Literal, Optional, Union
 
 from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientConnectorError
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncdagpi import Client as DagpiClient
 from asyncpg import Connection, Pool
-from bs4 import BeautifulSoup
 from discord import (
     AllowedMentions,
     DiscordException,
@@ -42,7 +40,7 @@ from discord.utils import format_dt, utcnow
 from mystbin import Client as MystBinClient
 from orjson import dumps
 
-from src.utils.matches import REGEX_URL, SCAM_FINDER
+from src.utils.matches import URL_DOMAIN_MATCH
 
 __all__ = ("CustomBot",)
 
@@ -103,45 +101,28 @@ class CustomBot(Bot):
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
-        self.scanned_urls: dict[str, bool] = {}
+        self.scam_urls: set[str] = set()
 
-    async def on_message(self, message):
-        scam_detected: bool = False
-        if message.content:
-            for url in REGEX_URL.findall(message.content):
-                if scan := self.scanned_urls.get(url):
-                    scam_detected = True
-                    break
-                elif scan is False:
-                    continue
-                else:
-                    with suppress(ClientConnectorError):
-                        async with self.session.get(url) as data:
-                            if data.status != 200:
-                                continue
-                            text = await data.text()
-                            soup = BeautifulSoup(text, "html.parser")
-                            if soup.find_all(
-                                "script",
-                                attrs={"src": SCAM_FINDER},
-                            ):
-                                self.scanned_urls[url] = True
-                                scam_detected = True
-                                break
-                            else:
-                                self.scanned_urls[url] = False
-
-        if scam_detected:
-            if message.guild:
-                try:
-                    await message.author.ban(
-                        delete_message_days=1,
-                        reason="Nitro Scam victim",
-                    )
-                except DiscordException:
+    async def on_message(self, message: Message):
+        if not self.scam_urls:
+            async with self.session.get(
+                "https://phish.sinking.yachts/v2/all",
+                params={"X-Identity": "V-Bot"},
+            ) as data:
+                entries = await data.json()
+                self.scam_urls = set(entries)
+        for url in URL_DOMAIN_MATCH.findall(message.content or ""):
+            if url in self.scam_urls:
+                if message.guild:
                     await message.delete()
-            else:
-                await message.reply("That's a Nitro Scam")
+                    with suppress(DiscordException):
+                        await message.author.ban(
+                            delete_message_days=1,
+                            reason="Nitro Scam victim",
+                        )
+                else:
+                    await message.reply("That's a Nitro Scam")
+                break
         else:
             await self.process_commands(message)
 

@@ -28,6 +28,7 @@ __all__ = (
     "INVITE",
     "YAML_HANDLER",
     "SCAM_FINDER",
+    "URL_DOMAIN_MATCH",
 )
 SCAM_FINDER = compile(r"hb\.bizmrg\.com", IGNORECASE)
 DATA_FINDER = compile(
@@ -46,7 +47,9 @@ POKEMON_IMAGE = compile(
 G_DOCUMENT = compile(r"https://docs\.google\.com/document/d/(.+)/", IGNORECASE)
 
 EMOJI_REGEX = compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")
-
+URL_DOMAIN_MATCH = compile(
+    r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
+)
 REGEX_URL = compile(
     r"http[s]?://"
     r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
