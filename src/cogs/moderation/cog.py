@@ -218,7 +218,7 @@ class Moderation(Cog):
                 entries = await data.json()
                 self.bot.scam_urls = set(entries)
 
-        self.bot.scheduler.add_schedule(
+        await self.bot.scheduler.add_schedule(
             self.scam_changes,
             id="Nitro Scam List",
             trigger=CronTrigger(
