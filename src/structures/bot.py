@@ -103,29 +103,45 @@ class CustomBot(Bot):
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
+        self.scanned_urls: dict[str, bool] = {}
 
     async def on_message(self, message):
+        scam_detected: bool = False
         if message.content:
             for url in REGEX_URL.findall(message.content):
-                with suppress(ClientConnectorError):
-                    async with self.session.get(url) as data:
-                        if data.status != 200:
-                            continue
-                        text = await data.text()
-                        soup = BeautifulSoup(text, "html.parser")
-                        if soup.find_all("script", attrs={"src": SCAM_FINDER}):
-                            if message.guild:
-                                try:
-                                    await message.author.ban(
-                                        delete_message_days=1,
-                                        reason="Nitro Scam victim",
-                                    )
-                                except DiscordException:
-                                    await message.delete()
-                            else:
-                                await message.reply("That's a Nitro Scam")
-                            return
-        await self.process_commands(message)
+                if scan := self.scanned_urls.get(url):
+                    scam_detected = True
+                    break
+                elif scan is False:
+                    continue
+                else:
+                    with suppress(ClientConnectorError):
+                        async with self.session.get(url) as data:
+                            if data.status != 200:
+                                continue
+                            text = await data.text()
+                            soup = BeautifulSoup(text, "html.parser")
+                            if soup.find_all(
+                                "script",
+                                attrs={"src": SCAM_FINDER},
+                            ):
+                                self.scam_detected[url] = True
+                                scam_detected = True
+                                break
+
+        if scam_detected:
+            if message.guild:
+                try:
+                    await message.author.ban(
+                        delete_message_days=1,
+                        reason="Nitro Scam victim",
+                    )
+                except DiscordException:
+                    await message.delete()
+            else:
+                await message.reply("That's a Nitro Scam")
+        else:
+            await self.process_commands(message)
 
     def msg_cache_add(self, message: Union[Message, PartialMessage, int], /):
         """Method to add a message to the message cache
