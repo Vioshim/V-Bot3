@@ -267,34 +267,34 @@ class SubmissionView(View):
                     required=True,
                 )
 
-                async with text_input.send(
-                    title="Mission's Title",
-                    description="Small summary that will show in the top of the paper. (50 Characters)",
-                ) as text:
+                text_input.title = "Mission's Title"
+                text_input.description = "Small summary that will show in the top of the paper. (50 Characters)"
+
+                async with text_input.send() as text:
                     if not text:
                         return
-                    mission.title = text.capitalize()
+                    mission.title = text.title()
 
-                async with text_input.send(
-                    title="Mission's Description",
-                    description="In this area, specify what is the mission about, and describe whatever is needed.",
-                ) as text:
+                text_input.title = "Mission's Description"
+                text_input.description = "In this area, specify what is the mission about, and describe whatever is needed."
+
+                async with text_input.send() as text:
                     if not text:
                         return
                     mission.description = text
 
-                async with text_input.send(
-                    title="Mission's Target",
-                    description="Either be the one that you're looking for, or the item that is being searched.",
-                ) as text:
+                text_input.title = "Mission's Target"
+                text_input.description = "Either be the one that you're looking for, or the item that is being searched."
+
+                async with text_input.send() as text:
                     if not text:
                         return
                     mission.target = text
 
-                async with text_input.send(
-                    title="Mission's Client",
-                    description="The one that is making the mission and possibly reward if done.",
-                ) as text:
+                text_input.title = "Mission's Client"
+                text_input.description = "The one that is making the mission and possibly reward if done."
+
+                async with text_input.send() as text:
                     if not text:
                         return
                     mission.client = text
@@ -306,11 +306,9 @@ class SubmissionView(View):
                     values=range(1, 7),
                     emoji_parser=lambda x: DICE_NUMBERS[x - 1],
                     parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
-                    title="Mission's Difficulty",
                 )
-                async with view.send(
-                    title="Mission's difficulty", single=True
-                ) as item:
+                view.embed.title = ("Mission's Difficulty",)
+                async with view.send(single=True) as item:
                     if not item:
                         return
                     mission.difficulty = item
