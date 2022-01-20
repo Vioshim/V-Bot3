@@ -221,7 +221,10 @@ class Moderation(Cog):
         self.bot.scheduler.add_schedule(
             self.scam_changes,
             id="Nitro Scam List",
-            trigger=CronTrigger(minute=",".join(range(0, 60, 5)), second=0),
+            trigger=CronTrigger(
+                minute="0,5,10,15,20,25,30,35,40,45,50,55",
+                second=0,
+            ),
         )
 
     @slash_command(
