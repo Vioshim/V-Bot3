@@ -125,9 +125,11 @@ class CustomBot(Bot):
                                 "script",
                                 attrs={"src": SCAM_FINDER},
                             ):
-                                self.scam_detected[url] = True
+                                self.scanned_urls[url] = True
                                 scam_detected = True
                                 break
+                            else:
+                                self.scanned_urls[url] = False
 
         if scam_detected:
             if message.guild:
