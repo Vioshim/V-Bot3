@@ -696,7 +696,7 @@ class AbilitiesMod(Mod):
             timeout=None,
             target=target,
             max_values=oc.max_amount_abilities,
-            parser=lambda x: (x.value.name, x.description),
+            parser=lambda x: (x.name, x.description),
         )
         origin = await target.original_message()
         view.embed.title = "Select the abilities. Current ones below"
