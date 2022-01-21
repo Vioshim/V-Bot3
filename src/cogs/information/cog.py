@@ -550,7 +550,10 @@ class Information(Cog):
         channel = await self.bot.fetch_channel(860590339327918100)
 
         async for message in channel.history(limit=1):
-            if message.id != 913555643699458088 and message.author == self.user:
+            if (
+                message.id != 913555643699458088
+                and message.author == self.bot.user
+            ):
                 self.current_question = message
 
         await self.bot.scheduler.add_schedule(
