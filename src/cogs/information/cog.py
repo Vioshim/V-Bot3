@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from contextlib import suppress
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 

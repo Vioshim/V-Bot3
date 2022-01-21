@@ -691,12 +691,24 @@ class Submission(Cog):
             required=False,
         ),
     ):
+        await ctx.defer(ephemeral=True)
         if member is None:
             member: Member = ctx.author
-        await ctx.defer(ephemeral=True)
+        if isinstance(member, int):
+            try:
+                member = await self.bot.fetch_user(member)
+            except DiscordException:
+                return await ctx.send_followup("User no longer in Discord")
         if (character or "").isdigit() and (oc := self.ocs.get(int(character))):
             return await ctx.send_followup(embed=oc.embed)
-        if ocs := self.rpers.get(member.id, {}).values():
+        if ocs := list(self.rpers.get(member.id, {}).values()):
+            ocs.sort(key=lambda x: x.name)
+            if len(ocs) == 1:
+                await ctx.send_followup(
+                    f"{member.mention} has only one character.",
+                    embed=ocs[0].embed,
+                )
+                return
             view = CharactersView(
                 bot=self.bot,
                 member=ctx.author,
@@ -711,9 +723,7 @@ class Submission(Cog):
             async with view.send(ephemeral=True):
                 pass
         else:
-            await ctx.send_followup(
-                f"{member.mention} has no characters.", ephemeral=True
-            )
+            await ctx.send_followup(f"{member.mention} has no characters.")
 
     @slash_command(
         name="submit_as",
@@ -731,7 +741,9 @@ class Submission(Cog):
         ),
     ):
         await ctx.defer(ephemeral=True)
-        if ctx.author == member or member is None:
+        if not member:
+            member: Member = ctx.author
+        if ctx.author == member:
             self.supporting.pop(ctx.author, None)
             await ctx.send_followup(
                 content="OCs registered now will be assigned to your account.!",

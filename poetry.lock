@@ -231,11 +231,11 @@ python-versions = "*"
 
 [[package]]
 name = "cachetools"
-version = "4.2.4"
+version = "5.0.0"
 description = "Extensible memoizing collections and decorators"
 category = "main"
 optional = false
-python-versions = "~=3.5"
+python-versions = "~=3.7"
 
 [[package]]
 name = "cchardet"
@@ -414,14 +414,14 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.3.3"
+version = "2.4.0"
 description = "Google Authentication Library"
 category = "main"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"
 
 [package.dependencies]
-cachetools = ">=2.0.0,<5.0"
+cachetools = ">=2.0.0,<6.0"
 pyasn1-modules = ">=0.2.1"
 rsa = {version = ">=3.1.4,<5", markers = "python_version >= \"3.6\""}
 six = ">=1.9.0"
@@ -791,7 +791,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "py-cord"
-version = "2.0.0a4826+gc3de8584"
+version = "2.0.0a4845+g0e056c9f"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -815,7 +815,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Vioshim/pycord.git"
 reference = "master"
-resolved_reference = "c3de858433466c083789d36a608df4ac361fe7a7"
+resolved_reference = "0e056c9f4c65fcd3050d60f4c6f4f656e956a0f9"
 
 [[package]]
 name = "pyaml"
@@ -1473,8 +1473,8 @@ cached-property = [
     {file = "cached_property-1.5.2-py2.py3-none-any.whl", hash = "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"},
 ]
 cachetools = [
-    {file = "cachetools-4.2.4-py3-none-any.whl", hash = "sha256:92971d3cb7d2a97efff7c7bb1657f21a8f5fb309a37530537c71b1774189f2d1"},
-    {file = "cachetools-4.2.4.tar.gz", hash = "sha256:89ea6f1b638d5a73a4f9226be57ac5e4f399d22770b92355f92dcb0f7f001693"},
+    {file = "cachetools-5.0.0-py3-none-any.whl", hash = "sha256:8fecd4203a38af17928be7b90689d8083603073622229ca7077b72d8e5a976e4"},
+    {file = "cachetools-5.0.0.tar.gz", hash = "sha256:486471dfa8799eb7ec503a8059e263db000cdda20075ce5e48903087f79d5fd6"},
 ]
 cchardet = [
     {file = "cchardet-2.1.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:c6f70139aaf47ffb94d89db603af849b82efdf756f187cdd3e566e30976c519f"},
@@ -1686,8 +1686,8 @@ google-api-python-client = [
     {file = "google_api_python_client-2.36.0-py2.py3-none-any.whl", hash = "sha256:9e8863dec46224d4375cf3834e27ffd4bce79858f0f00a6109a51e3e62b4f3c2"},
 ]
 google-auth = [
-    {file = "google-auth-2.3.3.tar.gz", hash = "sha256:d83570a664c10b97a1dc6f8df87e5fdfff012f48f62be131e449c20dfc32630e"},
-    {file = "google_auth-2.3.3-py2.py3-none-any.whl", hash = "sha256:a348a50b027679cb7dae98043ac8dbcc1d7951f06d8387496071a1e05a2465c0"},
+    {file = "google-auth-2.4.0.tar.gz", hash = "sha256:ef6f4827f6a3f9c5ff884616e2ba779acb5d690486fb70ca5e3091ed85ad932a"},
+    {file = "google_auth-2.4.0-py2.py3-none-any.whl", hash = "sha256:d1fad279d9d97e7d6b4a09a53e851ab2ee6d36d5c19547354a3f47a8a6ae41b9"},
 ]
 google-auth-httplib2 = [
     {file = "google-auth-httplib2-0.1.0.tar.gz", hash = "sha256:a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac"},
