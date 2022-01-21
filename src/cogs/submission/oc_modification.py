@@ -98,14 +98,14 @@ class SPView(Basic):
                 target=ctx,
                 values=self.oc.abilities,
                 timeout=None,
-                parser=lambda x: (x.value.name, x.description),
+                parser=lambda x: (x.name, x.description),
                 silent_mode=True,
             )
             async with view.send(
                 title="Select an Ability to Remove.",
                 fields=[
                     dict(
-                        name=f"Ability {index} - {item.value.name}",
+                        name=f"Ability {index} - {item.name}",
                         value=item.description,
                         inline=False,
                     )
@@ -702,7 +702,7 @@ class AbilitiesMod(Mod):
         view.embed.title = "Select the abilities. Current ones below"
         for index, item in enumerate(oc.abilities, start=1):
             view.embed.add_field(
-                name=f"Ability {index} - {item.value.name}",
+                name=f"Ability {index} - {item.name}",
                 value=item.description,
                 inline=False,
             )

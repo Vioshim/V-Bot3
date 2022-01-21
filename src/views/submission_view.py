@@ -179,30 +179,51 @@ class SubmissionView(View):
 
         member = self.supporting.get(member, member)
 
-        if not (values := self.rpers.get(member.id, {}).values()):
+        if not (values := list(self.rpers.get(member.id, {}).values())):
             return await ctx.followup.send(
                 "You don't have characters to modify", ephemeral=True
             )
 
-        view = CharacterHandlerView(
-            bot=self.bot,
-            member=ctx.user,
-            target=ctx,
-            values=values,
-        )
+        values.sort(key=lambda x: x.name)
 
-        view.embed.title = "Select Character to modify"
-        view.embed.set_thumbnail(url=member.display_avatar.url)
-
-        oc: Type[Character]
-        async with view.send(single=True) as oc:
-            if isinstance(oc, Character):
-                self.bot.logger.info(
-                    "%s is modifying a Character(%s) aka %s",
-                    str(ctx.user),
-                    repr(oc),
-                    oc.name,
+        if len(values) == 1:
+            view = ModifyView(
+                bot=self.bot,
+                member=ctx.user,
+                oc=values[0],
+                target=ctx,
+            )
+            await resp.send_message(
+                embed=values[0].embed,
+                view=view,
+                ephemeral=True,
+            )
+            await view.wait()
+            with suppress(DiscordException):
+                await ctx.edit_original_message(
+                    embed=values[0].embed,
+                    view=None,
                 )
+        else:
+            view = CharacterHandlerView(
+                bot=self.bot,
+                member=ctx.user,
+                target=ctx,
+                values=values,
+            )
+
+            view.embed.title = "Select Character to modify"
+            view.embed.set_thumbnail(url=member.display_avatar.url)
+
+            oc: Type[Character]
+            async with view.send(single=True) as oc:
+                if isinstance(oc, Character):
+                    self.bot.logger.info(
+                        "%s is modifying a Character(%s) aka %s",
+                        str(ctx.user),
+                        repr(oc),
+                        oc.name,
+                    )
 
     @button(
         label="Create Mission",
