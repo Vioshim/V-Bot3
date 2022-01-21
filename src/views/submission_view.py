@@ -193,7 +193,8 @@ class SubmissionView(View):
                 oc=values[0],
                 target=ctx,
             )
-            await resp.send_message(
+            await ctx.followup.send(
+                content="User only has one character",
                 embed=values[0].embed,
                 view=view,
                 ephemeral=True,
