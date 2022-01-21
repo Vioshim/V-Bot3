@@ -103,21 +103,28 @@ class CustomBot(Bot):
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
         self.scam_urls: set[str] = set()
 
-    async def on_message(self, message: Message):
-        for url in URL_DOMAIN_MATCH.findall(message.content or ""):
-            if url in self.scam_urls:
-                if message.guild:
-                    await message.delete()
-                    with suppress(DiscordException):
+    async def on_message(self, message: Message) -> None:
+        """Bot's on_message with nitro scam handler
+
+        Parameters
+        ----------
+        message : Message
+            message to process
+        """
+        if message.content:
+            elements = URL_DOMAIN_MATCH.findall(message.content)
+            if self.scam_urls.intersection(elements):
+                with suppress(DiscordException):
+                    if not message.guild:
+                        await message.reply("That's a Nitro Scam")
+                    else:
+                        await message.delete()
                         await message.author.ban(
                             delete_message_days=1,
                             reason="Nitro Scam victim",
                         )
-                else:
-                    await message.reply("That's a Nitro Scam")
-                break
-        else:
-            await self.process_commands(message)
+                return
+        await self.process_commands(message)
 
     def msg_cache_add(self, message: Union[Message, PartialMessage, int], /):
         """Method to add a message to the message cache

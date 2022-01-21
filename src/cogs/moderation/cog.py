@@ -49,6 +49,9 @@ from src.context import ApplicationContext, Context
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
+API = "https://phish.sinking.yachts/v2"
+API_PARAM = {"X-Identity": "V-Bot"}
+
 
 class Meeting(View):
     def __init__(
@@ -189,15 +192,30 @@ class Meeting(View):
 
 
 class Moderation(Cog):
+    """This is a standard moderation Cog"""
+
     def __init__(self, bot: CustomBot):
+        """Default init Method
+
+        Parameters
+        ----------
+        bot : CustomBot
+            Bot instance
+        """
         self.bot = bot
         self.loaded: bool = False
 
     async def scam_changes(self, seconds: str = 300):
-        url = f"https://phish.sinking.yachts/v2/recent/{seconds}"
+        """Function to load API Changes
+
+        Parameters
+        ----------
+        seconds : str, optional
+            Seconds to retrieve, by default 300
+        """
         async with self.bot.session.get(
-            url,
-            params={"X-Identity": "V-Bot"},
+            f"{API}/recent/{seconds}",
+            params=API_PARAM,
         ) as data:
             items: list[dict[str, str]] = await data.json()
             for item in items:
@@ -210,10 +228,11 @@ class Moderation(Cog):
 
     @Cog.listener()
     async def on_ready(self):
+        """Initialize the scam urls and schedule each 5 minutes"""
         if not self.bot.scam_urls:
             async with self.bot.session.get(
-                "https://phish.sinking.yachts/v2/all",
-                params={"X-Identity": "V-Bot"},
+                f"{API}/all",
+                params=API_PARAM,
             ) as data:
                 entries = await data.json()
                 self.bot.scam_urls = set(entries)
