@@ -304,11 +304,11 @@ class ColorRoles(View):
                     view=view,
                 )
             elif role:
-                await ctx.user.add_roles(role, reason="Self Roles interaction")
                 await resp.send_message(
-                    f"Role {role.mention} was added to your account.",
+                    f"Role {role.mention} is being added to your account.",
                     ephemeral=True,
                 )
+                await ctx.user.add_roles(role, reason="Self Roles interaction")
             if data := set(ctx.user.roles).intersection(total):
                 await ctx.user.remove_roles(*data, reason="Self Roles")
 

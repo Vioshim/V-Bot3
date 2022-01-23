@@ -712,7 +712,7 @@ class Moderation(Cog):
         :param reason: Reason
         :return:
         """
-        mod_channel: TextChannel = ctx.guild.get_channel(799091737875447808)
+        mod_channel: TextChannel = ctx.guild.get_channel(877376320093425685)
         guild: Guild = mod_channel.guild
         roles: list[Role] = [
             guild.get_role(732328576615055393),
