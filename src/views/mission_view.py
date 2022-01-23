@@ -32,10 +32,9 @@ class MissionView(View):
 
     @button(label="Claim Mission", custom_id="claim")
     async def claim(self, btn: Button, interaction: Interaction):
-        # noinspection PyTypeChecker
         cog = self.bot.get_cog("Submission")
         member: Member = interaction.user
-        if not (ocs := cog.oc_slots.get(member.id, set())):
+        if not (ocs := list(cog.rpers.get(member.id, {}).values())):
             await interaction.response.send_message(
                 "You don't have registered characters", ephemeral=True
             )

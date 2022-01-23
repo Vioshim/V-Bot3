@@ -75,28 +75,21 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        if (member.id, member.guild.id) in self.blame.values():
+        item = member.id, member.guild.id
+        if item in self.blame.values():
 
-            for k, v in self.blame.items():
-                if v == (member.id, member.guild.id):
-                    del self.cache[v]
-                    async with self.bot.database(
-                        raise_on_error=False
-                    ) as session:
-                        await session.execute(
-                            """
-                            DELETE FROM EMBED_BUILDER
-                            WHERE CHANNEL = $1 AND SERVER = $2;
-                            """,
-                            member.id,
-                            member.guild.id,
-                        )
+            aux = [v for v in self.blame.values() if v == item]
+            self.cache.pop(item, None)
+            self.blame = {k: v for k, v in self.blame.items() if v != item}
 
-            self.blame = {
-                k: v
-                for k, v in self.blame.items()
-                if v != (member.id, member.guild.id)
-            }
+            async with self.bot.database(raise_on_error=False) as session:
+                await session.executemany(
+                    """--sql
+                    DELETE FROM EMBED_BUILDER
+                    WHERE CHANNEL = $1 AND SERVER = $2;
+                    """,
+                    aux,
+                )
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -107,7 +100,8 @@ class EmbedBuilder(Cog):
         with suppress(DiscordException):
             ctx: Context = await self.bot.get_context(message=message)
             reference = await self.converter.convert(
-                ctx=ctx, argument=message.content
+                ctx=ctx,
+                argument=message.content,
             )
             member: Member = message.author
             author: User = reference.author
@@ -119,16 +113,14 @@ class EmbedBuilder(Cog):
             )
             if content := reference.content:
                 embed.description = content
-            if avatar := author.display_avatar:
-                embed.set_author(name=f"Quoting {author}", icon_url=avatar.url)
-            else:
-                embed.set_author(name=f"Quoting {author}")
-            if avatar := member.display_avatar:
-                embed.set_footer(
-                    text=f"Requested by {member}", icon_url=avatar.url
-                )
-            else:
-                embed.set_footer(text=f"Requested by {member}")
+            embed.set_author(
+                name=f"Quoting {author}",
+                icon_url=author.display_avatar.url,
+            )
+            embed.set_footer(
+                text=f"Requested by {member}",
+                icon_url=member.display_avatar.url,
+            )
             view = View(timeout=None)
             view.add_item(Button(label="Jump URL", url=reference.jump_url))
             target: TextChannel = message.channel
@@ -159,17 +151,30 @@ class EmbedBuilder(Cog):
         """
         if ctx.webhook_id:
 
-            for k, v in self.blame.items():
-                if k == ctx:
-                    del self.blame[k]
-                    async with self.bot.database(
-                        raise_on_error=False
-                    ) as session:
-                        await session.execute(
-                            "DELETE FROM EMBED_BUILDER WHERE CHANNEL = ($1) AND MESSAGE = ($2);",
-                            k.channel.id,
-                            ctx.id,
-                        )
+            def check(x: Message) -> bool:
+                return ctx.channel == x.channel and ctx.id == x.id
+
+            if aux := [
+                (
+                    k.channel.id,
+                    ctx.id,
+                )
+                for k in self.blame.keys()
+                if check(k)
+            ]:
+                async with self.bot.database(raise_on_error=False) as session:
+                    await session.executemany(
+                        """--sql
+                        DELETE FROM EMBED_BUILDER
+                        WHERE CHANNEL = ($1) AND MESSAGE = ($2);
+                        """,
+                        aux,
+                    )
+            self.blame = {
+                k: v
+                for k, v in self.blame.items()
+                if not (ctx.channel == k.channel and not check(k))
+            }
 
     @Cog.listener()
     async def on_ready(self):
@@ -183,7 +188,10 @@ class EmbedBuilder(Cog):
             return
         async with self.bot.database(raise_on_error=False) as session:
             async for item in session.cursor(
-                "SELECT AUTHOR, SERVER, CHANNEL, MESSAGE FROM EMBED_BUILDER;"
+                """--sql
+                SELECT AUTHOR, SERVER, CHANNEL, MESSAGE
+                FROM EMBED_BUILDER;
+                """
             ):
                 author, guild, channel, message = tuple(item)
                 item_blame = author, guild
@@ -198,7 +206,8 @@ class EmbedBuilder(Cog):
                             thread_id = None
                         item_cache: WebhookMessage = (
                             await webhook.fetch_message(
-                                message, thread_id=thread_id
+                                message,
+                                thread_id=thread_id,
                             )
                         )
                         self.cache[item_blame] = item_cache
