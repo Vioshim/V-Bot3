@@ -63,6 +63,7 @@ class MissionView(View):
         async with view_select.send(
             title="Mission Claiming",
             description="Select who is taking the mission",
+            single=True,
         ) as choice:
 
             if not choice:
