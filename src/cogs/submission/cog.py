@@ -1195,9 +1195,9 @@ class Submission(Cog):
                     former_channel = message.guild.get_channel(oc.location)
                     previous = self.located.get(oc.location, set())
                     current = self.located.get(msg.channel.id, set())
-                    if item in previous:
+                    if oc in previous:
                         previous.remove(oc)
-                    if item not in current:
+                    if oc not in current:
                         current.add(oc)
 
                     if len(previous) == 0 and former_channel:
