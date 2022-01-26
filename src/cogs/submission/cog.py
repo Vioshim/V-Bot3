@@ -1200,7 +1200,7 @@ class Submission(Cog):
                     if oc not in current:
                         current.add(oc)
 
-                    if len(previous) == 0 and former_channel:
+                    if former_channel and len(previous) == 0:
                         await self.unclaiming(former_channel)
                         await self.bot.scheduler.remove_schedule(
                             f"RP[{former_channel.id}]"
