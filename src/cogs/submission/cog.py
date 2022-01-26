@@ -317,7 +317,7 @@ class Submission(Cog):
                 ]
             )
         )
-        for oc in self.located.get(channel.id, set()):
+        for oc in self.located.pop(channel.id, set()):
             oc.location = None
             await self.oc_update(oc)
 
