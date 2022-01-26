@@ -21,7 +21,7 @@ from docx.document import Document
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
+from googleapiclient.discovery import Resource, build
 from googleapiclient.http import HttpRequest, MediaIoBaseDownload
 
 SCOPES = [
@@ -34,13 +34,21 @@ DOCX_FORMAT = (
 GOOGLE_FORMAT = "application/vnd.google-apps.document"
 
 
-def docs_reader(document_id: str) -> Document:
+def docs_reader(
+    document_id: str,
+    token_path: str = "token.json",
+    credentials_path: str = "credentials.json",
+) -> Document:
     """Google Document reader
 
     Parameters
     ----------
     document_id: str
         Google document's unique ID
+    token_path: str, optional
+        token path, defaults to "token.json"
+    credentials_path: str, optional
+        credentials path, defaults to "credentials.json"
 
     Raises
     ------
@@ -48,6 +56,8 @@ def docs_reader(document_id: str) -> Document:
         If bad request
     ValueError
         If invalid format
+    NotImplementedError
+        If credentials weren't found
 
     Returns
     -------
@@ -55,22 +65,28 @@ def docs_reader(document_id: str) -> Document:
         Document
     """
     credentials = None
-    if exists("token.json"):
+
+    if exists(token_path):
         credentials = Credentials.from_authorized_user_file(
-            "token.json", SCOPES
+            token_path,
+            scopes=SCOPES,
         )
     if not credentials or not credentials.valid:
         if credentials and credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
-        else:
+        elif exists(credentials_path):
             flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials.json", SCOPES
+                credentials_path,
+                scopes=SCOPES,
             )
             credentials = flow.run_local_server(port=0)
-        with open("token.json", "w") as file:
+        else:
+            text = f"Path {credentials_path} for credentials was not found."
+            raise NotImplementedError(text)
+        with open(token_path, "w") as file:
             file.write(credentials.to_json())
 
-    service = build(
+    service: Resource = build(
         "drive",
         "v3",
         credentials=credentials,
@@ -82,9 +98,7 @@ def docs_reader(document_id: str) -> Document:
         info: dict[str, str] = request.execute()
         value: Optional[str] = info.get("mimeType")
         if value == DOCX_FORMAT:
-            request = data.get_media(
-                fileId=document_id,
-            )
+            request = data.get_media(fileId=document_id)
         elif value == GOOGLE_FORMAT:
             request = data.export_media(
                 fileId=document_id,

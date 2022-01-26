@@ -111,6 +111,9 @@ class Typing:
     chart: frozendict[int, float] = field(default_factory=frozendict)
     banner: str = ""
 
+    def __post_init__(self):
+        self.chart = frozendict({k: v for k, v in self.chart.items() if v != 1})
+
     def __add__(self, other: Typing) -> Typing:
         """Add Method
 
@@ -125,16 +128,11 @@ class Typing:
             Type with resulting chart
         """
         if (a := self.chart) != (b := other.chart):
+            chart = {x: a.get(x, 1) * b.get(x, 1) for x in a | b}
             return Typing(
                 name=f"{self.name}/{other.name}",
                 color=((self.color + other.color) ** 2) / 2,
-                chart=frozendict(
-                    {
-                        x: multi
-                        for x in a | b
-                        if (multi := a.get(x, 1) * b.get(x, 1)) != 1
-                    }
-                ),
+                chart=frozendict(chart),
             )
         return self
 
@@ -210,6 +208,13 @@ class Typing:
         return self.chart.get(int(other), 1.0)
 
     def when_attacked_by(self, *others: Typing) -> float:
+        """method to determine multiplier
+
+        Returns
+        -------
+        float
+            value
+        """
         base = 1.0
         for other in others:
             if isinstance(other, str):
@@ -219,6 +224,13 @@ class Typing:
         return base
 
     def when_attacking(self, *others: Typing | str) -> float:
+        """method to determine multiplier
+
+        Returns
+        -------
+        float
+            value
+        """
         base = 1.0
         for other in others:
             if isinstance(other, str):

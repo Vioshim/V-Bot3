@@ -32,7 +32,7 @@ from discord.utils import utcnow
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.views.characters_view import CharactersView
+from src.views.characters_view import CharactersView, PingView
 
 __all__ = (
     "PronounRoles",
@@ -245,7 +245,9 @@ class PronounRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
+        total = {
+            item for x in sct.options if (item := guild.get_role(int(x.value)))
+        }
         if add := roles - set(member.roles):
             await member.add_roles(*add, reason="Self Roles")
         if remove := (total - roles) & set(member.roles):
@@ -365,7 +367,9 @@ class BasicRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
+        total = {
+            item for x in sct.options if (item := guild.get_role(int(x.value)))
+        }
         if add := roles - set(member.roles):
             await member.add_roles(*add, reason="Self Roles")
         if remove := (total - roles) & set(member.roles):
@@ -418,7 +422,9 @@ class RPSearchRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
+        total = {
+            item for x in sct.options if (item := guild.get_role(int(x.value)))
+        }
         if add := roles - set(member.roles):
             await member.add_roles(*add, reason="Self Roles")
         if remove := (total - roles) & set(member.roles):
@@ -448,7 +454,7 @@ class RoleManage(View):
         super(RoleManage, self).__init__(timeout=None)
         self.bot = bot
         self.role = role
-        self.ocs = set(ocs)
+        self.ocs = list(ocs)
         self.member = member
         self.role_add.label = f"Get {role.name} Role"
         self.role_remove.label = f"Remove {role.name} Role"
@@ -481,25 +487,47 @@ class RoleManage(View):
         custom_id="check_ocs",
     )
     async def check_ocs(self, _: Button, ctx: Interaction):
-        view = CharactersView(
-            bot=self.bot,
-            member=ctx.user,
-            target=ctx,
-            ocs=self.ocs,
-            keep_working=True,
-        )
-        embed = view.embed
-        embed.set_author(name=self.member.display_name)
-        embed.set_thumbnail(url=self.member.display_avatar.url)
-        async with view.send(ephemeral=True, single=True) as data:
-            if isinstance(data, Character):
-                self.bot.logger.info(
-                    "User %s is currently reading %s's character %s [%s]",
-                    str(ctx.user),
-                    str(self.member),
-                    data.name,
-                    repr(data),
-                )
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        if len(self.ocs) > 1:
+            view = CharactersView(
+                bot=self.bot,
+                member=ctx.user,
+                target=ctx,
+                ocs=self.ocs,
+                keep_working=True,
+            )
+            embed = view.embed
+            embed.set_author(name=self.member.display_name)
+            embed.set_thumbnail(url=self.member.display_avatar.url)
+            async with view.send(ephemeral=True, single=True) as data:
+                if isinstance(data, Character):
+                    self.bot.logger.info(
+                        "User %s is currently reading %s's character %s [%s]",
+                        str(ctx.user),
+                        str(self.member),
+                        data.name,
+                        repr(data),
+                    )
+        elif self.ocs:
+            oc = self.ocs[0]
+            embed = oc.embed
+            embed.set_author(name=self.member.display_name)
+            embed.set_thumbnail(url=self.member.display_avatar.url)
+            view = PingView(oc=oc, deleter=self.member == ctx.user)
+            await ctx.followup.send(
+                content="User only has one character",
+                embed=embed,
+                ephemeral=True,
+                view=view,
+            )
+            self.bot.logger.info(
+                "User %s is currently reading %s's character %s [%s]",
+                str(ctx.user),
+                str(self.member),
+                oc.name,
+                repr(oc),
+            )
 
 
 class RoleView(View):

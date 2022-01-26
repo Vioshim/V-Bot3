@@ -1687,7 +1687,7 @@ def kind_deduce(item: Optional[Species], *args, **kwargs):
         return instance(*args, **kwargs)
 
 
-def oc_process(**kwargs):
+def oc_process(**kwargs) -> Type[Character]:
     """Function used for processing a dict, to a character
 
     Returns

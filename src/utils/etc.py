@@ -29,7 +29,8 @@ from discord import OptionChoice, PartialEmoji
 REGISTERED_IMG = "https://cdn.discordapp.com/attachments/797618220382027839/867427444579106856/registered_1.png"
 RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/863415224626184192/image.gif"
 WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
-MAP_URL = "https://cdn.discordapp.com/attachments/801227409881694218/935364791730581534/Untitled147_20220124204109.png"
+MAP_URL = "https://cdn.discordapp.com/attachments/801227409881694218/935642408434159668/Untitled147_20220125150721.png"
+
 NUMBERS = [
     PartialEmoji(name="one", id=861932320373866497),
     PartialEmoji(name="two", id=861932320420266015),

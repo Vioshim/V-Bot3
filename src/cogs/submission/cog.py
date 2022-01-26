@@ -42,12 +42,7 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -63,12 +58,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -88,31 +78,43 @@ from src.views import (
 )
 
 
-def oc_autocomplete(ctx: AutocompleteContext):
+def oc_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
+    """Method to autocomplete the requested OCs
+
+    Parameters
+    ----------
+    ctx : AutocompleteContext
+        Context
+
+    Returns
+    -------
+    list[OptionChoice]
+        Values
+    """
     member_id = int(ctx.options.get("member") or ctx.interaction.user.id)
     cog: Submission = ctx.bot.get_cog("Submission")
-    text: str = ctx.value or ""
+    text: str = str(ctx.value or "").title()
     ocs = cog.rpers.get(member_id, {}).values()
-    values: set[tuple[str, str]] = set()
 
-    if items := {oc.name: (oc.name, str(oc.id)) for oc in ocs}:
-        values.update(
-            items[item]
+    if items := {oc.name: str(oc.id) for oc in ocs}:
+        values = [
+            OptionChoice(name=item, value=items[item])
             for item in get_close_matches(
                 word=text,
                 possibilities=items,
                 n=25,
             )
-        )
+        ]
+    else:
+        values = []
 
-    if len(values) <= 5:
-        values.update(
-            (oc.name, str(oc.id))
-            for oc in ocs
-            if oc.name.startswith(text.title())
-        )
+    values.extend(
+        OptionChoice(name=oc.name, value=str(oc.id))
+        for oc in ocs
+        if oc.name.startswith(text)
+    )
 
-    return map(lambda x: OptionChoice(*x), values)
+    return sorted(values, key=lambda x: x.name)
 
 
 class Submission(Cog):
@@ -166,7 +168,11 @@ class Submission(Cog):
                 keep_working=True,
             )
             async with view.send(ephemeral=True):
-                pass
+                self.bot.logger.info(
+                    "User %s is reading the moves at %s",
+                    str(ctx.author),
+                    message.jump_url,
+                )
         else:
             await ctx.send_followup(
                 "This message does not include moves.",
@@ -202,7 +208,11 @@ class Submission(Cog):
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
             async with view.send(ephemeral=True):
-                pass
+                self.bot.logger.info(
+                    "User %s is reading the OCs of %s",
+                    str(ctx.author),
+                    str(member),
+                )
         else:
             await ctx.send_followup(
                 f"{member.mention} has no characters.", ephemeral=True
@@ -307,6 +317,9 @@ class Submission(Cog):
                 ]
             )
         )
+        for oc in self.located.get(channel.id, set()):
+            oc.location = None
+            await self.oc_update(oc)
 
     async def list_update(
         self,
@@ -391,9 +404,9 @@ class Submission(Cog):
             )
             return
 
-        if isinstance(ctx, Message):
+        user = ctx.author
 
-            user = ctx.author
+        if isinstance(ctx, Message):
 
             await ctx.reply(
                 "Starting submission process",
@@ -429,8 +442,8 @@ class Submission(Cog):
                         max_values=2,
                         timeout=None,
                         parser=lambda x: (
-                            name := str(x),
-                            f"Adds the typing {name}",
+                            str(x),
+                            f"Adds the typing {x}",
                         ),
                     )
                     async with view.send(
@@ -451,8 +464,8 @@ class Submission(Cog):
                         max_values=1,
                         timeout=None,
                         parser=lambda x: (
-                            name := "/".join(str(i) for i in x),
-                            f"Adds the typing {name}",
+                            "/".join(str(i) for i in x),
+                            f"Adds the typing {'/'.join(str(i) for i in x)}",
                         ),
                     )
                     async with view.send(
@@ -502,16 +515,17 @@ class Submission(Cog):
                     f"Max Amount of Abilities for the current Species is {max_ab}"
                 )
                 return
-            elif not oc.any_ability_at_first:
-                if ability_errors := ", ".join(
+            elif not oc.any_ability_at_first and (
+                ability_errors := ", ".join(
                     ability.name
                     for ability in oc.abilities
                     if ability not in species.abilities
-                ):
-                    await ctx.reply(
-                        f"the abilities [{ability_errors}] were not found in the species"
-                    )
-                    return
+                )
+            ):
+                await ctx.reply(
+                    f"the abilities [{ability_errors}] were not found in the species"
+                )
+                return
 
             text_view = TextInput(bot=self.bot, member=user, target=ctx)
 
@@ -627,9 +641,6 @@ class Submission(Cog):
             if received := image_view.received:
                 await received.delete(delay=10)
 
-        else:
-            user = ctx.user
-
         await self.list_update(member)
         webhook = await self.bot.fetch_webhook(919280056558317658)
         thread_id = self.oc_list[member.id]
@@ -721,7 +732,16 @@ class Submission(Cog):
             embed.set_author(name=member.display_name)
             embed.set_thumbnail(url=member.display_avatar.url)
             async with view.send(ephemeral=True):
-                pass
+                if member == ctx.author:
+                    self.bot.logger.info(
+                        "User %s is reading their OCs", str(member)
+                    )
+                else:
+                    self.bot.logger.info(
+                        "User %s is reading the OCs of %s",
+                        str(ctx.author),
+                        str(member),
+                    )
         else:
             await ctx.send_followup(f"{member.mention} has no characters.")
 
@@ -885,15 +905,12 @@ class Submission(Cog):
         now: Member,
     ) -> None:
         try:
-            if any(
-                (
-                    past.display_name != now.display_name,
-                    past.display_avatar != now.display_avatar,
-                    past.colour != now.colour,
-                )
-            ):
-                if self.oc_list.get(now.id):
-                    await self.list_update(now)
+            if (
+                past.display_name != now.display_name
+                or past.display_avatar != now.display_avatar
+                or past.colour != now.colour
+            ) and self.oc_list.get(now.id):
+                await self.list_update(now)
         except Exception as e:
             self.bot.logger.exception("Exception updating", exc_info=e)
 
@@ -1021,7 +1038,16 @@ class Submission(Cog):
                 doc = None
                 if doc_data := G_DOCUMENT.match(text):
                     doc = await to_thread(docs_reader, doc_data.group(1))
-                    msg_data = doc_convert(doc, url=doc_data.group(1))
+                    if doc.tables:
+                        msg_data = doc_convert(doc, url=doc_data.group(1))
+                    else:
+                        elements: list[str] = []
+                        for p in doc.paragraphs:
+                            if element := p.text.strip():
+                                elements.append(element)
+                        text = "\n".join(elements)
+                        if text := YAML_HANDLER.sub(": ", text):
+                            msg_data = safe_load(text)
                 elif text := YAML_HANDLER.sub(": ", text):
                     msg_data = safe_load(text)
                     if images := message.attachments:
@@ -1031,7 +1057,6 @@ class Submission(Cog):
                         file = await attachments[0].to_file()
                         doc = await to_thread(Document, file.fp)
                         msg_data = doc_convert(doc)
-
                 if doc:
                     with suppress(Exception):
                         data = list(doc.inline_shapes)
@@ -1039,9 +1064,9 @@ class Submission(Cog):
                         blip = (
                             item._inline.graphic.graphicData.pic.blipFill.blip
                         )
-                        rID = blip.embed
+                        rid = blip.embed
                         doc_part = doc.part
-                        image_part = doc_part.related_parts[rID]
+                        image_part = doc_part.related_parts[rid]
                         fp = BytesIO(image_part._blob)
                         msg_data["image"] = File(fp=fp, filename="image.png")
 
@@ -1125,34 +1150,28 @@ class Submission(Cog):
                             )
             else:
                 for item in self.rpers.get(message.author.id, {}).values():
-                    if any(
-                        (
-                            item.name.title() in msg.author.name.title(),
-                            msg.author.name.title() in item.name.title(),
-                        )
-                    ):
-                        if item.location != msg.channel.id:
-                            former_channel = message.guild.get_channel(
-                                item.location
+                    if (
+                        item.name.title() in msg.author.name.title()
+                        or msg.author.name.title() in item.name.title()
+                    ) and item.location != msg.channel.id:
+                        former_channel = message.guild.get_channel(item.location)
+                        previous = self.located.get(item.location, set())
+                        current = self.located.get(msg.channel.id, set())
+                        if item in previous:
+                            previous.remove(item)
+                        if item not in current:
+                            current.add(item)
+
+                        if len(previous) == 0 and former_channel:
+                            await self.unclaiming(former_channel)
+                            await self.bot.scheduler.remove_schedule(
+                                f"RP[{former_channel.id}]"
                             )
-                            previous = self.located.get(item.location, set())
-                            current = self.located.get(msg.channel.id, set())
-                            if item in previous:
-                                previous.remove(item)
-                            if item not in current:
-                                current.add(item)
 
-                            if len(previous) == 0:
-                                with suppress(Exception):
-                                    await self.unclaiming(former_channel)
-                                    await self.bot.scheduler.remove_schedule(
-                                        f"RP[{former_channel.id}]"
-                                    )
-
-                            async with self.bot.database() as db:
-                                item.location = msg.channel.id
-                                await self.oc_update(item)
-                                await item.upsert(db)
+                        async with self.bot.database() as db:
+                            item.location = msg.channel.id
+                            await self.oc_update(item)
+                            await item.upsert(db)
 
 
 def setup(bot: CustomBot) -> None:
