@@ -317,9 +317,11 @@ class Submission(Cog):
                 ]
             )
         )
-        for oc in self.located.pop(channel.id, set()):
-            oc.location = None
-            await self.oc_update(oc)
+        async with self.bot.database() as conn:
+            for oc in self.located.pop(channel.id, set()):
+                oc.location = None
+                await oc.update(connection=conn)
+                await self.oc_update(oc)
 
     async def list_update(
         self,
