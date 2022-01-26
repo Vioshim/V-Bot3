@@ -70,12 +70,12 @@ class MovesCall(Converter[Move]):
 
 
 class SpeciesCall(Converter[Species]):
-    async def convert(self, ctx: Context, argument: str) -> str:
+    async def convert(self, _: Context, argument: str) -> str:
         """Function which converts to Species if possible
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Parsing str argument

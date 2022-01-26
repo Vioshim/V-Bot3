@@ -325,7 +325,7 @@ class Submission(Cog):
                     SET LOCATION = NULL
                     WHERE ID = $1;
                     """,
-                    oc.id
+                    oc.id,
                 )
                 oc.location = None
                 await self.oc_update(oc)
@@ -1158,29 +1158,48 @@ class Submission(Cog):
                                 overwrite=None,
                             )
             else:
-                for item in self.rpers.get(message.author.id, {}).values():
-                    if (
-                        item.name.title() in msg.author.name.title()
-                        or msg.author.name.title() in item.name.title()
-                    ) and item.location != msg.channel.id:
-                        former_channel = message.guild.get_channel(item.location)
-                        previous = self.located.get(item.location, set())
-                        current = self.located.get(msg.channel.id, set())
-                        if item in previous:
-                            previous.remove(item)
-                        if item not in current:
-                            current.add(item)
+                if msg.author.name.startswith("NPC〕"):
+                    return
 
-                        if len(previous) == 0 and former_channel:
-                            await self.unclaiming(former_channel)
-                            await self.bot.scheduler.remove_schedule(
-                                f"RP[{former_channel.id}]"
-                            )
+                author = msg.author.name.title()
+                
+                if "Narrator" in author:
+                    return
 
-                        async with self.bot.database() as db:
-                            item.location = msg.channel.id
-                            await self.oc_update(item)
-                            await item.upsert(db)
+                ocs = {
+                    item.name: item
+                    for item in self.rpers.get(message.author.id, {}).values()
+                }
+                oc = None
+
+                if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
+                    oc = ocs[items[0]]
+                else:
+
+                    def check(x: Character) -> bool:
+                        return x.name in author or author in x.name
+
+                    oc = next(filter(check, ocs.values()), None)
+
+                if oc and oc.location != msg.channel.id:
+                    former_channel = message.guild.get_channel(oc.location)
+                    previous = self.located.get(oc.location, set())
+                    current = self.located.get(msg.channel.id, set())
+                    if item in previous:
+                        previous.remove(oc)
+                    if item not in current:
+                        current.add(oc)
+
+                    if len(previous) == 0 and former_channel:
+                        await self.unclaiming(former_channel)
+                        await self.bot.scheduler.remove_schedule(
+                            f"RP[{former_channel.id}]"
+                        )
+
+                    async with self.bot.database() as db:
+                        oc.location = msg.channel.id
+                        await self.oc_update(oc)
+                        await oc.upsert(db)
 
 
 def setup(bot: CustomBot) -> None:

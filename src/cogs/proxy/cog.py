@@ -64,12 +64,9 @@ class Proxy(Cog):
         channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(
             payload.channel_id
         )
-        if isinstance(channel, Thread):
-            if registered not in channel.parent.overwrites:
-                pass
-        elif isinstance(channel, TextChannel):
-            if registered not in channel.overwrites:
-                return
+        reference: TextChannel = getattr(channel, "parent", channel)
+        if registered not in reference.overwrites:
+            return
 
         key = NPCLog(channel_id=channel.id, message_id=payload.message_id)
         if data := self.npc_info.get(key):
@@ -81,7 +78,9 @@ class Proxy(Cog):
                     await message.clear_reaction(emoji=emoji)
                     if user := guild.get_member(data):
                         view = View()
-                        view.add_item(Button(label="Jump URL", url=message.jump_url))
+                        view.add_item(
+                            Button(label="Jump URL", url=message.jump_url)
+                        )
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)
@@ -90,12 +89,20 @@ class Proxy(Cog):
                     "That proxy was sent by an user who is no longer in discord."
                 )
 
-    async def handler(self, ctx: Context, name: str, avatar_url: str, content: str):
+    async def handler(
+        self,
+        ctx: Context,
+        name: str,
+        avatar_url: str,
+        content: str,
+    ):
         webhook = await self.bot.webhook(ctx.channel, reason="NPC")
         message: Message = ctx.message
         view = View()
         if reference := message.reference:
-            view.add_item(item=Button(label="Replying to", url=reference.jump_url))
+            view.add_item(
+                item=Button(label="Replying to", url=reference.jump_url)
+            )
 
         data = dict(
             username=name,
@@ -124,13 +131,21 @@ class Proxy(Cog):
 
     @guild_only()
     @command()
-    async def npc(self, ctx: Context, species: SpeciesCall, *, content: str):
+    async def npc(
+        self,
+        ctx: Context,
+        species: SpeciesCall,
+        *,
+        content: str = "\u200b",
+    ):
         webhook = await self.bot.webhook(ctx.channel, reason="NPC")
         message: Message = ctx.message
-        view = View()
         if reference := message.reference:
+            view = View()
             item = Button(label="Replying to", url=reference.jump_url)
             view.add_item(item=item)
+        else:
+            view = None
 
         data = dict(
             username=f"NPC〕{species.name} ",
@@ -144,7 +159,7 @@ class Proxy(Cog):
         if isinstance(ctx.channel, Thread):
             data["thread"] = ctx.channel
 
-        proxy_msg = await webhook.send(**data)
+        proxy_msg = await webhook.send(**{k: v for k, v in data.items() if v})
 
         key = NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)
         self.npc_info[key] = ctx.author.id

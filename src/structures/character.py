@@ -1748,7 +1748,7 @@ def oc_process(**kwargs) -> Type[Character]:
     elif species := Species.deduce(common_pop_get(data, "species", "pokemon")):
         data["species"] = species
     else:
-        raise Exception("Unable to determine the species")
+        raise Exception(f"Unable to determine the species, value: {species}")
 
     if species.banned:
         raise Exception(f"The Species {species.name!r} is banned currently.")
