@@ -319,8 +319,15 @@ class Submission(Cog):
         )
         async with self.bot.database() as conn:
             for oc in self.located.pop(channel.id, set()):
+                await conn.execute(
+                    """--sql
+                    UPDATE CHARACTER
+                    SET LOCATION = NULL
+                    WHERE ID = $1;
+                    """,
+                    oc.id
+                )
                 oc.location = None
-                await oc.update(connection=conn)
                 await self.oc_update(oc)
 
     async def list_update(
