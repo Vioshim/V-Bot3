@@ -834,6 +834,8 @@ class Submission(Cog):
 
             self.bot.logger.info("Loading All Profiles")
 
+            webhook = await self.bot.fetch_webhook(919280056558317658)
+            
             async for item in db.cursor(
                 """--sql
                 SELECT AUTHOR, ID
@@ -844,16 +846,25 @@ class Submission(Cog):
             ):
                 author, thread_id = item
                 self.oc_list[author] = thread_id
+
                 try:
                     if not (member := guild.get_member(author)):
                         member = await guild.fetch_member(author)
-                    await self.list_update(member)
                 except HTTPException:
-                    view = RPView(
-                        bot=self.bot,
-                        member_id=author,
-                        oc_list=self.oc_list,
-                    )
+                    member = await self.bot.fetch_user(author)
+
+                embed = Embed(
+                    title="Registered Characters",
+                    color=member.color,
+                )
+                embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+                embed.set_author(name=member.display_name)
+                embed.set_thumbnail(url=member.display_avatar.url)
+                embed.set_image(url=WHITE_BAR)
+                view = RPView(self.bot, author, self.oc_list)
+                try:
+                    await webhook.edit_message(thread_id, embed=embed, view=view)
+                except DiscordException:
                     self.bot.add_view(view=view, message_id=thread_id)
 
             self.bot.logger.info("Finished loading all Profiles.")
