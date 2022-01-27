@@ -576,7 +576,7 @@ class RoleView(View):
             "to RP with their registered character(s).",
             timestamp=utcnow(),
         )
-        embed.set_thumbnail(url=ctx.user.avatar.url)
+        embed.set_thumbnail(url=ctx.user.display_avatar.url)
         msg = await channel.send(
             content=f"{role.mention} is being pinged by {ctx.user.mention}",
             embed=embed,
