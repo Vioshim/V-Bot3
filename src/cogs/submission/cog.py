@@ -30,6 +30,7 @@ from discord import (
     Embed,
     File,
     Guild,
+    HTTPException,
     Interaction,
     Member,
     Message,
@@ -42,12 +43,7 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -63,12 +59,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -853,13 +844,16 @@ class Submission(Cog):
             ):
                 author, thread_id = item
                 self.oc_list[author] = thread_id
-                if member := guild.get_member(author):
+                try:
+                    if not (member := guild.get_member(author)):
+                        member = await guild.fetch_member(author)
                     await self.list_update(member)
-                elif view := RPView(
-                    bot=self.bot,
-                    member_id=author,
-                    oc_list=self.oc_list,
-                ):
+                except HTTPException:
+                    view = RPView(
+                        bot=self.bot,
+                        member_id=author,
+                        oc_list=self.oc_list,
+                    )
                     self.bot.add_view(view=view, message_id=thread_id)
 
             self.bot.logger.info("Finished loading all Profiles.")
