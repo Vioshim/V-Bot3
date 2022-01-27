@@ -71,6 +71,7 @@ class MissionView(View):
             title="Mission Claiming",
             description="Select who is taking the mission",
             single=True,
+            ephemeral=True
         ) as choice:
 
             if not choice:
