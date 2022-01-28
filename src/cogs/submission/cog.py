@@ -43,7 +43,12 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -59,7 +64,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -191,10 +201,12 @@ class Submission(Cog):
         await ctx.defer(ephemeral=True)
         ocs: list[Character] = list(self.rpers.get(member.id, {}).values())
         if len(ocs) == 1:
+            view = PingView(ocs[0], ctx.user.id == ocs[0].author)
             await ctx.send_followup(
                 "The user only has one character",
                 ephemeral=True,
                 embed=ocs[0].embed,
+                view=view,
             )
         elif ocs:
             ocs.sort(key=lambda x: x.name)
