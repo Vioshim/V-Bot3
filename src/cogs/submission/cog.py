@@ -73,6 +73,7 @@ from src.views import (
     ImageView,
     MissionView,
     MoveView,
+    PingView,
     RPView,
     StatsView,
     SubmissionView,
@@ -721,7 +722,8 @@ class Submission(Cog):
             except DiscordException:
                 return await ctx.send_followup("User no longer in Discord")
         if (character or "").isdigit() and (oc := self.ocs.get(int(character))):
-            return await ctx.send_followup(embed=oc.embed)
+            view = PingView(oc, ctx.user.id == oc.author)
+            return await ctx.send_followup(embed=oc.embed, view=view)
         if ocs := list(self.rpers.get(member.id, {}).values()):
             ocs.sort(key=lambda x: x.name)
             if len(ocs) == 1:
@@ -835,7 +837,7 @@ class Submission(Cog):
             self.bot.logger.info("Loading All Profiles")
 
             webhook = await self.bot.fetch_webhook(919280056558317658)
-            
+
             async for item in db.cursor(
                 """--sql
                 SELECT AUTHOR, ID
@@ -864,7 +866,9 @@ class Submission(Cog):
                     embed.set_image(url=WHITE_BAR)
                     view = RPView(self.bot, author, self.oc_list)
                     try:
-                        await webhook.edit_message(thread_id, embed=embed, view=view)
+                        await webhook.edit_message(
+                            thread_id, embed=embed, view=view
+                        )
                     except DiscordException:
                         self.bot.add_view(view=view, message_id=thread_id)
 
