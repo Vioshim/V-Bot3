@@ -268,9 +268,8 @@ class EmbedBuilder(Cog):
         item_cache = (ctx.author.id, ctx.guild.id)
         try:
             embed = Embed()
-            if message := self.cache.get(item_cache):
-                if embeds := message.embeds:
-                    embed = embeds[0]
+            if (message := self.cache.get(item_cache)) and (embeds := message.embeds):
+                embed = embeds[0]
             yield embed
         finally:
             try:
@@ -1043,13 +1042,9 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        method = (
-            self.raw_edit(ctx)
-            if (attachments := ctx.message.attachments)
-            else self.edit(ctx)
-        )
+        method = self.edit(ctx)
         async with method as embed:
-            if attachments:
+            if attachments := ctx.message.attachments:
                 embed.set_image(url=attachments[-1].proxy_url)
             elif isinstance(image, (Emoji, PartialEmoji)):
                 embed.set_image(url=image.url)
