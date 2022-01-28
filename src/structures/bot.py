@@ -206,7 +206,7 @@ class CustomBot(Bot):
             ),
         )
         for item in set(properties) - set(exclude):
-            if image := properties[item]:
+            if not (image := properties[item]).startswith("attachment://"):
                 file = await self.get_file(image, filename=item)
                 if isinstance(file, File):
                     files.append(file)
@@ -238,20 +238,21 @@ class CustomBot(Bot):
         Optional[File]
             File for discord usage
         """
-        async with self.session.get(str(url)) as resp:
-            if resp.status == 200:
-                data = await resp.read()
-                fp = BytesIO(data)
-                text = resp.content_type.split("/")
-                if filename:
+        with suppress(Exception):
+            async with self.session.get(str(url)) as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+                    fp = BytesIO(data)
+                    text = resp.content_type.split("/")
+                    if filename:
+                        return File(
+                            fp=fp,
+                            filename=f"{filename}.{text[-1]}",
+                            spoiler=spoiler,
+                        )
                     return File(
-                        fp=fp,
-                        filename=f"{filename}.{text[-1]}",
-                        spoiler=spoiler,
+                        fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler
                     )
-                return File(
-                    fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler
-                )
 
     @asynccontextmanager
     async def database(
