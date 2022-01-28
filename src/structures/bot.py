@@ -206,7 +206,9 @@ class CustomBot(Bot):
             ),
         )
         for item in set(properties) - set(exclude):
-            if not (image := properties[item]).startswith("attachment://"):
+            if image := properties[item]:
+                if image.startswith("attachment://"):
+                    continue
                 file = await self.get_file(image, filename=item)
                 if isinstance(file, File):
                     files.append(file)
