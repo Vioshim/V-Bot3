@@ -259,6 +259,15 @@ class Moderation(Cog):
     ):
         interaction: Interaction = ctx.interaction
         resp: InteractionResponse = ctx.response
+        if not isinstance(member, Member):
+            member = ctx.guild.get_member(member)
+
+        if not member:
+            await resp.send_message(
+                content="Command failed as member was not found",
+                ephemeral=True,
+            )
+            return
         if member == ctx.author:
             await resp.send_message(
                 content="You can't report yourself. Tool isn't a joke",

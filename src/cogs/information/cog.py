@@ -270,13 +270,13 @@ class Information(Cog):
                 await msg.delete()
         guild: Guild = member.guild
         channel: TextChannel = guild.get_channel(719663963297808436)
-        roles = member.roles[1:]
+        roles = member.roles[:0:-1]
         embed = Embed(
             title="Member Left - Roles",
             color=Color.red(),
             timestamp=utcnow(),
         )
-        if text := "\n".join(f"> **•** {role.mention}" for role in roles[::-1]):
+        if text := "\n".join(f"> **•** {role.mention}" for role in roles):
             embed.description = text
         embed.set_author(
             name=member.display_name, icon_url=member.display_avatar.url

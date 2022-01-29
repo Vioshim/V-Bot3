@@ -307,7 +307,7 @@ def message_line(message: Message):
     """
     channel = message.channel
     user = message.author
-    return dict(
+    data = dict(
         channel=f"{channel.name} - {channel.mention}",
         user=f"{user.display_name} - {user.mention}",
         created_at=message.created_at,
@@ -324,28 +324,39 @@ def message_line(message: Message):
         embeds=[item.to_dict() for item in message.embeds],
         content=message.content,
     )
+    return {k: v for k, v in data.items() if v}
 
 
 def embed_handler(message: Message, embed: Embed) -> Embed:
+    """Embed handler function
+
+    Parameters
+    ----------
+    message : Message
+        Message
+    embed : Embed
+        Embed
+
+    Returns
+    -------
+    Embed
+        Embed with corrections
+    """
     for item in message.attachments:
-        if image := embed.image:
-            if item.url == image.url:
-                embed.set_image(url=f"attachment://{item.filename}")
-        if thumbnail := embed.thumbnail:
-            if item.url == thumbnail.url:
-                embed.set_thumbnail(url=f"attachment://{item.filename}")
-        if author := embed.author:
-            if item.url == author.icon_url:
-                embed.set_author(
-                    name=author.name,
-                    icon_url=f"attachment://{item.filename}",
-                    url=author.url,
-                )
-        if footer := embed.footer:
-            if item.url == footer.icon_url:
-                embed.set_footer(
-                    text=footer.text,
-                    icon_url=f"attachment://{item.filename}",
-                )
+        if (image := embed.image) and item.url == image.url:
+            embed.set_image(url=f"attachment://{item.filename}")
+        if (thumbnail := embed.thumbnail) and item.url == thumbnail.url:
+            embed.set_thumbnail(url=f"attachment://{item.filename}")
+        if (author := embed.author) and item.url == author.icon_url:
+            embed.set_author(
+                name=author.name,
+                icon_url=f"attachment://{item.filename}",
+                url=author.url,
+            )
+        if (footer := embed.footer) and item.url == footer.icon_url:
+            embed.set_footer(
+                text=footer.text,
+                icon_url=f"attachment://{item.filename}",
+            )
 
     return embed
