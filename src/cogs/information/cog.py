@@ -30,6 +30,7 @@ from discord import (
     Member,
     Message,
     Option,
+    OptionChoice,
     TextChannel,
 )
 from discord.ext.commands import (
@@ -65,12 +66,26 @@ channels = {
     766018765690241034: "Question",
     918703451830100028: "Poll",
     728800301888307301: "Suggestion",
+    769304918694690866: "Self RP",
 }
 
 
-def map_find(ctx: AutocompleteContext):
-    data: str = ctx.value or ""
-    return filter(lambda x: x.name.startswith(data), MAP_BUTTONS)
+def map_find(ctx: AutocompleteContext) -> list[OptionChoice]:
+    """Obtains valid Map Options
+
+    Parameters
+    ----------
+    ctx : AutocompleteContext
+        context
+
+    Returns
+    -------
+    list[OptionChoice]
+        values
+    """
+    if data := ctx.value:
+        return [x for x in MAP_BUTTONS if x.name.startswith(data.title())]
+    return MAP_BUTTONS
 
 
 class Information(Cog):
@@ -121,13 +136,13 @@ class Information(Cog):
 
         await thread.add_user(member)
 
-        view = View()
-        view.add_item(Button(label=f"Original {word}", url=msg.jump_url))
-        msg2 = await thread.send(embed=embed, view=view)
+        if word == "Poll":
+            await msg.add_reaction("\N{THUMBS UP SIGN}")
+            await msg.add_reaction("\N{THUMBS DOWN SIGN}")
 
-        view = View()
-        view.add_item(Button(label="Go to Thread", url=msg2.jump_url))
-        await msg.edit(view=view)
+        if "RP" in word and (tupper := guild.get_member(431544605209788416)):
+            await thread.add_user(tupper)
+
         await message.delete()
 
     async def daily_question(self) -> None:

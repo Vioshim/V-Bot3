@@ -68,10 +68,9 @@ class AreaSelection(View):
         self.entries: dict[str, set[Character]] = {}
         self.total: int = 0
         for location, ocs in cog.located.items():
-            if ch := guild.get_channel(location):
-                if cat == ch.category:
-                    self.entries[str(ch.id)] = ocs
-                    self.total += len(ocs)
+            if (ch := guild.get_channel(location)) and cat == ch.category:
+                self.entries[str(ch.id)] = ocs
+                self.total += len(ocs)
 
         def handle(item: TextChannel) -> str:
             text = f"{len(self.entries.get(str(item.id), [])):02d}"
