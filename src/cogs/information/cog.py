@@ -429,12 +429,14 @@ class Information(Cog):
         -------
 
         """
-        if not ctx.guild:
-            return
         user: Member = ctx.author
-        if self.bot.user.id == user.id:
-            return
-        if user.id == self.bot.owner_id or user.id in self.bot.owner_ids:
+
+        if (
+            not ctx.guild
+            or self.bot.user.id == user.id
+            or user.id == self.bot.owner_id
+            or user.id in self.bot.owner_ids
+        ):
             return
 
         if ctx.id in self.bot.msg_cache:
@@ -538,10 +540,10 @@ class Information(Cog):
         if hasattr(ctx.command, "on_error"):
             return
 
-        if cog := ctx.cog:
-            # noinspection PyProtectedMember
-            if cog._get_overridden_method(cog.cog_command_error):
-                return
+        if (cog := ctx.cog) and cog._get_overridden_method(
+            cog.cog_command_error
+        ):
+            return
 
         if error_cause := error.__cause__:
             await ctx.send(
