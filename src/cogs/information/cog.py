@@ -25,6 +25,7 @@ from discord import (
     Color,
     DiscordException,
     Embed,
+    File,
     Guild,
     HTTPException,
     Member,
@@ -398,22 +399,18 @@ class Information(Cog):
         if ids := set(item.id for item in messages) - self.bot.msg_cache:
             messages = [message for message in messages if message.id in ids]
             channel: TextChannel = self.bot.get_channel(719663963297808436)
-            if post := await self.bot.m_bin.post(
-                content=dump([message_line(item) for item in messages]),
-                syntax="yaml",
-            ):
-                embed = Embed(
-                    title="Bulk Message Delete",
-                    url=post.url,
-                    timestamp=utcnow(),
-                )
-                embed.set_image(url=WHITE_BAR)
-                embed.add_field(name="Channel", value=ch.mention)
-                embed.add_field(
-                    name="Amount", value=f"{len(messages)} messages"
-                )
-                embed.set_author(name=guild.name, icon_url=guild.icon.url)
-                await channel.send(embed=embed)
+            from io import StringIO
+
+            fp = StringIO()
+            fp.write(dump([message_line(item) for item in messages]))
+            fp.seek(0)
+            file = File(fp=fp, filename="Bulk.yaml")
+            embed = Embed(title="Bulk Message Delete", timestamp=utcnow())
+            embed.set_image(url=WHITE_BAR)
+            embed.add_field(name="Channel", value=ch.mention)
+            embed.add_field(name="Amount", value=f"{len(messages)} messages")
+            embed.set_author(name=guild.name, icon_url=guild.icon.url)
+            await channel.send(embed=embed, file=file)
             self.bot.msg_cache -= ids
 
     @Cog.listener()
