@@ -28,7 +28,7 @@ __all__ = ("RegionView",)
 
 class RegionView(View):
     def __init__(self, bot: CustomBot, cat_id: int):
-        super().__init__(timeout=None)
+        super(RegionView, self).__init__(timeout=None)
         self.bot = bot
         self.cat_id = cat_id
         self.unlock.custom_id = f"unlock-{cat_id}"
@@ -94,15 +94,15 @@ class RegionView(View):
             ephemeral=True,
         )
 
-    @button(label="Obtain Access")
+    @button(label="Obtain Access", custom_id="unlock")
     async def unlock(self, _: Button, ctx: Interaction) -> None:
         await self.perms_setter(ctx, True)
 
-    @button(label="Remove Acess")
+    @button(label="Remove Acess", custom_id="lock")
     async def lock(self, _: Button, ctx: Interaction) -> None:
         await self.perms_setter(ctx, False)
 
-    @button(label="More Information")
+    @button(label="More Information", custom_id="read")
     async def read(self, _: Button, ctx: Interaction) -> None:
         """Read Information
 
