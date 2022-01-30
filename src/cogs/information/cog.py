@@ -17,8 +17,6 @@ from pathlib import Path
 from typing import Optional
 
 from aiofiles import open as aiopen
-from apscheduler.triggers.cron import CronTrigger
-from bs4 import BeautifulSoup
 from discord import (
     AllowedMentions,
     CategoryChannel,
@@ -59,8 +57,6 @@ from src.utils.functions import message_line
 from src.utils.imagekit import ImageKit
 
 __all__ = ("Information", "setup")
-
-URL = "https://www.conversationstarters.com/generator.php"
 
 
 channels = {
@@ -145,44 +141,6 @@ class Information(Cog):
             await thread.add_user(tupper)
 
         await message.delete()
-
-    async def daily_question(self) -> None:
-        """This function generates a daily question from a website, and sends it to all guilds
-        as long as they have the feature enabled.
-        """
-        with suppress(DiscordException):
-            if message := self.current_question:
-                await message.delete()
-
-        self.current_question = None
-
-        async with self.bot.session.get(url=URL) as r:
-            content = await r.text()
-            soup = BeautifulSoup(content, "html.parser")
-            html = soup.find("div", attrs={"id": "random"})
-            date = utcnow()
-            embed = Embed(
-                title="Daily Question",
-                description=f"> {html.text}",
-                color=Color.purple(),
-                timestamp=date,
-            )
-            embed.set_image(url=WHITE_BAR)
-            channel: TextChannel = self.bot.get_channel(860590339327918100)
-            if guild := channel.guild:
-                embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-            self.current_question = message = await channel.send(embed=embed)
-            thread = await message.create_thread(name=date.strftime("%d-%m-%Y"))
-            view = View()
-            view.add_item(
-                Button(label="Back to Information", url=message.jump_url)
-            )
-            data = await thread.send(view=view, embed=embed)
-            view = View()
-            view.add_item(
-                Button(label="Join the Discussion", url=data.jump_url)
-            )
-            await message.edit(view=view)
 
     async def member_count(self):
         """Function which updates the member count and the Information's view"""
@@ -561,20 +519,6 @@ class Information(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
-        channel = await self.bot.fetch_channel(860590339327918100)
-
-        async for message in channel.history(limit=1):
-            if (
-                message.id != 913555643699458088
-                and message.author == self.bot.user
-            ):
-                self.current_question = message
-
-        await self.bot.scheduler.add_schedule(
-            self.daily_question,
-            trigger=CronTrigger(hour=13, minute=0, second=0),
-            id="Daily Question",
-        )
         await self.member_count()
 
 
