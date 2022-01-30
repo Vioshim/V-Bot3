@@ -12,505 +12,118 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
-from dataclasses import InitVar, dataclass, field
-from typing import Iterable, Optional
-from unicodedata import lookup
-
 from discord import (
-    ButtonStyle,
     CategoryChannel,
-    Color,
-    Embed,
     Interaction,
     InteractionResponse,
-    Member,
-    NotFound,
-    User,
+    PermissionOverwrite,
 )
-from discord.ui import Button, Select, View, button
-from discord.utils import utcnow
+from discord.ui import Button, View, button
 
 from src.cogs.information.area_selection import AreaSelection
-from src.pagination.complex import Complex
-from src.structures.ability import Ability
 from src.structures.bot import CustomBot
-from src.structures.move import Move
-from src.utils.etc import MAP_URL, WHITE_BAR
+
+__all__ = ("RegionView",)
 
 
-@dataclass(unsafe_hash=True)
-class Map:
-    label: str
-    category: int
-    content: str
-    emoji: InitVar[str] = None
-    map: str = None
-    embed: Embed = field(init=False)
-
-    def __post_init__(self, emoji: str = None):
-        try:
-            self.emoji = lookup(emoji)
-        except KeyError:
-            self.emoji = emoji
-        embed = Embed(
-            title=self.label,
-            description=self.content,
-            timestamp=utcnow(),
-        )
-        embed.set_footer(text=f"ID: {self.category}")
-        if image := self.map:
-            embed.set_image(url=image)
-        else:
-            embed.set_image(url=WHITE_BAR)
-        self.embed = embed
-
-
-@dataclass(unsafe_hash=True)
-class FAQ:
-    index: int
-    label: Optional[str] = None
-    title: InitVar[str] = None
-    content: InitVar[str] = None
-    fields: InitVar[Iterable[dict[str, str]]] = None
-    buttons: InitVar[Iterable[Button]] = None
-    thumbnail: InitVar[str] = None
-    image: InitVar[str] = None
-    url: InitVar[str] = None
-    embed: Embed = field(init=False)
-    view: View = field(init=False)
-
-    def __int__(self):
-        return self.index
-
-    def __post_init__(
-        self,
-        title: str = None,
-        content: str = None,
-        fields: Iterable[dict[str, str]] = None,
-        buttons: Iterable[Button] = None,
-        thumbnail: str = None,
-        image: str = None,
-        url: str = None,
-    ):
-        self.title = title
-        self.content = content
-        fields = fields or []
-        buttons = buttons or []
-        self.thumbnail = thumbnail
-        self.image = image
-        embed = Embed(
-            title=title,
-            description=content,
-            colour=0xFFFFFE,
-            timestamp=utcnow(),
-        )
-        if url:
-            embed.url = url
-        if thumbnail:
-            embed.set_thumbnail(url=thumbnail)
-        if image:
-            embed.set_image(url=image)
-        for item in fields:
-            embed.add_field(**item)
-        self.embed = embed
-        self.view = View(timeout=None)
-        for item in buttons:
-            if isinstance(item, dict):
-                item = Button(**item)
-            if isinstance(item, Button):
-                self.view.add_item(item)
-
-    @property
-    def tuple(self):
-        return self.label, self.content
-
-
-@dataclass(unsafe_hash=True)
-class Section:
-    title: str
-    description: str
-    emoji: Optional[str] = None
-    items: frozenset[FAQ] = field(default_factory=frozenset)
-
-    def __post_init__(self):
-        if emoji := self.emoji:
-            try:
-                self.emoji = lookup(emoji)
-            except KeyError:
-                self.emoji = emoji
-        else:
-            self.emoji = "\N{BLUE BOOK}"
-
-    @property
-    def tuple(self):
-        return (
-            self.title,
-            f"Function has {len(self.items):02d} choices to read.",
-        )
-
-
-class MapComplex(Complex):
-    def __init__(
-        self,
-        bot: CustomBot,
-        member: Member | User,
-        values: list[Map],
-        target: Interaction,
-    ):
-        super(MapComplex, self).__init__(
-            bot=bot,
-            timeout=None,
-            member=member,
-            values=values,
-            target=target,
-            parser=lambda x: (x.label, x.content),
-            silent_mode=True,
-            keep_working=True,
-            sort_key=lambda x: x.label,
-        )
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        return True
-
-    async def custom_choice(self, sct: Select, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        index: str = sct.values[0]
-        item: Map = self.current_chunk[int(index)]
-        category: CategoryChannel = self.bot.get_channel(item.category)
-        self.bot.logger.info(
-            "%s is reading Map Information of %s",
-            str(self.member),
-            item.label,
-        )
-        embed = item.embed.copy()
-        embed.color = self.member.color
-        view = AreaSelection(
-            bot=self.bot,
-            cat=category,
-            member=self.member,
-        )
-        embed.set_footer(
-            text=f"There's a total of {view.total:02d} OCs in this area."
-        )
-        await resp.send_message(
-            embed=embed,
-            view=view,
-            ephemeral=True,
-        )
-
-
-class FAQComplex(Complex):
-    def __init__(
-        self,
-        bot: CustomBot,
-        member: Member | User,
-        values: list[FAQ],
-        target: Interaction,
-    ):
-        super(FAQComplex, self).__init__(
-            bot=bot,
-            timeout=None,
-            member=member,
-            values=values,
-            target=target,
-            parser=lambda x: x.tuple,
-            silent_mode=True,
-            keep_working=True,
-            sort_key=lambda x: x.index,
-        )
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        return True
-
-    async def custom_choice(self, sct: Select, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        index: str = sct.values[0]
-        item: FAQ = self.current_chunk[int(index)]
-        self.bot.logger.info(
-            "%s is reading its entry [%s]: %s",
-            str(self.member),
-            str(item.index),
-            item.title,
-        )
-        embed = item.embed.copy()
-        embed.color = self.member.color
-
-        await resp.send_message(
-            embed=embed,
-            view=item.view,
-            ephemeral=True,
-        )
-
-
-class SectionComplex(Complex):
-    def __init__(
-        self,
-        bot: CustomBot,
-        member: Member | User,
-        values: list[Section],
-        target: Interaction,
-    ):
-        super(SectionComplex, self).__init__(
-            bot=bot,
-            timeout=None,
-            member=member,
-            values=values,
-            target=target,
-            parser=lambda x: x.tuple,
-            silent_mode=True,
-            keep_working=True,
-            sort_key=lambda x: x.title,
-        )
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        return True
-
-    async def custom_choice(self, sct: Select, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        index: str = sct.values[0]
-        item: Section = self.current_chunk[int(index)]
-        self.bot.logger.info(
-            "%s is reading %s",
-            str(self.member),
-            item.title,
-        )
-        view = FAQComplex(
-            bot=self.bot,
-            member=self.member,
-            values=item.items,
-            target=ctx,
-        )
-        embed = view.embed
-
-        embed.title = f"Parallel Yonder's {item.title}"
-        embed.description = item.description
-
-        await resp.send_message(
-            embed=embed,
-            view=view,
-            ephemeral=True,
-        )
-
-
-class InformationView(View):
-    def __init__(
-        self,
-        bot: CustomBot,
-        raw_data: dict[str, list | dict],
-    ):
-        super(InformationView, self).__init__(timeout=None)
+class RegionView(View):
+    def __init__(self, bot: CustomBot, cat_id: int):
+        super().__init__(timeout=None)
         self.bot = bot
-        self.elements: list[Section] = []
-        self.map_information: list[Map] = []
+        self.cat_id = cat_id
+        self.unlock.custom_id = f"unlock-{cat_id}"
+        self.lock.custom_id = f"lock-{cat_id}"
+        self.read.custom_id = f"read-{cat_id}"
 
-        for key, values in raw_data.items():
-            if isinstance(values, dict):
-                items = []
-                for index, item in enumerate(values["items"]):
-                    items.append(FAQ(**item, index=index))
-                section = Section(
-                    emoji=values["emoji"],
-                    description=values["description"],
-                    title=key,
-                    items=frozenset(items),
-                )
-                self.elements.append(section)
-            elif isinstance(values, list):
-                self.map_information = [Map(**info) for info in values]
-
-        items = []
-        abilities = list(Ability.all())
-        abilities.sort(key=lambda x: x.name)
-        for index, item in enumerate(abilities):
-            fields = []
-            if battle := item.battle:
-                fields.append(
-                    dict(
-                        name="In Battles",
-                        value=battle,
-                        inline=False,
-                    )
-                )
-            if outside := item.outside:
-                fields.append(
-                    dict(
-                        name="Out of Battles",
-                        value=outside,
-                        inline=False,
-                    )
-                )
-            if random_fact := item.random_fact:
-                fields.append(
-                    dict(
-                        name="Random Fact",
-                        value=random_fact,
-                        inline=False,
-                    )
-                )
-            items.append(
-                FAQ(
-                    index=index,
-                    label=item.name,
-                    title=item.name,
-                    content=item.description,
-                    fields=fields,
-                )
-            )
-
-        self.elements.append(
-            Section(
-                emoji="<:pokeball:852189914157809705>",
-                description="This is a description of all abilities, of course I haven't defined every single one of them yet, but these descriptions should at least work as heads up.",
-                title="Abilities F.A.Q.",
-                items=frozenset(items),
-            )
-        )
-
-        items = []
-        moves = list(Move.all())
-        moves.sort(key=lambda x: x.name)
-        for index, item in enumerate(moves):
-            title = item.name
-            if item.banned:
-                title = f"{title!r} - Move Banned"
-            fields = [
-                dict(name="Base", value=str(item.base)),
-                dict(name="Accuracy", value=str(item.accuracy)),
-                dict(name="PP", value=str(item.pp)),
-            ]
-
-            element = FAQ(
-                index=index,
-                label=item.name,
-                url=item.url,
-                title=title,
-                thumbnail=item.type.emoji.url,
-                image=item.image,
-                content=item.desc,
-                fields=fields,
-                buttons=[
-                    Button(
-                        label="Click here to read more in Bulbapedia",
-                        url=item.url,
-                    )
-                ],
-            )
-            element.embed.color = item.type.color
-            items.append(element)
-
-        self.elements.append(
-            Section(
-                emoji="<:pokeball:852189914157809705>",
-                description="This is a description of all Moves, of course I haven't defined every single one of them yet, but these descriptions should at least work as heads up.",
-                title="Moves F.A.Q.",
-                items=frozenset(items),
-            )
-        )
-
-        btn = Button(
-            label="Self Roles",
-            url="https://discord.com/channels/719343092963999804/719709333369258015/",
-        )
-        self.add_item(btn)
-        btn = Button(
-            label="Character Creation",
-            url="https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552",
-        )
-        self.add_item(btn)
-
-    @button(
-        label="F.A.Q.",
-        custom_id="F.A.Q.",
-        style=ButtonStyle.blurple,
-    )
-    async def faq(
-        self,
-        _: Button,
-        interaction: Interaction,
-    ):
-        """Function for F.A.Q. information
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        """Check if the User is registered
 
         Parameters
         ----------
-        _ : Button
-            Button
-        ctx : Interaction
-            User Interaction
+        interaction : Interaction
+            interaction
+
+        Returns
+        -------
+        bool
+            valid user
         """
         resp: InteractionResponse = interaction.response
+        registered = interaction.guild.get_role(719642423327719434)
+        if registered not in interaction.user.roles:
+            view = View()
+            view.add_item(
+                Button(
+                    label="Create a Character",
+                    url="https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552",
+                )
+            )
+            await resp.send_message(
+                f"In order to use this function, you need to have the role {registered.mention}",
+                view=view,
+                ephemeral=True,
+            )
+            return False
+        return True
 
-        if isinstance(member := interaction.user, User):
-            guild = member.mutual_guilds[0]
-            member = guild.get_member(member.id)
+    async def perms_setter(self, ctx: Interaction, mode: bool) -> None:
+        """Enable/Disable reading permissions
 
-        view = SectionComplex(
-            bot=self.bot,
-            member=member,
-            values=self.elements,
-            target=interaction,
+        Parameters
+        ----------
+        ctx : Interaction
+            interaction
+        mode : bool
+            mode
+        """
+        cat: CategoryChannel = ctx.guild.get_channel(self.cat_id)
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        permissions = cat.overwrites
+        perms = permissions.get(ctx.user, PermissionOverwrite())
+        self.bot.logger.info(
+            "%s reading permissions for %s at %s",
+            "Enabling" if mode else "Disabling",
+            str(ctx.user),
+            cat.name,
         )
-
-        embed = view.embed
-
-        embed.title = "Parallel Yonder's FAQ"
-        embed.description = "This command is pretty much a summary of common things that tend to be asked or are enforced, feel free to take a look and have fun."
-
-        await resp.send_message(
-            embed=embed,
-            view=view,
+        perms.read_messages = mode
+        await cat.set_permissions(target=ctx.user, overwrite=perms)
+        await ctx.followup.send(
+            "Permissions have been changed.",
             ephemeral=True,
         )
 
-    @button(
-        label="Map Information",
-        custom_id="Map Information",
-        style=ButtonStyle.blurple,
-    )
-    async def map_info(
-        self,
-        btn: Button,
-        ctx: Interaction,
-    ):
-        """Function for map information
+    @button(label="Obtain Access")
+    async def unlock(self, _: Button, ctx: Interaction) -> None:
+        await self.perms_setter(ctx, True)
+
+    @button(label="Remove Acess")
+    async def lock(self, _: Button, ctx: Interaction) -> None:
+        await self.perms_setter(ctx, False)
+
+    @button(label="More Information")
+    async def read(self, _: Button, ctx: Interaction) -> None:
+        """Read Information
 
         Parameters
         ----------
         btn : Button
-            Button
+            button
         ctx : Interaction
-            User Interaction
+            interaction
         """
+        category: CategoryChannel = ctx.guild.get_channel(self.cat_id)
         resp: InteractionResponse = ctx.response
-
-        if isinstance(member := ctx.user, User):
-            guild = member.mutual_guilds[0]
-            member = guild.get_member(member.id)
-
-        view = MapComplex(
-            bot=self.bot,
-            member=member,
-            values=self.map_information,
-            target=ctx,
+        self.bot.logger.info(
+            "%s is reading Map Information of %s",
+            str(ctx.user),
+            category.name,
         )
-
-        embed = view.embed
-
-        with suppress(NotFound):
-            if not (artist := member.guild.get_member(536565959004127232)):
-                artist = await self.bot.fetch_user(536565959004127232)
-            embed.set_author(
-                name=f"Drawn by {artist}",
-                icon_url=artist.display_avatar.url,
-            )
-
-        embed.title = f"Parallel Yonder's {btn.label}"
-        embed.color = Color.blurple()
-        embed.url = MAP_URL
-        embed.set_image(url=MAP_URL)
-
-        await resp.send_message(
-            embed=embed,
+        await resp.defer(ephemeral=True)
+        view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
+        await ctx.followup.send(
+            f"There's a total of {view.total:02d} OCs in {category.name}.",
             view=view,
             ephemeral=True,
         )

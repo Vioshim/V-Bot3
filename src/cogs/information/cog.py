@@ -13,13 +13,9 @@
 # limitations under the License.
 
 from contextlib import suppress
-from pathlib import Path
-from typing import Optional
 
-from aiofiles import open as aiopen
 from discord import (
     AllowedMentions,
-    CategoryChannel,
     Color,
     DiscordException,
     Embed,
@@ -28,8 +24,6 @@ from discord import (
     HTTPException,
     Member,
     Message,
-    Option,
-    OptionChoice,
     TextChannel,
 )
 from discord.ext.commands import (
@@ -38,21 +32,18 @@ from discord.ext.commands import (
     CommandError,
     CommandNotFound,
     CommandOnCooldown,
+    Context,
     DisabledCommand,
     MaxConcurrencyReached,
     UserInputError,
-    slash_command,
 )
 from discord.ui import Button, View
 from discord.utils import format_dt, utcnow
-from orjson import loads
 from yaml import dump
 
-from src.cogs.information.area_selection import AreaSelection
-from src.cogs.information.information_view import InformationView
-from src.context import ApplicationContext, AutocompleteContext, Context
+from src.cogs.information.information_view import RegionView
 from src.structures.bot import CustomBot
-from src.utils.etc import MAP_BUTTONS, MAP_URL, WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS, WHITE_BAR
 from src.utils.functions import message_line
 from src.utils.imagekit import ImageKit
 
@@ -67,30 +58,10 @@ channels = {
 }
 
 
-def map_find(ctx: AutocompleteContext) -> list[OptionChoice]:
-    """Obtains valid Map Options
-
-    Parameters
-    ----------
-    ctx : AutocompleteContext
-        context
-
-    Returns
-    -------
-    list[OptionChoice]
-        values
-    """
-    if data := ctx.value:
-        return [x for x in MAP_BUTTONS if x.name.startswith(data.title())]
-    return MAP_BUTTONS
-
-
 class Information(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
-        self.view: Optional[InformationView] = None
-        self.current_question: Optional[Message] = None
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -159,67 +130,7 @@ class Information(Cog):
         for key, value in data.items():
             text += f"\n{key}: {value:03d}"
         embed.description = f"```yaml{text}\n```"
-        if not self.view:
-            source = Path("resources/faq.json")
-            async with aiopen(source.resolve(), mode="r") as f:
-                contents = await f.read()
-                raw_data = loads(contents)
-                self.view = InformationView(bot=self.bot, raw_data=raw_data)
-                await message.edit(embed=embed, view=self.view)
-        else:
-            await message.edit(embed=embed)
-
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Map related information",
-    )
-    async def map(
-        self,
-        ctx: ApplicationContext,
-        area: Option(
-            str,
-            description="Region to check about",
-            required=False,
-            autocomplete=map_find,
-        ),
-    ):
-        await ctx.defer(ephemeral=True)
-
-        if not area:
-            guild: Guild = ctx.guild
-            embed = Embed(
-                title="Despa's Map",
-                color=Color.blurple(),
-                timestamp=utcnow(),
-            )
-            embed.set_image(url=MAP_URL)
-            if artist := guild.get_member(536565959004127232):
-                embed.set_author(
-                    name=artist.display_name, icon_url=artist.display_avatar.url
-                )
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-            await ctx.send_followup(
-                embed=embed,
-                ephemeral=True,
-            )
-            return
-
-        if items := [
-            i for i in self.view.map_information if str(i.category) == area
-        ]:
-            embed = items[0].embed.copy()
-            embed.colour = ctx.user.colour
-            category: CategoryChannel = ctx.guild.get_channel(items[0].category)
-            self.bot.logger.info(
-                "%s is reading /Map Information of %s",
-                str(ctx.user),
-                category.name,
-            )
-            view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
-            embed.set_footer(
-                text=f"There's a total of {view.total:02d} OCs in this area."
-            )
-            await ctx.send_followup(embed=embed, view=view, ephemeral=True)
+        await message.edit(embed=embed)
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
@@ -519,6 +430,9 @@ class Information(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
+        for item in MAP_ELEMENTS:
+            view = RegionView(bot=self.bot, cat_id=item.category)
+            self.bot.add_view(view, message_id=item.message)
         await self.member_count()
 
 

@@ -19,12 +19,13 @@ __all__ = (
     "NUMBERS",
     "DICE_NUMBERS",
     "RP_CATEGORIES",
-    "MAP_BUTTONS",
+    "MAP_ELEMENTS",
     "REGISTERED_IMG",
     "RTFM_PAGES",
 )
+from collections import namedtuple
 
-from discord import OptionChoice, PartialEmoji
+from discord import PartialEmoji
 
 REGISTERED_IMG = "https://cdn.discordapp.com/attachments/797618220382027839/867427444579106856/registered_1.png"
 RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/863415224626184192/image.gif"
@@ -85,85 +86,109 @@ RTFM_PAGES: dict[str, str] = {
     "aiohttp": "https://docs.aiohttp.org/en/stable/",
 }
 
-MAP_BUTTONS = [
-    OptionChoice(
+
+MapPair = namedtuple("MapPair", "name category message")
+
+
+MAP_ELEMENTS = [
+    MapPair(
         name="Ashouria",
-        value="909239415287738418",
+        category=909239415287738418,
+        message=937180387099152404,
     ),
-    OptionChoice(
+    MapPair(
         name="Athar",
-        value="909243882133389342",
+        category=909243882133389342,
+        message=937180388013535252,
     ),
-    OptionChoice(
+    MapPair(
         name="Brevania",
-        value="909249684621647942",
+        category=909249684621647942,
+        message=937180388764315698,
     ),
-    OptionChoice(
+    MapPair(
         name="Broxburn",
-        value="874015245251797012",
+        category=874015245251797012,
+        message=937180388911120435,
     ),
-    OptionChoice(
+    MapPair(
         name="Chandra Nur",
-        value="909250294506983505",
+        category=909250294506983505,
+        message=937180389817069608,
     ),
-    OptionChoice(
+    MapPair(
         name="Estelia",
-        value="909250668672466974",
+        category=909250668672466974,
+        message=937180396079177728,
     ),
-    OptionChoice(
+    MapPair(
         name="Lougy",
-        value="909264695414910996",
+        category=909264695414910996,
+        message=937180396611838032,
     ),
-    OptionChoice(
+    MapPair(
         name="Muzatoorah",
-        value="874017660470431784",
+        category=874017660470431784,
+        message=937180397064818768,
     ),
-    OptionChoice(
+    MapPair(
         name="Norwich",
-        value="874017703411720212",
+        category=874017703411720212,
+        message=937180397484273674,
     ),
-    OptionChoice(
+    MapPair(
         name="Osfield",
-        value="909264739488649246",
+        category=909264739488649246,
+        message=937180398016946177,
     ),
-    OptionChoice(
+    MapPair(
         name="Parvi",
-        value="909264770018988072",
+        category=909264770018988072,
+        message=937180405298249728,
     ),
-    OptionChoice(
+    MapPair(
         name="Pixy Foundation",
-        value="909266661515870258",
+        category=909266661515870258,
+        message=937180405713477642,
     ),
-    OptionChoice(
+    MapPair(
         name="Richmod",
-        value="909279217995370536",
+        category=909279217995370536,
+        message=937180406380392508,
     ),
-    OptionChoice(
+    MapPair(
         name="Sashi",
-        value="909279584732721184",
+        category=909279584732721184,
+        message=937180406476832780,
     ),
-    OptionChoice(
+    MapPair(
         name="Schalzburg",
-        value="874017935369310218",
+        category=874017935369310218,
+        message=937180407550607441,
     ),
-    OptionChoice(
+    MapPair(
         name="Shiey Shea",
-        value="909280179006877706",
+        category=909280179006877706,
+        message=937180414034997289,
     ),
-    OptionChoice(
+    MapPair(
         name="Shouhead Peaks",
-        value="909294313303846932",
+        category=909294313303846932,
+        message=937180414378917939,
     ),
-    OptionChoice(
+    MapPair(
         name="Tomalia",
-        value="909294458204487690",
+        category=909294458204487690,
+        message=937180414940946522,
     ),
-    OptionChoice(
+    MapPair(
         name="Upria",
-        value="909302744676986890",
+        category=909302744676986890,
+        message=937180415268122656,
     ),
-    OptionChoice(
+    MapPair(
         name="Wilderness",
-        value="874018024649265172",
+        category=874018024649265172,
+        message=937180415582679111,
     ),
 ]
