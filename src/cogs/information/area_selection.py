@@ -28,7 +28,7 @@ from discord.utils import utcnow
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import MAP_BUTTONS
+from src.utils.etc import MAP_ELEMENTS
 from src.views.characters_view import CharactersView
 
 
@@ -68,7 +68,9 @@ class AreaSelection(View):
         self.entries: dict[str, set[Character]] = {}
         self.total: int = 0
         for location, ocs in cog.located.items():
-            if (ch := guild.get_channel_or_thread(location)) and cat == ch.category:
+            if (
+                ch := guild.get_channel_or_thread(location)
+            ) and cat == ch.category:
                 self.entries[str(ch.id)] = ocs
                 self.total += len(ocs)
 
@@ -142,12 +144,12 @@ class AreaSelection(View):
     async def read_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        for item in MAP_BUTTONS:
+        for item in MAP_ELEMENTS:
             if isinstance(member := ctx.user, User):
                 guild = member.mutual_guilds[0]
             else:
                 guild = member.guild
-            category: CategoryChannel = guild.get_channel(int(item.value))
+            category: CategoryChannel = guild.get_channel(item.category)
             permissions = category.overwrites
             perms = permissions.get(ctx.user, PermissionOverwrite())
             if not perms.read_messages:
@@ -162,12 +164,12 @@ class AreaSelection(View):
     async def disable_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        for item in MAP_BUTTONS:
+        for item in MAP_ELEMENTS:
             if isinstance(member := ctx.user, User):
                 guild = member.mutual_guilds[0]
             else:
                 guild = member.guild
-            category: CategoryChannel = guild.get_channel(int(item.value))
+            category: CategoryChannel = guild.get_channel(item.category)
             permissions = category.overwrites
             perms = permissions.get(member, PermissionOverwrite())
             if perms.read_messages is not False:
