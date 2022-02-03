@@ -55,7 +55,7 @@ class Mission:
             self.id = await connection.fetchval(
                 """--sql
                 INSERT INTO MISSIONS(ID, AUTHOR, TITLE, DESCRIPTION, DIFFICULTY, PLACE, TARGET, CLIENT, REWARD, CREATED_AT, MSG_ID, MAX_AMOUNT)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 ON CONFLICT (ID) DO UPDATE SET
                     AUTHOR = $2,
                     TITLE = $3,
@@ -87,7 +87,7 @@ class Mission:
             self.id = await connection.fetchval(
                 """--sql
                 INSERT INTO MISSIONS(AUTHOR, TITLE, DESCRIPTION, DIFFICULTY, PLACE, TARGET, CLIENT, REWARD, CREATED_AT, MSG_ID, MAX_AMOUNT)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 RETURNING ID;
                 """,
                 self.author,
