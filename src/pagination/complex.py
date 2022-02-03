@@ -87,10 +87,10 @@ class Complex(Simple):
     ):
         self._silent_mode = silent_mode
         self._keep_working = keep_working
-        self._choices: set[_T] = None
+        self._choices: Optional[set[_T]] = None
         self._max_values = max_values
         if isinstance(emoji_parser, str):
-            self._emoji_parser = lambda x: emoji_parser
+            self._emoji_parser = lambda _: emoji_parser
         else:
             self._emoji_parser = emoji_parser or default_emoji_parser
         super().__init__(

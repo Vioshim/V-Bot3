@@ -54,7 +54,11 @@ def default_parser(
 
     if isinstance(item, tuple):
         return item
-    return str(item), repr(item)
+    if not (name := getattr(item, "name", None)):
+        name = str(item)
+    if not (description := getattr(item, "description", None)):
+        description = repr(item)
+    return name, description
 
 
 class Simple(Basic):

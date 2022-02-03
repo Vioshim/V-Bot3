@@ -15,13 +15,15 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
+from io import BytesIO
 from random import sample
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
-from discord import Color, Embed
+from discord import Color, Embed, File
 from discord.utils import utcnow
 from docx.document import Document
 from frozendict import frozendict
@@ -1831,15 +1833,13 @@ def check(value: Optional[str]) -> bool:
     return data
 
 
-def doc_convert(doc: Document, url: str = None) -> dict[str, Any]:
+def doc_convert(doc: Document) -> dict[str, Any]:
     """Google Convereter
 
     Parameters
     ----------
     doc : Document
         docx Document
-    url : str, optional
-        If this was fetched from a Google Document
 
     Returns
     -------
@@ -1861,9 +1861,9 @@ def doc_convert(doc: Document, url: str = None) -> dict[str, Any]:
     ]
 
     movepool_typing = dict[str, set[str] | dict[int, set[str]]]
-    if url:
+    if url := getattr(doc, "url", None):
         url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
-    raw_kwargs: dict[str, str | set[str] | movepool_typing] = dict(
+    raw_kwargs: dict[str, str | set[str] | movepool_typing | File] = dict(
         url=url,
         moveset=set(),
         movepool={},
@@ -1910,6 +1910,17 @@ def doc_convert(doc: Document, url: str = None) -> dict[str, Any]:
                 case [x, _]:
                     raw_kwargs["movepool"].setdefault(x.lower(), set())
                     raw_kwargs["movepool"][x.lower()].add(argument)
+
+    with suppress(Exception):
+        if data := list(doc.inline_shapes):
+            item = data[0]
+            pic = item._inline.graphic.graphicData.pic
+            blip = pic.blipFill.blip
+            rid = blip.embed
+            doc_part = doc.part
+            image_part = doc_part.related_parts[rid]
+            fp = BytesIO(image_part._blob)
+            raw_kwargs["image"] = File(fp=fp, filename="image.png")
 
     raw_kwargs.pop("artist", None)
     raw_kwargs.pop("website", None)

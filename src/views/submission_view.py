@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import suppress
+from datetime import datetime
 from typing import Type, Union
 
 from discord import (
@@ -38,6 +39,7 @@ from src.structures.character import Character
 from src.structures.mission import Mission
 from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
 from src.views.mission_view import MissionView
+from utils import int_check
 
 
 class CharacterHandlerView(Complex):
@@ -127,8 +129,27 @@ class SubmissionView(View):
         oc_list: dict[int, int],
         supporting: dict[Member, Member],
         missions: set[Mission],
+        mission_claimers: dict[int, set[int]],
+        mission_cooldown: dict[int, datetime],
         **kwargs: Union[str, dict],
     ):
+        """Init method
+
+        Parameters
+        ----------
+        bot : CustomBot
+            Bot instance
+        ocs : dict[int, Character]
+            OCs
+        rpers : dict[int, dict[int, Character]]
+            OCs per rper
+        oc_list : dict[int, int]
+            OC list
+        supporting : dict[Member, Member]
+            Mods assisting to
+        missions : set[Mission]
+            All Missions
+        """
         super(SubmissionView, self).__init__(timeout=None)
         self.bot = bot
         self.kwargs = kwargs
@@ -136,6 +157,8 @@ class SubmissionView(View):
         self.rpers = rpers
         self.oc_list = oc_list
         self.missions = missions
+        self.mission_claimers = mission_claimers
+        self.mission_cooldown = mission_cooldown
         self.supporting = supporting
         self.show_template.options = [
             SelectOption(
@@ -152,7 +175,16 @@ class SubmissionView(View):
         row=0,
         custom_id="a479517442c724c00cc2e15a4106d807",
     )
-    async def show_template(self, _: Select, ctx: Interaction):
+    async def show_template(self, _: Select, ctx: Interaction) -> None:
+        """Shows the provided Templates
+
+        Parameters
+        ----------
+        _ : Select
+            Select
+        ctx : Interaction
+            Interaction
+        """
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         if raw_data := ctx.data.get("values", []):
@@ -227,7 +259,7 @@ class SubmissionView(View):
                     )
 
     @button(
-        label="Create Mission",
+        label="Publish a Mission!",
         emoji="✉",
         row=1,
         custom_id="3ec81ed922f2f2cde42a2fc3ed3392c4",
@@ -278,16 +310,19 @@ class SubmissionView(View):
                 emoji_parser=lambda x: x.name[0],
             )
             area: TextChannel
+            author = self.supporting.get(ctx.user, ctx.user)
             async with view.send(title="Select Area", single=True) as area:
                 if not area:
                     return
-                mission = Mission(author=ctx.user.id, place=area.id)
+                mission = Mission(author=author.id, place=area.id)
                 text_input = TextInput(
                     bot=self.bot,
                     member=ctx.user,
                     target=ctx.channel,
                     required=True,
                 )
+
+                text: str
 
                 async with text_input.handle(
                     title="Mission's Title",
@@ -304,6 +339,15 @@ class SubmissionView(View):
                     if not text:
                         return
                     mission.description = text
+
+                async with text_input.handle(
+                    title="Mission's Max amount of joiners",
+                    description="If you want your missions to have a max amount of joiners (1-10), if you default then there will be no limit.",
+                    required=False,
+                ) as text:
+                    if text is None:
+                        return
+                    mission.max_amount = int_check(text, a=1, b=10)
 
                 async with text_input.handle(
                     title="Mission's Target",
@@ -327,24 +371,31 @@ class SubmissionView(View):
                     target=ctx.channel,
                     values=range(1, 7),
                     emoji_parser=lambda x: DICE_NUMBERS[x - 1],
-                    parser=lambda x: (item := f"{x} / 6", f"Sets to {item}"),
+                    parser=lambda x: (str(x), f"Sets to {x} / 6"),
                 )
                 view.embed.title = "Mission's Difficulty"
                 async with view.send(single=True) as item:
                     if not item:
                         return
                     mission.difficulty = item
-                    w = await self.bot.webhook(908498210211909642)
-                    view = MissionView(bot=self.bot, mission=mission)
-                    msg = await w.send(
-                        content=ctx.user.mention,
+                    channel: TextChannel = self.bot.get_channel(908498210211909642)
+                    view = MissionView(
+                        bot=self.bot,
+                        mission=mission,
+                        mission_claimers=self.mission_claimers,
+                        mission_cooldown=self.mission_cooldown,
+                        supporting=self.supporting,
+                    )
+                    msg = await channel.send(
+                        content=author.mention,
                         embed=mission.embed,
                         view=view,
-                        wait=True,
                         allowed_mentions=AllowedMentions(users=True),
                     )
                     mission.msg_id = msg.id
                     self.missions.add(mission)
                     async with self.bot.database() as session:
                         await mission.upsert(session)
+                        thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
+                        await thread.add_user(author)
                         self.bot.logger.info("Mission added: %s", repr(mission))

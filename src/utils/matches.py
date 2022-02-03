@@ -26,7 +26,8 @@ __all__ = (
     "DISCORD_MSG_URL",
     "DATA_FINDER",
     "INVITE",
-    "YAML_HANDLER",
+    "YAML_HANDLER1",
+    "YAML_HANDLER2",
     "SCAM_FINDER",
     "URL_DOMAIN_MATCH",
 )
@@ -34,7 +35,8 @@ SCAM_FINDER = compile(r"hb\.bizmrg\.com", IGNORECASE)
 DATA_FINDER = compile(
     r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE
 )
-YAML_HANDLER = compile(r":\s*")
+YAML_HANDLER1 = compile(r":\s*")
+YAML_HANDLER2 = compile(r"\n\s+")
 IMAGEKIT_API = "https://ik.imagekit.io/vioshim"
 DISCORD_MATCH = compile(r"https://\w+\.discordapp\.\w+/(.*)", IGNORECASE)
 IMAGEKIT_MATCH = compile(f"{IMAGEKIT_API}/(.*)", IGNORECASE)

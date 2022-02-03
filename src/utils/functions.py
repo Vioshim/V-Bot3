@@ -17,6 +17,8 @@ from typing import Callable, Optional, TypeVar
 from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
 
+from src.utils.matches import YAML_HANDLER1, YAML_HANDLER2
+
 _T = TypeVar("_T")
 
 __all__ = (
@@ -32,6 +34,7 @@ __all__ = (
     "image_check",
     "message_line",
     "embed_handler",
+    "yaml_handler",
 )
 
 
@@ -51,6 +54,12 @@ def fix(text: str) -> str:
     text: str = str(text).upper().strip()
     values = {"Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U"}
     return "".join(x for e in text if (x := values.get(e, e)).isalnum())
+
+
+def yaml_handler(text: str) -> str:
+    text = YAML_HANDLER1.sub(": ", text)
+    text = YAML_HANDLER2.sub("\n", text)
+    return text
 
 
 def common_get(item: dict[str, _T], *args: str) -> Optional[_T]:
@@ -172,16 +181,16 @@ def embed_modifier(embed: Embed = None, **kwargs):
     return embed
 
 
-def int_check(data: str, a: int, b: int) -> Optional[int]:
+def int_check(data: str, a: int = None, b: int = None) -> Optional[int]:
     """This is a method that checks the integer out of a string given a range
 
     Parameters
     ----------
     data : str
         string to scan
-    a : int
+    a : int, optional
         min range value (inclusive)
-    b : int
+    b : int, optional
         max range value (inclusive)
 
     Returns
@@ -189,9 +198,54 @@ def int_check(data: str, a: int, b: int) -> Optional[int]:
     Optional[int]
         Determined value
     """
-    if val := "".join(char for char in str(data) if char.isdigit()):
-        if a <= (value := int(val)) <= b:
-            return value
+    value: Optional[int] = None
+    try:
+        value = int(data)
+    except ValueError:
+        if text := "".join(char for char in str(data) if char.isdigit()):
+            value = int(text)
+    finally:
+        if not isinstance(a, int):
+            a = value
+        if not isinstance(b, int):
+            b = value
+
+    if isinstance(value, int) and a <= value <= b:
+        return value
+
+
+def float_check(data: str, a: float = None, b: float = None) -> Optional[float]:
+    """This is a method that checks the float out of a string given a range
+
+    Parameters
+    ----------
+    data : str
+        string to scan
+    a : int, optional
+        min range value (inclusive)
+    b : int, optional
+        max range value (inclusive)
+
+    Returns
+    -------
+    Optional[float]
+        Determined value
+    """
+    value: Optional[float] = None
+    try:
+        value = float(data)
+    except ValueError:
+        text: str = "".join(char for char in str(data) if char.isdigit() or char == ".")
+        if text.count(".") <= 1:
+            value = float(text)
+    finally:
+        if not isinstance(a, float):
+            a = value
+        if not isinstance(b, float):
+            b = value
+
+    if isinstance(value, float) and a <= value <= b:
+        return value
 
 
 def stats_check(*args: str) -> int:

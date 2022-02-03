@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import datetime, timedelta
+
 from discord import (
-    AllowedMentions,
-    ButtonStyle,
+    Color,
     Interaction,
+    InteractionResponse,
     Member,
     TextChannel,
+    Thread,
 )
 from discord.ui import Button, View, button
+from discord.utils import format_dt
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
@@ -30,39 +34,90 @@ __all__ = ("MissionView",)
 
 
 class MissionView(View):
-    def __init__(self, bot: CustomBot, mission: Mission):
+    def __init__(
+        self,
+        bot: CustomBot,
+        mission: Mission,
+        mission_claimers: dict[int, set[int]],
+        mission_cooldown: dict[int, datetime],
+        supporting: dict[Member, Member],
+    ):
+        """Init Method
+
+        Parameters
+        ----------
+        bot : CustomBot
+            Bot Instance
+        mission : Mission
+            Mission
+        mission_claimers : dict[int, datetime]
+            Members with their last claim date
+        mission_cooldown : dict[int, set[int]]
+            mission id and the ocs that claim it
+        """
         super(MissionView, self).__init__(timeout=None)
         self.bot = bot
         self.mission = mission
-        self.claim.disabled = bool(mission.claimed)
+        self.mission_claimers = mission_claimers
+        self.mission_cooldown = mission_cooldown
+        self.supporting = supporting
 
-    @button(label="Claim Mission", custom_id="claim")
-    async def claim(self, btn: Button, interaction: Interaction):
+    @button(label="Join Mission", custom_id="claim")
+    async def claim(self, btn: Button, interaction: Interaction) -> None:
+        """Claim Mission
+
+        Parameters
+        ----------
+        btn : Button
+            Button
+        interaction : Interaction
+            Interaction
+        """
+        resp: InteractionResponse = interaction.response
         cog = self.bot.get_cog("Submission")
-        member: Member = interaction.user
-        if not (ocs := list(cog.rpers.get(member.id, {}).values())):
-            await interaction.response.send_message(
-                "You don't have registered characters", ephemeral=True
+        member: Member = self.supporting.get(interaction.user, interaction.user)
+
+        ocs: list[Character] = list(cog.rpers.get(member.id, {}).values())
+
+        if not ocs:
+            await resp.send_message(
+                "You don't have registered characters",
+                ephemeral=True,
             )
             return
 
-        async with self.bot.database() as db:
+        limit = self.mission.max_amount
+        if limit and len(self.mission.ocs) >= limit:
+            await resp.send_message(
+                f"The limited mission has already been claimed by {limit:02d} characters.",
+                ephemeral=True,
+            )
+            return
 
-            if await db.fetchval(
-                "SELECT COUNT(*) > 1 FROM MISSIONS WHERE CLAIMED = $1;",
-                member.id,
-            ):
-                await interaction.response.send_message(
-                    "You are already doing a mission.", ephemeral=True
-                )
-                return
+        if items := [oc for oc in ocs if oc.id in self.mission.ocs]:
+            oc = items[0]
+            await resp.send_message(
+                f"Your character {oc.name!r} is already participating in the mission.",
+                view=View(Button(label="Jump URL", url=oc.jump_url)),
+                ephemeral=True,
+            )
+            return
+
+        if (time := self.mission_cooldown.get(member.id)) and (
+            reference_time := time + timedelta(days=3)
+        ) >= datetime.now():
+            time: str = format_dt(reference_time, style="R")
+            await resp.send_message(
+                f"You are in cool down: {time}.",
+                ephemeral=True,
+            )
+            return
 
         view_select = Complex(
             bot=self.bot,
-            member=member,
+            member=interaction.user,
             target=interaction,
             values=ocs,
-            parser=lambda x: (x.name, repr(x)),
             sort_key=lambda x: x.name,
         )
 
@@ -71,66 +126,63 @@ class MissionView(View):
             title="Mission Claiming",
             description="Select who is taking the mission",
             single=True,
-            ephemeral=True
+            ephemeral=True,
         ) as choice:
 
-            if not choice:
+            if choice is None:
                 return
 
             async with self.bot.database() as db:
 
-                w2 = await self.bot.webhook(
-                    interaction.channel_id, reason="Missions"
+                assigned_at = await self.mission.upsert_oc(
+                    connection=db, oc_id=choice.id
                 )
+                self.mission_cooldown[member.id] = assigned_at
+                embed = self.mission.embed
+                if limit and self.mission.ocs >= limit:
+                    btn.disabled = True
+                await interaction.message.edit(embed=embed, view=self)
 
-                btn.label = "See Claim"
-                btn.custom_id = None
-                btn.style = ButtonStyle.link
-                btn.url = choice.jump_url
-
-                await w2.edit_message(interaction.message.id, view=self)
-
-                w3 = await self.bot.webhook(
-                    740568087820238919, reason="Mission Claim"
+                thread: Thread = await self.bot.fetch_channel(
+                    self.mission.msg_id
                 )
-
-                self.mission.claimed = member.id
-                await self.mission.upsert(connection=db)
-                view = View()
-                view.add_item(Button(label="Character", url=choice.jump_url))
-                view.add_item(
-                    Button(label="Mission", url=self.mission.jump_url)
+                await thread.add_user(member)
+                await thread.send(
+                    f"{member} joined with {choice.name} `{choice!r}` as character for this mission.",
+                    view=View(Button(label="Jump URL", url=choice.jump_url)),
                 )
-
-                if author := w3.guild.get_member(self.mission.author):
-                    await w3.send(
-                        content=f"{member.mention} has claimed {author.mention}'s mission.",
-                        view=view,
-                        allowed_mentions=AllowedMentions(users=True),
-                    )
-                else:
-                    await w3.send(
-                        content=f"{member.mention} has claimed a mission ~~whose author left~~.",
-                        view=view,
-                        allowed_mentions=AllowedMentions(users=True),
-                    )
 
     # noinspection PyTypeChecker
-    @button(label="Remove Mission", custom_id="remove")
-    async def remove(self, _: Button, interaction: Interaction):
+    @button(label="Conclude Mission", custom_id="remove")
+    async def remove(self, btn: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         ch: TextChannel = interaction.channel
+        await resp.defer(ephemeral=True)
         if (
-            ch.permissions_for(member).manage_messages
-            or member.id != self.mission.author
+            member.id == self.mission.author
+            or ch.permissions_for(member).manage_messages
         ):
+            self.claim.disabled = True
+            btn.disabled = True
             async with self.bot.database() as db:
                 await self.mission.remove(db)
-                await interaction.message.delete()
-            await interaction.response.send_message(
-                "Mission has been removed.", ephemeral=True
+                embed = self.mission.embed
+                embed.color = Color.red()
+                await interaction.message.edit(embed=embed, view=self)
+                thread: Thread = await self.bot.fetch_channel(
+                    self.mission.msg_id
+                )
+                await thread.edit(
+                    locked=True,
+                    reason=f"{member} concluded the mission.",
+                )
+            await interaction.followup.send(
+                "Mission has been concluded.",
+                ephemeral=True,
             )
         else:
-            await interaction.response.send_message(
-                "It's not yours.", ephemeral=True
+            await interaction.followup.send(
+                "It's not yours.",
+                ephemeral=True,
             )
