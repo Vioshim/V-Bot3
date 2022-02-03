@@ -42,12 +42,7 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -64,12 +59,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -342,25 +332,24 @@ class Submission(Cog):
         """
         if isinstance(channel, int):
             channel: TextChannel = self.bot.get_channel(channel)
-        if m := self.data_msg.pop(channel.id, None):
-            with suppress(DiscordException):
-                await m.delete()
-        self.data_msg[channel.id] = await channel.send(CLAIM_MESSAGE)
+        if not self.data_msg.get(channel.id):
+            m = await channel.send(CLAIM_MESSAGE)
+            self.data_msg[channel.id] = m
+
         async with self.bot.database() as conn:
-            if ocs := [
-                oc for oc in self.ocs.values() if oc.location == channel.id
-            ]:
-                await conn.executemany(
+            for oc in self.ocs.values():
+                if oc.location != channel.id:
+                    continue
+                await conn.execute(
                     """--sql
                     UPDATE CHARACTER
                     SET LOCATION = NULL
                     WHERE ID = $1;
                     """,
-                    [i.id for i in ocs],
+                    oc.id,
                 )
-                for oc in ocs:
-                    oc.location = None
-                    await self.oc_update(oc)
+                oc.location = None
+                await self.oc_update(oc)
 
     async def list_update(
         self,
@@ -1215,9 +1204,11 @@ class Submission(Cog):
         ):
             return
 
+        trigger = IntervalTrigger(days=3)
+        
         if oc.location != message.channel.id:
 
-            former_channel = message.guild.get_channel(oc.location)
+            former_channel: TextChannel = message.guild.get_channel(oc.location)
 
             if (
                 former_channel
@@ -1226,20 +1217,18 @@ class Submission(Cog):
                 )
                 == 0
             ):
-                trigger = IntervalTrigger(days=3)
-                await self.bot.scheduler.add_schedule(
-                    self.unclaiming,
-                    trigger,
-                    id=f"RP[{channel.id}]",
-                    args=[channel.id],
-                    conflict_policy=ConflictPolicy.replace,
-                )
+                self.data_msg.pop(former_channel.id, None)
+                scheduler = await self.bot.scheduler.get_schedule(f"RP[{former_channel.id}]")
                 await self.unclaiming(former_channel)
+                scheduler.trigger = trigger
+        
+        scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
+        scheduler.trigger = trigger
 
-            async with self.bot.database() as db:
-                oc.location = message.channel.id
-                await self.oc_update(oc)
-                await oc.upsert(db)
+        async with self.bot.database() as db:
+            oc.location = message.channel.id
+            await self.oc_update(oc)
+            await oc.upsert(db)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
@@ -1267,7 +1256,7 @@ class Submission(Cog):
                     self.unclaiming,
                     trigger,
                     id=f"RP[{channel.id}]",
-                    args=[channel.id],
+                    args=[channel.id, False],
                     conflict_policy=ConflictPolicy.replace,
                 )
             await self.on_message_tupper(msg)
