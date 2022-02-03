@@ -54,7 +54,7 @@ channels = {
     766018765690241034: "Question",
     918703451830100028: "Poll",
     728800301888307301: "Suggestion",
-    769304918694690866: "Self RP",
+    769304918694690866: "Story",
 }
 
 
@@ -66,10 +66,7 @@ class Information(Cog):
     @Cog.listener()
     async def on_message(self, message: Message):
 
-        if not message.content:
-            return
-
-        if message.channel.id not in channels:
+        if not (message.content and message.channel.id in channels):
             return
 
         if message.webhook_id:
@@ -77,6 +74,11 @@ class Information(Cog):
             return
 
         if message.author.bot:
+            return
+
+        context = await self.bot.get_context(message)
+
+        if context.command:
             return
 
         member: Member = message.author
