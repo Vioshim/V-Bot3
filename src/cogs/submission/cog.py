@@ -43,7 +43,12 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -60,7 +65,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -936,7 +946,11 @@ class Submission(Cog):
 
     async def load_claimed_categories(self):
         items: list[list[TextChannel]] = [
-            [x for x in self.bot.get_channel(ch).channels if not x.is_news()]
+            [
+                x
+                for x in self.bot.get_channel(ch).channels
+                if not x.name.endswith("-ooc")
+            ]
             for ch in RP_CATEGORIES
         ]
         for channel in chain(*items):
@@ -1265,12 +1279,21 @@ class Submission(Cog):
             and tupper.status == Status.online
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
-            and not message.channel.is_news()
+            and not message.channel.name.endswith("-ooc")
         ):
             await self.on_message_proxy(message)
 
     @Cog.listener()
     async def on_message_edit(self, _: Message, message: Message):
+        """on_message_edit handler
+
+        Parameters
+        ----------
+        _ : Message
+            Previous message
+        message : Message
+            Message to process
+        """
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
 

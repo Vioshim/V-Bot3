@@ -75,7 +75,7 @@ class AreaSelection(View):
                 emoji=item.name[0],
             )
             for item in cat.channels
-            if not item.is_news()
+            if not item.name.endswith("-ooc")
         ]
 
     @select(placeholder="Select a location to check", row=0)
