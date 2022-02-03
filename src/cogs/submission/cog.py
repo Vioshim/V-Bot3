@@ -43,12 +43,7 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -65,12 +60,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -396,7 +386,6 @@ class Submission(Cog):
                     await thread.delete(
                         reason="Former OC List Message was removed."
                     )
-        self.oc_list[member.id] = thread.id
         view = RPView(self.bot, member.id, self.oc_list)
         message: WebhookMessage = await webhook.send(
             content=member.mention,
@@ -406,6 +395,7 @@ class Submission(Cog):
             allowed_mentions=AllowedMentions(users=True),
         )
         thread = await message.create_thread(name=f"OCs⎱{member.id}")
+        self.oc_list[member.id] = thread.id
         if isinstance(member, Member):
             await thread.add_user(member)
 
