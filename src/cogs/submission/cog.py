@@ -42,7 +42,12 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -59,7 +64,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1205,7 +1215,7 @@ class Submission(Cog):
             return
 
         trigger = IntervalTrigger(days=3)
-        
+
         if oc.location != message.channel.id:
 
             former_channel: TextChannel = message.guild.get_channel(oc.location)
@@ -1218,10 +1228,12 @@ class Submission(Cog):
                 == 0
             ):
                 self.data_msg.pop(former_channel.id, None)
-                scheduler = await self.bot.scheduler.get_schedule(f"RP[{former_channel.id}]")
+                scheduler = await self.bot.scheduler.get_schedule(
+                    f"RP[{former_channel.id}]"
+                )
                 await self.unclaiming(former_channel)
                 scheduler.trigger = trigger
-        
+
         scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
         scheduler.trigger = trigger
 
