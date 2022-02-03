@@ -1073,7 +1073,7 @@ class Submission(Cog):
         self, message: Message
     ) -> Optional[DocumentType]:
         if attachments := message.attachments:
-            with suppress(ValueError):
+            with suppress(Exception):
                 file = await attachments[0].to_file()
                 return Document(file.fp)
 
