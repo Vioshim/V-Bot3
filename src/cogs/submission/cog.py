@@ -386,18 +386,18 @@ class Submission(Cog):
                     await thread.delete(
                         reason="Former OC List Message was removed."
                     )
-        view = RPView(self.bot, member.id, self.oc_list)
         message: WebhookMessage = await webhook.send(
             content=member.mention,
             wait=True,
             embed=embed,
-            view=view,
             allowed_mentions=AllowedMentions(users=True),
         )
         thread = await message.create_thread(name=f"OCs⎱{member.id}")
         self.oc_list[member.id] = thread.id
         if isinstance(member, Member):
             await thread.add_user(member)
+        view = RPView(self.bot, member.id, self.oc_list)
+        await message.edit(view=view)
 
     async def registration(
         self,
