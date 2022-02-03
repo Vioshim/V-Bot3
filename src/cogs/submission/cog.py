@@ -830,7 +830,7 @@ class Submission(Cog):
         await cog.load(rpers=self.rpers)
         self.bot.logger.info("Finished loading all characters")
 
-    async def load_profiles(self, db: Connection):
+    async def load_profiles(self):
         self.bot.logger.info("Loading All Profiles")
         channel = self.bot.get_channel(919277769735680050)
         async for m in channel.history(limit=None):
@@ -976,11 +976,11 @@ class Submission(Cog):
 
         async with self.bot.database() as db:
             await self.load_characters(db)
-            await self.load_profiles(db)
             await self.load_missions(db)
             await self.load_mission_views(db)
 
         self.ready = True
+        await self.load_profiles()
         await self.load_submssions()
         await self.load_claimed_categories()
 

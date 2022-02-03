@@ -139,7 +139,7 @@ class MissionView(View):
                 )
                 self.mission_cooldown[member.id] = assigned_at
                 embed = self.mission.embed
-                if limit and self.mission.ocs >= limit:
+                if limit and len(self.mission.ocs) >= limit:
                     btn.disabled = True
                 await interaction.message.edit(embed=embed, view=self)
 
