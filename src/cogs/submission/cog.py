@@ -1108,6 +1108,15 @@ class Submission(Cog):
         message : Message
             Message to process
         """
+        if (
+            not self.ready
+            or not message.guild
+            or message.mentions
+            or message.author.bot
+            or message.author.id in self.ignore
+            or message.stickers
+        ):
+            return
         try:
             done, _ = await wait(
                 [
@@ -1249,16 +1258,6 @@ class Submission(Cog):
         message : Message
             Message to process
         """
-        if (
-            not self.ready
-            or not message.guild
-            or message.mentions
-            or message.author.bot
-            or message.author.id in self.ignore
-            or message.stickers
-        ):
-            return
-
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
         elif (
@@ -1269,6 +1268,11 @@ class Submission(Cog):
             and not message.channel.is_news()
         ):
             await self.on_message_proxy(message)
+
+    @Cog.listener()
+    async def on_message_edit(self, _: Message, message: Message):
+        if message.channel.id == 852180971985043466:
+            await self.on_message_submission(message)
 
 
 def setup(bot: CustomBot) -> None:
