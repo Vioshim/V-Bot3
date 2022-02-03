@@ -40,6 +40,7 @@ from discord import (
     Status,
     TextChannel,
     Thread,
+    User,
     WebhookMessage,
 )
 from discord.commands import (
@@ -363,13 +364,13 @@ class Submission(Cog):
 
     async def list_update(
         self,
-        member: Member,
+        member: Member | User,
     ):
         """This function updates an user's character list message
 
         Parameters
         ----------
-        member : Member
+        member : Member | User
             User to update list
         """
         if not self.ready:
@@ -378,12 +379,12 @@ class Submission(Cog):
             title="Registered Characters",
             color=member.color,
         )
-        guild = member.guild
-        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        webhook = await self.bot.fetch_webhook(919280056558317658)
+        if guild := webhook.guild:
+            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         embed.set_author(name=member.display_name)
         embed.set_thumbnail(url=member.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
-        webhook = await self.bot.fetch_webhook(919280056558317658)
         if oc_list := self.oc_list.get(member.id, None):
             try:
                 view = RPView(self.bot, member.id, self.oc_list)
@@ -395,28 +396,18 @@ class Submission(Cog):
                     await thread.delete(
                         reason="Former OC List Message was removed."
                     )
+        self.oc_list[member.id] = thread.id
+        view = RPView(self.bot, member.id, self.oc_list)
         message: WebhookMessage = await webhook.send(
             content=member.mention,
             wait=True,
             embed=embed,
+            view=view,
             allowed_mentions=AllowedMentions(users=True),
         )
         thread = await message.create_thread(name=f"OCs⎱{member.id}")
-        await thread.add_user(member)
-        self.oc_list[member.id] = thread.id
-        view = RPView(self.bot, member.id, self.oc_list)
-        await message.edit(view=view)
-        async with self.bot.database() as db:
-            await db.execute(
-                """--sql
-                INSERT INTO THREAD_LIST(ID, AUTHOR, SERVER)
-                VALUES ($1, $2, $3) ON CONFLICT(AUTHOR, SERVER)
-                DO UPDATE SET ID = $1;
-                """,
-                thread.id,
-                member.id,
-                guild.id,
-            )
+        if isinstance(member, Member):
+            await thread.add_user(member)
 
     async def registration(
         self,
@@ -795,13 +786,22 @@ class Submission(Cog):
         self,
         ctx: ApplicationContext,
         member: Option(
-            Member,
+            User,
             description="Member, if not provided, it's current user.",
             required=False,
         ),
     ):
         await ctx.defer(ephemeral=True)
-        if not member:
+        if isinstance(member, int):
+            try:
+                member: User = await self.bot.fetch_user(member)
+            except HTTPException:
+                await ctx.send_followup(
+                    content="User does not exist in discord.",
+                    ephemeral=True,
+                )
+                return
+        elif not member:
             member: Member = ctx.author
         if ctx.author == member:
             self.supporting.pop(ctx.author, None)
@@ -816,6 +816,9 @@ class Submission(Cog):
                 ephemeral=True,
             )
 
+        if self.oc_list.get(member.id):
+            await self.list_update(member)
+
     async def load_characters(self, db: Connection):
         self.bot.logger.info("Loading all Characters.")
         for oc in await fetch_all(db):
@@ -829,41 +832,14 @@ class Submission(Cog):
 
     async def load_profiles(self, db: Connection):
         self.bot.logger.info("Loading All Profiles")
-        guild: Guild = self.bot.get_guild(719343092963999804)
-        webhook = await self.bot.fetch_webhook(919280056558317658)
-        async for item in db.cursor(
-            """--sql
-            SELECT AUTHOR, ID
-            FROM THREAD_LIST
-            WHERE SERVER = $1;
-            """,
-            guild.id,
-        ):
-            author, thread_id = item
-            self.oc_list[author] = thread_id
-
-            with suppress(HTTPException):
-                if not (member := guild.get_member(author)):
-                    try:
-                        member = await guild.fetch_member(author)
-                    except HTTPException:
-                        member = await self.bot.fetch_user(author)
-
-                embed = Embed(
-                    title="Registered Characters",
-                    color=member.color,
-                )
-                embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-                embed.set_author(name=member.display_name)
-                embed.set_thumbnail(url=member.display_avatar.url)
-                embed.set_image(url=WHITE_BAR)
-                view = RPView(self.bot, author, self.oc_list)
-                try:
-                    await webhook.edit_message(
-                        thread_id, embed=embed, view=view
-                    )
-                except DiscordException:
-                    self.bot.add_view(view=view, message_id=thread_id)
+        channel = self.bot.get_channel(919277769735680050)
+        async for m in channel.history(limit=None):
+            if not m.mentions:
+                continue
+            user = m.mentions[0]
+            self.oc_list[user.id] = m.id
+            view = RPView(self.bot, user.id, self.oc_list)
+            self.bot.add_view(view=view, message_id=m.id)
 
         self.bot.logger.info("Finished loading all Profiles.")
 
@@ -1044,14 +1020,6 @@ class Submission(Cog):
             ][0]
             async with self.bot.database() as db:
                 del self.oc_list[author_id]
-                await db.execute(
-                    """--sql
-                    DELETE FROM THREAD_LIST
-                    WHERE ID = $1 AND SERVER = $2;
-                    """,
-                    payload.thread_id,
-                    payload.guild_id,
-                )
 
                 for oc in self.rpers.pop(author_id, {}).values():
                     del self.ocs[oc.id]
