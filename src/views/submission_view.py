@@ -38,8 +38,8 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mission import Mission
 from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
+from src.utils.functions import int_check
 from src.views.mission_view import MissionView
-from utils import int_check
 
 
 class CharacterHandlerView(Complex):
@@ -378,7 +378,9 @@ class SubmissionView(View):
                     if not item:
                         return
                     mission.difficulty = item
-                    channel: TextChannel = self.bot.get_channel(908498210211909642)
+                    channel: TextChannel = self.bot.get_channel(
+                        908498210211909642
+                    )
                     view = MissionView(
                         bot=self.bot,
                         mission=mission,
@@ -396,6 +398,8 @@ class SubmissionView(View):
                     self.missions.add(mission)
                     async with self.bot.database() as session:
                         await mission.upsert(session)
-                        thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
+                        thread = await msg.create_thread(
+                            name=f"Mission {mission.id:03d}"
+                        )
                         await thread.add_user(author)
                         self.bot.logger.info("Mission added: %s", repr(mission))
