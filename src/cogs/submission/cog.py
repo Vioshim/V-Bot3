@@ -882,7 +882,7 @@ class Submission(Cog):
                 async for oc_item in db.cursor(
                     """--sql
                     SELECT character, assigned_at
-                    FROM MISSIONS_ASSIGNMENT
+                    FROM MISSION_ASSIGNMENT
                     where mission = $1;
                     """,
                     mission.id,
