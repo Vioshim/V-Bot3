@@ -28,6 +28,7 @@ __all__ = (
     "common_pop_get",
     "embed_modifier",
     "int_check",
+    "float_check",
     "stats_check",
     "check_valid",
     "text_check",
@@ -235,7 +236,9 @@ def float_check(data: str, a: float = None, b: float = None) -> Optional[float]:
     try:
         value = float(data)
     except ValueError:
-        text: str = "".join(char for char in str(data) if char.isdigit() or char == ".")
+        text: str = "".join(
+            char for char in str(data) if char.isdigit() or char == "."
+        )
         if text.count(".") <= 1:
             value = float(text)
     finally:
