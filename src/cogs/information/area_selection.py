@@ -53,13 +53,14 @@ class AreaSelection(View):
             self.add_item(btn)
         cog = bot.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
-        self.total: int = 0
-        for location, ocs in cog.located.items():
-            if (
-                ch := guild.get_channel_or_thread(location)
-            ) and cat == ch.category:
-                self.entries[str(ch.id)] = ocs
-                self.total += len(ocs)
+
+        for oc in cog.ocs:
+            ch = guild.get_channel_or_thread(oc.location)
+            if ch and cat == ch.category:
+                self.entries.setdefault(str(ch.id), set())
+                self.entries[str(ch.id)].add(oc)
+
+        self.total = sum(len(item) for item in self.entries.values())
 
         def handle(item: TextChannel) -> str:
             text = f"{len(self.entries.get(str(item.id), [])):02d}"

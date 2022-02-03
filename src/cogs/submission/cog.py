@@ -834,7 +834,7 @@ class Submission(Cog):
         self.bot.logger.info("Loading All Profiles")
         channel = self.bot.get_channel(919277769735680050)
         async for m in channel.history(limit=None):
-            if not m.mentions:
+            if not (m.mentions and m.webhook_id):
                 continue
             user = m.mentions[0]
             self.oc_list[user.id] = m.id
