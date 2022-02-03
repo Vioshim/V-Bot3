@@ -54,7 +54,7 @@ class AreaSelection(View):
         cog = bot.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
 
-        for oc in cog.ocs:
+        for oc in cog.ocs.values():
             ch = guild.get_channel_or_thread(oc.location)
             if ch and cat == ch.category:
                 self.entries.setdefault(str(ch.id), set())
