@@ -16,6 +16,7 @@ from discord import AutocompleteContext, OptionChoice
 
 from src.cogs.submission.cog import Submission
 from src.structures.ability import Ability
+from src.structures.character import Character
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.species import (
@@ -27,7 +28,6 @@ from src.structures.species import (
     UltraBeast,
 )
 from src.utils.functions import fix
-from structures import Character
 
 
 def move_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
