@@ -19,6 +19,7 @@ from discord.ext.commands import Cog
 from src.cogs.pokedex.search import default_species_autocomplete
 from src.context import ApplicationContext
 from src.structures.bot import CustomBot
+from src.structures.character import Character
 from src.structures.species import Species, Variant
 from src.views import CharactersView
 
@@ -64,6 +65,7 @@ class Pokedex(Cog):
             str,
             description="Species to look up info about.",
             autocomplete=default_species_autocomplete,
+            required=False,
         ),
         variant: Option(
             bool, description="wanna see Variant OCs?", required=False
@@ -82,11 +84,11 @@ class Pokedex(Cog):
         variant : bool, optional
             Variant, by default None
         """
+        cog = ctx.bot.get_cog("Submission")
         if mon := Species.from_ID(species):
             self.bot.logger.info(
                 "%s is reading /find species %s", str(ctx.user), mon.name
             )
-            cog = ctx.bot.get_cog("Submission")
             ocs = []
             for oc in cog.ocs.values():
                 if (
@@ -147,9 +149,27 @@ class Pokedex(Cog):
                 ephemeral=True,
             )
 
-        else:
+        elif species:
             await ctx.send_response(
                 content=f"Unable to identify the species: {species}",
+                ephemeral=True,
+            )
+        else:
+            ocs = []
+            amounts: dict[str, set[Character]] = {}
+            items: list[Character] = cog.ocs.values()
+            for oc in items:
+                amounts.setdefault(oc.kind, set())
+                amounts[oc.kind].add(oc)
+
+            await ctx.send_response(
+                content="\n".join(
+                    sorted(
+                        amounts.items(),
+                        key=lambda x: x[1],
+                        reverse=True,
+                    )
+                ),
                 ephemeral=True,
             )
 
