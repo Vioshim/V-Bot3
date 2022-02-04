@@ -222,16 +222,16 @@ class Utilities(Cog):
             str,
             description="Expression (Example: d20)",
         ),
+        hidden: bool = False
     ):
         value = roll(expr=expression, stringifier=MarkdownStringifier())
         try:
-            await ctx.respond(value.result)
+            await ctx.respond(value.result, ephemeral=hidden)
         except RollSyntaxError:
             await ctx.respond("Invalid expression", ephemeral=True)
         except HTTPException:
-            expr = value.expr
-            simplify_expr(expr)
-            await ctx.respond(value.result)
+            simplify_expr(value.expr)
+            await ctx.respond(value.result, ephemeral=hidden)
 
 
 def setup(bot: CustomBot) -> None:
