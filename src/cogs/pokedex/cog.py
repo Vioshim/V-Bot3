@@ -164,8 +164,11 @@ class Pokedex(Cog):
             info = [(k, len(v)) for k, v in amounts.items()]
             info.sort(key=lambda x: x[1], reverse=True)
 
+            text = "\n".join(f"{k}: {v}" for k, v in info)
+            text = f"```yaml\n{text}\n```"
+
             await ctx.send_response(
-                content="\n".join(f"{k}: {v}" for k, v in info),
+                content=text,
                 ephemeral=True,
             )
 
