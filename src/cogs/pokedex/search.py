@@ -103,8 +103,8 @@ def default_species_autocomplete(
 
     def value(mon: Character | Species):
         if isinstance(Species):
-            return mon.id
-        return mon.species.id
+            return str(mon.id)
+        return str(mon.species.id)
 
     options = {name(mon): value(mon) for mon in sorted(mons, key=name)}
 
