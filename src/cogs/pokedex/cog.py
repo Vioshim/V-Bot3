@@ -48,11 +48,6 @@ class Pokedex(Cog):
     async def find_species(
         self,
         ctx: ApplicationContext,
-        species: Option(
-            str,
-            description="Species to look up info about.",
-            autocomplete=default_species_autocomplete,
-        ),
         kind: Option(
             str,
             description="Filter by kind",
@@ -64,6 +59,11 @@ class Pokedex(Cog):
                 OptionChoice(name="Any", value="ANY"),
             ],
             required=False,
+        ),
+        species: Option(
+            str,
+            description="Species to look up info about.",
+            autocomplete=default_species_autocomplete,
         ),
         variant: Option(
             bool, description="wanna see Variant OCs?", required=False
