@@ -513,7 +513,7 @@ class Variant(Species):
 
     def __init__(self, base: Species, name: str):
         super(Variant, self).__init__(
-            id=base.id,
+            id=f"{base.id}+",
             name=name.title(),
             shape=base.shape,
             color=base.color,
@@ -582,7 +582,7 @@ class Variant(Species):
         Optional[Variant]
             Result
         """
-        if mon := Species.from_ID(item):
+        if mon := Species.from_ID(item.removesuffix("+")):
             if not isinstance(mon, Fusion):
                 return Variant(base=mon, name=f"Variant {mon.name.title()}")
 

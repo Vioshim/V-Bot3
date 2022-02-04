@@ -1301,7 +1301,7 @@ class VariantCharacter(Character):
             DO UPDATE SET SPECIES = $2, NAME = $3;
             """,
             self.id,
-            self.species.id,
+            self.species.base.id,
             self.species.name,
         )
         await connection.execute(

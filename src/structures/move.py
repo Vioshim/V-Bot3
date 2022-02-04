@@ -94,7 +94,7 @@ class Move:
     type: Typing
     url: str
     image: str
-    contest: str = None
+    contest: Optional[str] = None
     desc: Optional[str] = None
     shortDesc: Optional[str] = None
     accuracy: Optional[int] = None
@@ -106,10 +106,13 @@ class Move:
 
     @property
     def embed(self):
+        title = self.name
+        if self.banned:
+            title += " - Banned Move"
         description = self.desc or self.shortDesc
         embed = Embed(
             url=self.url,
-            title=self.name,
+            title=title,
             description=description,
             color=self.type.color,
             timestamp=utcnow(),

@@ -14,6 +14,8 @@
 
 from discord import AutocompleteContext, OptionChoice
 
+from src.cogs.submission.cog import Submission
+from src.structures.ability import Ability
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.species import (
@@ -41,6 +43,15 @@ def move_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
     ]
 
 
+def ability_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
+    text: str = fix(ctx.value or "")
+    return [
+        OptionChoice(name=i.name, value=i.id)
+        for i in Ability.all()
+        if text in i.id or i.id in text
+    ]
+
+
 def type_autocomplete(ctx: AutocompleteContext):
     text: str = fix(ctx.value or "")
     return [
@@ -54,6 +65,7 @@ def default_species_autocomplete(
     ctx: AutocompleteContext,
 ) -> list[OptionChoice]:
     text: str = fix(ctx.value or "")
+    cog: Submission = ctx.bot.get_cog("Submission")
     match fix(ctx.options.get("kind", "")):
         case "LEGENDARY":
             mons = Legendary.all()
@@ -65,14 +77,36 @@ def default_species_autocomplete(
             mons = Pokemon.all()
         case "MEGA":
             mons = Mega.all()
+        case "FAKEMON":
+            mons = [
+                oc.species for oc in cog.ocs.values() if oc.kind == "FAKEMON"
+            ]
+        case "VARIANT":
+            mons = [
+                oc.species for oc in cog.ocs.values() if oc.kind == "VARIANT"
+            ]
+        case "FUSION":
+            mons = [
+                oc.species for oc in cog.ocs.values() if oc.kind == "FUSION"
+            ]
         case _:
             mons = Species.all()
 
-    options = [
-        OptionChoice(name=i.name, value=i.id)
-        for i in mons
-        if i.id in text or text in i.id
-    ]
+    mon_type_id = ctx.options.get("types")
+    if mon_type_id and (mon_type := Typing.from_ID(mon_type_id)):
+        mons = [i for i in mons if mon_type in i.types]
+
+    ability_id = ctx.options.get("abilities")
+    if ability_id and (ability := Ability.from_ID(ability_id)):
+        mons = [i for i in mons if ability in i.abilities]
+
+    move_id = ctx.options.get("moves")
+    if move_id and (move := Move.from_ID(move_id)):
+        mons = [i for i in mons if move in i.movepool]
+
+    options = {i.name: i.id for i in mons if i.id in text or text in i.id}
+
+    options = [OptionChoice(k, v) for k, v in options.items()]
 
     options.sort(key=lambda x: x.name)
     return options
