@@ -84,7 +84,6 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
             scheduler=scheduler,
             pool=pool,
             logger=logger,
-            debug_guild=719343092963999804,
             owner_id=678374009045254198,
             command_prefix=when_mentioned_or("?"),
             description="This is Vioshim's bot",
