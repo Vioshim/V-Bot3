@@ -27,11 +27,7 @@ from src.structures.species import (
     UltraBeast,
 )
 from src.utils.functions import fix
-
-# /find-species name: str, fusion: str = None, kind: str = None, variants: bool = False
-# /find-species name: str, fusion: str = None, kind: str = None
-# /find-species name: str, fusion: str = None, kind: str = None
-# /find-species name: str, fusion: str = None, kind: str = None
+from structures import Character
 
 
 def move_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
@@ -78,19 +74,15 @@ def default_species_autocomplete(
         case "MEGA":
             mons = Mega.all()
         case "FAKEMON":
-            mons = [
-                oc.species for oc in cog.ocs.values() if oc.kind == "FAKEMON"
-            ]
+            mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON"]
         case "VARIANT":
-            mons = [
-                oc.species for oc in cog.ocs.values() if oc.kind == "VARIANT"
-            ]
+            mons = [oc for oc in cog.ocs.values() if oc.kind == "VARIANT"]
         case "FUSION":
-            mons = [
-                oc.species for oc in cog.ocs.values() if oc.kind == "FUSION"
-            ]
+            mons = [oc for oc in cog.ocs.values() if oc.kind == "FUSION"]
         case _:
             mons = Species.all()
+
+    mons: list[Character | Species] = list(mons)
 
     mon_type_id = ctx.options.get("types")
     if mon_type_id and (mon_type := Typing.from_ID(mon_type_id)):
@@ -104,9 +96,20 @@ def default_species_autocomplete(
     if move_id and (move := Move.from_ID(move_id)):
         mons = [i for i in mons if move in i.movepool]
 
-    options = {i.name: i.id for i in mons if i.id in text or text in i.id}
+    def name(mon: Character | Species):
+        if isinstance(Species):
+            return mon.name
+        return mon.species.name
 
-    options = [OptionChoice(k, v) for k, v in options.items()]
+    def value(mon: Character | Species):
+        if isinstance(Species):
+            return mon.id
+        return mon.species.id
 
-    options.sort(key=lambda x: x.name)
-    return options
+    options = {name(mon): value(mon) for mon in sorted(mons, key=name)}
+
+    return [
+        OptionChoice(name=k, value=v)
+        for k, v in options.items()
+        if v in text or text in v
+    ]

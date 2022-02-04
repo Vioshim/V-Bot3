@@ -91,6 +91,15 @@ class Species(metaclass=ABCMeta):
         self.types = frozenset(self.types)
         self.abilities = frozenset(self.abilities)
 
+    def __eq__(self, other: Species):
+        if isinstance(other, Species):
+            mon1 = str(self.id)
+            mon2 = str(other.id)
+            return set(mon1.split("_")) == set(mon2.split("_"))
+        raise NotImplementedError(
+            f"Can't compare Species with {other.__class__.__name__}"
+        )
+
     @classmethod
     def all(cls) -> frozenset[Species]:
         items = filter(lambda x: isinstance(x, cls), ALL_SPECIES.values())
@@ -624,6 +633,17 @@ class Fusion(Species):
         self.evolves_to = frozenset(zip(item1, item2))
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
             self.evolves_from = item1, item2
+
+    def __eq__(self, other: Fusion):
+        if isinstance(other, Fusion):
+            mon1 = str(self.id)
+            mon2 = str(other.id)
+            return set(mon1.split("_")) == set(mon2.split("_"))
+        raise NotImplementedError("Fusions can only compare with other fusions")
+
+    @property
+    def bases(self) -> frozenset[Species]:
+        return frozenset((self.mon1, self.mon2))
 
     @property
     def species_evolves_to(self) -> list[Fusion]:

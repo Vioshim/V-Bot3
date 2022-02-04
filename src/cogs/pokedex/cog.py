@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from discord import Embed, InteractionResponse, Option, OptionChoice
+from discord import Embed, Option, OptionChoice
 from discord.commands import slash_command
 from discord.ext.commands import Cog
 
@@ -125,8 +125,7 @@ class Pokedex(Cog):
         type_id: str = type_id or ""
         cog = ctx.bot.get_cog("Submission")
 
-        resp: InteractionResponse = ctx.respose
-        await resp.defer(ephemeral=True)
+        await ctx.defer(ephemeral=True)
 
         if species.isdigit() and (oc := cog.ocs.get(int(species))):
             view = PingView(oc, oc.author == ctx.user.id)
@@ -139,6 +138,7 @@ class Pokedex(Cog):
             self.bot.logger.info(
                 "%s is reading /find species %s", str(ctx.user), mon.name
             )
+
             ocs = [
                 oc
                 for oc in cog.ocs.values()
@@ -231,7 +231,7 @@ class Pokedex(Cog):
                 ocs = [oc for oc in cog.ocs.values() if item in oc.abilities]
             elif isinstance(item, Typing):
                 ocs = [oc for oc in cog.ocs.values() if item in oc.types]
-            else:
+            elif isinstance(item, Move):
                 ocs = [oc for oc in cog.ocs.values() if item in oc.moveset]
             view = CharactersView(
                 bot=self.bot,
