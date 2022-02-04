@@ -69,15 +69,15 @@ class Movepool:
         str
             repr
         """
-        elements: list[str] = []
-        for key, value in asdict(self).items():
-            if isinstance(value, dict):
-                count = sum(len(item) for item in value.values())
-            else:
-                count = len(value)
-            if count:
-                elements.append(f"{key}={count}")
-        data = ", ".join(elements)
+        elements = dict(
+            level=len(self.level_moves),
+            event=len(self.event),
+            tutor=len(self.tutor),
+            egg=len(self.egg),
+            levelup=len(self.levelup),
+            other=len(self.other),
+        )
+        data = ", ".join(f"{k}={v}" for k, v in elements.items() if v)
         return f"Movepool({data})"
 
     def __len__(self) -> int:

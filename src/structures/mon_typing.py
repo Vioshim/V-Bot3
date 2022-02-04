@@ -247,7 +247,7 @@ class Typing:
         }.get(item := str(self), f"{item} Terrain".title())
 
     @classmethod
-    def all(cls):
+    def all(cls) -> frozenset[Typing]:
         return frozenset(ALL_TYPES.values())
 
     @classmethod

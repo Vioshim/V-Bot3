@@ -84,12 +84,13 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
             scheduler=scheduler,
             pool=pool,
             logger=logger,
+            debug_guild=719343092963999804,
+            owner_id=678374009045254198,
             command_prefix=when_mentioned_or("?"),
             description="This is Vioshim's bot",
             command_attrs=dict(hidden=True),
             case_insensitive=True,
             help_command=CustomHelp(),
-            owner_ids={678374009045254198},
         )
         bot.load_extension("jishaku")
         path = Path("src/cogs")

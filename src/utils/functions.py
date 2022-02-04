@@ -146,35 +146,41 @@ def embed_modifier(embed: Embed = None, **kwargs):
     embed.url = kwargs.get("url", embed.url)
     embed.color = kwargs.get("color", embed.color)
     embed.timestamp = kwargs.get("timestamp", embed.timestamp)
+
     if author := kwargs.get("author", {}):
         embed.set_author(**author)
     elif "author" in kwargs:
         embed.remove_author()
+
     if footer := kwargs.get("footer", {}):
         embed.set_footer(**footer)
     elif "footer" in kwargs:
         embed.remove_footer()
+
     if image := kwargs.get("image", ""):
         embed.set_image(url=image)
     elif "image" in kwargs:
         embed.remove_image()
+
     if thumbnail := kwargs.get("thumbnail", ""):
         embed.set_thumbnail(url=thumbnail)
     elif "thumbnail" in kwargs:
-        embed.remove_thumbnail
+        embed.remove_thumbnail()
+
     if "fields" in kwargs:
         embed.clear_fields()
         if fields := kwargs.get("fields", []):
             for field in fields:
                 if isinstance(field, tuple):
-                    try:
+                    if len(field) == 2:
                         name, value = field
                         embed.add_field(name=name, value=value)
-                    except ValueError:
+                    elif len(field) == 3:
                         name, value, inline = field
                         embed.add_field(name=name, value=value, inline=inline)
-                if isinstance(field, dict):
+                elif isinstance(field, dict):
                     embed.add_field(**field)
+
     return embed
 
 

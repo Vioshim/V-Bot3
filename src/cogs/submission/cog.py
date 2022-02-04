@@ -237,7 +237,6 @@ class Submission(Cog):
                 view=view,
             )
         elif ocs:
-            ocs.sort(key=lambda x: x.name)
             view = CharactersView(
                 bot=self.bot,
                 member=ctx.author,

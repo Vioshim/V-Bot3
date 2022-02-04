@@ -64,7 +64,17 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Proxy</summary>
+<details closed> <summary> Pokedex </summary>
+
+<p>
+
+> Implementation of commands that allow to obtain information given search parameters.
+
+</p>
+
+</details>
+
+<details closed> <summary> Proxy </summary>
 
 <p>
 
@@ -74,7 +84,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Roles</summary>
+<details closed> <summary> Roles </summary>
 
 <p>
 
@@ -84,7 +94,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Submission</summary>
+<details closed> <summary> Submission </summary>
 
 <p>
 
@@ -94,7 +104,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Utilities</summary>
+<details closed> <summary> Utilities </summary>
 
 <p>
 

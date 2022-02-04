@@ -46,7 +46,18 @@ __all__ = (
 
 ALL_SPECIES = frozendict()
 SPECIES_BY_NAME = frozendict()
-
+COLORS = {
+    "Green": 0x64D364,
+    "Purple": 0xC183C1,
+    "White": 0xFFF,
+    "Blue": 0x94DBEE,
+    "Red": 0xEC8484,
+    "Brown": 0xC96,
+    "Gray": 0xD1D1E0,
+    "Pink": 0xF4BDC9,
+    "Black": 0xBBB,
+    "Yellow": 0xFF9,
+}
 _BEASTBOOST = Ability.from_ID(item="BEASTBOOST")
 
 
@@ -55,7 +66,7 @@ class Species(metaclass=ABCMeta):
     id: str = ""
     name: str = ""
     shape: str = ""
-    color: str = ""
+    color: int = 0
     base_image: Optional[str] = None
     base_image_shiny: Optional[str] = None
     female_image: Optional[str] = None
@@ -81,7 +92,7 @@ class Species(metaclass=ABCMeta):
         self.abilities = frozenset(self.abilities)
 
     @classmethod
-    def all(cls):
+    def all(cls) -> frozenset[Species]:
         items = filter(lambda x: isinstance(x, cls), ALL_SPECIES.values())
         return frozenset(items)
 
@@ -589,6 +600,7 @@ class Fusion(Species):
         super(Fusion, self).__init__(
             id=f"{mon1.id}_{mon2.id}",
             name=f"{mon1.name}/{mon2.name}",
+            color=(mon1.color ** 2 + mon2.color ** 2) / 2,
             height=round((mon1.height + mon2.height) / 2),
             weight=round((mon1.weight + mon2.weight) / 2),
             HP=round((mon1.HP + mon2.HP) / 2),
@@ -650,9 +662,13 @@ class Fusion(Species):
                 elements.append(items)
             elif common := types1.intersection(types2):
                 uncommon = items - common
-                elements.extend(frozenset({x, y}) for x in common for y in uncommon)
+                elements.extend(
+                    frozenset({x, y}) for x in common for y in uncommon
+                )
             else:
-                elements.extend(frozenset({x, y}) for x in types1 for y in types2)
+                elements.extend(
+                    frozenset({x, y}) for x in types1 for y in types2
+                )
         return elements
 
     @property
@@ -735,9 +751,10 @@ class SpeciesDecoder(JSONDecoder):
             Output
         """
         if all(i in dct for i in Species.__slots__):
-            dct["abilities"] = Ability.deduce_many(*dct.pop("abilities", []))
-            dct["movepool"] = Movepool.from_dict(**dct.pop("movepool", {}))
-            dct["types"] = Typing.deduce_many(*dct.pop("types", []))
+            dct["abilities"] = Ability.deduce_many(*dct.get("abilities", []))
+            dct["movepool"] = Movepool.from_dict(**dct.get("movepool", {}))
+            dct["types"] = Typing.deduce_many(*dct.get("types", []))
+            dct["color"] = COLORS.get(dct.get("color"), 0xFFF)
             match dct.pop("kind", ""):
                 case "Legendary":
                     return Legendary(**dct)
