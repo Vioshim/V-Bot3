@@ -23,6 +23,7 @@ from src.cogs.pokedex.search import (
     type_autocomplete,
 )
 from src.context import ApplicationContext
+from src.structures.ability import Ability
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mon_typing import Typing
@@ -30,7 +31,6 @@ from src.structures.move import Move
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
 from src.views import CharactersView, PingView
-from structures import Ability
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
 KINDS = [
