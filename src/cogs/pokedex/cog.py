@@ -161,14 +161,11 @@ class Pokedex(Cog):
                 amounts.setdefault(oc.kind, set())
                 amounts[oc.kind].add(oc)
 
+            info = [(k, len(v)) for k, v in amounts.items()]
+            info.sort(key=lambda x: x[1], reverse=True)
+
             await ctx.send_response(
-                content="\n".join(
-                    sorted(
-                        amounts.items(),
-                        key=lambda x: x[1],
-                        reverse=True,
-                    )
-                ),
+                content="\n".join(f"{k}: {v}" for k, v in info),
                 ephemeral=True,
             )
 
