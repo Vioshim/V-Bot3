@@ -821,7 +821,7 @@ class Submission(Cog):
 
     async def load_profiles(self):
         self.bot.logger.info("Loading All Profiles")
-        channel = self.bot.get_channel(919277769735680050)
+        channel = await self.bot.fetch_channel(919277769735680050)
         async for m in channel.history(limit=None):
             if not (m.mentions and m.webhook_id):
                 continue
@@ -868,7 +868,7 @@ class Submission(Cog):
     async def load_mission_views(self, db: Connection):
         self.bot.logger.info("Loading mission views")
 
-        channel: TextChannel = self.bot.get_channel(908498210211909642)
+        channel: TextChannel = await self.bot.fetch_channel(908498210211909642)
 
         for mission in self.missions:
             view = MissionView(
@@ -972,10 +972,10 @@ class Submission(Cog):
             await self.load_missions(db)
             await self.load_mission_views(db)
 
-        self.ready = True
         await self.load_profiles()
         await self.load_submssions()
         await self.load_claimed_categories()
+        self.ready = True
 
     @Cog.listener()
     async def on_member_update(
