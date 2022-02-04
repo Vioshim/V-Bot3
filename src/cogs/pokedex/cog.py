@@ -148,7 +148,6 @@ class Pokedex(Cog):
                 view=view,
                 ephemeral=True,
             )
-
         elif species:
             await ctx.send_response(
                 content=f"Unable to identify the species: {species}",

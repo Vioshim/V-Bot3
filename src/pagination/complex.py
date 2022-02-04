@@ -191,7 +191,7 @@ class Complex(Simple):
         if not (choices := self.choices):
             choices = set()
 
-        foo.placeholder = f"Picked:{len(choices)}, Max:{self.max_values}"
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
 
         foo.options.clear()
         pages.options.clear()
@@ -431,20 +431,20 @@ class Complex(Simple):
 
         await self.custom_choice(sct, interaction)
 
-        if not (self.silent_mode or response.is_done()):
-            if text := ", ".join(entries):
-                await response.send_message(
-                    content=f"Great! you have selected **{text}**.",
-                    ephemeral=True,
-                )
+        if not (self.silent_mode or response.is_done()) and (
+            text := ", ".join(entries)
+        ):
+            await response.send_message(
+                content=f"Great! you have selected **{text}**.",
+                ephemeral=True,
+            )
 
         if not response.is_done():
             await response.pong()
 
         self.values = set(self.values) - self.choices
-        if len(sct.values) == self.entries_per_page:
-            if self._pos > 1:
-                self._pos -= 1
+        if len(sct.values) == self.entries_per_page and self._pos > 1:
+            self._pos -= 1
         await self.edit(page=self._pos)
 
     @select(
@@ -526,11 +526,11 @@ class ComplexInput(Complex):
         if response.is_done():
             return
         btn.disabled = True
-        if message := self.message:
+        if message := self.message or (
+            isinstance(target := self.target, Interaction)
+            and (message := await target.original_message())
+        ):
             await message.edit(view=self)
-        elif isinstance(target := self.target, Interaction):
-            if message := await target.original_message():
-                await message.edit(view=self)
         await response.send_message(
             content="Write down the choice in that case.", ephemeral=True
         )
@@ -545,16 +545,19 @@ class ComplexInput(Complex):
 
         current = set()
         for elem in message.content.split(","):
-            if len(self._choices or set()) < self.max_values - len(current):
-                if entries := get_close_matches(
+            if len(self._choices or set()) < self.max_values - len(
+                current
+            ) and (
+                entries := get_close_matches(
                     word=elem.strip(),
                     possibilities=aux,
                     n=1,
-                ):
-                    if self._choices is None:
-                        self._choices = set()
-                    item = aux[entries[0]]
-                    current.add(item)
+                )
+            ):
+                if self._choices is None:
+                    self._choices = set()
+                item = aux[entries[0]]
+                current.add(item)
 
         with suppress(DiscordException):
             if current:
