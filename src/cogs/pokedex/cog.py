@@ -165,7 +165,7 @@ class Pokedex(Cog):
             info.sort(key=lambda x: x[1], reverse=True)
 
             text = "\n".join(f"{k}: {v}" for k, v in info)
-            text = f"```yaml\n{text}\n```"
+            text = f"```yaml\n{text}\n```".title()
 
             await ctx.send_response(
                 content=text,
