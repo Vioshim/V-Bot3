@@ -40,8 +40,8 @@ class Pokedex(Cog):
 
     find = SlashCommandGroup(name="find", description="Useful pokedex info.")
 
-    @find.command(name="species")
-    async def find_species(
+    @find.command()
+    async def species(
         self,
         ctx: ApplicationContext,
         species: Option(
