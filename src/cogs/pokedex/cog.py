@@ -38,7 +38,11 @@ class Pokedex(Cog):
         """
         self.bot = bot
 
-    find = SlashCommandGroup("find", "Useful pokedex info.", [719343092963999804])
+    find = SlashCommandGroup(
+        "find",
+        "Useful pokedex info.",
+        guild_ids=[719343092963999804],
+    )
 
     @find.command(name="species")
     async def find_species(
