@@ -333,23 +333,26 @@ class Submission(Cog):
         if isinstance(channel, int):
             channel: TextChannel = self.bot.get_channel(channel)
         if not self.data_msg.get(channel.id):
-            m = await channel.send(CLAIM_MESSAGE)
+            if (msgs := await channel.history(limit=1).flatten()) and msgs[0].content == CLAIM_MESSAGE:
+                m = msgs[0]
+            else:
+                m = await channel.send(CLAIM_MESSAGE)
             self.data_msg[channel.id] = m
 
-        async with self.bot.database() as conn:
-            for oc in self.ocs.values():
-                if oc.location != channel.id:
-                    continue
-                await conn.execute(
-                    """--sql
-                    UPDATE CHARACTER
-                    SET LOCATION = NULL
-                    WHERE ID = $1;
-                    """,
-                    oc.id,
-                )
-                oc.location = None
-                await self.oc_update(oc)
+            async with self.bot.database() as conn:
+                for oc in self.ocs.values():
+                    if oc.location != channel.id:
+                        continue
+                    await conn.execute(
+                        """--sql
+                        UPDATE CHARACTER
+                        SET LOCATION = NULL
+                        WHERE ID = $1;
+                        """,
+                        oc.id,
+                    )
+                    oc.location = None
+                    await self.oc_update(oc)
 
     async def list_update(
         self,

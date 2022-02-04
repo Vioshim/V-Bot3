@@ -129,7 +129,7 @@ class Pokedex(Cog):
 
         if species.isdigit() and (oc := cog.ocs.get(int(species))):
             view = PingView(oc, oc.author == ctx.user.id)
-            await ctx.send_followup(
+            await ctx.respond(
                 embeds=oc.embed,
                 view=view,
                 ephemeral=True,
@@ -212,13 +212,13 @@ class Pokedex(Cog):
                     inline=False,
                 )
 
-            await ctx.send_followup(
+            await ctx.respond(
                 embeds=embeds,
                 view=view,
                 ephemeral=True,
             )
         elif species:
-            await ctx.send_followup(
+            await ctx.respond(
                 content=f"Unable to identify the species: {species}",
                 ephemeral=True,
             )
@@ -270,7 +270,7 @@ class Pokedex(Cog):
                 embed = item.embed
                 embed.url = item.url
 
-            await ctx.send_followup(
+            await ctx.respond(
                 embed=embed,
                 view=view,
                 ephemeral=True,
@@ -288,7 +288,7 @@ class Pokedex(Cog):
             text = "\n".join(f"{k}: {v}" for k, v in info)
             text = f"```yaml\n{text}\n```".title()
 
-            await ctx.send_followup(
+            await ctx.respond(
                 content=text,
                 ephemeral=True,
             )

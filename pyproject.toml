@@ -32,7 +32,7 @@ google-auth-oauthlib = "^0.4.6"
 aiohttp = "^3.8.1"
 apscheduler = {git = "https://github.com/agronholm/apscheduler.git"}
 jishaku = "^2.3.2"
-py-cord = {git = "https://github.com/Vioshim/pycord.git", extras = ["voice", "speed"]}
+py-cord = {git = "https://github.com/Vioshim/pycord.git", extras = ["voice", "speed"], rev = "1fb5c0dbcfe935a9467078617c5567601b30e33d"}
 python-docx = "^0.8.11"
 
 [tool.poetry.dev-dependencies]
