@@ -12,7 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from discord import Embed, Member, Option, OptionChoice, TextChannel
+from discord import (
+    Embed,
+    Guild,
+    Member,
+    Option,
+    OptionChoice,
+    TextChannel,
+    Thread,
+)
 from discord.commands import slash_command
 from discord.ext.commands import Cog
 from discord.utils import utcnow
@@ -165,8 +173,16 @@ class Pokedex(Cog):
             ocs = [oc]
         else:
             ocs = total
-        if location_id := getattr(location, "id", location):
-            ocs = [oc for oc in ocs if oc.location == int(location_id)]
+        guild: Guild = ctx.guild
+        if isinstance(location, Thread):
+            location = location.parent
+        if isinstance(location, TextChannel):
+            ocs = [
+                oc
+                for oc in ocs
+                if (ch := guild.get_channel_or_thread(oc.location))
+                and (ch.parent if isinstance(ch, Thread) else ch) == location
+            ]
         if member_id := getattr(member, "id", member):
             ocs = [oc for oc in ocs if oc.author == int(member_id)]
         fuse_mon = Species.from_ID(fused)
