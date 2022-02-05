@@ -268,7 +268,9 @@ class EmbedBuilder(Cog):
         item_cache = (ctx.author.id, ctx.guild.id)
         try:
             embed = Embed()
-            if (message := self.cache.get(item_cache)) and (embeds := message.embeds):
+            if (message := self.cache.get(item_cache)) and (
+                embeds := message.embeds
+            ):
                 embed = embeds[0]
             yield embed
         finally:
@@ -377,6 +379,7 @@ class EmbedBuilder(Cog):
                 avatar_url=author.display_avatar.url,
                 thread=thread,
             )
+        message.channel = ctx.channel
         await self.write(message, author)
         await ctx.message.delete()
 
@@ -412,13 +415,14 @@ class EmbedBuilder(Cog):
             if webhook_id := message.webhook_id:
                 try:
                     webhook = await self.bot.fetch_webhook(webhook_id)
-                    if isinstance(message.channel, Thread):
-                        thread_id = message.channel.id
+                    if isinstance(channel := message.channel, Thread):
+                        thread_id = channel.id
                     else:
                         thread_id = None
                     message: WebhookMessage = await webhook.fetch_message(
                         message.id, thread_id=thread_id
                     )
+                    message.channel = channel
                     await self.write(message, ctx.author)
                     await ctx.reply("Message has been set", delete_after=3)
                 except DiscordException:
