@@ -77,7 +77,10 @@ class Inviter(Cog):
         )
         files = []
         if (icon := invite_guild.icon) and (
-            file := await self.bot.get_file(icon.url, "server_icon")
+            file := await self.bot.get_file(
+                icon.with_size(size=4096).url,
+                "server_icon",
+            )
         ):
             generator.set_thumbnail(url=f"attachment://{file.filename}")
             files.append(file)
