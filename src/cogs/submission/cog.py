@@ -333,7 +333,9 @@ class Submission(Cog):
         if isinstance(channel, int):
             channel: TextChannel = self.bot.get_channel(channel)
         if not self.data_msg.get(channel.id):
-            if (msgs := await channel.history(limit=1).flatten()) and msgs[0].content == CLAIM_MESSAGE:
+            if (msgs := await channel.history(limit=1).flatten()) and msgs[
+                0
+            ].content == CLAIM_MESSAGE:
                 m = msgs[0]
             else:
                 m = await channel.send(CLAIM_MESSAGE)
@@ -1072,7 +1074,10 @@ class Submission(Cog):
         text: str = codeblock_converter(message.content or "").content
         if doc_data := G_DOCUMENT.match(text):
             doc = await to_thread(docs_reader, url := doc_data.group(1))
-            return doc, url
+            return (
+                doc,
+                f"https://docs.google.com/document/d/{url}/edit?usp=sharing",
+            )
 
     async def bio_word_doc_parser(
         self, message: Message
