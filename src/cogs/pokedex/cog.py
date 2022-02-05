@@ -30,6 +30,7 @@ from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
+from src.utils.functions import fix
 from src.views import CharactersView, PingView
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
@@ -270,6 +271,26 @@ class Pokedex(Cog):
                 embed = item.embed
                 embed.url = item.url
 
+            await ctx.respond(
+                embed=embed,
+                view=view,
+                ephemeral=True,
+            )
+        elif kind := fix(kind):
+            ocs = [
+                oc
+                for oc in cog.ocs.values()
+                if (kind == "ANY" or oc.kind == kind)
+            ]
+
+            view = CharactersView(
+                bot=self.bot,
+                member=ctx.author,
+                ocs=ocs,
+                target=ctx.interaction,
+                keep_working=True,
+            )
+            embed = view.embed
             await ctx.respond(
                 embed=embed,
                 view=view,
