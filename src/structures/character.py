@@ -1722,7 +1722,6 @@ def oc_process(**kwargs) -> Type[Character]:
             raise Exception("Fakemon was not deduced by the bot.")
 
         data["species"] = species
-
     elif variant := data.pop("variant", ""):
 
         if species := Variant.deduce(
@@ -1750,6 +1749,7 @@ def oc_process(**kwargs) -> Type[Character]:
     elif species := Species.deduce(common_pop_get(data, "species", "pokemon")):
         data["species"] = species
     else:
+        print(data)
         raise Exception(f"Unable to determine the species, value: {species}")
 
     if species.banned:
