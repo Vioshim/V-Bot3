@@ -267,7 +267,11 @@ class Pokedex(Cog):
                 for e in embeds:
                     e.url = item.url
             if (kind := fix(kind)) in REF_KINDS and kind != "ANY":
-                ocs = [oc for oc in ocs if fix(oc.kind) == kind]
+                ocs = [
+                    oc
+                    for oc in ocs
+                    if fix(oc.kind) == kind.replace("POKEMON", "COMMON")
+                ]
 
         if len(ocs) == 1:
             view = PingView(ocs[0], ctx.author.id == ocs[0].author)
@@ -306,7 +310,7 @@ class Pokedex(Cog):
                 )
             )
         await ctx.respond(
-            text=text,
+            content=text,
             embeds=embeds,
             view=view,
             ephemeral=True,
