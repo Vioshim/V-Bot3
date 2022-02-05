@@ -33,7 +33,7 @@ from src.structures.move import Move
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
-from src.views import CharactersView, PingView
+from src.views import CharactersView
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
 KINDS = [
@@ -327,19 +327,13 @@ class Pokedex(Cog):
                 if fix(oc.kind) == kind.replace("POKEMON", "COMMON")
             ]
 
-        if len(ocs) == 1:
-            view = PingView(ocs[0], ctx.author.id == ocs[0].author)
-            if embed.title == "Select the Character":
-                embed.title = "Only 1 character was found."
-            embeds.append(ocs[0].embed)
-        else:
-            view = CharactersView(
-                bot=self.bot,
-                member=ctx.author,
-                ocs=ocs,
-                target=ctx.interaction,
-                keep_working=True,
-            )
+        view = CharactersView(
+            bot=self.bot,
+            member=ctx.author,
+            ocs=ocs,
+            target=ctx.interaction,
+            keep_working=True,
+        )
 
         if not ocs or total == ocs:
 

@@ -93,9 +93,7 @@ class Species(metaclass=ABCMeta):
 
     def __eq__(self, other: Species):
         if isinstance(other, Species):
-            mon1 = str(self.id)
-            mon2 = str(other.id)
-            return set(mon1.split("_")) == set(mon2.split("_"))
+            return str(self.id) == str(other.id)
         raise NotImplementedError(
             f"Can't compare Species with {other.__class__.__name__}"
         )
@@ -636,6 +634,11 @@ class Fusion(Species):
         self.evolves_to = frozenset(zip(item1, item2))
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
             self.evolves_from = item1, item2
+
+    def __eq__(self, other: Fusion):
+        if isinstance(other, Fusion):
+            return self.bases == other.bases
+        return super(Fusion, self).__eq__(other)
 
     @property
     def bases(self) -> frozenset[Species]:
