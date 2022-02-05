@@ -1086,10 +1086,11 @@ class Submission(Cog):
                 return Document(file.fp)
 
     async def bio_discord_doc_parser(self, message: Message) -> Optional[dict]:
-        text = yaml_handler(codeblock_converter(message.content or "").content)
+        text = codeblock_converter(message.content or "").content
         if G_DOCUMENT.match(text):
             return
         with suppress(MarkedYAMLError):
+            text = yaml_handler(text)
             if isinstance(msg_data := safe_load(text), dict):
                 if images := message.attachments:
                     msg_data["image"] = images[0].url
@@ -1139,6 +1140,8 @@ class Submission(Cog):
 
             for result in map(lambda x: x.result(), done):
                 msg_data: Optional[dict] = result
+                if not result:
+                    continue
 
                 if isinstance(result, tuple):
                     result, url = result
