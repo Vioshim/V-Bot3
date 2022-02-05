@@ -43,12 +43,7 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -65,12 +60,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1097,6 +1087,8 @@ class Submission(Cog):
 
     async def bio_discord_doc_parser(self, message: Message) -> Optional[dict]:
         text = yaml_handler(codeblock_converter(message.content or "").content)
+        if G_DOCUMENT.match(text):
+            return
         with suppress(MarkedYAMLError):
             if isinstance(msg_data := safe_load(text), dict):
                 if images := message.attachments:
