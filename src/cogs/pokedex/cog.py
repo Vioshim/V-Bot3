@@ -15,6 +15,7 @@
 from discord import Embed, Option, OptionChoice
 from discord.commands import slash_command
 from discord.ext.commands import Cog
+from discord.ui import Button, View
 from discord.utils import utcnow
 
 from src.cogs.pokedex.search import (
@@ -126,8 +127,8 @@ class Pokedex(Cog):
         ability_id: str = ability_id or ""
         move_id: str = move_id or ""
         type_id: str = type_id or ""
+        text: str = ""
         cog = ctx.bot.get_cog("Submission")
-
         await ctx.defer(ephemeral=True)
         embed = Embed(
             title="Select the Character",
@@ -245,7 +246,8 @@ class Pokedex(Cog):
                 description = item.desc or item.shortDesc
                 if embed.color == ctx.author.color:
                     embed.color = item.color
-
+                embed.set_thumbnail(url=item.type.emoji.url)
+                embed.set_image(url=item.image)
                 power = item.base or "-"
                 acc = item.accuracy or "-"
                 pp = item.pp or "-"
@@ -267,28 +269,22 @@ class Pokedex(Cog):
             if (kind := fix(kind)) in REF_KINDS and kind != "ANY":
                 ocs = [oc for oc in ocs if fix(oc.kind) == kind]
 
-        if ocs:
-            if len(ocs) == 1:
-                view = PingView(ocs[0], ctx.author.id == ocs[0].author)
-                if embed.title == "Select the Character":
-                    embed.title = "Only 1 character was found."
-                embeds.append(ocs[0].embed)
-            else:
-                view = CharactersView(
-                    bot=self.bot,
-                    member=ctx.author,
-                    ocs=ocs,
-                    target=ctx.interaction,
-                    keep_working=True,
-                )
-            await ctx.respond(
-                embeds=embeds,
-                view=view,
-                ephemeral=True,
-            )
+        if len(ocs) == 1:
+            view = PingView(ocs[0], ctx.author.id == ocs[0].author)
+            if embed.title == "Select the Character":
+                embed.title = "Only 1 character was found."
+            embeds.append(ocs[0].embed)
         else:
-            title = embed.title or ""
-            embed.title = f"{title} (No OCs Found)"
+            view = CharactersView(
+                bot=self.bot,
+                member=ctx.author,
+                ocs=ocs,
+                target=ctx.interaction,
+                keep_working=True,
+            )
+
+        if not ocs:
+
             amounts: dict[str, set[Character]] = {}
             for oc in cog.ocs.values():
                 amounts.setdefault(oc.kind, set())
@@ -297,21 +293,24 @@ class Pokedex(Cog):
             info = [(k, len(v)) for k, v in amounts.items()]
             info.sort(key=lambda x: x[1], reverse=True)
 
-            text = "\n".join(f"{k}: {v}" for k, v in info)
-            text = f"```yaml\n{text}\n```".title()
-
+            data = "\n".join(f"{k}: {v}" for k, v in info).title()
+            data = f"```yaml\n{data}\n```"
             if embed.description:
-                await ctx.respond(
-                    content=text,
-                    embeds=embeds,
-                    ephemeral=True,
-                )
+                text = f"**__Total OCs in Server__**\n{data}"
             else:
-                embed.description = text
-                await ctx.respond(
-                    embeds=embeds,
-                    ephemeral=True,
+                embed.description = data
+            view = View(
+                Button(
+                    label="Read more",
+                    url="https://discord.com/channels/719343092963999804/919277769735680050",
                 )
+            )
+        await ctx.respond(
+            text=text,
+            embeds=embeds,
+            view=view,
+            ephemeral=True,
+        )
 
 
 def setup(bot: CustomBot):
