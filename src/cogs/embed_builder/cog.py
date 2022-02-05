@@ -276,14 +276,17 @@ class EmbedBuilder(Cog):
                 if ctx.message.attachments:
                     files, embed = await self.bot.embed_raw(embed)
                     await message.edit(files=files, embed=embed, attachments=[])
-                else:
+                elif message:
                     embed = embed_handler(message, embed)
                     await message.edit(embed=embed)
 
                 if delete:
                     self.bot.msg_cache.add(ctx.message.id)
                     await ctx.message.delete()
-            except DiscordException:
+            except DiscordException as e:
+                self.bot.logger.exception(
+                    "exception while editing an embed", exc_info=e
+                )
                 if item := self.cache.pop(item_cache, None):
                     del self.blame[item]
 
@@ -395,13 +398,14 @@ class EmbedBuilder(Cog):
         -------
 
         """
+        guild: Guild = ctx.guild
         if reference := ctx.message.reference:
             if isinstance(reference.resolved, Message):
                 message = reference.resolved
             else:
-                channel: Union[Thread, TextChannel] = self.bot.get_channel(
-                    reference.channel_id
-                )
+                channel: Union[
+                    Thread, TextChannel
+                ] = guild.get_channel_or_thread(reference.channel_id)
                 message = await channel.fetch_message(reference.message_id)
 
         if isinstance(message, Message):
