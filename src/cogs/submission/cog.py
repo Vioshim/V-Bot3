@@ -43,7 +43,12 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -60,7 +65,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1074,10 +1084,8 @@ class Submission(Cog):
         text: str = codeblock_converter(message.content or "").content
         if doc_data := G_DOCUMENT.match(text):
             doc = await to_thread(docs_reader, url := doc_data.group(1))
-            return (
-                doc,
-                f"https://docs.google.com/document/d/{url}/edit?usp=sharing",
-            )
+            url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+            return doc, url
 
     async def bio_word_doc_parser(
         self, message: Message
@@ -1140,10 +1148,11 @@ class Submission(Cog):
             for result in map(lambda x: x.result(), done):
                 msg_data: Optional[dict] = result
 
-                url: Optional[str] = None
                 if isinstance(result, tuple):
                     result, url = result
-                if isinstance(result, DocumentType):
+                    msg_data = doc_convert(result)
+                    msg_data["url"] = url
+                elif isinstance(result, DocumentType):
                     if result.tables:
                         msg_data = doc_convert(result)
                     else:
@@ -1159,7 +1168,6 @@ class Submission(Cog):
                             )
 
                 if isinstance(msg_data, dict):
-                    msg_data["url"] = url
                     await self.submission_handler(message, **msg_data)
                     return
         except Exception as e:
