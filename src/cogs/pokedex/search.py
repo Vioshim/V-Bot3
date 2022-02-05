@@ -95,6 +95,12 @@ def species_autocomplete(
 
     mons: list[Character | Species] = list(mons)
 
+    if member_id := ctx.options.get("member"):
+        mons = [i for i in mons if i.author == int(member_id)]
+
+    if location_id := ctx.options.get("location"):
+        mons = [i for i in mons if i.location == int(location_id)]
+
     mon_type_id = ctx.options.get("types")
     if mon_type_id and (mon_type := Typing.from_ID(mon_type_id)):
         mons = [i for i in mons if mon_type in i.types]

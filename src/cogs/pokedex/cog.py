@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from discord import Embed, Option, OptionChoice
+from discord import Embed, Member, Option, OptionChoice, TextChannel
 from discord.commands import slash_command
 from discord.ext.commands import Cog
 from discord.utils import utcnow
@@ -110,6 +110,16 @@ class Pokedex(Cog):
             autocomplete=default_species_autocomplete,
             required=False,
         ),
+        member: Option(
+            Member,
+            description="Member to filter",
+            required=False,
+        ),
+        location: Option(
+            TextChannel,
+            description="OCs at a location to filter",
+            required=False,
+        ),
     ):
         """Command to obtain Pokemon entries and its ocs
 
@@ -127,6 +137,12 @@ class Pokedex(Cog):
             Move, by default None
         species : str, optional
             Species, by default None
+        fused : str, optional
+            Fusion, by default None
+        member : Member, optional
+            Member, by default None
+        location : TextChannel, optional
+            Channel, by default None
         """
         species: str = species or ""
         fused: str = fused or ""
@@ -145,10 +161,14 @@ class Pokedex(Cog):
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
         total: list[Character] = list(cog.ocs.values())
-        ocs = total
-
         if species.isdigit() and (oc := cog.ocs.get(int(species))):
             ocs = [oc]
+        else:
+            ocs = total
+        if location_id := getattr(location, "id", location):
+            ocs = [oc for oc in ocs if oc.location == int(location_id)]
+        if member_id := getattr(member, "id", member):
+            ocs = [oc for oc in ocs if oc.author == int(member_id)]
         fuse_mon = Species.from_ID(fused)
         mon = Species.from_ID(species.removesuffix("+"))
         if mon or fuse_mon:
@@ -167,7 +187,12 @@ class Pokedex(Cog):
                 ]
             else:
                 mon = fuse_mon
-                ocs = [oc for oc in ocs if isinstance(oc, FusionCharacter) and fuse_mon in oc.species.bases]
+                ocs = [
+                    oc
+                    for oc in ocs
+                    if isinstance(oc, FusionCharacter)
+                    and fuse_mon in oc.species.bases
+                ]
 
             movepool = mon.movepool
             data = dict(
@@ -180,11 +205,16 @@ class Pokedex(Cog):
                 Other=movepool.other,
             )
 
-            if len(moves_description := "\n".join(
-                f"{key} Moves: \n> {info}"
-                for key, moves in data.items()
-                if (info := ", ".join(m.name for m in moves))
-            )) <= 2000:
+            if (
+                len(
+                    moves_description := "\n".join(
+                        f"{key} Moves: \n> {info}"
+                        for key, moves in data.items()
+                        if (info := ", ".join(m.name for m in moves))
+                    )
+                )
+                <= 2000
+            ):
                 embed.description = moves_description
             else:
                 embed.description = "\n".join(
@@ -219,16 +249,12 @@ class Pokedex(Cog):
             if isinstance(mon, Fusion):
                 embeds = [
                     embed.set_image(url=mon.mon1.base_image),
-                    Embed(url=PLACEHOLDER).set_image(
-                        url=mon.mon2.base_image
-                    ),
+                    Embed(url=PLACEHOLDER).set_image(url=mon.mon2.base_image),
                 ]
             else:
                 embeds = [
                     embed.set_image(url=mon.base_image),
-                    Embed(url=PLACEHOLDER).set_image(
-                        url=mon.base_image_shiny
-                    ),
+                    Embed(url=PLACEHOLDER).set_image(url=mon.base_image_shiny),
                 ]
         elif species and not fuse_mon:
             embed.title = f"Unable to identify the species: {species}.\nShowing all Instead"
