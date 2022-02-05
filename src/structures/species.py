@@ -612,7 +612,7 @@ class Fusion(Species):
         super(Fusion, self).__init__(
             id=f"{mon1.id}_{mon2.id}",
             name=f"{mon1.name}/{mon2.name}",
-            color=(mon1.color ** 2 + mon2.color ** 2) / 2,
+            color=int((mon1.color ** 2 + mon2.color ** 2) / 2),
             height=round((mon1.height + mon2.height) / 2),
             weight=round((mon1.weight + mon2.weight) / 2),
             HP=round((mon1.HP + mon2.HP) / 2),
