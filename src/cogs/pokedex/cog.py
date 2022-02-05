@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from dataclasses import astuple
 
 from discord import (
     Embed,
@@ -20,6 +21,7 @@ from discord import (
     OptionChoice,
     TextChannel,
     Thread,
+    User,
 )
 from discord.commands import slash_command
 from discord.ext.commands import Cog
@@ -52,6 +54,8 @@ KINDS = [
     "Fakemon",
     "Variant",
     "Fusion",
+    "Custom Mega",
+    "Mega",
 ]
 REF_KINDS = [fix(i) for i in KINDS]
 
@@ -128,6 +132,11 @@ class Pokedex(Cog):
             description="OCs at a location to filter",
             required=False,
         ),
+        sp_ability: Option(
+            str,
+            description="Any words to look for",
+            required=False,
+        ),
     ):
         """Command to obtain Pokemon entries and its ocs
 
@@ -151,12 +160,15 @@ class Pokedex(Cog):
             Member, by default None
         location : TextChannel, optional
             Channel, by default None
+        sp_ability : str, optional
+            Sp_Ability, by default None
         """
         species: str = species or ""
         fused: str = fused or ""
         ability_id: str = ability_id or ""
         move_id: str = move_id or ""
         type_id: str = type_id or ""
+        sp_ability: str = sp_ability or ""
         text: str = ""
         cog = ctx.bot.get_cog("Submission")
         await ctx.defer(ephemeral=True)
@@ -183,8 +195,12 @@ class Pokedex(Cog):
                 if (ch := guild.get_channel_or_thread(oc.location))
                 and (ch.parent if isinstance(ch, Thread) else ch) == location
             ]
-        if member_id := getattr(member, "id", member):
-            ocs = [oc for oc in ocs if oc.author == int(member_id)]
+
+        if isinstance(member, (User, Member)):
+            ocs = [oc for oc in ocs if oc.author == member.id]
+        elif member:
+            ocs = [oc for oc in ocs if oc.author == member]
+
         fuse_mon = Species.from_ID(fused)
         mon = Species.from_ID(species.removesuffix("+"))
         if mon or fuse_mon:
@@ -274,6 +290,13 @@ class Pokedex(Cog):
                 ]
         elif species and not fuse_mon:
             embed.title = f"Unable to identify the species: {species}.\nShowing all Instead"
+        if sp_ability := sp_ability.lower():
+            ocs = [
+                oc
+                for oc in ocs
+                if (item := oc.sp_ability)
+                and any(sp_ability in x for x in astuple(item))
+            ]
         if type_id and (item := Typing.from_ID(type_id)):
             ocs = [oc for oc in ocs if item in oc.types]
             if embed.color == ctx.author.color:

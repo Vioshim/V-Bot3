@@ -84,6 +84,8 @@ def species_autocomplete(
             mons = Pokemon.all()
         case "MEGA":
             mons = Mega.all()
+        case "CUSTOMMEGA":
+            mons = [oc for oc in cog.ocs.values() if oc.kind == "CUSTOM MEGA"]
         case "FAKEMON":
             mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON"]
         case "VARIANT":
