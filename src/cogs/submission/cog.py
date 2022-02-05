@@ -883,38 +883,39 @@ class Submission(Cog):
                 mission_cooldown=self.mission_cooldown,
                 supporting=self.supporting,
             )
-            if mission.msg_id:
-                self.bot.add_view(view=view, message_id=mission.msg_id)
-            elif member := channel.guild.get_member(mission.author):
-                msg = await channel.send(
-                    content=member.mention,
-                    embed=mission.embed,
-                    view=view,
-                    allowed_mentions=AllowedMentions(users=True),
-                )
-                mission.msg_id = msg.id
-                thread = await msg.create_thread(
-                    name=f"Mission {mission.id:03d}"
-                )
-                await thread.add_user(member)
-                ocs = set(mission.ocs)
-                for oc_id in mission.ocs:
-                    if oc := self.ocs.get(oc_id):
-                        await thread.send(
-                            f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
-                            view=View(
-                                Button(label="Jump URL", url=oc.jump_url)
-                            ),
-                        )
-                    else:
-                        ocs.remove(oc_id)
+            try:
+                message = await channel.fetch_message(mission.msg_id)
+                await message.edit(view=view)
+            except DiscordException:
+                if not (member := channel.guild.get_member(mission.author)):
+                    await mission.remove(db)
+                else:
+                    msg = await channel.send(
+                        content=member.mention,
+                        embed=mission.embed,
+                        view=view,
+                        allowed_mentions=AllowedMentions(users=True),
+                    )
+                    mission.msg_id = msg.id
+                    thread = await msg.create_thread(
+                        name=f"Mission {mission.id:03d}"
+                    )
+                    await thread.add_user(member)
+                    ocs = set(mission.ocs)
+                    for oc_id in mission.ocs:
+                        if oc := self.ocs.get(oc_id):
+                            await thread.send(
+                                f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
+                                view=View(
+                                    Button(label="Jump URL", url=oc.jump_url)
+                                ),
+                            )
+                        else:
+                            ocs.remove(oc_id)
+                    mission.ocs = frozenset(ocs)
 
-                mission.ocs = frozenset(ocs)
-
-                mission.msg_id = msg.id
-                await mission.upsert(db)
-            else:
-                await mission.remove(db)
+                    mission.msg_id = msg.id
+                    await mission.upsert(db)
 
         self.bot.logger.info("Finished loading mission views")
 
