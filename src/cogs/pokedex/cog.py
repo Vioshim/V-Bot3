@@ -295,7 +295,7 @@ class Pokedex(Cog):
                 oc
                 for oc in ocs
                 if (item := oc.sp_ability)
-                and any(sp_ability in x for x in astuple(item))
+                and any(sp_ability in x.lower() for x in astuple(item))
             ]
         if type_id and (item := Typing.from_ID(type_id)):
             ocs = [oc for oc in ocs if item in oc.types]
