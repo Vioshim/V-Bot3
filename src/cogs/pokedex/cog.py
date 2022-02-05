@@ -15,6 +15,7 @@
 from discord import Embed, Option, OptionChoice
 from discord.commands import slash_command
 from discord.ext.commands import Cog
+from discord.utils import utcnow
 
 from src.cogs.pokedex.search import (
     ability_autocomplete,
@@ -44,6 +45,7 @@ KINDS = [
     "Fusion",
     "Any",
 ]
+REF_KINDS = [fix(i) for i in KINDS]
 
 
 class Pokedex(Cog):
@@ -127,125 +129,96 @@ class Pokedex(Cog):
         cog = ctx.bot.get_cog("Submission")
 
         await ctx.defer(ephemeral=True)
+        embed = Embed(
+            title="Select the Character",
+            url=PLACEHOLDER,
+            color=ctx.author.color,
+            timestamp=utcnow(),
+        )
+        embed.set_image(url=WHITE_BAR)
+        embeds = [embed]
+        ocs: list[Character] = list(cog.ocs.values())
 
         if species.isdigit() and (oc := cog.ocs.get(int(species))):
-            view = PingView(oc, oc.author == ctx.user.id)
-            await ctx.respond(
-                embeds=oc.embed,
-                view=view,
-                ephemeral=True,
-            )
-        elif mon := Species.from_ID(species.removesuffix("+")):
-            self.bot.logger.info(
-                "%s is reading /find species %s", str(ctx.user), mon.name
-            )
-
-            ocs = [
-                oc
-                for oc in cog.ocs.values()
-                if (
-                    species.endswith("+")
-                    and isinstance(oc.species, Variant)
-                    and oc.species.base == mon
-                )
-                or oc.species == mon
-            ]
-
-            view = CharactersView(
-                bot=self.bot,
-                member=ctx.author,
-                ocs=ocs,
-                target=ctx.interaction,
-                keep_working=True,
-            )
-            embed = view.embed
-            stats = dict(
-                HP=mon.HP,
-                ATK=mon.ATK,
-                DEF=mon.DEF,
-                SPA=mon.SPA,
-                SPD=mon.SPD,
-                SPE=mon.SPE,
-            )
-            text = "\n".join(f"{k}: {v:03d}" for k, v in stats.items())
-
-            if mon.banned:
-                embed.title = f"{mon.name} - Banned Species"
-            else:
-                embed.title = mon.name
-
-            embed.color = mon.color
-            embed.url = PLACEHOLDER
-            embed.description = f"```yaml\n{text}\n```"
-
-            if mon_types := ", ".join(i.name for i in mon.types):
-                embed.set_footer(text=f"Types: {mon_types}")
-
-            if isinstance(mon, Fusion):
-                mon_types = ", ".join(
-                    "/".join(i.name for i in item)
-                    for item in mon.possible_types
-                )
-                embeds = [
-                    embed.set_image(url=mon.mon1.base_image),
-                    Embed(url=PLACEHOLDER).set_image(url=mon.mon2.base_image),
+            ocs = [oc]
+        else:
+            if mon := Species.from_ID(species.removesuffix("+")):
+                ocs = [
+                    oc
+                    for oc in ocs
+                    if (
+                        species.endswith("+")
+                        and isinstance(oc.species, Variant)
+                        and oc.species.base == mon
+                    )
+                    or oc.species == mon
                 ]
-                embed.set_footer(text=f"Possible Types: {mon_types}")
-            else:
-                embeds = [
-                    embed.set_image(url=mon.base_image),
-                    Embed(url=PLACEHOLDER).set_image(url=mon.base_image_shiny),
-                ]
-                if mon.base_image != mon.female_image:
-                    embeds += [
+
+                stats = dict(
+                    HP=mon.HP,
+                    ATK=mon.ATK,
+                    DEF=mon.DEF,
+                    SPA=mon.SPA,
+                    SPD=mon.SPD,
+                    SPE=mon.SPE,
+                )
+                text = "\n".join(f"{k}: {v:03d}" for k, v in stats.items())
+                embed.description = f"```yaml\n{text}\n```"
+                embed.color = mon.color
+
+                if mon.banned:
+                    embed.title = f"{mon.name} - Banned Species"
+                else:
+                    embed.title = mon.name
+
+                if mon_types := ", ".join(i.name for i in mon.types):
+                    embed.set_footer(text=f"Types: {mon_types}")
+                elif isinstance(mon, Fusion) and (
+                    mon_types := ", ".join(
+                        "/".join(i.name for i in item)
+                        for item in mon.possible_types
+                    )
+                ):
+                    embed.set_footer(text=f"Possible Types: {mon_types}")
+
+                if ab_text := "\n".join(f"• {ab.name}" for ab in mon.abilities):
+                    embed.add_field(
+                        name=f"Abilities (Max {mon.max_amount_abilities})",
+                        value=ab_text,
+                    )
+
+                if isinstance(mon, Fusion):
+                    embeds = [
+                        embed.set_image(url=mon.mon1.base_image),
                         Embed(url=PLACEHOLDER).set_image(
-                            url=mon.female_image,
-                        ),
-                        Embed(url=PLACEHOLDER).set_image(
-                            url=mon.female_image_shiny,
+                            url=mon.mon2.base_image
                         ),
                     ]
-
-            for index, ability in enumerate(mon.abilities, start=1):
-                embed.add_field(
-                    name=f"Ability {index} - {ability.name}",
-                    value=f"> {ability.description}",
-                    inline=False,
-                )
-
-            await ctx.respond(
-                embeds=embeds,
-                view=view,
-                ephemeral=True,
-            )
-        elif species:
-            await ctx.respond(
-                content=f"Unable to identify the species: {species}",
-                ephemeral=True,
-            )
-        elif (
-            (type_id and (item := Typing.from_ID(type_id)))
-            or (ability_id and (item := Ability.from_ID(ability_id)))
-            or (move_id and (item := Move.from_ID(move_id)))
-        ):
-            if isinstance(item, Ability):
-                ocs = [oc for oc in cog.ocs.values() if item in oc.abilities]
-            elif isinstance(item, Typing):
-                ocs = [oc for oc in cog.ocs.values() if item in oc.types]
-            elif isinstance(item, Move):
-                ocs = [oc for oc in cog.ocs.values() if item in oc.moveset]
-            view = CharactersView(
-                bot=self.bot,
-                member=ctx.author,
-                ocs=ocs,
-                target=ctx.interaction,
-                keep_working=True,
-            )
-            embed = view.embed
-            embed.title = item.name
-            embed.set_image(url=WHITE_BAR)
-            if isinstance(item, Ability):
-                embed.description = item.description
+                else:
+                    embeds = [
+                        embed.set_image(url=mon.base_image),
+                        Embed(url=PLACEHOLDER).set_image(
+                            url=mon.base_image_shiny
+                        ),
+                    ]
+            elif species:
+                embed.title = f"Unable to identify the species: {species}.\nShowing all Instead"
+            if type_id and (item := Typing.from_ID(type_id)):
+                ocs = [oc for oc in ocs if item in oc.types]
+                if embed.color == ctx.author.color:
+                    embed.color = item.color
+                embed.set_thumbnail(url=item.emoji.url)
+            if ability_id and (item := Ability.from_ID(ability_id)):
+                ocs = [oc for oc in ocs if item in oc.abilities]
+                if embed.description:
+                    embed.add_field(
+                        name=f"Ability - {item.name}",
+                        value=item.description,
+                        inline=False,
+                    )
+                else:
+                    embed.title = item.name
+                    embed.description = item.description
                 if battle := item.battle:
                     embed.add_field(
                         name="Battle effect",
@@ -264,42 +237,60 @@ class Pokedex(Cog):
                         value=random_fact,
                         inline=False,
                     )
-            elif isinstance(item, Typing):
-                embed.color = item.color
-                embed.set_thumbnail(url=item.emoji.url)
+            if move_id and (item := Move.from_ID(move_id)):
+                ocs = [oc for oc in ocs if item in oc.abilities]
+                title = repr(item)
+                if item.banned:
+                    title += " - Banned Move"
+                description = item.desc or item.shortDesc
+                if embed.color == ctx.author.color:
+                    embed.color = item.color
+
+                power = item.base or "-"
+                acc = item.accuracy or "-"
+                pp = item.pp or "-"
+
+                if embed.description:
+                    embed.add_field(
+                        name=f"{title} - Power:{power}|Acc:{acc}|PP:{pp}",
+                        value=description,
+                        inline=False,
+                    )
+                else:
+                    embed.title = title
+                    embed.description = description
+                    embed.add_field(name="Power", value=power)
+                    embed.add_field(name="Accuracy", value=acc)
+                    embed.add_field(name="PP", value=pp)
+                for e in embeds:
+                    e.url = item.url
+            if (kind := fix(kind)) in REF_KINDS and kind != "ANY":
+                ocs = [oc for oc in ocs if fix(oc.kind) == kind]
+
+        if ocs:
+            if len(ocs) == 1:
+                view = PingView(ocs[0], ctx.author.id == ocs[0].author)
+                if embed.title == "Select the Character":
+                    embed.title = "Only 1 character was found."
+                embeds.append(ocs[0].embed)
             else:
-                embed = item.embed
-                embed.url = item.url
-
+                view = CharactersView(
+                    bot=self.bot,
+                    member=ctx.author,
+                    ocs=ocs,
+                    target=ctx.interaction,
+                    keep_working=True,
+                )
             await ctx.respond(
-                embed=embed,
-                view=view,
-                ephemeral=True,
-            )
-        elif kind := fix(kind):
-            ocs = [
-                oc
-                for oc in cog.ocs.values()
-                if (kind == "ANY" or oc.kind == kind)
-            ]
-
-            view = CharactersView(
-                bot=self.bot,
-                member=ctx.author,
-                ocs=ocs,
-                target=ctx.interaction,
-                keep_working=True,
-            )
-            embed = view.embed
-            await ctx.respond(
-                embed=embed,
+                embeds=embeds,
                 view=view,
                 ephemeral=True,
             )
         else:
+            title = embed.title or ""
+            embed.title = f"{title} (No OCs Found)"
             amounts: dict[str, set[Character]] = {}
-            items: list[Character] = cog.ocs.values()
-            for oc in items:
+            for oc in cog.ocs.values():
                 amounts.setdefault(oc.kind, set())
                 amounts[oc.kind].add(oc)
 
@@ -309,10 +300,18 @@ class Pokedex(Cog):
             text = "\n".join(f"{k}: {v}" for k, v in info)
             text = f"```yaml\n{text}\n```".title()
 
-            await ctx.respond(
-                content=text,
-                ephemeral=True,
-            )
+            if embed.description:
+                await ctx.respond(
+                    content=text,
+                    embeds=embeds,
+                    ephemeral=True,
+                )
+            else:
+                embed.description = text
+                await ctx.respond(
+                    embeds=embeds,
+                    ephemeral=True,
+                )
 
 
 def setup(bot: CustomBot):

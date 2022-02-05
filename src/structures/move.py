@@ -105,6 +105,10 @@ class Move:
     metronome: bool = True
 
     @property
+    def color(self):
+        return self.type.color
+
+    @property
     def embed(self):
         title = self.name
         if self.banned:
