@@ -1068,12 +1068,11 @@ class Submission(Cog):
 
     async def bio_google_doc_parser(
         self, message: Message
-    ) -> Optional[DocumentType]:
+    ) -> Optional[tuple[DocumentType, str]]:
         text: str = codeblock_converter(message.content or "").content
         if doc_data := G_DOCUMENT.match(text):
             doc = await to_thread(docs_reader, url := doc_data.group(1))
-            doc.url = url
-            return doc
+            return doc, url
 
     async def bio_word_doc_parser(
         self, message: Message
@@ -1136,6 +1135,9 @@ class Submission(Cog):
             for result in map(lambda x: x.result(), done):
                 msg_data: Optional[dict] = result
 
+                url: Optional[str] = None
+                if isinstance(result, tuple):
+                    result, url = result
                 if isinstance(result, DocumentType):
                     if result.tables:
                         msg_data = doc_convert(result)
@@ -1152,6 +1154,7 @@ class Submission(Cog):
                             )
 
                 if isinstance(msg_data, dict):
+                    msg_data["url"] = url
                     await self.submission_handler(message, **msg_data)
                     return
         except Exception as e:
