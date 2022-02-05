@@ -39,6 +39,17 @@ def move_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
     ]
 
 
+def default_species_autocomplete(
+    ctx: AutocompleteContext,
+) -> list[OptionChoice]:
+    text: str = fix(ctx.value or "")
+    return [
+        OptionChoice(name=i.name, value=i.id)
+        for i in Species.all()
+        if text in i.id or i.id in text
+    ]
+
+
 def ability_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
     text: str = fix(ctx.value or "")
     return [
@@ -57,7 +68,7 @@ def type_autocomplete(ctx: AutocompleteContext):
     ]
 
 
-def default_species_autocomplete(
+def species_autocomplete(
     ctx: AutocompleteContext,
 ) -> list[OptionChoice]:
     text: str = fix(ctx.value or "")

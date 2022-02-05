@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, astuple, dataclass, field
+from dataclasses import astuple, dataclass, field
 from json import JSONDecoder, JSONEncoder
 from typing import Any, Callable, Iterable, Union
 
