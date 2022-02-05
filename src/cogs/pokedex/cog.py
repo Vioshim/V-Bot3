@@ -15,7 +15,6 @@
 from discord import Embed, Option, OptionChoice
 from discord.commands import slash_command
 from discord.ext.commands import Cog
-from discord.ui import Button, View
 from discord.utils import utcnow
 
 from src.cogs.pokedex.search import (
@@ -138,7 +137,8 @@ class Pokedex(Cog):
         )
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
-        ocs: list[Character] = list(cog.ocs.values())
+        total: list[Character] = list(cog.ocs.values())
+        ocs = total
 
         if species.isdigit() and (oc := cog.ocs.get(int(species))):
             ocs = [oc]
@@ -287,7 +287,7 @@ class Pokedex(Cog):
                 keep_working=True,
             )
 
-        if not ocs:
+        if not ocs or total == ocs:
 
             amounts: dict[str, set[Character]] = {}
             for oc in cog.ocs.values():
@@ -303,12 +303,7 @@ class Pokedex(Cog):
                 text = f"**__Total OCs in Server__**\n{data}"
             else:
                 embed.description = data
-            view = View(
-                Button(
-                    label="Read more",
-                    url="https://discord.com/channels/719343092963999804/919277769735680050",
-                )
-            )
+
         await ctx.respond(
             content=text,
             embeds=embeds,
