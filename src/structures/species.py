@@ -111,7 +111,8 @@ class Species(metaclass=ABCMeta):
 
     @property
     def species_evolves_from(self) -> Optional[Species]:
-        return self.from_ID(self.evolves_from)
+        if mon := self.evolves_from:
+            return self.from_ID(mon)
 
     @property
     @abstractmethod
@@ -591,6 +592,8 @@ class Variant(Species):
         Optional[Variant]
             Result
         """
+        if not item:
+            return
         if mon := Species.from_ID(item.removesuffix("+")):
             if not isinstance(mon, Fusion):
                 return Variant(base=mon, name=f"Variant {mon.name.title()}")
