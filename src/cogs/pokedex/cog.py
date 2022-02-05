@@ -58,7 +58,7 @@ class Pokedex(Cog):
         """
         self.bot = bot
 
-    @slash_command(guild_ids=[719343092963999804])
+    # @slash_command(guild_ids=[719343092963999804])
     async def find(
         self,
         ctx: ApplicationContext,
