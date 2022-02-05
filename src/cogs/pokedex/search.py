@@ -97,12 +97,12 @@ def default_species_autocomplete(
         mons = [i for i in mons if move in i.movepool]
 
     def name(mon: Character | Species):
-        if isinstance(Species):
+        if isinstance(mon, Species):
             return mon.name
         return mon.species.name
 
     def value(mon: Character | Species):
-        if isinstance(Species):
+        if isinstance(mon, Species):
             return str(mon.id)
         return str(mon.species.id)
 
