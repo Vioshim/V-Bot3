@@ -293,7 +293,7 @@ class Pokedex(Cog):
                     inline=False,
                 )
         if move_id and (item := Move.from_ID(move_id)):
-            ocs = [oc for oc in ocs if item in oc.abilities]
+            ocs = [oc for oc in ocs if item in oc.moveset]
             title = repr(item)
             if item.banned:
                 title += " - Banned Move"
