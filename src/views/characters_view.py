@@ -35,7 +35,11 @@ __all__ = ("CharactersView", "PingView")
 
 
 class PingView(View):
-    def __init__(self, oc: Character, deleter: bool = False):
+    def __init__(
+        self,
+        oc: Character,
+        deleter: bool = False,
+    ):
         super(PingView, self).__init__(timeout=None)
         self.oc = oc
         self.ping.label = f"Ping to RP with {oc.name}"
@@ -64,12 +68,16 @@ class PingView(View):
         member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         if ctx.user == member:
-            await resp.send_message("You can't ping yourself", ephemeral=True)
+            await resp.send_message(
+                "You can't ping yourself",
+                ephemeral=True,
+            )
             return
         try:
-            channel: TextChannel = ctx.guild.get_channel(740568087820238919)
-            view = View()
-            view.add_item(Button(label="Character", url=self.oc.jump_url))
+            channel: TextChannel = ctx.channel
+            if channel.id != 722617383738540092:
+                channel = ctx.guild.get_channel(740568087820238919) or channel
+            view = View(Button(label="Character", url=self.oc.jump_url))
             await channel.send(
                 f"Hello {member.mention}!\n\n"
                 f"{ctx.user.mention} is interested on RPing with {self.oc.name}.",
@@ -108,6 +116,7 @@ class CharactersView(Complex):
         target: Union[Interaction, Webhook, TextChannel],
         ocs: set[Character],
         keep_working: bool = False,
+        ping_channel: bool = False,
     ):
         super(CharactersView, self).__init__(
             bot=bot,
@@ -120,6 +129,7 @@ class CharactersView(Complex):
             sort_key=lambda x: x.name,
         )
         self.embed.title = "Select a character"
+        self.ping_channel = ping_channel
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
@@ -135,7 +145,11 @@ class CharactersView(Complex):
                         name=author.display_name,
                         icon_url=author.display_avatar.url,
                     )
-                view = PingView(item, ctx.user.id == item.author)
+                view = PingView(
+                    oc=item,
+                    deleter=ctx.user.id == item.author,
+                    ping_channel=self.ping_channel,
+                )
                 await response.send_message(
                     embed=embed,
                     view=view,
