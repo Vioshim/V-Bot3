@@ -147,11 +147,17 @@ class CharactersView(Complex):
                     oc=item,
                     deleter=ctx.user.id == item.author,
                 )
-                await response.send_message(
-                    embed=embed,
-                    view=view,
-                    ephemeral=True,
-                )
+                if not response.is_done():
+                    await response.send_message(
+                        embed=embed,
+                        view=view,
+                        ephemeral=True,
+                    )
+                else:
+                    await ctx.edit_original_message(
+                        embed=embed,
+                        view=view,
+                    )
             except Exception as e:
                 self.bot.logger.exception(
                     "Chunk: %s",
