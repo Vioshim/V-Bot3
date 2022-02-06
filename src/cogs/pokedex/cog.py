@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import astuple
+from re import IGNORECASE, compile
 from typing import Optional
 
 from discord import (
@@ -126,6 +127,11 @@ class Pokedex(Cog):
     async def find(
         self,
         ctx: ApplicationContext,
+        name: Option(
+            str,
+            description="any name that matches(regex works).",
+            required=False,
+        ),
         kind: Option(
             str,
             description="Filter by kind",
@@ -209,6 +215,8 @@ class Pokedex(Cog):
         ----------
         ctx : ApplicationContext
             Context
+        name : str, optional
+            Name, by default None
         kind : str, optional
             Kind, by default None
         type_id : str, optional
@@ -251,7 +259,12 @@ class Pokedex(Cog):
         else:
             ocs = total
 
-        ocs = [oc for oc in ocs if age_parser(age, oc)]
+        if name:
+            pattern = compile(name, IGNORECASE)
+            ocs = [oc for oc in ocs if pattern.search(oc.name)]
+
+        if age:
+            ocs = [oc for oc in ocs if age_parser(age, oc)]
 
         if isinstance(location, Thread):
             location = location.parent
