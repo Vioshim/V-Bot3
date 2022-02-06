@@ -288,8 +288,7 @@ class Complex(Simple):
             )
 
     async def edit(self, page: Optional[int] = None) -> None:
-        """
-        Method used to edit the pagination
+        """Method used to edit the pagination
 
         Parameters
         ----------
@@ -298,8 +297,9 @@ class Complex(Simple):
         """
         amount = len(self._choices or set())
         if self.keep_working or amount < self._max_values:
-            return await super(Complex, self).edit(page=page)
-        await self.delete(force=True)
+            await super(Complex, self).edit(page=page, modifying_embed=False)
+        else:
+            await self.delete(force=True)
 
     @asynccontextmanager
     async def send(

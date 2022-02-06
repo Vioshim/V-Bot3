@@ -32,7 +32,7 @@ from discord.utils import utcnow
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.views.characters_view import CharactersView, PingView
+from src.views.characters_view import CharactersView
 
 __all__ = (
     "PronounRoles",
@@ -132,89 +132,6 @@ RP_SEARCH_ROLES = dict(
     GameMaster=808730687753420821,
 )
 
-COLORS = [
-    Button(
-        emoji=":red:880796435048706099",
-        custom_id="794274172813312000",
-        row=0,
-    ),
-    Button(
-        emoji=":crimson:880796435161968681",
-        custom_id="794274956296847370",
-        row=0,
-    ),
-    Button(
-        emoji=":orange:880796435501678602",
-        custom_id="794275894209282109",
-        row=0,
-    ),
-    Button(
-        emoji=":golden:880796435291983902",
-        custom_id="794275428696064061",
-        row=0,
-    ),
-    Button(
-        emoji=":yellow:880796435325526047",
-        custom_id="794274424777080884",
-        row=1,
-    ),
-    Button(
-        emoji=":green:880796435329724446",
-        custom_id="794274561570504765",
-        row=1,
-    ),
-    Button(
-        emoji=":lime:880796435359080458",
-        custom_id="794276035326902342",
-        row=1,
-    ),
-    Button(
-        emoji=":cyan:880796435312967710",
-        custom_id="794276172762185799",
-        row=1,
-    ),
-    Button(
-        emoji=":light_blue:880796435065483306",
-        custom_id="794274301707812885",
-        row=2,
-    ),
-    Button(
-        emoji=":deep_blue:880796435229069323",
-        custom_id="794275553477394475",
-        row=2,
-    ),
-    Button(
-        emoji=":violet:880796435635904572",
-        custom_id="794275765533278208",
-        row=2,
-    ),
-    Button(
-        emoji=":pink:880796434989977601",
-        custom_id="794274741061025842",
-        row=2,
-    ),
-    Button(
-        emoji=":light_brown:880796435426201610",
-        custom_id="794275107958292500",
-        row=3,
-    ),
-    Button(
-        emoji=":dark_brown:880796435359092806",
-        custom_id="794275288271028275",
-        row=3,
-    ),
-    Button(
-        emoji=":silver:880796435409416202",
-        custom_id="850018780762472468",
-        row=3,
-    ),
-    Button(
-        emoji=":gray:880796435430395914",
-        custom_id="794273806176223303",
-        row=3,
-    ),
-]
-
 
 class PronounRoles(View):
     @select(
@@ -249,72 +166,153 @@ class PronounRoles(View):
             item for x in sct.options if (item := guild.get_role(int(x.value)))
         }
         if add := roles - set(member.roles):
-            await member.add_roles(*add, reason="Self Roles")
+            await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
-            await member.remove_roles(*remove, reason="Self Roles")
+            await member.remove_roles(*remove)
         text: str = ", ".join(role.mention for role in roles)
         await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
 
 
+class Confirmation(View):
+    def __init__(self, role: Role):
+        super().__init__()
+        self.role = role
+
+    @button(
+        label="Keep role",
+        emoji=":small_check_mark:811367963235713124",
+    )
+    async def keep(self, _: Button, inter: Interaction):
+        await inter.response.send_message(
+            f"Role {self.role.mention} was not removed.",
+            ephemeral=True,
+        )
+        self.stop()
+
+    @button(
+        label="Remove Role",
+        emoji=":small_x_mark:811367596866797658",
+    )
+    async def remove(self, _: Button, inter: Interaction):
+        await inter.user.remove_roles(self.role)
+        await inter.response.send_message(
+            f"Role {self.role.mention} was removed.",
+            ephemeral=True,
+        )
+        self.stop()
+
+
+class ColorButton(Button):
+    async def callback(self, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        guild = ctx.guild
+        role = guild.get_role(int(self.custom_id))
+        total = set(map(guild.get_role, COLOR_ROLES.values()))
+        total.remove(role)
+        if role in ctx.user.roles:
+            view = Confirmation(role)
+            await resp.send_message(
+                f"You have the role {role.mention} already",
+                ephemeral=True,
+                view=view,
+            )
+        elif role:
+            await resp.send_message(
+                f"Role {role.mention} is being added to your account.",
+                ephemeral=True,
+            )
+            await ctx.user.add_roles(role)
+        if data := set(ctx.user.roles).intersection(total):
+            await ctx.user.remove_roles(*data)
+
+
+COLORS = [
+    ColorButton(
+        emoji=":red:880796435048706099",
+        custom_id="794274172813312000",
+        row=0,
+    ),
+    ColorButton(
+        emoji=":crimson:880796435161968681",
+        custom_id="794274956296847370",
+        row=0,
+    ),
+    ColorButton(
+        emoji=":orange:880796435501678602",
+        custom_id="794275894209282109",
+        row=0,
+    ),
+    ColorButton(
+        emoji=":golden:880796435291983902",
+        custom_id="794275428696064061",
+        row=0,
+    ),
+    ColorButton(
+        emoji=":yellow:880796435325526047",
+        custom_id="794274424777080884",
+        row=1,
+    ),
+    ColorButton(
+        emoji=":green:880796435329724446",
+        custom_id="794274561570504765",
+        row=1,
+    ),
+    ColorButton(
+        emoji=":lime:880796435359080458",
+        custom_id="794276035326902342",
+        row=1,
+    ),
+    ColorButton(
+        emoji=":cyan:880796435312967710",
+        custom_id="794276172762185799",
+        row=1,
+    ),
+    ColorButton(
+        emoji=":light_blue:880796435065483306",
+        custom_id="794274301707812885",
+        row=2,
+    ),
+    ColorButton(
+        emoji=":deep_blue:880796435229069323",
+        custom_id="794275553477394475",
+        row=2,
+    ),
+    ColorButton(
+        emoji=":violet:880796435635904572",
+        custom_id="794275765533278208",
+        row=2,
+    ),
+    ColorButton(
+        emoji=":pink:880796434989977601",
+        custom_id="794274741061025842",
+        row=2,
+    ),
+    ColorButton(
+        emoji=":light_brown:880796435426201610",
+        custom_id="794275107958292500",
+        row=3,
+    ),
+    ColorButton(
+        emoji=":dark_brown:880796435359092806",
+        custom_id="794275288271028275",
+        row=3,
+    ),
+    ColorButton(
+        emoji=":silver:880796435409416202",
+        custom_id="850018780762472468",
+        row=3,
+    ),
+    ColorButton(
+        emoji=":gray:880796435430395914",
+        custom_id="794273806176223303",
+        row=3,
+    ),
+]
+
+
 class ColorRoles(View):
     def __init__(self, timeout: Optional[float] = None):
-        super().__init__(timeout=timeout)
-        for item in COLORS:
-            item.callback = self.color_button(item)
-            self.add_item(item)
-
-    def color_button(self, btn: Button):
-        async def inner(ctx: Interaction):
-            resp: InteractionResponse = ctx.response
-            guild = ctx.guild
-            role = guild.get_role(int(btn.custom_id))
-            total = set(map(guild.get_role, COLOR_ROLES.values()))
-            total.remove(role)
-            if role in ctx.user.roles:
-
-                class Confirmation(View):
-                    @button(
-                        label="Keep role",
-                        emoji=":small_check_mark:811367963235713124",
-                    )
-                    async def keep(self, _: Button, inter: Interaction):
-                        await inter.response.send_message(
-                            f"Role {role.mention} was not removed.",
-                            ephemeral=True,
-                        )
-                        self.stop()
-
-                    @button(
-                        label="Remove Role",
-                        emoji=":small_x_mark:811367596866797658",
-                    )
-                    async def remove(self, _: Button, inter: Interaction):
-                        await ctx.user.remove_roles(
-                            role,
-                            reason="Self Roles interaction",
-                        )
-                        await inter.response.send_message(
-                            f"Role {role.mention} was removed.",
-                            ephemeral=True,
-                        )
-                        self.stop()
-
-                view = Confirmation()
-                await resp.send_message(
-                    f"You have the role {role.mention} already",
-                    ephemeral=True,
-                    view=view,
-                )
-            elif role:
-                await resp.send_message(
-                    f"Role {role.mention} is being added to your account.",
-                    ephemeral=True,
-                )
-                await ctx.user.add_roles(role, reason="Self Roles interaction")
-            if data := set(ctx.user.roles).intersection(total):
-                await ctx.user.remove_roles(*data, reason="Self Roles")
-
-        return inner
+        super().__init__(*COLORS, timeout=timeout)
 
 
 class BasicRoles(View):
@@ -371,11 +369,19 @@ class BasicRoles(View):
             item for x in sct.options if (item := guild.get_role(int(x.value)))
         }
         if add := roles - set(member.roles):
-            await member.add_roles(*add, reason="Self Roles")
+            await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
-            await member.remove_roles(*remove, reason="Self Roles")
-        text: str = ", ".join(role.mention for role in roles)
-        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
+            await member.remove_roles(*remove)
+        if text := ", ".join(role.mention for role in roles):
+            await resp.send_message(
+                f"Roles [{text}] has been set!",
+                ephemeral=True,
+            )
+        else:
+            await resp.send_message(
+                "Roles unset!",
+                ephemeral=True,
+            )
 
 
 class RPSearchRoles(View):
@@ -426,11 +432,19 @@ class RPSearchRoles(View):
             item for x in sct.options if (item := guild.get_role(int(x.value)))
         }
         if add := roles - set(member.roles):
-            await member.add_roles(*add, reason="Self Roles")
+            await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
-            await member.remove_roles(*remove, reason="Self Roles")
-        text: str = ", ".join(role.mention for role in roles)
-        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
+            await member.remove_roles(*remove)
+        if text := ", ".join(role.mention for role in roles):
+            await resp.send_message(
+                f"Roles [{text}] has been set!",
+                ephemeral=True,
+            )
+        else:
+            await resp.send_message(
+                "Roles unset!",
+                ephemeral=True,
+            )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -438,7 +452,8 @@ class RPSearchRoles(View):
         if required in interaction.user.roles:
             return True
         await resp.send_message(
-            f"You need {required.mention} to use this role.", ephemeral=True
+            f"You need {required.mention} to use this role.",
+            ephemeral=True,
         )
         return False
 
@@ -464,11 +479,15 @@ class RoleManage(View):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         if self.role in member.roles:
-            await resp.send_message("You already have the role", ephemeral=True)
+            await resp.send_message(
+                "You already have the role",
+                ephemeral=True,
+            )
             return
         await member.add_roles(self.role)
         await resp.send_message(
-            "Role added, you'll get pinged next time.", ephemeral=True
+            "Role added, you'll get pinged next time.",
+            ephemeral=True,
         )
 
     @button(emoji="\N{CROSS MARK}", row=0, custom_id="role_remove")
@@ -477,9 +496,15 @@ class RoleManage(View):
         member: Member = interaction.user
         if self.role in member.roles:
             await member.remove_roles(self.role, reason="RP Search")
-            await resp.send_message("Role removed successfully", ephemeral=True)
+            await resp.send_message(
+                "Role removed successfully",
+                ephemeral=True,
+            )
             return
-        await resp.send_message("You don't have that role.", ephemeral=True)
+        await resp.send_message(
+            "You don't have that role.",
+            ephemeral=True,
+        )
 
     @button(
         label="Click here to view all the user's characters.",
@@ -489,45 +514,25 @@ class RoleManage(View):
     async def check_ocs(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        if len(self.ocs) > 1:
-            view = CharactersView(
-                bot=self.bot,
-                member=ctx.user,
-                target=ctx,
-                ocs=self.ocs,
-                keep_working=True,
-            )
-            embed = view.embed
-            embed.set_author(name=self.member.display_name)
-            embed.set_thumbnail(url=self.member.display_avatar.url)
-            async with view.send(ephemeral=True, single=True) as data:
-                if isinstance(data, Character):
-                    self.bot.logger.info(
-                        "User %s is currently reading %s's character %s [%s]",
-                        str(ctx.user),
-                        str(self.member),
-                        data.name,
-                        repr(data),
-                    )
-        elif self.ocs:
-            oc = self.ocs[0]
-            embed = oc.embed
-            embed.set_author(name=self.member.display_name)
-            embed.set_thumbnail(url=self.member.display_avatar.url)
-            view = PingView(oc=oc, deleter=self.member == ctx.user)
-            await ctx.followup.send(
-                content="User only has one character",
-                embed=embed,
-                ephemeral=True,
-                view=view,
-            )
-            self.bot.logger.info(
-                "User %s is currently reading %s's character %s [%s]",
-                str(ctx.user),
-                str(self.member),
-                oc.name,
-                repr(oc),
-            )
+        view = CharactersView(
+            bot=self.bot,
+            member=ctx.user,
+            target=ctx,
+            ocs=self.ocs,
+            keep_working=True,
+        )
+        embed = view.embed
+        embed.set_author(name=self.member.display_name)
+        embed.set_thumbnail(url=self.member.display_avatar.with_size(4096).url)
+        async with view.send(ephemeral=True, single=True) as data:
+            if isinstance(data, Character):
+                self.bot.logger.info(
+                    "User %s is currently reading %s's character %s [%s]",
+                    str(ctx.user),
+                    str(self.member),
+                    data.name,
+                    repr(data),
+                )
 
 
 class RoleView(View):

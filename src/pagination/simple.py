@@ -245,6 +245,7 @@ class Simple(Basic):
     async def edit(
         self,
         page: Optional[int] = None,
+        modifying_embed: bool = False,
     ) -> None:
         """This method edits the pagination's page given an index.
 
@@ -252,19 +253,24 @@ class Simple(Basic):
         ----------
         page : int, optional
             page's index, defaults to None
+        modifying_embed : bool, optional
+            if modifies it, defaults to False
         """
         try:
             if isinstance(page, int):
                 self._pos = page
                 self.menu_format()
-                view = self
+                data = dict(view=self)
             else:
-                view = None
+                data = dict(view=None)
+
+            if modifying_embed:
+                data["embed"] = self._embed
 
             if message := self.message:
-                await message.edit(embed=self._embed, view=view)
+                await message.edit(**data)
             elif isinstance(target := self.target, Interaction):
-                await target.edit_original_message(embed=self._embed, view=view)
+                await target.edit_original_message(**data)
         except DiscordException as e:
             self.bot.logger.exception(
                 "Exception while editing view %s",

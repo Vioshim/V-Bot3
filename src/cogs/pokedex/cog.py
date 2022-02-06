@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import astuple
+from typing import Optional
 
 from discord import (
     Embed,
@@ -58,6 +59,70 @@ KINDS = [
     "Mega",
 ]
 REF_KINDS = [fix(i) for i in KINDS]
+
+
+def age_parser(text: str):
+    """Filter through range
+
+    Parameters
+    ----------
+    text : str
+        Range
+
+    Returns
+    -------
+    Optional[Callable[[Character], bool]]
+        inner
+    """
+
+    if not text:
+        return None
+
+    functions = []
+
+    for item in text.replace(",", ";").replace("|", ";").split(";"):
+        item = item.strip()
+        if item.isdigit():
+            functions.append(lambda x: x == int(item))
+        else:
+
+            def foo(x: str) -> Optional[int]:
+                x = x.strip()
+                if x.isdigit():
+                    return int(x)
+
+            match [foo(x) for x in item.split("-")]:
+                case [None, _] | [_, None] | [None, None]:
+                    item = item.replace("-", "")
+                case [min_value, max_value]:
+                    functions.append(lambda x: min_value <= x <= max_value)
+            match [foo(x) for x in item.split(">=")]:
+                case [None, value]:
+                    functions.append(lambda x: x >= value)
+                case [value, None]:
+                    functions.append(lambda x: value >= x)
+            match [foo(x) for x in item.split(">")]:
+                case [None, value]:
+                    functions.append(lambda x: x > value)
+                case [value, None]:
+                    functions.append(lambda x: value > x)
+            match [foo(x) for x in item.split("<=")]:
+                case [None, value]:
+                    functions.append(lambda x: x <= value)
+                case [value, None]:
+                    functions.append(lambda x: value <= x)
+            match [foo(x) for x in item.split("<")]:
+                case [None, value]:
+                    functions.append(lambda x: x < value)
+                case [value, None]:
+                    functions.append(lambda x: value < x)
+
+    def inner(oc: Character):
+        if functions:
+            return any(f(oc.age) for f in functions)
+        return oc.age is None
+
+    return inner
 
 
 class Pokedex(Cog):
@@ -132,9 +197,25 @@ class Pokedex(Cog):
             description="OCs at a location to filter",
             required=False,
         ),
+        backstory: Option(
+            str,
+            description="Any words to look for in backstories",
+            required=False,
+        ),
         sp_ability: Option(
             str,
-            description="Any words to look for",
+            description="Any words to look for in Sp Abilities",
+            required=False,
+        ),
+        pronoun: Option(
+            str,
+            description="Pronoun to Look for",
+            required=False,
+            choices=["He", "She", "Them"],
+        ),
+        age: Option(
+            str,
+            description="OC's age. e.g. 18-24, 13, >20",
             required=False,
         ),
     ):
@@ -162,14 +243,14 @@ class Pokedex(Cog):
             Channel, by default None
         sp_ability : str, optional
             Sp_Ability, by default None
+        pronoun : str, optional
+            pronoun, by default None
+        age : str, optional
+            age, by default None
         """
         species: str = species or ""
-        fused: str = fused or ""
-        ability_id: str = ability_id or ""
-        move_id: str = move_id or ""
-        type_id: str = type_id or ""
-        sp_ability: str = sp_ability or ""
         text: str = ""
+        guild: Guild = ctx.guild
         cog = ctx.bot.get_cog("Submission")
         await ctx.defer(ephemeral=True)
         embed = Embed(
@@ -185,7 +266,10 @@ class Pokedex(Cog):
             ocs = [oc]
         else:
             ocs = total
-        guild: Guild = ctx.guild
+
+        if age_checker := age_parser(age):
+            ocs = [oc for oc in ocs if age_checker(oc)]
+
         if isinstance(location, Thread):
             location = location.parent
         if isinstance(location, TextChannel):
@@ -290,12 +374,20 @@ class Pokedex(Cog):
                 ]
         elif species and not fuse_mon:
             embed.title = f"Unable to identify the species: {species}.\nShowing all Instead"
-        if sp_ability := sp_ability.lower():
+        if pronoun:
+            ocs = [oc for oc in ocs if oc.pronoun.name == pronoun.title()]
+        if backstory:
+            ocs = [
+                oc
+                for oc in ocs
+                if backstory.lower() in (oc.backstory or "").lower()
+            ]
+        if sp_ability:
             ocs = [
                 oc
                 for oc in ocs
                 if (item := oc.sp_ability)
-                and any(sp_ability in x.lower() for x in astuple(item))
+                and any(sp_ability.lower() in x.lower() for x in astuple(item))
             ]
         if type_id and (item := Typing.from_ID(type_id)):
             ocs = [oc for oc in ocs if item in oc.types]
@@ -363,7 +455,7 @@ class Pokedex(Cog):
             ocs = [
                 oc
                 for oc in ocs
-                if fix(oc.kind) == kind.replace("POKEMON", "COMMON")
+                if fix(oc.kind) == (kind if kind != "POKEMON" else "COMMON")
             ]
 
         view = CharactersView(
