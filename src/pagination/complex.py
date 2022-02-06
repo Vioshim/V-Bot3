@@ -199,7 +199,7 @@ class Complex(Simple):
         # Then gets defined the amount of entries an user can pick
 
         foo.max_values = min(
-            self.max_values - len(choices),
+            max(self.max_values - len(choices), 1),
             self.entries_per_page,
         )
 
