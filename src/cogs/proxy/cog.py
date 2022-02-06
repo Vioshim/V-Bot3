@@ -17,20 +17,25 @@ from contextlib import suppress
 from typing import Union
 
 from discord import (
+    ApplicationContext,
     DiscordException,
+    Member,
     Message,
     NotFound,
+    Option,
     RawReactionActionEvent,
     TextChannel,
     Thread,
+    WebhookMessage,
 )
-from discord.ext.commands import Cog, command, guild_only
+from discord.ext.commands import Cog, slash_command
 from discord.ui import Button, View
 
-from src.context import Context
+from src.cogs.pokedex.search import default_species_autocomplete
 from src.structures.bot import CustomBot
-from src.structures.converters import SpeciesCall
+from src.structures.species import Fusion, Species
 
+NPC = namedtuple("NPC", "name avatar")
 NPCLog = namedtuple("NPCLog", "channel_id message_id")
 
 
@@ -38,6 +43,91 @@ class Proxy(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.npc_info: dict[NPCLog, int] = {}
+        self.current: dict[int, NPC] = {}
+
+    @slash_command(guild_ids=[719343092963999804])
+    async def npc(
+        self,
+        ctx: ApplicationContext,
+        pokemon: Option(
+            str,
+            description="Species to use",
+            autocomplete=default_species_autocomplete,
+        ),
+        shiny: Option(
+            bool,
+            description="If Shiny",
+            required=False,
+        ),
+        gender: Option(
+            str,
+            choices=["Male", "Female"],
+            description="Sprite to use",
+            required=False,
+        ),
+    ):
+
+        if (mon := Species.from_ID(pokemon)) and not isinstance(mon, Fusion):
+            image = mon.base_image
+            if shiny:
+                image = mon.base_image_shiny
+                if gender == "Female":
+                    if shiny:
+                        image = mon.female_image_shiny
+                    else:
+                        image = mon.female_image
+
+            self.current[ctx.author.id] = NPC(name=mon.name, image=image)
+
+            await ctx.respond(
+                "NPC has been set, now send the message.",
+                ephemeral=True,
+            )
+        else:
+            await ctx.respond(
+                f"{pokemon} was not found, try again.",
+                ephemeral=True,
+            )
+
+    @Cog.listener()
+    async def on_message(self, message: Message):
+        member: Member = message.author
+        if not message.guild or member.bot:
+            return
+        if npc := self.current.pop(member.id, None):
+            webhook = await self.bot.webhook(message.channel, reason="NPC")
+
+            data = dict(
+                username=f"NPC〕{npc.name} ",
+                avatar_url=npc.avatar,
+                content=message.content,
+                files=[await item.to_file() for item in message.attachments],
+                wait=True,
+            )
+
+            if reference := message.reference:
+                data["view"] = View(
+                    Button(label="Replying to", url=reference.jump_url)
+                )
+
+            if isinstance(message.channel, Thread):
+                data["thread"] = message.channel
+
+            proxy_msg: WebhookMessage = await webhook.send(**data)
+            proxy_msg.channel = message.channel
+
+            item = NPCLog(
+                channel_id=message.channel.id,
+                message_id=proxy_msg.id,
+            )
+            self.npc_info[item] = message.author.id
+
+            self.bot.msg_cache.add(message.id)
+            with suppress(DiscordException):
+                if message.mentions:
+                    await message.delete(delay=300)
+                else:
+                    await message.delete()
 
     @Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
@@ -77,8 +167,7 @@ class Proxy(Cog):
                 elif emoji == "\N{BLACK QUESTION MARK ORNAMENT}":
                     await message.clear_reaction(emoji=emoji)
                     if user := guild.get_member(data):
-                        view = View()
-                        view.add_item(
+                        view = View(
                             Button(label="Jump URL", url=message.jump_url)
                         )
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
@@ -88,88 +177,6 @@ class Proxy(Cog):
                 await payload.member.send(
                     "That proxy was sent by an user who is no longer in discord."
                 )
-
-    async def handler(
-        self,
-        ctx: Context,
-        name: str,
-        avatar_url: str,
-        content: str,
-    ):
-        webhook = await self.bot.webhook(ctx.channel, reason="NPC")
-        message: Message = ctx.message
-        view = View()
-        if reference := message.reference:
-            view.add_item(
-                item=Button(label="Replying to", url=reference.jump_url)
-            )
-
-        data = dict(
-            username=name,
-            avatar_url=avatar_url,
-            content=content,
-            files=[await item.to_file() for item in message.attachments],
-            view=view,
-            wait=True,
-        )
-
-        if isinstance(ctx.channel, Thread):
-            data["thread"] = ctx.channel
-
-        proxy_msg = await webhook.send(**data)
-
-        self.npc_info[
-            NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)
-        ] = ctx.author.id
-
-        self.bot.msg_cache.add(message.id)
-        with suppress(DiscordException):
-            if message.mentions:
-                await message.delete(delay=300)
-            else:
-                await message.delete()
-
-    @guild_only()
-    @command()
-    async def npc(
-        self,
-        ctx: Context,
-        species: SpeciesCall,
-        *,
-        content: str = "\u200b",
-    ):
-        webhook = await self.bot.webhook(ctx.channel, reason="NPC")
-        message: Message = ctx.message
-        if reference := message.reference:
-            view = View()
-            item = Button(label="Replying to", url=reference.jump_url)
-            view.add_item(item=item)
-        else:
-            view = None
-
-        data = dict(
-            username=f"NPC〕{species.name} ",
-            avatar_url=species.base_image,
-            content=content,
-            files=[await item.to_file() for item in message.attachments],
-            view=view,
-            wait=True,
-        )
-
-        if isinstance(ctx.channel, Thread):
-            data["thread"] = ctx.channel
-
-        proxy_msg = await webhook.send(**{k: v for k, v in data.items() if v})
-
-        key = NPCLog(channel_id=ctx.channel.id, message_id=proxy_msg.id)
-        self.npc_info[key] = ctx.author.id
-
-        self.bot.msg_cache.add(message.id)
-        with suppress(DiscordException):
-            if message.mentions:
-                await message.delete(delay=300)
-            else:
-                await message.delete()
 
 
 def setup(bot: CustomBot) -> None:
