@@ -89,7 +89,7 @@ class Complex(Simple):
         self._keep_working = keep_working
         self._choices: Optional[set[_T]] = None
         if keep_working:
-            self._max_values = max(max_values, len(list(self.values)))
+            self._max_values = max(max_values, len(list(values)))
         else:
             self._max_values = max_values
         if isinstance(emoji_parser, str):
