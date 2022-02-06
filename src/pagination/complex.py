@@ -258,8 +258,7 @@ class Complex(Simple):
                 )
 
             # Now we start to add the information of the current page in the paginator.
-
-            for index, item in enumerate(elements[self._pos]):
+            for index, item in enumerate(elements.get(self._pos, [])):
                 # In each cycle, we proceed to convert the name and value (as we use its index)
                 # and determine the emoji, based on the current implementation of emoji_parser
 
@@ -271,17 +270,17 @@ class Complex(Simple):
                     description=str(value).replace("\n", " ")[:100],
                     emoji=emoji,
                 )
-
             pages.disabled = len(pages.options) == 1
-        else:
 
-            # This is the outcome for no provided values.
+        # This is the outcome for no provided values.
+        if not pages.options:
             pages.disabled = True
             pages.add_option(
                 label="Page 01/01",
                 emoji="\N{PAGE FACING UP}",
                 default=True,
             )
+        if not foo.options:
             foo.disabled = True
             foo.add_option(
                 label="Empty List",
@@ -298,9 +297,9 @@ class Complex(Simple):
             Page to be accessed, defaults to None
         """
         amount = len(self._choices or set())
-        if amount < self._max_values:
+        if self.keep_working or amount < self._max_values:
             return await super(Complex, self).edit(page=page)
-        await self.delete(force=not self.keep_working)
+        await self.delete(force=True)
 
     @asynccontextmanager
     async def send(
@@ -422,12 +421,11 @@ class Complex(Simple):
         amount = self.entries_per_page * self._pos
         chunk = self.values[amount : amount + self.entries_per_page]
 
-        if not self.keep_working:
-            for index in sct.values:
-                item: _T = chunk[int(index)]
-                name, _ = self.parser(item)
-                entries.append(str(name))
-                self._choices.add(item)
+        for index in sct.values:
+            item: _T = chunk[int(index)]
+            name, _ = self.parser(item)
+            entries.append(str(name))
+            self._choices.add(item)
 
         await self.custom_choice(sct, interaction)
 
