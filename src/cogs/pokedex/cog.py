@@ -59,9 +59,15 @@ KINDS = [
     "Mega",
 ]
 REF_KINDS = [fix(i) for i in KINDS]
+OPERATORS = {
+    "<=": lambda x, y: x <= y,
+    "<": lambda x, y: x < y,
+    ">=": lambda x, y: x >= y,
+    ">": lambda x, y: x > y,
+}
 
 
-def age_parser(text: str):
+def age_parser(text: str, oc: Character):
     """Filter through range
 
     Parameters
@@ -71,60 +77,43 @@ def age_parser(text: str):
 
     Returns
     -------
-    Optional[Callable[[Character], bool]]
-        inner
+    bool
+        valid
     """
 
     if not text:
-        return None
+        return True
 
-    functions = []
+    functions: list[bool] = []
 
     for item in text.replace(",", ";").replace("|", ";").split(";"):
         item = item.strip()
         if item.isdigit():
-            functions.append(lambda x: x == int(item))
-        else:
+            functions.append(int(item) == oc.age)
+        elif oc.age:
 
             def foo(x: str) -> Optional[int]:
                 x = x.strip()
                 if x.isdigit():
                     return int(x)
 
-            match [foo(x) for x in item.split("-")]:
-                case [None, _] | [_, None] | [None, None]:
-                    item = item.replace("-", "")
-                case [min_value, max_value]:
-                    functions.append(lambda x: min_value <= x <= max_value)
-            match [foo(x) for x in item.split(">=")]:
-                case [None, value]:
-                    functions.append(lambda x: x >= value)
-                case [value, None]:
-                    functions.append(lambda x: value >= x)
-            match [foo(x) for x in item.split(">")]:
-                case [None, value]:
-                    functions.append(lambda x: x > value)
-                case [value, None]:
-                    functions.append(lambda x: value > x)
-            match [foo(x) for x in item.split("<=")]:
-                case [None, value]:
-                    functions.append(lambda x: x <= value)
-                case [value, None]:
-                    functions.append(lambda x: value <= x)
-            match [foo(x) for x in item.split("<")]:
-                case [None, value]:
-                    functions.append(lambda x: x < value)
-                case [value, None]:
-                    functions.append(lambda x: value < x)
+            op = [foo(x) for x in item.split("-")]
+            if len(op) == 2 and all(op):
+                min_value, max_value = op
+                functions.append(min_value <= oc.age <= max_value)
 
-    def inner(oc: Character):
-        if functions:
-            if oc.age is None:
-                return False
-            return any(f(oc.age) for f in functions)
+            for key, operator in OPERATORS.items():
+                if len(op := [foo(x) for x in item.split(key)]) == 2:
+                    min_value, max_value = op
+                    if isinstance(min_value, int):
+                        functions.append(operator(min_value, oc.age))
+                    if isinstance(max_value, int):
+                        functions.append(operator(oc.age, max_value))
+
+    if not functions:
         return oc.age is None
 
-    return inner
+    return any(functions)
 
 
 class Pokedex(Cog):
@@ -269,8 +258,7 @@ class Pokedex(Cog):
         else:
             ocs = total
 
-        if age_checker := age_parser(age):
-            ocs = [oc for oc in ocs if age_checker(oc)]
+        ocs = [oc for oc in ocs if age_parser(age, oc)]
 
         if isinstance(location, Thread):
             location = location.parent
