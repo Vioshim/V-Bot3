@@ -116,7 +116,6 @@ class CharactersView(Complex):
         target: Union[Interaction, Webhook, TextChannel],
         ocs: set[Character],
         keep_working: bool = False,
-        ping_channel: bool = False,
     ):
         super(CharactersView, self).__init__(
             bot=bot,
@@ -129,7 +128,6 @@ class CharactersView(Complex):
             sort_key=lambda x: x.name,
         )
         self.embed.title = "Select a character"
-        self.ping_channel = ping_channel
 
     async def custom_choice(self, sct: Select, ctx: Interaction):
         response: InteractionResponse = ctx.response
@@ -148,7 +146,6 @@ class CharactersView(Complex):
                 view = PingView(
                     oc=item,
                     deleter=ctx.user.id == item.author,
-                    ping_channel=self.ping_channel,
                 )
                 await response.send_message(
                     embed=embed,
