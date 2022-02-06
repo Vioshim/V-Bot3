@@ -84,12 +84,12 @@ def age_parser(text: str, oc: Character):
     if not text:
         return True
 
-    functions: list[bool] = []
+    functions: set[bool] = set()
 
     for item in text.replace(",", ";").replace("|", ";").split(";"):
         item = item.strip()
         if item.isdigit():
-            functions.append(int(item) == oc.age)
+            functions.add(int(item) == oc.age)
         elif oc.age:
 
             def foo(x: str) -> Optional[int]:
@@ -100,15 +100,17 @@ def age_parser(text: str, oc: Character):
             op = [foo(x) for x in item.split("-")]
             if len(op) == 2 and all(op):
                 min_value, max_value = op
-                functions.append(min_value <= oc.age <= max_value)
+                functions.add(min_value <= oc.age <= max_value)
 
             for key, operator in OPERATORS.items():
-                if len(op := [foo(x) for x in item.split(key)]) == 2:
+                if oc.age is None:
+                    functions.add(False)
+                elif len(op := [foo(x) for x in item.split(key)]) == 2:
                     min_value, max_value = op
                     if isinstance(min_value, int):
-                        functions.append(operator(min_value, oc.age))
+                        functions.add(operator(min_value, oc.age))
                     if isinstance(max_value, int):
-                        functions.append(operator(oc.age, max_value))
+                        functions.add(operator(oc.age, max_value))
 
     if not functions:
         return oc.age is None
