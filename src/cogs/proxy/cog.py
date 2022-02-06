@@ -68,16 +68,16 @@ class Proxy(Cog):
     ):
 
         if (mon := Species.from_ID(pokemon)) and not isinstance(mon, Fusion):
-            image = mon.base_image
+            avatar = mon.base_image
             if shiny:
-                image = mon.base_image_shiny
+                avatar = mon.base_image_shiny
                 if gender == "Female":
                     if shiny:
-                        image = mon.female_image_shiny
+                        avatar = mon.female_image_shiny
                     else:
-                        image = mon.female_image
+                        avatar = mon.female_image
 
-            self.current[ctx.author.id] = NPC(name=mon.name, image=image)
+            self.current[ctx.author.id] = NPC(name=mon.name, avatar=avatar)
 
             await ctx.respond(
                 "NPC has been set, now send the message.",
