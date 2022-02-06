@@ -84,13 +84,11 @@ def age_parser(text: str, oc: Character):
     if not text:
         return True
 
-    functions: set[bool] = set()
-
     for item in text.replace(",", ";").replace("|", ";").split(";"):
         item = item.strip()
-        if item.isdigit():
-            functions.add(int(item) == oc.age)
-        elif oc.age:
+        if oc.age:
+            if item.isdigit():
+                return int(item) == oc.age
 
             def foo(x: str) -> Optional[int]:
                 x = x.strip()
@@ -98,24 +96,18 @@ def age_parser(text: str, oc: Character):
                     return int(x)
 
             op = [foo(x) for x in item.split("-")]
-            if len(op) == 2 and all(op):
-                min_value, max_value = op
-                functions.add(min_value <= oc.age <= max_value)
+            if len(op) == 2 and all(op) and op[0] <= oc.age <= op[1]:
+                return True
 
             for key, operator in OPERATORS.items():
-                if oc.age is None:
-                    functions.add(False)
-                elif len(op := [foo(x) for x in item.split(key)]) == 2:
-                    min_value, max_value = op
-                    if isinstance(min_value, int):
-                        functions.add(operator(min_value, oc.age))
-                    if isinstance(max_value, int):
-                        functions.add(operator(oc.age, max_value))
+                op = [foo(x) for x in item.split(key)]
+                if len(op) == 2 and (
+                    (isinstance(op[0], int) and operator(op[0], oc.age))
+                    or (isinstance(op[1], int) and operator(oc.age, op[1]))
+                ):
+                    return True
 
-    if not functions:
-        return oc.age is None
-
-    return any(functions)
+    return False
 
 
 class Pokedex(Cog):
