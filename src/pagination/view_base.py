@@ -300,9 +300,9 @@ class Basic(Generic[_M], View):
                     message = await target.original_message()
                     view = self.from_message(message)
                     if force or view.children == self.children:
-                        await target.edit_original_message(view=None)
+                        await message.edit(view=None)
             self.message = None
-            return self.stop()
+            self.stop()
 
     async def on_timeout(self) -> None:
         with suppress(DiscordException):

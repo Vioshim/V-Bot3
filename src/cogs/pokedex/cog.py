@@ -119,6 +119,8 @@ def age_parser(text: str):
 
     def inner(oc: Character):
         if functions:
+            if oc.age is None:
+                return False
             return any(f(oc.age) for f in functions)
         return oc.age is None
 
