@@ -81,31 +81,30 @@ def age_parser(text: str, oc: Character):
         valid
     """
 
-    if not text:
+    if not (text and oc.age):
         return True
 
     for item in text.replace(",", ";").replace("|", ";").split(";"):
         item = item.strip()
-        if oc.age:
-            if item.isdigit():
-                return int(item) == oc.age
+        if item.isdigit():
+            return int(item) == oc.age
 
-            def foo(x: str) -> Optional[int]:
-                x = x.strip()
-                if x.isdigit():
-                    return int(x)
+        def foo(x: str) -> Optional[int]:
+            x = x.strip()
+            if x.isdigit():
+                return int(x)
 
-            op = [foo(x) for x in item.split("-")]
-            if len(op) == 2 and all(op) and op[0] <= oc.age <= op[1]:
+        op = [foo(x) for x in item.split("-")]
+        if len(op) == 2 and all(op) and op[0] <= oc.age <= op[1]:
+            return True
+
+        for key, operator in OPERATORS.items():
+            op = [foo(x) for x in item.split(key)]
+            if len(op) == 2 and (
+                (isinstance(op[0], int) and operator(op[0], oc.age))
+                or (isinstance(op[1], int) and operator(oc.age, op[1]))
+            ):
                 return True
-
-            for key, operator in OPERATORS.items():
-                op = [foo(x) for x in item.split(key)]
-                if len(op) == 2 and (
-                    (isinstance(op[0], int) and operator(op[0], oc.age))
-                    or (isinstance(op[1], int) and operator(oc.age, op[1]))
-                ):
-                    return True
 
     return False
 
