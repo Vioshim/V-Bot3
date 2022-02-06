@@ -440,7 +440,8 @@ class Complex(Simple):
         if not response.is_done():
             await response.pong()
 
-        self.values = set(self.values) - self.choices
+        if not self.keep_working:
+            self.values = set(self.values) - self.choices
         if len(sct.values) == self.entries_per_page and self._pos > 1:
             self._pos -= 1
         await self.edit(page=self._pos)
