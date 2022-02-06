@@ -155,8 +155,6 @@ class CharactersView(Complex):
                     view=view,
                     ephemeral=True,
                 )
-            except IndexError:
-                pass
             except Exception as e:
                 self.bot.logger.exception(
                     "Chunk: %s",
