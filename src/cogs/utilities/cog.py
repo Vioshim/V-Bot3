@@ -222,16 +222,25 @@ class Utilities(Cog):
             str,
             description="Expression (Example: d20)",
         ),
-        hidden: bool = False
+        hidden: bool = False,
     ):
-        value = roll(expr=expression, stringifier=MarkdownStringifier())
         try:
-            await ctx.respond(value.result, ephemeral=hidden)
-        except RollSyntaxError:
+            value = roll(
+                expr=expression,
+                stringifier=MarkdownStringifier(),
+                allow_comments=True,
+            )
+            if len(result := value.result) >= 2000:
+                simplify_expr(value.expr)
+            if len(result := value.result) <= 2000:
+                await ctx.respond(result, ephemeral=hidden)
+            else:
+                await ctx.respond(
+                    f"Expression is too long, result is: {value.total}",
+                    ephemeral=hidden,
+                )
+        except Exception:
             await ctx.respond("Invalid expression", ephemeral=True)
-        except HTTPException:
-            simplify_expr(value.expr)
-            await ctx.respond(value.result, ephemeral=hidden)
 
 
 def setup(bot: CustomBot) -> None:
