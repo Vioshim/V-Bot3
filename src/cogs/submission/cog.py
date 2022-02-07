@@ -565,7 +565,9 @@ class Submission(Cog):
 
             if not oc.moveset:
                 if not (movepool := species.movepool):
-                    movepool = Movepool(event=Move.all())
+                    movepool = Movepool(
+                        event=[m for m in Move.all() if not m.banned]
+                    )
 
                 moves_view = ComplexInput(
                     bot=self.bot,

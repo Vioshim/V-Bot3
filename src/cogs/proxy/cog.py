@@ -32,6 +32,7 @@ from discord.ext.commands import Cog, slash_command
 from discord.ui import Button, View
 
 from src.cogs.pokedex.search import default_species_autocomplete
+from src.cogs.submission.cog import oc_autocomplete
 from src.structures.bot import CustomBot
 from src.structures.species import Fusion, Species
 
@@ -53,6 +54,7 @@ class Proxy(Cog):
             str,
             description="Species to use",
             autocomplete=default_species_autocomplete,
+            required=False,
         ),
         shiny: Option(
             bool,
@@ -65,8 +67,25 @@ class Proxy(Cog):
             description="Sprite to use",
             required=False,
         ),
+        character: Option(
+            str,
+            description="Character to Use",
+            autocomplete=oc_autocomplete,
+            required=False,
+        ),
     ):
-
+        if (character or "").isdigit() and (
+            oc := self.bot.get_cog("Submission").ocs.get(int(character))
+        ):
+            self.current[ctx.author.id] = NPC(
+                name=oc.name,
+                avatar=oc.image,
+            )
+            await ctx.respond(
+                f"NPC has been set as {oc.name}, now send the message.",
+                ephemeral=True,
+            )
+            return
         if (mon := Species.from_ID(pokemon)) and not isinstance(mon, Fusion):
             avatar = mon.base_image
             if shiny:
@@ -77,7 +96,10 @@ class Proxy(Cog):
                     else:
                         avatar = mon.female_image
 
-            self.current[ctx.author.id] = NPC(name=mon.name, avatar=avatar)
+            self.current[ctx.author.id] = NPC(
+                name=f"NPC〕{mon.name}",
+                avatar=avatar,
+            )
 
             await ctx.respond(
                 "NPC has been set, now send the message.",
@@ -98,7 +120,7 @@ class Proxy(Cog):
             webhook = await self.bot.webhook(message.channel, reason="NPC")
 
             data = dict(
-                username=f"NPC〕{npc.name} ",
+                username=npc.name,
                 avatar_url=npc.avatar,
                 content=message.content,
                 files=[await item.to_file() for item in message.attachments],
@@ -107,7 +129,10 @@ class Proxy(Cog):
 
             if reference := message.reference:
                 data["view"] = View(
-                    Button(label="Replying to", url=reference.jump_url)
+                    Button(
+                        label="Replying to",
+                        url=reference.jump_url,
+                    )
                 )
 
             if isinstance(message.channel, Thread):
