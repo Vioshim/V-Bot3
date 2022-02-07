@@ -38,6 +38,8 @@ from src.structures.species import Fusion, Species
 
 NPC = namedtuple("NPC", "name avatar")
 NPCLog = namedtuple("NPCLog", "channel_id message_id")
+MALE = "\N{MALE SIGN}"
+FEMALE = "\N{FEMALE SIGN}"
 
 
 class Proxy(Cog):
@@ -89,15 +91,22 @@ class Proxy(Cog):
         if (mon := Species.from_ID(pokemon)) and not isinstance(mon, Fusion):
             avatar = mon.base_image
             if shiny:
+                name = f"NPC〕Shiny {mon.name}"
                 avatar = mon.base_image_shiny
                 if gender == "Female":
-                    if shiny:
-                        avatar = mon.female_image_shiny
-                    else:
-                        avatar = mon.female_image
+                    avatar = mon.female_image
+            elif gender == "Female":
+                avatar = mon.female_image
+            else:
+                name = f"NPC〕{mon.name}"
+
+            if gender == "Male":
+                name = f"{name} {MALE}"
+            elif gender == "Female":
+                name = f"{name} {FEMALE}"
 
             self.current[ctx.author.id] = NPC(
-                name=f"NPC〕{mon.name}",
+                name=name,
                 avatar=avatar,
             )
 
