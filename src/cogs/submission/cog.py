@@ -1205,27 +1205,26 @@ class Submission(Cog):
             else:
                 return
 
-        former_channel: Optional[TextChannel] = message.guild.get_channel(
-            oc.location
-        )
+        former_channel = message.guild.get_channel(oc.location)
 
         async with self.bot.database() as db:
             oc.location = message.channel.id
             await self.oc_update(oc)
             await oc.upsert(db)
 
-        trigger = IntervalTrigger(days=3)
-
         if (
             former_channel
             and len([x for x in self.ocs.values() if x.location == oc.location])
             == 0
-            and former_channel != message.channel
+            and former_channel != channel
         ):
             await self.unclaiming(former_channel)
 
-        scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
-        scheduler.trigger = trigger
+        if isinstance(channel, TextChannel):
+            scheduler = await self.bot.scheduler.get_schedule(
+                f"RP[{channel.id}]"
+            )
+            scheduler.trigger = IntervalTrigger(days=3)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
