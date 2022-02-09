@@ -1184,7 +1184,7 @@ class Submission(Cog):
             if message.author.id in self.ignore:
                 self.ignore.remove(message.author.id)
 
-    async def on_message_tupper(self, message: Message):
+    async def on_message_tupper(self, message: Message, member_id: int):
         channel = message.channel
         author = message.author.name.title()
 
@@ -1192,23 +1192,18 @@ class Submission(Cog):
             return
 
         ocs = {
-            item.name: item
-            for item in self.rpers.get(message.author.id, {}).values()
+            item.name: item for item in self.rpers.get(member_id, {}).values()
         }
 
         if not (oc := ocs.get(author)):
             if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
                 oc = ocs[items[0]]
+            elif ocs := [
+                v for k, v in ocs.items() if k in author or author in k
+            ]:
+                oc = ocs[0]
             else:
-                oc = next(
-                    filter(
-                        lambda x: x.name in author or author in x.name,
-                        ocs.values(),
-                    ),
-                    None,
-                )
-                if not oc:
-                    return
+                return
 
         former_channel: Optional[TextChannel] = message.guild.get_channel(
             oc.location
@@ -1219,12 +1214,12 @@ class Submission(Cog):
             await self.oc_update(oc)
             await oc.upsert(db)
 
-        former_ocs = [x for x in self.ocs.values() if x.location == oc.location]
         trigger = IntervalTrigger(days=3)
 
         if (
             former_channel
-            and len(former_ocs) == 0
+            and len([x for x in self.ocs.values() if x.location == oc.location])
+            == 0
             and former_channel != message.channel
         ):
             await self.unclaiming(former_channel)
@@ -1261,7 +1256,7 @@ class Submission(Cog):
                     args=[channel.id, False],
                     conflict_policy=ConflictPolicy.replace,
                 )
-            await self.on_message_tupper(msg)
+            await self.on_message_tupper(msg, message.author.id)
         except TimeoutError:
             if not self.rpers.get(message.author.id):
                 role = message.guild.get_role(719642423327719434)
