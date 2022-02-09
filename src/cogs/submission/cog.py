@@ -1196,25 +1196,31 @@ class Submission(Cog):
             for item in self.rpers.get(message.author.id, {}).values()
         }
 
-        if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
-            oc = ocs[items[0]]
-        elif not (
-            oc := next(
-                filter(
-                    lambda x: x.name in author or author in x.name,
-                    ocs.values(),
-                ),
-                None,
-            )
-        ):
-            return
+        if not (oc := ocs.get(author)):
+            if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
+                oc = ocs[items[0]]
+            else:
+                oc = next(
+                    filter(
+                        lambda x: x.name in author or author in x.name,
+                        ocs.values(),
+                    ),
+                    None,
+                )
+                if not oc:
+                    return
 
         former_channel: Optional[TextChannel] = message.guild.get_channel(
             oc.location
         )
+        former_ocs = [x for x in self.ocs.values() if x.location == oc.location]
         trigger = IntervalTrigger(days=3)
 
-        if former_channel and former_channel != message.channel:
+        if (
+            former_channel
+            and len(former_ocs) == 0
+            and former_channel != message.channel
+        ):
             await self.unclaiming(former_channel)
 
         async with self.bot.database() as db:
