@@ -233,12 +233,11 @@ class Utilities(Cog):
             if len(result := value.result) >= 2000:
                 simplify_expr(value.expr)
             if len(result := value.result) <= 2000:
-                await ctx.respond(result, ephemeral=hidden)
-            else:
-                await ctx.respond(
-                    f"Expression is too long, result is: {value.total}",
-                    ephemeral=hidden,
-                )
+                return await ctx.respond(result, ephemeral=hidden)
+            await ctx.respond(
+                f"Expression is too long, result is: {value.total}",
+                ephemeral=hidden,
+            )
         except Exception:
             await ctx.respond("Invalid expression", ephemeral=True)
 

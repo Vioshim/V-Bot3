@@ -89,15 +89,17 @@ class Proxy(Cog):
             )
             return
         if (mon := Species.from_ID(pokemon)) and not isinstance(mon, Fusion):
-            avatar = mon.base_image
             name = mon.name
             if shiny:
                 name = f"Shiny {name}"
-                avatar = mon.base_image_shiny
                 if gender == "Female":
-                    avatar = mon.female_image
+                    avatar = mon.female_image_shiny
+                else:
+                    avatar = mon.base_image_shiny
             elif gender == "Female":
                 avatar = mon.female_image
+            else:
+                avatar = mon.base_image
 
             if gender == "Male":
                 name = f"NPC〕{name} {MALE}"
