@@ -43,7 +43,12 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -60,7 +65,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import TextInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1203,8 +1213,12 @@ class Submission(Cog):
 
         if oc.location != message.channel.id:
 
+            async with self.bot.database() as db:
+                oc.location = message.channel.id
+                await self.oc_update(oc)
+                await oc.upsert(db)
+
             former_channel: TextChannel = message.guild.get_channel(oc.location)
-            oc.location = message.channel.id
 
             if (
                 former_channel
@@ -1222,11 +1236,6 @@ class Submission(Cog):
 
         scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
         scheduler.trigger = trigger
-
-        async with self.bot.database() as db:
-            oc.location = message.channel.id
-            await self.oc_update(oc)
-            await oc.upsert(db)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
