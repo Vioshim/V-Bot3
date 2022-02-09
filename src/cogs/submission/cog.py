@@ -351,20 +351,20 @@ class Submission(Cog):
                 m = await channel.send(CLAIM_MESSAGE)
             self.data_msg[channel.id] = m
 
-            async with self.bot.database() as conn:
-                for oc in self.ocs.values():
-                    if oc.location != channel.id:
-                        continue
-                    await conn.execute(
-                        """--sql
-                        UPDATE CHARACTER
-                        SET LOCATION = NULL
-                        WHERE ID = $1;
-                        """,
-                        oc.id,
-                    )
-                    oc.location = None
-                    await self.oc_update(oc)
+        async with self.bot.database() as conn:
+            for oc in filter(
+                lambda x: x.location == channel.id, self.ocs.values()
+            ):
+                await conn.execute(
+                    """--sql
+                    UPDATE CHARACTER
+                    SET LOCATION = NULL
+                    WHERE ID = $1;
+                    """,
+                    oc.id,
+                )
+                oc.location = None
+                await self.oc_update(oc)
 
     async def list_update(
         self,
@@ -1209,30 +1209,18 @@ class Submission(Cog):
         ):
             return
 
+        former_channel: Optional[TextChannel] = message.guild.get_channel(
+            oc.location
+        )
         trigger = IntervalTrigger(days=3)
 
-        if oc.location != message.channel.id:
+        if former_channel and former_channel != message.channel:
+            await self.unclaiming(former_channel)
 
-            async with self.bot.database() as db:
-                oc.location = message.channel.id
-                await self.oc_update(oc)
-                await oc.upsert(db)
-
-            former_channel: TextChannel = message.guild.get_channel(oc.location)
-
-            if (
-                former_channel
-                and len(
-                    [x for x in self.ocs.values() if x.location == oc.location]
-                )
-                == 0
-            ):
-                self.data_msg.pop(former_channel.id, None)
-                scheduler = await self.bot.scheduler.get_schedule(
-                    f"RP[{former_channel.id}]"
-                )
-                await self.unclaiming(former_channel)
-                scheduler.trigger = trigger
+        async with self.bot.database() as db:
+            oc.location = message.channel.id
+            await self.oc_update(oc)
+            await oc.upsert(db)
 
         scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
         scheduler.trigger = trigger
