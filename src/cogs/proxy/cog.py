@@ -195,6 +195,7 @@ class Proxy(Cog):
         self,
         ctx: Context,
         pokemon: SpeciesCall,
+        *,
         text: str = None,
     ):
         """Command for NPCs

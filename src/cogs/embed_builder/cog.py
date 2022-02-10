@@ -136,12 +136,18 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        if ctx.webhook_id:
-            self.blame = {
-                k: v
-                for k, v in self.blame.items()
-                if not (ctx.channel == k.channel and ctx.id == k.id)
-            }
+        if (
+            ctx.webhook_id
+            and (
+                items := [
+                    item
+                    for item in self.blame
+                    if not (ctx.channel == item.channel and ctx.id == item.id)
+                ]
+            )
+            and (data := self.blame.pop(items[0], None))
+        ):
+            self.cache.pop(data, None)
 
     def write(self, message: WebhookMessage, author: Member):
         """A method for adding webhook messages to the database
