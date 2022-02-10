@@ -75,21 +75,8 @@ class EmbedBuilder(Cog):
         -------
 
         """
-        item = member.id, member.guild.id
-        if item in self.blame.values():
-
-            aux = [v for v in self.blame.values() if v == item]
-            self.cache.pop(item, None)
-            self.blame = {k: v for k, v in self.blame.items() if v != item}
-
-            async with self.bot.database(raise_on_error=False) as session:
-                await session.executemany(
-                    """--sql
-                    DELETE FROM EMBED_BUILDER
-                    WHERE CHANNEL = $1 AND SERVER = $2;
-                    """,
-                    aux,
-                )
+        if data := self.cache.pop((member.id, member.guild.id), None):
+            self.blame.pop(data, None)
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -150,70 +137,13 @@ class EmbedBuilder(Cog):
 
         """
         if ctx.webhook_id:
-
-            def check(x: Message) -> bool:
-                return ctx.channel == x.channel and ctx.id == x.id
-
-            if aux := [
-                (
-                    k.channel.id,
-                    ctx.id,
-                )
-                for k in self.blame.keys()
-                if check(k)
-            ]:
-                async with self.bot.database(raise_on_error=False) as session:
-                    await session.executemany(
-                        """--sql
-                        DELETE FROM EMBED_BUILDER
-                        WHERE CHANNEL = ($1) AND MESSAGE = ($2);
-                        """,
-                        aux,
-                    )
             self.blame = {
                 k: v
                 for k, v in self.blame.items()
-                if not (ctx.channel == k.channel and not check(k))
+                if not (ctx.channel == k.channel and ctx.id == k.id)
             }
 
-    @Cog.listener()
-    async def on_ready(self):
-        """This is a function with the purpose to fill the cache
-
-        Returns
-        -------
-
-        """
-        if self.loaded:
-            return
-        async with self.bot.database(raise_on_error=False) as session:
-            async for item in session.cursor(
-                """--sql
-                SELECT AUTHOR, SERVER, CHANNEL, MESSAGE
-                FROM EMBED_BUILDER;
-                """
-            ):
-                author, guild, channel, message = tuple(item)
-                item_blame = author, guild
-                with suppress(DiscordException):
-                    if channel := self.bot.get_channel(channel):
-                        webhook: Webhook = await self.bot.webhook(
-                            channel, reason="Embed Builder"
-                        )
-                        if isinstance(channel, Thread):
-                            thread_id = channel.id
-                        else:
-                            thread_id = None
-                        item_cache: WebhookMessage = (
-                            await webhook.fetch_message(
-                                message,
-                                thread_id=thread_id,
-                            )
-                        )
-                        self.cache[item_blame] = item_cache
-                        self.blame[item_cache] = item_blame
-
-    async def write(self, message: WebhookMessage, author: Member):
+    def write(self, message: WebhookMessage, author: Member):
         """A method for adding webhook messages to the database
 
         Parameters
@@ -222,33 +152,9 @@ class EmbedBuilder(Cog):
             Message to be uploaded
         author: Member
             Author who sent the message
-
-        Returns
-        -------
-
         """
-        async with self.bot.database(raise_on_error=False) as session:
-            await session.execute(
-                """
-                INSERT INTO EMBED_BUILDER(
-                    AUTHOR, SERVER, MESSAGE, WEBHOOK, CHANNEL
-                )
-                VALUES($1, $2, $3, $4, $5)
-                ON CONFLICT (AUTHOR, SERVER) DO
-                UPDATE SET
-                    MESSAGE = $3,
-                    WEBHOOK = $4,
-                    CHANNEL = $5;
-                """,
-                author.id,
-                author.guild.id,
-                message.id,
-                message.webhook_id,
-                message.channel.id,
-            )
-
-            self.cache[(author.id, author.guild.id)] = message
-            self.blame[message] = (author.id, author.guild.id)
+        self.cache[(author.id, author.guild.id)] = message
+        self.blame[message] = (author.id, author.guild.id)
 
     @asynccontextmanager
     async def edit(self, ctx: Context, delete: bool = True):
@@ -380,7 +286,7 @@ class EmbedBuilder(Cog):
                 thread=thread,
             )
         message.channel = ctx.channel
-        await self.write(message, author)
+        self.write(message, author)
         await ctx.message.delete()
 
     @embed.command(name="set")
@@ -423,7 +329,7 @@ class EmbedBuilder(Cog):
                         message.id, thread_id=thread_id
                     )
                     message.channel = channel
-                    await self.write(message, ctx.author)
+                    self.write(message, ctx.author)
                     await ctx.reply("Message has been set", delete_after=3)
                 except DiscordException:
                     await ctx.reply("Message can't be set", delete_after=3)
@@ -535,12 +441,7 @@ class EmbedBuilder(Cog):
         """
         if message := self.cache.pop((ctx.author.id, ctx.guild.id), None):
             del self.blame[message]
-            async with self.bot.database(raise_on_error=False) as session:
-                await session.execute(
-                    "DELETE FROM EMBED_BUILDER WHERE MESSAGE = $1;",
-                    message.id,
-                )
-                await ctx.reply("Removed stored embed.")
+            await ctx.reply("Removed stored embed.")
         else:
             await ctx.reply("No stored embed to remove.")
 

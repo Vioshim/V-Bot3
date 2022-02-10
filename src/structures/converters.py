@@ -30,14 +30,14 @@ from discord.ext.commands import (
 from discord.file import File
 
 from src.context.context import Context
-from src.structures.move import Move
-from src.structures.species import Species
 from src.structures.exceptions import (
     NoDateFound,
     NoImageFound,
     NoMoveFound,
     NoSpeciesFound,
 )
+from src.structures.move import Move
+from src.structures.species import Species
 from src.utils.matches import REGEX_URL
 
 
@@ -70,7 +70,7 @@ class MovesCall(Converter[Move]):
 
 
 class SpeciesCall(Converter[Species]):
-    async def convert(self, _: Context, argument: str) -> str:
+    async def convert(self, _: Context, argument: str) -> Species:
         """Function which converts to Species if possible
 
         Parameters

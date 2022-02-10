@@ -28,12 +28,19 @@ from discord import (
     Thread,
     WebhookMessage,
 )
-from discord.ext.commands import Cog, slash_command
+from discord.ext.commands import (
+    Cog,
+    Context,
+    command,
+    guild_only,
+    slash_command,
+)
 from discord.ui import Button, View
 
 from src.cogs.pokedex.search import default_species_autocomplete
 from src.cogs.submission.cog import oc_autocomplete
 from src.structures.bot import CustomBot
+from src.structures.converters import SpeciesCall
 from src.structures.species import Fusion, Species
 
 NPC = namedtuple("NPC", "name avatar")
@@ -48,8 +55,52 @@ class Proxy(Cog):
         self.npc_info: dict[NPCLog, int] = {}
         self.current: dict[int, NPC] = {}
 
-    @slash_command(guild_ids=[719343092963999804])
-    async def npc(
+    async def proxy_handler(
+        self,
+        npc: NPC,
+        message: Message,
+        text: str = None,
+    ):
+        webhook = await self.bot.webhook(message.channel, reason="NPC")
+        text = text or "\u200b"
+
+        data = dict(
+            username=npc.name,
+            avatar_url=npc.avatar,
+            content=text,
+            files=[await item.to_file() for item in message.attachments],
+            wait=True,
+        )
+
+        if reference := message.reference:
+            data["view"] = View(
+                Button(
+                    label="Replying to",
+                    url=reference.jump_url,
+                )
+            )
+
+        if isinstance(message.channel, Thread):
+            data["thread"] = message.channel
+
+        proxy_msg: WebhookMessage = await webhook.send(**data)
+        proxy_msg.channel = message.channel
+
+        item = NPCLog(
+            channel_id=message.channel.id,
+            message_id=proxy_msg.id,
+        )
+        self.npc_info[item] = message.author.id
+
+        self.bot.msg_cache.add(message.id)
+        with suppress(DiscordException):
+            if message.mentions:
+                await message.delete(delay=300)
+            else:
+                await message.delete()
+
+    @slash_command(name="npc", guild_ids=[719343092963999804])
+    async def slash_npc(
         self,
         ctx: ApplicationContext,
         pokemon: Option(
@@ -76,6 +127,21 @@ class Proxy(Cog):
             required=False,
         ),
     ):
+        """Slash command for NPC Narration
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            Context
+        pokemon : str, optional
+            Pokemon, by default None
+        shiny : bool, optional
+            if shiny, by default None
+        gender : str, optional
+            pronoun, by default None
+        character : str, optional
+            character id, by default None
+        """
         if (character or "").isdigit() and (
             oc := self.bot.get_cog("Submission").ocs.get(int(character))
         ):
@@ -123,48 +189,49 @@ class Proxy(Cog):
                 ephemeral=True,
             )
 
+    @command(name="npc")
+    @guild_only()
+    async def cmd_npc(
+        self,
+        ctx: Context,
+        pokemon: SpeciesCall,
+        text: str = None,
+    ):
+        """Command for NPCs
+
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        pokemon : SpeciesCall
+            Species
+        text : str, optional
+            Text, by default None
+        """
+        npc = NPC(name=f"NPC〕{pokemon.name}", avatar=pokemon.base_image)
+        await self.proxy_handler(
+            npc=npc,
+            message=ctx.message,
+            text=text,
+        )
+
     @Cog.listener()
     async def on_message(self, message: Message):
         member: Member = message.author
-        if not message.guild or member.bot:
+        if not message.guild or member.bot or member not in self.current:
             return
+
+        ctx = await self.bot.get_context(message)
+
+        if ctx.command:
+            return
+
         if npc := self.current.pop(member.id, None):
-            webhook = await self.bot.webhook(message.channel, reason="NPC")
-
-            data = dict(
-                username=npc.name,
-                avatar_url=npc.avatar,
-                content=message.content,
-                files=[await item.to_file() for item in message.attachments],
-                wait=True,
+            await self.proxy_handler(
+                npc=npc,
+                message=message,
+                text=message.content,
             )
-
-            if reference := message.reference:
-                data["view"] = View(
-                    Button(
-                        label="Replying to",
-                        url=reference.jump_url,
-                    )
-                )
-
-            if isinstance(message.channel, Thread):
-                data["thread"] = message.channel
-
-            proxy_msg: WebhookMessage = await webhook.send(**data)
-            proxy_msg.channel = message.channel
-
-            item = NPCLog(
-                channel_id=message.channel.id,
-                message_id=proxy_msg.id,
-            )
-            self.npc_info[item] = message.author.id
-
-            self.bot.msg_cache.add(message.id)
-            with suppress(DiscordException):
-                if message.mentions:
-                    await message.delete(delay=300)
-                else:
-                    await message.delete()
 
     @Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
