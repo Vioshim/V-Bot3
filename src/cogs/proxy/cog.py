@@ -219,7 +219,7 @@ class Proxy(Cog):
     @Cog.listener()
     async def on_message(self, message: Message):
         member: Member = message.author
-        if not message.guild or member.bot or member not in self.current:
+        if not message.guild or member.bot or member.id not in self.current:
             return
 
         ctx = await self.bot.get_context(message)
