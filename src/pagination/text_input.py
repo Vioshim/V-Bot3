@@ -81,6 +81,11 @@ class ModernInput(Basic):
         aux = ModernInput(**data)
         try:
             if origin:
+                if isinstance(origin, Interaction):
+                    resp: InteractionResponse = origin.response
+                    if not resp.is_done():
+                        await resp.pong()
+                    origin = await origin.original_message()
                 await origin.edit(
                     content=None,
                     embed=aux.embed,

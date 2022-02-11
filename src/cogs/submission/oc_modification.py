@@ -337,12 +337,11 @@ class NameMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
-        origin = await target.original_message()
         handler = text_view.handle(
             label="Write the character's Name.",
             placeholder="> oc.name",
             value=oc.name,
-            origin=origin,
+            origin=target,
             required=True,
         )
         async with handler as answer:
@@ -397,13 +396,12 @@ class AgeMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
-        origin = await target.original_message()
         age = str(oc.age) if oc.age else "Unknown"
         handler = text_view.handle(
             label="Write the character's Age.",
             placeholder=f"> {age}",
             value=age,
-            origin=origin,
+            origin=target,
             required=True,
         )
         async with handler as answer:
@@ -524,7 +522,6 @@ class BackstoryMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
-        origin = await target.original_message()
         backstory = (
             oc.backstory[:4000]
             if oc.backstory
@@ -534,7 +531,7 @@ class BackstoryMod(Mod):
             label="Write the character's Backstory.",
             style=InputTextStyle.paragraph,
             value=backstory,
-            origin=origin,
+            origin=target,
             required=False,
         )
         async with handler as answer:
@@ -589,7 +586,6 @@ class ExtraMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
-        origin = await target.original_message()
         extra = (
             oc.extra[:4000]
             if oc.extra
@@ -599,7 +595,7 @@ class ExtraMod(Mod):
             label="Write the character's Extra Information.",
             style=InputTextStyle.paragraph,
             value=extra,
-            origin=origin,
+            origin=target,
             required=False,
         )
         async with handler as answer:
