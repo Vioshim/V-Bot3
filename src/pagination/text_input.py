@@ -82,9 +82,6 @@ class ModernInput(Basic):
         try:
             if origin:
                 if isinstance(origin, Interaction):
-                    resp: InteractionResponse = origin.response
-                    if not resp.is_done():
-                        await resp.pong()
                     origin = await origin.original_message()
                 await origin.edit(
                     content=None,
@@ -216,3 +213,4 @@ class TextModal(Modal):
         self.view.text = self.children[0].value or ""
         await interaction.response.pong()
         await self.view.delete(force=True)
+        self.view.stop()
