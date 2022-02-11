@@ -859,6 +859,7 @@ class Submission(Cog):
             """
         ):
             mission = Mission(**dict(item))
+            ocs = set()
             if mission.id:
                 async for oc_item in db.cursor(
                     """--sql
@@ -873,11 +874,14 @@ class Submission(Cog):
                         oc_item["assigned_at"],
                     )
                     if oc := self.ocs.get(oc_id):
+                        ocs.add(oc.id)
                         self.mission_claimers.setdefault(mission.id, set())
                         self.mission_claimers[mission.id].add(oc.id)
                         date = self.mission_cooldown.get(oc.author, assigned_at)
                         if date <= assigned_at:
                             self.mission_cooldown[oc.author] = assigned_at
+
+            mission.ocs = frozenset(ocs)
 
             self.missions.add(mission)
         self.bot.logger.info("Finished loading claimed missions")
