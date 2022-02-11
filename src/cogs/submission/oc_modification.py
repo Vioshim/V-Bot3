@@ -20,6 +20,7 @@ from typing import Optional, Type, Union
 from discord import (
     ButtonStyle,
     DiscordException,
+    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
@@ -27,10 +28,10 @@ from discord import (
     Thread,
     User,
 )
-from discord.ui import Button, Select, View, button, select
+from discord.ui import Button, InputText, Select, View, button, select
 
 from src.pagination.complex import Complex, ComplexInput
-from src.pagination.text_input import TextInput
+from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
@@ -42,6 +43,8 @@ from src.utils.functions import int_check
 from src.views import ImageView
 
 __all__ = ("Modification", "ModifyView")
+
+DEFAULT_INFO_MSG = "If you need to write too much, I recommend to move to Google documents, otherwise, try to be concise."
 
 
 class SPView(Basic):
@@ -123,22 +126,30 @@ class SPView(Basic):
 
         message = await ctx.original_message()
 
-        text_view = TextInput(
+        text_view = ModernInput(
             bot=self.bot,
+            input_text=InputText(
+                placeholder=DEFAULT_INFO_MSG,
+                required=True,
+            ),
             member=self.member,
             target=ctx,
-            required=True,
-        )
-        text_view.embed.description = (
-            "If you need to write too much, "
-            "I recommend to move to Google documents, otherwise, try to be concise."
         )
 
         data: dict[str, str] = {}
 
         for item in SpAbility.__slots__:
+            if item == "name":
+                item_style = InputTextStyle.short
+            else:
+                item_style = InputTextStyle.long
             title = f"Write the Special Ability's {item.title()}"
-            async with text_view.handle(title=title, origin=message) as answer:
+            async with text_view.handle(
+                placeholder=DEFAULT_INFO_MSG,
+                style=item_style,
+                label=title,
+                origin=message,
+            ) as answer:
                 data[item] = answer
                 if not isinstance(answer, str):
                     break
@@ -166,44 +177,47 @@ class SPView(Basic):
             target=ctx,
             timeout=None,
             parser=lambda x: (
-                name := str(x).title(),
-                f"Modify Sp. Ability's {name}",
+                str(x).title(),
+                f"Modify Sp. Ability's {x}".title(),
             ),
             silent_mode=True,
         )
-        text_view = TextInput(
-            bot=self.bot,
-            member=self.member,
-            target=ctx,
-            required=True,
-        )
-        backup = asdict(self.oc.sp_ability)
-        text_view.embed.description = (
-            "If you need to write too much, "
-            "I recommend to move to Google documents, otherwise, try to be concise."
-        )
+
         async with view.send(
             title="Sp.Ability Modify", ephemeral=True
         ) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
+            text_view = ModernInput(
+                bot=self.bot,
+                member=self.member,
+                target=ctx,
+            )
+            backup = asdict(self.oc.sp_ability)
+
             msg = await ctx.original_message()
 
             for item in SpAbility.__slots__:
                 if item not in elements:
                     continue
-                title = f"Special Ability's {item}. Current Below".title()
-                description = backup.get(item)
+                if item == "name":
+                    item_style = InputTextStyle.short
+                else:
+                    item_style = InputTextStyle.long
+                title = f"Special Ability's {item}".title()
+                value: str = backup.get(item)
                 async with text_view.handle(
                     title=title,
-                    description=description,
+                    style=item_style,
+                    placeholder=DEFAULT_INFO_MSG,
+                    value=value,
                     origin=msg,
+                    required=True,
                 ) as answer:
-                    if not isinstance(answer, str):
+                    if not (answer and isinstance(answer, str)):
                         break
-                    elif answer:
-                        backup[item] = answer
+                    backup[item] = answer
 
             else:
                 self.oc.sp_ability = SpAbility(**backup)
@@ -322,12 +336,14 @@ class NameMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = TextInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(bot=bot, member=member, target=target)
         origin = await target.original_message()
         handler = text_view.handle(
-            title="Write the character's Name. Current below",
-            description=f"> {oc.name}",
+            label="Write the character's Name.",
+            placeholder="> oc.name",
+            value=oc.name,
             origin=origin,
+            required=True,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -380,16 +396,19 @@ class AgeMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = TextInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(bot=bot, member=member, target=target)
         origin = await target.original_message()
+        age = str(oc.age) if oc.age else "Unknown"
         handler = text_view.handle(
-            title="Write the character's Age. Current below",
-            description=f"> {oc.age or 'Unknown'}",
+            label="Write the character's Age.",
+            placeholder=f"> {age}",
+            value=age,
             origin=origin,
+            required=True,
         )
         async with handler as answer:
             if isinstance(answer, str):
-                oc.age = int_check(answer, 1, 99)
+                oc.age = int_check(answer, 13, 99)
                 return False
 
 
@@ -444,7 +463,7 @@ class PronounMod(Mod):
             target=target,
             timeout=None,
             values=Pronoun,
-            parser=lambda x: (name := x.name, f"Sets Pronoun as {name}"),
+            parser=lambda x: (x.name, f"Sets Pronoun as {x.name}"),
             sort_key=lambda x: x.name,
         )
         aux: Optional[bool] = None
@@ -504,12 +523,19 @@ class BackstoryMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = TextInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(bot=bot, member=member, target=target)
         origin = await target.original_message()
+        backstory = (
+            oc.backstory[:4000]
+            if oc.backstory
+            else "No backstory was provided."
+        )
         handler = text_view.handle(
-            title="Write the character's Backstory. Current below",
-            description=oc.backstory or "No backstory was provided.",
+            label="Write the character's Backstory.",
+            style=InputTextStyle.paragraph,
+            value=backstory,
             origin=origin,
+            required=False,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -562,12 +588,19 @@ class ExtraMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = TextInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(bot=bot, member=member, target=target)
         origin = await target.original_message()
+        extra = (
+            oc.extra[:4000]
+            if oc.extra
+            else "No Extra Information was provided."
+        )
         handler = text_view.handle(
-            title="Write the character's Extra information. Current below",
-            description=oc.extra or "No extra information was provided.",
+            label="Write the character's Extra Information.",
+            style=InputTextStyle.paragraph,
+            value=extra,
             origin=origin,
+            required=False,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -822,8 +855,6 @@ class EvolutionMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        species = oc.species
-
         origin = await target.original_message()
 
         if len(values := oc.species.species_evolves_to) == 1:
@@ -853,8 +884,8 @@ class EvolutionMod(Mod):
                 timeout=None,
                 target=target,
                 parser=lambda x: (
-                    name := "/".join(i.name for i in x).title(),
-                    f"Sets the typing to {name}",
+                    "/".join(i.name for i in x).title(),
+                    f"Sets the typing to {'/'.join(i.name for i in x).title()}",
                 ),
             )
             view.embed.title = "Select the Fusion's new typing"
@@ -941,8 +972,8 @@ class DevolutionMod(Mod):
                 timeout=None,
                 target=target,
                 parser=lambda x: (
-                    name := "/".join(i.name for i in x).title(),
-                    f"Sets the typing to {name}",
+                    "/".join(i.name for i in x).title(),
+                    f"Sets the typing to {'/'.join(i.name for i in x).title()}",
                 ),
             )
             view.embed.title = "Select the Fusion's new typing"

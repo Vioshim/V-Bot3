@@ -26,29 +26,30 @@ from discord import (
     User,
 )
 from discord.abc import Messageable
-from discord.ui import Button, button
+from discord.ui import Button, InputText, Modal, button
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
-from src.utils.functions import embed_modifier, text_check
+from src.utils.functions import text_check
 
-__all__ = ("TextInput",)
+__all__ = ("ModernInput", "TextModal")
 
 _M = TypeVar("_M", bound=Messageable)
+DEFAULT_MSG = "Alright, now write down the information."
 
 
-class TextInput(Basic):
+class ModernInput(Basic):
     def __init__(
         self,
         *,
         bot: CustomBot,
+        input_text: InputText = None,
         member: Union[Member, User],
         target: _M = None,
         timeout: Optional[float] = None,
         embed: Embed = None,
-        required: bool = False,
     ):
-        super(TextInput, self).__init__(
+        super(ModernInput, self).__init__(
             bot=bot,
             member=member,
             target=target,
@@ -56,24 +57,30 @@ class TextInput(Basic):
             embed=embed,
         )
         self.text: Optional[str] = None
-        self.aux: Optional[TextInput] = None
-        self.empty.disabled = required
+        self.input_text = input_text
+        if input_text:
+            self.embed.title = input_text.label or self.embed.title
+            self.embed.description = (
+                input_text.value
+                or input_text.placeholder
+                or self.embed.description
+            )
+            self.empty.disabled = input_text.required
+        else:
+            self.remove_item(self.confirm2)
 
     @asynccontextmanager
     async def handle(self, **kwargs):
         data = dict(
             bot=self.bot,
-            member=kwargs.get("member", self.member),
-            target=kwargs.get("target", self.target),
-            embed=kwargs.get("embed", self.embed),
-            required=kwargs.get("required", self.empty.disabled),
+            member=kwargs.pop("member", self.member),
+            target=kwargs.pop("target", self.target),
         )
-
-        data["embed"] = embed_modifier(data["embed"], **kwargs)
-
-        aux = TextInput(**data)
+        origin = kwargs.pop("origin", None)
+        data["input_text"] = InputText(**kwargs)
+        aux = ModernInput(**data)
         try:
-            if origin := kwargs.get("origin"):
+            if origin:
                 await origin.edit(
                     content=None,
                     embed=aux.embed,
@@ -102,7 +109,7 @@ class TextInput(Basic):
 
     @button(
         label="Proceed with Message",
-        style=ButtonStyle.green,
+        style=ButtonStyle.blurple,
         row=0,
     )
     async def confirm(
@@ -112,7 +119,7 @@ class TextInput(Basic):
     ):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(
-            content="Alright, now write down the information.",
+            content=DEFAULT_MSG,
             view=None,
         )
         try:
@@ -134,6 +141,21 @@ class TextInput(Basic):
             )
         finally:
             self.stop()
+
+    @button(
+        label="Proceed with Modal",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
+    async def confirm2(
+        self,
+        _: Button,
+        interaction: Interaction,
+    ):
+        resp: InteractionResponse = interaction.response
+        modal = TextModal(self)
+        modal.add_item(self.input_text)
+        await resp.send_modal(modal=modal)
 
     @button(
         label="Cancel the Process",
@@ -178,3 +200,14 @@ class TextInput(Basic):
             )
         finally:
             self.stop()
+
+
+class TextModal(Modal):
+    def __init__(self, view: ModernInput) -> None:
+        super().__init__(title=DEFAULT_MSG)
+        self.view = view
+
+    async def callback(self, interaction: Interaction):
+        self.view.text = self.children[0].value or ""
+        await interaction.response.pong()
+        await self.view.delete(force=True)

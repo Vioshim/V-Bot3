@@ -30,6 +30,7 @@ from discord import (
     Embed,
     Guild,
     HTTPException,
+    InputTextStyle,
     Interaction,
     Member,
     Message,
@@ -43,12 +44,7 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -62,15 +58,10 @@ from yaml.error import MarkedYAMLError
 from src.context import ApplicationContext, AutocompleteContext
 from src.pagination.boolean import BooleanView
 from src.pagination.complex import ComplexInput
-from src.pagination.text_input import TextInput
+from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -561,7 +552,7 @@ class Submission(Cog):
                 )
                 return
 
-            text_view = TextInput(bot=self.bot, member=user, target=ctx)
+            text_view = ModernInput(bot=self.bot, member=user, target=ctx)
 
             if not oc.moveset:
                 if not (movepool := species.movepool):
@@ -621,9 +612,16 @@ class Submission(Cog):
                     if answer:
                         data: dict[str, str] = {}
                         for item in SpAbility.__slots__:
+
+                            if item == "name":
+                                style = InputTextStyle.short
+                            else:
+                                style = InputTextStyle.paragraph
+
                             async with text_view.handle(
-                                title=f"Special Ability's {item.title()}",
-                                description=(
+                                label=f"Special Ability's {item.title()}",
+                                style=style,
+                                placeholder=(
                                     f"Here you'll define the Special Ability's {item.title()}, "
                                     "make sure it is actually understandable."
                                 ),
@@ -636,8 +634,9 @@ class Submission(Cog):
 
             if not oc.backstory:
                 async with text_view.handle(
-                    title="Character's Backstory",
-                    description=(
+                    label="Character's Backstory",
+                    style=InputTextStyle.paragraph,
+                    placeholder=(
                         "Don't worry about having to write too much, this is just a summary of information "
                         "that people can keep in mind when interacting with your character. You can provide "
                         "information about how they are, information of their past, or anything you'd like to add."
@@ -646,13 +645,13 @@ class Submission(Cog):
                 ) as text:
                     if text is None:
                         return
-                    if text:
-                        oc.backstory = text
+                    oc.backstory = text or None
 
             if not oc.extra:
                 async with text_view.handle(
-                    title="Character's extra information",
-                    description=(
+                    label="Character's extra information",
+                    style=InputTextStyle.paragraph,
+                    placeholder=(
                         "In this area, you can write down information you want people to consider when they are rping with them, "
                         "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
                         "or simply just writing down that your character has a goal in specific."
@@ -661,8 +660,7 @@ class Submission(Cog):
                 ) as text:
                     if text is None:
                         return
-                    if text:
-                        oc.extra = text
+                    oc.extra = text or None
 
             image_view = ImageView(
                 bot=self.bot,
@@ -904,34 +902,33 @@ class Submission(Cog):
                 await message.edit(view=view)
             except DiscordException:
                 if not (member := channel.guild.get_member(mission.author)):
-                    await mission.remove(db)
-                else:
-                    msg = await channel.send(
-                        content=member.mention,
-                        embed=mission.embed,
-                        view=view,
-                        allowed_mentions=AllowedMentions(users=True),
-                    )
-                    mission.msg_id = msg.id
-                    thread = await msg.create_thread(
-                        name=f"Mission {mission.id:03d}"
-                    )
-                    await thread.add_user(member)
-                    ocs = set(mission.ocs)
-                    for oc_id in mission.ocs:
-                        if oc := self.ocs.get(oc_id):
-                            await thread.send(
-                                f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
-                                view=View(
-                                    Button(label="Jump URL", url=oc.jump_url)
-                                ),
-                            )
-                        else:
-                            ocs.remove(oc_id)
-                    mission.ocs = frozenset(ocs)
+                    return await mission.remove(db)
+                msg = await channel.send(
+                    content=member.mention,
+                    embed=mission.embed,
+                    view=view,
+                    allowed_mentions=AllowedMentions(users=True),
+                )
+                mission.msg_id = msg.id
+                thread = await msg.create_thread(
+                    name=f"Mission {mission.id:03d}"
+                )
+                await thread.add_user(member)
+                ocs = set(mission.ocs)
+                for oc_id in mission.ocs:
+                    if oc := self.ocs.get(oc_id):
+                        await thread.send(
+                            f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
+                            view=View(
+                                Button(label="Jump URL", url=oc.jump_url)
+                            ),
+                        )
+                    else:
+                        ocs.remove(oc_id)
+                mission.ocs = frozenset(ocs)
 
-                    mission.msg_id = msg.id
-                    await mission.upsert(db)
+                mission.msg_id = msg.id
+                await mission.upsert(db)
 
         self.bot.logger.info("Finished loading mission views")
 

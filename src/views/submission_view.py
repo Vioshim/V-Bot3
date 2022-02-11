@@ -22,6 +22,7 @@ from discord import (
     CategoryChannel,
     DiscordException,
     Guild,
+    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
@@ -33,7 +34,7 @@ from yaml import dump
 
 from src.cogs.submission.oc_modification import ModifyView
 from src.pagination.complex import Complex, ComplexInput
-from src.pagination.text_input import TextInput
+from src.pagination.text_input import ModernInput
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mission import Mission
@@ -276,14 +277,16 @@ class SubmissionView(View):
         locations: list[CategoryChannel] = [
             guild.get_channel(item) for item in RP_CATEGORIES
         ]
+        member: Member = ctx.user
+        channel: TextChannel = ctx.channel
         view = ComplexInput(
             bot=self.bot,
-            member=ctx.user,
+            member=member,
             target=ctx,
             values=locations,
             parser=lambda x: (
-                name := x.name[2:].capitalize(),
-                f"Sets it at {name}",
+                x.name[2:].capitalize(),
+                f"Sets it at {x.name[2:].capitalize()}",
             ),
             emoji_parser=lambda x: x.name[0],
         )
@@ -294,7 +297,7 @@ class SubmissionView(View):
             view = ComplexInput(
                 bot=self.bot,
                 member=ctx.user,
-                target=ctx.channel,
+                target=channel,
                 values=[
                     item
                     for item in choice.channels
@@ -305,7 +308,7 @@ class SubmissionView(View):
                 ],
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
-                    desc[:50] if (desc := x.topic) else "No description.",
+                    x.topic[:50] if x.topic else "No description.",
                 ),
                 emoji_parser=lambda x: x.name[0],
             )
@@ -315,34 +318,37 @@ class SubmissionView(View):
                 if not area:
                     return
                 mission = Mission(author=author.id, place=area.id)
-                text_input = TextInput(
-                    bot=self.bot,
-                    member=ctx.user,
-                    target=ctx.channel,
-                    required=True,
+                text_input = ModernInput(
+                    bot=self.bot, member=member, target=channel
                 )
 
                 text: str
 
                 async with text_input.handle(
-                    title="Mission's Title",
-                    description="Small summary that will show in the top of the paper. (50 Characters)",
+                    style=InputTextStyle.short,
+                    label="Mission's Title",
+                    placeholder="Small summary that will show in the top of the paper.",
+                    max_length=50,
+                    required=True,
                 ) as text:
                     if not text:
                         return
                     mission.title = text.title()
 
                 async with text_input.handle(
-                    title="Mission's Description",
-                    description="In this area, specify what is the mission about, and describe whatever is needed.",
+                    style=InputTextStyle.paragraph,
+                    label="Mission's Description",
+                    placeholder="In this area, specify what is the mission about, and describe whatever is needed.",
+                    required=True,
                 ) as text:
                     if not text:
                         return
                     mission.description = text
 
                 async with text_input.handle(
-                    title="Mission's Max amount of joiners",
-                    description="If you want your missions to have a max amount of joiners (1-10), if you default then there will be no limit.",
+                    style=InputTextStyle.short,
+                    label="Mission's Max amount of joiners",
+                    placeholder="If you want your missions to have a max amount of joiners (1-10), if you default then there will be no limit.",
                     required=False,
                 ) as text:
                     if text is None:
@@ -350,16 +356,20 @@ class SubmissionView(View):
                     mission.max_amount = int_check(text, a=1, b=10)
 
                 async with text_input.handle(
-                    title="Mission's Target",
-                    description="Either be the one that you're looking for, or the item that is being searched.",
+                    style=InputTextStyle.short,
+                    label="Mission's Target",
+                    placeholder="Either be the one that you're looking for, or the item that is being searched.",
+                    required=True,
                 ) as text:
                     if not text:
                         return
                     mission.target = text
 
                 async with text_input.handle(
-                    title="Mission's Client",
-                    description="The one that is making the mission and possibly reward if done.",
+                    style=InputTextStyle.short,
+                    label="Mission's Client",
+                    placeholder="The one that is making the mission and possibly reward if done.",
+                    required=True,
                 ) as text:
                     if not text:
                         return
@@ -367,8 +377,8 @@ class SubmissionView(View):
 
                 view = Complex(
                     bot=self.bot,
-                    member=ctx.user,
-                    target=ctx.channel,
+                    member=member,
+                    target=channel,
                     values=range(1, 7),
                     emoji_parser=lambda x: DICE_NUMBERS[x - 1],
                     parser=lambda x: (str(x), f"Sets to {x} / 6"),

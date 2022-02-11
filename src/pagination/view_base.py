@@ -288,7 +288,7 @@ class Basic(Generic[_M], View):
             with suppress(DiscordException):
                 if message := self.message:
                     view = self.from_message(message)
-                    if force or view.children == self.children:
+                    if force or view.id == self.id:
                         await message.edit(view=None)
                 self.message = None
         finally:
@@ -299,7 +299,7 @@ class Basic(Generic[_M], View):
                 with suppress(DiscordException):
                     message = await target.original_message()
                     view = self.from_message(message)
-                    if force or view.children == self.children:
+                    if force or view.id == self.id:
                         await message.edit(view=None)
             self.message = None
             self.stop()

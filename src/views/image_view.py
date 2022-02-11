@@ -65,6 +65,7 @@ class ImageView(Basic):
             self.embed.set_image(url=default_img)
         elif isinstance(default_img, File):
             self.embed.set_image(url=f"attachment://{default_img.filename}")
+        self.embed.title = "Image"
         self.received: Optional[Message] = None
         self.text: Optional[str] = default_img
         self.default_image.disabled = not default_img
