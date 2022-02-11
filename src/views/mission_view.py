@@ -23,7 +23,7 @@ from discord import (
     Thread,
 )
 from discord.ui import Button, View, button
-from discord.utils import format_dt
+from discord.utils import format_dt, utcnow
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
@@ -105,7 +105,7 @@ class MissionView(View):
 
         if (time := self.mission_cooldown.get(member.id)) and (
             reference_time := time + timedelta(days=3)
-        ) >= datetime.now():
+        ) >= utcnow():
             time: str = format_dt(reference_time, style="R")
             await resp.send_message(
                 f"You are in cool down: {time}.",
