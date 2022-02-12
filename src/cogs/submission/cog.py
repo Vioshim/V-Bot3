@@ -44,7 +44,12 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -61,7 +66,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1122,7 +1132,8 @@ class Submission(Cog):
                 oc.author = author.id
                 oc.server = message.guild.id
                 await self.registration(ctx=message, oc=oc)
-                await message.delete()
+                with suppress(DiscordException):
+                    await message.delete()
             self.ignore.remove(message.author.id)
 
     async def on_message_submission(self, message: Message):
