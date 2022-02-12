@@ -208,7 +208,7 @@ class SPView(Basic):
                 title = f"Special Ability's {item}".title()
                 value: str = backup.get(item)
                 async with text_view.handle(
-                    title=title,
+                    label=title,
                     style=item_style,
                     placeholder=DEFAULT_INFO_MSG,
                     value=value,
