@@ -77,6 +77,8 @@ class ModernInput(Basic):
             target=kwargs.pop("target", self.target),
         )
         origin = kwargs.pop("origin", None)
+        if placeholder := kwargs.get("placeholder"):
+            kwargs["placeholder"] = placeholder[:100]
         data["input_text"] = InputText(**kwargs)
         aux = ModernInput(**data)
         try:

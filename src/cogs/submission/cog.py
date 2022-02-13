@@ -1134,7 +1134,7 @@ class Submission(Cog):
                 await self.registration(ctx=message, oc=oc)
                 with suppress(DiscordException):
                     await message.delete()
-            self.ignore.remove(message.author.id)
+        self.ignore -= {message.author.id}
 
     async def on_message_submission(self, message: Message):
         """This method processes character submissions

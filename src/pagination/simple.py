@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
 
 from discord import (
@@ -256,27 +257,21 @@ class Simple(Basic):
         modifying_embed : bool, optional
             if modifies it, defaults to False
         """
-        try:
-            if isinstance(page, int):
-                self._pos = page
-                self.menu_format()
-                data = dict(view=self)
-            else:
-                data = dict(view=None)
+        if isinstance(page, int):
+            self._pos = page
+            self.menu_format()
+            data = dict(view=self)
+        else:
+            data = dict(view=None)
 
-            if modifying_embed:
-                data["embed"] = self._embed
+        if modifying_embed:
+            data["embed"] = self._embed
 
+        with suppress(DiscordException):
             if message := self.message:
                 await message.edit(**data)
             elif isinstance(target := self.target, Interaction):
                 await target.edit_original_message(**data)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Exception while editing view %s",
-                repr(self.message),
-                exc_info=e,
-            )
 
     @button(
         emoji=":lasttrack:861938354609717258",
