@@ -197,7 +197,8 @@ class ModernInput(Basic):
                 content="Default Value has been chosen",
                 view=None,
             )
-            await self.message.delete(delay=1)
+            if message := self.message:
+                await message.delete(delay=1)
         except DiscordException as e:
             self.bot.logger.exception(
                 "Error deleting message",
