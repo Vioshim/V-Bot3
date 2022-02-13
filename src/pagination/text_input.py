@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from asyncio import Future, get_running_loop
 from contextlib import asynccontextmanager
 from typing import Optional, TypeVar, Union
 
@@ -157,10 +158,10 @@ class ModernInput(Basic):
         interaction: Interaction,
     ):
         resp: InteractionResponse = interaction.response
-        await resp.defer(ephemeral=True)
-        modal = TextModal(self)
-        modal.add_item(self.input_text)
+        modal = TextModal(self.input_text)
         await resp.send_modal(modal=modal)
+        await modal.wait()
+        self.text = modal.text
 
     @button(
         label="Cancel the Process",
@@ -209,15 +210,28 @@ class ModernInput(Basic):
 
 
 class TextModal(Modal):
-    def __init__(self, view: ModernInput) -> None:
-        super().__init__(title=DEFAULT_MSG)
-        self.view = view
+    def __init__(self, item: InputText) -> None:
+        super(TextModal, self).__init__(title=DEFAULT_MSG)
+        self.text: Optional[str] = None
+        self.add_item(item)
+        loop = get_running_loop()
+        self._stopped: Future[bool] = loop.create_future()
 
-    async def callback(self, interaction: Interaction):
-        self.view.text = self.children[0].value or ""
-        await interaction.followup.send(
-            "Parameter has been added.",
-            ephemeral=True,
+    async def callback(self, interaction: Interaction) -> None:
+        """Runs whenever the modal is closed."""
+        self.text = self.children[0].value or ""
+        # Stop the modal.
+        self.stop()
+        # Respond to the interaction.
+        await interaction.response.send_message(
+            "Parameter has been added.", ephemeral=True
         )
-        await self.view.delete(force=True)
-        self.view.stop()
+
+    def stop(self) -> None:
+        """Stops listening to interaction events from the modal."""
+        if not self._stopped.done():
+            self._stopped.set_result(True)
+
+    async def wait(self) -> bool:
+        """Waits for the modal to be closed."""
+        return await self._stopped
