@@ -157,6 +157,7 @@ class ModernInput(Basic):
         interaction: Interaction,
     ):
         resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True)
         modal = TextModal(self)
         modal.add_item(self.input_text)
         await resp.send_modal(modal=modal)
