@@ -215,6 +215,9 @@ class TextModal(Modal):
 
     async def callback(self, interaction: Interaction):
         self.view.text = self.children[0].value or ""
-        await interaction.response.pong()
+        await interaction.followup.send(
+            "Parameter has been added.",
+            ephemeral=True,
+        )
         await self.view.delete(force=True)
         self.view.stop()
