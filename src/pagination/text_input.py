@@ -162,6 +162,7 @@ class ModernInput(Basic):
         await resp.send_modal(modal=modal)
         await modal.wait()
         self.text = modal.text
+        self.stop()
 
     @button(
         label="Cancel the Process",
