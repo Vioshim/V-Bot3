@@ -84,6 +84,7 @@ RTFM_PAGES: dict[str, str] = {
     "uvloop": "https://uvloop.readthedocs.io/",
     "d20": "https://d20.readthedocs.io/en/latest/",
     "aiohttp": "https://docs.aiohttp.org/en/stable/",
+    "python-docx": "https://python-docx.readthedocs.io/en/latest/",
 }
 
 

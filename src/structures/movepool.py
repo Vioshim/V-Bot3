@@ -71,6 +71,7 @@ class Movepool:
         """
         elements = dict(
             level=len(self.level_moves),
+            tm=len(self.tm),
             event=len(self.event),
             tutor=len(self.tutor),
             egg=len(self.egg),
@@ -306,6 +307,8 @@ class Movepool:
             If the provided key is not found
         """
         match fix(key):
+            case "LEVEL":
+                return self.level_moves
             case "TM":
                 return self.tm
             case "EVENT":
@@ -370,10 +373,7 @@ class Movepool:
         """
         movepool = Movepool()
         for item in movepool.__slots__:
-            if item == "level":
-                movepool[item] = kwargs.get(item, {})
-            else:
-                movepool[item] = kwargs.get(item, set())
+            movepool[item] = kwargs.get(item, {} if item == "level" else set())
         return movepool
 
     @property
@@ -400,6 +400,41 @@ class Movepool:
                 List of move IDs
             """
             return sorted(move.id for move in moves)
+
+        return dict(
+            level={k: foo(v) for k, v in sorted(self.level.items())},
+            egg=foo(self.egg),
+            event=foo(self.event),
+            tm=foo(self.tm),
+            tutor=foo(self.tutor),
+            levelup=foo(self.levelup),
+            other=foo(self.other),
+        )
+
+    @property
+    def as_display_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:
+        """Returns a Movepool as dict with moves as strings
+
+        Returns
+        -------
+        dict[str, list[str] | dict[int, list[str]]]
+            generated values
+        """
+
+        def foo(moves: frozenset[Move]) -> list[str]:
+            """Inner method for conversion
+
+            Parameters
+            ----------
+            moves : frozenset[Move]
+                moves to convert
+
+            Returns
+            -------
+            list[str]
+                List of move Names
+            """
+            return sorted(move.name for move in moves)
 
         return dict(
             level={k: foo(v) for k, v in sorted(self.level.items())},

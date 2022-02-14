@@ -68,6 +68,37 @@ def type_autocomplete(ctx: AutocompleteContext):
     ]
 
 
+def item_name(mon: Character | Species):
+    if isinstance(mon, Species):
+        return mon.name
+    return mon.species.name
+
+
+def item_value(mon: Character | Species):
+    if isinstance(mon, Species):
+        return str(mon.id)
+    return str(mon.species.id)
+
+
+def fakemon_autocomplete(
+    ctx: AutocompleteContext,
+) -> list[OptionChoice]:
+    text: str = fix(ctx.value or "")
+    cog: Submission = ctx.bot.get_cog("Submission")
+    mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON"]
+
+    options = {
+        mon.species.name: item_value(mon)
+        for mon in sorted(mons, key=lambda x: x.species.name)
+    }
+
+    return [
+        OptionChoice(name=k, value=v)
+        for k, v in options.items()
+        if v in text or text in v
+    ]
+
+
 def species_autocomplete(
     ctx: AutocompleteContext,
 ) -> list[OptionChoice]:
@@ -115,17 +146,9 @@ def species_autocomplete(
     if move_id and (move := Move.from_ID(move_id)):
         mons = [i for i in mons if move in i.movepool]
 
-    def name(mon: Character | Species):
-        if isinstance(mon, Species):
-            return mon.name
-        return mon.species.name
-
-    def value(mon: Character | Species):
-        if isinstance(mon, Species):
-            return str(mon.id)
-        return str(mon.species.id)
-
-    options = {name(mon): value(mon) for mon in sorted(mons, key=name)}
+    options = {
+        item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
+    }
 
     return [
         OptionChoice(name=k, value=v)

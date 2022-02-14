@@ -16,9 +16,9 @@ from os import path
 from re import IGNORECASE, compile, escape
 from unicodedata import name as u_name
 
-from d20 import MarkdownStringifier, RollSyntaxError, roll
+from d20 import roll
 from d20.utils import simplify_expr
-from discord import Embed, HTTPException, Option, OptionChoice, slash_command
+from discord import Option, OptionChoice, slash_command
 from discord.commands.permissions import is_owner
 from discord.ext.commands import Cog, command
 
@@ -26,7 +26,7 @@ from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.context import ApplicationContext, Context
 from src.structures.bot import CustomBot
 from src.structures.move import Move
-from src.utils.etc import RTFM_PAGES, WHITE_BAR
+from src.utils.etc import RTFM_PAGES
 
 
 class Utilities(Cog):
@@ -98,7 +98,7 @@ class Utilities(Cog):
 
         return result
 
-    async def build_rtfm_lookup_table(self, RTFM_PAGES: dict[str, str]):
+    async def build_rtfm_lookup_table(self):
         cache = {}
         for key, page in RTFM_PAGES.items():
             async with self.bot.session.get(page + "/objects.inv") as resp:
@@ -118,24 +118,17 @@ class Utilities(Cog):
             return await ctx.send_followup(RTFM_PAGES[key])
 
         if not self._rtfm_cache:
-            await ctx.trigger_typing()
-            await self.build_rtfm_lookup_table(RTFM_PAGES)
+            await self.build_rtfm_lookup_table()
 
         cache = list(self._rtfm_cache[key].items())
 
-        self.matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)[
-            :8
-        ]
+        matches = self.finder(obj, cache, key=lambda t: t[0], lazy=False)
+        self.matches = matches[:8]
 
-        e = Embed(colour=0x05FFF0)
-        e.set_image(url=WHITE_BAR)
-        if len(self.matches) == 0:
-            return await ctx.send_followup("Could not find anything. Sorry.")
-
-        e.description = "\n".join(
-            f"[`{key}`]({url})" for key, url in self.matches
-        )
-        await ctx.send_followup(embed=e)
+        if text := "\n".join(f"[`{key}`]({url})" for key, url in self.matches):
+            await ctx.send_followup(text)
+        else:
+            await ctx.send_followup("Could not find anything. Sorry.")
 
     @command()
     async def charinfo(self, ctx: Context, *, characters: str):
@@ -191,7 +184,7 @@ class Utilities(Cog):
         ),
         query: str = None,
     ):
-        await ctx.defer()
+        await ctx.defer(ephemeral=True)
         if not key or key.lower() not in RTFM_PAGES:
             query = query or ""
             key = key or ""
@@ -227,7 +220,6 @@ class Utilities(Cog):
         try:
             value = roll(
                 expr=expression,
-                stringifier=MarkdownStringifier(),
                 allow_comments=True,
             )
             if len(result := value.result) >= 2000:

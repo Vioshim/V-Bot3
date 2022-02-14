@@ -32,6 +32,7 @@ from discord.utils import utcnow
 from src.cogs.pokedex.search import (
     ability_autocomplete,
     default_species_autocomplete,
+    fakemon_autocomplete,
     move_autocomplete,
     species_autocomplete,
     type_autocomplete,
@@ -42,10 +43,11 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, FusionCharacter
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
+from src.structures.movepool import Movepool
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
-from src.views import CharactersView
+from src.views import CharactersView, MovepoolView
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
 KINDS = [
@@ -66,6 +68,12 @@ OPERATORS = {
     ">=": lambda x, y: x >= y,
     ">": lambda x, y: x > y,
 }
+
+
+def foo(x: str) -> Optional[int]:
+    x = x.strip()
+    if x.isdigit():
+        return int(x)
 
 
 def age_parser(text: str, oc: Character):
@@ -89,11 +97,6 @@ def age_parser(text: str, oc: Character):
         item = item.strip()
         if item.isdigit():
             return int(item) == oc.age
-
-        def foo(x: str) -> Optional[int]:
-            x = x.strip()
-            if x.isdigit():
-                return int(x)
 
         op = [foo(x) for x in item.split("-")]
         if len(op) == 2 and all(op) and op[0] <= oc.age <= op[1]:
@@ -122,6 +125,63 @@ class Pokedex(Cog):
             Bot instance
         """
         self.bot = bot
+
+    @slash_command(guild_ids=[719343092963999804])
+    async def movepool(
+        self,
+        ctx: ApplicationContext,
+        species: Option(
+            str,
+            description="Species to look up info about.",
+            autocomplete=default_species_autocomplete,
+            required=False,
+        ),
+        fused: Option(
+            str,
+            description="To check when fused",
+            autocomplete=default_species_autocomplete,
+            required=False,
+        ),
+        fakemon: Option(
+            str,
+            description="Search Fakemon Species",
+            autocomplete=fakemon_autocomplete,
+            required=False,
+        ),
+    ):
+        fakemon: str = fakemon or ""
+        cog = ctx.bot.get_cog("Submission")
+        embed = Embed(
+            title="See Movepool",
+            color=ctx.user.color,
+            timestamp=utcnow(),
+        )
+        embed.set_image(url=WHITE_BAR)
+
+        if mon := Species.from_ID(species):
+            if mon2 := Species.from_ID(fused):
+                mon = Fusion(mon, mon2)
+                mon_types = mon.possible_types
+            else:
+                mon_types = [mon.types]
+
+            embed.title = f"See {mon.name}'s movepool"
+            movepool = mon.movepool
+            if info := "\n".join(
+                f"• {'/'.join(i.name for i in x)}"
+                for x in mon_types
+            ):
+                embed.add_field(name="Possible Types", value=info)
+        elif (
+            fakemon.isdigit() and (oc := cog.ocs.get(int(fakemon)))
+        ):
+            movepool = oc.movepool
+            embed.title = f"See {oc.species.name}'s movepool"
+        else:
+            movepool = Movepool()
+
+        view = MovepoolView(bot=self.bot, movepool=movepool)
+        await ctx.respond(embed=embed, view=view, ephemeral=True)
 
     @slash_command(guild_ids=[719343092963999804])
     async def find(
@@ -305,35 +365,6 @@ class Pokedex(Cog):
                     if isinstance(oc, FusionCharacter)
                     and fuse_mon in oc.species.bases
                 ]
-
-            movepool = mon.movepool
-            data = dict(
-                Level=movepool.level_moves,
-                Egg=movepool.egg,
-                Event=movepool.event,
-                TM=movepool.tm,
-                Tutor=movepool.tutor,
-                LevelUp=movepool.levelup,
-                Other=movepool.other,
-            )
-
-            if (
-                len(
-                    moves_description := "\n".join(
-                        f"{key} Moves: \n> {info}"
-                        for key, moves in data.items()
-                        if (info := ", ".join(m.name for m in moves))
-                    )
-                )
-                <= 2000
-            ):
-                embed.description = moves_description
-            else:
-                embed.description = "\n".join(
-                    f"{key} Moves: {len(moves)}"
-                    for key, moves in data.items()
-                    if moves
-                )
 
             embed.color = mon.color
 
