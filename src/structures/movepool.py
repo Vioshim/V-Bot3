@@ -554,7 +554,7 @@ class Movepool:
             learnset_elements.extend(
                 (
                     id,
-                    m.name,
+                    m.id,
                     level,
                 )
                 for m in values
@@ -565,7 +565,7 @@ class Movepool:
             movepool_elements.extend(
                 (
                     id,
-                    m.name,
+                    m.id,
                     key,
                 )
                 for m in value
