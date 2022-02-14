@@ -68,5 +68,5 @@ class MovepoolView(View):
         super(MovepoolView, self).__init__(timeout=timeout)
         self.bot = bot
         for item in movepool.__slots__:
-            btn = MovepoolButton(bot=bot, movepool=movepool[item], label=item)
+            btn = MovepoolButton(bot=bot, moves=movepool[item], label=item)
             self.add_item(btn)
