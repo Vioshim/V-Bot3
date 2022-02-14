@@ -168,13 +168,10 @@ class Pokedex(Cog):
             embed.title = f"See {mon.name}'s movepool"
             movepool = mon.movepool
             if info := "\n".join(
-                f"• {'/'.join(i.name for i in x)}"
-                for x in mon_types
+                f"• {'/'.join(i.name for i in x)}" for x in mon_types
             ):
                 embed.add_field(name="Possible Types", value=info)
-        elif (
-            fakemon.isdigit() and (oc := cog.ocs.get(int(fakemon)))
-        ):
+        elif fakemon.isdigit() and (oc := cog.ocs.get(int(fakemon))):
             movepool = oc.movepool
             embed.title = f"See {oc.species.name}'s movepool"
         else:

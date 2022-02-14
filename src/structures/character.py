@@ -1084,6 +1084,7 @@ class FakemonCharacter(Character):
                 )
                 mon = FakemonCharacter(**data)
                 await mon.retrieve(connection)
+                mon.movepool += Movepool(other=mon.moveset)
                 characters.append(mon)
 
         return characters
@@ -1442,7 +1443,7 @@ class FusionCharacter(Character):
 
         Returns
         -------
-        list[FakemonCharacter]
+        list[FusionCharacter]
             characters
         """
         characters: list[FusionCharacter] = []
