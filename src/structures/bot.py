@@ -68,11 +68,6 @@ class CustomBot(Bot):
         Dagpi client
     """
 
-    async def sync_commands(self) -> None:
-        """
-        Soon to be patched
-        """
-
     def __init__(
         self,
         scheduler: AsyncScheduler,
