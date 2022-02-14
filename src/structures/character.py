@@ -1084,7 +1084,7 @@ class FakemonCharacter(Character):
                 )
                 mon = FakemonCharacter(**data)
                 await mon.retrieve(connection)
-                mon.movepool += Movepool(other=mon.moveset)
+                mon.species.movepool += Movepool(other=mon.moveset)
                 characters.append(mon)
 
         return characters
