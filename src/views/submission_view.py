@@ -139,7 +139,7 @@ class TemplateView(View):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
-        modal = SubmissionModal(bot=self.bot, title=self.title)
+        modal = SubmissionModal(bot=self.bot)
         modal.add_item(
             InputText(
                 style=InputTextStyle.paragraph,
