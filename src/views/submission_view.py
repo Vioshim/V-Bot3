@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from asyncio import to_thread
 from contextlib import suppress
 from datetime import datetime
 from typing import Type, Union
@@ -29,17 +30,20 @@ from discord import (
     SelectOption,
     TextChannel,
 )
-from discord.ui import Button, Select, View, button, select
-from yaml import dump
+from discord.ui import Button, InputText, Modal, Select, View, button, select
+from jishaku.codeblocks import codeblock_converter
+from yaml import MarkedYAMLError, dump, safe_load
 
 from src.cogs.submission.oc_modification import ModifyView
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.text_input import ModernInput
 from src.structures.bot import CustomBot
-from src.structures.character import Character
+from src.structures.character import Character, doc_convert
 from src.structures.mission import Mission
+from src.utils.doc_reader import docs_reader
 from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
-from src.utils.functions import int_check
+from src.utils.functions import int_check, yaml_handler
+from src.utils.matches import G_DOCUMENT
 from src.views.mission_view import MissionView
 
 
@@ -85,14 +89,71 @@ class CharacterHandlerView(Complex):
             )
 
 
+class SubmissionModal(Modal):
+    def __init__(self, bot: CustomBot):
+        super().__init__(title="Character Submission Template")
+        self.bot = bot
+
+    async def callback(self, interaction: Interaction):
+        text: str = codeblock_converter(self.children[0].value or "").content
+        resp: InteractionResponse = interaction.response
+        try:
+            if doc_data := G_DOCUMENT.match(text):
+                doc = await to_thread(docs_reader, url := doc_data.group(1))
+                msg_data = doc_convert(doc)
+                url = (
+                    f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                )
+                msg_data["url"] = url
+            else:
+                text = yaml_handler(text)
+                msg_data = safe_load(text)
+
+            if isinstance(msg_data, dict):
+                cog = self.bot.get_cog("Submission")
+                await cog.submission_handler(interaction, **msg_data)
+            else:
+                await resp.send_message("Invalid submission", ephemeral=True)
+                return
+
+        except Exception as e:
+            await resp.send_message(f"{e}", ephemeral=True)
+
+
 class TemplateView(View):
-    def __init__(self, target: Interaction, template: dict):
+    def __init__(
+        self,
+        bot: CustomBot,
+        target: Interaction,
+        template: dict,
+        title: str,
+    ):
         super().__init__(timeout=None)
+        self.bot = bot
         self.target = target
         self.template = template
+        self.title = title
 
-    @button(label="Through Discord Message", row=0, style=ButtonStyle.blurple)
+    @button(label="Through Discord Modal", row=0, style=ButtonStyle.blurple)
     async def mode1(self, _: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        info = self.template.get("Template", {})
+        text = dump(info, sort_keys=False)
+        modal = SubmissionModal(bot=self.bot, title=self.title)
+        modal.add_item(
+            InputText(
+                style=InputTextStyle.paragraph,
+                label=self.title,
+                placeholder="Template or Google Document goes here",
+                value=text,
+                required=True,
+            )
+        )
+        self.stop()
+        await resp.send_modal(modal)
+
+    @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
+    async def mode2(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
@@ -103,8 +164,8 @@ class TemplateView(View):
         await resp.pong()
         self.stop()
 
-    @button(label="Through Google Documents", row=1, style=ButtonStyle.blurple)
-    async def mode2(self, _: Button, interaction: Interaction):
+    @button(label="Through Google Documents", row=2, style=ButtonStyle.blurple)
+    async def mode3(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
 
         content = (
@@ -189,8 +250,13 @@ class SubmissionView(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         if raw_data := ctx.data.get("values", []):
-            template = self.kwargs.get(raw_data[0], {})
-            view = TemplateView(target=ctx, template=template)
+            template = self.kwargs.get(title := raw_data[0], {})
+            view = TemplateView(
+                bot=self.bot,
+                target=ctx,
+                template=template,
+                title=title,
+            )
             await ctx.followup.send(
                 "__How do you want to register your character?__",
                 view=view,

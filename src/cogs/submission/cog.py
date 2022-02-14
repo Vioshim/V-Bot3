@@ -44,12 +44,7 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -66,12 +61,7 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    doc_convert,
-    fetch_all,
-    oc_process,
-)
+from src.structures.character import Character, doc_convert, fetch_all, oc_process
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1122,18 +1112,24 @@ class Submission(Cog):
 
     async def submission_handler(
         self,
-        message: Message,
+        message: Interaction | Message,
         **msg_data,
     ):
         if msg_data:
-            author = self.supporting.get(message.author, message.author)
-            self.ignore.add(message.author.id)
+            if isinstance(message, Interaction):
+                refer_author = message.user
+            else:
+                refer_author = message.author
+
+            author = self.supporting.get(refer_author, refer_author)
+            self.ignore.add(refer_author.id)
             if oc := oc_process(**msg_data):
                 oc.author = author.id
                 oc.server = message.guild.id
                 await self.registration(ctx=message, oc=oc)
-                with suppress(DiscordException):
-                    await message.delete()
+                if isinstance(message, Message):
+                    with suppress(DiscordException):
+                        await message.delete()
         self.ignore -= {message.author.id}
 
     async def on_message_submission(self, message: Message):
