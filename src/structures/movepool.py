@@ -489,13 +489,14 @@ class Movepool:
         )
         async for item in connection.cursor(
             """--sql
-                SELECT MOVE, METHOD
-                FROM FAKEMON_MOVEPOOL
-                WHERE FAKEMON = $1 AND METHOD != 'LEVEL';
-                """,
+            SELECT MOVE, METHOD
+            FROM FAKEMON_MOVEPOOL
+            WHERE FAKEMON = $1 AND METHOD != 'LEVEL';
+            """,
             id,
         ):
             move, method = item["move"], item["method"]
+            method: str = method.lower()
             items.setdefault(method, set())
             items[method].add(Move.from_ID(move))
 
