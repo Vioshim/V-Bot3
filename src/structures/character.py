@@ -1751,22 +1751,21 @@ def oc_process(**kwargs) -> Type[Character]:
         data["species"] = species
     else:
         print(data)
-        raise Exception(f"Unable to determine the species, value: {species}")
+        raise ValueError(f"Unable to determine the species, value: {species}, make sure you're using a recent template.")
 
     if species.banned:
-        raise Exception(f"The Species {species.name!r} is banned currently.")
+        raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if type_info := common_pop_get(data, "types", "type"):
-        if types := Typing.deduce_many(type_info):
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
-                species.types = types
-            elif species.types != types:
-                types_txt = "/".join(i.name for i in types)
-                species = Variant(
-                    base=species,
-                    name=f"{types_txt}-Typed {species.name}",
-                )
-                species.types = types
+    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
+        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            species.types = types
+        elif species.types != types:
+            types_txt = "/".join(i.name for i in types)
+            species = Variant(
+                base=species,
+                name=f"{types_txt}-Typed {species.name}",
+            )
+            species.types = types
 
     if ability_info := common_pop_get(data, "abilities", "ability"):
         if isinstance(ability_info, str):
