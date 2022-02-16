@@ -15,7 +15,12 @@
 from datetime import datetime
 
 from discord import AllowedMentions, Embed, Member, Role, TextChannel
-from discord.commands import ApplicationContext, Option, OptionChoice, slash_command
+from discord.commands import (
+    ApplicationContext,
+    Option,
+    OptionChoice,
+    slash_command,
+)
 from discord.ext.commands import Cog, has_role
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -43,6 +48,7 @@ class Roles(Cog):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
+        self.last_claimer: dict[int, int] = {}
 
     async def load(self, rpers: dict[int, dict[int, Character]]):
         self.bot.logger.info("Loading existing RP Searches")
@@ -69,20 +75,22 @@ class Roles(Cog):
                     if not (values := rpers.get(member.id, {}).values()):
                         continue
 
-                    if item := self.role_cool_down.get(role_id):
-                        if item < created_at:
-                            self.role_cool_down[role_id] = created_at
-                    else:
+                    if (
+                        item := self.role_cool_down.get(role_id, created_at)
+                    ) >= created_at:
                         self.role_cool_down[role_id] = created_at
+                        self.last_claimer[role_id] = member_id
 
-                    if item := self.cool_down.get(member_id):
-                        if item < created_at:
-                            self.cool_down[member_id] = created_at
-                    else:
+                    if (
+                        item := self.cool_down.get(member_id, created_at)
+                    ) >= created_at:
                         self.cool_down[member_id] = created_at
 
                     view = RoleManage(
-                        bot=self.bot, role=role, ocs=values, member=member
+                        bot=self.bot,
+                        role=role,
+                        ocs=values,
+                        member=member,
                     )
                     self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
@@ -114,10 +122,10 @@ class Roles(Cog):
             member: Member = ctx.user
         role: Role = ctx.guild.get_role(int(role_id))
         cog = self.bot.get_cog(name="Submission")
-        channel: TextChannel = ctx.channel
+
         await ctx.defer(ephemeral=True)
 
-        channel = self.bot.get_channel(722617383738540092)
+        channel: TextChannel = self.bot.get_channel(722617383738540092)
 
         ocs = cog.rpers.get(member.id, {}).values()
         view = RoleManage(self.bot, role, ocs, member)
@@ -131,20 +139,25 @@ class Roles(Cog):
         embed.set_thumbnail(url=member.display_avatar.url)
 
         if member != ctx.user:
-            if not channel.permissions_for(ctx.user).manage_messages:
-                embed.description = f"{member.display_name} is looking to RP with you, using their registered character(s)."
-                await channel.send(
-                    content=f"{member.mention} is being pinged by {ctx.user.mention}",
-                    embed=embed,
-                    allowed_mentions=AllowedMentions(users=True),
-                    view=view,
-                )
-                return
+            embed.description = f"{member.display_name} is looking to RP with you, using their registered character(s)."
+            await channel.send(
+                content=f"{member.mention} is being pinged by {ctx.user.mention}",
+                embed=embed,
+                allowed_mentions=AllowedMentions(users=True),
+                view=view,
+            )
+            return
 
         if role not in member.roles:
             await member.add_roles(role, reason="Rp Searching")
 
-        if hours((val := self.cool_down.get(member.id))) < 2:
+        if self.last_claimer.get(role.id) == member.id:
+            await ctx.send_followup(
+                f"You're the last user that pinged {role.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
+                ephemeral=True,
+            )
+            return
+        elif hours((val := self.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
             await ctx.send_followup(
                 "You're in cool down, you pinged one of the roles recently."
@@ -169,6 +182,7 @@ class Roles(Cog):
         )
         self.cool_down[member.id] = utcnow()
         self.role_cool_down[role.id] = utcnow()
+        self.last_claimer[role.id] = member.id
         view = View()
         view.add_item(Button(label="Jump URL", url=msg.jump_url))
 
@@ -214,6 +228,7 @@ class Roles(Cog):
                 bot=self.bot,
                 cool_down=self.cool_down,
                 role_cool_down=self.role_cool_down,
+                last_claimer=self.last_claimer,
             ),
             message_id=910915102490910740,
         )

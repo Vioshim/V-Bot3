@@ -543,6 +543,7 @@ class RoleView(View):
         bot: CustomBot,
         cool_down: dict[int, datetime],
         role_cool_down: dict[int, datetime],
+        last_claimer: dict[int, int],
     ):
         """Init Method
         Parameters
@@ -553,10 +554,13 @@ class RoleView(View):
             cool down per user
         role_cool_down: dict[int, datetime]
             cool down per role
+        last_claimer: dict[int, int]
+            user that last pinged
         """
         super().__init__(timeout=None)
-        self.cool_down: dict[int, datetime] = cool_down
-        self.role_cool_down: dict[int, datetime] = role_cool_down
+        self.cool_down = cool_down
+        self.role_cool_down = role_cool_down
+        self.last_claimer = last_claimer
         self.bot = bot
 
     async def process(self, btn: Button, ctx: Interaction):
@@ -630,6 +634,13 @@ class RoleView(View):
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
+        custom_id: int = int(interaction.data.get("custom_id"))
+        if self.last_claimer.get(custom_id) == interaction.user.id:
+            await resp.send_message(
+                f"You're the last user that pinged <@&{custom_id}>, no need to keep pinging, just ask in the RP planning and discuss.",
+                ephemeral=True,
+            )
+            return False
         if hours((val := self.cool_down.get(interaction.user.id))) < 2:
             s = 7200 - seconds(val)
             await resp.send_message(
@@ -638,7 +649,6 @@ class RoleView(View):
                 ephemeral=True,
             )
             return False
-        custom_id: int = int(interaction.data.get("custom_id"))
         if hours((val := self.role_cool_down.get(custom_id))) < 2:
             s = 7200 - seconds(val)
             await resp.send_message(
