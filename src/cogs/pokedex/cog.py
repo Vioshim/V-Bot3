@@ -317,13 +317,13 @@ class Pokedex(Cog):
         )
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
-        total: list[Character] = list(cog.ocs.values())
+        total: list[Character] = [
+            oc for oc in cog.ocs.values() if guild.get_member(oc.author)
+        ]
         if species.isdigit() and (oc := cog.ocs.get(int(species))):
             ocs = [oc]
         else:
             ocs = total
-
-        ocs = [oc for oc in ocs if guild.get_member(oc.author)]
 
         if name:
             pattern = compile(name, IGNORECASE)
