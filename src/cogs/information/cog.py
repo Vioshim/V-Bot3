@@ -14,6 +14,7 @@
 
 from contextlib import suppress
 from io import StringIO
+from typing import Optional
 
 from discord import (
     AllowedMentions,
@@ -26,6 +27,8 @@ from discord import (
     Member,
     Message,
     TextChannel,
+    Webhook,
+    WebhookMessage,
 )
 from discord.ext.commands import (
     CheckFailure,
@@ -63,6 +66,8 @@ class Information(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
+        self.log: Optional[Webhook] = None
+        self.info_msg: Optional[WebhookMessage] = None
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -118,22 +123,27 @@ class Information(Cog):
 
     async def member_count(self):
         """Function which updates the member count and the Information's view"""
-        webhook = await self.bot.fetch_webhook(860606374488047616)
-        guild = webhook.guild
+        if not self.info_msg:
+            return
+        guild = self.info_msg.guild
         members = len([m for m in guild.members if not m.bot])
         total = len(guild.members)
-        message = await webhook.fetch_message(913555643699458088)
-        embed = message.embeds[0]
-        data = {
-            "Members": members,
-            "Bots   ": total - members,
-            "Total  ": total,
-        }
-        text = ""
-        for key, value in data.items():
-            text += f"\n{key}: {value:03d}"
-        embed.description = f"```yaml{text}\n```"
-        await message.edit(embed=embed)
+        embed = self.info_msg.embeds[0].copy()
+        data: dict[str, int] = {}
+        if cog := self.bot.get_cog("Submission"):
+            ocs = [oc for oc in cog.ocs.values() if guild.get_member(oc.author)]
+            data["Characters"] = len(ocs)
+
+        data["Members   "] = members
+        data["Bots      "] = total - members
+        data["Total     "] = total
+
+        text = "\n".join(f"{key}: {value:03d}" for key, value in data.items())
+        text = f"```yaml\n{text}\n```"
+
+        if self.info_msg.embeds[0].description != text:
+            embed.description = text
+            await self.info_msg.edit(embed=embed)
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
@@ -142,7 +152,6 @@ class Information(Cog):
             with suppress(DiscordException):
                 await msg.delete()
         guild: Guild = member.guild
-        channel: TextChannel = guild.get_channel(719663963297808436)
         roles = member.roles[:0:-1]
         embed = Embed(
             title="Member Left - Roles",
@@ -151,9 +160,6 @@ class Information(Cog):
         )
         if text := "\n".join(f"> **•** {role.mention}" for role in roles):
             embed.description = text
-        embed.set_author(
-            name=member.display_name, icon_url=member.display_avatar.url
-        )
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
         if value := self.bot.get_cog("Submission").oc_list.get(member.id):
@@ -166,18 +172,24 @@ class Information(Cog):
         else:
             view = None
 
+        asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(
-            member.display_avatar.url,
+            asset.url,
             filename=str(member.id),
         ):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
-            await channel.send(file=file, embed=embed, view=view)
+            await self.log.send(
+                file=file,
+                embed=embed,
+                view=view,
+                username=member.display_name,
+                avatar_url=member.display_avatar.url,
+            )
 
     @Cog.listener()
     async def on_member_join(self, member: Member):
         await self.member_count()
         guild: Guild = member.guild
-        log: TextChannel = self.bot.get_channel(719663963297808436)
         welcome_channel: TextChannel = guild.get_channel(719343092963999807)
         if not welcome_channel:
             return
@@ -205,7 +217,9 @@ class Information(Cog):
                 )
             else:
                 view = View()
-            message = await log.send(embed=embed, file=file, view=view)
+            message = await self.log.send(
+                embed=embed, file=file, view=view, wait=True
+            )
             image = ImageKit(
                 base="welcome_TW8HUQOuU.png", weight=1920, height=1080
             )
@@ -254,7 +268,6 @@ class Information(Cog):
     async def on_member_update(self, past: Member, now: Member):
         if past.premium_since == now.premium_since:
             return
-        log: TextChannel = self.bot.get_channel(719663963297808436)
         if past.premium_since and not now.premium_since:
             embed = Embed(
                 title="Has un-boosted the Server!",
@@ -268,10 +281,11 @@ class Information(Cog):
                 timestamp=utcnow(),
             )
         embed.set_image(url=WHITE_BAR)
-        embed.set_thumbnail(url=now.display_avatar.url)
+        asset = now.display_avatar.replace(format="png", size=4096)
+        embed.set_thumbnail(url=asset.url)
         if guild := now.guild:
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        await log.send(content=now.mention, embed=embed)
+        await self.log.send(content=now.mention, embed=embed)
 
     @Cog.listener()
     async def on_bulk_message_delete(self, messages: list[Message]) -> None:
@@ -287,7 +301,6 @@ class Information(Cog):
             ids := set(item.id for item in messages) - self.bot.msg_cache
         ):
             messages = [message for message in messages if message.id in ids]
-            channel: TextChannel = self.bot.get_channel(719663963297808436)
             fp = StringIO()
             fp.write(dump(list(map(message_line, messages))))
             fp.seek(0)
@@ -299,16 +312,16 @@ class Information(Cog):
                 emoji, name = msg.channel.name.split("〛")
             except ValueError:
                 emoji, name = None, msg.channel.name
-            finally:
-                view = View(
-                    Button(
-                        emoji=emoji,
-                        label=name.replace("-", " ").title(),
-                        url=msg.jump_url,
-                    )
+
+            view = View(
+                Button(
+                    emoji=emoji,
+                    label=name.replace("-", " ").title(),
+                    url=msg.jump_url,
                 )
-                await channel.send(embeds=embed, files=file, view=view)
-                self.bot.msg_cache -= ids
+            )
+            await self.log.send(embeds=embed, files=file, view=view)
+            self.bot.msg_cache -= ids
 
     @Cog.listener()
     async def on_message_delete(self, ctx: Message) -> None:
@@ -336,7 +349,6 @@ class Information(Cog):
         if ctx.id in self.bot.msg_cache:
             self.bot.msg_cache.remove(ctx.id)
         else:
-            channel: TextChannel = self.bot.get_channel(719663963297808436)
             embed = Embed(
                 title="Message Deleted",
                 description=ctx.content,
@@ -344,10 +356,6 @@ class Information(Cog):
                 timestamp=utcnow(),
             )
             embed.set_image(url=WHITE_BAR)
-            embed.set_author(
-                name=user.display_name,
-                icon_url=user.display_avatar.url,
-            )
             text = f"Embeds: {len(ctx.embeds)}, Attachments: {len(ctx.attachments)}"
             embed.set_footer(text=text, icon_url=ctx.guild.icon.url)
             files = []
@@ -370,7 +378,14 @@ class Information(Cog):
                         url=ctx.jump_url,
                     )
                 )
-                await channel.send(embeds=embeds, files=files, view=view)
+                asset = user.display_avatar.replace(format="png", size=4096)
+                await self.log.send(
+                    embeds=embeds,
+                    files=files,
+                    view=view,
+                    username=user.display_avatar,
+                    avatar_url=asset.url,
+                )
 
     @Cog.listener()
     async def on_command(self, ctx: Context) -> None:
@@ -465,6 +480,9 @@ class Information(Cog):
             view = RegionView(bot=self.bot, cat_id=item.category)
             self.bot.add_view(view, message_id=item.message)
         await self.member_count()
+        self.log = await self.bot.fetch_webhook(943493074162700298)
+        w = await self.bot.fetch_webhook(860606374488047616)
+        self.info_msg = await w.fetch_message(913555643699458088)
 
 
 def setup(bot: CustomBot) -> None:
