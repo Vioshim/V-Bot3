@@ -378,13 +378,12 @@ class Information(Cog):
                         url=ctx.jump_url,
                     )
                 )
-                asset = user.display_avatar.replace(format="png", size=4096)
                 await self.log.send(
                     embeds=embeds,
                     files=files,
                     view=view,
                     username=user.display_avatar,
-                    avatar_url=asset.url,
+                    avatar_url=user.display_avatar.url,
                 )
 
     @Cog.listener()
