@@ -300,7 +300,13 @@ class Information(Cog):
             except ValueError:
                 emoji, name = None, msg.channel.name
             finally:
-                view = View(Button(emoji=emoji, label=name, url=msg.jump_url))
+                view = View(
+                    Button(
+                        emoji=emoji,
+                        label=name.replace("-", " ").title(),
+                        url=msg.jump_url,
+                    )
+                )
                 await channel.send(embeds=embed, files=file, view=view)
                 self.bot.msg_cache -= ids
 
@@ -357,7 +363,13 @@ class Information(Cog):
             except ValueError:
                 emoji, name = None, ctx.channel.name
             finally:
-                view = View(Button(emoji=emoji, label=name, url=ctx.jump_url))
+                view = View(
+                    Button(
+                        emoji=emoji,
+                        label=name.replace("-", " ").title(),
+                        url=ctx.jump_url,
+                    )
+                )
                 await channel.send(embeds=embeds, files=files, view=view)
 
     @Cog.listener()
