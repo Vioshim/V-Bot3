@@ -316,6 +316,7 @@ class Information(Cog):
             embed.set_image(url=WHITE_BAR)
             try:
                 emoji, name = msg.channel.name.split("〛")
+                emoji = emoji[0]
             except ValueError:
                 emoji, name = None, msg.channel.name
 
@@ -379,27 +380,28 @@ class Information(Cog):
                 emoji = emoji[0]
             except ValueError:
                 emoji, name = None, ctx.channel.name
-            finally:
-                view = View(
-                    Button(
-                        emoji=emoji,
-                        label=name.replace("-", " ").title(),
-                        url=ctx.jump_url,
-                    )
-                )
-                name: str = user.display_name
-                if user.bot and "〕" not in name:
-                    name = f"Bot〕{name}"
-                elif not user.bot:
-                    embed.title = f"Message Deleted (User: {user.id})"
 
-                await self.log.send(
-                    embeds=embeds,
-                    files=files,
-                    view=view,
-                    username=name,
-                    avatar_url=user.display_avatar.url,
+            view = View(
+                Button(
+                    emoji=emoji,
+                    label=name.replace("-", " ").title(),
+                    url=ctx.jump_url,
                 )
+            )
+
+            username: str = user.display_name
+            if user.bot and "〕" not in username:
+                name = f"Bot〕{username}"
+            elif not user.bot:
+                embed.title = f"Message Deleted (User: {user.id})"
+
+            await self.log.send(
+                embeds=embeds,
+                files=files,
+                view=view,
+                username=username,
+                avatar_url=user.display_avatar.url,
+            )
 
     @Cog.listener()
     async def on_command(self, ctx: Context) -> None:
