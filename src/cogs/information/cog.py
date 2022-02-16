@@ -382,7 +382,7 @@ class Information(Cog):
                     embeds=embeds,
                     files=files,
                     view=view,
-                    username=user.display_avatar,
+                    username=user.display_name,
                     avatar_url=user.display_avatar.url,
                 )
 
