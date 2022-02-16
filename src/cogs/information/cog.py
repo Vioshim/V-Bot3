@@ -340,6 +340,8 @@ class Information(Cog):
 
         if (
             not ctx.guild
+            or not self.log
+            or ctx.webhook_id == self.log.id
             or self.bot.user.id == user.id
             or user.id == self.bot.owner_id
             or user.id in self.bot.owner_ids
