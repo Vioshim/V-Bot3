@@ -378,11 +378,12 @@ class Information(Cog):
                         url=ctx.jump_url,
                     )
                 )
-                if user.bot:
-                    if "〕" not in (name := user.display_name):
-                        name = f"Bot〕{name}"
-                else:
-                    name = f"ID:{user.id}〕{user.display_name}"
+                name: str = user.display_name
+                if user.bot and "〕" not in name:
+                    name = f"Bot〕{name}"
+                elif not user.bot:
+                    embed.title = f"Message Deleted (User: {user.id})"
+
                 await self.log.send(
                     embeds=embeds,
                     files=files,
