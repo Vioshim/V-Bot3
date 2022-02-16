@@ -543,9 +543,8 @@ class Moderation(Cog):
         """
         message = message or ctx.message
         channel: TextChannel = ctx.channel
-        if ref := message.reference:
-            if isinstance(ref.resolved, Message):
-                message = ref.resolved
+        if (ref := message.reference) and isinstance(ref.resolved, Message):
+            message = ref.resolved
         async with ctx.typing():
             await ctx.message.delete()
             deleted = await channel.purge(limit=amount, after=message)

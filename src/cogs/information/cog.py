@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import suppress
+from io import StringIO
 
 from discord import (
     AllowedMentions,
@@ -155,12 +156,22 @@ class Information(Cog):
         )
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
+        if value := self.bot.get_cog("Submission").oc_list.get(member.id):
+            view = View(
+                Button(
+                    label="Characters",
+                    url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
+                )
+            )
+        else:
+            view = None
+
         if file := await self.bot.get_file(
             member.display_avatar.url,
             filename=str(member.id),
         ):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
-            await channel.send(file=file, embed=embed)
+            await channel.send(file=file, embed=embed, view=view)
 
     @Cog.listener()
     async def on_member_join(self, member: Member):
@@ -185,7 +196,16 @@ class Information(Cog):
                 name="Account Age",
                 value=format_dt(member.created_at, style="R"),
             )
-            message = await log.send(embed=embed, file=file)
+            if value := self.bot.get_cog("Submission").oc_list.get(member.id):
+                view = View(
+                    Button(
+                        label="User Characters",
+                        url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
+                    )
+                )
+            else:
+                view = View()
+            message = await log.send(embed=embed, file=file, view=view)
             image = ImageKit(
                 base="welcome_TW8HUQOuU.png", weight=1920, height=1080
             )
@@ -214,7 +234,6 @@ class Information(Cog):
                 embed.set_footer(text=guild.name, icon_url=guild.icon.url)
                 embed.set_image(url=f"attachment://{file.filename}")
 
-                view = View()
                 view.add_item(
                     Button(
                         label="See Information & Rules",
@@ -264,25 +283,26 @@ class Information(Cog):
             Messages that were deleted.
         """
         msg = messages[0]
-        ch: TextChannel = msg.channel
-        if not (guild := msg.guild):
-            return
-        if ids := set(item.id for item in messages) - self.bot.msg_cache:
+        if msg.guild and (
+            ids := set(item.id for item in messages) - self.bot.msg_cache
+        ):
             messages = [message for message in messages if message.id in ids]
             channel: TextChannel = self.bot.get_channel(719663963297808436)
-            from io import StringIO
-
             fp = StringIO()
-            fp.write(dump([message_line(item) for item in messages]))
+            fp.write(dump(list(map(message_line, messages))))
             fp.seek(0)
             file = File(fp=fp, filename="Bulk.yaml")
             embed = Embed(title="Bulk Message Delete", timestamp=utcnow())
+            embed.set_footer(text=f"Deleted {len(messages)} messages")
             embed.set_image(url=WHITE_BAR)
-            embed.add_field(name="Channel", value=ch.mention)
-            embed.add_field(name="Amount", value=f"{len(messages)} messages")
-            embed.set_author(name=guild.name, icon_url=guild.icon.url)
-            await channel.send(embed=embed, file=file)
-            self.bot.msg_cache -= ids
+            try:
+                emoji, name = msg.channel.name.split("〛")
+            except ValueError:
+                emoji, name = None, msg.channel.name
+            finally:
+                view = View(Button(emoji=emoji, label=name, url=msg.jump_url))
+                await channel.send(embeds=embed, files=file, view=view)
+                self.bot.msg_cache -= ids
 
     @Cog.listener()
     async def on_message_delete(self, ctx: Message) -> None:
@@ -317,31 +337,28 @@ class Information(Cog):
                 color=Color.blurple(),
                 timestamp=utcnow(),
             )
-            embeds: list[Embed] = ctx.embeds
             embed.set_image(url=WHITE_BAR)
-            if avatar := user.avatar:
-                embed.set_author(name=user.display_name, icon_url=avatar.url)
-            else:
-                embed.set_author(name=user.display_name)
-            embed.add_field(name="Channel", value=ctx.channel.mention)
-            embed.add_field(name="Embed", value=f"**{len(embeds)}**")
-            embed.add_field(
-                name="Attachments", value=f"**{len(ctx.attachments)}**"
+            embed.set_author(
+                name=user.display_name,
+                icon_url=user.display_avatar.url,
             )
-            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
+            text = f"Embeds: {len(ctx.embeds)}, Attachments: {len(ctx.attachments)}"
+            embed.set_footer(text=text, icon_url=ctx.guild.icon.url)
             files = []
             for item in ctx.attachments:
                 with suppress(HTTPException):
                     file = await item.to_file(use_cached=True)
                     files.append(file)
 
-            message = await channel.send(embed=embed, files=files)
-            for item in embeds:
-                if item.type != "gifv":
-                    await message.reply(embed=item)
-                else:
-                    embed.set_image(url=item.url)
-                    await message.reply(embed=embed)
+            embeds: list[Embed] = [embed] + ctx.embeds
+
+            try:
+                emoji, name = ctx.channel.name.split("〛")
+            except ValueError:
+                emoji, name = None, ctx.channel.name
+            finally:
+                view = View(Button(emoji=emoji, label=name, url=ctx.jump_url))
+                await channel.send(embeds=embeds, files=files, view=view)
 
     @Cog.listener()
     async def on_command(self, ctx: Context) -> None:

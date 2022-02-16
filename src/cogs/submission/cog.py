@@ -301,25 +301,19 @@ class Submission(Cog):
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
-            view = View()
-            view.add_item(
+            view = View(
                 Button(
                     label="Maps",
                     url="https://discord.com/channels/719343092963999804/812180282739392522/906430640898056222",
-                )
-            )
-            view.add_item(
+                ),
                 Button(
                     label="Story-lines",
                     url="https://discord.com/channels/719343092963999804/903627523911458816/",
-                )
-            )
-
-            view.add_item(
+                ),
                 Button(
                     label="RP Planning",
                     url="https://discord.com/channels/719343092963999804/722617383738540092/",
-                )
+                ),
             )
 
             with suppress(DiscordException):

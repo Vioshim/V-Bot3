@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from discord import AutocompleteContext, OptionChoice
+from discord import AutocompleteContext, Guild, OptionChoice
 
 from src.cogs.submission.cog import Submission
 from src.structures.ability import Ability
@@ -84,8 +84,13 @@ def fakemon_autocomplete(
     ctx: AutocompleteContext,
 ) -> list[OptionChoice]:
     text: str = fix(ctx.value or "")
+    guild: Guild = ctx.interaction.guild
     cog: Submission = ctx.bot.get_cog("Submission")
-    mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON"]
+    mons = [
+        oc
+        for oc in cog.ocs.values()
+        if oc.kind == "FAKEMON" and guild.get_member(oc.author)
+    ]
 
     options = {
         mon.species.name: item_value(mon)
@@ -104,6 +109,7 @@ def species_autocomplete(
 ) -> list[OptionChoice]:
     text: str = fix(ctx.value or "")
     cog: Submission = ctx.bot.get_cog("Submission")
+    guild: Guild = ctx.interaction.guild
     match fix(ctx.options.get("kind", "")):
         case "LEGENDARY":
             mons = Legendary.all()
@@ -116,13 +122,29 @@ def species_autocomplete(
         case "MEGA":
             mons = Mega.all()
         case "CUSTOMMEGA":
-            mons = [oc for oc in cog.ocs.values() if oc.kind == "CUSTOM MEGA"]
+            mons = [
+                oc
+                for oc in cog.ocs.values()
+                if oc.kind == "CUSTOM MEGA" and guild.get_member(oc.author)
+            ]
         case "FAKEMON":
-            mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON"]
+            mons = [
+                oc
+                for oc in cog.ocs.values()
+                if oc.kind == "FAKEMON" and guild.get_member(oc.author)
+            ]
         case "VARIANT":
-            mons = [oc for oc in cog.ocs.values() if oc.kind == "VARIANT"]
+            mons = [
+                oc
+                for oc in cog.ocs.values()
+                if oc.kind == "VARIANT" and guild.get_member(oc.author)
+            ]
         case "FUSION":
-            mons = [oc for oc in cog.ocs.values() if oc.kind == "FUSION"]
+            mons = [
+                oc
+                for oc in cog.ocs.values()
+                if oc.kind == "FUSION" and guild.get_member(oc.author)
+            ]
         case _:
             mons = Species.all()
 

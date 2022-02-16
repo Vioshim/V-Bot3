@@ -98,15 +98,22 @@ def age_parser(text: str, oc: Character):
         if item.isdigit():
             return int(item) == oc.age
 
-        op = [foo(x) for x in item.split("-")]
-        if len(op) == 2 and all(op) and op[0] <= oc.age <= op[1]:
+        if (
+            len(op := [foo(x) for x in item.split("-")]) == 2
+            and all(op)
+            and op[0] <= oc.age <= op[1]
+        ):
             return True
 
         for key, operator in OPERATORS.items():
-            op = [foo(x) for x in item.split(key)]
-            if len(op) == 2 and (
-                (isinstance(op[0], int) and operator(op[0], oc.age))
-                or (isinstance(op[1], int) and operator(oc.age, op[1]))
+            if (
+                len(op := [foo(x) for x in item.split(key)]) == 2
+                and any(op)
+                and (
+                    operator(op[0], oc.age)
+                    if isinstance(op[0], int)
+                    else operator(oc.age, op[1])
+                )
             ):
                 return True
 
@@ -315,6 +322,8 @@ class Pokedex(Cog):
             ocs = [oc]
         else:
             ocs = total
+
+        ocs = [oc for oc in ocs if guild.get_member(oc.author)]
 
         if name:
             pattern = compile(name, IGNORECASE)
