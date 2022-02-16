@@ -382,7 +382,7 @@ class Information(Cog):
                     embeds=embeds,
                     files=files,
                     view=view,
-                    username=user.display_name,
+                    username=f"{user.display_name} (ID:{user.id})",
                     avatar_url=user.display_avatar.url,
                 )
 

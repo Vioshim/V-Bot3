@@ -129,7 +129,7 @@ RP_SEARCH_ROLES = dict(
     Plot=744841357960544316,
     Casual=744841408539656272,
     Action=744842759004880976,
-    GameMaster=808730687753420821,
+    Narrated=808730687753420821,
 )
 
 
@@ -416,7 +416,7 @@ class RPSearchRoles(View):
                 emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
             ),
             SelectOption(
-                label="GameMaster",
+                label="Narrated",
                 description="Used for getting help with narration.",
                 value="808730687753420821",
                 emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
@@ -628,7 +628,7 @@ class RoleView(View):
     async def rp_search_4(self, btn: Button, interaction: Interaction):
         await self.process(btn, interaction)
 
-    @button(label="GameMaster", custom_id="808730687753420821")
+    @button(label="Narrated", custom_id="808730687753420821")
     async def rp_search_5(self, btn: Button, interaction: Interaction):
         await self.process(btn, interaction)
 
