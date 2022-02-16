@@ -376,6 +376,7 @@ class Information(Cog):
 
             try:
                 emoji, name = ctx.channel.name.split("〛")
+                emoji = emoji[0]
             except ValueError:
                 emoji, name = None, ctx.channel.name
             finally:
