@@ -297,10 +297,16 @@ class Information(Cog):
             Messages that were deleted.
         """
         msg = messages[0]
+        if not self.log:
+            return
         if msg.guild and (
             ids := set(item.id for item in messages) - self.bot.msg_cache
         ):
-            messages = [message for message in messages if message.id in ids]
+            messages = [
+                message
+                for message in messages
+                if message.id in ids or message.webhook_id != self.log.id
+            ]
             fp = StringIO()
             fp.write(dump(list(map(message_line, messages))))
             fp.seek(0)
