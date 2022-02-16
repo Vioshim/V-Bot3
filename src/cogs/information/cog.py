@@ -378,11 +378,16 @@ class Information(Cog):
                         url=ctx.jump_url,
                     )
                 )
+                if user.bot:
+                    if "〕" not in (name := user.display_name):
+                        name = f"Bot〕{name}"
+                else:
+                    name = f"ID:{user.id}〕{user.display_name}"
                 await self.log.send(
                     embeds=embeds,
                     files=files,
                     view=view,
-                    username=f"{user.display_name} (ID:{user.id})",
+                    username=name,
                     avatar_url=user.display_avatar.url,
                 )
 
