@@ -40,7 +40,7 @@ from src.cogs.roles.roles import (
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from utils.etc import WHITE_BAR
+from src.utils.etc import WHITE_BAR
 
 __all__ = ("Roles", "setup")
 

@@ -1822,7 +1822,7 @@ def doc_convert(doc: Document) -> dict[str, Any]:
         Info
     """
 
-    content_values = [
+    content_values: list[str] = [
         cell.text
         for table in doc.tables
         for row in table.rows

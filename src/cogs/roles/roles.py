@@ -32,8 +32,8 @@ from discord.utils import utcnow
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
+from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
-from utils.etc import WHITE_BAR
 
 __all__ = (
     "PronounRoles",
