@@ -25,7 +25,7 @@ from discord import (
     Member,
     Role,
     SelectOption,
-    TextChannel,
+    Webhook,
 )
 from discord.ui import Button, Select, View, button, select
 from discord.utils import utcnow
@@ -33,6 +33,7 @@ from discord.utils import utcnow
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.views.characters_view import CharactersView
+from utils.etc import WHITE_BAR
 
 __all__ = (
     "PronounRoles",
@@ -535,36 +536,26 @@ class RoleManage(View):
                 )
 
 
-class RoleView(View):
-    __slots__ = ("cool_down", "role_time", "bot", "last_claimer")
-
+class RoleButton(Button):
     def __init__(
         self,
         bot: CustomBot,
+        webhook: Webhook,
         cool_down: dict[int, datetime],
         role_cool_down: dict[int, datetime],
         last_claimer: dict[int, int],
+        label: str,
+        custom_id: str,
     ):
-        """Init Method
-        Parameters
-        ----------
-        bot: CustomBot
-            Bot
-        cool_down: dict[int, datetime]
-            cool down per user
-        role_cool_down: dict[int, datetime]
-            cool down per role
-        last_claimer: dict[int, int]
-            user that last pinged
-        """
-        super().__init__(timeout=None)
+        super().__init__(label=label, custom_id=custom_id)
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
+        self.webhook = webhook
         self.bot = bot
 
-    async def process(self, btn: Button, ctx: Interaction):
-        role: Role = ctx.guild.get_role(int(btn.custom_id))
+    async def callback(self, ctx: Interaction):
+        role: Role = ctx.guild.get_role(int(self.custom_id))
         member: Member = ctx.user
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
@@ -573,31 +564,29 @@ class RoleView(View):
             await member.add_roles(role, reason="RP searching")
 
         cog = self.bot.get_cog(name="Submission")
-        channel: TextChannel = self.bot.get_channel(722617383738540092)
-
         characters = cog.rpers.get(member.id, {}).values()
         view = RoleManage(self.bot, role, characters, member)
-
         embed = Embed(
             title=role.name,
-            color=ctx.user.color,
-            description=f"{ctx.user.display_name} is looking "
+            color=member.color,
+            description=f"{member.display_name} is looking "
             "to RP with their registered character(s).",
             timestamp=utcnow(),
         )
-        embed.set_thumbnail(url=ctx.user.display_avatar.url)
-        msg = await channel.send(
-            content=f"{role.mention} is being pinged by {ctx.user.mention}",
+        embed.set_image(url=WHITE_BAR)
+        msg = await self.webhook.send(
+            content=f"{role.mention} is being pinged by {member.mention}",
             embed=embed,
             allowed_mentions=AllowedMentions(roles=True, users=True),
             view=view,
+            username=member.display_name,
+            avatar_url=member.display_avatar.url,
+            wait=True,
         )
         self.cool_down[member.id] = utcnow()
         self.role_cool_down[role.id] = utcnow()
-
-        view = View()
-        view.add_item(Button(label="Jump URL", url=msg.jump_url))
-
+        self.last_claimer[role.id] = member.id
+        view = View(Button(label="Jump URL", url=msg.jump_url))
         async with self.bot.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
@@ -612,32 +601,40 @@ class RoleView(View):
                 ephemeral=True,
             )
 
-    @button(label="Any", custom_id="744841294869823578")
-    async def rp_search_1(self, btn: Button, interaction: Interaction):
-        await self.process(btn, interaction)
 
-    @button(label="Plot", custom_id="744841357960544316")
-    async def rp_search_2(self, btn: Button, interaction: Interaction):
-        await self.process(btn, interaction)
-
-    @button(label="Casual", custom_id="744841408539656272")
-    async def rp_search_3(self, btn: Button, interaction: Interaction):
-        await self.process(btn, interaction)
-
-    @button(label="Action", custom_id="744842759004880976")
-    async def rp_search_4(self, btn: Button, interaction: Interaction):
-        await self.process(btn, interaction)
-
-    @button(label="Narrated", custom_id="808730687753420821")
-    async def rp_search_5(self, btn: Button, interaction: Interaction):
-        await self.process(btn, interaction)
+class RoleView(View):
+    def __init__(
+        self,
+        bot: CustomBot,
+        webhook: Webhook,
+        cool_down: dict[int, datetime],
+        role_cool_down: dict[int, datetime],
+        last_claimer: dict[int, int],
+    ):
+        buttons = [
+            RoleButton(
+                bot=bot,
+                webhook=webhook,
+                cool_down=cool_down,
+                role_cool_down=role_cool_down,
+                last_claimer=last_claimer,
+                label=k,
+                custom_id=str(v),
+            )
+            for k, v in RP_SEARCH_ROLES.items()
+        ]
+        super().__init__(*buttons, timeout=None)
+        self.cool_down = cool_down
+        self.role_cool_down = role_cool_down
+        self.last_claimer = last_claimer
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         custom_id: int = int(interaction.data.get("custom_id"))
+        role: Role = interaction.guild.get_role(custom_id)
         if self.last_claimer.get(custom_id) == interaction.user.id:
             await resp.send_message(
-                f"You're the last user that pinged <@&{custom_id}>, no need to keep pinging, just ask in the RP planning and discuss.",
+                f"You're the last user that pinged {role.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
             return False
@@ -652,7 +649,7 @@ class RoleView(View):
         if hours((val := self.role_cool_down.get(custom_id))) < 2:
             s = 7200 - seconds(val)
             await resp.send_message(
-                f"<@&{custom_id}> is in cool down, check the latest ping at <#722617383738540092>."
+                f"{role.mention} is in cool down, check the latest ping at <#722617383738540092>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )

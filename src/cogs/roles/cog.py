@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from datetime import datetime
+from typing import Optional
 
-from discord import AllowedMentions, Embed, Member, Role, TextChannel
+from discord import AllowedMentions, Embed, Member, Role, Webhook
 from discord.commands import (
     ApplicationContext,
     Option,
@@ -39,6 +40,7 @@ from src.cogs.roles.roles import (
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character
+from utils.etc import WHITE_BAR
 
 __all__ = ("Roles", "setup")
 
@@ -49,6 +51,7 @@ class Roles(Cog):
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
         self.last_claimer: dict[int, int] = {}
+        self.webhook: Optional[Webhook] = None
 
     async def load(self, rpers: dict[int, dict[int, Character]]):
         self.bot.logger.info("Loading existing RP Searches")
@@ -120,12 +123,16 @@ class Roles(Cog):
     ):
         if not member:
             member: Member = ctx.user
+        if not self.webhook:
+            await ctx.respond(
+                "Bot is restarting, have patience.",
+                ephemeral=True,
+            )
+            return
         role: Role = ctx.guild.get_role(int(role_id))
         cog = self.bot.get_cog(name="Submission")
 
         await ctx.defer(ephemeral=True)
-
-        channel: TextChannel = self.bot.get_channel(722617383738540092)
 
         ocs = cog.rpers.get(member.id, {}).values()
         view = RoleManage(self.bot, role, ocs, member)
@@ -136,15 +143,17 @@ class Roles(Cog):
             description=f"{member.display_name} is looking to RP with their registered character(s).",
             timestamp=utcnow(),
         )
-        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_image(url=WHITE_BAR)
 
         if member != ctx.user:
-            embed.description = f"{member.display_name} is looking to RP with you, using their registered character(s)."
-            await channel.send(
+            embed.description = f"{ctx.user.display_name} is looking to RP with you, using their registered character(s)."
+            await self.webhook.send(
                 content=f"{member.mention} is being pinged by {ctx.user.mention}",
                 embed=embed,
                 allowed_mentions=AllowedMentions(users=True),
                 view=view,
+                username=ctx.user.display_name,
+                avatar_url=ctx.user.url,
             )
             return
 
@@ -174,17 +183,19 @@ class Roles(Cog):
             )
             return
 
-        msg = await channel.send(
+        msg = await self.webhook.send(
             content=f"{role.mention} is being pinged by {member.mention}",
             embed=embed,
             allowed_mentions=AllowedMentions(roles=True, users=True),
             view=view,
+            username=member.display_name,
+            avatar_url=member.default_avatar.url,
+            wait=True,
         )
         self.cool_down[member.id] = utcnow()
         self.role_cool_down[role.id] = utcnow()
         self.last_claimer[role.id] = member.id
-        view = View()
-        view.add_item(Button(label="Jump URL", url=msg.jump_url))
+        view = View(Button(label="Jump URL", url=msg.jump_url))
 
         async with self.bot.database() as db:
             await db.execute(
@@ -207,6 +218,7 @@ class Roles(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the views"""
+        self.webhook = await self.bot.fetch_webhook(857145983379832832)
         self.bot.add_view(
             view=PronounRoles(timeout=None),
             message_id=916482734933811232,
@@ -227,6 +239,7 @@ class Roles(Cog):
             view=RoleView(
                 bot=self.bot,
                 cool_down=self.cool_down,
+                webhook=self.webhook,
                 role_cool_down=self.role_cool_down,
                 last_claimer=self.last_claimer,
             ),

@@ -82,6 +82,7 @@ from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES, WHITE_BAR
 from src.utils.functions import yaml_handler
 from src.utils.matches import G_DOCUMENT
 from src.views import (
+    AbilityView,
     CharactersView,
     ImageView,
     MissionView,
@@ -217,6 +218,52 @@ class Submission(Cog):
         else:
             await ctx.send_followup(
                 "This message does not include moves.",
+                ephemeral=True,
+            )
+
+    @message_command(
+        guild_ids=[719343092963999804],
+        name="Read Abilities",
+    )
+    async def abilities_checker(
+        self, ctx: ApplicationContext, message: Message
+    ):
+        await ctx.defer(ephemeral=True)
+        abilities: list[Ability | SpAbility] = []
+        if oc := self.ocs.get(message.id):
+            if sp_ability := oc.sp_ability:
+                abilities.append(sp_ability)
+            abilities.extend(oc.abilities)
+        elif text := message.content:
+            abilities.extend(
+                move
+                for move in Ability.all()
+                if move.name in text.title() or move.id in text.upper()
+            )
+            abilities.extend(
+                sp
+                for x in self.ocs.values()
+                if (sp := x.sp_ability) and sp.name in text.title()
+            )
+
+        if abilities:
+            abilities.sort(key=lambda x: x.name)
+            view = AbilityView(
+                bot=self.bot,
+                member=ctx.author,
+                abilities=abilities,
+                target=ctx.interaction,
+                keep_working=True,
+            )
+            async with view.send(ephemeral=True):
+                self.bot.logger.info(
+                    "User %s is reading the abilities at %s",
+                    str(ctx.author),
+                    message.jump_url,
+                )
+        else:
+            await ctx.send_followup(
+                "This message does not include abilities.",
                 ephemeral=True,
             )
 

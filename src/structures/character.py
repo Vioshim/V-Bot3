@@ -67,6 +67,12 @@ __all__ = (
     "oc_process",
 )
 
+FETCH_QUERY = """--sql
+SELECT C.*, PC.SPECIES
+FROM POKEMON_CHARACTER PC, CHARACTER C
+WHERE C.ID = PC.ID and C.kind = $1;
+"""
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class Character(metaclass=ABCMeta):
@@ -86,7 +92,7 @@ class Character(metaclass=ABCMeta):
     url: Optional[str] = None
     image: Optional[str] = None
     location: Optional[int] = None
-    created_at: datetime = None
+    created_at: Optional[datetime] = None
 
     def __post_init__(self):
         if not self.server:
@@ -614,14 +620,7 @@ class PokemonCharacter(Character):
             characters
         """
         characters: list[PokemonCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "COMMON",
-        ):
+        async for item in connection.cursor(FETCH_QUERY, "COMMON"):
             data = dict(item)
             data.pop("kind", None)
             species_id = data.pop("species", None)
@@ -713,14 +712,7 @@ class LegendaryCharacter(Character):
             characters
         """
         characters: list[LegendaryCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "LEGENDARY",
-        ):
+        async for item in connection.cursor(FETCH_QUERY, "LEGENDARY"):
             data = dict(item)
             data.pop("kind", None)
             if species := Legendary.from_ID(data.pop("species", None)):
@@ -811,14 +803,7 @@ class MythicalCharacter(Character):
             characters
         """
         characters: list[MythicalCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "MYTHICAL",
-        ):
+        async for item in connection.cursor(FETCH_QUERY, "MYTHICAL"):
             data = dict(item)
             data.pop("kind", None)
             if species := Mythical.from_ID(data.pop("species", None)):
@@ -907,14 +892,7 @@ class UltraBeastCharacter(Character):
             characters
         """
         characters: list[UltraBeastCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "ULTRA BEAST",
-        ):
+        async for item in connection.cursor(FETCH_QUERY, "ULTRA BEAST"):
             data = dict(item)
             data.pop("kind", None)
             if species := UltraBeast.from_ID(data.pop("species", None)):
@@ -1549,14 +1527,7 @@ class MegaCharacter(Character):
             characters
         """
         characters: list[MegaCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "MEGA",
-        ):
+        async for item in connection.cursor(FETCH_QUERY, "MEGA"):
             data = dict(item)
             data.pop("kind", None)
             if species := Mega.from_ID(data.pop("species", None)):
@@ -1751,12 +1722,16 @@ def oc_process(**kwargs) -> Type[Character]:
         data["species"] = species
     else:
         print(data)
-        raise ValueError(f"Unable to determine the species, value: {species}, make sure you're using a recent template.")
+        raise ValueError(
+            f"Unable to determine the species, value: {species}, make sure you're using a recent template."
+        )
 
     if species.banned:
         raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
+    if (type_info := common_pop_get(data, "types", "type")) and (
+        types := Typing.deduce_many(type_info)
+    ):
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.types = types
         elif species.types != types:

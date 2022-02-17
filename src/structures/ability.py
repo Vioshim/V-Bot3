@@ -22,6 +22,7 @@ from re import split
 from typing import Any, Optional
 
 from asyncpg import Connection, Record
+from discord import Embed
 from frozendict import frozendict
 
 from src.utils.functions import fix
@@ -59,6 +60,24 @@ class Ability:
             string representing the ability
         """
         return f"Ability(name={self.name!r})"
+
+    @property
+    def embed(self) -> Embed:
+        """Generated Embed
+
+        Returns
+        -------
+        Embed
+            Embed
+        """
+        embed = Embed(title=self.name, description=self.description)
+        if battle := self.battle:
+            embed.add_field(name="In Battle", value=battle, inline=False)
+        if outside := self.outside:
+            embed.add_field(name="Out of Battle", value=outside, inline=False)
+        if random_fact := self.random_fact:
+            embed.add_field(name="Random Fact", value=random_fact, inline=False)
+        return embed
 
     @classmethod
     def all(cls) -> frozenset[Ability]:
@@ -170,6 +189,26 @@ class SpAbility:
 
     def __repr__(self) -> str:
         return f"SPAbility(name={self.name})"
+
+    @property
+    def embed(self) -> Embed:
+        """Generated Embed
+
+        Returns
+        -------
+        Embed
+            Embed
+        """
+        embed = Embed(title=self.name, description=self.description)
+        if origin := self.origin:
+            embed.add_field(name="Origin", value=origin[:1024], inline=False)
+        if pros := self.pros:
+            embed.add_field(name="Pros", value=pros[:1024], inline=False)
+        if cons := self.cons:
+            embed.add_field(name="Cons", value=cons[:1024], inline=False)
+        if len(embed) >= 6000 and embed.description:
+            embed.description = embed.description[:2000]
+        return embed
 
     @classmethod
     def convert(cls, record: Record) -> SpAbility:
