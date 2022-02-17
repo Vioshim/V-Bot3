@@ -32,7 +32,7 @@ from discord import (
 )
 from discord.ui import Button, InputText, Modal, Select, View, button, select
 from jishaku.codeblocks import codeblock_converter
-from yaml import MarkedYAMLError, dump, safe_load
+from yaml import dump, safe_load
 
 from src.cogs.submission.oc_modification import ModifyView
 from src.pagination.complex import Complex, ComplexInput
@@ -313,7 +313,10 @@ class SubmissionView(View):
             )
 
             view.embed.title = "Select Character to modify"
-            view.embed.set_thumbnail(url=member.display_avatar.url)
+            view.embed.set_author(
+                name=member.display_name,
+                icon_url=member.display_avatar.url,
+            )
 
             oc: Type[Character]
             async with view.send(single=True) as oc:

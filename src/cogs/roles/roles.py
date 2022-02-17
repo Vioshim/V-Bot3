@@ -523,8 +523,10 @@ class RoleManage(View):
             keep_working=True,
         )
         embed = view.embed
-        embed.set_author(name=self.member.display_name)
-        embed.set_thumbnail(url=self.member.display_avatar.with_size(4096).url)
+        embed.set_author(
+            name=self.member.display_name,
+            icon_url=self.member.display_avatar.url,
+        )
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
                 self.bot.logger.info(

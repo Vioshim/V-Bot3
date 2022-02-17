@@ -294,8 +294,10 @@ class Submission(Cog):
             )
             embed = view.embed
             embed.color = member.color
-            embed.set_author(name=member.display_name)
-            embed.set_thumbnail(url=member.display_avatar.url)
+            embed.set_author(
+                name=member.display_name,
+                icon_url=member.display_avatar.url,
+            )
             async with view.send(ephemeral=True):
                 self.bot.logger.info(
                     "User %s is reading the OCs of %s",
@@ -815,8 +817,10 @@ class Submission(Cog):
             )
             embed = view.embed
             embed.color = member.color
-            embed.set_author(name=member.display_name)
-            embed.set_thumbnail(url=member.display_avatar.url)
+            embed.set_author(
+                name=member.display_name,
+                icon_url=member.display_avatar.url,
+            )
             async with view.send(ephemeral=True):
                 if member == ctx.author:
                     self.bot.logger.info(
