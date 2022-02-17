@@ -26,6 +26,8 @@ from discord import (
     HTTPException,
     Member,
     Message,
+    RawBulkMessageDeleteEvent,
+    RawMessageDeleteEvent,
     TextChannel,
     Webhook,
     WebhookMessage,
@@ -155,6 +157,7 @@ class Information(Cog):
         roles = member.roles[:0:-1]
         embed = Embed(
             title="Member Left - Roles",
+            description="The user did not have any roles.",
             color=Color.red(),
             timestamp=utcnow(),
         )
@@ -162,15 +165,14 @@ class Information(Cog):
             embed.description = text
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
+        view = View()
         if value := self.bot.get_cog("Submission").oc_list.get(member.id):
-            view = View(
+            view.add_item(
                 Button(
                     label="Characters",
                     url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                 )
             )
-        else:
-            view = None
 
         asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(
@@ -288,7 +290,9 @@ class Information(Cog):
         await self.log.send(content=now.mention, embed=embed)
 
     @Cog.listener()
-    async def on_bulk_message_delete(self, messages: list[Message]) -> None:
+    async def on_bulk_message_delete(
+        self, payload: RawBulkMessageDeleteEvent
+    ) -> None:
         """This coroutine triggers upon bulk message deletions. YAML Format to Myst.bin
 
         Parameters
@@ -296,17 +300,15 @@ class Information(Cog):
         messages: list[Message]
             Messages that were deleted.
         """
-        msg = messages[0]
-        if not self.log:
+        if not (self.log and payload.guild_id):
             return
-        if msg.guild and (
-            ids := set(item.id for item in messages) - self.bot.msg_cache
-        ):
-            messages = [
-                message
-                for message in messages
-                if message.id in ids or message.webhook_id != self.log.id
-            ]
+        if messages := [
+            message
+            for message in payload.cached_messages
+            if message.id not in self.bot.msg_cache
+            and message.webhook_id != self.log.id
+        ]:
+            msg = messages[0]
             fp = StringIO()
             fp.write(dump(list(map(message_line, messages))))
             fp.seek(0)
@@ -328,21 +330,25 @@ class Information(Cog):
                 )
             )
             await self.log.send(embeds=embed, files=file, view=view)
-            self.bot.msg_cache -= ids
+
+        self.bot.msg_cache -= payload.message_ids
 
     @Cog.listener()
-    async def on_message_delete(self, ctx: Message) -> None:
+    async def on_raw_message_delete(
+        self,
+        payload: RawMessageDeleteEvent,
+    ) -> None:
         """Message deleted detection
 
         Parameters
         ----------
-        ctx: Message
-            Deleted Message
-
-        Returns
-        -------
-
+        payload: RawMessageDeleteEvent
+            Deleted Message Event
         """
+        if not (ctx := payload.cached_message):
+            self.bot.msg_cache -= {payload.message_id}
+            return
+
         user: Member = ctx.author
 
         if (
@@ -373,7 +379,8 @@ class Information(Cog):
                     file = await item.to_file(use_cached=True)
                     files.append(file)
 
-            embeds: list[Embed] = [embed] + ctx.embeds
+            embeds: list[Embed] = [embed]
+            embeds.extend(ctx.embeds)
 
             try:
                 emoji, name = ctx.channel.name.split("〛")
