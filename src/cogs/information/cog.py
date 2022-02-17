@@ -290,10 +290,10 @@ class Information(Cog):
         await self.log.send(content=now.mention, embed=embed)
 
     @Cog.listener()
-    async def on_bulk_message_delete(
+    async def on_raw_bulk_message_delete(
         self, payload: RawBulkMessageDeleteEvent
     ) -> None:
-        """This coroutine triggers upon bulk message deletions. YAML Format to Myst.bin
+        """This coroutine triggers upon raw bulk message deletions. YAML Format to Myst.bin
 
         Parameters
         ----------
