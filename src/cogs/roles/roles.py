@@ -536,7 +536,7 @@ class RoleManage(View):
 
 
 class RoleView(View):
-    __slots__ = ("cool_down", "role_time", "bot")
+    __slots__ = ("cool_down", "role_time", "bot", "last_claimer")
 
     def __init__(
         self,
