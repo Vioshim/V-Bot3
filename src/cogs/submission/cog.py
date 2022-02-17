@@ -236,14 +236,14 @@ class Submission(Cog):
             abilities.extend(oc.abilities)
         elif text := message.content:
             abilities.extend(
-                move
-                for move in Ability.all()
-                if move.name in text.title() or move.id in text.upper()
+                ab
+                for ab in Ability.all()
+                if ab.name in text.title() or ab.id in text.upper()
             )
             abilities.extend(
                 sp
                 for x in self.ocs.values()
-                if (sp := x.sp_ability) and sp.name in text.title()
+                if (sp := x.sp_ability) and sp.name.lower() in text.lower()
             )
 
         if abilities:
