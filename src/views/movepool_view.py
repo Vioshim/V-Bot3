@@ -24,7 +24,6 @@ from discord import (
     TextChannel,
 )
 from discord.ui import Button, InputText, Modal, View, button
-from pyaml import dump
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
@@ -59,9 +58,9 @@ class MovepoolModal(Modal):
                 placeholder="1: Move, Move\n2: Move, Move",
                 required=False,
                 value="\n".join(
-                    f"{k}: {foo}"
+                    f"{k}: {', '.join(v)}"
                     for k, v in data.get("level", {}).items()
-                    if (foo := ", ".join(v))
+                    if v
                 ),
             )
         )
@@ -150,9 +149,11 @@ class MovepoolView(Basic):
         for key, value in oc.movepool.as_display_dict.items():
 
             if isinstance(value, dict):
-                value = {k: ", ".join(v) for k, v in value.items() if v}
+                value = [f"{k}: {', '.join(v)}" for k, v in value.items() if v]
+            else:
+                value = [f"- {i}" for i in value]
 
-            if value and (text := dump(value)):
+            if text := "\n".join(value):
                 self.embed.add_field(
                     name=f"{key.title()} Moves",
                     value=f"```yaml\n{text[:1000]}\n```",
