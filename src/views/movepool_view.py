@@ -147,7 +147,7 @@ class MovepoolView(Basic):
         self.oc = oc
         self.embed.title = f"Modify Movepool for {oc.name}"
         self.embed.clear_fields()
-        for key, value in oc.movepool.as_dict.items():
+        for key, value in oc.movepool.as_display_dict.items():
             if value and (text := dump(value)):
                 self.embed.add_field(
                     name=f"{key.title()} Moves",
