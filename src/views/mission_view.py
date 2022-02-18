@@ -174,6 +174,7 @@ class MissionView(View):
                     self.mission.msg_id
                 )
                 await thread.edit(
+                    archived=False,
                     locked=True,
                     reason=f"{member} concluded the mission.",
                 )
