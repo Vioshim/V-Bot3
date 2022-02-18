@@ -862,7 +862,7 @@ class MovepoolMod(Mod):
             Bool If Updatable, None if cancelled
         """
         origin = await target.original_message()
-        view = MovepoolView(oc)
+        view = MovepoolView(bot, target, member, oc)
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
