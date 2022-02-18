@@ -44,12 +44,7 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -68,6 +63,7 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import (
     Character,
+    FakemonCharacter,
     doc_convert,
     fetch_all,
     oc_process,
@@ -86,6 +82,7 @@ from src.views import (
     CharactersView,
     ImageView,
     MissionView,
+    MovepoolView,
     MoveView,
     PingView,
     RPView,
@@ -607,11 +604,23 @@ class Submission(Cog):
 
             text_view = ModernInput(bot=self.bot, member=user, target=ctx)
 
+            if (
+                isinstance(species := oc.species, Variant)
+                and oc.movepool == species.base.movepool
+            ) or isinstance(oc, FakemonCharacter):
+                view = MovepoolView(
+                    bot=self.bot,
+                    target=ctx,
+                    member=member,
+                    oc=oc,
+                )
+                await view.send()
+                await view.wait()
+                species = oc.species
+
             if not oc.moveset:
                 if not (movepool := species.movepool):
-                    movepool = Movepool(
-                        event=[m for m in Move.all() if not m.banned]
-                    )
+                    movepool = Movepool(event=Move.all())
 
                 moves_view = ComplexInput(
                     bot=self.bot,

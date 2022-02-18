@@ -47,7 +47,7 @@ from src.structures.movepool import Movepool
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
-from src.views import CharactersView, MovepoolView
+from src.views import CharactersView, MovepoolViewSelector
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
 KINDS = [
@@ -184,7 +184,7 @@ class Pokedex(Cog):
         else:
             movepool = Movepool()
 
-        view = MovepoolView(bot=self.bot, movepool=movepool)
+        view = MovepoolViewSelector(bot=self.bot, movepool=movepool)
         await ctx.respond(embed=embed, view=view, ephemeral=True)
 
     @slash_command(guild_ids=[719343092963999804])

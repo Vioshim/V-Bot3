@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from asyncio import Future, get_running_loop
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Optional, Type, Union
@@ -21,7 +20,6 @@ from typing import Optional, Type, Union
 from discord import (
     ButtonStyle,
     DiscordException,
-    Embed,
     InputTextStyle,
     Interaction,
     InteractionResponse,
@@ -30,22 +28,23 @@ from discord import (
     Thread,
     User,
 )
-from discord.ui import Button, InputText, Modal, Select, View, button, select
-from pyaml import dump
+from discord.ui import Button, InputText, Select, View, button, select
 
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, FakemonCharacter, VariantCharacter
+from src.structures.character import (
+    Character,
+    FakemonCharacter,
+    VariantCharacter,
+)
 from src.structures.move import ALL_MOVES
-from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
-from src.utils.etc import WHITE_BAR
-from src.utils.functions import int_check, yaml_handler
-from src.views import ImageView
+from src.utils.functions import int_check
+from src.views import ImageView, MovepoolView
 
 __all__ = ("Modification", "ModifyView")
 
@@ -862,126 +861,9 @@ class MovepoolMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        PLACEHOLDER = "Move, Move, Move"
-        movepool: Movepool = oc.movepool
-
         origin = await target.original_message()
-
-        class MovepoolModal(Modal):
-            def __init__(self, *children) -> None:
-                super().__init__(title=f"Movepool for {oc.name}")
-                for item in children:
-                    self.add_item(item)
-                loop = get_running_loop()
-                self._stopped: Future[bool] = loop.create_future()
-
-            def stop(self) -> None:
-                if not self._stopped.done():
-                    self._stopped.set_result(True)
-
-            async def wait(self) -> bool:
-                return await self._stopped
-
-            async def callback(self, interaction: Interaction):
-                resp: InteractionResponse = interaction.response
-                if not isinstance(oc, (VariantCharacter, FakemonCharacter)):
-                    await resp.send_message(
-                        "Movepool can't be changed for the Species.",
-                        ephemeral=True,
-                    )
-                    return
-
-                kwargs = {}
-                for item in self.children:
-                    key = item.label.lower().removesuffix(" moves")
-                    if value := yaml_handler(item.value):
-                        kwargs[key] = value
-
-                movepool = Movepool.from_dict(**kwargs)
-
-                oc.species.movepool = movepool
-                oc.moveset &= frozenset(movepool())
-
-                await resp.send_message(
-                    "Movepool has been changed.", ephemeral=True
-                )
-
-        data = movepool.as_display_dict
-        modal = MovepoolModal(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Level Moves",
-                placeholder="1: Move, Move\n2: Move, Move",
-                required=False,
-                value="\n".join(
-                    f"{k}: {foo}"
-                    for k, v in data.get("level", {}).items()
-                    if (foo := ", ".join(v))
-                ),
-            ),
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="TM Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("tm", [])),
-            ),
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Tutor Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("tutor", [])),
-            ),
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Egg Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("egg", [])),
-            ),
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Event Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("event", [])),
-            ),
-        )
-
-        embed = Embed(
-            title=f"Modify Movepool for {oc.name}",
-            color=member.color,
-        )
-        embed.set_image(url=WHITE_BAR)
-
-        for key, value in data.items():
-            if value and (text := dump(value)):
-                embed.add_field(
-                    name=f"{key.title()} Moves",
-                    value=f"```yaml\n{text[:1000]}\n```",
-                )
-
-        class MovepoolView(View):
-            @button(label="Modify Movepool (Modal)")
-            async def modify(self, _: Button, ctx: Interaction):
-                resp: InteractionResponse = ctx.response
-                await resp.send_modal(modal)
-                await modal.wait()
-                self.stop()
-
-            @button(label="Not modify")
-            async def cancel(self, _: Button, ctx: Interaction):
-                resp: InteractionResponse = ctx.response
-                await resp.send_message(
-                    "Keeping current movepool",
-                    ephemeral=True,
-                )
-                self.stop()
-
-        view = MovepoolView(timeout=None)
-
-        await origin.edit(content=None, embed=embed, view=view)
+        view = MovepoolView(oc)
+        await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
         return False
