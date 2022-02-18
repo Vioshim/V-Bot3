@@ -138,14 +138,14 @@ class TemplateView(View):
     async def mode1(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
-        text = dump(info, sort_keys=False)
+        text: str = dump(info, sort_keys=False)
         modal = SubmissionModal(bot=self.bot)
         modal.add_item(
             InputText(
                 style=InputTextStyle.paragraph,
                 label=self.title,
                 placeholder="Template or Google Document goes here",
-                value=text,
+                value=text.strip(),
                 required=True,
             )
         )
