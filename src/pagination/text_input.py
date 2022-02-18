@@ -80,15 +80,19 @@ class ModernInput(Basic):
         origin = kwargs.pop("origin", None)
         if placeholder := kwargs.get("placeholder"):
             kwargs["placeholder"] = placeholder[:100]
-        data["input_text"] = InputText(**kwargs)
+        data["input_text"] = input_text = InputText(**kwargs)
         aux = ModernInput(**data)
+        embed = aux.embed
+        embed.description = (
+            input_text.value or placeholder or self.embed.description
+        )
         try:
             if origin:
                 if isinstance(origin, Interaction):
                     origin = await origin.original_message()
                 await origin.edit(
                     content=None,
-                    embed=aux.embed,
+                    embed=embed,
                     view=aux,
                 )
                 await aux.wait()
