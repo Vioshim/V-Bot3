@@ -44,7 +44,12 @@ from discord import (
     User,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -480,7 +485,7 @@ class Submission(Cog):
             )
             return
 
-        user = ctx.author
+        user = ctx.author if isinstance(ctx, Message) else ctx.user
 
         if isinstance(ctx, Message):
 
