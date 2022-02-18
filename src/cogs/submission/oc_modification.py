@@ -21,6 +21,7 @@ from typing import Optional, Type, Union
 from discord import (
     ButtonStyle,
     DiscordException,
+    Embed,
     InputTextStyle,
     Interaction,
     InteractionResponse,
@@ -46,6 +47,7 @@ from src.structures.move import ALL_MOVES
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
+from src.utils.etc import WHITE_BAR
 from src.utils.functions import int_check, yaml_handler
 from src.views import ImageView
 
@@ -661,7 +663,7 @@ class MovesetMod(Mod):
         view = ComplexInput(
             bot=bot,
             member=member,
-            values=(item for item in moves if not item.banned),
+            values=moves,
             timeout=None,
             target=target,
             max_values=6,
@@ -951,19 +953,14 @@ class MovepoolMod(Mod):
             ),
         )
 
+        text = (dump(data) if data else "") or "No Movepool provided"
+
         class MovepoolView(View):
             @button(label="Modify Movepool (Modal)")
             async def modify(self, _: Button, ctx: Interaction):
                 resp: InteractionResponse = ctx.response
                 await resp.send_modal(modal)
                 await modal.wait()
-                self.stop()
-
-            @button(label="View Current")
-            async def view(self, _: Button, ctx: Interaction):
-                resp: InteractionResponse = ctx.response
-                text = (dump(data) if data else "") or "No Movepool provided"
-                await resp.send_message(f"```yaml\n{text}\n```", ephemeral=True)
                 self.stop()
 
             @button(label="Not modify")
@@ -976,8 +973,17 @@ class MovepoolMod(Mod):
                 self.stop()
 
         view = MovepoolView(timeout=None)
-        await origin.edit(view=view)
+
+        embed = Embed(
+            title=f"Modify Movepool for {oc.name}",
+            description=f"```yaml\n{text[:3900]}\n```",
+            color=member.color,
+        )
+        embed.set_image(url=WHITE_BAR)
+
+        await origin.edit(content=None, embed=embed, view=view)
         await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
         return False
 
 
