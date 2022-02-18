@@ -43,14 +43,10 @@ from discord import (
     TextChannel,
     Thread,
     User,
+    Webhook,
     WebhookMessage,
 )
-from discord.commands import (
-    has_role,
-    message_command,
-    slash_command,
-    user_command,
-)
+from discord.commands import has_role, message_command, slash_command, user_command
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -80,7 +76,7 @@ from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.doc_reader import docs_reader
-from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES, WHITE_BAR
+from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES
 from src.utils.functions import yaml_handler
 from src.utils.matches import G_DOCUMENT
 from src.views import (
@@ -174,6 +170,7 @@ class Submission(Cog):
         self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
         self.supporting: dict[Member, Member] = {}
+        self.oc_list_webhook: Optional[Webhook] = None
 
     @message_command(
         guild_ids=[719343092963999804],
@@ -426,20 +423,10 @@ class Submission(Cog):
         """
         if not self.ready:
             return
-        embed = Embed(
-            title="Registered Characters",
-            color=member.color,
-        )
-        webhook = await self.bot.fetch_webhook(919280056558317658)
-        if guild := webhook.guild:
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        embed.set_author(name=member.display_name)
-        embed.set_thumbnail(url=member.display_avatar.url)
-        embed.set_image(url=WHITE_BAR)
         if oc_list := self.oc_list.get(member.id, None):
             try:
                 view = RPView(self.bot, member.id, self.oc_list)
-                await webhook.edit_message(oc_list, embed=embed, view=view)
+                await self.oc_list_webhook.edit_message(oc_list, embed=None, view=view)
                 return
             except DiscordException:
                 with suppress(DiscordException):
@@ -447,10 +434,9 @@ class Submission(Cog):
                     await thread.delete(
                         reason="Former OC List Message was removed."
                     )
-        message: WebhookMessage = await webhook.send(
+        message: WebhookMessage = await self.oc_list_webhook.send(
             content=member.mention,
             wait=True,
-            embed=embed,
             allowed_mentions=AllowedMentions(users=True),
         )
         thread = await message.create_thread(name=f"OCs⎱{member.id}")
@@ -754,7 +740,6 @@ class Submission(Cog):
             await received.delete(delay=10)
 
         await self.list_update(member)
-        webhook = await self.bot.fetch_webhook(919280056558317658)
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
@@ -763,7 +748,7 @@ class Submission(Cog):
         ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
-            msg_oc = await webhook.send(
+            msg_oc = await self.oc_list_webhook.send(
                 content=member.mention,
                 embed=embed,
                 file=file,
@@ -786,13 +771,12 @@ class Submission(Cog):
                 await oc.update(connection=conn, idx=msg_oc.id)
 
     async def oc_update(self, oc: Type[Character]):
-        webhook = await self.bot.fetch_webhook(919280056558317658)
         embed: Embed = oc.embed
         embed.set_image(url="attachment://image.png")
         thread: Thread = await self.bot.fetch_channel(oc.thread)
         if thread.archived:
             await thread.edit(archived=False)
-        await webhook.edit_message(oc.id, embed=embed, thread=thread)
+        await self.oc_list_webhook.edit_message(oc.id, embed=embed, thread=thread)
 
     @slash_command(
         name="ocs",
@@ -900,9 +884,6 @@ class Submission(Cog):
                 ephemeral=True,
             )
 
-        if self.oc_list.get(member.id):
-            await self.list_update(member)
-
     async def load_characters(self, db: Connection):
         self.bot.logger.info("Loading all Characters.")
         for oc in await fetch_all(db):
@@ -918,12 +899,11 @@ class Submission(Cog):
         self.bot.logger.info("Loading All Profiles")
         channel = await self.bot.fetch_channel(919277769735680050)
         async for m in channel.history(limit=None):
-            if not (m.mentions and m.webhook_id):
-                continue
-            user = m.mentions[0]
-            self.oc_list[user.id] = m.id
-            view = RPView(self.bot, user.id, self.oc_list)
-            self.bot.add_view(view=view, message_id=m.id)
+            if m.mentions and m.webhook_id:
+                user = m.mentions[0]
+                self.oc_list[user.id] = m.id
+                view = RPView(self.bot, user.id, self.oc_list)
+                self.bot.add_view(view=view, message_id=m.id)
 
         self.bot.logger.info("Finished loading all Profiles.")
 
@@ -1028,8 +1008,7 @@ class Submission(Cog):
                 mission_cooldown=self.mission_cooldown,
                 **loads(contents),
             )
-            w = await self.bot.fetch_webhook(857435846454280244)
-            await w.edit_message(903437849154711552, view=view)
+            self.bot.add_view(view, message_id=903437849154711552)
         self.bot.logger.info("Finished loading Submission menu")
 
     async def load_claimed_categories(self):
@@ -1066,6 +1045,7 @@ class Submission(Cog):
         if self.ready:
             return
 
+        self.oc_list_webhook = await self.bot.fetch_webhook(919280056558317658)
         async with self.bot.database() as db:
             await self.load_characters(db)
             await self.load_missions(db)
@@ -1075,22 +1055,6 @@ class Submission(Cog):
         await self.load_submssions()
         await self.load_claimed_categories()
         self.ready = True
-
-    @Cog.listener()
-    async def on_member_update(
-        self,
-        past: Member,
-        now: Member,
-    ) -> None:
-        try:
-            if (
-                past.display_name != now.display_name
-                or past.display_avatar != now.display_avatar
-                or past.colour != now.colour
-            ) and self.oc_list.get(now.id):
-                await self.list_update(now)
-        except Exception as e:
-            self.bot.logger.exception("Exception updating", exc_info=e)
 
     @Cog.listener()
     async def on_raw_thread_delete(
