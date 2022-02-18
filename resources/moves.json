@@ -4739,7 +4739,7 @@
 		"image": "https://archives.bulbagarden.net/media/upload/5/5b/Guillotine_VIII.png",
 		"desc": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + 30)%, and fails if the target is at a higher level. Pokemon with the Sturdy Ability are immune.",
 		"shortDesc": "OHKOs the target. Fails if user is a lower level.",
-		"banned": true,
+		"banned": false,
 		"metronome": true
 	},
 	{
@@ -5266,7 +5266,7 @@
 		"image": "https://archives.bulbagarden.net/media/upload/6/6e/Horn_Drill_VIII.png",
 		"desc": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + 30)%, and fails if the target is at a higher level. Pokemon with the Sturdy Ability are immune.",
 		"shortDesc": "OHKOs the target. Fails if user is a lower level.",
-		"banned": true,
+		"banned": false,
 		"metronome": true
 	},
 	{
@@ -9652,7 +9652,7 @@
 		"image": "https://archives.bulbagarden.net/media/upload/1/1c/Sheer_Cold_VIII.png",
 		"desc": "Deals damage to the target equal to the target's maximum HP. Ignores accuracy and evasiveness modifiers. This attack's accuracy is equal to (user's level - target's level + X)%, where X is 30 if the user is an Ice type and 20 otherwise, and fails if the target is at a higher level. Ice-type Pokemon and Pokemon with the Sturdy Ability are immune.",
 		"shortDesc": "OHKOs non-Ice targets. Fails if user's lower level.",
-		"banned": true,
+		"banned": false,
 		"metronome": true
 	},
 	{

@@ -149,8 +149,8 @@ class TemplateView(View):
                 required=True,
             )
         )
-        self.stop()
         await resp.send_modal(modal)
+        self.stop()
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
     async def mode2(self, _: Button, interaction: Interaction):

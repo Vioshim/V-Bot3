@@ -94,6 +94,11 @@ class Movepool:
     def __bool__(self):
         return any(astuple(self))
 
+    def __eq__(self, other: Movepool) -> bool:
+        if isinstance(other, Movepool):
+            return astuple(self) == astuple(other)
+        return NotImplemented
+
     def __lt__(self, other: Movepool):
         return len(self) < len(other)
 
@@ -234,10 +239,10 @@ class Movepool:
         """
         return bool(item in self.__call__())
 
-    def __setitem__(
+    def assign(
         self,
         key: str,
-        value: Union[set[Move], dict[int, set[Move]]],
+        value: Union[str, set[Move], dict[int, set[Move]]] = None,
     ):
         """Assigning method for movepool
 
@@ -245,13 +250,26 @@ class Movepool:
         ----------
         key : str
             Element in specific to set
-        value : Union[move_set, frozendict[int, move_set]]
+        value : Union[str, move_set, frozendict[int, move_set]]
             Values to set
         """
         key = fix(key)
 
+        if isinstance(value, str):
+            if key == "LEVEL":
+                aux = {}
+                for part in value.split("\n"):
+                    try:
+                        index, items = part.split(": ")
+                        aux[index] = items.split(",")
+                    except ValueError:
+                        continue
+                value = aux
+            else:
+                value = value.split(",")
+
         if key == "LEVEL":
-            if isinstance(value, dict):
+            if isinstance(value := value or {}, dict):
                 level: move_dict = {}
                 for key, value in value.items():
                     key = str(key)
@@ -261,16 +279,14 @@ class Movepool:
                     moves = move_set()
                     for item in value:
                         if data := Move.deduce(item):
-                            if not data.banned:
-                                moves.add(data)
+                            moves.add(data)
                     level[int(key)] = frozen_set(moves)
                 self.level = frozen_dict(level)
-        else:
+        elif isinstance(value := value or set(), Iterable):
             moves = move_set()
             for item in value:
                 if data := Move.deduce(item):
-                    if not data.banned:
-                        moves.add(data)
+                    moves.add(data)
 
             moves = frozen_set(moves)
 
@@ -287,6 +303,22 @@ class Movepool:
                     self.levelup = moves
                 case _:
                     self.other = moves
+
+    def __setitem__(
+        self,
+        key: str,
+        value: Union[set[Move], dict[int, set[Move]]],
+    ):
+        """Assigning method for movepool
+
+        Parameters
+        ----------
+        key : str
+            Element in specific to set
+        value : Union[move_set, frozendict[int, move_set]]
+            Values to set
+        """
+        self.assign(key, value)
 
     def __getitem__(self, key: str):
         """Get method for movepool
@@ -371,9 +403,10 @@ class Movepool:
         Movepool
             Generated movepool
         """
-        movepool = Movepool()
+        movepool = cls()
         for item in movepool.__slots__:
-            movepool[item] = kwargs.get(item, {} if item == "level" else set())
+            if value := kwargs.get(item):
+                movepool.assign(key=item, value=value)
         return movepool
 
     @property
@@ -559,7 +592,6 @@ class Movepool:
                     level,
                 )
                 for m in values
-                if not m.banned
             )
 
         for key, value in data.items():
@@ -570,7 +602,6 @@ class Movepool:
                     key,
                 )
                 for m in value
-                if not m.banned
             )
 
         if movepool_elements:
@@ -598,16 +629,7 @@ class MovepoolEncoder(JSONEncoder):
 
     def default(self, o):
         if isinstance(o, Movepool):
-            data = {}
-            for item in o.__slots__:
-                if isinstance(element := o[item], frozendict):
-                    data[item] = {
-                        k: sorted(map(lambda x: x.id, v))
-                        for k, v in element.items()
-                    }
-                elif isinstance(element, frozenset):
-                    data[item] = sorted(map(lambda x: x.id, element))
-            return data
+            return o.as_dict
         return super(MovepoolEncoder, self).default(o)
 
 
