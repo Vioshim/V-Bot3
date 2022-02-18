@@ -154,7 +154,7 @@ class Proxy(Cog):
                 ephemeral=True,
             )
             return
-        if (mon := Species.from_ID(pokemon)) and not isinstance(mon, Fusion):
+        if (mon := Species.deduce(pokemon)) and not isinstance(mon, Fusion):
             name = mon.name
             if shiny:
                 name = f"Shiny {name}"
