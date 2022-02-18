@@ -167,15 +167,14 @@ class MissionView(View):
             btn.disabled = True
             async with self.bot.database() as db:
                 await self.mission.remove(db)
-                await interaction.delete_original_message()
-                thread: Thread = await self.bot.fetch_channel(
-                    self.mission.msg_id
-                )
+                await interaction.message.delete()
+                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
                 await thread.edit(
                     archived=False,
                     locked=True,
                     reason=f"{member} concluded the mission.",
                 )
+                await thread.send(embed=self.mission.embed)
             await interaction.followup.send(
                 "Mission has been concluded.",
                 ephemeral=True,
