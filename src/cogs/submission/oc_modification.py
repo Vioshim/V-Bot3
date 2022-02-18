@@ -38,11 +38,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.move import ALL_MOVES
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -960,7 +956,7 @@ class MovepoolMod(Mod):
         embed.set_image(url=WHITE_BAR)
 
         for key, value in data.items():
-            if text := dump(value or ""):
+            if value and (text := dump(value)):
                 embed.add_field(
                     name=f"{key.title()} Moves",
                     value=f"```yaml\n{text[:1000]}\n```",
