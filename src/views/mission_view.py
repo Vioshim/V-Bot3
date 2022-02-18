@@ -15,7 +15,6 @@
 from datetime import datetime, timedelta
 
 from discord import (
-    Color,
     Interaction,
     InteractionResponse,
     Member,
@@ -168,7 +167,9 @@ class MissionView(View):
             async with self.bot.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
-                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
+                thread: Thread = await self.bot.fetch_channel(
+                    self.mission.msg_id
+                )
                 await thread.edit(
                     archived=False,
                     locked=True,

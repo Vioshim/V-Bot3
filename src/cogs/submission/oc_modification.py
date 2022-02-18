@@ -953,7 +953,18 @@ class MovepoolMod(Mod):
             ),
         )
 
-        text = (dump(data) if data else "") or "No Movepool provided"
+        embed = Embed(
+            title=f"Modify Movepool for {oc.name}",
+            color=member.color,
+        )
+        embed.set_image(url=WHITE_BAR)
+
+        for key, value in data.items():
+            if text := dump(value or ""):
+                embed.add_field(
+                    name=f"{key.title()} Moves",
+                    value=f"```yaml\n{text[:1000]}\n```",
+                )
 
         class MovepoolView(View):
             @button(label="Modify Movepool (Modal)")
@@ -973,13 +984,6 @@ class MovepoolMod(Mod):
                 self.stop()
 
         view = MovepoolView(timeout=None)
-
-        embed = Embed(
-            title=f"Modify Movepool for {oc.name}",
-            description=f"```yaml\n{text[:3900]}\n```",
-            color=member.color,
-        )
-        embed.set_image(url=WHITE_BAR)
 
         await origin.edit(content=None, embed=embed, view=view)
         await view.wait()
