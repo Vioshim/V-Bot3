@@ -167,9 +167,7 @@ class MissionView(View):
             btn.disabled = True
             async with self.bot.database() as db:
                 await self.mission.remove(db)
-                embed = self.mission.embed
-                embed.color = Color.red()
-                await interaction.message.edit(embed=embed, view=self)
+                await interaction.delete_original_message()
                 thread: Thread = await self.bot.fetch_channel(
                     self.mission.msg_id
                 )
