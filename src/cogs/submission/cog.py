@@ -426,7 +426,9 @@ class Submission(Cog):
         if oc_list := self.oc_list.get(member.id, None):
             try:
                 view = RPView(self.bot, member.id, self.oc_list)
-                await self.oc_list_webhook.edit_message(oc_list, embed=None, view=view)
+                await self.oc_list_webhook.edit_message(
+                    oc_list, embed=None, view=view
+                )
                 return
             except DiscordException:
                 with suppress(DiscordException):
@@ -474,7 +476,7 @@ class Submission(Cog):
                     )
                 return await ctx.followup.send(content=text, ephemeral=True)
             else:
-                return ctx.reply(content=text, delete_after=5)
+                return await ctx.reply(content=text, delete_after=5)
 
         if not self.ready:
             await send(
@@ -776,7 +778,9 @@ class Submission(Cog):
         thread: Thread = await self.bot.fetch_channel(oc.thread)
         if thread.archived:
             await thread.edit(archived=False)
-        await self.oc_list_webhook.edit_message(oc.id, embed=embed, thread=thread)
+        await self.oc_list_webhook.edit_message(
+            oc.id, embed=embed, thread=thread
+        )
 
     @slash_command(
         name="ocs",
