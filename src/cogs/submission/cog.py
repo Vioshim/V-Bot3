@@ -919,14 +919,12 @@ class Submission(Cog):
     async def load_missions(self, db: Connection):
         self.bot.logger.info("Loading claimed missions")
         missions: dict[int, Mission] = {}
-        placeholder_missions = {}
 
         async for item in db.cursor("SELECT * FROM MISSIONS;"):
             mission = Mission(**dict(item))
             if mission.id:
                 self.missions.add(mission)
                 missions[mission.id] = mission
-                placeholder_missions[mission.id] = set()
 
         async for oc_item in db.cursor("SELECT * FROM MISSION_ASSIGNMENT;"):
             mission_id, oc_id, assigned_at = (
