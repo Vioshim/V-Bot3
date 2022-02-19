@@ -46,7 +46,12 @@ from discord import (
     Webhook,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -913,39 +918,32 @@ class Submission(Cog):
 
     async def load_missions(self, db: Connection):
         self.bot.logger.info("Loading claimed missions")
-        async for item in db.cursor(
-            """--sql
-            SELECT *
-            FROM MISSIONS
-            order by created_at;
-            """
-        ):
+        missions: dict[int, Mission] = {}
+        placeholder_missions = {}
+
+        async for item in db.cursor("SELECT * FROM MISSIONS;"):
             mission = Mission(**dict(item))
-            ocs = set()
             if mission.id:
-                async for oc_item in db.cursor(
-                    """--sql
-                    SELECT character, assigned_at
-                    FROM MISSION_ASSIGNMENT
-                    where mission = $1;
-                    """,
-                    mission.id,
-                ):
-                    oc_id, assigned_at = (
-                        oc_item["character"],
-                        oc_item["assigned_at"],
-                    )
-                    if oc := self.ocs.get(oc_id):
-                        ocs.add(oc.id)
-                        self.mission_claimers.setdefault(mission.id, set())
-                        self.mission_claimers[mission.id].add(oc.id)
-                        date = self.mission_cooldown.get(oc.author, assigned_at)
-                        if date <= assigned_at:
-                            self.mission_cooldown[oc.author] = assigned_at
+                self.missions.add(mission)
+                missions[mission.id] = mission
+                placeholder_missions[mission.id] = set()
 
-            mission.ocs = frozenset(ocs)
+        async for oc_item in db.cursor("SELECT * FROM MISSION_ASSIGNMENT;"):
+            mission_id, oc_id, assigned_at = (
+                oc_item["mission"],
+                oc_item["character"],
+                oc_item["assigned_at"],
+            )
+            if (mission := missions.get(mission_id)) and (
+                oc := self.ocs.get(oc_id)
+            ):
+                mission.ocs |= {oc.id}
+                self.mission_claimers.setdefault(mission.id, set())
+                self.mission_claimers[mission.id].add(oc.id)
+                date = self.mission_cooldown.get(oc.author, assigned_at)
+                if date <= assigned_at:
+                    self.mission_cooldown[oc.author] = assigned_at
 
-            self.missions.add(mission)
         self.bot.logger.info("Finished loading claimed missions")
 
     async def load_mission_views(self, db: Connection):
