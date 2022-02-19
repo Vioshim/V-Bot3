@@ -1062,7 +1062,6 @@ class FakemonCharacter(Character):
                 )
                 mon = FakemonCharacter(**data)
                 await mon.retrieve(connection)
-                mon.species.movepool += Movepool(event=mon.moveset)
                 characters.append(mon)
 
         return characters
@@ -1339,11 +1338,7 @@ class VariantCharacter(Character):
                     mon.id,
                 ):
                     moves = Move.deduce_many(*moves)
-                    species.movepool += Movepool(
-                        event=frozenset(
-                            item for item in moves if not item.banned
-                        )
-                    )
+                    species.movepool += Movepool(event=frozenset(moves))
                 await mon.retrieve(connection)
                 characters.append(mon)
 
