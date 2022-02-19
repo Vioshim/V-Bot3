@@ -61,6 +61,7 @@ channels = {
     918703451830100028: "Poll",
     728800301888307301: "Suggestion",
     769304918694690866: "Story",
+    903627523911458816: "Storyline",
 }
 
 
@@ -105,10 +106,20 @@ class Information(Cog):
         embed.set_author(name=f"{member}", icon_url=member.display_avatar.url)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
 
-        msg = await message.channel.send(
-            embed=embed,
-            files=[await item.to_file() for item in message.attachments],
-        )
+        embeds = [embed]
+        files = []
+        for item in message.attachments:
+            if len(embeds) < 10 and item.content_type.startswith("image/"):
+                if embeds[0].image.url == WHITE_BAR:
+                    aux = embed
+                else:
+                    aux = Embed(color=message.author.colour)
+                    embeds.append(aux)
+                aux.set_image(url=f"attachments://{item.filename}")
+                file = await item.to_file()
+                files.append(file)
+
+        msg = await message.channel.send(embeds=embeds, files=files)
 
         thread = await msg.create_thread(name=f"{word} {msg.id}")
 
@@ -374,13 +385,24 @@ class Information(Cog):
             text = f"Embeds: {len(ctx.embeds)}, Attachments: {len(ctx.attachments)}"
             embed.set_footer(text=text, icon_url=ctx.guild.icon.url)
             files = []
-            for item in ctx.attachments:
-                with suppress(HTTPException):
-                    file = await item.to_file(use_cached=True)
-                    files.append(file)
 
             embeds: list[Embed] = [embed]
             embeds.extend(ctx.embeds)
+
+            for item in ctx.attachments:
+                with suppress(HTTPException):
+                    file = await item.to_file(use_cached=True)
+                    if (
+                        item.content_type.startswith("image/")
+                        and len(embeds) < 10
+                    ):
+                        if embed.image.url == WHITE_BAR:
+                            aux = embed
+                        else:
+                            aux = Embed(color=Color.blurple())
+                            embeds.append(aux)
+                        aux.set_image(url=f"attachment://{item.filename}")
+                    files.append(file)
 
             try:
                 emoji, name = ctx.channel.name.split("〛")

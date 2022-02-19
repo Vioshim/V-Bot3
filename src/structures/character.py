@@ -1329,16 +1329,9 @@ class VariantCharacter(Character):
                 species.name = variant
                 data["species"] = species
                 mon = VariantCharacter(**data)
-                if moves := await connection.fetchval(
-                    """--sql
-                    SELECT array_agg(move)
-                    FROM FAKEMON_MOVEPOOL
-                    WHERE FAKEMON = $1;
-                    """,
-                    mon.id,
-                ):
-                    moves = Move.deduce_many(*moves)
-                    species.movepool += Movepool(event=frozenset(moves))
+                mon.species.movepool = await Movepool.fakemon_fetch(
+                    connection, mon.id
+                )
                 await mon.retrieve(connection)
                 characters.append(mon)
 

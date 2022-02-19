@@ -42,7 +42,8 @@ def check(ctx: Interaction):
         if ctx.user == message.author and ctx.channel == message.channel:
             if REGEX_URL.match(message.content or ""):
                 return True
-            return bool(message.attachments)
+            if attachments := message.attachments:
+                return attachments[0].content_type.startswith("image/")
         return False
 
     return inner
