@@ -422,7 +422,7 @@ class Information(Cog):
             for item in ctx.embeds:
                 if (
                     item.type == "gifv"
-                    and isinstance(url := embed.url, str)
+                    and isinstance(url := item.url, str)
                     and (items := url.split("-"))
                 ):
 
