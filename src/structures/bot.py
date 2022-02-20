@@ -241,14 +241,14 @@ class CustomBot(Bot):
                     data = await resp.read()
                     fp = BytesIO(data)
                     text = resp.content_type.split("/")
-                    if filename:
-                        return File(
-                            fp=fp,
-                            filename=f"{filename}.{text[-1]}",
-                            spoiler=spoiler,
-                        )
+                    if not filename:
+                        filename = ".".join(text)
+                    else:
+                        filename = f"{filename}.{text[-1]}"
                     return File(
-                        fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler
+                        fp=fp,
+                        filename=filename,
+                        spoiler=spoiler,
                     )
 
     @asynccontextmanager

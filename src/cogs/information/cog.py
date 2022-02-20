@@ -14,6 +14,7 @@
 
 from contextlib import suppress
 from io import StringIO
+from os import getenv
 from typing import Optional
 
 from discord import (
@@ -63,6 +64,9 @@ channels = {
     769304918694690866: "Story",
     903627523911458816: "Storyline",
 }
+
+TENOR_API = getenv("TENOR_API")
+GIPHY_API = getenv("GIPHY_API")
 
 
 class Information(Cog):
@@ -344,6 +348,33 @@ class Information(Cog):
 
         self.bot.msg_cache -= payload.message_ids
 
+    async def tenor_fetch(self, image_id: str):
+        URL = f"https://g.tenor.com/v1/gifs?ids={image_id}&key={TENOR_API}"
+        with suppress(Exception):
+            async with self.bot.session.get(url=URL) as data:
+                if data.status == 200:
+                    info = await data.json()
+                    result = info["results"][0]
+                    media = result["media"][0]
+                    title: str = (
+                        result["title"] or result["content_description"]
+                    )
+                    url: str = result["itemurl"]
+                    image: str = media["gif"]["url"]
+                    return title, url, image
+
+    async def giphy_fetch(self, image_id: str):
+        URL = f"https://api.giphy.com/v1/gifs/{image_id}?api_key={GIPHY_API}"
+        with suppress(Exception):
+            async with self.bot.session.get(url=URL) as data:
+                if data.status == 200:
+                    info = await data.json()
+                    result = info["data"]
+                    title: str = result["title"]
+                    url: str = result["url"]
+                    image: str = result["images"]["original"]["url"]
+                    return title, url, image
+
     @Cog.listener()
     async def on_raw_message_delete(
         self,
@@ -387,15 +418,42 @@ class Information(Cog):
             files = []
 
             embeds: list[Embed] = [embed]
-            embeds.extend(ctx.embeds)
+
+            for item in ctx.embeds:
+                if (
+                    item.type == "gifv"
+                    and isinstance(url := embed.url, str)
+                    and (items := url.split("-"))
+                ):
+
+                    image_id = items[-1]
+                    method = None
+
+                    if url.startswith("https://tenor.com/"):
+                        method = self.tenor_fetch
+                    elif url.startswith("https://giphy.com/"):
+                        method = self.giphy_fetch
+
+                    if method and (data := await method(image_id=image_id)):
+                        gif_title, gif_url, gif_image = data
+                        if embed.title == "GIF Deleted":
+                            aux = Embed(color=Color.blurple())
+                            embeds.append(aux)
+                        else:
+                            aux = embed
+                            aux.description = embed.Empty
+
+                        aux.title = "GIF Deleted"
+                        aux.url = gif_url
+                        aux.set_image(url=gif_image)
+                        aux.add_field(name="GIF Title", value=gif_title)
+                else:
+                    embeds.append(item)
 
             for item in ctx.attachments:
                 with suppress(HTTPException):
                     file = await item.to_file(use_cached=True)
-                    if (
-                        item.content_type.startswith("image/")
-                        and len(embeds) < 10
-                    ):
+                    if item.content_type.startswith("image/"):
                         if embed.image.url == WHITE_BAR:
                             aux = embed
                         else:
@@ -422,10 +480,10 @@ class Information(Cog):
             if user.bot and "〕" not in username:
                 name = f"Bot〕{username}"
             elif not user.bot:
-                embed.title = f"Message Deleted (User: {user.id})"
+                embed.title = f"{embed.title} (User: {user.id})"
 
             await self.log.send(
-                embeds=embeds,
+                embeds=embeds[:10],
                 files=files,
                 view=view,
                 username=username,
@@ -440,12 +498,9 @@ class Information(Cog):
         ----------
         ctx: Context
             Context
-
-        Returns
-        -------
-
         """
-        if guild := ctx.guild:
+        guild: Optional[Guild] = ctx.guild
+        if guild:
             self.bot.logger.info(
                 "%s > %s > %s",
                 guild.name,

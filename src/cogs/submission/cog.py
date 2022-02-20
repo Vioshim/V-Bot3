@@ -938,8 +938,8 @@ class Submission(Cog):
                 mission.ocs |= {oc.id}
                 self.mission_claimers.setdefault(mission.id, set())
                 self.mission_claimers[mission.id].add(oc.id)
-                date = self.mission_cooldown.get(oc.author, assigned_at)
-                if date <= assigned_at:
+                self.mission_cooldown.setdefault(oc.author, assigned_at)
+                if self.mission_cooldown[oc.author] < assigned_at:
                     self.mission_cooldown[oc.author] = assigned_at
 
         self.bot.logger.info("Finished loading claimed missions")
