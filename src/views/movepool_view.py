@@ -149,11 +149,14 @@ class MovepoolView(Basic):
         for key, value in oc.movepool.as_display_dict.items():
 
             if isinstance(value, dict):
-                value = [f"{k}: {', '.join(v)}" for k, v in value.items() if v]
-            else:
-                value = [f"- {i}" for i in value]
-
-            if text := "\n".join(value):
+                if text := "\n".join(
+                    f"{k}: {', '.join(v)}" for k, v in value.items() if v
+                ):
+                    self.embed.add_field(
+                        name=f"{key.title()} Moves",
+                        value=f"```yaml\n{text[:1000]}\n```",
+                    )
+            elif text := ", ".join(value):
                 self.embed.add_field(
                     name=f"{key.title()} Moves",
                     value=f"```yaml\n{text[:1000]}\n```",
@@ -165,6 +168,7 @@ class MovepoolView(Basic):
         modal = MovepoolModal(self.oc)
         await resp.send_modal(modal)
         await modal.wait()
+        await self.delete()
         self.stop()
 
     @button(label="Keep Current")
@@ -174,6 +178,7 @@ class MovepoolView(Basic):
             "Keeping current movepool",
             ephemeral=True,
         )
+        await self.delete()
         self.stop()
 
 

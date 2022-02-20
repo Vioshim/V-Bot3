@@ -51,8 +51,7 @@ class RegionView(View):
         resp: InteractionResponse = interaction.response
         registered = interaction.guild.get_role(719642423327719434)
         if registered not in interaction.user.roles:
-            view = View()
-            view.add_item(
+            view = View(
                 Button(
                     label="Create a Character",
                     url="https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552",
