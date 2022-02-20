@@ -26,6 +26,7 @@ from discord import (
     Member,
     Message,
     PartialEmoji,
+    PartialMessage,
     TextChannel,
     Thread,
     User,
@@ -36,6 +37,7 @@ from discord.ext.commands import (
     Cog,
     CommandError,
     MessageConverter,
+    PartialMessageConverter,
     group,
     has_guild_permissions,
     is_owner,
@@ -84,22 +86,28 @@ class EmbedBuilder(Cog):
         if not message.guild or message.author.bot or not message.content:
             return
 
-        with suppress(DiscordException):
-            ctx: Context = await self.bot.get_context(message=message)
-            reference = await self.converter.convert(
-                ctx=ctx,
-                argument=message.content,
-            )
+        try:
+            (
+                guild_id,
+                message_id,
+                channel_id,
+            ) = PartialMessageConverter._get_id_matches(message.content)
+            if guild := self.bot.get_guild(guild_id):
+                if not (channel := guild.get_channel_or_thread(channel_id)):
+                    channel = await guild.fetch_channel(channel_id)
+            elif not (channel := self.bot.get_channel(channel_id)):
+                channel = await self.bot.fetch_channel(channel_id)
+            reference = await channel.fetch_message(message_id)
             member: Member = message.author
             author: User = reference.author
             embed = Embed(
-                title="Content",
-                description="```\nNone\n```",
                 colour=member.colour,
                 timestamp=reference.created_at,
             )
             if content := reference.content:
+                embed.title = "Content"
                 embed.description = content
+
             embed.set_author(
                 name=f"Quoting {author}",
                 icon_url=author.display_avatar.url,
@@ -108,20 +116,29 @@ class EmbedBuilder(Cog):
                 text=f"Requested by {member}",
                 icon_url=member.display_avatar.url,
             )
-            view = View(timeout=None)
-            view.add_item(Button(label="Jump URL", url=reference.jump_url))
+            view = View(Button(label="Jump URL", url=reference.jump_url))
             target: TextChannel = message.channel
             await target.send(embed=embed, view=view)
             for item in reference.embeds:
                 files, embed_item = await self.bot.embed_raw(embed=item)
                 await target.send(embed=embed_item, files=files)
-            if not reference.embeds:
+
+            if not reference.embeds and reference.attachments:
                 embed.title = embed.Empty
                 embed.description = embed.Empty
-                for item in message.attachments:
-                    file = await item.to_file()
-                    embed.set_image(url=f"attachment://{file.filename}")
-                    await target.send(embed=embed, file=file)
+                files = []
+                embeds = []
+                for item in reference.attachments:
+                    if item.content_type.startswith("image/"):
+                        aux = embed.copy()
+                        file = await item.to_file()
+                        aux.set_image(url=f"attachment://{file.filename}")
+                        embeds.append(aux)
+                        files.append(file)
+
+                await target.send(embed=embeds[:10], file=files[:10])
+        except Exception:
+            return
 
     @Cog.listener()
     async def on_message_delete(self, ctx: Message):
@@ -222,10 +239,10 @@ class EmbedBuilder(Cog):
         """
         embed = Embed(
             title="Embed Builder",
-            description="No embed available.",
             color=ctx.author.color,
             timestamp=utcnow(),
         )
+        embed.set_image(url=WHITE_BAR)
         embed.set_author(
             name=ctx.author.display_name,
             icon_url=ctx.author.display_avatar.url,
@@ -235,11 +252,17 @@ class EmbedBuilder(Cog):
             icon_url=ctx.guild.icon,
         )
         if data := self.cache.get((ctx.author.id, ctx.guild.id)):
-            embed.description = (
-                f"{data.channel.mention} -> **[Message]"
-                f'({data.jump_url} "Go to")**'
-            )
-        await ctx.reply(embed=embed)
+            try:
+                emoji, name = data.channel.name.split("〛")
+                emoji = emoji[0]
+            except Exception:
+                name = data.channel.name
+                emoji = None
+
+            view = View(Button(label=name, emoji=emoji, url=data.jump_url))
+            await ctx.reply(embed=embed, view=view)
+        else:
+            await ctx.reply(embed=embed)
 
     @embed.command(name="new", aliases=["create"])
     @has_guild_permissions(
@@ -364,17 +387,19 @@ class EmbedBuilder(Cog):
 
         """
         async with self.edit(ctx) as embed:
-            webhook: Webhook = await ctx.bot.webhook(ctx.channel.id)
+            webhook: Webhook = await ctx.bot.webhook(ctx.channel)
 
             if not isinstance(thread := ctx.channel, Thread):
                 thread = MISSING
 
-            await webhook.send(
+            message = await webhook.send(
                 embed=embed,
                 username=ctx.author.display_name,
                 avatar_url=ctx.author.display_avatar.url,
                 thread=thread,
+                wait=True,
             )
+            self.write(message, ctx.author)
 
     @embed_post.command(name="raw")
     @has_guild_permissions(
@@ -394,18 +419,20 @@ class EmbedBuilder(Cog):
         """
         async with self.edit(ctx) as embed:
             files, embed_aux = await self.bot.embed_raw(embed)
-            webhook: Webhook = await ctx.bot.webhook(ctx.channel.id)
+            webhook: Webhook = await ctx.bot.webhook(ctx.channel)
 
             if not isinstance(thread := ctx.channel, Thread):
                 thread = MISSING
 
-            await webhook.send(
+            message = await webhook.send(
                 files=files,
                 embed=embed_aux,
                 username=ctx.author.display_name,
                 avatar_url=ctx.author.display_avatar.url,
                 thread=thread,
+                wait=True,
             )
+            self.write(message, ctx.author)
 
     @embed.command(name="announce")
     @is_owner()
@@ -422,12 +449,14 @@ class EmbedBuilder(Cog):
 
         """
         async with self.edit(ctx) as embed:
-
-            await ctx.send(
+            webhook: Webhook = await ctx.bot.webhook(ctx.channel)
+            message = await webhook.send(
                 content="@everyone",
                 embed=embed,
                 allowed_mentions=AllowedMentions(everyone=True),
+                wait=True,
             )
+            self.write(message, ctx.author)
 
     @embed.command(name="unset")
     @has_guild_permissions(
@@ -447,7 +476,8 @@ class EmbedBuilder(Cog):
         """
         if message := self.cache.pop((ctx.author.id, ctx.guild.id), None):
             del self.blame[message]
-            await ctx.reply("Removed stored embed.")
+            view = View(Button(label="Jump URL", url=message.jump_url))
+            await ctx.reply("Removed stored embed.", view=view)
         else:
             await ctx.reply("No stored embed to remove.")
 
