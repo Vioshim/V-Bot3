@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Union
 
 from discord import (
@@ -84,55 +84,41 @@ class EmbedBuilder(Cog):
         if not message.guild or message.author.bot or not message.content:
             return
 
-        try:
-            guild_id, message_id, channel_id = discord_url_msg(message)
+        if not (data := discord_url_msg(message)):
+            return
+
+        with suppress(DiscordException):
+            guild_id, message_id, channel_id = data
             if guild := self.bot.get_guild(guild_id):
                 if not (channel := guild.get_channel_or_thread(channel_id)):
                     channel = await guild.fetch_channel(channel_id)
             elif not (channel := self.bot.get_channel(channel_id)):
                 channel = await self.bot.fetch_channel(channel_id)
             reference = await channel.fetch_message(message_id)
-            member: Member = message.author
+            webhook = await self.bot.webhook(message.channel)
+            if not isinstance(thread := message.channel, Thread):
+                thread = MISSING
+
             author: User = reference.author
-            embed = Embed(
-                colour=member.colour,
-                timestamp=reference.created_at,
-            )
-            if content := reference.content:
-                embed.title = "Content"
-                embed.description = content
 
-            embed.set_author(
-                name=f"Quoting {author}",
-                icon_url=author.display_avatar.url,
+            await webhook.send(
+                content=reference.content,
+                embeds=[
+                    embed_handler(reference, item) for item in reference.embeds
+                ],
+                files=[await item.to_file() for item in reference.attachments],
+                username=f"URL〕{author.display_name}",
+                avatar_url=author.display_avatar.url,
+                allowed_mentions=AllowedMentions.none(),
+                thread=thread,
+                view=View(
+                    Button(
+                        label=f"URL Requested by {message.author.display_name}",
+                        url=reference.jump_url,
+                    )
+                ),
             )
-            embed.set_footer(
-                text=f"Requested by {member}",
-                icon_url=member.display_avatar.url,
-            )
-            view = View(Button(label="Jump URL", url=reference.jump_url))
-            target: TextChannel = message.channel
-            await target.send(embed=embed, view=view)
-            for item in reference.embeds:
-                files, embed_item = await self.bot.embed_raw(embed=item)
-                await target.send(embed=embed_item, files=files)
-
-            if not reference.embeds and reference.attachments:
-                embed.title = embed.Empty
-                embed.description = embed.Empty
-                files = []
-                embeds = []
-                for item in reference.attachments:
-                    if item.content_type.startswith("image/"):
-                        aux = embed.copy()
-                        file = await item.to_file()
-                        aux.set_image(url=f"attachment://{file.filename}")
-                        embeds.append(aux)
-                        files.append(file)
-
-                await target.send(embed=embeds[:10], file=files[:10])
-        except Exception:
-            return
+            await message.delete()
 
     @Cog.listener()
     async def on_message_delete(self, ctx: Message):

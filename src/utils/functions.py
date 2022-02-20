@@ -432,20 +432,14 @@ def embed_handler(message: Message, embed: Embed) -> Embed:
         Embed with corrections
     """
     for item in message.attachments:
+        URL = f"attachment://{item.filename}"
         if (image := embed.image) and item.url == image.url:
-            embed.set_image(url=f"attachment://{item.filename}")
+            embed.set_image(url=URL)
         if (thumbnail := embed.thumbnail) and item.url == thumbnail.url:
-            embed.set_thumbnail(url=f"attachment://{item.filename}")
+            embed.set_thumbnail(url=URL)
         if (author := embed.author) and item.url == author.icon_url:
-            embed.set_author(
-                name=author.name,
-                icon_url=f"attachment://{item.filename}",
-                url=author.url,
-            )
+            embed.set_author(name=author.name, icon_url=URL, url=author.url)
         if (footer := embed.footer) and item.url == footer.icon_url:
-            embed.set_footer(
-                text=footer.text,
-                icon_url=f"attachment://{item.filename}",
-            )
+            embed.set_footer(text=footer.text, icon_url=URL)
 
     return embed
