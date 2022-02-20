@@ -24,6 +24,7 @@ __all__ = (
     "EMOJI_REGEX",
     "REGEX_URL",
     "DISCORD_MSG_URL",
+    "DISCORD_MSG_URL2",
     "DATA_FINDER",
     "INVITE",
     "YAML_HANDLER1",
@@ -56,11 +57,13 @@ REGEX_URL = compile(
     r"http[s]?://"
     r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
 )
-
 DISCORD_MSG_URL = compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"
     r"(?:[0-9]{15,20}|@me)"
     r"/(?P<channel_id>[0-9]{15,20})/(?P<message_id>[0-9]{15,20})/?"
+)
+DISCORD_MSG_URL2 = compile(
+    r"(?:(?P<channel_id>[0-9]{15,20})-)?(?P<message_id>[0-9]{15,20})$"
 )
 INVITE = compile(
     r"(https?://)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com/invite)/([^\s/]+?(?=\b))",

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from typing import Union
 
 from discord import (
@@ -26,7 +26,6 @@ from discord import (
     Member,
     Message,
     PartialEmoji,
-    PartialMessage,
     TextChannel,
     Thread,
     User,
@@ -37,7 +36,6 @@ from discord.ext.commands import (
     Cog,
     CommandError,
     MessageConverter,
-    PartialMessageConverter,
     group,
     has_guild_permissions,
     is_owner,
@@ -49,7 +47,7 @@ from src.context import Context
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import RAINBOW, WHITE_BAR
-from src.utils.functions import embed_handler
+from src.utils.functions import discord_url_msg, embed_handler
 
 __all__ = ("EmbedBuilder", "setup")
 
@@ -87,11 +85,7 @@ class EmbedBuilder(Cog):
             return
 
         try:
-            (
-                guild_id,
-                message_id,
-                channel_id,
-            ) = PartialMessageConverter._get_id_matches(message.content)
+            guild_id, message_id, channel_id = discord_url_msg(message)
             if guild := self.bot.get_guild(guild_id):
                 if not (channel := guild.get_channel_or_thread(channel_id)):
                     channel = await guild.fetch_channel(channel_id)

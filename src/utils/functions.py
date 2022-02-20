@@ -17,12 +17,18 @@ from typing import Callable, Optional, TypeVar
 from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
 
-from src.utils.matches import YAML_HANDLER1, YAML_HANDLER2
+from src.utils.matches import (
+    DISCORD_MSG_URL,
+    DISCORD_MSG_URL2,
+    YAML_HANDLER1,
+    YAML_HANDLER2,
+)
 
 _T = TypeVar("_T")
 
 __all__ = (
     "fix",
+    "discord_url_msg",
     "common_get",
     "multiple_pop",
     "common_pop_get",
@@ -37,6 +43,30 @@ __all__ = (
     "embed_handler",
     "yaml_handler",
 )
+
+
+def discord_url_msg(message: Message):
+
+    content: str = message.content or ""
+
+    if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(
+        content
+    ):
+        data = match.groupdict()
+        channel_id = data.get("channel_id")
+        if channel_id is None:
+            channel_id = message.channel and message.channel.id
+        else:
+            channel_id = int(channel_id)
+        message_id = int(data["message_id"])
+        guild_id = data.get("guild_id")
+        if guild_id is None:
+            guild_id = message.guild and message.guild.id
+        elif guild_id == "@me":
+            guild_id = None
+        else:
+            guild_id = int(guild_id)
+        return guild_id, message_id, channel_id
 
 
 def fix(text: str) -> str:
