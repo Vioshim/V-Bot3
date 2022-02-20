@@ -419,6 +419,18 @@ class Information(Cog):
 
             embeds: list[Embed] = [embed]
 
+            for item in ctx.stickers:
+                if embed.title == "Sticker Deleted":
+                    aux = Embed(color=Color.blurple())
+                    embeds.append(aux)
+                else:
+                    aux = embed
+                    aux.description = embed.Empty
+
+                aux.title = "Sticker Deleted"
+                aux.set_image(url=item.url)
+                aux.add_field(name="Sticker Name", value=item.name)
+
             for item in ctx.embeds:
                 if (
                     item.type == "gifv"
