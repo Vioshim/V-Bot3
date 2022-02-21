@@ -100,6 +100,7 @@ class EmbedBuilder(Cog):
                 thread = MISSING
 
             author: User = reference.author
+            name = author.display_name.removeprefix("URL〕")
 
             await webhook.send(
                 content=reference.content,
@@ -107,7 +108,7 @@ class EmbedBuilder(Cog):
                     embed_handler(reference, item) for item in reference.embeds
                 ],
                 files=[await item.to_file() for item in reference.attachments],
-                username=f"URL〕{author.display_name}",
+                username=f"URL〕{name}",
                 avatar_url=author.display_avatar.url,
                 allowed_mentions=AllowedMentions.none(),
                 thread=thread,
