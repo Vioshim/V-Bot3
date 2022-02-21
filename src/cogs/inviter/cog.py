@@ -78,7 +78,7 @@ class Inviter(Cog):
         files = []
         if (icon := invite_guild.icon) and (
             file := await self.bot.get_file(
-                icon.with_size(size=4096).url,
+                icon.with_size(4096).url,
                 "server_icon",
             )
         ):
