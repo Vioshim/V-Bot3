@@ -155,11 +155,13 @@ class MovepoolView(Basic):
                     self.embed.add_field(
                         name=f"{key.title()} Moves",
                         value=f"```yaml\n{text[:1000]}\n```",
+                        inline=False,
                     )
             elif text := ", ".join(value):
                 self.embed.add_field(
                     name=f"{key.title()} Moves",
                     value=f"```yaml\n{text[:1000]}\n```",
+                    inline=False,
                 )
 
     @button(label="Modify Movepool")
