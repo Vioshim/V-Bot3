@@ -224,12 +224,10 @@ class Basic(Generic[_M], View):
                 if message := await target.edit_original_message(**data):
                     self.message = message
             elif resp.is_done():
-                if message := await target.followup.send(**data, wait=True):
-                    self.message = message
+                self.message = await target.followup.send(**data, wait=True)
             else:
                 ctx = await resp.send_message(**data)
-                if message := await ctx.original_message():
-                    self.message = message
+                self.message = await ctx.original_message()
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:

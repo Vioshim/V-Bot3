@@ -797,7 +797,7 @@ class ImageMod(Mod):
             default_img=oc.image,
             target=target,
         )
-        origin = await target.original_message()
+        view.message = origin = await target.original_message()
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)

@@ -99,10 +99,10 @@ class ImageView(Basic):
     async def insert_image(self, btn: Button, ctx: Interaction):
         btn.disabled = True
         resp: InteractionResponse = ctx.response
-        if isinstance(target := self.target, Interaction):
+        if message := self.message:
+            await message.edit(view=None)
+        elif isinstance(target := self.target, Interaction):
             await target.edit_original_message(view=None)
-        else:
-            await self.message.edit(view=None)
         await resp.send_message(
             content="Alright, now send the URL or Attach an image.",
             ephemeral=True,
@@ -127,10 +127,10 @@ class ImageView(Basic):
     @button(label="I like the default one", row=0)
     async def default_image(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        if isinstance(target := self.target, Interaction):
+        if message := self.message:
+            await message.edit(view=None)
+        elif isinstance(target := self.target, Interaction):
             await target.edit_original_message(view=None)
-        else:
-            await self.message.edit(view=None)
 
         await resp.send_message(
             content="Keeping default image.",
@@ -141,10 +141,10 @@ class ImageView(Basic):
     @button(label="Cancel Submission", style=ButtonStyle.red, row=0)
     async def cancel(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        if isinstance(target := self.target, Interaction):
+        if message := self.message:
+            await message.edit(view=None)
+        elif isinstance(target := self.target, Interaction):
             await target.edit_original_message(view=None)
-        else:
-            await self.message.edit(view=None)
         await resp.send_message(
             content="Submission has been concluded.",
             ephemeral=True,
