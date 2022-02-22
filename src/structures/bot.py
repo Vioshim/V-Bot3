@@ -97,6 +97,33 @@ class CustomBot(Bot):
         self.msg_cache: set[int] = set()
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
         self.scam_urls: set[str] = set()
+        self.webhook_cache: dict[int, Webhook] = {}
+
+    async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
+        """|coro|
+
+        Retrieves a :class:`.Webhook` with the specified ID.
+
+        Raises
+        --------
+        :exc:`.HTTPException`
+            Retrieving the webhook failed.
+        :exc:`.NotFound`
+            Invalid webhook ID.
+        :exc:`.Forbidden`
+            You do not have permission to fetch this webhook.
+
+        Returns
+        ---------
+        :class:`.Webhook`
+            The webhook you requested.
+        """
+        webhook: Webhook = await super(CustomBot, self).fetch_webhook(
+            webhook_id
+        )
+        if webhook.user == self.user:
+            self.webhook_cache[webhook.channel.id] = webhook
+        return webhook
 
     async def on_message(self, message: Message) -> None:
         """Bot's on_message with nitro scam handler
@@ -308,7 +335,10 @@ class CustomBot(Bot):
 
     # noinspection PyTypeChecker
     async def webhook(
-        self, channel: Union[Messageable, int], *, reason: str = None
+        self,
+        channel: Union[Messageable, int],
+        *,
+        reason: str = None,
     ) -> Webhook:
         """Function which returns first webhook of a
         channel creates one if there's no webhook
@@ -325,18 +355,29 @@ class CustomBot(Bot):
         Webhook
             Webhook if channel is valid.
         """
-        if isinstance(channel, int):
-            channel: TextChannel = self.get_channel(channel)
         if isinstance(channel, Thread):
             channel: TextChannel = channel.parent
 
+        channel_id: int = getattr(channel, "id", channel)
+
+        if webhook := self.webhook_cache.get(channel_id):
+            return webhook
+
+        if isinstance(channel, int):
+            channel: TextChannel = self.get_channel(channel)
+
         for item in await channel.webhooks():
             if item.user == self.user:
+                self.webhook_cache[channel.id] = item
                 return item
         image = await self.user.display_avatar.read()
-        return await channel.create_webhook(
-            name=self.user.display_name, avatar=image, reason=reason
+        item = await channel.create_webhook(
+            name=self.user.display_name,
+            avatar=image,
+            reason=reason,
         )
+        self.webhook_cache[channel.id] = item
+        return item
 
     def __repr__(self) -> str:
         """Representation of V-Bot

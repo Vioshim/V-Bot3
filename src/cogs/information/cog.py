@@ -169,15 +169,14 @@ class Information(Cog):
             with suppress(DiscordException):
                 await msg.delete()
         guild: Guild = member.guild
-        roles = member.roles[:0:-1]
         embed = Embed(
             title="Member Left - Roles",
             description="The user did not have any roles.",
             color=Color.red(),
             timestamp=utcnow(),
         )
-        if text := "\n".join(f"> **•** {role.mention}" for role in roles):
-            embed.description = text
+        if roles := member.roles[:0:-1]:
+            embed.description = "\n".join(f"> **•** {role.mention}" for role in roles)
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
         view = View()
