@@ -146,7 +146,9 @@ class EmbedBuilder(Cog):
                 if session.status == 200:
                     item: dict[str, str] = await session.json()
                     log = item["log"]
-                    p1, p2 = PLAYER_FINDER.findall(log)
+                    (p1, score1), (p2, score2) = PLAYER_FINDER.findall(log)
+                    p1 = f"{p1} ({score1})"
+                    p2 = f"{p2} ({score2})"
                     items = {}
                     for index, name in POKEMON_FINDER.findall(log):
                         name = f"• {name}"
