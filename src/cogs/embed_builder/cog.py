@@ -14,6 +14,8 @@
 
 
 from contextlib import asynccontextmanager, suppress
+from datetime import datetime
+from re import compile
 from typing import Union
 
 from discord import (
@@ -49,6 +51,15 @@ from src.structures.converters import AfterDateCall
 from src.utils.etc import RAINBOW, WHITE_BAR
 from src.utils.functions import discord_url_msg, embed_handler
 
+PLAYER_FINDER = compile(
+    r"\|raw\|(.*)'s rating: \d+ &rarr; <strong>\d+</strong><br />\((.*)\)"
+)
+POKEMON_FINDER = compile(r"\|poke\|p(\d)\|(.*)\|")
+RULE_FINDER = compile(r"\|rule\|(.*)")
+GAMETYPE_FINDER = compile(r"\|gametype\|(.*)")
+TIER_FINDER = compile(r"\|tier\|(.*)")
+
+
 __all__ = ("EmbedBuilder", "setup")
 
 
@@ -78,48 +89,106 @@ class EmbedBuilder(Cog):
         if data := self.cache.pop((member.id, member.guild.id), None):
             self.blame.pop(data, None)
 
+    async def webhook_send(self, message: Message, **kwargs):
+        webhook = await self.bot.webhook(message.channel)
+        if not isinstance(thread := message.channel, Thread):
+            thread = MISSING
+
+        await webhook.send(
+            allowed_mentions=AllowedMentions.none(),
+            thread=thread,
+            **kwargs,
+        )
+        await message.delete()
+
     @Cog.listener()
     async def on_message(self, message: Message):
 
         if not message.guild or message.author.bot or not message.content:
             return
 
-        if not (data := discord_url_msg(message)):
-            return
+        if data := discord_url_msg(message):
+            with suppress(DiscordException):
+                guild_id, message_id, channel_id = data
+                if guild := self.bot.get_guild(guild_id):
+                    if not (channel := guild.get_channel_or_thread(channel_id)):
+                        channel = await guild.fetch_channel(channel_id)
+                elif not (channel := self.bot.get_channel(channel_id)):
+                    channel = await self.bot.fetch_channel(channel_id)
 
-        with suppress(DiscordException):
-            guild_id, message_id, channel_id = data
-            if guild := self.bot.get_guild(guild_id):
-                if not (channel := guild.get_channel_or_thread(channel_id)):
-                    channel = await guild.fetch_channel(channel_id)
-            elif not (channel := self.bot.get_channel(channel_id)):
-                channel = await self.bot.fetch_channel(channel_id)
-            reference = await channel.fetch_message(message_id)
-            webhook = await self.bot.webhook(message.channel)
-            if not isinstance(thread := message.channel, Thread):
-                thread = MISSING
+                reference = await channel.fetch_message(message_id)
 
-            author: User = reference.author
-            name = author.display_name.removeprefix("URL〕")
+                author: User = reference.author
+                name = author.display_name.removeprefix("URL〕")
 
-            await webhook.send(
-                content=reference.content,
-                embeds=[
-                    embed_handler(reference, item) for item in reference.embeds
-                ],
-                files=[await item.to_file() for item in reference.attachments],
-                username=f"URL〕{name}",
-                avatar_url=author.display_avatar.url,
-                allowed_mentions=AllowedMentions.none(),
-                thread=thread,
-                view=View(
-                    Button(
-                        label=f"URL Requested by {message.author.display_name}",
-                        url=reference.jump_url,
+                await self.webhook_send(
+                    message,
+                    content=reference.content,
+                    embeds=[
+                        embed_handler(reference, item)
+                        for item in reference.embeds
+                    ],
+                    files=[
+                        await item.to_file() for item in reference.attachments
+                    ],
+                    username=f"URL〕{name}",
+                    avatar_url=author.display_avatar.url,
+                    view=View(
+                        Button(
+                            label=f"URL Requested by {message.author.display_name}",
+                            url=reference.jump_url,
+                        )
+                    ),
+                )
+        elif message.content.startswith("https://replay.pokemonshowdown.com/"):
+            content = message.content.split(" ")[0]
+            async with self.bot.session.get(url=f"{content}.json") as session:
+                if session.status == 200:
+                    item: dict[str, str] = await session.json()
+                    log = item["log"]
+                    p1, p2 = PLAYER_FINDER.findall(log)
+                    items = {}
+                    for index, name in POKEMON_FINDER.findall(log):
+                        name = f"• {name}"
+                        if index == "1":
+                            items.setdefault(p1, [])
+                            items[p1].append(name)
+                        else:
+                            items.setdefault(p2, [])
+                            items[p2].append(name)
+
+                    gametype = GAMETYPE_FINDER.search(log).group(1).title()
+                    tier = TIER_FINDER.search(log).group(1).title()
+
+                    author = message.author
+
+                    embed = Embed(
+                        title=f"{tier} - {gametype}",
+                        description="\n".join(
+                            f"• {i}" for i in RULE_FINDER.findall(log)
+                        ),
+                        color=author.color,
+                        timestamp=datetime.fromtimestamp(item["uploadtime"]),
                     )
-                ),
-            )
-            await message.delete()
+
+                    for key, value in items.items():
+                        embed.add_field(name=key, value="\n".join(value))
+
+                    author = message.author
+
+                    await self.webhook_send(
+                        message,
+                        embed=embed,
+                        username=f"URL〕{author.display_name}",
+                        avatar_url=author.display_avatar.url,
+                        view=View(
+                            Button(
+                                label="Watch Replay",
+                                url=content,
+                                emoji="\N{VIDEO CAMERA}",
+                            )
+                        ),
+                    )
 
     @Cog.listener()
     async def on_message_delete(self, ctx: Message):
