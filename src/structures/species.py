@@ -66,7 +66,6 @@ class Species(metaclass=ABCMeta):
     id: str = ""
     name: str = ""
     shape: str = ""
-    color: int = 0
     base_image: Optional[str] = None
     base_image_shiny: Optional[str] = None
     female_image: Optional[str] = None
@@ -454,7 +453,6 @@ class CustomMega(Species):
             id=base.id,
             name=f"Mega {base.name}",
             shape=base.shape,
-            color=base.color,
             height=base.height,
             weight=base.weight,
             HP=base.HP,
@@ -518,14 +516,13 @@ class Variant(Species):
     This class Represents a Variant
     """
 
-    base: Species = None
+    base: Optional[Species] = None
 
     def __init__(self, base: Species, name: str):
         super(Variant, self).__init__(
             id=f"{base.id}+",
             name=name.title(),
             shape=base.shape,
-            color=base.color,
             height=base.height,
             weight=base.weight,
             HP=base.HP,
@@ -612,7 +609,6 @@ class Fusion(Species):
         super(Fusion, self).__init__(
             id=f"{mon1.id}_{mon2.id}",
             name=f"{mon1.name}/{mon2.name}",
-            color=int((mon1.color + mon2.color) / 2),
             height=round((mon1.height + mon2.height) / 2),
             weight=round((mon1.weight + mon2.weight) / 2),
             HP=round((mon1.HP + mon2.HP) / 2),
@@ -776,7 +772,6 @@ class SpeciesDecoder(JSONDecoder):
             dct["abilities"] = Ability.deduce_many(*dct.get("abilities", []))
             dct["movepool"] = Movepool.from_dict(**dct.get("movepool", {}))
             dct["types"] = Typing.deduce_many(*dct.get("types", []))
-            dct["color"] = COLORS.get(dct.get("color"), 0xFFF)
             match dct.pop("kind", ""):
                 case "Legendary":
                     return Legendary(**dct)

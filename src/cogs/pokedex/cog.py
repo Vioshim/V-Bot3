@@ -372,8 +372,6 @@ class Pokedex(Cog):
                     and fuse_mon in oc.species.bases
                 ]
 
-            embed.color = mon.color
-
             if mon.banned:
                 embed.title = f"{mon.name} - Banned Species"
             else:
