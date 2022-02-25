@@ -340,7 +340,7 @@ class EmbedBuilder(Cog):
         """
         embed = Embed(title=title, description=description)
         webhook = await self.bot.webhook(
-            ctx.channel.id, reason="Created by Embed Builder"
+            ctx.channel, reason="Created by Embed Builder"
         )
         author: Member = ctx.author
 

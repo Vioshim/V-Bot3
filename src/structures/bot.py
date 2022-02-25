@@ -365,6 +365,8 @@ class CustomBot(Bot):
 
         if isinstance(channel, int):
             channel: TextChannel = self.get_channel(channel)
+            if isinstance(channel, Thread):
+                channel: TextChannel = channel.parent
 
         for item in await channel.webhooks():
             if item.user == self.user:
