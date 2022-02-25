@@ -280,7 +280,10 @@ class Movepool:
                     for item in value:
                         if data := Move.deduce(item):
                             moves.add(data)
-                    level[int(key)] = frozen_set(moves)
+                    if (key := int(key)) != 0:
+                        level[key] = frozen_set(moves)
+                    else:
+                        self.levelup |= frozen_set(moves)
                 self.level = frozen_dict(level)
         elif isinstance(value := value or set(), Iterable):
             moves = move_set()
@@ -292,17 +295,17 @@ class Movepool:
 
             match key:
                 case "TM":
-                    self.tm = moves
+                    self.tm |= moves
                 case "EVENT":
-                    self.event = moves
+                    self.event |= moves
                 case "TUTOR":
-                    self.tutor = moves
+                    self.tutor |= moves
                 case "EGG":
-                    self.egg = moves
+                    self.egg |= moves
                 case "LEVELUP":
-                    self.levelup = moves
+                    self.levelup |= moves
                 case _:
-                    self.other = moves
+                    self.other |= moves
 
     def __setitem__(
         self,

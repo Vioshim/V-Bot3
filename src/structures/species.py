@@ -593,9 +593,10 @@ class Variant(Species):
         """
         if not item:
             return
-        if mon := Species.from_ID(item.removesuffix("+")):
-            if not isinstance(mon, Fusion):
-                return Variant(base=mon, name=f"Variant {mon.name.title()}")
+        if (mon := Species.from_ID(item.removesuffix("+"))) and not isinstance(
+            mon, Fusion
+        ):
+            return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -745,6 +746,7 @@ class SpeciesEncoder(JSONEncoder):
             item["abilities"] = [i.id for i in o.abilities]
             item["types"] = [str(i) for i in o.types]
             item["movepool"] = o.movepool.as_dict
+            item["evolves_to"] = list(o.evolves_to)
             return item
         return super(SpeciesEncoder, self).default(o)
 
