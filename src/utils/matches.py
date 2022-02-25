@@ -20,6 +20,7 @@ __all__ = (
     "IMAGEKIT_MATCH",
     "GOOGLE_IMAGE",
     "POKEMON_IMAGE",
+    "SEREBII_IMAGE",
     "G_DOCUMENT",
     "EMOJI_REGEX",
     "REGEX_URL",
@@ -47,6 +48,7 @@ POKEMON_IMAGE = compile(
     r"(poke_capture_\d{4}_\d{3}_\w{2}_n_00000000_f_[n|r]\.png)",
     IGNORECASE,
 )
+SEREBII_IMAGE = compile(r"https://www\.serebii\.net/(.+)", IGNORECASE)
 G_DOCUMENT = compile(r"https://docs\.google\.com/document/d/(.+)/", IGNORECASE)
 
 EMOJI_REGEX = compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")

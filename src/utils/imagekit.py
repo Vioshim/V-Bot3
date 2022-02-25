@@ -21,6 +21,7 @@ from src.utils.matches import (
     IMAGEKIT_API,
     IMAGEKIT_MATCH,
     POKEMON_IMAGE,
+    SEREBII_IMAGE,
 )
 
 __all__ = ("ImageKit", "image_formatter")
@@ -40,7 +41,13 @@ def image_formatter(text: str) -> str:
         Shortcut or full URL
     """
 
-    for item in (DISCORD_MATCH, IMAGEKIT_MATCH, GOOGLE_IMAGE, POKEMON_IMAGE):
+    for item in (
+        DISCORD_MATCH,
+        IMAGEKIT_MATCH,
+        GOOGLE_IMAGE,
+        POKEMON_IMAGE,
+        SEREBII_IMAGE,
+    ):
         if match := item.match(text):
             return match.group(1)
     return text
@@ -128,7 +135,6 @@ class ImageKit:
             entries.append(f"oy-N{abs(y)}" if y < 0 else f"oy-{y}")
         self._media.append(",".join(entries))
 
-    # noinspection DuplicatedCode
     def add_text(
         self,
         text: str,
@@ -170,9 +176,8 @@ class ImageKit:
             extra.append(f"oa-{transparency}")
         if isinstance(alignment, str):
             extra.append(f"otia-{alignment}")
-        if isinstance(padding, Iterable):
-            if padding_info := "_".join(str(item) for item in padding):
-                extra.append(f"otp-{padding_info}")
+        if isinstance(padding, Iterable) and (padding_info := "_".join(str(item) for item in padding)):
+            extra.append(f"otp-{padding_info}")
         if content := ",".join(extra):
             self._media.append(f"{raw},{content}")
         else:
