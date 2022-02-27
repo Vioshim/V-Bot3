@@ -709,6 +709,10 @@ class Fusion(Species):
         types1 = self.mon1.types
         types2 = self.mon2.types
         elements: list[set[Typing]] = []
+        if self.mon1 in self.mon2.evolves_to or self.mon2 in self.mon1.evolves_to:
+            elements.append(self.mon1.types)
+            elements.append(self.mon2.types)
+
         if items := frozenset(types1) | frozenset(types2):
             if len(items) <= 2:
                 elements.append(items)

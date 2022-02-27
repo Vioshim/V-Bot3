@@ -1163,9 +1163,7 @@ class FusionMod(Mod):
         if not species:
             return
 
-        possible_types = list(species.possible_types)
-        possible_types.append(species.mon1.types)
-        possible_types.append(species.mon2.types)
+        possible_types = species.possible_types
         view = ComplexInput(
             bot=bot,
             member=member,
