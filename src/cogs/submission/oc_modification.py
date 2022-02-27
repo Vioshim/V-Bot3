@@ -1163,25 +1163,26 @@ class FusionMod(Mod):
         if not species:
             return
 
-        if not species.types:
-            possible_types = species.possible_types
-            view = ComplexInput(
-                bot=bot,
-                member=member,
-                values=possible_types,
-                timeout=None,
-                target=target,
-                parser=lambda x: (
-                    "/".join(i.name for i in x).title(),
-                    f"Sets the typing to {'/'.join(i.name for i in x).title()}",
-                ),
-            )
-            view.embed.title = "Select the Fusion's new typing"
-            await origin.edit(content=None, embed=view.embed, view=view)
-            await view.wait()
-            if not (types := view.choice):
-                return
-            species.types = types
+        possible_types = list(species.possible_types)
+        possible_types.append(species.mon1.types)
+        possible_types.append(species.mon2.types)
+        view = ComplexInput(
+            bot=bot,
+            member=member,
+            values=set(possible_types),
+            timeout=None,
+            target=target,
+            parser=lambda x: (
+                "/".join(i.name for i in x).title(),
+                f"Sets the typing to {'/'.join(i.name for i in x).title()}",
+            ),
+        )
+        view.embed.title = "Select the Fusion's new typing"
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        if not (types := view.choice):
+            return
+        species.types = types
 
         oc.species = species
 
