@@ -14,11 +14,12 @@
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Optional, TypeVar, Union
 
 from discord import (
     ButtonStyle,
+    DiscordException,
     File,
     HTTPException,
     Interaction,
@@ -111,15 +112,18 @@ class ImageView(Basic):
         if attachments := received.attachments:
             self.text = attachments[0].proxy_url
             self.received = received
-            await received.delete()
+            with suppress(DiscordException):
+                await received.delete()
         elif file := await self.bot.get_file(
             url=received.content,
             filename="image",
         ):
-            await received.delete()
+            with suppress(DiscordException):
+                await received.delete()
             self.received = foo = await ctx.channel.send(file=file)
             self.text = self.received.attachments[0].proxy_url
-            await foo.delete()
+            with suppress(DiscordException):
+                await foo.delete()
         elif image := self.message.embeds[0].image:
             self.text = image.url
         else:
