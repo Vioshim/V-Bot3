@@ -653,10 +653,18 @@ class Fusion(Species):
         ]
 
         for x in self.mon1.species_evolves_to:
-            items.append(Fusion(mon1=x, mon2=self.mon2))
+            if x == self.mon2:
+                mon = x
+            else:
+                mon = Fusion(mon1=x, mon2=self.mon2)
+            items.append(mon)
 
         for x in self.mon2.species_evolves_to:
-            items.append(Fusion(mon1=self.mon1, mon2=x))
+            if x == self.mon1:
+                mon = x
+            else:
+                mon = Fusion(mon1=self.mon1, mon2=x)
+            items.append(mon)
 
         return items
 
