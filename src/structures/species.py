@@ -683,7 +683,7 @@ class Fusion(Species):
 
         if mon2 := self.mon2.species_evolves_from:
             if self.mon1 != mon2:
-                mon2 = Fusion(mon1=mon1, mon2=self.mon2)
+                mon2 = Fusion(mon1=self.mon1, mon2=mon2)
             items.append(mon2)
 
         if mon1 and mon2:
