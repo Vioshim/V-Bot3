@@ -941,12 +941,28 @@ class EvolutionMod(Mod):
                     f"Sets the typing to {'/'.join(i.name for i in x).title()}",
                 ),
             )
-            view.embed.title = "Select the Fusion's new typing"
+            view.embed.title = "Select the new typing"
             await origin.edit(content=None, embed=view.embed, view=view)
             await view.wait()
             if not (types := view.choice):
                 return
             species.types = types
+
+        view = ComplexInput(
+            bot=bot,
+            member=member,
+            values=species.abilities or ALL_ABILITIES.values(),
+            timeout=None,
+            target=target,
+            max_values=oc.max_amount_abilities,
+            parser=lambda x: (x.name, x.description),
+        )
+
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
+        if isinstance(abilities := view.choices, set):
+            oc.abilities = frozenset(abilities)
 
         default_image: str = oc.default_image or oc.image
 
