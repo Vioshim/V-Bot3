@@ -570,7 +570,7 @@ class Submission(Cog):
                 return
 
         max_ab = oc.max_amount_abilities
-        if not oc.abilities:
+        if not oc.abilities or len(oc.abilities) > max_ab:
             if not isinstance(species, Fakemon) and max_ab == 1:
                 oc.abilities = species.abilities
             else:
@@ -626,7 +626,7 @@ class Submission(Cog):
             await view.wait()
             species = oc.species
 
-        if not oc.moveset:
+        if not oc.moveset or len(oc.moveset) > 6:
             if not (movepool := species.movepool):
                 movepool = Movepool(event=Move.all())
 

@@ -505,9 +505,8 @@ class CustomMega(Species):
         item : str
             placeholder
         """
-        if mon := Species.from_ID(item):
-            if not isinstance(mon, Fusion):
-                return CustomMega(base=mon)
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
+            return CustomMega(base=mon)
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -570,9 +569,8 @@ class Variant(Species):
         Optional[Variant]
             Result
         """
-        if mon := Species.deduce(item):
-            if not isinstance(mon, cls):
-                return cls(base=mon, name=f"Variant {mon.name.title()}")
+        if (mon := Species.deduce(item)) and not isinstance(mon, cls):
+            return cls(base=mon, name=f"Variant {mon.name.title()}")
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Variant]:

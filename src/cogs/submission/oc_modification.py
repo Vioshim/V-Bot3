@@ -15,6 +15,7 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass
 from enum import Enum
+from itertools import combinations
 from typing import Optional, Type, Union
 
 from discord import (
@@ -35,11 +36,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
@@ -1083,6 +1080,113 @@ class DevolutionMod(Mod):
 
 
 @dataclass(unsafe_hash=True, slots=True)
+class FusionMod(Mod):
+    label: str = "Fuse"
+    description: str = "Used to fuse within the evolution line."
+
+    def check(self, oc: Type[Character]) -> bool:
+        """Determines whetere it can be used or not by a character
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+
+        Returns
+        -------
+        bool
+            If it can be used or not
+        """
+        if not isinstance(species := oc.species, Fusion):
+            return bool(species.evolves_to)
+        return False
+
+    async def method(
+        self,
+        oc: Type[Character],
+        bot: CustomBot,
+        member: Union[User, Member],
+        target: Interaction,
+    ) -> Optional[bool]:
+        """Method
+
+        Parameters
+        ----------
+        oc : Type[Character]
+            Character
+        bot : CustomBot
+            Bot
+        member : Union[User, Member]
+            User
+        target : T
+            Context
+
+        Returns
+        -------
+        Optional[bool]
+            Bool If Updatable, None if cancelled
+        """
+        origin = await target.original_message()
+
+        items = [oc.species]
+        items.extend(oc.species.species_evolves_to)
+        values = set(Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2))
+
+        view = ComplexInput(
+            bot=bot,
+            member=member,
+            values=values,
+            timeout=None,
+            target=target,
+            parser=lambda x: (x.name, f"Evolve to {x.name}"),
+        )
+        view.embed.title = "Select the Fused Evolution"
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        species: Optional[Fusion] = view.choice
+        if not species:
+            return
+
+        if not species.types:
+            possible_types = species.possible_types
+            view = ComplexInput(
+                bot=bot,
+                member=member,
+                values=possible_types,
+                timeout=None,
+                target=target,
+                parser=lambda x: (
+                    "/".join(i.name for i in x).title(),
+                    f"Sets the typing to {'/'.join(i.name for i in x).title()}",
+                ),
+            )
+            view.embed.title = "Select the Fusion's new typing"
+            await origin.edit(content=None, embed=view.embed, view=view)
+            await view.wait()
+            if not (types := view.choice):
+                return
+            species.types = types
+
+        oc.species = species
+
+        default_image: str = oc.default_image or oc.image
+
+        view = ImageView(
+            bot=bot,
+            member=member,
+            default_img=default_image,
+            target=target,
+        )
+
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        await origin.edit(content="Modification done", embed=None, view=None)
+        if isinstance(image := view.text, str):
+            oc.image = image
+        return True
+
+
+@dataclass(unsafe_hash=True, slots=True)
 class SpAbilityMod(Mod):
     label: str = "Special Ability"
     description: str = "Modify/Add the OC's Special Abilities"
@@ -1147,6 +1251,7 @@ class Modification(Enum):
     Image = ImageMod()
     Movepool = MovepoolMod()
     Evolution = EvolutionMod()
+    Fusion = FusionMod()
     Devolution = DevolutionMod()
     SpAbility = SpAbilityMod()
 
