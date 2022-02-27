@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from asyncio import Future, get_running_loop
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Optional, TypeVar, Union
 
 from discord import (
@@ -132,11 +132,10 @@ class ModernInput(Basic):
             view=None,
         )
         try:
-            message: Message = await self.bot.wait_for(
-                "message", check=text_check(interaction)
-            )
+            message: Message = await self.bot.wait_for("message", check=text_check(interaction))
             self.text = message.content
-            await message.delete()
+            with suppress(DiscordException):
+                await message.delete()
             msg = await interaction.original_message()
             await msg.edit(
                 content="Parameter has been added.",
@@ -145,7 +144,7 @@ class ModernInput(Basic):
             )
         except DiscordException as e:
             self.bot.logger.exception(
-                "Error deleting message",
+                "Error editing message",
                 exc_info=e,
             )
         finally:

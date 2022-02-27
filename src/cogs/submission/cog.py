@@ -743,8 +743,6 @@ class Submission(Cog):
             if image is None:
                 return
             oc.image = image
-        if received := image_view.received:
-            await received.delete(delay=10)
 
         await self.list_update(member)
         thread_id = self.oc_list[member.id]

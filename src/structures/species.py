@@ -644,13 +644,21 @@ class Fusion(Species):
 
     @property
     def species_evolves_to(self) -> list[Fusion]:
-        return [
+        items = [
             Fusion(mon1=a, mon2=b)
             for a, b in zip(
                 self.mon1.species_evolves_to,
                 self.mon2.species_evolves_to,
             )
         ]
+
+        for x in self.mon1.species_evolves_to:
+            items.append(Fusion(mon1=x, mon2=self.mon2))
+
+        for x in self.mon2.species_evolves_to:
+            items.append(Fusion(mon1=self.mon1, mon2=x))
+
+        return items
 
     @property
     def species_evolves_from(self) -> Optional[Fusion]:
@@ -661,6 +669,21 @@ class Fusion(Species):
             )
         ):
             return Fusion(mon1=mon1, mon2=mon2)
+
+    @property
+    def total_species_evolves_from(self) -> list[Fusion]:
+        items: list[Fusion] = []
+
+        if mon1 := self.mon1.species_evolves_from:
+            items.append(Fusion(mon1=mon1, mon2=self.mon2))
+
+        if mon2 := self.mon2.species_evolves_from:
+            items.append(Fusion(mon1=self.mon1, mon2=mon2))
+
+        if mon1 and mon2:
+            items.append(Fusion(mon1=mon1, mon2=mon2))
+
+        return items
 
     @property
     def possible_types(self) -> list[set[Typing]]:

@@ -221,8 +221,7 @@ class Basic(Generic[_M], View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if editing_original:
-                if message := await target.edit_original_message(**data):
-                    self.message = message
+                self.message = await target.edit_original_message(**data)
             elif resp.is_done():
                 self.message = await target.followup.send(**data, wait=True)
             else:

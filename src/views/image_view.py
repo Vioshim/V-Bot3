@@ -92,8 +92,8 @@ class ImageView(Basic):
         finally:
             self.text = self.message.embeds[0].image.url
             await self.wait()
-            yield self.text
             await self.delete()
+            yield self.text
 
     @button(label="I'll send an Image", row=0)
     async def insert_image(self, btn: Button, ctx: Interaction):
@@ -109,15 +109,17 @@ class ImageView(Basic):
         )
         received: Message = await self.bot.wait_for("message", check=check(ctx))
         if attachments := received.attachments:
-            self.text = attachments[0].url
+            self.text = attachments[0].proxy_url
             self.received = received
+            await received.delete()
         elif file := await self.bot.get_file(
             url=received.content,
             filename="image",
         ):
-            self.received = await ctx.channel.send(file=file)
-            self.text = self.received.attachments[0].url
             await received.delete()
+            self.received = foo = await ctx.channel.send(file=file)
+            self.text = self.received.attachments[0].proxy_url
+            await foo.delete()
         elif image := self.message.embeds[0].image:
             self.text = image.url
         else:

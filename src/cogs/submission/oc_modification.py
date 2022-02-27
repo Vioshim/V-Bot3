@@ -803,8 +803,6 @@ class ImageMod(Mod):
         await origin.edit(content="Modification done", embed=None, view=None)
         aux: Optional[bool] = None
         if isinstance(image := view.text, str):
-            if msg := view.received:
-                await msg.delete(delay=100)
             aux = oc.image != image
             oc.image = image
         return aux
@@ -916,22 +914,21 @@ class EvolutionMod(Mod):
         """
         origin = await target.original_message()
 
-        if len(values := oc.species.species_evolves_to) == 1:
-            species = values[0]
-        else:
-            view = ComplexInput(
-                bot=bot,
-                member=member,
-                values=set(values),
-                timeout=None,
-                target=target,
-                parser=lambda x: (x.name, f"Evolve to {x.name}"),
-            )
-            view.embed.title = "Select the Evolution"
-            await origin.edit(content=None, embed=view.embed, view=view)
-            await view.wait()
-            if not (species := view.choice):
-                return
+        values = oc.species.species_evolves_to
+
+        view = ComplexInput(
+            bot=bot,
+            member=member,
+            values=set(values),
+            timeout=None,
+            target=target,
+            parser=lambda x: (x.name, f"Evolve to {x.name}"),
+        )
+        view.embed.title = "Select the Evolution"
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        if not (species := view.choice):
+            return
 
         oc.species = species
         if not oc.types and isinstance(species, Fusion):
@@ -967,8 +964,6 @@ class EvolutionMod(Mod):
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
         if isinstance(image := view.text, str):
-            if msg := view.received:
-                await msg.delete(delay=30)
             oc.image = image
         return True
 
@@ -991,7 +986,9 @@ class DevolutionMod(Mod):
         bool
             If it can be used or not
         """
-        return bool(oc.evolves_from)
+        if isinstance(species := oc.species, Fusion):
+            return bool(species.total_species_evolves_from)
+        return bool(species.evolves_from)
 
     async def method(
         self,
@@ -1021,9 +1018,31 @@ class DevolutionMod(Mod):
         origin = await target.original_message()
 
         current = oc.species
-        oc.species = oc.species.species_evolves_from
-        if not oc.types and isinstance(oc.species, Fusion):
-            possible_types = oc.species.possible_types
+
+        total = []
+
+        if isinstance(current, Fusion):
+            total.extend(current.total_species_evolves_from)
+        elif item := current.species_evolves_from:
+            total.append(item)
+
+        view = ComplexInput(
+            bot=bot,
+            member=member,
+            values=set(total),
+            timeout=None,
+            target=target,
+            parser=lambda x: (x.name, f"Devolve to {x.name}"),
+        )
+        view.embed.title = "Select the Devolution"
+        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.wait()
+        species: Optional[Fusion] = view.choice
+        if not species:
+            return
+
+        if not species.types and isinstance(species, Fusion):
+            possible_types = species.possible_types
             view = ComplexInput(
                 bot=bot,
                 member=member,
@@ -1040,9 +1059,11 @@ class DevolutionMod(Mod):
             await view.wait()
             if not (types := view.choice):
                 return
-            oc.species.types = types
+            species.types = types
 
-        oc.moveset &= set(oc.species.movepool()) & set(current.movepool())
+        oc.species = species
+
+        oc.moveset &= set(species.movepool()) & set(current.movepool())
 
         default_image = oc.default_image or oc.image
 
@@ -1057,8 +1078,6 @@ class DevolutionMod(Mod):
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
         if isinstance(image := view.text, str):
-            if msg := view.received:
-                await msg.delete(delay=30)
             oc.image = image
         return True
 
