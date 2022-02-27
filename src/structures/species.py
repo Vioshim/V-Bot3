@@ -650,18 +650,14 @@ class Fusion(Species):
             )
         ]
 
-        for x in self.mon1.species_evolves_to:
-            if x == self.mon2:
-                mon = x
-            else:
-                mon = Fusion(mon1=x, mon2=self.mon2)
+        for mon in self.mon1.species_evolves_to:
+            if mon != self.mon2:
+                mon = Fusion(mon1=mon, mon2=self.mon2)
             items.append(mon)
 
-        for x in self.mon2.species_evolves_to:
-            if x == self.mon1:
-                mon = x
-            else:
-                mon = Fusion(mon1=self.mon1, mon2=x)
+        for mon in self.mon2.species_evolves_to:
+            if mon != self.mon1:
+                mon = Fusion(mon1=self.mon1, mon2=mon)
             items.append(mon)
 
         return items
@@ -681,13 +677,19 @@ class Fusion(Species):
         items: list[Fusion] = []
 
         if mon1 := self.mon1.species_evolves_from:
-            items.append(Fusion(mon1=mon1, mon2=self.mon2))
+            if mon1 != self.mon2:
+                mon1 = Fusion(mon1=mon1, mon2=self.mon2)
+            items.append(mon1)
 
         if mon2 := self.mon2.species_evolves_from:
-            items.append(Fusion(mon1=self.mon1, mon2=mon2))
+            if self.mon1 != mon2:
+                mon2 = Fusion(mon1=mon1, mon2=self.mon2)
+            items.append(mon2)
 
         if mon1 and mon2:
-            items.append(Fusion(mon1=mon1, mon2=mon2))
+            if mon1 != mon2:
+                mon1 = Fusion(mon1=mon1, mon2=mon2)
+            items.append(mon1)
 
         return items
 
