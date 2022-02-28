@@ -414,16 +414,17 @@ class Character(metaclass=ABCMeta):
             ):
                 self.abilities = Ability.deduce_many(*abilities)
 
-            if not self.has_default_types:
-                if mon_types := await connection.fetchval(
+            if not self.has_default_types and (
+                mon_types := await connection.fetchval(
                     """--sql
                     SELECT ARRAY_AGG(TYPE)
                     FROM CHARACTER_TYPES
                     WHERE character = $1;
                     """,
                     self.id,
-                ):
-                    self.species.types = Typing.deduce_many(*mon_types)
+                )
+            ):
+                self.species.types = Typing.deduce_many(*mon_types)
 
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities

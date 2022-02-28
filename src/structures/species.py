@@ -93,9 +93,7 @@ class Species(metaclass=ABCMeta):
     def __eq__(self, other: Species):
         if isinstance(other, Species):
             return str(self.id) == str(other.id)
-        raise NotImplementedError(
-            f"Can't compare Species with {other.__class__.__name__}"
-        )
+        return NotImplemented
 
     @classmethod
     def all(cls) -> frozenset[Species]:
@@ -709,7 +707,10 @@ class Fusion(Species):
         types1 = self.mon1.types
         types2 = self.mon2.types
         elements: list[set[Typing]] = []
-        if self.mon1 in self.mon2.evolves_to or self.mon2 in self.mon1.evolves_to:
+        if (
+            self.mon1 in self.mon2.evolves_to
+            or self.mon2 in self.mon1.evolves_to
+        ):
             elements.append(self.mon1.types)
             elements.append(self.mon2.types)
 
@@ -778,10 +779,11 @@ class SpeciesEncoder(JSONEncoder):
         """
         if isinstance(o, Species):
             item = asdict(o)
-            item["abilities"] = [i.id for i in o.abilities]
+            item["abilities"] = sorted(i.id for i in o.abilities)
             item["types"] = [str(i) for i in o.types]
             item["movepool"] = o.movepool.as_dict
-            item["evolves_to"] = list(o.evolves_to)
+            item["evolves_to"] = sorted(o.evolves_to)
+            item["kind"] = type(o).__name__
             return item
         return super(SpeciesEncoder, self).default(o)
 
