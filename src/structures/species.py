@@ -59,6 +59,12 @@ COLORS = {
     "Yellow": 0xFF9,
 }
 _BEASTBOOST = Ability.from_ID(item="BEASTBOOST")
+PHRASES = {
+    "GALAR": "Galarian",
+    "HISUI": "Hisuian",
+    "ALOLA": "Alolan",
+    "KANTO": "Kantoian",
+}
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -196,12 +202,14 @@ class Species(metaclass=ABCMeta):
 
                 word = method(word)
 
-                if word.startswith(item := method("Galarian ")):
-                    word = method(f"{word.replace(item, '')} Galar")
-                elif word.startswith(item := method("Hisuian ")):
-                    word = method(f"{word.replace(item, '')} Hisui")
-                elif word.startswith(item := method("Kantoian ")):
-                    word = word.replace(item, "")
+                for key, value in PHRASES.items():
+                    phrase1, phrase2 = method(f"{value} "), method(f"{key} ")
+                    if word.startswith(phrase1) or word.startswith(phrase2):
+                        word = word.removeprefix(phrase1)
+                        word = word.removeprefix(phrase2)
+                        if key != "KANTO":
+                            word = method(f"{word} {key}")
+                        break
 
                 if data := elems.get(word):
                     items.add(data)
@@ -661,14 +669,14 @@ class Fusion(Species):
         return items
 
     @property
-    def species_evolves_from(self) -> Optional[Fusion]:
-        if all(
-            (
-                mon1 := self.mon1.species_evolves_from,
-                mon2 := self.mon2.species_evolves_from,
-            )
+    def species_evolves_from(self):
+        if (
+            (mon1 := self.mon1.species_evolves_from)
+            and (mon2 := self.mon2.species_evolves_from)
+            and mon1 != mon2
         ):
             return Fusion(mon1=mon1, mon2=mon2)
+        return mon1 or mon2
 
     @property
     def total_species_evolves_from(self) -> list[Fusion]:
