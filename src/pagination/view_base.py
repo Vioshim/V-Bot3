@@ -223,7 +223,10 @@ class Basic(Generic[_M], View):
             if editing_original:
                 self.message = await target.edit_original_message(**data)
             elif resp.is_done():
-                self.message = await target.followup.send(**data, wait=True)
+                try:
+                    self.message = await target.followup.send(**data, wait=True)
+                except DiscordException:
+                    self.message = await target.channel.send(**data)
             else:
                 ctx = await resp.send_message(**data)
                 self.message = await ctx.original_message()
