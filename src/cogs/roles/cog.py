@@ -219,8 +219,8 @@ class Roles(Cog):
     async def on_ready(self):
         """Loads the views"""
         self.webhook = await self.bot.webhook(
-            719709333369258015,
-            reason="Self Roles",
+            722617383738540092,
+            reason="RP Pinging",
         )
         self.roles = PronounRoles(timeout=None)
         self.basic = BasicRoles(timeout=None)
