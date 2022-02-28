@@ -218,33 +218,26 @@ class Roles(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the views"""
-        self.webhook = await self.bot.fetch_webhook(857145983379832832)
-        self.bot.add_view(
-            view=PronounRoles(timeout=None),
-            message_id=916482734933811232,
+        self.webhook = await self.bot.webhook(
+            719709333369258015,
+            reason="Self Roles",
         )
-        self.bot.add_view(
-            view=BasicRoles(timeout=None),
-            message_id=916482736309534762,
+        self.roles = PronounRoles(timeout=None)
+        self.basic = BasicRoles(timeout=None)
+        self.color = ColorRoles(timeout=None)
+        self.rp_search = RPSearchRoles(timeout=None)
+        self.role_view = RoleView(
+            bot=self.bot,
+            cool_down=self.cool_down,
+            webhook=self.webhook,
+            role_cool_down=self.role_cool_down,
+            last_claimer=self.last_claimer,
         )
-        self.bot.add_view(
-            view=ColorRoles(timeout=None),
-            message_id=916482737811120128,
-        )
-        self.bot.add_view(
-            view=RPSearchRoles(timeout=None),
-            message_id=916482738876477483,
-        )
-        self.bot.add_view(
-            view=RoleView(
-                bot=self.bot,
-                cool_down=self.cool_down,
-                webhook=self.webhook,
-                role_cool_down=self.role_cool_down,
-                last_claimer=self.last_claimer,
-            ),
-            message_id=910915102490910740,
-        )
+        self.bot.add_view(view=self.roles, message_id=916482734933811232)
+        self.bot.add_view(view=self.basic, message_id=916482736309534762)
+        self.bot.add_view(view=self.color, message_id=916482737811120128)
+        self.bot.add_view(view=self.rp_search, message_id=916482738876477483)
+        self.bot.add_view(view=self.role_view, message_id=910915102490910740)
 
 
 def setup(bot: CustomBot) -> None:

@@ -154,7 +154,7 @@ class PronounRoles(View):
             SelectOption(
                 label="Them",
                 value="874721683381030973",
-                emoji="🏳️‍🌈",
+                emoji=None,
             ),
         ],
     )
