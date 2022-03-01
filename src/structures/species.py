@@ -112,8 +112,7 @@ class Species(metaclass=ABCMeta):
 
     @classmethod
     def all(cls) -> frozenset[Species]:
-        items = filter(lambda x: isinstance(x, cls), ALL_SPECIES.values())
-        return frozenset(items)
+        return frozenset(x for x in ALL_SPECIES.values() if isinstance(x, cls))
 
     @property
     def total_movepool(self):
@@ -255,10 +254,7 @@ class Species(metaclass=ABCMeta):
         if isinstance(item, cls):
             return item
         elif isinstance(item, str):
-            if to_search := cls.all():
-                values = {i.id: i for i in to_search}
-            else:
-                values = ALL_SPECIES
+            values = {i.id: i for i in cls.all()} or ALL_SPECIES
             items = {x for i in item.split("_") if (x := values.get(i))}
             if len(items) == 2:
                 items = {Fusion(*items)}
