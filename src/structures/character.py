@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
 from random import sample
+from sys import exc_info
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
@@ -1630,7 +1631,11 @@ async def fetch_all(connection: Connection):
     data: list[Type[Character]] = []
 
     for kind in ASSOCIATIONS.values():
-        data.extend(await kind.fetch_all(connection))
+        try:
+            values = await kind.fetch_all(connection)
+            data.extend(values)
+        except Exception as e:
+            print(f"Exception at {kind}: {e}")
 
     return data
 
