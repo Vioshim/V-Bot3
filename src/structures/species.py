@@ -93,8 +93,17 @@ class Species(metaclass=ABCMeta):
 
     def __post_init__(self):
         self.evolves_to = frozenset(self.evolves_to)
-        self.types = frozenset(self.types)
+
+        if any(not isinstance(x, Ability) for x in self.abilities):
+            self.abilities = Ability.deduce_many(*self.abilities)
         self.abilities = frozenset(self.abilities)
+
+        if isinstance(self.movepool, dict):
+            self.movepool = Movepool.from_dict(**self.movepool)
+
+        if any(not isinstance(x, Typing) for x in self.types):
+            self.types = Typing.deduce_many(*self.types)
+        self.types = frozenset(self.types)
 
     def __eq__(self, other: Species):
         if isinstance(other, Species):
@@ -105,6 +114,14 @@ class Species(metaclass=ABCMeta):
     def all(cls) -> frozenset[Species]:
         items = filter(lambda x: isinstance(x, cls), ALL_SPECIES.values())
         return frozenset(items)
+
+    @property
+    def total_movepool(self):
+        mon = self
+        aux = self.movepool
+        while mon := mon.species_evolves_from:
+            aux += mon.movepool
+        return aux
 
     @property
     def species_evolves_to(self) -> list[Species]:
@@ -181,12 +198,9 @@ class Species(metaclass=ABCMeta):
             elif isinstance(elem, cls):
                 items.add(elem)
 
-        if entries := cls.all():
-            MOD1 = {i.id: i for i in entries}
-            MOD2 = {i.name: i for i in entries}
-        else:
-            MOD1 = ALL_SPECIES
-            MOD2 = SPECIES_BY_NAME
+        entries = cls.all()
+        MOD1 = {i.id: i for i in entries} or ALL_SPECIES
+        MOD2 = {i.name: i for i in entries} or SPECIES_BY_NAME
 
         methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
             (MOD1, fix),
@@ -334,15 +348,6 @@ class UltraBeast(Species):
     This class Represents a legendary
     """
 
-    def __post_init__(self):
-        self.evolves_to = frozenset(self.evolves_to)
-        self.types = frozenset(self.types)
-        self.abilities = frozenset(
-            {
-                _BEASTBOOST,
-            }
-        )
-
     @property
     def requires_image(self) -> bool:
         return False
@@ -372,13 +377,24 @@ class Fakemon(Species):
     def __post_init__(self):
         stats = self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
         self.evolves_to = frozenset(self.evolves_to)
+
+        if any(not isinstance(x, Ability) for x in self.abilities):
+            self.abilities = Ability.deduce_many(*self.abilities)
+        self.abilities = frozenset(self.abilities)
+
+        if isinstance(self.movepool, dict):
+            self.movepool = Movepool.from_dict(**self.movepool)
+
+        if any(not isinstance(x, Typing) for x in self.types):
+            self.types = Typing.deduce_many(*self.types)
         self.types = frozenset(self.types)
+
         if sum(stats) > 18:
-            raise Exception("Stats are very high, total max is 18")
+            raise ValueError("Stats are very high, total max is 18")
         if min(stats) < 1:
-            raise Exception("Minimum stat value is 1")
+            raise ValueError("Minimum stat value is 1")
         if max(stats) > 5:
-            raise Exception("Maximum stat value is 5")
+            raise ValueError("Maximum stat value is 5")
 
     def set_stats(
         self,
@@ -391,11 +407,11 @@ class Fakemon(Species):
     ):
         stats = HP, ATK, DEF, SPA, SPD, SPE
         if sum(stats) > 18:
-            raise Exception("Stats are very high, total max is 18")
+            raise ValueError("Stats are very high, total max is 18")
         if min(stats) < 1:
-            raise Exception("Minimum stat value is 1")
+            raise ValueError("Minimum stat value is 1")
         if max(stats) > 5:
-            raise Exception("Maximum stat value is 5")
+            raise ValueError("Maximum stat value is 5")
         self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE = stats
 
     @property
@@ -428,12 +444,11 @@ class Fakemon(Species):
         Optional[Fakemon]
             Result
         """
-        if mon := Species.deduce(item):
-            if not isinstance(mon, cls):
-                return cls(evolves_from=mon.id)
+        if (mon := Species.deduce(item)) and not isinstance(mon, cls):
+            return cls(evolves_from=mon.id)
 
     @classmethod
-    def from_ID(cls, item: str) -> None:
+    def from_ID(cls, item: str) -> Optional[Fakemon]:
         """Method from ID but filtered, (fakemon that evolved from a canon species)
 
         Parameters
@@ -441,9 +456,8 @@ class Fakemon(Species):
         item : str
             placeholder
         """
-        if mon := Species.from_ID(item):
-            if not isinstance(mon, Fusion):
-                return Fakemon(evolves_from=mon.id)
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
+            return Fakemon(evolves_from=mon.id)
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -452,7 +466,7 @@ class CustomMega(Species):
     This class Represents a Custom Mega
     """
 
-    base: Species = None
+    base: Optional[Species] = None
 
     def __init__(self, base: Species):
         super(CustomMega, self).__init__(
@@ -498,12 +512,11 @@ class CustomMega(Species):
         Optional[CustomMega]
             Result
         """
-        if mon := Species.deduce(item):
-            if not isinstance(mon, cls):
-                return cls(base=mon)
+        if (mon := Species.deduce(item)) and not isinstance(mon, cls):
+            return cls(base=mon)
 
     @classmethod
-    def from_ID(cls, item: str) -> None:
+    def from_ID(cls, item: str) -> Optional[CustomMega]:
         """Method from ID but filtered
 
         Parameters
@@ -818,9 +831,6 @@ class SpeciesDecoder(JSONDecoder):
             Output
         """
         if all(i in dct for i in Species.__slots__):
-            dct["abilities"] = Ability.deduce_many(*dct.get("abilities", []))
-            dct["movepool"] = Movepool.from_dict(**dct.get("movepool", {}))
-            dct["types"] = Typing.deduce_many(*dct.get("types", []))
             match dct.pop("kind", ""):
                 case "Legendary":
                     return Legendary(**dct)

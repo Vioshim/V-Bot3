@@ -161,6 +161,10 @@ class Character(metaclass=ABCMeta):
         return self.species.movepool
 
     @property
+    def total_movepool(self) -> Movepool:
+        return self.species.total_movepool
+
+    @property
     def can_have_special_abilities(self) -> bool:
         return self.species.can_have_special_abilities
 

@@ -650,7 +650,7 @@ class MovesetMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        moves = oc.movepool() or ALL_MOVES.values()
+        moves = oc.total_movepool() or ALL_MOVES.values()
 
         view = ComplexInput(
             bot=bot,
@@ -811,7 +811,7 @@ class MovepoolMod(Mod):
     description: str = "Used to change Movepool"
 
     def check(self, oc: Type[Character]) -> bool:
-        """Determines whetere it can be used or not by a character
+        """Determines if it can be used or not by a character
 
         Parameters
         ----------
@@ -1076,7 +1076,7 @@ class DevolutionMod(Mod):
 
         oc.species = species
 
-        oc.moveset &= set(species.movepool()) & set(current.movepool())
+        oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
 
         default_image = oc.default_image or oc.image
 
