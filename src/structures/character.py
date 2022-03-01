@@ -99,7 +99,9 @@ class Character(metaclass=ABCMeta):
             self.server = 719343092963999804
         if not self.created_at:
             self.created_at = utcnow()
-        if isinstance(self.sp_ability, dict):
+        if not self.can_have_special_abilities:
+            self.sp_ability = None
+        elif isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun[self.pronoun]
@@ -1773,6 +1775,13 @@ def oc_process(**kwargs) -> Type[Character]:
 
     data = {k: v for k, v in data.items() if v}
     data["species"] = species
+
+    if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
+        data["sp_ability"] = value
+    elif "false" not in (value := str(value).lower()) and (
+        "true" in value or "yes" in value
+    ):
+        data["sp_ability"] = SpAbility()
 
     return kind_deduce(species, **data)
 

@@ -6,6 +6,7 @@
             "Age": "Age",
             "Pronoun": "He/She/Them",
             "Abilities": "Ability, Ability",
+            "SpAbility": "True/False",
             "Moveset": "Move, Move, Move, Move, Move, Move"
         },
         "Document": {
@@ -86,6 +87,7 @@
             "Age": "Age",
             "Pronoun": "He/She/Them",
             "Abilities": "Ability, Ability",
+            "SpAbility": "True/False",
             "Moveset": "Move, Move, Move, Move, Move, Move"
         },
         "Document": {
@@ -159,6 +161,7 @@
             "Types": "Type, Type",
             "Pronoun": "He/She/Them",
             "Ability": "Ability, Ability",
+            "SpAbility": "True/False",
             "Moveset": "Move, Move, Move, Move, Move, Move"
         },
         "Document": {

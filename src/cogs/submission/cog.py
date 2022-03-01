@@ -79,7 +79,14 @@ from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Variant
+from src.structures.species import (
+    Fakemon,
+    Fusion,
+    Legendary,
+    Mythical,
+    UltraBeast,
+    Variant,
+)
 from src.utils.doc_reader import docs_reader
 from src.utils.etc import REGISTERED_IMG, RP_CATEGORIES
 from src.utils.functions import yaml_handler
@@ -151,12 +158,10 @@ def message_validator(message: Message):
 
     def checker(value: Message) -> bool:
         if value.webhook_id and message.channel == value.channel:
-            if message.content:
-                return value.content in message.content
-            if message.attachments and (
-                len(message.attachments) == len(value.attachments)
-            ):
-                return value.content is None
+            if isinstance(content := message.content, str):
+                return value.content in content
+            if attachments := message.attachments:
+                return len(attachments) == len(value.attachments)
         return False
 
     return checker
@@ -570,29 +575,31 @@ class Submission(Cog):
                 return
 
         max_ab = oc.max_amount_abilities
-        if not oc.abilities or len(oc.abilities) > max_ab:
-            if not isinstance(species, Fakemon) and max_ab == 1:
-                oc.abilities = species.abilities
-            else:
-                ability_view = ComplexInput(
-                    bot=self.bot,
-                    member=user,
-                    values=(
-                        Ability.all()
-                        if oc.any_ability_at_first
-                        else oc.species.abilities
-                    ),
-                    target=ctx,
-                    max_values=max_ab,
-                )
+        if not isinstance(species, Fakemon) and (
+            isinstance(species, (Legendary, Mythical, UltraBeast))
+            or len(species.abilities) == 1
+        ):
+            oc.abilities = species.abilities
+        elif not oc.abilities or len(oc.abilities) > max_ab:
+            ability_view = ComplexInput(
+                bot=self.bot,
+                member=user,
+                values=(
+                    Ability.all()
+                    if oc.any_ability_at_first
+                    else oc.species.abilities
+                ),
+                target=ctx,
+                max_values=max_ab,
+            )
 
-                async with ability_view.send(
-                    title=f"Select the Abilities (Max {max_ab})",
-                    description="If you press the write button, you can add multiple by adding commas.",
-                ) as abilities:
-                    if not abilities:
-                        return
-                    oc.abilities = frozenset(abilities)
+            async with ability_view.send(
+                title=f"Select the Abilities (Max {max_ab})",
+                description="If you press the write button, you can add multiple by adding commas.",
+            ) as abilities:
+                if not abilities:
+                    return
+                oc.abilities = frozenset(abilities)
         if len(oc.abilities) > max_ab:
             await send(
                 f"Max Amount of Abilities for the current Species is {max_ab}"
@@ -627,13 +634,15 @@ class Submission(Cog):
             species = oc.species
 
         if not oc.moveset or len(oc.moveset) > 6:
-            if not (movepool := species.movepool):
-                movepool = Movepool(event=Move.all())
+            if movepool := species.movepool:
+                movepool = movepool()
+            else:
+                movepool = Move.all()
 
             moves_view = ComplexInput(
                 bot=self.bot,
                 member=user,
-                values=movepool(),
+                values=movepool,
                 timeout=None,
                 target=ctx,
                 max_values=6,
@@ -663,12 +672,7 @@ class Submission(Cog):
             await send("Max amount of moves in a pokemon is 6.")
             return
 
-        if (
-            not oc.sp_ability
-            and not oc.url
-            and oc.can_have_special_abilities
-            and len(oc.abilities) == 1
-        ):
+        if oc.sp_ability == SpAbility():
             bool_view = BooleanView(bot=self.bot, member=user, target=ctx)
             async with bool_view.handle(
                 title="Does the character have an Special Ability?",
@@ -748,7 +752,9 @@ class Submission(Cog):
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
         thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             embed: Embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg_oc = await self.oc_list_webhook.send(
