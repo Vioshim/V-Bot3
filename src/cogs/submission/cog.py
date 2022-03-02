@@ -626,7 +626,7 @@ class Submission(Cog):
             view = MovepoolView(
                 bot=self.bot,
                 target=ctx,
-                member=member,
+                member=user,
                 oc=oc,
             )
             await view.send()
