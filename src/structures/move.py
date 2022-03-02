@@ -310,8 +310,8 @@ class MoveDecoder(JSONDecoder):
         Any
             Result
         """
-        if set(dct).issubset(Move.__slots__):
-            dct["type"] = Typing.from_ID(dct.get("type", "NORMAL"))
+        if mon_type := dct.get("type"):
+            dct["type"] = Typing.from_ID(mon_type)
             return Move(**dct)
         return dct
 
