@@ -1691,7 +1691,7 @@ def oc_process(**kwargs) -> Type[Character]:
             species = Fakemon(name=name.title())
 
         if species is None:
-            raise Exception("Fakemon was not deduced by the bot.")
+            raise ValueError("Fakemon was not deduced by the bot.")
 
         data["species"] = species
     elif variant := data.pop("variant", ""):
@@ -1713,7 +1713,7 @@ def oc_process(**kwargs) -> Type[Character]:
                     species.name = variant.title()
                     break
             else:
-                raise Exception("Unable to determine the variant' species")
+                raise ValueError("Unable to determine the variant' species")
 
         data["species"] = species
     elif species := Fusion.deduce(data.pop("fusion", "")):
@@ -1729,9 +1729,7 @@ def oc_process(**kwargs) -> Type[Character]:
     if species.banned:
         raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if (type_info := common_pop_get(data, "types", "type")) and (
-        types := Typing.deduce_many(type_info)
-    ):
+    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(*type_info)):
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.types = types
         elif species.types != types:

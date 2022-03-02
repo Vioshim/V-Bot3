@@ -783,7 +783,7 @@ if __name__ == "__main__":
             SPA=95,
             SPD=95,
             SPE=60,
-            evolves_from=["DARTRIX"],
+            evolves_from="DARTRIX",
             movepool=Movepool.from_dict(
                 level={
                     0: ["ROCKSMASH"],

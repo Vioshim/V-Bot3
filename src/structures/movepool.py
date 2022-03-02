@@ -659,6 +659,6 @@ class MovepoolDecoder(JSONDecoder):
         Any
             Result
         """
-        if any(i in dct for i in Movepool.__slots__):
+        if set(dct).issubsset(Movepool.__slots__):
             return Movepool.from_dict(**dct)
         return dct

@@ -826,7 +826,7 @@ class SpeciesDecoder(JSONDecoder):
         Any
             Output
         """
-        if all(i in dct for i in Species.__slots__):
+        if set(dct).issubset(Species.__slots__):
             match dct.pop("kind", ""):
                 case "Legendary":
                     return Legendary(**dct)

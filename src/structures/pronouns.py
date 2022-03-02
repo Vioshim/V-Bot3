@@ -102,7 +102,7 @@ class Pronoun(Enum):
                 name = item.__class__.__name__
                 raise TypeError(f"Expected str but received {name!r} instead.")
 
-            name = "/".join(map(str, item))
+            item = "/".join(map(str, item))
 
         match fix(item):
             case x if "THEM" in x or "HELICOPTER" in x:

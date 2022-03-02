@@ -110,7 +110,8 @@ class ColoredFormatter(Formatter):
             )
             record.levelname = level_name_color
             pathname = record.pathname.replace("/root/V-Bot3/src/", "")
-            record.pathname = pathname.replace("/root/V-Bot3/", "")
+            pathname = pathname.replace("/root/V-Bot3/", "")
+            record.pathname = pathname.replace("/app/", "")
         return super(ColoredFormatter, self).format(record)
 
 
