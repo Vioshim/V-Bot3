@@ -15,10 +15,12 @@
 from contextlib import suppress
 from io import StringIO
 from os import getenv
+from random import randint
 from typing import Optional
 
 from discord import (
     AllowedMentions,
+    ApplicationContext,
     Color,
     DiscordException,
     Embed,
@@ -27,6 +29,8 @@ from discord import (
     HTTPException,
     Member,
     Message,
+    Option,
+    OptionChoice,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     TextChannel,
@@ -43,6 +47,7 @@ from discord.ext.commands import (
     DisabledCommand,
     MaxConcurrencyReached,
     UserInputError,
+    slash_command,
 )
 from discord.ui import Button, View
 from discord.utils import format_dt, utcnow
@@ -67,6 +72,7 @@ channels = {
 
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
+WEATHER_API = getenv("WEATHER_API")
 
 
 class Information(Cog):
@@ -75,6 +81,69 @@ class Information(Cog):
         self.join: dict[Member, Message] = {}
         self.log: Optional[Webhook] = None
         self.info_msg: Optional[WebhookMessage] = None
+
+    @slash_command(guild_ids=[719343092963999804])
+    async def weather(
+        self,
+        ctx: ApplicationContext,
+        area: Option(
+            str,
+            name="area",
+            choices=[
+                OptionChoice(
+                    name=item.name,
+                    value=f"{item.name}/{randint(1, 100)}/{randint(1, 100)}",
+                )
+                for item in MAP_ELEMENTS
+            ],
+        ),
+    ):
+        """Weather information from the selected area.
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            ctx
+        area : str, optional
+            area
+        """
+        if not isinstance(area, str):
+            await ctx.respond("Wrong format", ephemeral=True)
+        else:
+            try:
+                name, lat, lon = area.split("/")
+                URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API}"
+                async with self.bot.session.get(URL) as f:
+                    if f.status != 200:
+                        await ctx.respond("Invalid response", ephemeral=True)
+                    data: dict = await f.json()
+                    if weather := data.get("weather", []):
+                        info: dict = weather[0]
+                        main, desc, icon = (
+                            info["main"],
+                            info["description"],
+                            info["icon"],
+                        )
+                        embed = Embed(
+                            title=f"Weather for {name}",
+                            description=f"{main}: {desc}".title(),
+                            color=ctx.author.color,
+                            timestamp=utcnow(),
+                        )
+                        embed.set_image(url=WHITE_BAR)
+                        embed.set_thumbnail(
+                            url=f"http://openweathermap.org/img/w/{icon}.png"
+                        )
+                        if wind := data.get("wind", {}):
+                            deg, speed = wind["deg"], wind["speed"]
+                            embed.set_footer(
+                                text=f"Speed: {speed}, Degrees: {deg} °"
+                            )
+                        await ctx.respond(embed=embed, ephemeral=True)
+                        return
+                await ctx.respond("Invalid value", ephemeral=True)
+            except ValueError:
+                await ctx.respond("Invalid value", ephemeral=True)
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -149,8 +218,11 @@ class Information(Cog):
         data: dict[str, int] = {}
         if cog := self.bot.get_cog("Submission"):
             ocs = [oc for oc in cog.ocs.values() if guild.get_member(oc.author)]
-            data["Characters"] = len(ocs)
+            total_ocs = len(ocs)
+        else:
+            total_ocs = 0
 
+        data["Characters"] = total_ocs
         data["Members   "] = members
         data["Bots      "] = total - members
         data["Total     "] = total
@@ -176,7 +248,9 @@ class Information(Cog):
             timestamp=utcnow(),
         )
         if roles := member.roles[:0:-1]:
-            embed.description = "\n".join(f"> **•** {role.mention}" for role in roles)
+            embed.description = "\n".join(
+                f"> **•** {role.mention}" for role in roles
+            )
         embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
         embed.set_image(url=WHITE_BAR)
         view = View()
@@ -231,13 +305,22 @@ class Information(Cog):
                         url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                     )
                 )
+                message = await self.log.send(
+                    embed=embed,
+                    file=file,
+                    view=view,
+                    wait=True,
+                )
             else:
-                view = View()
-            message = await self.log.send(
-                embed=embed, file=file, view=view, wait=True
-            )
+                message = await self.log.send(
+                    embed=embed,
+                    file=file,
+                    wait=True,
+                )
             image = ImageKit(
-                base="welcome_TW8HUQOuU.png", weight=1920, height=1080
+                base="welcome_TW8HUQOuU.png",
+                weight=1920,
+                height=1080,
             )
             image.add_text(
                 font="unifont_HcfNyZlJoK.otf",
