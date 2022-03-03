@@ -15,7 +15,6 @@
 from contextlib import suppress
 from io import StringIO
 from os import getenv
-from random import randint
 from typing import Optional
 
 from discord import (
@@ -92,7 +91,7 @@ class Information(Cog):
             choices=[
                 OptionChoice(
                     name=item.name,
-                    value=f"{item.name}/{randint(1, 100)}/{randint(1, 100)}",
+                    value=f"{item.name}/{item.lat}/{item.lon}",
                 )
                 for item in MAP_ELEMENTS
             ],
@@ -137,7 +136,7 @@ class Information(Cog):
                         if wind := data.get("wind", {}):
                             deg, speed = wind["deg"], wind["speed"]
                             embed.set_footer(
-                                text=f"Speed: {speed}, Degrees: {deg} °"
+                                text=f"Wind(Speed: {speed}, Degrees: {deg} °)"
                             )
                         await ctx.respond(embed=embed, ephemeral=True)
                         return

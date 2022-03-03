@@ -96,140 +96,140 @@ MAP_ELEMENTS = [
         name="Ashouria",
         category=909239415287738418,
         message=937180387099152404,
-        lat=0,
-        lon=0
+        lat=30,
+        lon=31
     ),
     MapPair(
         name="Athar",
         category=909243882133389342,
         message=937180388013535252,
-        lat=0,
-        lon=0
+        lat=27,
+        lon=153
     ),
     MapPair(
         name="Brevania",
         category=909249684621647942,
         message=937180388764315698,
-        lat=0,
-        lon=0
+        lat=10,
+        lon=67
     ),
     MapPair(
         name="Broxburn",
         category=874015245251797012,
         message=937180388911120435,
-        lat=0,
-        lon=0
+        lat=41,
+        lon=2
     ),
     MapPair(
         name="Chandra Nur",
         category=909250294506983505,
         message=937180389817069608,
-        lat=0,
-        lon=0
+        lat=34,
+        lon=135
     ),
     MapPair(
         name="Estelia",
         category=909250668672466974,
         message=937180396079177728,
-        lat=0,
-        lon=0
+        lat=48,
+        lon=11
     ),
     MapPair(
         name="Lougy",
         category=909264695414910996,
         message=937180396611838032,
-        lat=0,
-        lon=0
+        lat=14,
+        lon=120
     ),
     MapPair(
         name="Muzatoorah",
         category=874017660470431784,
         message=937180397064818768,
-        lat=0,
-        lon=0
+        lat=21,
+        lon=39
     ),
     MapPair(
         name="Norwich",
         category=874017703411720212,
         message=937180397484273674,
-        lat=0,
-        lon=0
+        lat=55,
+        lon=4
     ),
     MapPair(
         name="Osfield",
         category=909264739488649246,
         message=937180398016946177,
-        lat=0,
-        lon=0
+        lat=34,
+        lon=58
     ),
     MapPair(
         name="Parvi",
         category=909264770018988072,
         message=937180405298249728,
-        lat=0,
-        lon=0
+        lat=43,
+        lon=5
     ),
     MapPair(
         name="Pixy Foundation",
         category=909266661515870258,
         message=937180405713477642,
-        lat=0,
-        lon=0
+        lat=45,
+        lon=9
     ),
     MapPair(
         name="Richmod",
         category=909279217995370536,
         message=937180406380392508,
-        lat=0,
-        lon=0
+        lat=33,
+        lon=70
     ),
     MapPair(
         name="Sashi",
         category=909279584732721184,
         message=937180406476832780,
-        lat=0,
-        lon=0
+        lat=35,
+        lon=41
     ),
     MapPair(
         name="Schalzburg",
         category=874017935369310218,
         message=937180407550607441,
-        lat=0,
-        lon=0
+        lat=52,
+        lon=21
     ),
     MapPair(
         name="Shiey Shea",
         category=909280179006877706,
         message=937180414034997289,
-        lat=0,
-        lon=0
+        lat=48,
+        lon=11
     ),
     MapPair(
         name="Shouhead Peaks",
         category=909294313303846932,
         message=937180414378917939,
-        lat=0,
-        lon=0
+        lat=53,
+        lon=3
     ),
     MapPair(
         name="Tomalia",
         category=909294458204487690,
         message=937180414940946522,
-        lat=0,
-        lon=0
+        lat=23,
+        lon=82
     ),
     MapPair(
         name="Upria",
         category=909302744676986890,
         message=937180415268122656,
-        lat=0,
-        lon=0
+        lat=55,
+        lon=37
     ),
     MapPair(
         name="Wilderness",
         category=874018024649265172,
         message=937180415582679111,
-        lat=0,
-        lon=0
+        lat=34,
+        lon=56
     ),
 ]
