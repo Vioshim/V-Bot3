@@ -91,7 +91,7 @@ class Information(Cog):
             choices=[
                 OptionChoice(
                     name=item.name,
-                    value=f"{item.name}/{item.lat}/{item.lon}",
+                    value=f"{item.lat}/{item.lon}",
                 )
                 for item in MAP_ELEMENTS
             ],
@@ -110,7 +110,7 @@ class Information(Cog):
             await ctx.respond("Wrong format", ephemeral=True)
         else:
             try:
-                name, lat, lon = area.split("/")
+                lat, lon = area.split("/")
                 URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API}"
                 async with self.bot.session.get(URL) as f:
                     if f.status != 200:
@@ -124,11 +124,25 @@ class Information(Cog):
                             info["icon"],
                         )
                         embed = Embed(
-                            title=f"Weather for {name}",
-                            description=f"{main}: {desc}".title(),
+                            title=f"{main}: {desc}".title(),
+                            description="Temperature {} ({})",
                             color=ctx.author.color,
                             timestamp=utcnow(),
                         )
+                        main_info = data["main"]
+
+                        values = {
+                            "Temp.": main_info["temp"],
+                            "Temp. Min": main_info["temp_min"],
+                            "Temp. Max": main_info["temp_max"],
+                        }
+
+                        for k, v in values.items():
+                            embed.add_field(
+                                name=k,
+                                value=f"{v} ° C | {1.8 * v + 32} ° K",
+                            )
+
                         embed.set_image(url=WHITE_BAR)
                         embed.set_thumbnail(
                             url=f"http://openweathermap.org/img/w/{icon}.png"
