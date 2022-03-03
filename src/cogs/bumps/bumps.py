@@ -93,7 +93,10 @@ class Bump(metaclass=ABCMeta):
                 value=f"> If you like the server, "
                 f"feel free to let us know your opinion by rating/reviewing the server in {self.name}.",
             )
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
+        embed.set_author(
+            name=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar.url,
+        )
         if guild := ctx.guild:
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         return embed
@@ -110,6 +113,9 @@ class PingBump(View):
         super(PingBump, self).__init__(timeout=data.hours * 3600.0)
         self.mentions: set[Member] = set()
         self.embed = data.adapt_embed(after)
+        if url := self.embed.url:
+            btn = Button(label="Click Here to Review us!", url=url)
+            self.add_item(btn)
         self.before = before
         self.after = after
         self.data = data
@@ -122,22 +128,24 @@ class PingBump(View):
         return self.data.on_message(self.after)
 
     @property
+    def timedelta(self):
+        if date := self.date:
+            return date - utcnow()
+
+    @property
     def date(self) -> datetime:
-        if embeds := self.after.embeds:
-            if data := self.data.format_date.search(embeds[0].description):
-                return parse(
-                    data.group(1),
-                    settings=dict(
-                        PREFER_DATES_FROM="future",
-                        TIMEZONE="utc",
-                    ),
-                )
+        if (embeds := self.after.embeds) and (
+            data := self.data.format_date.search(embeds[0].description)
+        ):
+            return parse(
+                data.group(1),
+                settings=dict(
+                    PREFER_DATES_FROM="future",
+                    TIMEZONE="utc",
+                ),
+            )
 
     async def send(self):
-        if url := self.embed.url:
-            btn = Button(label="Click Here to Review us!", url=url)
-            self.add_item(btn)
-
         self.message = await self.after.channel.send(
             embed=self.embed,
             view=self,
@@ -152,7 +160,9 @@ class PingBump(View):
                 "Alright, you won't get notified", ephemeral=True
             )
         self.mentions.add(inter.user)
-        return await resp.send_message("Alright, you will get notified", ephemeral=True)
+        return await resp.send_message(
+            "Alright, you will get notified", ephemeral=True
+        )
 
     async def on_timeout(self) -> None:
         text = f"**Bump Reminder (Prefix is {self.data.prefix}):**\n"
