@@ -125,7 +125,6 @@ class Information(Cog):
                         )
                         embed = Embed(
                             title=f"{main}: {desc}".title(),
-                            description="Temperature {} ({})",
                             color=ctx.author.color,
                             timestamp=utcnow(),
                         )
@@ -140,7 +139,7 @@ class Information(Cog):
                         for k, v in values.items():
                             embed.add_field(
                                 name=k,
-                                value=f"{v} ° C | {1.8 * v + 32} ° K",
+                                value=f"{v:01d} ° C | {1.8 * v + 32:01d} ° K",
                             )
 
                         embed.set_image(url=WHITE_BAR)
