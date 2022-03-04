@@ -439,7 +439,7 @@ class Information(Cog):
                     url=msg.jump_url,
                 )
             )
-            await self.log.send(embeds=embed, files=file, view=view)
+            await self.log.send(embed=embed, file=file, view=view)
 
         self.bot.msg_cache -= payload.message_ids
 
