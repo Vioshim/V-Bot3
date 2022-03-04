@@ -112,7 +112,7 @@ class Information(Cog):
         else:
             try:
                 lat, lon = area.split("/")
-                URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={WEATHER_API}"
+                URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API}"
                 async with self.bot.session.get(URL) as f:
                     if f.status != 200:
                         await ctx.respond("Invalid response", ephemeral=True)
