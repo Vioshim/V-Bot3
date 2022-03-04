@@ -89,7 +89,13 @@ class Information(Cog):
             str,
             name="area",
             description="Area to get weather info about.",
-            # choices=[OptionChoicename=item.name, value=f"{item.lat}/{item.lon}",) for item in MAP_ELEMENTS],
+            choices=[
+                OptionChoice(
+                    name=item.name,
+                    value=f"{item.lat}/{item.lon}",
+                )
+                for item in MAP_ELEMENTS
+            ],
         ),
     ):
         """Weather information from the selected area.
@@ -134,7 +140,7 @@ class Information(Cog):
                         for k, v in values.items():
                             embed.add_field(
                                 name=k,
-                                value=f"{v:01d} ° C | {1.8 * v + 32:01d} ° K",
+                                value=f"{v:.1f} ° C | {1.8 * v + 32:.1f} ° K",
                             )
 
                         embed.set_image(url=WHITE_BAR)
