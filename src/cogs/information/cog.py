@@ -88,13 +88,8 @@ class Information(Cog):
         area: Option(
             str,
             name="area",
-            choices=[
-                OptionChoice(
-                    name=item.name,
-                    value=f"{item.lat}/{item.lon}",
-                )
-                for item in MAP_ELEMENTS
-            ],
+            description="Area to get weather info about.",
+            # choices=[OptionChoicename=item.name, value=f"{item.lat}/{item.lon}",) for item in MAP_ELEMENTS],
         ),
     ):
         """Weather information from the selected area.
