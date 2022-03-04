@@ -35,6 +35,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    NotFound,
     Option,
     OptionChoice,
     RawMessageDeleteEvent,
@@ -458,6 +459,38 @@ class Submission(Cog):
         view = RPView(self.bot, member.id, self.oc_list)
         await message.edit(view=view)
 
+    async def register_oc(self, member: Member, oc: Character):
+        await self.list_update(member)
+        thread_id = self.oc_list[member.id]
+        oc.thread = thread_id
+        thread: Thread = await self.bot.fetch_channel(thread_id)
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
+            embed: Embed = oc.embed
+            embed.set_image(url=f"attachment://{file.filename}")
+            msg_oc = await self.oc_list_webhook.send(
+                content=member.mention,
+                embed=embed,
+                file=file,
+                thread=thread,
+                allowed_mentions=AllowedMentions(users=True),
+                wait=True,
+            )
+            oc.id = msg_oc.id
+            oc.image = msg_oc.embeds[0].image.url
+            self.rpers.setdefault(member.id, {})
+            self.rpers[member.id][oc.id] = oc
+            self.ocs[oc.id] = oc
+            self.bot.logger.info(
+                "New character has been registered! > %s > %s > %s",
+                str(member),
+                repr(oc),
+                oc.url or "Manual",
+            )
+            async with self.bot.database() as conn:
+                await oc.update(connection=conn, idx=msg_oc.id)
+
     async def registration(
         self,
         ctx: Union[Interaction, Message],
@@ -748,36 +781,7 @@ class Submission(Cog):
                 return
             oc.image = image
 
-        await self.list_update(member)
-        thread_id = self.oc_list[member.id]
-        oc.thread = thread_id
-        thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
-            embed: Embed = oc.embed
-            embed.set_image(url=f"attachment://{file.filename}")
-            msg_oc = await self.oc_list_webhook.send(
-                content=member.mention,
-                embed=embed,
-                file=file,
-                thread=thread,
-                allowed_mentions=AllowedMentions(users=True),
-                wait=True,
-            )
-            oc.id = msg_oc.id
-            oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(member.id, {})
-            self.rpers[member.id][oc.id] = oc
-            self.ocs[oc.id] = oc
-            self.bot.logger.info(
-                "New character has been registered! > %s > %s > %s",
-                str(member),
-                repr(oc),
-                oc.url or "Manual",
-            )
-            async with self.bot.database() as conn:
-                await oc.update(connection=conn, idx=msg_oc.id)
+        await self.register_oc(member, oc)
 
     async def oc_update(self, oc: Type[Character]):
         embed: Embed = oc.embed
@@ -785,9 +789,13 @@ class Submission(Cog):
         thread: Thread = await self.bot.fetch_channel(oc.thread)
         if thread.archived:
             await thread.edit(archived=False)
-        await self.oc_list_webhook.edit_message(
-            oc.id, embed=embed, thread=thread
-        )
+        try:
+            await self.oc_list_webhook.edit_message(
+                oc.id, embed=embed, thread=thread
+            )
+        except NotFound:
+            if member := self.oc_list_webhook.guild.get_member(oc.author):
+                await self.register_oc(member, oc)
 
     @slash_command(
         name="ocs",
@@ -1167,7 +1175,6 @@ class Submission(Cog):
             refer_author = message.author
         if msg_data:
             author = self.supporting.get(refer_author, refer_author)
-            self.ignore.add(refer_author.id)
             if oc := oc_process(**msg_data):
                 oc.author = author.id
                 oc.server = message.guild.id
@@ -1175,7 +1182,6 @@ class Submission(Cog):
                 if isinstance(message, Message):
                     with suppress(DiscordException):
                         await message.delete()
-        self.ignore -= {refer_author.id}
 
     async def on_message_submission(self, message: Message):
         """This method processes character submissions
@@ -1194,6 +1200,7 @@ class Submission(Cog):
             or message.stickers
         ):
             return
+        self.ignore.add(message.author.id)
         try:
             done, _ = await wait(
                 [
@@ -1234,8 +1241,8 @@ class Submission(Cog):
                 "Exception processing character", exc_info=e
             )
             await message.reply(str(e), delete_after=10)
-            if message.author.id in self.ignore:
-                self.ignore.remove(message.author.id)
+        finally:
+            self.ignore -= {message.author.id}
 
     async def on_message_tupper(self, message: Message, member_id: int):
         channel = message.channel
