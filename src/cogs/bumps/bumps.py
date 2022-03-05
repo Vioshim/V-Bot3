@@ -191,7 +191,7 @@ class Disboard(Bump):
 
     def on_message(self, message: Message) -> bool:
         if embeds := message.embeds:
-            return ":thumbsup:" in embeds[0].description
+            return "Bump done!" in embeds[0].description
         return False
 
     def on_message_edit(self, _before: Message, _now: Message) -> bool:
