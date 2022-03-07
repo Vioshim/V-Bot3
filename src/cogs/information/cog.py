@@ -229,13 +229,11 @@ class Information(Cog):
                         "Invalid color",
                         ephemeral=True,
                     )
-                    return
                 except DiscordException:
                     await ctx.respond(
                         "Invalid color for discord",
                         ephemeral=True,
                     )
-                    return
             if isinstance(icon, Attachment):
                 try:
                     data = await icon.read()
@@ -245,8 +243,8 @@ class Information(Cog):
                         "Invalid icon for discord",
                         ephemeral=True,
                     )
-                    return
-            await ctx.respond("Role added/modified.", ephemeral=True)
+            if not ctx.interaction.response.is_done():
+                await ctx.respond("Role added/modified.", ephemeral=True)
         else:
             await ctx.respond(
                 "You have to provide a name for the role",
