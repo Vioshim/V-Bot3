@@ -303,6 +303,17 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "colour"
+version = "0.1.5"
+description = "converts and manipulates various color representation (HSL, RVB, web, X11, ...)"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+test = ["nose"]
+
+[[package]]
 name = "d20"
 version = "1.1.2"
 description = "A formal grammar-based dice parser and roller for D&D and other dice systems."
@@ -791,7 +802,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "py-cord"
-version = "2.0.0b4"
+version = "2.0.0b5"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -815,7 +826,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Pycord-Development/pycord.git"
 reference = "master"
-resolved_reference = "0fc0afd1a02b90c97d14f6af4f7411c0aeec80d1"
+resolved_reference = "a518aaa5c02d6d0e23685f148a293d4f11f0c33c"
 
 [[package]]
 name = "pyaml"
@@ -1266,7 +1277,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.1"
-content-hash = "c8d804305ae59c9a372e3cd29d05a75bf5597764914364d15bb54d30b3dd9e92"
+content-hash = "257e9d558ba209f832ec883c465e00ed3ee7c7ecd66b9942739c2208be8a706e"
 
 [metadata.files]
 aiodns = [
@@ -1577,6 +1588,10 @@ click = [
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
+]
+colour = [
+    {file = "colour-0.1.5-py2.py3-none-any.whl", hash = "sha256:33f6db9d564fadc16e59921a56999b79571160ce09916303d35346dddc17978c"},
+    {file = "colour-0.1.5.tar.gz", hash = "sha256:af20120fefd2afede8b001fbef2ea9da70ad7d49fafdb6489025dae8745c3aee"},
 ]
 d20 = [
     {file = "d20-1.1.2-py3-none-any.whl", hash = "sha256:1195bfc643aa4bd984bf6d26327491795272bfab8b19ac15108b4352a9de3166"},

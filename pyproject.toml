@@ -34,6 +34,7 @@ apscheduler = {git = "https://github.com/agronholm/apscheduler.git"}
 jishaku = "^2.3.2"
 py-cord = {git = "https://github.com/Pycord-Development/pycord.git", extras = ["voice", "speed"]}
 python-docx = "^0.8.11"
+colour = "^0.1.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

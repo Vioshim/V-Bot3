@@ -17,10 +17,12 @@ from io import StringIO
 from os import getenv
 from typing import Optional
 
+from colour import Color
 from discord import (
     AllowedMentions,
     ApplicationContext,
-    Color,
+    Attachment,
+    Colour,
     DiscordException,
     Embed,
     File,
@@ -32,6 +34,7 @@ from discord import (
     OptionChoice,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
+    Role,
     TextChannel,
     Webhook,
     WebhookMessage,
@@ -46,6 +49,7 @@ from discord.ext.commands import (
     DisabledCommand,
     MaxConcurrencyReached,
     UserInputError,
+    has_role,
     slash_command,
 )
 from discord.ui import Button, View
@@ -80,6 +84,7 @@ class Information(Cog):
         self.join: dict[Member, Message] = {}
         self.log: Optional[Webhook] = None
         self.info_msg: Optional[WebhookMessage] = None
+        self.boosters: dict[Member, Role] = {}
 
     @slash_command(guild_ids=[719343092963999804])
     async def weather(
@@ -157,6 +162,63 @@ class Information(Cog):
                 await ctx.respond("Invalid value", ephemeral=True)
             except ValueError:
                 await ctx.respond("Invalid value", ephemeral=True)
+
+    @slash_command(guild_ids=[719343092963999804])
+    @has_role("Booster")
+    async def custom_role(
+        self,
+        ctx: ApplicationContext,
+        name: Option(
+            str,
+            description="Role Name",
+            required=False,
+        ),
+        color: Option(
+            str,
+            description="Name or Hex color",
+            required=False,
+        ),
+        icon: Option(
+            Attachment,
+            description="Valid Role Icon",
+            required=False,
+        ),
+    ):
+        if (role := self.boosters.get(ctx.author)) or name:
+            if not role:
+                guild: Guild = ctx.guild
+                role = await guild.create_role(name=name)
+                await ctx.author.add_roles(role)
+                self.boosters[ctx.author] = role
+            if color:
+                try:
+                    data = Color(color)
+                    color = Colour.from_rgb(*data.rgb)
+                    await role.edit(colour=color)
+                except ValueError:
+                    await ctx.respond(
+                        "Invalid color",
+                        ephemeral=True,
+                    )
+                except DiscordException:
+                    await ctx.respond(
+                        "Invalid color for discord",
+                        ephemeral=True,
+                    )
+            if isinstance(icon, Attachment):
+                try:
+                    data = await icon.read()
+                    await role.edit(icon=data)
+                except DiscordException:
+                    await ctx.respond(
+                        "Invalid icon for discord",
+                        ephemeral=True,
+                    )
+        else:
+            await ctx.respond(
+                "You have to provide a name for the role",
+                ephemeral=True,
+            )
 
     @Cog.listener()
     async def on_message(self, message: Message):
@@ -257,7 +319,7 @@ class Information(Cog):
         embed = Embed(
             title="Member Left - Roles",
             description="The user did not have any roles.",
-            color=Color.red(),
+            color=Colour.red(),
             timestamp=utcnow(),
         )
         if roles := member.roles[:0:-1]:
@@ -274,6 +336,10 @@ class Information(Cog):
                     url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                 )
             )
+
+        if role := self.boosters.pop(member, None):
+            with suppress(DiscordException):
+                await role.delete(reason="User Left")
 
         asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(
@@ -298,7 +364,7 @@ class Information(Cog):
             return
         embed = Embed(
             title="Member Joined",
-            colour=Color.green(),
+            colour=Colour.green(),
             description=f"{member.mention} - {member}",
             timestamp=utcnow(),
         )
@@ -354,7 +420,7 @@ class Information(Cog):
                 image.url, filename=str(member.id)
             ):
                 embed = Embed(
-                    color=Color.blurple(),
+                    color=Colour.blurple(),
                     timestamp=utcnow(),
                 )
                 embed.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -383,13 +449,13 @@ class Information(Cog):
         if past.premium_since and not now.premium_since:
             embed = Embed(
                 title="Has un-boosted the Server!",
-                colour=Color.red(),
+                colour=Colour.red(),
                 timestamp=utcnow(),
             )
         else:
             embed = Embed(
                 title="Has boosted the Server!",
-                colour=Color.brand_green(),
+                colour=Colour.brand_green(),
                 timestamp=utcnow(),
             )
         embed.set_image(url=WHITE_BAR)
@@ -504,7 +570,7 @@ class Information(Cog):
             embed = Embed(
                 title="Message Deleted",
                 description=ctx.content,
-                color=Color.blurple(),
+                color=Colour.blurple(),
                 timestamp=utcnow(),
             )
             embed.set_image(url=WHITE_BAR)
@@ -516,7 +582,7 @@ class Information(Cog):
 
             for item in ctx.stickers:
                 if embed.title == "Sticker Deleted":
-                    aux = Embed(color=Color.blurple())
+                    aux = Embed(color=Colour.blurple())
                     embeds.append(aux)
                 else:
                     aux = embed
@@ -544,7 +610,7 @@ class Information(Cog):
                     if method and (data := await method(image_id=image_id)):
                         gif_title, gif_url, gif_image = data
                         if embed.title == "GIF Deleted":
-                            aux = Embed(color=Color.blurple())
+                            aux = Embed(color=Colour.blurple())
                             embeds.append(aux)
                         else:
                             aux = embed
@@ -564,7 +630,7 @@ class Information(Cog):
                         if embed.image.url == WHITE_BAR:
                             aux = embed
                         else:
-                            aux = Embed(color=Color.blurple())
+                            aux = Embed(color=Colour.blurple())
                             embeds.append(aux)
                         aux.set_image(url=f"attachment://{item.filename}")
                     files.append(file)
@@ -649,7 +715,7 @@ class Information(Cog):
         ):
             await ctx.send(
                 embed=Embed(
-                    color=Color.red(),
+                    color=Colour.red(),
                     title=f"Error - {ctx.command.qualified_name}",
                     description=str(error),
                 )
@@ -667,7 +733,7 @@ class Information(Cog):
         if error_cause := error.__cause__:
             await ctx.send(
                 embed=Embed(
-                    color=Color.red(),
+                    color=Colour.red(),
                     title=f"Unexpected error - {ctx.command.qualified_name}",
                     description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
                 )
@@ -690,6 +756,10 @@ class Information(Cog):
         self.log = await self.bot.fetch_webhook(943493074162700298)
         w = await self.bot.fetch_webhook(860606374488047616)
         self.info_msg = await w.fetch_message(913555643699458088)
+        AFK = w.guild.get_role(932324221168795668)
+        BOOSTER = w.guild.get_role(731347440342663220)
+        for role in filter(lambda x: BOOSTER < x < AFK, w.guild.roles):
+            self.boosters.update({x: role for x in role.members})
 
 
 def setup(bot: CustomBot) -> None:
