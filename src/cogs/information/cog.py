@@ -222,8 +222,7 @@ class Information(Cog):
             if isinstance(color, str):
                 try:
                     data = Color(color)
-                    color = Colour.from_rgb(*map(int, data.rgb))
-                    await role.edit(colour=color)
+                    await role.edit(colour=int(data.hex[1:], base=16))
                 except ValueError:
                     await ctx.respond(
                         "Invalid color",
