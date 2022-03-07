@@ -85,6 +85,7 @@ class Information(Cog):
         self.log: Optional[Webhook] = None
         self.info_msg: Optional[WebhookMessage] = None
         self.boosters: dict[Member, Role] = {}
+        self.AFK: Optional[Role] = None
 
     @slash_command(guild_ids=[719343092963999804])
     async def weather(
@@ -184,13 +185,41 @@ class Information(Cog):
             required=False,
         ),
     ):
+        """Create custom roles (no info deletes them)
+
+        Parameters
+        ----------
+        ctx : ApplicationContext
+            Context
+        name : Option, optional
+            Name
+        color : Option, optional
+            Color
+        icon : Option, optional
+            Icon
+        """
         if (role := self.boosters.get(ctx.author)) or name:
             if not role:
                 guild: Guild = ctx.guild
-                role = await guild.create_role(name=name)
-                await ctx.author.add_roles(role)
-                self.boosters[ctx.author] = role
-            if color:
+                try:
+                    role = await guild.create_role(name=name)
+                    await role.edit(position=self.AFK.position - 1)
+                    await ctx.author.add_roles(role)
+                    self.boosters[ctx.author] = role
+                except DiscordException as e:
+                    await ctx.respond(str(e), ephemeral=True)
+                    return
+            elif not (name or color or icon):
+                try:
+                    await role.delete()
+                    self.boosters.pop(ctx.author, None)
+                except DiscordException as e:
+                    await ctx.respond(str(e), ephemeral=True)
+                else:
+                    await ctx.respond("Role deleted", ephemeral=True)
+                return
+
+            if isinstance(color, str):
                 try:
                     data = Color(color)
                     color = Colour.from_rgb(*data.rgb)
@@ -200,11 +229,13 @@ class Information(Cog):
                         "Invalid color",
                         ephemeral=True,
                     )
+                    return
                 except DiscordException:
                     await ctx.respond(
                         "Invalid color for discord",
                         ephemeral=True,
                     )
+                    return
             if isinstance(icon, Attachment):
                 try:
                     data = await icon.read()
@@ -214,6 +245,8 @@ class Information(Cog):
                         "Invalid icon for discord",
                         ephemeral=True,
                     )
+                    return
+            await ctx.respond("Role added/modified.", ephemeral=True)
         else:
             await ctx.respond(
                 "You have to provide a name for the role",
@@ -452,6 +485,9 @@ class Information(Cog):
                 colour=Colour.red(),
                 timestamp=utcnow(),
             )
+            if role := self.boosters.pop(now, None):
+                with suppress(DiscordException):
+                    await role.delete(reason="Boost removed.")
         else:
             embed = Embed(
                 title="Has boosted the Server!",
@@ -756,7 +792,7 @@ class Information(Cog):
         self.log = await self.bot.fetch_webhook(943493074162700298)
         w = await self.bot.fetch_webhook(860606374488047616)
         self.info_msg = await w.fetch_message(913555643699458088)
-        AFK = w.guild.get_role(932324221168795668)
+        self.AFK = AFK = w.guild.get_role(932324221168795668)
         BOOSTER = w.guild.get_role(731347440342663220)
         for role in filter(lambda x: BOOSTER < x < AFK, w.guild.roles):
             self.boosters.update({x: role for x in role.members})
