@@ -222,7 +222,7 @@ class Information(Cog):
             if isinstance(color, str):
                 try:
                     data = Color(color)
-                    color = Colour.from_rgb(*data.rgb)
+                    color = Colour.from_rgb(*map(int, data.rgb))
                     await role.edit(colour=color)
                 except ValueError:
                     await ctx.respond(

@@ -36,7 +36,11 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, FakemonCharacter, VariantCharacter
+from src.structures.character import (
+    Character,
+    FakemonCharacter,
+    VariantCharacter,
+)
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
@@ -130,6 +134,7 @@ class SPView(Basic):
         text_view = ModernInput(
             bot=self.bot,
             input_text=InputText(
+                label="Special Ability",
                 placeholder=DEFAULT_INFO_MSG,
                 required=True,
             ),
@@ -1076,7 +1081,9 @@ class DevolutionMod(Mod):
 
         oc.species = species
 
-        oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
+        oc.moveset &= set(species.total_movepool()) & set(
+            current.total_movepool()
+        )
 
         default_image = oc.default_image or oc.image
 
@@ -1146,7 +1153,9 @@ class FusionMod(Mod):
 
         items = [oc.species]
         items.extend(oc.species.species_evolves_to)
-        values = set(Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2))
+        values = set(
+            Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2)
+        )
 
         view = ComplexInput(
             bot=bot,
