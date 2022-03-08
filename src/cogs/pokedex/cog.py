@@ -193,10 +193,10 @@ class Pokedex(Cog):
 
         if move := Move.from_ID(move_id):
             if methods := "\n".join(
-                x.title() for x in movepool.methods_for(move)
+                f"> • **{x.title()}**" for x in movepool.methods_for(move)
             ):
                 await ctx.respond(
-                    f"The pokemon can learn {move.name} through: {methods}.",
+                    f"The pokemon can learn {move.name} through:\n{methods}.",
                     ephemeral=True,
                 )
             else:
