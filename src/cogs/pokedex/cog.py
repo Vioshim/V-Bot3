@@ -155,6 +155,13 @@ class Pokedex(Cog):
             autocomplete=fakemon_autocomplete,
             required=False,
         ),
+        move_id: Option(
+            str,
+            name="move",
+            description="Move to lookup",
+            autocomplete=move_autocomplete,
+            required=False,
+        ),
     ):
         fakemon: str = fakemon or ""
         cog = ctx.bot.get_cog("Submission")
@@ -184,8 +191,20 @@ class Pokedex(Cog):
         else:
             movepool = Movepool()
 
-        view = MovepoolViewSelector(bot=self.bot, movepool=movepool)
-        await ctx.respond(embed=embed, view=view, ephemeral=True)
+        if move := Move.from_ID(move_id):
+            if methods := "\n".join(
+                x.title() for x in movepool.methods_for(move)
+            ):
+                await ctx.respond(
+                    f"The pokemon can learn {move.name} through: {methods}."
+                )
+            else:
+                await ctx.respond(
+                    f"The pokemon can not learn {move.name} through: {methods}."
+                )
+        else:
+            view = MovepoolViewSelector(bot=self.bot, movepool=movepool)
+            await ctx.respond(embed=embed, view=view, ephemeral=True)
 
     @slash_command(guild_ids=[719343092963999804])
     async def find(

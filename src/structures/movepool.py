@@ -81,6 +81,18 @@ class Movepool:
         data = ", ".join(f"{k}={v}" for k, v in elements.items() if v)
         return f"Movepool({data})"
 
+    def methods_for(self, move: Move):
+        elements = dict(
+            level=move in self.level_moves,
+            tm=move in self.tm,
+            event=move in self.event,
+            tutor=move in self.tutor,
+            egg=move in self.egg,
+            levelup=move in self.levelup,
+            other=move in self.other,
+        )
+        return [k for k, v in elements.items() if v]
+
     def __len__(self) -> int:
         """Returns the total of individual moves in the movepool
 
