@@ -196,11 +196,13 @@ class Pokedex(Cog):
                 x.title() for x in movepool.methods_for(move)
             ):
                 await ctx.respond(
-                    f"The pokemon can learn {move.name} through: {methods}."
+                    f"The pokemon can learn {move.name} through: {methods}.",
+                    ephemeral=True,
                 )
             else:
                 await ctx.respond(
-                    f"The pokemon can not learn {move.name} through: {methods}."
+                    f"The pokemon can not learn {move.name}.",
+                    ephemeral=True,
                 )
         else:
             view = MovepoolViewSelector(bot=self.bot, movepool=movepool)
