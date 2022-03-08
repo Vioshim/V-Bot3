@@ -407,8 +407,9 @@ class Information(Cog):
                 name="Account Age",
                 value=format_dt(member.created_at, style="R"),
             )
+            view = View()
             if value := self.bot.get_cog("Submission").oc_list.get(member.id):
-                view = View(
+                view.add_item(
                     Button(
                         label="User Characters",
                         url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
