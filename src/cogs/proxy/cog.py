@@ -38,9 +38,8 @@ from discord.ext.commands import (
 from discord.ui import Button, View
 
 from src.cogs.pokedex.search import default_species_autocomplete
-from src.cogs.submission.cog import oc_autocomplete
+from src.cogs.submission.cog import Submission, oc_autocomplete
 from src.structures.bot import CustomBot
-from src.structures.converters import SpeciesCall
 from src.structures.species import Fusion, Species
 
 NPC = namedtuple("NPC", "name avatar")
@@ -194,7 +193,7 @@ class Proxy(Cog):
     async def cmd_npc(
         self,
         ctx: Context,
-        pokemon: SpeciesCall,
+        pokemon: str,
         *,
         text: str = None,
     ):
@@ -209,7 +208,30 @@ class Proxy(Cog):
         text : str, optional
             Text, by default None
         """
-        npc = NPC(name=f"NPC〕{pokemon.name}", avatar=pokemon.base_image)
+        if mon := Species.deduce(pokemon):
+            if isinstance(mon, Fusion):
+                await ctx.reply(
+                    "Fusions don't have stored images yet", delete_after=3
+                )
+                return
+            npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
+        else:
+            member: Member = ctx.author
+            cog: Submission = self.bot.get_cog("Submission")
+            ocs = cog.rpers.get(member.id, {}).values()
+            if ocs := [
+                x
+                for x in ocs
+                if pokemon.lower() in x.name.lower()
+                or x.name.lower() in pokemon.lower()
+            ]:
+                oc = ocs[0]
+                npc = NPC(name=oc.name, avatar=oc.image)
+            else:
+                npc = NPC(
+                    name=f"NPC〕{member.display_name}",
+                    avatar=member.display_avatar.url,
+                )
         await self.proxy_handler(
             npc=npc,
             message=ctx.message,
