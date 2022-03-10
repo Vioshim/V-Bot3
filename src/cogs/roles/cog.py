@@ -209,15 +209,9 @@ class Roles(Cog):
 
         embed.clear_fields()
 
-        def foo(x: datetime):
-            if hours(x) >= 2:
-                return "\N{WHITE HEAVY CHECK MARK} - Pingable"
-            time = timedelta(hours=7200 - seconds(x))
-            time = format_dt(x + time, style="R")
-            return f"\N{CROSS MARK} - {time}"
-
         TEXT1 = "\n".join(
-            f"• <@&{k}>: {foo(v)}" for k, v in self.role_cool_down.items()
+            f"• <@&{k}>: {format_dt(v + timedelta(hours=7200 - seconds(v)), style='R')}"
+            for k, v in self.role_cool_down.items()
         )
         TEXT2 = "\n".join(
             f"• <@&{k}>: <@{v}>" for k, v in self.last_claimer.items()
