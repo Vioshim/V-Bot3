@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import mktime
 from typing import Optional
 
@@ -26,9 +26,10 @@ from discord import (
     Role,
     SelectOption,
     Webhook,
+    WebhookMessage,
 )
 from discord.ui import Button, Select, View, button, select
-from discord.utils import utcnow
+from discord.utils import format_dt, utcnow
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
@@ -548,6 +549,7 @@ class RoleButton(Button):
         last_claimer: dict[int, int],
         label: str,
         custom_id: str,
+        msg: WebhookMessage,
     ):
         super().__init__(label=label, custom_id=custom_id)
         self.cool_down = cool_down
@@ -555,6 +557,7 @@ class RoleButton(Button):
         self.last_claimer = last_claimer
         self.webhook = webhook
         self.bot = bot
+        self.msg = msg
 
     async def callback(self, ctx: Interaction):
         role: Role = ctx.guild.get_role(int(self.custom_id))
@@ -589,6 +592,30 @@ class RoleButton(Button):
         self.role_cool_down[role.id] = utcnow()
         self.last_claimer[role.id] = member.id
         view = View(Button(label="Jump URL", url=msg.jump_url))
+
+        embed = self.msg.embeds[0]
+
+        embed.clear_fields()
+
+        def foo(x: datetime):
+            if hours(x) >= 2:
+                return "\N{WHITE HEAVY CHECK MARK} - Pingable"
+            time = timedelta(hours=7200 - seconds(x))
+            time = format_dt(x + time, style="R")
+            return f"\N{CROSS MARK} - {time}"
+
+        TEXT1 = "\n".join(
+            f"• <@&{k}>: {foo(v)}" for k, v in self.role_cool_down.items()
+        )
+        TEXT2 = "\n".join(
+            f"• <@&{k}>: <@{v}>" for k, v in self.last_claimer.items()
+        )
+
+        embed.add_field(name="Role cooldown", value=TEXT1 or "None")
+        embed.add_field(name="Last Pings", value=TEXT2 or "None")
+
+        await self.msg.edit(embed=embed)
+
         async with self.bot.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
@@ -612,6 +639,7 @@ class RoleView(View):
         cool_down: dict[int, datetime],
         role_cool_down: dict[int, datetime],
         last_claimer: dict[int, int],
+        msg: WebhookMessage,
     ):
         buttons = [
             RoleButton(
@@ -622,6 +650,7 @@ class RoleView(View):
                 last_claimer=last_claimer,
                 label=k,
                 custom_id=str(v),
+                msg=msg,
             )
             for k, v in RP_SEARCH_ROLES.items()
         ]
@@ -629,6 +658,7 @@ class RoleView(View):
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
+        self.msg = msg
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response

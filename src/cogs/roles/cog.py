@@ -12,10 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
-from discord import AllowedMentions, Embed, Member, Role, Webhook
+from discord import (
+    AllowedMentions,
+    Embed,
+    Member,
+    Role,
+    Webhook,
+    WebhookMessage,
+)
 from discord.commands import (
     ApplicationContext,
     Option,
@@ -24,7 +31,7 @@ from discord.commands import (
 )
 from discord.ext.commands import Cog, has_role
 from discord.ui import Button, View
-from discord.utils import utcnow
+from discord.utils import format_dt, utcnow
 
 from src.cogs.roles.roles import (
     QUERIES,
@@ -52,6 +59,7 @@ class Roles(Cog):
         self.role_cool_down: dict[int, datetime] = {}
         self.last_claimer: dict[int, int] = {}
         self.webhook: Optional[Webhook] = None
+        self.msg: Optional[WebhookMessage] = None
 
     async def load(self, rpers: dict[int, dict[int, Character]]):
         self.bot.logger.info("Loading existing RP Searches")
@@ -197,6 +205,29 @@ class Roles(Cog):
         self.last_claimer[role.id] = member.id
         view = View(Button(label="Jump URL", url=msg.jump_url))
 
+        embed = self.msg.embeds[0]
+
+        embed.clear_fields()
+
+        def foo(x: datetime):
+            if hours(x) >= 2:
+                return "\N{WHITE HEAVY CHECK MARK} - Pingable"
+            time = timedelta(hours=7200 - seconds(x))
+            time = format_dt(x + time, style="R")
+            return f"\N{CROSS MARK} - {time}"
+
+        TEXT1 = "\n".join(
+            f"• <@&{k}>: {foo(v)}" for k, v in self.role_cool_down.items()
+        )
+        TEXT2 = "\n".join(
+            f"• <@&{k}>: <@{v}>" for k, v in self.last_claimer.items()
+        )
+
+        embed.add_field(name="Role cooldown", value=TEXT1 or "None")
+        embed.add_field(name="Last Pings", value=TEXT2 or "None")
+
+        await self.msg.edit(embed=embed)
+
         async with self.bot.database() as db:
             await db.execute(
                 """--sql
@@ -226,18 +257,24 @@ class Roles(Cog):
         self.basic = BasicRoles(timeout=None)
         self.color = ColorRoles(timeout=None)
         self.rp_search = RPSearchRoles(timeout=None)
-        self.role_view = RoleView(
-            bot=self.bot,
-            cool_down=self.cool_down,
-            webhook=self.webhook,
-            role_cool_down=self.role_cool_down,
-            last_claimer=self.last_claimer,
-        )
+
         self.bot.add_view(view=self.roles, message_id=916482734933811232)
         self.bot.add_view(view=self.basic, message_id=916482736309534762)
         self.bot.add_view(view=self.color, message_id=916482737811120128)
         self.bot.add_view(view=self.rp_search, message_id=916482738876477483)
-        self.bot.add_view(view=self.role_view, message_id=910915102490910740)
+
+        w2 = await self.bot.webhook(910914713234325504, reason="RP Search")
+        self.msg = await w2.fetch_message(910915102490910740)
+        await self.msg.edit(
+            view=RoleView(
+                bot=self.bot,
+                cool_down=self.cool_down,
+                webhook=self.webhook,
+                role_cool_down=self.role_cool_down,
+                last_claimer=self.last_claimer,
+                msg=self.msg,
+            )
+        )
 
 
 def setup(bot: CustomBot) -> None:
