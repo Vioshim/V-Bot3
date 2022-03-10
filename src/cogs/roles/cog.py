@@ -210,7 +210,7 @@ class Roles(Cog):
         embed.clear_fields()
 
         TEXT1 = "\n".join(
-            f"• <@&{k}>: {format_dt(v + timedelta(hours=7200 - seconds(v)), style='R')}"
+            f"• <@&{k}>: {format_dt(v, style='R')}"
             for k, v in self.role_cool_down.items()
         )
         TEXT2 = "\n".join(
