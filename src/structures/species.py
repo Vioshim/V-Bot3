@@ -557,11 +557,7 @@ class Variant(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return (
-            1
-            if _BEASTBOOST in self.abilities
-            else self.base.max_amount_abilities
-        )
+        return 1 if _BEASTBOOST in self.abilities else 2
 
     @property
     def can_have_special_abilities(self) -> bool:

@@ -1444,10 +1444,24 @@ class ModifyView(View):
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, _: Button, ctx: Interaction):
         await self.target.edit_original_message(view=None)
-        webhook = await self.bot.fetch_webhook(919280056558317658)
-        thread: Thread = await self.bot.fetch_channel(self.oc.thread)
-        if thread.archived:
-            await thread.edit(archived=False)
-        await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
+        webhook = await self.bot.webhook(919277769735680050)
+        try:
+            thread: Thread = await self.bot.fetch_channel(self.oc.thread)
+            if thread.archived:
+                await thread.edit(archived=False)
+            await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
+        except DiscordException:
+            cog = self.bot.get_cog("Submission")
+            cog.ocs.pop(self.oc.id, None)
+            cog.rpers.setdefault(self.oc.author, {})
+            cog.rpers[self.oc.author].pop(self.oc.id, None)
+            async with self.bot.database() as db:
+                self.bot.logger.info(
+                    "Character Removed as message was removed! > %s - %s > %s",
+                    self.oc.name,
+                    repr(self.oc),
+                    self.oc.url or "None",
+                )
+                await self.oc.delete(db)
         await ctx.followup.send("Character Has been Deleted", ephemeral=True)
         return self.stop()
