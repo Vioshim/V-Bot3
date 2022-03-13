@@ -38,6 +38,11 @@ from src.utils.matches import INVITE
 
 __all__ = ("Inviter", "setup")
 
+PARTNERS = {
+    719343092963999804: 735900056946868335,
+    952517983786377287: 952558960903352320
+}
+
 
 class InviteView(View):
     def __init__(
@@ -64,7 +69,7 @@ class InviteView(View):
                 items.append(
                     SelectOption(
                         label=name,
-                        value=channel.id,
+                        value=str(channel.id),
                         emoji=emoji,
                     )
                 )
@@ -267,7 +272,8 @@ class Inviter(Cog):
                 embed.set_image(url=images[0].proxy_url)
 
             files_embed, embed = await self.bot.embed_raw(embed=embed)
-            view = InviteView(handler, category, ctx.author)
+            cat = guild.get_channel(PARTNERS.get(guild.id))
+            view = InviteView(handler, cat, ctx.author)
             await mod_ch.send(
                 content=invite.url,
                 embed=embed,
