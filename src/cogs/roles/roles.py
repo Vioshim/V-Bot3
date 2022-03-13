@@ -230,82 +230,82 @@ class ColorButton(Button):
 
 COLORS = [
     ColorButton(
-        emoji=":red:880796435048706099",
+        emoji=":red:952523311395528728",
         custom_id="794274172813312000",
         row=0,
     ),
     ColorButton(
-        emoji=":crimson:880796435161968681",
+        emoji=":crimson:952523311680745492",
         custom_id="794274956296847370",
         row=0,
     ),
     ColorButton(
-        emoji=":orange:880796435501678602",
+        emoji=":orange:952523311756218428",
         custom_id="794275894209282109",
         row=0,
     ),
     ColorButton(
-        emoji=":golden:880796435291983902",
+        emoji=":golden:952523311429074966",
         custom_id="794275428696064061",
         row=0,
     ),
     ColorButton(
-        emoji=":yellow:880796435325526047",
+        emoji=":yellow:952523311697494086",
         custom_id="794274424777080884",
         row=1,
     ),
     ColorButton(
-        emoji=":green:880796435329724446",
+        emoji=":green:952523311890452520",
         custom_id="794274561570504765",
         row=1,
     ),
     ColorButton(
-        emoji=":lime:880796435359080458",
+        emoji=":lime:952523311865270302",
         custom_id="794276035326902342",
         row=1,
     ),
     ColorButton(
-        emoji=":cyan:880796435312967710",
+        emoji=":cyan:952523311735255100",
         custom_id="794276172762185799",
         row=1,
     ),
     ColorButton(
-        emoji=":light_blue:880796435065483306",
+        emoji=":light_blue:952523313794670622",
         custom_id="794274301707812885",
         row=2,
     ),
     ColorButton(
-        emoji=":deep_blue:880796435229069323",
+        emoji=":deep_blue:952523311680725013",
         custom_id="794275553477394475",
         row=2,
     ),
     ColorButton(
-        emoji=":violet:880796435635904572",
+        emoji=":violet:952523311743660052",
         custom_id="794275765533278208",
         row=2,
     ),
     ColorButton(
-        emoji=":pink:880796434989977601",
+        emoji=":pink:952523311743635486",
         custom_id="794274741061025842",
         row=2,
     ),
     ColorButton(
-        emoji=":light_brown:880796435426201610",
+        emoji=":light_brown:952523311764627536",
         custom_id="794275107958292500",
         row=3,
     ),
     ColorButton(
-        emoji=":dark_brown:880796435359092806",
+        emoji=":dark_brown:952523311642972200",
         custom_id="794275288271028275",
         row=3,
     ),
     ColorButton(
-        emoji=":silver:880796435409416202",
+        emoji=":silver:952523311680745532",
         custom_id="850018780762472468",
         row=3,
     ),
     ColorButton(
-        emoji=":gray:880796435430395914",
+        emoji=":gray:952523311714295898",
         custom_id="794273806176223303",
         row=3,
     ),

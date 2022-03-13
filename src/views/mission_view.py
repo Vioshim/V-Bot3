@@ -87,6 +87,9 @@ class MissionView(View):
 
         limit = self.mission.max_amount
         if limit and len(self.mission.ocs) >= limit:
+            if not btn.disabled:
+                btn.disabled = True
+                await interaction.message.edit(view=self)
             await resp.send_message(
                 f"The limited mission has already been claimed by {limit:02d} characters.",
                 ephemeral=True,

@@ -274,7 +274,7 @@ class Simple(Basic):
                 await target.edit_original_message(**data)
 
     @button(
-        emoji=":lasttrack:861938354609717258",
+        emoji=":lasttrack:952522808347467807",
         row=0,
         custom_id="first",
     )
@@ -299,7 +299,7 @@ class Simple(Basic):
             return await self.edit(page=0)
 
     @button(
-        emoji=":fastreverse:861938354136416277",
+        emoji=":fastreverse:952522808599126056",
         row=0,
         custom_id="previous",
     )
@@ -324,7 +324,7 @@ class Simple(Basic):
             return await self.edit(page=self._pos - 1)
 
     @button(
-        emoji=":stop:861938354244943913",
+        emoji=":stop:952522808573968454",
         row=0,
         custom_id="finish",
     )
@@ -349,7 +349,7 @@ class Simple(Basic):
             await self.delete(force=True)
 
     @button(
-        emoji=":fastforward:861938354085953557",
+        emoji=":fastforward:952522808347488326",
         row=0,
         custom_id="next",
     )
@@ -374,7 +374,7 @@ class Simple(Basic):
             return await self.edit(page=self._pos + 1)
 
     @button(
-        emoji=":nexttrack:861938354210603028",
+        emoji=":nexttrack:952522808355848292",
         row=0,
         custom_id="last",
     )

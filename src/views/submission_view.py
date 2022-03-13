@@ -112,12 +112,12 @@ class SubmissionModal(Modal):
             if isinstance(msg_data, dict):
                 cog = self.bot.get_cog("Submission")
                 await cog.submission_handler(interaction, **msg_data)
-            else:
-                await resp.send_message("Invalid submission", ephemeral=True)
-                return
 
         except Exception as e:
-            await resp.send_message(f"{e}", ephemeral=True)
+            await resp.send_message(str(e), ephemeral=True)
+        finally:
+            if not resp.is_done():
+                await resp.pong()
 
 
 class TemplateView(View):
@@ -150,7 +150,6 @@ class TemplateView(View):
             )
         )
         await resp.send_modal(modal)
-        self.stop()
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
     async def mode2(self, _: Button, interaction: Interaction):
