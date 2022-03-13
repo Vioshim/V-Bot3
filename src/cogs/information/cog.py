@@ -70,7 +70,7 @@ channels = {
 }
 
 LOGS = {
-    719343092963999804: 943493074162700298,
+    719343092963999804: 719663963297808436,
     952517983786377287: 952588363263782962,
 }
 
@@ -537,14 +537,10 @@ class Information(Cog):
                 emoji = emoji[0]
             except ValueError:
                 emoji, name = None, msg.channel.name
+            finally:
+                name = name.replace("-", " ").title()
 
-            view = View(
-                Button(
-                    emoji=emoji,
-                    label=name.replace("-", " ").title(),
-                    url=msg.jump_url,
-                )
-            )
+            view = View(Button(emoji=emoji, label=name, url=msg.jump_url))
             await w.send(embed=embed, file=file, view=view)
 
         self.bot.msg_cache -= payload.message_ids

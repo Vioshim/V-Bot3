@@ -11,27 +11,116 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from contextlib import suppress
+
 from discord import (
     ButtonStyle,
+    CategoryChannel,
     Color,
+    DiscordException,
     Embed,
     Guild,
     Interaction,
     InteractionResponse,
     Member,
     Message,
+    SelectOption,
     Thread,
     Webhook,
 )
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import InviteConverter
-from discord.ui import Button, View, button
-from discord.utils import find, utcnow, get
+from discord.ui import Button, Select, View, button, select
+from discord.utils import find, get, utcnow
 
 from src.structures.bot import CustomBot
 from src.utils.matches import INVITE
 
 __all__ = ("Inviter", "setup")
+
+
+class InviteView(View):
+    def __init__(
+        self,
+        handler,
+        category: CategoryChannel,
+        author: Member,
+    ):
+        super().__init__(timeout=None)
+        self.category = category
+        self.handler = handler
+        self.author = author
+
+        sct: Select = self.process
+        items = []
+        for channel in category.channels:
+            try:
+                emoji, name = channel.name.split("〛")
+                emoji = emoji[0]
+            except ValueError:
+                emoji, name = None, channel.name
+            finally:
+                name = name.replace("-", " ").title()
+                items.append(
+                    SelectOption(
+                        label=name,
+                        value=channel.id,
+                        emoji=emoji,
+                    )
+                )
+
+        sct.options = items
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        resp: InteractionResponse = interaction.response
+        if not interaction.user.guild_permissions.administrator:
+            await resp.send_message(
+                "You are not an administrator", ephemeral=True
+            )
+            return False
+        return True
+
+    @select(placeholder="Select Partnership Channel", custom_id="partner")
+    async def process(self, sct: Select, inter: Interaction):
+        member: Member = inter.user
+        resp: InteractionResponse = inter.response
+        thread: Thread = await self.handler(idx := int(sct.values[0]))
+        await thread.add_user(member)
+        await thread.add_user(self.author)
+        await resp.send_message(
+            f"<#{idx}> has been added by {member.display_name}"
+        )
+        if partnered_role := get(member.guild.roles, name="Partners"):
+            await self.author.add_roles(partnered_role)
+        await inter.message.delete()
+        self.stop()
+
+    @button(
+        label="Not interested...",
+        style=ButtonStyle.red,
+        row=0,
+    )
+    async def accident(
+        self,
+        btn: Button,
+        inter: Interaction,
+    ) -> None:
+        """Conclude Partnership
+
+        Parameters
+        ----------
+        btn: Button
+            Button
+        inter: Interaction
+            Interaction
+        """
+        member: Member = inter.user
+        resp: InteractionResponse = inter.response
+        await resp.send_message(
+            f"{btn.label!r} has been chosen by {member.display_name}"
+        )
+        await inter.message.delete()
+        self.stop()
 
 
 class Inviter(Cog):
@@ -66,7 +155,11 @@ class Inviter(Cog):
         if not (invite_guild := invite.guild):
             return
 
-        partnered_role = get(guild.roles, name="Partners")
+        if not (category := ctx.channel.category):
+            with suppress(DiscordException):
+                await ctx.delete()
+            return
+
         mod_ch = find(lambda x: "mod-chat" in x.name, guild.channels)
         if not mod_ch:
             return
@@ -139,7 +232,6 @@ class Inviter(Cog):
 
         if (
             author.guild_permissions.administrator
-            and (category := ctx.channel.category)
             and "partner" in category.name.lower()
         ):
             await handler(ctx.channel)
@@ -174,92 +266,8 @@ class Inviter(Cog):
             if images := ctx.attachments:
                 embed.set_image(url=images[0].proxy_url)
 
-            class InviteView(View):
-                async def interaction_check(
-                    self, interaction: Interaction
-                ) -> bool:
-                    resp: InteractionResponse = interaction.response
-                    if not interaction.user.guild_permissions.administrator:
-                        await resp.send_message(
-                            "You are not an administrator", ephemeral=True
-                        )
-                        return False
-                    return True
-
-                async def process(
-                    self,
-                    btn: Button,
-                    inter: Interaction,
-                ):
-                    """Process Partnership
-
-                    Parameters
-                    ----------
-                    btn: Button
-                        Button
-                    inter: Interaction
-                        Interaction
-                    """
-                    member: Member = inter.user
-                    resp: InteractionResponse = inter.response
-                    thread = await handler(int(btn.custom_id))
-                    thread.add_user(ctx.author)
-                    thread.add_user(member)
-                    await resp.send_message(
-                        f"{btn.label} has been added by {member.display_name}"
-                    )
-                    if partnered_role:
-                        await author.add_roles(partnered_role)
-                    await inter.message.delete()
-                    self.stop()
-
-                @button(
-                    label="Pokemon Partnership",
-                    style=ButtonStyle.green,
-                    row=0,
-                    custom_id="855197800907407360",
-                )
-                async def partner1(self, btn, inter) -> None:
-                    await self.process(btn, inter)
-
-                @button(
-                    label="Standard Partnership",
-                    style=ButtonStyle.green,
-                    row=0,
-                    custom_id="855199463978041355",
-                )
-                async def partner2(self, btn, inter):
-                    await self.process(btn, inter)
-
-                @button(
-                    label="Not interested...",
-                    style=ButtonStyle.red,
-                    row=0,
-                )
-                async def accident(
-                    self,
-                    btn: Button,
-                    inter: Interaction,
-                ) -> None:
-                    """Conclude Partnership
-
-                    Parameters
-                    ----------
-                    btn: Button
-                        Button
-                    inter: Interaction
-                        Interaction
-                    """
-                    member: Member = inter.user
-                    resp: InteractionResponse = inter.response
-                    await resp.send_message(
-                        f"{btn.label!r} has been chosen by {member.display_name}"
-                    )
-                    await inter.message.delete()
-                    self.stop()
-
             files_embed, embed = await self.bot.embed_raw(embed=embed)
-            view = InviteView(timeout=None)
+            view = InviteView(handler, category, ctx.author)
             await mod_ch.send(
                 content=invite.url,
                 embed=embed,
