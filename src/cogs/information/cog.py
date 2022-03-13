@@ -435,7 +435,6 @@ class Information(Cog):
 
         await self.member_count(member.guild)
 
-        guild: Guild = member.guild
         embed = Embed(
             title="Member Joined",
             colour=Colour.green(),
@@ -453,67 +452,15 @@ class Information(Cog):
                 value=format_dt(member.created_at, style="R"),
             )
             view = View()
-            if value := self.bot.get_cog("Submission").oc_list.get(member.id):
+            cog = self.bot.get_cog("Submission")
+            if value := cog.oc_list.get(member.id):
                 view.add_item(
                     Button(
                         label="User Characters",
                         url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                     )
                 )
-            message = await log.send(
-                embed=embed,
-                file=file,
-                view=view,
-                wait=True,
-            )
-            image = ImageKit(
-                base="welcome_TW8HUQOuU.png",
-                weight=1920,
-                height=1080,
-            )
-            image.add_text(
-                font="unifont_HcfNyZlJoK.otf",
-                text=member.display_name,
-                font_size=120,
-                color=0xFFFFFF,
-                x=180,
-                y=480,
-            )
-            image.add_image(
-                image=message.embeds[0].thumbnail.url,
-                height=548,
-                weight=548,
-                x=1308,
-                y=65,
-            )
-            if file := await self.bot.get_file(
-                image.url, filename=str(member.id)
-            ):
-                embed = Embed(
-                    color=Colour.blurple(),
-                    timestamp=utcnow(),
-                )
-                if icon := guild.icon:
-                    embed.set_footer(text=guild.name, icon_url=icon.url)
-                else:
-                    embed.set_footer(text=guild.name)
-                embed.set_image(url=f"attachment://{file.filename}")
-
-                view.add_item(
-                    Button(
-                        label="See Information & Rules",
-                        url="https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088",
-                    )
-                )
-
-                with suppress(DiscordException):
-                    self.join[member] = await member.send(
-                        content=member.mention,
-                        embed=embed,
-                        file=file,
-                        view=view,
-                        allowed_mentions=AllowedMentions(users=True),
-                    )
+            await log.send(embed=embed, file=file, view=view)
 
     @Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
