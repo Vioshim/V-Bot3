@@ -36,6 +36,7 @@ from discord.ext.commands import (
     slash_command,
 )
 from discord.ui import Button, View
+from discord.utils import get
 
 from src.cogs.pokedex.search import default_species_autocomplete
 from src.cogs.submission.cog import Submission, oc_autocomplete
@@ -141,9 +142,8 @@ class Proxy(Cog):
         character : str, optional
             character id, by default None
         """
-        if (character or "").isdigit() and (
-            oc := self.bot.get_cog("Submission").ocs.get(int(character))
-        ):
+        cog = self.bot.get_cog("Submission")
+        if (character or "").isdigit() and (oc := cog.ocs.get(int(character))):
             self.current[ctx.author.id] = NPC(
                 name=oc.name,
                 avatar=oc.image,
@@ -277,7 +277,10 @@ class Proxy(Cog):
             return
 
         guild = self.bot.get_guild(payload.guild_id)
-        registered = guild.get_role(719642423327719434)
+        registered = get(guild.roles, name="Registered")
+        if not registered:
+            return
+
         channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(
             payload.channel_id
         )
@@ -294,7 +297,9 @@ class Proxy(Cog):
                 elif emoji == "\N{BLACK QUESTION MARK ORNAMENT}":
                     await message.clear_reaction(emoji=emoji)
                     if user := guild.get_member(data):
-                        view = View(Button(label="Jump URL", url=message.jump_url))
+                        view = View(
+                            Button(label="Jump URL", url=message.jump_url)
+                        )
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)

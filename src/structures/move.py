@@ -267,7 +267,7 @@ class Move:
         return frozenset(list(items)[:limit])
 
     @classmethod
-    def getMetronome(cls):
+    def getMetronome(cls) -> Move:
         """This is a method that returns a Move given Metronome's behaviour
 
         Returns

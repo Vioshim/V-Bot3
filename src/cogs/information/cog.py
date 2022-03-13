@@ -34,10 +34,6 @@ from discord import (
     OptionChoice,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
-    Role,
-    TextChannel,
-    Webhook,
-    WebhookMessage,
 )
 from discord.ext.commands import (
     CheckFailure,
@@ -53,7 +49,7 @@ from discord.ext.commands import (
     slash_command,
 )
 from discord.ui import Button, View
-from discord.utils import format_dt, utcnow
+from discord.utils import find, format_dt, get, utcnow
 from yaml import dump
 
 from src.cogs.information.information_view import RegionView
@@ -73,6 +69,16 @@ channels = {
     903627523911458816: "Storyline",
 }
 
+LOGS = {
+    719343092963999804: 943493074162700298,
+    952517983786377287: 952588363263782962,
+}
+
+MSG_INFO = {
+    719343092963999804: 913555643699458088,
+    952517983786377287: 952617304095592478,
+}
+
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
 WEATHER_API = getenv("WEATHER_API")
@@ -82,10 +88,6 @@ class Information(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
-        self.log: Optional[Webhook] = None
-        self.info_msg: Optional[WebhookMessage] = None
-        self.boosters: dict[Member, Role] = {}
-        self.AFK: Optional[Role] = None
 
     @slash_command(guild_ids=[719343092963999804])
     async def weather(
@@ -198,21 +200,33 @@ class Information(Cog):
         icon : Option, optional
             Icon
         """
-        if (role := self.boosters.get(ctx.author)) or name:
+        guild: Guild = ctx.guild
+
+        AFK = get(guild.roles, name="AFK")
+        BOOSTER = guild.premium_subscriber_role
+
+        if not (AFK and BOOSTER):
+            await ctx.respond("No function set here", ephemeral=True)
+            return
+
+        role = find(
+            lambda x: BOOSTER < x < AFK and ctx.user in x.members,
+            guild.roles,
+        )
+
+        if role or name:
             if not role:
                 guild: Guild = ctx.guild
                 try:
                     role = await guild.create_role(name=name)
-                    await role.edit(position=self.AFK.position - 1)
+                    await role.edit(position=AFK.position - 1)
                     await ctx.author.add_roles(role)
-                    self.boosters[ctx.author] = role
                 except DiscordException as e:
                     await ctx.respond(str(e), ephemeral=True)
                     return
             elif not (name or color or icon):
                 try:
                     await role.delete()
-                    self.boosters.pop(ctx.author, None)
                 except DiscordException as e:
                     await ctx.respond(str(e), ephemeral=True)
                 else:
@@ -312,22 +326,34 @@ class Information(Cog):
 
         await message.delete()
 
-    async def member_count(self):
+    async def member_count(self, guild: Guild):
         """Function which updates the member count and the Information's view"""
-        if not self.info_msg:
+        channel = guild.rules_channel
+        msg_id = MSG_INFO.get(guild.id)
+        if not (channel and msg_id):
             return
-        guild = self.info_msg.guild
+
+        w = await self.bot.webhook(channel, reason="Member Count")
+        msg = await w.fetch_message(msg_id)
+        if not msg.embeds:
+            return
+
+        embed = msg.embeds[0]
+
         members = len([m for m in guild.members if not m.bot])
         total = len(guild.members)
-        embed = self.info_msg.embeds[0].copy()
-        data: dict[str, int] = {}
-        if cog := self.bot.get_cog("Submission"):
-            ocs = [oc for oc in cog.ocs.values() if guild.get_member(oc.author)]
-            total_ocs = len(ocs)
-        else:
-            total_ocs = 0
 
-        data["Characters"] = total_ocs
+        data: dict[str, int] = {}
+
+        if cog := self.bot.get_cog("Submission"):
+            ocs = [
+                oc
+                for oc in cog.ocs.values()
+                if oc.server == guild.id and guild.get_member(oc.author)
+            ]
+            if total_ocs := len(ocs):
+                data["Characters"] = total_ocs
+
         data["Members   "] = members
         data["Bots      "] = total - members
         data["Total     "] = total
@@ -335,14 +361,17 @@ class Information(Cog):
         text = "\n".join(f"{key}: {value:03d}" for key, value in data.items())
         text = f"```yaml\n{text}\n```"
 
-        if self.info_msg.embeds[0].description != text:
+        if embed.description != text:
             embed.description = text
-            await self.info_msg.edit(embed=embed)
+            await msg.edit(embed=embed)
 
     @Cog.listener()
     async def on_member_remove(self, member: Member):
-        await self.member_count()
-        if msg := self.join.get(member):
+        await self.member_count(member.guild)
+        if not (log_id := LOGS.get(member.guild.id)):
+            return
+
+        if msg := self.join.pop(member, None):
             with suppress(DiscordException):
                 await msg.delete()
         guild: Guild = member.guild
@@ -356,10 +385,15 @@ class Information(Cog):
             embed.description = "\n".join(
                 f"> **•** {role.mention}" for role in roles
             )
-        embed.set_footer(text=f"ID: {member.id}", icon_url=guild.icon.url)
+        if icon := guild.icon:
+            embed.set_footer(text=f"ID: {member.id}", icon_url=icon.url)
+        else:
+            embed.set_footer(text=f"ID: {member.id}")
         embed.set_image(url=WHITE_BAR)
         view = View()
-        if value := self.bot.get_cog("Submission").oc_list.get(member.id):
+
+        cog = self.bot.get_cog("Submission")
+        if value := cog.oc_list.get(member.id):
             view.add_item(
                 Button(
                     label="Characters",
@@ -367,7 +401,15 @@ class Information(Cog):
                 )
             )
 
-        if role := self.boosters.pop(member, None):
+        AFK = get(roles, name="AFK")
+        BOOSTER = find(lambda x: x.is_premium_subscriber(), roles)
+
+        if (AFK and BOOSTER) and (
+            role := find(
+                lambda x: BOOSTER < x < AFK and member in x.members,
+                roles,
+            )
+        ):
             with suppress(DiscordException):
                 await role.delete(reason="User Left")
 
@@ -377,7 +419,8 @@ class Information(Cog):
             filename=str(member.id),
         ):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
-            await self.log.send(
+            log = await self.bot.webhook(log_id, reason="Join Logging")
+            await log.send(
                 file=file,
                 embed=embed,
                 view=view,
@@ -387,11 +430,12 @@ class Information(Cog):
 
     @Cog.listener()
     async def on_member_join(self, member: Member):
-        await self.member_count()
-        guild: Guild = member.guild
-        welcome_channel: TextChannel = guild.get_channel(719343092963999807)
-        if not welcome_channel:
+        if not (log_id := LOGS.get(member.guild.id)):
             return
+
+        await self.member_count(member.guild)
+
+        guild: Guild = member.guild
         embed = Embed(
             title="Member Joined",
             colour=Colour.green(),
@@ -401,6 +445,7 @@ class Information(Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {member.id}")
         asset = member.display_avatar.replace(format="png", size=512)
+        log = await self.bot.webhook(log_id, reason="Join Logging")
         if file := await self.bot.get_file(asset.url, filename="image"):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(
@@ -415,18 +460,12 @@ class Information(Cog):
                         url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                     )
                 )
-                message = await self.log.send(
-                    embed=embed,
-                    file=file,
-                    view=view,
-                    wait=True,
-                )
-            else:
-                message = await self.log.send(
-                    embed=embed,
-                    file=file,
-                    wait=True,
-                )
+            message = await log.send(
+                embed=embed,
+                file=file,
+                view=view,
+                wait=True,
+            )
             image = ImageKit(
                 base="welcome_TW8HUQOuU.png",
                 weight=1920,
@@ -454,7 +493,10 @@ class Information(Cog):
                     color=Colour.blurple(),
                     timestamp=utcnow(),
                 )
-                embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+                if icon := guild.icon:
+                    embed.set_footer(text=guild.name, icon_url=icon.url)
+                else:
+                    embed.set_footer(text=guild.name)
                 embed.set_image(url=f"attachment://{file.filename}")
 
                 view.add_item(
@@ -483,9 +525,18 @@ class Information(Cog):
                 colour=Colour.red(),
                 timestamp=utcnow(),
             )
-            if role := self.boosters.pop(now, None):
+
+            AFK = get(now.guild.roles, name="AFK")
+            BOOSTER = find(lambda x: x.is_premium_subscriber(), now.guild.roles)
+
+            if (AFK and BOOSTER) and (
+                role := find(
+                    lambda x: BOOSTER < x < AFK and now in x.members,
+                    now.guild.roles,
+                )
+            ):
                 with suppress(DiscordException):
-                    await role.delete(reason="Boost removed.")
+                    await role.delete(reason="User Left")
         else:
             embed = Embed(
                 title="Has boosted the Server!",
@@ -495,9 +546,14 @@ class Information(Cog):
         embed.set_image(url=WHITE_BAR)
         asset = now.display_avatar.replace(format="png", size=4096)
         embed.set_thumbnail(url=asset.url)
-        if guild := now.guild:
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        await self.log.send(content=now.mention, embed=embed)
+        if icon := now.guild.icon:
+            embed.set_footer(text=now.guild.name, icon_url=icon.url)
+        else:
+            embed.set_footer(text=now.guild.name)
+
+        if log_id := LOGS.get(now.guild.id):
+            log = await self.bot.webhook(log_id, reason="Logging")
+            await log.send(content=now.mention, embed=embed)
 
     @Cog.listener()
     async def on_raw_bulk_message_delete(
@@ -510,13 +566,16 @@ class Information(Cog):
         messages: list[Message]
             Messages that were deleted.
         """
-        if not (self.log and payload.guild_id):
+        if not (payload.guild_id and (log_id := LOGS.get(payload.guild_id))):
             return
+
+        w = await self.bot.webhook(log_id, reason="Bulk delete logging")
+
         if messages := [
             message
             for message in payload.cached_messages
             if message.id not in self.bot.msg_cache
-            and message.webhook_id != self.log.id
+            and message.webhook_id != w.id
         ]:
             msg = messages[0]
             fp = StringIO()
@@ -539,7 +598,7 @@ class Information(Cog):
                     url=msg.jump_url,
                 )
             )
-            await self.log.send(embed=embed, file=file, view=view)
+            await w.send(embed=embed, file=file, view=view)
 
         self.bot.msg_cache -= payload.message_ids
 
@@ -586,12 +645,16 @@ class Information(Cog):
             self.bot.msg_cache -= {payload.message_id}
             return
 
+        if not (payload.guild_id and (log_id := LOGS.get(payload.guild_id))):
+            return
+
+        w = await self.bot.webhook(log_id, reason="Raw Message delete logging")
+
         user: Member = ctx.author
 
         if (
             not ctx.guild
-            or not self.log
-            or ctx.webhook_id == self.log.id
+            or ctx.webhook_id == w.id
             or self.bot.user.id == user.id
             or user.id == self.bot.owner_id
             or user.id in self.bot.owner_ids
@@ -634,20 +697,21 @@ class Information(Cog):
                 ):
 
                     image_id = items[-1]
-                    method = None
 
                     if url.startswith("https://tenor.com/"):
                         method = self.tenor_fetch
                     elif url.startswith("https://giphy.com/"):
                         method = self.giphy_fetch
+                    else:
+                        method = None
 
-                    if method and (data := await method(image_id=image_id)):
+                    if method and (data := await method(image_id)):
                         gif_title, gif_url, gif_image = data
                         if embed.title == "GIF Deleted":
                             aux = Embed(color=Colour.blurple())
                             embeds.append(aux)
                         else:
-                            aux = embed
+                            aux = embed.copy()
                             aux.description = embed.Empty
 
                         aux.title = "GIF Deleted"
@@ -689,7 +753,7 @@ class Information(Cog):
             elif not user.bot:
                 embed.title = f"{embed.title} (User: {user.id})"
 
-            await self.log.send(
+            await w.send(
                 embeds=embeds[:10],
                 files=files,
                 view=view,
@@ -786,14 +850,9 @@ class Information(Cog):
         for item in MAP_ELEMENTS:
             view = RegionView(bot=self.bot, cat_id=item.category)
             self.bot.add_view(view, message_id=item.message)
-        await self.member_count()
-        self.log = await self.bot.fetch_webhook(943493074162700298)
-        w = await self.bot.fetch_webhook(860606374488047616)
-        self.info_msg = await w.fetch_message(913555643699458088)
-        self.AFK = AFK = w.guild.get_role(932324221168795668)
-        BOOSTER = w.guild.get_role(731347440342663220)
-        for role in filter(lambda x: BOOSTER < x < AFK, w.guild.roles):
-            self.boosters.update({x: role for x in role.members})
+
+        for guild in self.bot.guilds:
+            await self.member_count(guild)
 
 
 def setup(bot: CustomBot) -> None:

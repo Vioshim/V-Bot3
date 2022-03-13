@@ -20,15 +20,13 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
-    PartialInviteGuild,
-    TextChannel,
     Thread,
     Webhook,
 )
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import InviteConverter
 from discord.ui import Button, View, button
-from discord.utils import utcnow
+from discord.utils import find, utcnow, get
 
 from src.structures.bot import CustomBot
 from src.utils.matches import INVITE
@@ -64,10 +62,14 @@ class Inviter(Cog):
 
         guild: Guild = ctx.guild
         author: Member = ctx.author
-        if not isinstance(invite_guild := invite.guild, PartialInviteGuild):
+
+        if not (invite_guild := invite.guild):
             return
-        partnered_role = guild.get_role(725582056620294204)
-        mod_ch: TextChannel = self.bot.get_channel(877376320093425685)
+
+        partnered_role = get(guild.roles, name="Partners")
+        mod_ch = find(lambda x: "mod-chat" in x.name, guild.channels)
+        if not mod_ch:
+            return
 
         generator = Embed(
             title=f"__**{guild.name} is now officially partnered with {invite_guild.name}**__",
@@ -75,16 +77,15 @@ class Inviter(Cog):
             colour=Color.blurple(),
             timestamp=utcnow(),
         )
+
         files = []
-        if (icon := invite_guild.icon) and (
-            file := await self.bot.get_file(
-                icon.with_size(4096).url,
-                "server_icon",
-            )
+        if (
+            (icon := invite_guild.icon)
+            and (icon_url := icon.with_size(4096).url)
+            and (file := await self.bot.get_file(icon_url, "server_icon"))
         ):
             generator.set_thumbnail(url=f"attachment://{file.filename}")
             files.append(file)
-
         if attachments := ctx.attachments:
             file = await attachments[0].to_file(use_cached=True)
             generator.set_image(url=f"attachment://{file.filename}")
@@ -94,8 +95,7 @@ class Inviter(Cog):
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
 
-        link_view = View()
-        link_view.add_item(Button(label="Click Here to Join", url=invite.url))
+        link_view = View(Button(label="Click Here to Join", url=invite.url))
 
         async def handler(w: Webhook) -> Thread:
             """Inner function to add parameters
@@ -139,13 +139,14 @@ class Inviter(Cog):
 
         if (
             author.guild_permissions.administrator
-            and ctx.channel.category_id == 735900056946868335
+            and (category := ctx.channel.category)
+            and "partner" in category.name.lower()
         ):
             await handler(ctx.channel)
         else:
             generator.set_footer(
                 text=author.display_name,
-                icon_url=author.avatar.url,
+                icon_url=author.display_avatar.url,
             )
             embed = Embed(
                 title="Server Invite Detected - Possible Partner/Advertiser",
@@ -155,36 +156,32 @@ class Inviter(Cog):
             )
             embed.set_author(
                 name=author.display_name,
-                icon_url=author.avatar.url,
+                icon_url=author.display_avatar.url,
             )
-            embed.set_footer(
-                text=f"ID: {author.id}",
-                icon_url=invite_guild.icon.url,
-            )
-            embed.add_field(
-                name="Posted at",
-                value=ctx.channel.mention,
-            )
+            if icon := invite_guild.icon:
+                embed.set_footer(text=f"ID: {author.id}", icon_url=icon.url)
+                embed.set_thumbnail(url=icon.url)
+            else:
+                embed.set_footer(text=f"ID: {author.id}")
+            embed.add_field(name="Posted at", value=ctx.channel.mention)
+
             if user := invite.inviter:
                 embed.add_field(
                     name=f"Invite creator - {user.name!r}",
                     value=user.mention,
                 )
-            embed.set_thumbnail(url=invite_guild.icon.url)
 
             if images := ctx.attachments:
                 embed.set_image(url=images[0].proxy_url)
 
             class InviteView(View):
                 async def interaction_check(
-                    self,
-                    interaction: Interaction,
+                    self, interaction: Interaction
                 ) -> bool:
                     resp: InteractionResponse = interaction.response
                     if not interaction.user.guild_permissions.administrator:
                         await resp.send_message(
-                            "You are not an administrator",
-                            ephemeral=True,
+                            "You are not an administrator", ephemeral=True
                         )
                         return False
                     return True
@@ -211,7 +208,8 @@ class Inviter(Cog):
                     await resp.send_message(
                         f"{btn.label} has been added by {member.display_name}"
                     )
-                    await author.add_roles(partnered_role)
+                    if partnered_role:
+                        await author.add_roles(partnered_role)
                     await inter.message.delete()
                     self.stop()
 
