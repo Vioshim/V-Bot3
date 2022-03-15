@@ -803,11 +803,10 @@ class ImageMod(Mod):
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
-        aux: Optional[bool] = None
         if isinstance(image := view.text, str):
             aux = oc.image != image
             oc.image = image
-        return aux
+            return aux
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -1396,30 +1395,18 @@ class ModifyView(View):
                 modifying |= result
 
         try:
-            webhook = await self.bot.fetch_webhook(919280056558317658)
+            webhook = await self.bot.webhook(919277769735680050)
             thread: Thread = await self.bot.fetch_channel(self.oc.thread)
-            if thread.archived:
-                await thread.edit(archived=False)
+            await thread.edit(archived=False)
             embed = self.oc.embed
             embed.set_image(url="attachment://image.png")
-            if not modifying:
-                msg = await webhook.edit_message(
-                    self.oc.id, embed=embed, thread=thread
-                )
-            elif file := await self.bot.get_file(self.oc.generated_image):
-                msg = await webhook.edit_message(
-                    self.oc.id,
-                    file=file,
-                    attachments=[],
-                    embed=embed,
-                    thread=thread,
-                )
-            else:
-                msg = await webhook.edit_message(
-                    self.oc.id,
-                    embed=embed,
-                    thread=thread,
-                )
+            kwargs = dict(embed=embed, thread=thread)
+            if modifying and (
+                file := await self.bot.get_file(self.oc.generated_image)
+            ):
+                kwargs["attachments"] = []
+                kwargs["file"] = file
+            msg = await webhook.edit_message(self.oc.id, **kwargs)
             self.oc.image = msg.embeds[0].image.url
             async with self.bot.database() as db:
                 await self.oc.update(db)
