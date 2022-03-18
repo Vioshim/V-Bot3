@@ -410,7 +410,7 @@ class Movepool:
         )
 
     def add_level_moves(self, level: int, *moves: Move):
-        self.level.setdefault(level, frozen_set())
+        self.level = self.level.setdefault(level, frozen_set())
         self.level[level] |= frozen_set(moves)
 
     def remove_level_moves(self, level: int, *moves: Move):
