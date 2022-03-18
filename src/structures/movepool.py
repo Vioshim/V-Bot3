@@ -409,6 +409,16 @@ class Movepool:
             other=foo(self.other),
         )
 
+    def add_level_moves(self, level: int, *moves: Move):
+        self.level.setdefault(level, frozen_set())
+        self.level[level] |= frozen_set(moves)
+
+    def remove_level_moves(self, level: int, *moves: Move):
+        self.level.setdefault(level, frozen_set())
+        self.level[level] -= frozen_set(moves)
+        if not self.level[level]:
+            del self.level[level]
+
     @classmethod
     def from_dict(cls, **kwargs) -> Movepool:
         """Returns a Movepool which corresponds to the kwargs provided
