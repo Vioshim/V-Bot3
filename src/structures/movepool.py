@@ -172,6 +172,21 @@ class Movepool:
         """
         return self.operator(other, method=lambda x, y: x | y)
 
+    def __radd__(self, other: Movepool) -> Movepool:
+        """Recursive Add method
+
+        Parameters
+        ----------
+        other : Movepool
+            Movepool to operate against
+
+        Returns
+        -------
+        Movepool
+            resulting movepool
+        """
+        return self.operator(other, method=lambda x, y: x | y)
+    
     def __sub__(self, other: Movepool) -> Movepool:
         """Sub method
 

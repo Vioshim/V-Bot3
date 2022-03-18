@@ -180,7 +180,7 @@ class Pokedex(Cog):
                 mon_types = [mon.types]
 
             embed.title = f"See {mon.name}'s movepool"
-            movepool = mon.movepool
+            movepool = mon.total_movepool
             if info := "\n".join(
                 f"• {'/'.join(i.name for i in x)}" for x in mon_types
             ):

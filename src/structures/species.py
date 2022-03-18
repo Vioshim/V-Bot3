@@ -119,7 +119,8 @@ class Species(metaclass=ABCMeta):
         mon = self
         aux = self.movepool
         while mon := mon.species_evolves_from:
-            aux += mon.movepool
+            moves = mon.movepool.without_moves(aux)
+            aux += Movepool(egg=mon.egg, other=moves())
         return aux
 
     @property
@@ -183,7 +184,7 @@ class Species(metaclass=ABCMeta):
             result
         """
         aux: list[str] = []
-        items: set[cls] = set()
+        items: list[cls] = []
 
         if not item:
             return
@@ -195,7 +196,7 @@ class Species(metaclass=ABCMeta):
             if isinstance(elem, str):
                 aux.append(elem)
             elif isinstance(elem, cls):
-                items.add(elem)
+                items.append(elem)
 
         entries = cls.all()
         MOD1 = {i.id: i for i in entries} or ALL_SPECIES
@@ -225,7 +226,7 @@ class Species(metaclass=ABCMeta):
                         break
 
                 if data := elems.get(word):
-                    items.add(data)
+                    items.append(data)
                 else:
                     for data in get_close_matches(
                         word=word,
@@ -233,7 +234,7 @@ class Species(metaclass=ABCMeta):
                         n=1,
                         cutoff=0.85,
                     ):
-                        items.add(elems[data])
+                        items.append(elems[data])
 
         return items
 
@@ -252,8 +253,54 @@ class Species(metaclass=ABCMeta):
         Optional[Type[Species]]
             result
         """
-        if items := cls.deduce(item):
-            return items.pop()
+        aux: list[str] = []
+
+        if not item:
+            return
+
+        if isinstance(item, str) or not isinstance(item, Iterable):
+            item = [item]
+
+        for elem in item:
+            if isinstance(elem, str):
+                aux.append(elem)
+            if isinstance(elem, cls):
+                return elem
+
+        entries = cls.all()
+        MOD1 = {i.id: i for i in entries} or ALL_SPECIES
+        MOD2 = {i.name: i for i in entries} or SPECIES_BY_NAME
+
+        methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
+            (MOD1, fix),
+            (MOD2, lambda x: str(x).strip().title()),
+        ]
+
+        for word in filter(bool, ",".join(aux).split(", ")):
+
+            for elems, method in methods:
+
+                word = method(word)
+
+                for key, value in PHRASES.items():
+                    phrase1, phrase2 = method(f"{value} "), method(f"{key} ")
+                    if word.startswith(phrase1) or word.startswith(phrase2):
+                        word = word.removeprefix(phrase1)
+                        word = word.removeprefix(phrase2)
+                        if key != "KANTO":
+                            word = method(f"{word} {key}")
+                        break
+
+                if data := elems.get(word):
+                    return data
+
+                for data in get_close_matches(
+                    word=word,
+                    possibilities=elems,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    return elems[data]
 
     @classmethod
     def any_deduce(cls, item: str):
