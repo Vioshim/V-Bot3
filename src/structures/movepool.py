@@ -415,11 +415,10 @@ class Movepool:
         self.level = frozen_dict(aux)
 
     def remove_level_moves(self, level: int, *moves: Move):
-        if lvl_moves := self.level.get(level):
-            if total := lvl_moves - frozenset(moves):
-                self.level[level] = total
-            else:
-                del self.level[level]
+        if total := self.level.get(level, set()) - frozenset(moves):
+            self.level[level] = total
+        else:
+            self.level.pop(level, None)
 
     @classmethod
     def from_dict(cls, **kwargs) -> Movepool:

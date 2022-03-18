@@ -19,7 +19,6 @@ from copy import copy
 from dataclasses import asdict, dataclass, field
 from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
-from re import split
 from typing import Any, Callable, Iterable, Optional
 
 from ability import Ability
@@ -216,7 +215,7 @@ class Species(metaclass=ABCMeta):
             (MOD2, lambda x: str(x).strip().title()),
         ]
 
-        for word in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+        for word in ",".join(aux).split(", "):
 
             if not word:
                 continue
