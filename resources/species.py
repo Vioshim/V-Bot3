@@ -177,7 +177,7 @@ class Species(metaclass=ABCMeta):
         """
 
     @classmethod
-    def deduce(cls, item: str, let_fuse: bool = True):
+    def deduce(cls, item: str):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
 
@@ -244,11 +244,45 @@ class Species(metaclass=ABCMeta):
                     ):
                         items.add(elems[data])
 
-        if let_fuse and len(items) == 2:
-            mon1, mon2 = items
-            return Fusion(mon1=mon1, mon2=mon2)
+        return items
 
-        if items:
+    @classmethod
+    def single_deduce(cls, item: str):
+        """This is a function which allows to obtain the species given
+        an ID or multiple values.
+
+        Parameters
+        ----------
+        item : str
+            Item to look for
+
+        Returns
+        -------
+        Optional[Type[Species]]
+            result
+        """
+        if items := cls.deduce(item):
+            return items.pop()
+
+    @classmethod
+    def any_deduce(cls, item: str):
+        """This is a function which allows to obtain the species given
+        an ID or multiple values.
+
+        Parameters
+        ----------
+        item : str
+            Item to look for
+
+        Returns
+        -------
+        Optional[Type[Species]]
+            result
+        """
+        if items := cls.deduce(item):
+            if len(items) == 2:
+                mon1, mon2 = items
+                return Fusion(mon1=mon1, mon2=mon2)
             return items.pop()
 
     @classmethod
@@ -452,7 +486,7 @@ class Fakemon(Species):
         Optional[Fakemon]
             Result
         """
-        if (mon := Species.deduce(item)) and not isinstance(mon, cls):
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
             return cls(evolves_from=mon.id)
 
     @classmethod
@@ -520,7 +554,7 @@ class CustomMega(Species):
         Optional[CustomMega]
             Result
         """
-        if (mon := Species.deduce(item)) and not isinstance(mon, cls):
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
             return cls(base=mon)
 
     @classmethod
@@ -596,7 +630,7 @@ class Variant(Species):
         Optional[Variant]
             Result
         """
-        if (mon := Species.deduce(item)) and not isinstance(mon, cls):
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
             return cls(base=mon, name=f"Variant {mon.name.title()}")
 
     @classmethod
@@ -786,7 +820,7 @@ class Fusion(Species):
         Optional[Fusion]
             result
         """
-        if isinstance(mon := Species.deduce(item), cls):
+        if isinstance(mon := Species.single_deduce(item), cls):
             return mon
 
 

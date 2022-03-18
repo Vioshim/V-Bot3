@@ -91,7 +91,7 @@ class SpeciesCall(Converter[Species]):
             If no image was found
         """
 
-        if data := Species.deduce(argument):
+        if data := Species.single_deduce(argument):
             return data
 
         raise NoSpeciesFound(argument)

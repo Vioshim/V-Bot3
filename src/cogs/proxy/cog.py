@@ -153,7 +153,7 @@ class Proxy(Cog):
                 ephemeral=True,
             )
             return
-        if (mon := Species.deduce(pokemon)) and not isinstance(mon, Fusion):
+        if mon := Species.single_deduce(pokemon):
             name = mon.name
             if shiny:
                 name = f"Shiny {name}"
@@ -208,12 +208,7 @@ class Proxy(Cog):
         text : str, optional
             Text, by default None
         """
-        if mon := Species.deduce(pokemon):
-            if isinstance(mon, Fusion):
-                await ctx.reply(
-                    "Fusions don't have stored images yet", delete_after=3
-                )
-                return
+        if mon := Species.single_deduce(pokemon):
             npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
         else:
             member: Member = ctx.author

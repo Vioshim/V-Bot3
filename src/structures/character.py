@@ -1718,13 +1718,15 @@ def oc_process(**kwargs) -> Type[Character]:
         data["species"] = species
     elif species := Fusion.deduce(data.pop("fusion", "")):
         data["species"] = species
-    elif species := Species.deduce(common_pop_get(data, "species", "pokemon")):
-        data["species"] = species
     else:
-        print(data)
-        raise ValueError(
-            f"Unable to determine the species, value: {species}, make sure you're using a recent template."
-        )
+        aux = common_pop_get(data, "species", "pokemon")
+        if species := Species.single_deduce(aux) or Species.any_deduce(aux):
+            data["species"] = species
+        else:
+            print(data)
+            raise ValueError(
+                f"Unable to determine the species, value: {species}, make sure you're using a recent template."
+            )
 
     if species.banned:
         raise ValueError(f"The Species {species.name!r} is banned currently.")
