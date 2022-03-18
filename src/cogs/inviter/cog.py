@@ -40,7 +40,7 @@ __all__ = ("Inviter", "setup")
 
 PARTNERS = {
     719343092963999804: 735900056946868335,
-    952517983786377287: 952558960903352320
+    952517983786377287: 952558960903352320,
 }
 
 
@@ -157,7 +157,7 @@ class Inviter(Cog):
         guild: Guild = ctx.guild
         author: Member = ctx.author
 
-        if not (invite_guild := invite.guild):
+        if not (invite_guild := invite.guild) or invite_guild == guild:
             return
 
         if not (category := ctx.channel.category):
