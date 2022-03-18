@@ -177,7 +177,7 @@ class Species(metaclass=ABCMeta):
         """
 
     @classmethod
-    def deduce(cls, item: str):
+    def deduce(cls, item: str, let_fuse: bool = True):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
 
@@ -244,7 +244,7 @@ class Species(metaclass=ABCMeta):
                     ):
                         items.add(elems[data])
 
-        if len(items) == 2:
+        if let_fuse and len(items) == 2:
             mon1, mon2 = items
             return Fusion(mon1=mon1, mon2=mon2)
 
