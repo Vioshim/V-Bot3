@@ -186,7 +186,7 @@ class Movepool:
             resulting movepool
         """
         return self.operator(other, method=lambda x, y: x | y)
-    
+
     def __sub__(self, other: Movepool) -> Movepool:
         """Sub method
 
@@ -406,7 +406,8 @@ class Movepool:
             total_remove = total_remove()
 
         def foo(moves: Iterable[Move]):
-            items = sorted(move for move in moves if move not in total_remove)
+            data = filter(lambda x: x not in total_remove, moves)
+            items = sorted(data, key=lambda x: x.name)
             return frozen_set(items)
 
         return Movepool(

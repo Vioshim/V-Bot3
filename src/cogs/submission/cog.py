@@ -786,7 +786,9 @@ class Submission(Cog):
     async def oc_update(self, oc: Type[Character]):
         embed: Embed = oc.embed
         embed.set_image(url="attachment://image.png")
-        thread: Thread = await self.bot.fetch_channel(oc.thread)
+        guild = self.bot.get_guild(oc.server)
+        if not (thread := guild.get_thread(oc.thread)):
+            thread: Thread = await self.bot.fetch_channel(oc.thread)
         if thread.archived:
             await thread.edit(archived=False)
         try:
