@@ -132,7 +132,7 @@ class Species(metaclass=ABCMeta):
     @property
     def species_evolves_from(self) -> Optional[Species]:
         if mon := self.evolves_from:
-            return self.from_ID(mon)
+            return Species.from_ID(mon)
 
     @property
     @abstractmethod
