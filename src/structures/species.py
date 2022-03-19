@@ -118,11 +118,11 @@ class Species(metaclass=ABCMeta):
         mon = self
         aux = self.movepool
         while mon := mon.species_evolves_from:
-            if aux:
+            if not aux:
+                aux += mon.movepool
+            else:
                 moves = mon.movepool.without_moves(aux)
                 aux += Movepool(egg=mon.movepool.egg, other=moves())
-            else:
-                aux += mon.movepool
         return aux
 
     @property
