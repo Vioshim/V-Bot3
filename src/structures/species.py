@@ -127,7 +127,9 @@ class Species(metaclass=ABCMeta):
 
     @property
     def species_evolves_to(self) -> list[Species]:
-        return [mon for item in self.evolves_to if (mon := self.from_ID(item))]
+        return [
+            mon for item in self.evolves_to if (mon := Species.from_ID(item))
+        ]
 
     @property
     def species_evolves_from(self) -> Optional[Species]:
