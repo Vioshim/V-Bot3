@@ -826,7 +826,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Pycord-Development/pycord.git"
 reference = "master"
-resolved_reference = "38962ffdcf4f8685a535d3c89ca1f68969b0feb3"
+resolved_reference = "fbdf1bb9594cfe01e28966cd9918bd8922e41698"
 
 [[package]]
 name = "pyaml"

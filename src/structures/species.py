@@ -760,11 +760,9 @@ class Fusion(Species):
 
     @property
     def species_evolves_from(self):
-        if (
-            (mon1 := self.mon1.species_evolves_from)
-            and (mon2 := self.mon2.species_evolves_from)
-            and mon1 != mon2
-        ):
+        mon1 = self.mon1.species_evolves_from
+        mon2 = self.mon2.species_evolves_from
+        if mon1 and mon2 and mon1 != mon2:
             return Fusion(mon1=mon1, mon2=mon2)
         return mon1 or mon2
 
