@@ -667,7 +667,7 @@ class Submission(Cog):
             species = oc.species
 
         if not oc.moveset or len(oc.moveset) > 6:
-            if movepool := species.movepool:
+            if movepool := species.total_movepool:
                 movepool = movepool()
             else:
                 movepool = Move.all()
@@ -693,7 +693,7 @@ class Submission(Cog):
             species.movepool += Movepool(event=oc.moveset)
 
         if not oc.any_move_at_first:
-            moves_movepool = species.movepool()
+            moves_movepool = species.total_movepool()
             if move_errors := ", ".join(
                 move.name for move in oc.moveset if move not in moves_movepool
             ):
