@@ -105,6 +105,7 @@ BASIC_ROLES = {
     "Roblox": 750395469280051260,
     "Radio": 805878418225889280,
     "Announcements": 908809235012419595,
+    "Random RP": 955821594608042015,
 }
 
 COLOR_ROLES = dict(
@@ -353,6 +354,12 @@ class BasicRoles(View):
                 emoji="💠",
                 value="805878418225889280",
                 description="Get pinged each time Reshy streams in radio.",
+            ),
+            SelectOption(
+                label="Random RP",
+                emoji="💠",
+                value="955821594608042015",
+                description="Let's you see the non-canon random RP.",
             ),
             SelectOption(
                 label="Announcements",
