@@ -1686,9 +1686,9 @@ def oc_process(**kwargs) -> Type[Character]:
                 "pre_evo",
             )
         ):
-            species.name = name.title()
+            species.name = name
         else:
-            species = Fakemon(name=name.title())
+            species = Fakemon(name=name)
 
         if species is None:
             raise ValueError("Fakemon was not deduced by the bot.")
