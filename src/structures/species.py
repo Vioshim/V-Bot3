@@ -240,7 +240,7 @@ class Species(metaclass=ABCMeta):
                     ):
                         items.append(elems[data])
 
-        return items
+        return frozenset(items)
 
     @classmethod
     def single_deduce(cls, item: str):
@@ -321,7 +321,7 @@ class Species(metaclass=ABCMeta):
         Optional[Type[Species]]
             result
         """
-        if items := cls.deduce(item):
+        if items := set(cls.deduce(item)):
             if len(items) == 2:
                 mon1, mon2 = items
                 return Fusion(mon1=mon1, mon2=mon2)
