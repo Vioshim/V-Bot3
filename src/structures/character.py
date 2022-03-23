@@ -1720,7 +1720,8 @@ def oc_process(**kwargs) -> Type[Character]:
         data["species"] = species
     else:
         aux = common_pop_get(data, "species", "pokemon")
-        if species := Species.single_deduce(aux) or Species.any_deduce(aux):
+        method = Species.any_deduce if "," in aux else Species.single_deduce
+        if species := method(aux):
             data["species"] = species
         else:
             print(data)
@@ -1731,7 +1732,9 @@ def oc_process(**kwargs) -> Type[Character]:
     if species.banned:
         raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(*type_info)):
+    if (type_info := common_pop_get(data, "types", "type")) and (
+        types := Typing.deduce_many(*type_info)
+    ):
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.types = types
         elif species.types != types:
