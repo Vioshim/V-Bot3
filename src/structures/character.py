@@ -1676,7 +1676,7 @@ def oc_process(**kwargs) -> Type[Character]:
         name: str = fakemon.title()
 
         if name.startswith("Mega "):
-            species = CustomMega.deduce(name)
+            species = CustomMega.deduce(name.removeprefix("Mega "))
         elif species := Fakemon.deduce(
             common_pop_get(
                 data,
