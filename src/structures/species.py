@@ -191,7 +191,7 @@ class Species(metaclass=ABCMeta):
         items: list[cls] = []
 
         if not item:
-            return
+            return frozenset()
 
         if isinstance(item, str) or not isinstance(item, Iterable):
             item = [item]
@@ -211,10 +211,12 @@ class Species(metaclass=ABCMeta):
             (MOD2, lambda x: str(x).strip().title()),
         ]
 
-        for word in ",".join(aux).split(", "):
+        for word in ",".join(aux).split(","):
 
             if not word:
                 continue
+
+            word = word.strip()
 
             for elems, method in methods:
 
