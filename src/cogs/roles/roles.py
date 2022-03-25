@@ -478,41 +478,39 @@ class RegionView(View):
         self.lock.custom_id = f"lock-{info.category}"
         self.read.custom_id = f"read-{info.category}"
 
-    async def perms_setter(self, ctx: Interaction, mode: bool) -> None:
+    async def perms_setter(self, ctx: Interaction, btn: Button) -> None:
         """Enable/Disable reading permissions
 
         Parameters
         ----------
         ctx : Interaction
             interaction
-        mode : bool
-            mode
+        btn : Button
+            button
         """
         role: Role = ctx.guild.get_role(self.info.role)
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-        if mode:
+        btn.disabled = True
+        await ctx.edit_original_message(view=self)
+        if btn.label == "Obtain Access":
             await ctx.user.add_roles(role)
+            word = "Enabling"
         else:
             await ctx.user.remove_roles(role)
+            word = "Disabling"
         self.bot.logger.info(
             "%s reading permissions for %s at %s",
-            "Enabling" if mode else "Disabling",
+            word,
             str(ctx.user),
             role.name,
         )
-        await ctx.followup.send(
-            "Permissions have been changed.",
-            ephemeral=True,
-        )
 
     @button(label="Obtain Access", custom_id="unlock")
-    async def unlock(self, _: Button, ctx: Interaction) -> None:
-        await self.perms_setter(ctx, True)
+    async def unlock(self, btn: Button, ctx: Interaction) -> None:
+        await self.perms_setter(ctx, btn)
 
-    @button(label="Remove Acess", custom_id="lock")
-    async def lock(self, _: Button, ctx: Interaction) -> None:
-        await self.perms_setter(ctx, False)
+    @button(label="Remove Access", custom_id="lock")
+    async def lock(self, btn: Button, ctx: Interaction) -> None:
+        await self.perms_setter(ctx, btn)
 
     @button(label="More Information", custom_id="read")
     async def read(self, _: Button, ctx: Interaction) -> None:
