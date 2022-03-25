@@ -470,10 +470,11 @@ class RPSearchRoles(View):
 
 
 class RegionView(View):
-    def __init__(self, bot: CustomBot, info: MapPair):
+    def __init__(self, bot: CustomBot, info: MapPair, ctx: Interaction):
         super(RegionView, self).__init__(timeout=None)
         self.bot = bot
         self.info = info
+        self.ctx = ctx
         self.unlock.custom_id = f"unlock-{info.category}"
         self.lock.custom_id = f"lock-{info.category}"
         self.read.custom_id = f"read-{info.category}"
@@ -488,9 +489,11 @@ class RegionView(View):
         btn : Button
             button
         """
+        resp: InteractionResponse = ctx.response
         role: Role = ctx.guild.get_role(self.info.role)
         btn.disabled = True
-        await ctx.edit_original_message(view=self)
+        await resp.pong()
+        await self.ctx.edit_original_message(view=self)
         if btn.label == "Obtain Access":
             await ctx.user.add_roles(role)
             word = "Enabling"
@@ -560,7 +563,7 @@ class RegionRoles(View):
     async def region(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         info = MAP_ELEMENTS2[int(sct.values[0])]
-        view = RegionView(bot=self.bot, info=info)
+        view = RegionView(bot=self.bot, info=info, ctx=ctx)
         role: Role = ctx.guild.get_role(info.role)
         view.unlock.disabled = role in ctx.user.roles
         view.lock.disabled = role not in ctx.user.roles
