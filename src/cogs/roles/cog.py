@@ -39,6 +39,7 @@ from src.cogs.roles.roles import (
     BasicRoles,
     ColorRoles,
     PronounRoles,
+    RegionRoles,
     RoleManage,
     RoleView,
     RPSearchRoles,
@@ -251,11 +252,13 @@ class Roles(Cog):
         self.basic = BasicRoles(timeout=None)
         self.color = ColorRoles(timeout=None)
         self.rp_search = RPSearchRoles(timeout=None)
+        self.region = RegionRoles(self.bot)
 
         self.bot.add_view(view=self.roles, message_id=916482734933811232)
         self.bot.add_view(view=self.basic, message_id=916482736309534762)
         self.bot.add_view(view=self.color, message_id=916482737811120128)
         self.bot.add_view(view=self.rp_search, message_id=916482738876477483)
+        self.bot.add_view(view=self.region, message_id=956970863805231144)
 
         w2 = await self.bot.webhook(910914713234325504, reason="RP Search")
         self.msg = await w2.fetch_message(910915102490910740)

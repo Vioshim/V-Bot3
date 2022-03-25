@@ -16,6 +16,7 @@ from src.utils.doc_reader import docs_reader
 from src.utils.etc import (
     DICE_NUMBERS,
     MAP_ELEMENTS,
+    MAP_ELEMENTS2,
     RAINBOW,
     RP_CATEGORIES,
     WHITE_BAR,
@@ -52,6 +53,7 @@ __all__ = (
     "docs_reader",
     "DICE_NUMBERS",
     "MAP_ELEMENTS",
+    "MAP_ELEMENTS2",
     "RAINBOW",
     "RP_CATEGORIES",
     "WHITE_BAR",

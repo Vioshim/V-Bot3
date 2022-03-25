@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from time import mktime
 from typing import Optional
 
 from discord import (
     AllowedMentions,
+    CategoryChannel,
     Embed,
     Guild,
     Interaction,
@@ -31,9 +32,10 @@ from discord import (
 from discord.ui import Button, Select, View, button, select
 from discord.utils import format_dt, utcnow
 
+from src.cogs.roles.area_selection import AreaSelection
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR, MapPair
 from src.views.characters_view import CharactersView
 
 __all__ = (
@@ -467,6 +469,126 @@ class RPSearchRoles(View):
         return False
 
 
+class RegionView(View):
+    def __init__(self, bot: CustomBot, info: MapPair):
+        super(RegionView, self).__init__(timeout=None)
+        self.bot = bot
+        self.info = info
+        self.unlock.custom_id = f"unlock-{info.category}"
+        self.lock.custom_id = f"lock-{info.category}"
+        self.read.custom_id = f"read-{info.category}"
+
+    async def perms_setter(self, ctx: Interaction, mode: bool) -> None:
+        """Enable/Disable reading permissions
+
+        Parameters
+        ----------
+        ctx : Interaction
+            interaction
+        mode : bool
+            mode
+        """
+        role: Role = ctx.guild.get_role(self.info.role)
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        if mode:
+            await ctx.user.add_roles(role)
+        else:
+            await ctx.user.remove_roles(role)
+        self.bot.logger.info(
+            "%s reading permissions for %s at %s",
+            "Enabling" if mode else "Disabling",
+            str(ctx.user),
+            role.name,
+        )
+        await ctx.followup.send(
+            "Permissions have been changed.",
+            ephemeral=True,
+        )
+
+    @button(label="Obtain Access", custom_id="unlock")
+    async def unlock(self, _: Button, ctx: Interaction) -> None:
+        await self.perms_setter(ctx, True)
+
+    @button(label="Remove Acess", custom_id="lock")
+    async def lock(self, _: Button, ctx: Interaction) -> None:
+        await self.perms_setter(ctx, False)
+
+    @button(label="More Information", custom_id="read")
+    async def read(self, _: Button, ctx: Interaction) -> None:
+        """Read Information
+
+        Parameters
+        ----------
+        btn : Button
+            button
+        ctx : Interaction
+            interaction
+        """
+        category: CategoryChannel = ctx.guild.get_channel(self.info.category)
+        resp: InteractionResponse = ctx.response
+        self.bot.logger.info(
+            "%s is reading Map Information of %s",
+            str(ctx.user),
+            category.name,
+        )
+        await resp.defer(ephemeral=True)
+        view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
+        await ctx.followup.send(
+            f"There's a total of {view.total:02d} OCs in {category.name}.",
+            view=view,
+            ephemeral=True,
+        )
+
+
+class RegionRoles(View):
+    def __init__(self, bot: CustomBot):
+        super().__init__(timeout=None)
+        self.bot = bot
+
+    @select(
+        placeholder="Select Map Roles",
+        custom_id="region",
+        options=[
+            SelectOption(
+                label=item.name,
+                description=(item.short_desc or item.desc)[:100],
+                value=item.category,
+                emoji=item.emoji,
+            )
+            for item in MAP_ELEMENTS
+        ],
+    )
+    async def region(self, sct: Select, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        info = MAP_ELEMENTS2[sct.values[0]]
+        view = RegionView(bot=self.bot, info=info)
+        role: Role = ctx.guild.get_role(info.role)
+        view.unlock.disabled = role in ctx.user.roles
+        view.lock.disabled = role not in ctx.user.roles
+        embed = Embed(
+            title=info.name,
+            description=info.desc,
+            timestamp=utcnow(),
+            color=ctx.user.color,
+        )
+        embed.set_image(url=info.image or WHITE_BAR)
+        if icon := ctx.guild.icon:
+            embed.set_footer(
+                text=ctx.guild.name,
+                icon_url=icon.url,
+            )
+        else:
+            embed.set_footer(
+                text=ctx.guild.name,
+            )
+        await resp.send_message(
+            view=view,
+            embed=embed,
+            ephemeral=True,
+        )
+
+
 class RoleManage(View):
     def __init__(
         self,
@@ -574,7 +696,6 @@ class RoleButton(Button):
 
         if role not in member.roles:
             await member.add_roles(role, reason="RP searching")
-
         cog = self.bot.get_cog(name="Submission")
         characters = cog.rpers.get(member.id, {}).values()
         view = RoleManage(self.bot, role, characters, member)

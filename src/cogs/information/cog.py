@@ -19,7 +19,6 @@ from typing import Optional
 
 from colour import Color
 from discord import (
-    AllowedMentions,
     ApplicationContext,
     Attachment,
     Colour,
@@ -52,11 +51,9 @@ from discord.ui import Button, View
 from discord.utils import find, format_dt, get, utcnow
 from yaml import dump
 
-from src.cogs.information.information_view import RegionView
 from src.structures.bot import CustomBot
 from src.utils.etc import MAP_ELEMENTS, WHITE_BAR
 from src.utils.functions import message_line
-from src.utils.imagekit import ImageKit
 
 __all__ = ("Information", "setup")
 
@@ -790,10 +787,6 @@ class Information(Cog):
     @Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
-        for item in MAP_ELEMENTS:
-            view = RegionView(bot=self.bot, cat_id=item.category)
-            self.bot.add_view(view, message_id=item.message)
-
         for guild in self.bot.guilds:
             await self.member_count(guild)
 
