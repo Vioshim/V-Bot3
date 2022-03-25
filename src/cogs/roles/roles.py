@@ -550,6 +550,7 @@ class RegionRoles(View):
     @select(
         placeholder="Select Map Roles",
         custom_id="region",
+        row=0,
         options=[
             SelectOption(
                 label=item.name,
@@ -588,6 +589,30 @@ class RegionRoles(View):
             embed=embed,
             ephemeral=True,
         )
+
+    @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
+    async def region_all(self, _: Button, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        roles = [
+            role
+            for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS)
+            if role not in ctx.user.roles
+        ]
+        await ctx.user.add_roles(*roles)
+        await ctx.followup.send("Roles added.", ephemeral=True)
+
+    @button(label="Remove all Map Roles", custom_id="region-none", row=1)
+    async def region_none(self, _: Button, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        roles = [
+            role
+            for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS)
+            if role in ctx.user.roles
+        ]
+        await ctx.user.remove_roles(*roles)
+        await ctx.followup.send("Roles removed.", ephemeral=True)
 
 
 class RoleManage(View):
