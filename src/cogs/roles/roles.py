@@ -561,7 +561,7 @@ class RegionRoles(View):
     )
     async def region(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        info = MAP_ELEMENTS2[sct.values[0]]
+        info = MAP_ELEMENTS2[int(sct.values[0])]
         view = RegionView(bot=self.bot, info=info)
         role: Role = ctx.guild.get_role(info.role)
         view.unlock.disabled = role in ctx.user.roles
