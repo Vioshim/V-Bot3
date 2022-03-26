@@ -44,6 +44,7 @@ __all__ = (
     "ColorRoles",
     "RPSearchRoles",
     "RoleView",
+    "EMPTY_PING",
     "QUERIES",
 )
 
@@ -732,7 +733,14 @@ class RoleManage(View):
                 )
 
 
-class RoleButton(Button):
+EMPTY_PING = SelectOption(
+    label="No last pings",
+    description="Try to use pings in the bot.",
+    default=True,
+)
+
+
+class RoleButton(Button["RoleView"]):
     def __init__(
         self,
         bot: CustomBot,
@@ -752,7 +760,38 @@ class RoleButton(Button):
         self.bot = bot
         self.msg = msg
 
+    async def callback_check(self, interaction: Interaction):
+        self.view
+        resp: InteractionResponse = interaction.response
+        custom_id: int = int(interaction.data.get("custom_id"))
+        role: Role = interaction.guild.get_role(custom_id)
+        if self.last_claimer.get(custom_id) == interaction.user.id:
+            await resp.send_message(
+                f"You're the last user that pinged {role.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
+                ephemeral=True,
+            )
+            return False
+        if hours((val := self.cool_down.get(interaction.user.id))) < 2:
+            s = 7200 - seconds(val)
+            await resp.send_message(
+                "You're in cool down, you pinged one of the roles recently."
+                f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                ephemeral=True,
+            )
+            return False
+        if hours((val := self.role_cool_down.get(custom_id))) < 2:
+            s = 7200 - seconds(val)
+            await resp.send_message(
+                f"{role.mention} is in cool down, check the latest ping at <#722617383738540092>."
+                f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                ephemeral=True,
+            )
+            return False
+        return True
+
     async def callback(self, ctx: Interaction):
+        if not await self.callback_check(ctx):
+            return
         role: Role = ctx.guild.get_role(int(self.custom_id))
         member: Member = ctx.user
         resp: InteractionResponse = ctx.response
@@ -785,22 +824,24 @@ class RoleButton(Button):
         self.last_claimer[role.id] = member.id
         view = View(Button(label="Jump URL", url=msg.jump_url))
 
-        embed = self.msg.embeds[0]
+        sct: Select = self.view.last_pings
+        sct.options.clear()
+        for role_id, member_id in self.last_claimer.items():
+            role = ctx.guild.get_role(role_id)
+            member = ctx.guild.get_member(member_id)
+            if role and member:
+                sct.add_option(
+                    label=role.name,
+                    description=f"Pinged by {member.display_name}",
+                )
 
-        embed.clear_fields()
+        if not sct.options:
+            sct.append_option(EMPTY_PING)
+            sct.disabled = True
+        else:
+            sct.disabled = False
 
-        TEXT1 = "\n".join(
-            f"• <@&{k}>: {format_dt(v, style='R')}"
-            for k, v in self.role_cool_down.items()
-        )
-        TEXT2 = "\n".join(
-            f"• <@&{k}>: <@{v}>" for k, v in self.last_claimer.items()
-        )
-
-        embed.add_field(name="Role cooldown", value=TEXT1 or "None")
-        embed.add_field(name="Last Pings", value=TEXT2 or "None")
-
-        await self.msg.edit(embed=embed)
+        self.msg = await self.msg.edit(view=self.view)
 
         async with self.bot.database() as db:
             await db.execute(
@@ -844,32 +885,53 @@ class RoleView(View):
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
+        sct: Select = self.last_pings
+        sct.options.clear()
+        for role_id, member_id in last_claimer.items():
+            role = webhook.guild.get_role(role_id)
+            member = webhook.guild.get_member(member_id)
+            if role and member:
+                sct.add_option(
+                    label=role.name,
+                    description=f"Pinged by {member.display_name}",
+                )
+        if not sct.options:
+            sct.append_option(EMPTY_PING)
+            sct.disabled = True
+        else:
+            sct.disabled = False
         self.msg = msg
+        self.bot = bot
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
-        custom_id: int = int(interaction.data.get("custom_id"))
-        role: Role = interaction.guild.get_role(custom_id)
-        if self.last_claimer.get(custom_id) == interaction.user.id:
-            await resp.send_message(
-                f"You're the last user that pinged {role.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
-                ephemeral=True,
-            )
-            return False
-        if hours((val := self.cool_down.get(interaction.user.id))) < 2:
-            s = 7200 - seconds(val)
-            await resp.send_message(
-                "You're in cool down, you pinged one of the roles recently."
-                f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
-                ephemeral=True,
-            )
-            return False
-        if hours((val := self.role_cool_down.get(custom_id))) < 2:
-            s = 7200 - seconds(val)
-            await resp.send_message(
-                f"{role.mention} is in cool down, check the latest ping at <#722617383738540092>."
-                f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
-                ephemeral=True,
-            )
-            return False
-        return True
+    @select(placeholder="Last Pings", custom_id="last-pings")
+    async def last_pings(self, sct: Select, ctx: Interaction):
+        try:
+            item = int(sct.values[0])
+        except ValueError:
+            return
+        member = ctx.guild.get_member(item)
+        cog = self.bot.get_cog(name="Submission")
+        ocs = cog.rpers.get(member.id, {}).values()
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        view = CharactersView(
+            bot=self.bot,
+            member=ctx.user,
+            target=ctx,
+            ocs=ocs,
+            keep_working=True,
+        )
+        embed = view.embed
+        embed.set_author(
+            name=member.display_name,
+            icon_url=member.display_avatar.url,
+        )
+        async with view.send(ephemeral=True, single=True) as data:
+            if isinstance(data, Character):
+                self.bot.logger.info(
+                    "User %s is currently reading %s's character %s [%s]",
+                    str(ctx.user),
+                    str(member),
+                    data.name,
+                    repr(data),
+                )

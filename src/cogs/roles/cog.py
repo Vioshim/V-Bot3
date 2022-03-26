@@ -30,10 +30,11 @@ from discord.commands import (
     slash_command,
 )
 from discord.ext.commands import Cog, has_role
-from discord.ui import Button, View
-from discord.utils import format_dt, utcnow
+from discord.ui import Button, Select, View
+from discord.utils import utcnow
 
 from src.cogs.roles.roles import (
+    EMPTY_PING,
     QUERIES,
     RP_SEARCH_ROLES,
     BasicRoles,
@@ -206,23 +207,33 @@ class Roles(Cog):
         self.last_claimer[role.id] = member.id
         view = View(Button(label="Jump URL", url=msg.jump_url))
 
-        embed = self.msg.embeds[0]
-
-        embed.clear_fields()
-
-        TEXT1 = "\n".join(
-            f"• <@&{k}>: {format_dt(v, style='R')}"
-            for k, v in self.role_cool_down.items()
-        )
-        TEXT2 = "\n".join(
-            f"• <@&{k}>: <@{v}>" for k, v in self.last_claimer.items()
+        base_view = RoleView(
+            bot=self.bot,
+            cool_down=self.cool_down,
+            webhook=self.webhook,
+            role_cool_down=self.role_cool_down,
+            last_claimer=self.last_claimer,
+            msg=self.msg,
         )
 
-        embed.add_field(name="Role cooldown", value=TEXT1 or "None")
-        embed.add_field(name="Last Pings", value=TEXT2 or "None")
+        sct: Select = base_view.last_pings
+        sct.options.clear()
+        for role_id, member_id in self.last_claimer.items():
+            role = ctx.guild.get_role(role_id)
+            member = ctx.guild.get_member(member_id)
+            if role and member:
+                sct.add_option(
+                    label=role.name,
+                    description=f"Pinged by {member.display_name}",
+                )
 
-        await self.msg.edit(embed=embed)
+        if not sct.options:
+            sct.append_option(EMPTY_PING)
+            sct.disabled = True
+        else:
+            sct.disabled = False
 
+        self.msg = await self.msg.edit(view=base_view)
         async with self.bot.database() as db:
             await db.execute(
                 """--sql
