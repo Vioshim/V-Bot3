@@ -257,7 +257,6 @@ class EmbedBuilder(Cog):
         finally:
             try:
                 if message:
-                    embed = embed_handler(message, embed)
                     if ctx.message.attachments:
                         files, embed = await self.bot.embed_raw(embed)
                         await message.edit(
