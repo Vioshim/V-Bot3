@@ -492,8 +492,11 @@ class RegionView(View):
         resp: InteractionResponse = ctx.response
         role: Role = ctx.guild.get_role(self.info.role)
         btn.disabled = True
+        spectator = ctx.guild.get_role(957069729741287434)
         await resp.pong()
         await self.ctx.edit_original_message(view=self)
+        if spectator in ctx.user.roles:
+            await ctx.user.remove_roles(spectator)
         if btn.label == "Obtain Access":
             await ctx.user.add_roles(role)
             word = "Enabling"
@@ -533,12 +536,11 @@ class RegionView(View):
             str(ctx.user),
             category.name,
         )
-        await resp.defer(ephemeral=True)
+        await resp.pong()
         view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
-        await ctx.followup.send(
-            f"There's a total of {view.total:02d} OCs in {category.name}.",
+        await self.ctx.edit_original_message(
+            content=f"There's a total of {view.total:02d} OCs in {category.name}.",
             view=view,
-            ephemeral=True,
         )
 
 
@@ -551,6 +553,8 @@ class RegionRoles(View):
         placeholder="Select Map Roles",
         custom_id="region",
         row=0,
+        min_values=0,
+        max_values=len(MAP_ELEMENTS),
         options=[
             SelectOption(
                 label=item.name,
@@ -563,55 +567,89 @@ class RegionRoles(View):
     )
     async def region(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        info = MAP_ELEMENTS2[int(sct.values[0])]
-        view = RegionView(bot=self.bot, info=info, ctx=ctx)
-        role: Role = ctx.guild.get_role(info.role)
-        view.unlock.disabled = role in ctx.user.roles
-        view.lock.disabled = role not in ctx.user.roles
-        embed = Embed(
-            title=info.name,
-            description=info.desc,
-            timestamp=utcnow(),
-            color=ctx.user.color,
-        )
-        embed.set_image(url=info.image or WHITE_BAR)
-        if icon := ctx.guild.icon:
-            embed.set_footer(
-                text=ctx.guild.name,
-                icon_url=icon.url,
+        await resp.defer(ephemeral=True)
+        all_roles = {
+            role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))
+        }
+        spectator: Role = ctx.guild.get_role(957069729741287434)
+        if len(sct.values) == 1:
+            info = MAP_ELEMENTS2[int(sct.values[0])]
+            view = RegionView(bot=self.bot, info=info, ctx=ctx)
+            role: Role = ctx.guild.get_role(info.role)
+            view.unlock.disabled = role in ctx.user.roles
+            view.lock.disabled = role not in ctx.user.roles
+            embed = Embed(
+                title=info.name,
+                description=info.desc,
+                timestamp=utcnow(),
+                color=ctx.user.color,
             )
+            embed.set_image(url=info.image or WHITE_BAR)
+            if icon := ctx.guild.icon:
+                embed.set_footer(
+                    text=ctx.guild.name,
+                    icon_url=icon.url,
+                )
+            else:
+                embed.set_footer(
+                    text=ctx.guild.name,
+                )
+            await ctx.followup.send(
+                view=view,
+                embed=embed,
+                ephemeral=True,
+            )
+        elif choosen_roles := {
+            role
+            for x in map(int, sct.values)
+            if (role := ctx.guild.get_role(MAP_ELEMENTS2[x].role))
+        }:
+            if all_roles != choosen_roles:
+                if removed_roles := (all_roles - choosen_roles) | {spectator}:
+                    await ctx.user.remove_roles(*removed_roles)
+                await ctx.user.add_roles(*choosen_roles)
+            else:
+                await ctx.user.remove_roles(*all_roles)
+                if spectator not in ctx.user.roles:
+                    await ctx.user.add_roles(spectator)
+            await ctx.followup.send("Roles have been set", ephemeral=True)
         else:
-            embed.set_footer(
-                text=ctx.guild.name,
-            )
-        await resp.send_message(
-            view=view,
-            embed=embed,
-            ephemeral=True,
-        )
+            all_roles.add(spectator)
+            await ctx.user.remove_roles(*all_roles)
+            await ctx.followup.send("Roles have been set", ephemeral=True)
 
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
     async def region_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        roles = [
+        spectator = ctx.guild.get_role(957069729741287434)
+        if roles := [
             role
             for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS)
-            if role not in ctx.user.roles
-        ]
-        await ctx.user.add_roles(*roles)
-        await ctx.followup.send("Roles added.", ephemeral=True)
+            if role in ctx.user.roles
+        ]:
+            await ctx.user.remove_roles(*roles)
+        if spectator in ctx.user.roles:
+            await ctx.followup.send(
+                "You already have the Spectator role.", ephemeral=True
+            )
+        else:
+            await ctx.user.add_roles(spectator)
+            await ctx.followup.send("Roles added.", ephemeral=True)
 
     @button(label="Remove all Map Roles", custom_id="region-none", row=1)
     async def region_none(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        roles = [
+        spectator = ctx.guild.get_role(957069729741287434)
+        if roles := [
             role
             for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS)
             if role in ctx.user.roles
-        ]
-        await ctx.user.remove_roles(*roles)
+        ]:
+            await ctx.user.remove_roles(*roles)
+        if spectator in ctx.user.roles:
+            await ctx.user.remove_roles(spectator)
         await ctx.followup.send("Roles removed.", ephemeral=True)
 
 
