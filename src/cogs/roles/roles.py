@@ -883,7 +883,7 @@ class RoleView(View):
             if role and member:
                 sct.add_option(
                     label=role.name,
-                    description=f"Pinged by {member.display_name}",
+                    description=f"See {member.display_name}'s OCs"[:100],
                     value=str(member.id),
                 )
         if not sct.options:
