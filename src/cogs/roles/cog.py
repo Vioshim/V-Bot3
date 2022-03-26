@@ -30,11 +30,10 @@ from discord.commands import (
     slash_command,
 )
 from discord.ext.commands import Cog, has_role
-from discord.ui import Button, Select, View
+from discord.ui import Button, View
 from discord.utils import utcnow
 
 from src.cogs.roles.roles import (
-    EMPTY_PING,
     QUERIES,
     RP_SEARCH_ROLES,
     BasicRoles,
@@ -62,6 +61,7 @@ class Roles(Cog):
         self.last_claimer: dict[int, int] = {}
         self.webhook: Optional[Webhook] = None
         self.msg: Optional[WebhookMessage] = None
+        self.view: Optional[RoleView] = None
 
     async def load(self, rpers: dict[int, dict[int, Character]]):
         self.bot.logger.info("Loading existing RP Searches")
@@ -107,6 +107,17 @@ class Roles(Cog):
                     )
                     self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
+        w2 = await self.bot.webhook(910914713234325504, reason="RP Search")
+        self.msg = await w2.fetch_message(910915102490910740)
+        self.view = RoleView(
+            bot=self.bot,
+            cool_down=self.cool_down,
+            webhook=self.webhook,
+            role_cool_down=self.role_cool_down,
+            last_claimer=self.last_claimer,
+            msg=self.msg,
+        )
+        self.msg = await self.msg.edit(view=self.view)
 
     @slash_command(
         guild_ids=[719343092963999804],
@@ -207,33 +218,8 @@ class Roles(Cog):
         self.last_claimer[role.id] = member.id
         view = View(Button(label="Jump URL", url=msg.jump_url))
 
-        base_view = RoleView(
-            bot=self.bot,
-            cool_down=self.cool_down,
-            webhook=self.webhook,
-            role_cool_down=self.role_cool_down,
-            last_claimer=self.last_claimer,
-            msg=self.msg,
-        )
-
-        sct: Select = base_view.last_pings
-        sct.options.clear()
-        for role_id, member_id in self.last_claimer.items():
-            role = ctx.guild.get_role(role_id)
-            member = ctx.guild.get_member(member_id)
-            if role and member:
-                sct.add_option(
-                    label=role.name,
-                    description=f"Pinged by {member.display_name}",
-                )
-
-        if not sct.options:
-            sct.append_option(EMPTY_PING)
-            sct.disabled = True
-        else:
-            sct.disabled = False
-
-        self.msg = await self.msg.edit(view=base_view)
+        self.view.setup()
+        self.msg = await self.msg.edit(view=self.view)
         async with self.bot.database() as db:
             await db.execute(
                 """--sql
@@ -270,19 +256,6 @@ class Roles(Cog):
         self.bot.add_view(view=self.color, message_id=916482737811120128)
         self.bot.add_view(view=self.rp_search, message_id=916482738876477483)
         self.bot.add_view(view=self.region, message_id=956970863805231144)
-
-        w2 = await self.bot.webhook(910914713234325504, reason="RP Search")
-        self.msg = await w2.fetch_message(910915102490910740)
-        await self.msg.edit(
-            view=RoleView(
-                bot=self.bot,
-                cool_down=self.cool_down,
-                webhook=self.webhook,
-                role_cool_down=self.role_cool_down,
-                last_claimer=self.last_claimer,
-                msg=self.msg,
-            )
-        )
 
 
 def setup(bot: CustomBot) -> None:

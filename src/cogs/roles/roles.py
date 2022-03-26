@@ -824,23 +824,7 @@ class RoleButton(Button["RoleView"]):
         self.last_claimer[role.id] = member.id
         view = View(Button(label="Jump URL", url=msg.jump_url))
 
-        sct: Select = self.view.last_pings
-        sct.options.clear()
-        for role_id, member_id in self.last_claimer.items():
-            role = ctx.guild.get_role(role_id)
-            member = ctx.guild.get_member(member_id)
-            if role and member:
-                sct.add_option(
-                    label=role.name,
-                    description=f"Pinged by {member.display_name}",
-                )
-
-        if not sct.options:
-            sct.append_option(EMPTY_PING)
-            sct.disabled = True
-        else:
-            sct.disabled = False
-
+        self.view.setup()
         self.msg = await self.msg.edit(view=self.view)
 
         async with self.bot.database() as db:
@@ -885,30 +869,32 @@ class RoleView(View):
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
+        self.msg = msg
+        self.bot = bot
+        self.webhook = webhook
+        self.setup()
+
+    def setup(self):
         sct: Select = self.last_pings
         sct.options.clear()
-        for role_id, member_id in last_claimer.items():
-            role = webhook.guild.get_role(role_id)
-            member = webhook.guild.get_member(member_id)
+        for role_id, member_id in self.last_claimer.items():
+            role = self.webhook.guild.get_role(role_id)
+            member = self.webhook.guild.get_member(member_id)
             if role and member:
                 sct.add_option(
                     label=role.name,
                     description=f"Pinged by {member.display_name}",
+                    value=str(member.id),
                 )
         if not sct.options:
             sct.append_option(EMPTY_PING)
             sct.disabled = True
         else:
             sct.disabled = False
-        self.msg = msg
-        self.bot = bot
 
     @select(placeholder="Last Pings", custom_id="last-pings", row=1)
     async def last_pings(self, sct: Select, ctx: Interaction):
-        try:
-            item = int(sct.values[0])
-        except ValueError:
-            return
+        item = int(sct.values[0])
         member = ctx.guild.get_member(item)
         cog = self.bot.get_cog(name="Submission")
         ocs = cog.rpers.get(member.id, {}).values()
