@@ -903,7 +903,7 @@ class RoleView(View):
         self.msg = msg
         self.bot = bot
 
-    @select(placeholder="Last Pings", custom_id="last-pings")
+    @select(placeholder="Last Pings", custom_id="last-pings", row=1)
     async def last_pings(self, sct: Select, ctx: Interaction):
         try:
             item = int(sct.values[0])
