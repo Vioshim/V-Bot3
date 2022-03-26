@@ -256,16 +256,21 @@ class EmbedBuilder(Cog):
             yield embed
         finally:
             try:
-                if ctx.message.attachments:
-                    files, embed = await self.bot.embed_raw(embed)
-                    await message.edit(files=files, embed=embed, attachments=[])
-                elif message:
+                if message:
                     embed = embed_handler(message, embed)
-                    await message.edit(embed=embed)
-
+                    if ctx.message.attachments:
+                        files, embed = await self.bot.embed_raw(embed)
+                        await message.edit(
+                            files=files,
+                            embed=embed,
+                            attachments=[],
+                        )
+                    else:
+                        await message.edit(embed=embed)
                 if delete:
                     self.bot.msg_cache.add(ctx.message.id)
-                    await ctx.message.delete()
+                    with suppress(DiscordException):
+                        await ctx.message.delete()
             except DiscordException as e:
                 self.bot.logger.exception(
                     "exception while editing an embed", exc_info=e

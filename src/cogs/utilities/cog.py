@@ -29,6 +29,29 @@ from src.structures.move import Move
 from src.utils.etc import RTFM_PAGES
 
 
+def to_string(c: str) -> str:
+    """To String Method
+
+    Parameters
+    ----------
+    c : str
+        Character
+
+    Returns
+    -------
+    str
+        Parameters
+    """
+    digit = f"{ord(c):x}"
+    name = u_name(c, "Name not found.")
+    # noinspection HttpUrlsUsage
+    return (
+        f"`\\U{digit:>08}`: {name} - {c}"
+        " \N{EM DASH} "
+        f"<http://www.fileformat.info/info/unicode/char/{digit}>"
+    )
+
+
 class Utilities(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -135,28 +158,6 @@ class Utilities(Cog):
         """Shows you information about a number of characters.
         Only up to 25 characters at a time.
         """
-
-        def to_string(c: str) -> str:
-            """To String Method
-
-            Parameters
-            ----------
-            c : str
-                Character
-
-            Returns
-            -------
-            str
-                Parameters
-            """
-            digit = f"{ord(c):x}"
-            name = u_name(c, "Name not found.")
-            # noinspection HttpUrlsUsage
-            return (
-                f"`\\U{digit:>08}`: {name} - {c}"
-                " \N{EM DASH} "
-                f"<http://www.fileformat.info/info/unicode/char/{digit}>"
-            )
 
         msg = "\n".join(map(to_string, characters))
         if len(msg) > 2000:
