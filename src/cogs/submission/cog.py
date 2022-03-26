@@ -47,7 +47,12 @@ from discord import (
     Webhook,
     WebhookMessage,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
+from discord.commands import (
+    has_role,
+    message_command,
+    slash_command,
+    user_command,
+)
 from discord.ext.commands import Cog
 from discord.ui import Button, View
 from discord.utils import utcnow
@@ -64,7 +69,12 @@ from src.pagination.complex import ComplexInput
 from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -1287,7 +1297,7 @@ class Submission(Cog):
         if context.command:
             return
 
-        try:
+        with suppress(TimeoutError):
             msg: Message = await self.bot.wait_for(
                 event="message",
                 check=message_validator(message),
@@ -1304,15 +1314,6 @@ class Submission(Cog):
                     conflict_policy=ConflictPolicy.replace,
                 )
             await self.on_message_tupper(msg, message.author.id)
-        except TimeoutError:
-            if not self.rpers.get(message.author.id):
-                role = message.guild.get_role(719642423327719434)
-                await message.author.remove_roles(
-                    role, reason="Without OCs, user isn't registered."
-                )
-                for cat_id in RP_CATEGORIES:
-                    if ch := self.bot.get_channel(cat_id):
-                        await ch.set_permissions(message.author, overwrite=None)
 
     @Cog.listener()
     async def on_message(self, message: Message) -> None:
