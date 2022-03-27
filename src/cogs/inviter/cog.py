@@ -11,13 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from contextlib import suppress
 from typing import Optional
 
 from discord import (
     ButtonStyle,
     Color,
-    DiscordException,
     Embed,
     Guild,
     Interaction,
@@ -34,6 +32,7 @@ from discord.ui import Button, Select, View, button, select
 from discord.utils import find, get, utcnow
 
 from src.cogs.inviter.classifier import InviterView
+from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.utils.matches import INVITE
 
@@ -173,11 +172,6 @@ class Inviter(Cog):
         if not (invite_guild := invite.guild) or invite_guild == guild:
             return
 
-        if ctx.channel.id not in [957602085753458708, 957604961330561065]:
-            with suppress(DiscordException):
-                await ctx.delete()
-            return
-
         mod_ch = find(lambda x: "mod-chat" in x.name, guild.channels)
         if not mod_ch:
             return
@@ -208,6 +202,41 @@ class Inviter(Cog):
 
         link_view = View(Button(label="Click Here to Join", url=invite.url))
         data = self.view.data
+        if (
+            author.guild_permissions.administrator
+            and ctx.channel.id == 957604961330561065
+        ):
+            w = await self.bot.webhook(957602085753458708, reason="Partnership")
+            generator.set_footer(text="Other")
+            message = await w.send(
+                content=invite.url,
+                embed=generator,
+                wait=True,
+                thread=Object(id=957604961330561065),
+                view=link_view,
+                files=files,
+            )
+            view = Complex(
+                bot=self.bot,
+                member=author,
+                values=data.keys(),
+                target=ctx.channel,
+                timeout=None,
+            )
+
+            async with view.send(
+                title="Select Category",
+                single=True,
+            ) as choice:
+                if choice:
+                    data.setdefault(choice, set())
+                    data[choice].add(message)
+                    if partnered_role := get(
+                        author.guild.roles, name="Partners"
+                    ):
+                        await author.add_roles(partnered_role)
+                return
+
         generator.set_footer(
             text=author.display_name,
             icon_url=author.display_avatar.url,
