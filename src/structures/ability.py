@@ -277,6 +277,14 @@ class SpAbility:
         str
             Result of the query
         """
+        if not self:
+            return await connection.execute(
+                """--sql
+                DELETE FROM SPECIAL_ABILITIES
+                WHERE ID = $1;
+                """,
+                idx,
+            )
         return await connection.execute(
             """--sql
             INSERT INTO SPECIAL_ABILITIES(ID, NAME, DESCRIPTION, ORIGIN, PROS, CONS)

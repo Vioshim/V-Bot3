@@ -20,7 +20,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
 from random import sample
-from sys import exc_info
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
@@ -46,13 +45,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import (
-    common_pop_get,
-    fix,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -298,14 +291,13 @@ class Character(metaclass=ABCMeta):
                 value=location,
                 inline=False,
             )
-
-        if isinstance(self.extra, str):
-            if extra := self.extra[: min(1000, len(c_embed) - 100)]:
-                c_embed.add_field(
-                    name="Extra Information",
-                    value=extra,
-                    inline=False,
-                )
+        extra = self.extra or ""
+        if extra := extra[: min(1000, len(c_embed) - 100)]:
+            c_embed.add_field(
+                name="Extra Information",
+                value=extra,
+                inline=False,
+            )
 
         return c_embed
 
@@ -411,40 +403,15 @@ class Character(metaclass=ABCMeta):
             if pronoun := data.get("pronoun"):
                 data["pronoun"] = Pronoun[pronoun]
             self.update_from_dict(data)
-            if abilities := await connection.fetchval(
-                """--sql
-                SELECT ARRAY_AGG(ABILITY)
-                FROM CHARACTER_ABILITIES
-                WHERE ID = $1;
-                """,
-                self.id,
-            ):
+            self.sp_ability = await SpAbility.fetch(connection, idx=self.id)
+            if abilities := data.pop("abilities", []):
                 self.abilities = Ability.deduce_many(*abilities)
-
-            if not self.has_default_types and (
-                mon_types := await connection.fetchval(
-                    """--sql
-                    SELECT ARRAY_AGG(TYPE)
-                    FROM CHARACTER_TYPES
-                    WHERE character = $1;
-                    """,
-                    self.id,
-                )
-            ):
+            if mon_types := data.pop("types", []):
                 self.species.types = Typing.deduce_many(*mon_types)
-
             if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
                 self.species.abilities = self.abilities
-            if moveset := await connection.fetchval(
-                """--sql
-                SELECT ARRAY_AGG(MOVE)
-                FROM MOVESET
-                WHERE CHARACTER = $1;
-                """,
-                self.id,
-            ):
+            if moveset := data.pop("moveset", []):
                 self.moveset = Move.deduce_many(*moveset)
-            self.sp_ability = await SpAbility.fetch(connection, idx=self.id)
 
     @abstractmethod
     async def upsert(self, connection: Connection) -> None:
@@ -460,14 +427,18 @@ class Character(metaclass=ABCMeta):
             """--sql
             INSERT INTO CHARACTER(
                 ID, NAME, AGE, PRONOUN, BACKSTORY, EXTRA,
-                KIND, AUTHOR, SERVER, URL, IMAGE, CREATED_AT, LOCATION, THREAD)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                KIND, AUTHOR, SERVER, URL, IMAGE, CREATED_AT,
+                LOCATION, THREAD, MOVESET, TYPES, ABILITIES
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+            )
             ON CONFLICT (ID) DO UPDATE
             SET
                 ID = $1, NAME = $2, AGE = $3, PRONOUN = $4,
                 BACKSTORY = $5, EXTRA = $6, KIND = $7, AUTHOR = $8,
                 SERVER = $9, URL = $10, IMAGE = $11, CREATED_AT = $12,
-                LOCATION = $13, THREAD = $14;
+                LOCATION = $13, THREAD = $14, MOVESET = $15, TYPES = $16, ABILITIES = $17;
             """,
             self.id,
             self.name,
@@ -483,71 +454,11 @@ class Character(metaclass=ABCMeta):
             self.created_at,
             self.location,
             self.thread,
+            [x.id for x in self.moveset],
+            [str(x) for x in self.types],
+            [x.id for x in self.abilities],
         )
-        await connection.execute(
-            """--sql
-            DELETE FROM CHARACTER_TYPES
-            WHERE CHARACTER = $1;
-            """,
-            self.id,
-        )
-        if entries := [
-            (self.id, fix(item.name), not main)
-            for main, item in enumerate(self.types)
-        ]:
-            await connection.executemany(
-                """--sql
-                INSERT INTO CHARACTER_TYPES(CHARACTER, TYPE, MAIN)
-                VALUES ($1, $2, $3);
-                """,
-                entries,
-            )
-        await connection.execute(
-            """--sql
-            DELETE FROM CHARACTER_ABILITIES
-            WHERE ID = $1;
-            """,
-            self.id,
-        )
-        if entries := [
-            (self.id, item.name, bool(main))
-            for main, item in enumerate(self.abilities)
-        ]:
-            await connection.executemany(
-                """--sql
-                INSERT INTO CHARACTER_ABILITIES(ID, ABILITY, SLOT)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (ID, SLOT) DO UPDATE SET ABILITY = $2;
-                """,
-                entries,
-            )
-        await connection.execute(
-            """--sql
-            DELETE FROM MOVESET
-            WHERE CHARACTER = $1;
-            """,
-            self.id,
-        )
-        if entries := [
-            (self.id, value.name, key)
-            for key, value in enumerate(self.moveset, start=1)
-        ]:
-            await connection.executemany(
-                """--sql
-                INSERT INTO MOVESET(CHARACTER, MOVE, SLOT)
-                VALUES ($1, $2, $3);
-                """,
-                entries,
-            )
-        await connection.execute(
-            """--sql
-            DELETE FROM SPECIAL_ABILITIES
-            WHERE ID = $1;
-            """,
-            self.id,
-        )
-        if sp_ability := self.sp_ability:
-            await sp_ability.upsert(connection, idx=self.id)
+        await self.sp_ability.upsert(connection, idx=self.id)
 
     async def delete(self, connection: Connection) -> None:
         """Delete in database
