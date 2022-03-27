@@ -45,12 +45,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -463,7 +458,8 @@ class Character(metaclass=ABCMeta):
             [str(x) for x in self.types],
             [x.id for x in self.abilities],
         )
-        await self.sp_ability.upsert(connection, idx=self.id)
+        if sp_ability := self.sp_ability:
+            await sp_ability.upsert(connection, idx=self.id)
 
     async def delete(self, connection: Connection) -> None:
         """Delete in database
