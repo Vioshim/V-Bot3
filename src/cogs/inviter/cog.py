@@ -207,7 +207,6 @@ class Inviter(Cog):
             and ctx.channel.id == 957604961330561065
         ):
             w = await self.bot.webhook(957602085753458708, reason="Partnership")
-            generator.set_footer(text="Other")
             message = await w.send(
                 content=invite.url,
                 embed=generator,
@@ -229,6 +228,7 @@ class Inviter(Cog):
                 single=True,
             ) as choice:
                 if choice:
+                    generator.set_footer(text=choice)
                     data.setdefault(choice, set())
                     data[choice].add(message)
                     if partnered_role := get(
