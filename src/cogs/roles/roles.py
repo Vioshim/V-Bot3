@@ -813,6 +813,10 @@ class RoleButton(Button["RoleView"]):
             avatar_url=member.display_avatar.url,
             wait=True,
         )
+        thread = await self.msg.create_thread(
+            name=f"{member.display_name} - {role.name}"
+        )
+        await thread.add_user(member)
         self.cool_down[member.id] = utcnow()
         self.role_cool_down[role.id] = utcnow()
         self.last_claimer[role.id] = member.id
@@ -820,10 +824,6 @@ class RoleButton(Button["RoleView"]):
 
         self.view.setup()
         self.msg = await self.msg.edit(view=self.view)
-        thread = await self.msg.create_thread(
-            name=f"{member.display_name} - {role.name}"
-        )
-        await thread.add_user(member)
 
         async with self.bot.database() as db:
             await db.execute(
