@@ -45,7 +45,12 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -364,7 +369,7 @@ class Character(metaclass=ABCMeta):
             information to update
         """
         for k, v in data.items():
-            if hasattr(self, item := k.lower()) and item != "kind":
+            if (item := k.lower()) in self.__slots__:
                 setattr(self, item, v)
 
     @classmethod
