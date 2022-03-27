@@ -82,7 +82,7 @@ def get_title(message: Message):
 
 
 def get_date(message: Message):
-    return naturaltime(message.created_at).title()
+    return naturaltime(message.created_at.replace(tzinfo=None)).title()
 
 
 def msg_parser(msg: Message):
