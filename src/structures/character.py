@@ -541,7 +541,7 @@ class PokemonCharacter(Character):
         characters: list[PokemonCharacter] = []
         async for item in connection.cursor(FETCH_QUERY, "COMMON"):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             species_id = data.pop("species", None)
             if species := Pokemon.from_ID(species_id):
                 data["species"] = species
@@ -633,7 +633,7 @@ class LegendaryCharacter(Character):
         characters: list[LegendaryCharacter] = []
         async for item in connection.cursor(FETCH_QUERY, "LEGENDARY"):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             if species := Legendary.from_ID(data.pop("species", None)):
                 data["species"] = species
                 mon = LegendaryCharacter(**data)
@@ -724,7 +724,7 @@ class MythicalCharacter(Character):
         characters: list[MythicalCharacter] = []
         async for item in connection.cursor(FETCH_QUERY, "MYTHICAL"):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             if species := Mythical.from_ID(data.pop("species", None)):
                 data["species"] = species
                 mon = MythicalCharacter(**data)
@@ -813,7 +813,7 @@ class UltraBeastCharacter(Character):
         characters: list[UltraBeastCharacter] = []
         async for item in connection.cursor(FETCH_QUERY, "ULTRA BEAST"):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             if species := UltraBeast.from_ID(data.pop("species", None)):
                 data["species"] = species
                 mon = UltraBeastCharacter(**data)
@@ -965,7 +965,7 @@ class FakemonCharacter(Character):
             "FAKEMON",
         ):
             data: dict[str, str | int] = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             evolves_from: Optional[str] = data.pop("evolves_from", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
@@ -1098,7 +1098,7 @@ class CustomMegaCharacter(Character):
             "CUSTOM MEGA",
         ):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             if species := CustomMega.from_ID(data.pop("species", None)):
                 data["species"] = species
                 mon = CustomMegaCharacter(**data)
@@ -1242,7 +1242,7 @@ class VariantCharacter(Character):
             "VARIANT",
         ):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             variant = data.pop("variant", None)
             if species := Variant.from_ID(data.pop("species", None)):
                 species.name = variant
@@ -1341,7 +1341,7 @@ class FusionCharacter(Character):
             "FUSION",
         ):
             data: dict[str, int] = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             mon1: str = data.pop("species1", None)
             mon2: str = data.pop("species2", None)
             if species := Fusion.from_ID(f"{mon1}_{mon2}"):
@@ -1436,7 +1436,7 @@ class MegaCharacter(Character):
         characters: list[MegaCharacter] = []
         async for item in connection.cursor(FETCH_QUERY, "MEGA"):
             data = dict(item)
-            data.pop("kind", None)
+            multiple_pop(data, "kind", "types", "moveset", "abilities")
             if species := Mega.from_ID(data.pop("species", None)):
                 data["species"] = species
                 mon = MegaCharacter(**data)
