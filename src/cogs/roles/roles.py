@@ -325,7 +325,7 @@ class BasicRoles(View):
     @select(
         placeholder="Select Basic Roles",
         min_values=0,
-        max_values=6,
+        max_values=5,
         custom_id="62a0a35098d0666728712d4f05a140d1",
         options=[
             SelectOption(
@@ -357,12 +357,6 @@ class BasicRoles(View):
                 emoji="💠",
                 value="805878418225889280",
                 description="Get pinged each time Reshy streams in radio.",
-            ),
-            SelectOption(
-                label="Random RP",
-                emoji="💠",
-                value="955821594608042015",
-                description="Let's you see the non-canon random RP.",
             ),
             SelectOption(
                 label="Announcements",
