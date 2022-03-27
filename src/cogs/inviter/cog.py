@@ -12,69 +12,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from contextlib import suppress
+from typing import Optional
 
 from discord import (
     ButtonStyle,
-    CategoryChannel,
     Color,
     DiscordException,
     Embed,
     Guild,
     Interaction,
     InteractionResponse,
+    Invite,
     Member,
     Message,
-    SelectOption,
+    Object,
     Thread,
-    Webhook,
 )
 from discord.ext.commands import Cog
 from discord.ext.commands.converter import InviteConverter
 from discord.ui import Button, Select, View, button, select
 from discord.utils import find, get, utcnow
 
+from src.cogs.inviter.classifier import InviterView
 from src.structures.bot import CustomBot
 from src.utils.matches import INVITE
 
 __all__ = ("Inviter", "setup")
 
-PARTNERS = {
-    719343092963999804: 735900056946868335,
-    952517983786377287: 952558960903352320,
-}
-
 
 class InviteView(View):
     def __init__(
         self,
-        handler,
-        category: CategoryChannel,
+        bot: CustomBot,
+        invite: Invite,
+        embed: Embed,
         author: Member,
+        data: dict[str, set[Message]],
+        **kwargs,
     ):
         super().__init__(timeout=None)
-        self.category = category
-        self.handler = handler
+        self.bot = bot
+        self.invite = invite
+        self.embed = embed
         self.author = author
+        self.data = data
+        self.kwargs = kwargs
+        self.setup()
 
+    def setup(self):
         sct: Select = self.process
-        items = []
-        for channel in category.channels:
-            try:
-                emoji, name = channel.name.split("〛")
-                emoji = emoji[0]
-            except ValueError:
-                emoji, name = None, channel.name
-            finally:
-                name = name.replace("-", " ").title()
-                items.append(
-                    SelectOption(
-                        label=name,
-                        value=str(channel.id),
-                        emoji=emoji,
-                    )
-                )
+        sct.options.clear()
+        for key in self.data:
+            sct.add_option(
+                label=key,
+                value=key,
+                description=f"Adds {key} partnership",
+            )
 
-        sct.options = items
+        if not sct.options:
+            sct.add_option(label="NOTHING", value="NOTHING")
+            sct.disabled = True
+        else:
+            sct.disabled = False
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -85,16 +84,22 @@ class InviteView(View):
             return False
         return True
 
-    @select(placeholder="Select Partnership Channel", custom_id="partner")
+    @select(placeholder="Select Category", custom_id="partner")
     async def process(self, sct: Select, inter: Interaction):
         member: Member = inter.user
         resp: InteractionResponse = inter.response
-        thread: Thread = await self.handler(idx := int(sct.values[0]))
-        await thread.add_user(member)
-        await thread.add_user(self.author)
-        await resp.send_message(
-            f"<#{idx}> has been added by {member.display_name}"
+        w = await self.bot.webhook(957602085753458708, reason="Partnership")
+        self.embed.set_footer(text=sct.values[0])
+        message = await w.send(
+            content=self.invite.url,
+            embed=self.embed,
+            wait=True,
+            thread=Object(id=957604961330561065),
+            **self.kwargs,
         )
+        self.data.setdefault(sct.values[0], set())
+        self.data[sct.values[0]].add(message)
+        await resp.pong()
         if partnered_role := get(member.guild.roles, name="Partners"):
             await self.author.add_roles(partnered_role)
         await inter.message.delete()
@@ -132,6 +137,14 @@ class Inviter(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.adapt = InviteConverter()
+        self.view: Optional[InviterView] = None
+
+    @Cog.listener()
+    async def on_ready(self):
+        self.thread: Thread = await self.bot.fetch_channel(957604961330561065)
+        messages = await self.thread.history(limit=None).flatten()
+        self.view = InviterView(self.bot, messages)
+        self.bot.add_view(view=self.view, message_id=957604961330561065)
 
     @Cog.listener()
     async def on_message(self, ctx: Message) -> None:
@@ -160,7 +173,7 @@ class Inviter(Cog):
         if not (invite_guild := invite.guild) or invite_guild == guild:
             return
 
-        if not (category := ctx.channel.category):
+        if ctx.channel.id not in [957602085753458708, 957604961330561065]:
             with suppress(DiscordException):
                 await ctx.delete()
             return
@@ -194,92 +207,53 @@ class Inviter(Cog):
             files.append(file)
 
         link_view = View(Button(label="Click Here to Join", url=invite.url))
-
-        async def handler(w: Webhook) -> Thread:
-            """Inner function to add parameters
-
-            Parameters
-            ----------
-            w : Webhook
-                Webhook
-
-            Returns
-            -------
-            Thread
-                Resulting thread
-            """
-            if not isinstance(w, Webhook):
-                w = await self.bot.webhook(w, reason="Partnership")
-
-            msg = await w.send(
-                content=invite.url,
-                embed=generator,
-                view=link_view,
-                files=files,
-                wait=True,
-            )
-            thread = await msg.create_thread(name=invite.guild.name)
-
-            mentions = [
-                member
-                for x in ctx.mentions
-                if (member := guild.get_member(x.id))
-            ]
-            if (inviter := invite.inviter) and (
-                member := guild.get_member(inviter.id)
-            ):
-                mentions.append(member)
-
-            for user in mentions:
-                await thread.add_user(user)
-
-            return thread
-
-        if (
-            author.guild_permissions.administrator
-            and "partner" in category.name.lower()
-        ):
-            await handler(ctx.channel)
+        data = self.view.data
+        generator.set_footer(
+            text=author.display_name,
+            icon_url=author.display_avatar.url,
+        )
+        embed = Embed(
+            title="Server Invite Detected - Possible Partner/Advertiser",
+            color=author.color,
+            description=ctx.content,
+            timestamp=utcnow(),
+        )
+        embed.set_author(
+            name=author.display_name,
+            icon_url=author.display_avatar.url,
+        )
+        if icon := invite_guild.icon:
+            embed.set_footer(text=f"ID: {author.id}", icon_url=icon.url)
+            embed.set_thumbnail(url=icon.url)
         else:
-            generator.set_footer(
-                text=author.display_name,
-                icon_url=author.display_avatar.url,
-            )
-            embed = Embed(
-                title="Server Invite Detected - Possible Partner/Advertiser",
-                color=author.color,
-                description=ctx.content,
-                timestamp=utcnow(),
-            )
-            embed.set_author(
-                name=author.display_name,
-                icon_url=author.display_avatar.url,
-            )
-            if icon := invite_guild.icon:
-                embed.set_footer(text=f"ID: {author.id}", icon_url=icon.url)
-                embed.set_thumbnail(url=icon.url)
-            else:
-                embed.set_footer(text=f"ID: {author.id}")
-            embed.add_field(name="Posted at", value=ctx.channel.mention)
+            embed.set_footer(text=f"ID: {author.id}")
+        embed.add_field(name="Posted at", value=ctx.channel.mention)
 
-            if user := invite.inviter:
-                embed.add_field(
-                    name=f"Invite creator - {user.name!r}",
-                    value=user.mention,
-                )
-
-            if images := ctx.attachments:
-                embed.set_image(url=images[0].proxy_url)
-
-            files_embed, embed = await self.bot.embed_raw(embed=embed)
-            cat = guild.get_channel(PARTNERS.get(guild.id))
-            view = InviteView(handler, cat, ctx.author)
-            await mod_ch.send(
-                content=invite.url,
-                embed=embed,
-                files=files_embed,
-                view=view,
+        if user := invite.inviter:
+            embed.add_field(
+                name=f"Invite creator - {user.name!r}",
+                value=user.mention,
             )
+
+        if images := ctx.attachments:
+            embed.set_image(url=images[0].proxy_url)
+
+        files_embed, embed = await self.bot.embed_raw(embed=embed)
+        view = InviteView(
+            self.bot,
+            invite,
+            generator,
+            ctx.author,
+            data,
+            view=link_view,
+            files=files,
+        )
+        await mod_ch.send(
+            content=invite.url,
+            embed=embed,
+            files=files_embed,
+            view=view,
+        )
         await ctx.delete()
 
 
