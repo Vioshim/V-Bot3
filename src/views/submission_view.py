@@ -21,7 +21,6 @@ from discord import (
     AllowedMentions,
     ButtonStyle,
     CategoryChannel,
-    Color,
     DiscordException,
     Embed,
     Guild,
@@ -43,7 +42,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, doc_convert
 from src.structures.mission import Mission
 from src.utils.doc_reader import docs_reader
-from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES, WHITE_BAR
+from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
 from src.utils.functions import int_check, yaml_handler
 from src.utils.matches import G_DOCUMENT
 from src.views.mission_view import MissionView

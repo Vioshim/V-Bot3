@@ -304,7 +304,7 @@ class Information(Cog):
                 else:
                     aux = Embed(color=message.author.colour)
                     embeds.append(aux)
-                aux.set_image(url=f"attachments://{item.filename}")
+                aux.set_image(url=f"attachment://{item.filename}")
                 file = await item.to_file()
                 files.append(file)
 
