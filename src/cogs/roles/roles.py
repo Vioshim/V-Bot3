@@ -30,7 +30,7 @@ from discord import (
     WebhookMessage,
 )
 from discord.ui import Button, Select, View, button, select
-from discord.utils import format_dt, utcnow
+from discord.utils import utcnow
 
 from src.cogs.roles.area_selection import AreaSelection
 from src.structures.bot import CustomBot
