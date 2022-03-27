@@ -101,14 +101,8 @@ PRONOUN_ROLES = dict(
 )
 
 BASIC_ROLES = {
-    "PMDiscord": 729522869993734248,
-    "Smash Events": 742820332477612062,
-    "PMU": 750531846739198062,
-    "Minecraft": 748584270011957252,
-    "Roblox": 750395469280051260,
     "Radio": 805878418225889280,
     "Announcements": 908809235012419595,
-    "Random RP": 955821594608042015,
 }
 
 COLOR_ROLES = dict(
@@ -325,33 +319,9 @@ class BasicRoles(View):
     @select(
         placeholder="Select Basic Roles",
         min_values=0,
-        max_values=5,
+        max_values=2,
         custom_id="62a0a35098d0666728712d4f05a140d1",
         options=[
-            SelectOption(
-                label="Smash Events",
-                emoji="💠",
-                value="742820332477612062",
-                description="Lets you get pinged for Smash Events",
-            ),
-            SelectOption(
-                label="Pokemon",
-                emoji="💠",
-                value="750531846739198062",
-                description="To ping for Pokemon Games",
-            ),
-            SelectOption(
-                label="Minecraft",
-                emoji="💠",
-                value="748584270011957252",
-                description="Allows you to get notified for playing together.",
-            ),
-            SelectOption(
-                label="Roblox",
-                emoji="💠",
-                value="750395469280051260",
-                description="Helps you to get pinged for Roblox Events",
-            ),
             SelectOption(
                 label="Radio",
                 emoji="💠",
