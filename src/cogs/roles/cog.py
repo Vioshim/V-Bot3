@@ -34,7 +34,6 @@ from discord.ui import Button, View
 from discord.utils import utcnow
 
 from src.cogs.roles.roles import (
-    QUERIES,
     RP_SEARCH_ROLES,
     BasicRoles,
     ColorRoles,
@@ -66,46 +65,45 @@ class Roles(Cog):
     async def load(self, rpers: dict[int, dict[int, Character]]):
         self.bot.logger.info("Loading existing RP Searches")
         async with self.bot.database() as db:
-            for query in QUERIES:
-                async for item in db.cursor(query):
-                    msg_id, member_id, role_id, server_id, created_at = (
-                        item["id"],
-                        item["member"],
-                        item["role"],
-                        item["server"],
-                        item["created_at"],
-                    )
+            async for item in db.cursor("SELECT * FROM RP_SEARCH;"):
+                msg_id, member_id, role_id, server_id, created_at = (
+                    item["id"],
+                    item["member"],
+                    item["role"],
+                    item["server"],
+                    item["created_at"],
+                )
 
-                    if not (guild := self.bot.get_guild(server_id)):
-                        continue
+                if not (guild := self.bot.get_guild(server_id)):
+                    continue
 
-                    if not (member := guild.get_member(member_id)):
-                        continue
+                if not (member := guild.get_member(member_id)):
+                    continue
 
-                    if not (role := guild.get_role(role_id)):
-                        continue
+                if not (role := guild.get_role(role_id)):
+                    continue
 
-                    if not (values := rpers.get(member.id, {}).values()):
-                        continue
+                if not (values := rpers.get(member.id, {}).values()):
+                    continue
 
-                    if (
-                        item := self.role_cool_down.get(role_id, created_at)
-                    ) >= created_at:
-                        self.role_cool_down[role_id] = created_at
-                        self.last_claimer[role_id] = member_id
+                if (
+                    item := self.role_cool_down.get(role_id, created_at)
+                ) >= created_at:
+                    self.role_cool_down[role_id] = created_at
+                    self.last_claimer[role_id] = member_id
 
-                    if (
-                        item := self.cool_down.get(member_id, created_at)
-                    ) >= created_at:
-                        self.cool_down[member_id] = created_at
+                if (
+                    item := self.cool_down.get(member_id, created_at)
+                ) >= created_at:
+                    self.cool_down[member_id] = created_at
 
-                    view = RoleManage(
-                        bot=self.bot,
-                        role=role,
-                        ocs=values,
-                        member=member,
-                    )
-                    self.bot.add_view(view=view, message_id=msg_id)
+                view = RoleManage(
+                    bot=self.bot,
+                    role=role,
+                    ocs=values,
+                    member=member,
+                )
+                self.bot.add_view(view=view, message_id=msg_id)
         self.bot.logger.info("Finished loading existing RP Searches")
         w2 = await self.bot.webhook(910914713234325504, reason="RP Search")
         self.msg = await w2.fetch_message(910915102490910740)
