@@ -21,7 +21,9 @@ from discord import (
     AllowedMentions,
     ButtonStyle,
     CategoryChannel,
+    Color,
     DiscordException,
+    Embed,
     Guild,
     InputTextStyle,
     Interaction,
@@ -41,7 +43,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, doc_convert
 from src.structures.mission import Mission
 from src.utils.doc_reader import docs_reader
-from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
+from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES, WHITE_BAR
 from src.utils.functions import int_check, yaml_handler
 from src.utils.matches import G_DOCUMENT
 from src.views.mission_view import MissionView
@@ -256,8 +258,18 @@ class SubmissionView(View):
                 template=template,
                 title=title,
             )
+            embed = Embed(
+                title="How do you want to register your character?",
+                color=0xFFFFFE,
+            )
+            embed.set_image(
+                url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png",
+            )
+            embed.set_footer(
+                text="After sending, bot will ask for backstory, extra info and image."
+            )
             await ctx.followup.send(
-                "__How do you want to register your character?__",
+                embed=embed,
                 view=view,
                 ephemeral=True,
             )
