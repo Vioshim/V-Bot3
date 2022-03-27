@@ -220,6 +220,8 @@ class Roles(Cog):
 
         self.view.setup()
         self.msg = await self.msg.edit(view=self.view)
+        thread = await self.msg.create_thread(name=f"{member.display_name} - {role.name}")
+        await thread.add_user(member)
         async with self.bot.database() as db:
             await db.execute(
                 """--sql

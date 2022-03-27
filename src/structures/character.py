@@ -45,7 +45,12 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -404,7 +409,7 @@ class Character(metaclass=ABCMeta):
                 data["pronoun"] = Pronoun[pronoun]
             self.update_from_dict(data)
             sp_ability = await SpAbility.fetch(connection, idx=self.id)
-            if sp_ability != SpAbility():
+            if sp_ability and sp_ability != SpAbility():
                 self.sp_ability = sp_ability
             if abilities := data.pop("abilities", []):
                 self.abilities = Ability.deduce_many(*abilities)
