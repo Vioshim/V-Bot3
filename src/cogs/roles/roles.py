@@ -555,7 +555,7 @@ class RPThreadManage(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         cog = self.bot.get_cog("Submission")
-        ocs = cog.rpers.get(ctx.user.id, {}).values()
+        ocs = cog.rpers.get(self.member.id, {}).values()
         view = CharactersView(
             bot=self.bot,
             member=ctx.user,
