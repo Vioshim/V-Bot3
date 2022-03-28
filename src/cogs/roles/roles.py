@@ -740,7 +740,7 @@ class RoleView(View):
     )
     async def ping(self, btn: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        custom_id: int = int(btn.custom_id)
+        custom_id: int = int(btn.custom_id.split("-")[0])
         role: Role = interaction.guild.get_role(custom_id)
         member: Member = interaction.user
         await resp.defer(ephemeral=True)
