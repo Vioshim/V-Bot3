@@ -723,7 +723,7 @@ class RPThreadView(View):
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        embed = Embed(color=member.color)
+        embed = Embed(title=self.thread.name, color=member.color)
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
