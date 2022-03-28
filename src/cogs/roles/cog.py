@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import suppress
 from datetime import datetime
 from typing import Optional
 
-from discord import Thread, Webhook, WebhookMessage
+from discord import DiscordException, Thread, Webhook, WebhookMessage
 from discord.ext.commands import Cog
 
 from src.cogs.roles.roles import (
@@ -57,9 +58,12 @@ class Roles(Cog):
                     continue
 
                 member = guild.get_member(member_id)
-                role = guild.get_role(role_id)
 
-                if not (member and role):
+                if not (thread := guild.get_thread(role_id)):
+                    with suppress(DiscordException):
+                        thread = await guild.fetch_channel(role_id)
+
+                if not (member and thread):
                     continue
 
                 self.role_cool_down.setdefault(role_id, created_at)
@@ -74,7 +78,7 @@ class Roles(Cog):
                 self.bot.add_view(
                     view=RPThreadManage(
                         bot=self.bot,
-                        role=role,
+                        thread=thread,
                         member=member,
                     ),
                     message_id=msg_id,
@@ -109,6 +113,7 @@ class Roles(Cog):
             message_id=956970863805231144,
         )
         w = await self.bot.webhook(910914713234325504)
+
         async for m in w.channel.history(limit=None):
             if m.webhook_id != w.id:
                 continue
