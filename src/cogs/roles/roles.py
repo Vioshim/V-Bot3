@@ -704,21 +704,22 @@ class RPThreadView(View):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         await resp.defer(ephemeral=True)
+        followup = interaction.followup
         if self.last_claimer.get(self.thread.id) == member.id:
-            return await resp.send_message(
+            return await followup.send(
                 "You're the last user that pinged this thread, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
         if hours((val := self.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
-            return await resp.send_message(
+            return await followup.send(
                 "You're in cool down, you pinged one of the threads recently."
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
         if hours((val := self.role_cool_down.get(self.thread.id))) < 2:
             s = 7200 - seconds(val)
-            return await resp.send_message(
+            return await followup.send(
                 f"Thread is in cool down, check the latest thread at <#{self.thread.id}>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
@@ -749,7 +750,7 @@ class RPThreadView(View):
                 self.thread.id,
                 member.guild.id,
             )
-            await interaction.followup.send(
+            await followup.send(
                 content="Ping has been done successfully.",
                 ephemeral=True,
             )
