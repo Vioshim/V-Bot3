@@ -269,11 +269,13 @@ class Information(Cog):
         if not (message.content and message.channel.id in channels):
             return
 
-        if message.webhook_id:
-            await message.delete()
+        if message.author.bot:
             return
 
-        if message.author.bot:
+        webhook = await self.bot.webhook(message.channel)
+
+        if message.webhook_id and webhook.id != message.webhook_id:
+            await message.delete()
             return
 
         context = await self.bot.get_context(message)
@@ -294,7 +296,6 @@ class Information(Cog):
             colour=message.author.colour,
         )
         embed.set_image(url=WHITE_BAR)
-        embed.set_author(name=f"{member}", icon_url=member.display_avatar.url)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
 
         embeds = [embed]
@@ -310,7 +311,13 @@ class Information(Cog):
                 file = await item.to_file()
                 files.append(file)
 
-        msg = await message.channel.send(embeds=embeds, files=files)
+        msg = await webhook.send(
+            embeds=embeds,
+            files=files,
+            wait=True,
+            username=member.display_name,
+            avatar_url=member.display_avatar.url,
+        )
 
         thread = await msg.create_thread(name=f"{word} {msg.id}")
 
