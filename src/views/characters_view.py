@@ -23,6 +23,7 @@ from discord import (
     InteractionResponse,
     Member,
     TextChannel,
+    Thread,
     Webhook,
 )
 from discord.ui import Button, Select, View, button
@@ -74,13 +75,14 @@ class PingView(View):
             )
             return
         try:
-            channel: TextChannel = ctx.channel
-            if channel.id != 722617383738540092:
+            if isinstance(channel := ctx.channel, Thread):
+                channel = channel.parent
+            if channel.id != 910914713234325504:
                 channel = ctx.guild.get_channel(740568087820238919) or channel
             view = View(Button(label="Character", url=self.oc.jump_url))
             await channel.send(
                 f"Hello {member.mention}!\n\n"
-                f"{ctx.user.mention} is interested on RPing with {self.oc.name}.",
+                f"{ctx.user.mention} is interested on RPing with your OC {self.oc.name}.",
                 view=view,
                 allowed_mentions=AllowedMentions(users=True),
             )

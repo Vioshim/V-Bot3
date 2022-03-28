@@ -18,12 +18,14 @@ from typing import Optional
 
 from discord import (
     AllowedMentions,
+    ButtonStyle,
     CategoryChannel,
     Embed,
     Guild,
     Interaction,
     InteractionResponse,
     Member,
+    Object,
     Role,
     SelectOption,
     Webhook,
@@ -44,8 +46,8 @@ __all__ = (
     "ColorRoles",
     "RPSearchRoles",
     "RoleView",
-    "EMPTY_PING",
     "QUERIES",
+    "RP_SEARCH_MSG",
 )
 
 QUERIES = [
@@ -124,6 +126,13 @@ COLOR_ROLES = dict(
     gray=794273806176223303,
 )
 
+RP_SEARCH_MSG = {
+    744841294869823578: 958065492386541578,
+    744841357960544316: 958065493321863179,
+    744841408539656272: 958065494613704735,
+    744842759004880976: 958065496006213653,
+    808730687753420821: 958065497755230260,
+}
 RP_SEARCH_ROLES = dict(
     Any=744841294869823578,
     Plot=744841357960544316,
@@ -131,6 +140,13 @@ RP_SEARCH_ROLES = dict(
     Action=744842759004880976,
     Narrated=808730687753420821,
 )
+RP_SEARCH_IMAGES = {
+    744841294869823578: "https://cdn.discordapp.com/attachments/748384705098940426/958057777186619412/image.png",
+    744841357960544316: "https://cdn.discordapp.com/attachments/748384705098940426/958057777421496350/image.png",
+    744841408539656272: "https://cdn.discordapp.com/attachments/748384705098940426/958057777715105842/image.png",
+    744842759004880976: "https://cdn.discordapp.com/attachments/748384705098940426/958057777949982770/image.png",
+    808730687753420821: "https://cdn.discordapp.com/attachments/748384705098940426/958057778260353044/image.png",
+}
 
 
 class PronounRoles(View):
@@ -623,13 +639,11 @@ class RoleManage(View):
         self,
         bot: CustomBot,
         role: Role,
-        ocs: set[Character],
         member: Member,
     ):
         super(RoleManage, self).__init__(timeout=None)
         self.bot = bot
         self.role = role
-        self.ocs = list(ocs)
         self.member = member
         self.role_add.label = f"Get {role.name} Role"
         self.role_remove.label = f"Remove {role.name} Role"
@@ -674,11 +688,13 @@ class RoleManage(View):
     async def check_ocs(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
+        cog = self.bot.get_cog("Submission")
+        ocs = cog.rpers.get(ctx.user.id, {}).values()
         view = CharactersView(
             bot=self.bot,
             member=ctx.user,
             target=ctx,
-            ocs=self.ocs,
+            ocs=ocs,
             keep_working=True,
         )
         embed = view.embed
@@ -697,104 +713,77 @@ class RoleManage(View):
                 )
 
 
-EMPTY_PING = SelectOption(
-    label="No last pings",
-    description="Try to use pings in the bot.",
-    default=True,
-)
-
-
-class RoleButton(Button["RoleView"]):
+class RoleView(View):
     def __init__(
         self,
         bot: CustomBot,
-        webhook: Webhook,
         cool_down: dict[int, datetime],
         role_cool_down: dict[int, datetime],
         last_claimer: dict[int, int],
-        label: str,
-        custom_id: str,
-        msg: WebhookMessage,
+        role: int,
     ):
-        super().__init__(label=label, custom_id=custom_id)
+        super().__init__(timeout=None)
+        self.bot = bot
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
-        self.webhook = webhook
-        self.bot = bot
-        self.msg = msg
+        role = str(role)
+        self.ping.custom_id = role
+        self.get_role.custom_id = role
+        self.remove_role.custom_id = role
 
-    async def callback_check(self, interaction: Interaction):
-        self.view
+    @button(
+        label="Ping Role",
+        custom_id="role-id",
+        emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
+    async def ping(self, btn: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        custom_id: int = int(interaction.data.get("custom_id"))
+        custom_id: int = int(btn.custom_id)
         role: Role = interaction.guild.get_role(custom_id)
-        if self.last_claimer.get(custom_id) == interaction.user.id:
-            await resp.send_message(
+        member: Member = interaction.user
+        await resp.defer(ephemeral=True)
+        if self.last_claimer.get(custom_id) == member.id:
+            return await resp.send_message(
                 f"You're the last user that pinged {role.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
-            return False
-        if hours((val := self.cool_down.get(interaction.user.id))) < 2:
+        if hours((val := self.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
-            await resp.send_message(
+            return await resp.send_message(
                 "You're in cool down, you pinged one of the roles recently."
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-            return False
         if hours((val := self.role_cool_down.get(custom_id))) < 2:
             s = 7200 - seconds(val)
-            await resp.send_message(
+            return await resp.send_message(
                 f"{role.mention} is in cool down, check the latest ping at <#722617383738540092>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-            return False
-        return True
-
-    async def callback(self, ctx: Interaction):
-        if not await self.callback_check(ctx):
-            return
-        role: Role = ctx.guild.get_role(int(self.custom_id))
-        member: Member = ctx.user
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-
         if role not in member.roles:
             await member.add_roles(role, reason="RP searching")
-        cog = self.bot.get_cog(name="Submission")
-        characters = cog.rpers.get(member.id, {}).values()
-        view = RoleManage(self.bot, role, characters, member)
-        embed = Embed(
-            title=role.name,
-            color=member.color,
-            description=f"{member.display_name} is looking "
-            "to RP with their registered character(s).",
-            timestamp=utcnow(),
-        )
+        embed = Embed(color=member.color)
+        guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
-        msg = await self.webhook.send(
-            content=f"{role.mention} is being pinged by {member.mention}",
+        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        webhook = await self.bot.webhook(910914713234325504, reason="RP Search")
+        msg = await webhook.send(
+            content=role.mention,
+            allowed_mentions=AllowedMentions(roles=True),
             embed=embed,
-            allowed_mentions=AllowedMentions(roles=True, users=True),
-            view=view,
+            view=RoleManage(self.bot, role, member),
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             wait=True,
+            thread=Object(id=interaction.message.id),
         )
-        thread = await self.msg.create_thread(
-            name=f"{member.display_name} - {role.name}"
-        )
-        await thread.add_user(member)
         self.cool_down[member.id] = utcnow()
         self.role_cool_down[role.id] = utcnow()
         self.last_claimer[role.id] = member.id
-        view = View(Button(label="Jump URL", url=msg.jump_url))
-
-        self.view.setup()
-        self.msg = await self.msg.edit(view=self.view)
-
         async with self.bot.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
@@ -803,89 +792,37 @@ class RoleButton(Button["RoleView"]):
                 role.id,
                 member.guild.id,
             )
-            await ctx.followup.send(
+            await interaction.followup.send(
                 content="Ping has been done successfully.",
-                view=view,
                 ephemeral=True,
             )
 
+    @button(
+        label="Obtain Role",
+        custom_id="role-id",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
+    async def get_role(self, btn: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        guild: Guild = interaction.guild
+        member: Member = interaction.user
+        role = guild.get_role(int(btn.custom_id))
+        if role not in member.roles:
+            await member.add_roles(role)
+        await resp.send_message("Role assigned.", ephemeral=True)
 
-class RoleView(View):
-    def __init__(
-        self,
-        bot: CustomBot,
-        webhook: Webhook,
-        cool_down: dict[int, datetime],
-        role_cool_down: dict[int, datetime],
-        last_claimer: dict[int, int],
-        msg: WebhookMessage,
-    ):
-        buttons = [
-            RoleButton(
-                bot=bot,
-                webhook=webhook,
-                cool_down=cool_down,
-                role_cool_down=role_cool_down,
-                last_claimer=last_claimer,
-                label=k,
-                custom_id=str(v),
-                msg=msg,
-            )
-            for k, v in RP_SEARCH_ROLES.items()
-        ]
-        super().__init__(*buttons, timeout=None)
-        self.cool_down = cool_down
-        self.role_cool_down = role_cool_down
-        self.last_claimer = last_claimer
-        self.msg = msg
-        self.bot = bot
-        self.webhook = webhook
-        self.setup()
-
-    def setup(self):
-        sct: Select = self.last_pings
-        sct.options.clear()
-        for role_id, member_id in self.last_claimer.items():
-            role = self.webhook.guild.get_role(role_id)
-            member = self.webhook.guild.get_member(member_id)
-            if role and member:
-                sct.add_option(
-                    label=role.name,
-                    description=f"See {member.display_name}'s OCs"[:100],
-                    value=str(member.id),
-                )
-        if not sct.options:
-            sct.append_option(EMPTY_PING)
-            sct.disabled = True
-        else:
-            sct.disabled = False
-
-    @select(placeholder="Last Pings", custom_id="last-pings", row=1)
-    async def last_pings(self, sct: Select, ctx: Interaction):
-        item = int(sct.values[0])
-        member = ctx.guild.get_member(item)
-        cog = self.bot.get_cog(name="Submission")
-        ocs = cog.rpers.get(member.id, {}).values()
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-        view = CharactersView(
-            bot=self.bot,
-            member=ctx.user,
-            target=ctx,
-            ocs=ocs,
-            keep_working=True,
-        )
-        embed = view.embed
-        embed.set_author(
-            name=member.display_name,
-            icon_url=member.display_avatar.url,
-        )
-        async with view.send(ephemeral=True, single=True) as data:
-            if isinstance(data, Character):
-                self.bot.logger.info(
-                    "User %s is currently reading %s's character %s [%s]",
-                    str(ctx.user),
-                    str(member),
-                    data.name,
-                    repr(data),
-                )
+    @button(
+        label="Remove Role",
+        custom_id="role-id",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
+    async def remove_role(self, btn: Button, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        guild: Guild = interaction.guild
+        member: Member = interaction.user
+        role = guild.get_role(int(btn.custom_id))
+        if role in member.roles:
+            await member.remove_roles(role)
+        await resp.send_message("Role removed.", ephemeral=True)
