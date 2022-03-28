@@ -42,10 +42,8 @@ __all__ = (
     "PronounRoles",
     "BasicRoles",
     "ColorRoles",
-    "RPSearchRoles",
     "RPThreadView",
     "QUERIES",
-    "RP_SEARCH_MSG",
 )
 
 QUERIES = [
@@ -123,28 +121,6 @@ COLOR_ROLES = dict(
     silver=850018780762472468,
     gray=794273806176223303,
 )
-
-RP_SEARCH_MSG = {
-    744841294869823578: 958065492386541578,
-    744841357960544316: 958065493321863179,
-    744841408539656272: 958065494613704735,
-    744842759004880976: 958065496006213653,
-    808730687753420821: 958065497755230260,
-}
-RP_SEARCH_ROLES = dict(
-    Any=744841294869823578,
-    Plot=744841357960544316,
-    Casual=744841408539656272,
-    Action=744842759004880976,
-    Narrated=808730687753420821,
-)
-RP_SEARCH_IMAGES = {
-    744841294869823578: "https://cdn.discordapp.com/attachments/748384705098940426/958057777186619412/image.png",
-    744841357960544316: "https://cdn.discordapp.com/attachments/748384705098940426/958057777421496350/image.png",
-    744841408539656272: "https://cdn.discordapp.com/attachments/748384705098940426/958057777715105842/image.png",
-    744842759004880976: "https://cdn.discordapp.com/attachments/748384705098940426/958057777949982770/image.png",
-    808730687753420821: "https://cdn.discordapp.com/attachments/748384705098940426/958057778260353044/image.png",
-}
 
 
 class PronounRoles(View):
@@ -372,80 +348,6 @@ class BasicRoles(View):
                 "Roles unset!",
                 ephemeral=True,
             )
-
-
-class RPSearchRoles(View):
-    @select(
-        placeholder="Select RP Search Roles",
-        custom_id="rp_search",
-        min_values=0,
-        max_values=5,
-        options=[
-            SelectOption(
-                label="Any",
-                description="Used for getting any kind of RP.",
-                value="744841294869823578",
-                emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
-            ),
-            SelectOption(
-                label="Plot",
-                description="Used for getting arcs in RP.",
-                value="744841357960544316",
-                emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
-            ),
-            SelectOption(
-                label="Casual",
-                description="Used for getting random meetings in RP.",
-                value="744841408539656272",
-                emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
-            ),
-            SelectOption(
-                label="Action",
-                description="Used for getting battle/tension related RPs.",
-                value="744842759004880976",
-                emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
-            ),
-            SelectOption(
-                label="Narrated",
-                description="Used for getting help with narration.",
-                value="808730687753420821",
-                emoji="\N{RIGHT-POINTING MAGNIFYING GLASS}",
-            ),
-        ],
-    )
-    async def rp_search(self, sct: Select, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
-        guild: Guild = ctx.guild
-        roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
-        if add := roles - set(member.roles):
-            await member.add_roles(*add)
-        if remove := (total - roles) & set(member.roles):
-            await member.remove_roles(*remove)
-        if text := ", ".join(role.mention for role in roles):
-            await resp.send_message(
-                f"Roles [{text}] has been set!",
-                ephemeral=True,
-            )
-        else:
-            await resp.send_message(
-                "Roles unset!",
-                ephemeral=True,
-            )
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
-        required: Role = interaction.guild.get_role(719642423327719434)
-        if required in interaction.user.roles:
-            return True
-        await resp.send_message(
-            f"You need {required.mention} to use this role.",
-            ephemeral=True,
-        )
-        return False
 
 
 class RegionView(View):

@@ -24,7 +24,6 @@ from src.cogs.roles.roles import (
     ColorRoles,
     PronounRoles,
     RegionRoles,
-    RPSearchRoles,
     RPThreadManage,
     RPThreadView,
 )
@@ -103,10 +102,6 @@ class Roles(Cog):
         self.bot.add_view(
             view=ColorRoles(timeout=None),
             message_id=916482737811120128,
-        )
-        self.bot.add_view(
-            view=RPSearchRoles(timeout=None),
-            message_id=916482738876477483,
         )
         self.bot.add_view(
             view=RegionRoles(bot=self.bot),
