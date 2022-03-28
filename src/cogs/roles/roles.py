@@ -25,11 +25,9 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    Object,
     Role,
     SelectOption,
-    Webhook,
-    WebhookMessage,
+    Thread,
 )
 from discord.ui import Button, Select, View, button, select
 from discord.utils import utcnow
@@ -45,7 +43,7 @@ __all__ = (
     "BasicRoles",
     "ColorRoles",
     "RPSearchRoles",
-    "RoleView",
+    "RPThreadView",
     "QUERIES",
     "RP_SEARCH_MSG",
 )
@@ -634,51 +632,17 @@ class RegionRoles(View):
         await ctx.followup.send("Roles removed.", ephemeral=True)
 
 
-class RoleManage(View):
+class RPThreadManage(View):
     def __init__(
         self,
         bot: CustomBot,
-        role: Role,
+        thread: Thread,
         member: Member,
     ):
-        super(RoleManage, self).__init__(timeout=None)
+        super(RPThreadManage, self).__init__(timeout=None)
         self.bot = bot
-        self.role = role
+        self.thread = thread
         self.member = member
-        self.role_add.label = f"Get {role.name} Role"
-        self.role_remove.label = f"Remove {role.name} Role"
-
-    @button(emoji="\N{WHITE HEAVY CHECK MARK}", row=0, custom_id="role_add")
-    async def role_add(self, _: Button, interaction: Interaction):
-        resp: InteractionResponse = interaction.response
-        member: Member = interaction.user
-        if self.role in member.roles:
-            await resp.send_message(
-                "You already have the role",
-                ephemeral=True,
-            )
-            return
-        await member.add_roles(self.role)
-        await resp.send_message(
-            "Role added, you'll get pinged next time.",
-            ephemeral=True,
-        )
-
-    @button(emoji="\N{CROSS MARK}", row=0, custom_id="role_remove")
-    async def role_remove(self, _: Button, interaction: Interaction):
-        resp: InteractionResponse = interaction.response
-        member: Member = interaction.user
-        if self.role in member.roles:
-            await member.remove_roles(self.role, reason="RP Search")
-            await resp.send_message(
-                "Role removed successfully",
-                ephemeral=True,
-            )
-            return
-        await resp.send_message(
-            "You don't have that role.",
-            ephemeral=True,
-        )
 
     @button(
         label="Click here to view all the user's characters.",
@@ -713,82 +677,76 @@ class RoleManage(View):
                 )
 
 
-class RoleView(View):
+class RPThreadView(View):
     def __init__(
         self,
         bot: CustomBot,
         cool_down: dict[int, datetime],
         role_cool_down: dict[int, datetime],
         last_claimer: dict[int, int],
-        role: int,
+        thread: Thread,
     ):
-        super().__init__(timeout=None)
+        super(RPThreadView, self).__init__(timeout=None)
         self.bot = bot
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
-        self.ping.custom_id = f"{role}-ping"
-        self.get_role.custom_id = f"{role}-add"
-        self.remove_role.custom_id = f"{role}-remove"
+        self.thread = thread
 
     @button(
         label="Ping Role",
-        custom_id="role-id",
+        custom_id="ping-role",
         emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
         style=ButtonStyle.blurple,
         row=0,
     )
-    async def ping(self, btn: Button, interaction: Interaction):
+    async def ping(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        custom_id: int = int(btn.custom_id.split("-")[0])
-        role: Role = interaction.guild.get_role(custom_id)
         member: Member = interaction.user
         await resp.defer(ephemeral=True)
-        if self.last_claimer.get(custom_id) == member.id:
+        if self.last_claimer.get(self.thread.id) == member.id:
             return await resp.send_message(
-                f"You're the last user that pinged {role.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
+                "You're the last user that pinged this thread, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
         if hours((val := self.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                "You're in cool down, you pinged one of the roles recently."
+                "You're in cool down, you pinged one of the threads recently."
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        if hours((val := self.role_cool_down.get(custom_id))) < 2:
+        if hours((val := self.role_cool_down.get(self.thread.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                f"{role.mention} is in cool down, check the latest ping at <#722617383738540092>."
+                f"Thread is in cool down, check the latest thread at <#{self.thread.id}>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        if role not in member.roles:
-            await member.add_roles(role, reason="RP searching")
         embed = Embed(color=member.color)
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         webhook = await self.bot.webhook(910914713234325504, reason="RP Search")
         msg = await webhook.send(
-            content=role.mention,
-            allowed_mentions=AllowedMentions(roles=True),
+            content="@here",
+            allowed_mentions=AllowedMentions(everyone=True),
             embed=embed,
-            view=RoleManage(self.bot, role, member),
+            view=RPThreadManage(self.bot, self.thread, member),
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             wait=True,
-            thread=Object(id=interaction.message.id),
+            thread=self.thread,
         )
         self.cool_down[member.id] = utcnow()
-        self.role_cool_down[role.id] = utcnow()
-        self.last_claimer[role.id] = member.id
+        self.role_cool_down[self.thread.id] = utcnow()
+        self.last_claimer[self.thread.id] = member.id
         async with self.bot.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
                 msg.id,
                 member.id,
-                role.id,
+                self.thread.id,
                 member.guild.id,
             )
             await interaction.followup.send(
@@ -797,31 +755,23 @@ class RoleView(View):
             )
 
     @button(
-        label="Obtain Role",
-        custom_id="role-id",
+        label="Enable Pings",
+        custom_id="obtain-role",
         style=ButtonStyle.blurple,
         row=0,
     )
-    async def get_role(self, btn: Button, interaction: Interaction):
+    async def get_role(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        guild: Guild = interaction.guild
-        member: Member = interaction.user
-        role = guild.get_role(int(btn.custom_id.split("-")[0]))
-        if role not in member.roles:
-            await member.add_roles(role)
-        await resp.send_message("Role assigned.", ephemeral=True)
+        await self.thread.add_user(interaction.user)
+        await resp.send_message("Access granted.", ephemeral=True)
 
     @button(
-        label="Remove Role",
-        custom_id="role-id",
+        label="Disable Pings",
+        custom_id="remove-role",
         style=ButtonStyle.blurple,
         row=0,
     )
-    async def remove_role(self, btn: Button, interaction: Interaction):
+    async def remove_role(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        guild: Guild = interaction.guild
-        member: Member = interaction.user
-        role = guild.get_role(int(btn.custom_id.split("-")[0]))
-        if role in member.roles:
-            await member.remove_roles(role)
-        await resp.send_message("Role removed.", ephemeral=True)
+        await self.thread.remove_user(interaction.user)
+        await resp.send_message("Access removed.", ephemeral=True)

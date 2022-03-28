@@ -15,18 +15,17 @@
 from datetime import datetime
 from typing import Optional
 
-from discord import Webhook, WebhookMessage
+from discord import Thread, Webhook, WebhookMessage
 from discord.ext.commands import Cog
 
 from src.cogs.roles.roles import (
-    RP_SEARCH_MSG,
     BasicRoles,
     ColorRoles,
     PronounRoles,
     RegionRoles,
-    RoleManage,
-    RoleView,
     RPSearchRoles,
+    RPThreadManage,
+    RPThreadView,
 )
 from src.structures.bot import CustomBot
 
@@ -73,7 +72,7 @@ class Roles(Cog):
                     self.cool_down[member_id] = created_at
 
                 self.bot.add_view(
-                    view=RoleManage(
+                    view=RPThreadManage(
                         bot=self.bot,
                         role=role,
                         member=member,
@@ -110,17 +109,24 @@ class Roles(Cog):
             message_id=956970863805231144,
         )
         w = await self.bot.webhook(910914713234325504)
-        for role, msg_id in RP_SEARCH_MSG.items():
+        async for m in w.channel.history(limit=None):
+            if m.webhook_id != w.id:
+                continue
+
+            if not (thread := w.channel.get_thread(m.id)):
+                thread: Thread = await w.guild.fetch_channel(m.id)
+
             await w.edit_message(
-                msg_id,
-                view=RoleView(
+                m.id,
+                view=RPThreadView(
                     bot=self.bot,
                     cool_down=self.cool_down,
                     role_cool_down=self.role_cool_down,
                     last_claimer=self.last_claimer,
-                    role=role,
+                    thread=thread,
                 ),
             )
+
         await self.load_rp_searches()
 
 
