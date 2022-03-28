@@ -727,10 +727,9 @@ class RoleView(View):
         self.cool_down = cool_down
         self.role_cool_down = role_cool_down
         self.last_claimer = last_claimer
-        role = str(role)
-        self.ping.custom_id = role
-        self.get_role.custom_id = role
-        self.remove_role.custom_id = role
+        self.ping.custom_id = f"{role}-ping"
+        self.get_role.custom_id = f"{role}-add"
+        self.remove_role.custom_id = f"{role}-remove"
 
     @button(
         label="Ping Role",
@@ -807,7 +806,7 @@ class RoleView(View):
         resp: InteractionResponse = interaction.response
         guild: Guild = interaction.guild
         member: Member = interaction.user
-        role = guild.get_role(int(btn.custom_id))
+        role = guild.get_role(int(btn.custom_id.split("-")[0]))
         if role not in member.roles:
             await member.add_roles(role)
         await resp.send_message("Role assigned.", ephemeral=True)
@@ -822,7 +821,7 @@ class RoleView(View):
         resp: InteractionResponse = interaction.response
         guild: Guild = interaction.guild
         member: Member = interaction.user
-        role = guild.get_role(int(btn.custom_id))
+        role = guild.get_role(int(btn.custom_id.split("-")[0]))
         if role in member.roles:
             await member.remove_roles(role)
         await resp.send_message("Role removed.", ephemeral=True)

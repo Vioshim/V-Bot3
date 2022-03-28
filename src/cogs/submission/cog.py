@@ -907,9 +907,6 @@ class Submission(Cog):
             self.ocs[oc.id] = oc
             self.rpers.setdefault(oc.author, {})
             self.rpers[oc.author][oc.id] = oc
-
-        cog = self.bot.get_cog("Roles")
-        await cog.load(rpers=self.rpers)
         self.bot.logger.info("Finished loading all characters")
 
     async def load_profiles(self):
