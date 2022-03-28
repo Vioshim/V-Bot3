@@ -431,6 +431,8 @@ def embed_handler(message: Message, embed: Embed) -> Embed:
     Embed
         Embed with corrections
     """
+    if not message:
+        return
     for item in message.attachments:
         URL = f"attachment://{item.filename}"
         if (image := embed.image) and item.url == image.url:
