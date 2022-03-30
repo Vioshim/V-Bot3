@@ -75,9 +75,7 @@ class PingView(View):
             )
             return
         try:
-            if isinstance(channel := ctx.channel, Thread):
-                channel = channel.parent
-            if channel.id != 910914713234325504:
+            if isinstance(channel := ctx.channel, TextChannel):
                 channel = ctx.guild.get_channel(740568087820238919) or channel
             view = View(Button(label="Character", url=self.oc.jump_url))
             await channel.send(

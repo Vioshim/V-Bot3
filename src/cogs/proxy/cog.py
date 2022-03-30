@@ -41,7 +41,7 @@ from discord.utils import get
 from src.cogs.pokedex.search import default_species_autocomplete
 from src.cogs.submission.cog import Submission, oc_autocomplete
 from src.structures.bot import CustomBot
-from src.structures.species import Fusion, Species
+from src.structures.species import Species
 
 NPC = namedtuple("NPC", "name avatar")
 NPCLog = namedtuple("NPCLog", "channel_id message_id")
