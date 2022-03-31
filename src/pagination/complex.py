@@ -103,6 +103,7 @@ class Complex(Simple):
             entries_per_page=entries_per_page,
             parser=parser,
             sort_key=sort_key,
+            modifying_embed=False,
         )
 
     @property

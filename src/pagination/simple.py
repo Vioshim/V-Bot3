@@ -78,6 +78,7 @@ class Simple(Basic):
         entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = default_parser,
         sort_key: Callable[[_T], Any] = None,
+        modifying_embed: bool = True,
     ):
         """Init Method
 
@@ -111,6 +112,7 @@ class Simple(Basic):
             timeout=timeout,
             embed=embed,
         )
+        self.modifying_embed = modifying_embed
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
@@ -246,7 +248,6 @@ class Simple(Basic):
     async def edit(
         self,
         page: Optional[int] = None,
-        modifying_embed: bool = False,
     ) -> None:
         """This method edits the pagination's page given an index.
 
@@ -254,8 +255,6 @@ class Simple(Basic):
         ----------
         page : int, optional
             page's index, defaults to None
-        modifying_embed : bool, optional
-            if modifies it, defaults to False
         """
         if isinstance(page, int):
             self._pos = page
@@ -264,7 +263,7 @@ class Simple(Basic):
         else:
             data = dict(view=None)
 
-        if modifying_embed:
+        if self.modifying_embed:
             data["embed"] = self._embed
 
         with suppress(DiscordException):

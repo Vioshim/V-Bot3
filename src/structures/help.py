@@ -16,13 +16,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
-from discord import Color, Embed, MessageCommand, SlashCommand
+from discord import Color, Embed
 from discord.ext.commands import Command
 
 from src.utils.etc import WHITE_BAR
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Command, Group, Cog
+    from discord.ext.commands import Group, Cog
     from src.context.context import Context
 
 from discord.ext.commands import HelpCommand
