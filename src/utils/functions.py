@@ -20,6 +20,7 @@ from discord.ext.commands import Context
 from src.utils.matches import (
     DISCORD_MSG_URL,
     DISCORD_MSG_URL2,
+    ESCAPE_SEQ,
     YAML_HANDLER1,
     YAML_HANDLER2,
 )
@@ -39,10 +40,15 @@ __all__ = (
     "check_valid",
     "text_check",
     "image_check",
+    "unescape",
     "message_line",
     "embed_handler",
     "yaml_handler",
 )
+
+
+def unescape(text: str):
+    return ESCAPE_SEQ.sub(r"\1", text)
 
 
 def discord_url_msg(message: Message):

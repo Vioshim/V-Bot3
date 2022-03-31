@@ -15,7 +15,10 @@
 from re import IGNORECASE, MULTILINE, compile
 
 __all__ = (
+    "ESCAPE_SEQ",
+    "CLYDE",
     "IMAGEKIT_API",
+    "ID_DICEBEAR",
     "DISCORD_MATCH",
     "IMAGEKIT_MATCH",
     "GOOGLE_IMAGE",
@@ -33,6 +36,9 @@ __all__ = (
     "SCAM_FINDER",
     "URL_DOMAIN_MATCH",
 )
+ESCAPE_SEQ = compile(r"\\(.)")
+CLYDE = compile(r"C(.)lyde", IGNORECASE)
+ID_DICEBEAR = compile(r"https://avatars\.dicebear\.com/api/identicon/(.+)\.png")
 SCAM_FINDER = compile(r"hb\.bizmrg\.com", IGNORECASE)
 DATA_FINDER = compile(
     r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE

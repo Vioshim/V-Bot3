@@ -31,55 +31,15 @@ from datetime import datetime
 from functools import reduce
 from itertools import groupby
 from operator import itemgetter
-from re import DOTALL, IGNORECASE, MULTILINE, Pattern, compile, escape
+from re import DOTALL, MULTILINE, Pattern, compile, escape, sub
 from typing import Optional
 
 from discord import Embed, Message
 from discord.utils import snowflake_time
 from frozendict import frozendict
 
-CLYDE = compile(r"Clyde", IGNORECASE)
-CLYDE.sub("Clxyde", "This is Clyde")
-ID_DICEBEAR = compile(r"https://avatars\.dicebear\.com/api/identicon/(.+)\.png")
-
-
-@dataclass(unsafe_hash=True, repr=False)
-class TupperForm:
-    id: int
-    name: str
-    image: str
-    tupper_id: int
-    description: Optional[str] = None
-    username: Optional[str] = None
-
-    @classmethod
-    def from_message(cls, msg: Message):
-        embed = msg.embeds[0]
-        return TupperForm(
-            id=msg.id,
-            tupper_id=msg.channel.id,
-            name=embed.title,
-            description=embed.description or None,
-            username=embed.footer.text or None,
-            image=embed.image.url,
-        )
-
-    @property
-    def created_at(self):
-        return snowflake_time(self.id)
-
-    @property
-    def embed(self):
-        embed = Embed(
-            title=self.name,
-            color=0xFFFFFE,
-        )
-        if self.description:
-            embed.description = self.description
-        embed.set_image(url=self.image)
-        if self.username:
-            embed.set_footer(text=self.username)
-        return embed
+from src.utils.functions import unescape
+from src.utils.matches import CLYDE, ID_DICEBEAR
 
 
 @dataclass(unsafe_hash=True, repr=False)
@@ -89,14 +49,15 @@ class Tupper:
     regex_str: InitVar[str]
     form: str = "Default"
     id: Optional[int] = None
+    description: Optional[str] = None
     value_regex: Optional[Pattern] = None
     display_prefix: Optional[str] = None
     character: Optional[int] = None
     birthday: Optional[datetime] = None
-    forms: frozendict[str, TupperForm] = field(default_factory=frozendict)
+    forms: frozendict[str, str] = field(default_factory=frozendict)
+    color: int = 16777214  # FF FF FE
 
     def __post_init__(self, regex_str: str):
-        self.display_prefix = regex_str
         self.regex = regex_str
 
     def __call__(self, text: str):
@@ -112,7 +73,9 @@ class Tupper:
 
     @regex.setter
     def regex(self, regex_str: str):
-        data = escape(regex_str.strip()).replace("text", "(.*)")
+        regex_str = regex_str.strip()
+        self.display_prefix = regex_str
+        data = escape(regex_str).replace("text", "(.*)")
         self.value_regex = compile(rf"^{data}$", DOTALL | MULTILINE)
 
     @classmethod
@@ -132,7 +95,26 @@ class Tupper:
             form=embed.footer.text,
             character=character,
             birthday=embed.timestamp or None,
+            color=embed.color.value,
         )
+
+    @property
+    def embed(self):
+        embed = Embed(
+            description=self.description,
+            color=self.color,
+            timestamp=self.birthday,
+        )
+        embed.set_author(
+            name=embed.author.name,
+            icon_url=f"https://avatars.dicebear.com/api/identicon/{self.author}.png",
+        )
+        embed.set_footer(text=self.form)
+        embed.add_field(name="Regex", value=self.display_prefix)
+        if self.character:
+            embed.add_field(name="Character", value=self.character)
+
+        return embed
 
     def __repr__(self):
         return f"Proxy(name={self.name!r}, regex=`{escape(self.regex)}`)"

@@ -16,7 +16,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
-from discord import SlashCommand
+from discord import Color, Embed, SlashCommand
+
+from src.utils.etc import WHITE_BAR
 
 if TYPE_CHECKING:
     from discord.ext.commands import Command, Group, Cog
@@ -89,10 +91,13 @@ class CustomHelp(HelpCommand):
 
         values = {
             "Short document": cmd.short_doc or "None",
-            "Aliases": "\n".join(f"> • {item}" for item in cmd.aliases) or "None",
             "Cog": getattr(cmd.cog, "qualified_name", None) or "None",
             "Usage": self.get_command_signature(cmd) or "None",
         }
+
+        if hasattr(cmd, "aliases"):
+            items = "\n".join(f"> • {item}" for item in cmd.aliases)
+            values["aliases"] = items or "None"
 
         target = self.get_destination()
 
@@ -174,7 +179,9 @@ class CustomHelp(HelpCommand):
         view.embed.description = "\n".join(commands) or "> No Commands"
 
         @view.set_parser
-        def cog_parser(item: tuple[str, Callable[[Any], Any]]) -> tuple[str, str]:
+        def cog_parser(
+            item: tuple[str, Callable[[Any], Any]]
+        ) -> tuple[str, str]:
             """Parser for cogs
 
             Attributes
@@ -206,20 +213,13 @@ class CustomHelp(HelpCommand):
             Error in the message
         """
         context = self.context
-        guild = context.bot.get_guild(719343092963999804)
-        member = guild.get_member(context.author.id)
-        target = self.get_destination()
-
-        view = Simple(
-            bot=self.context.bot,
-            timeout=None,
-            target=target,
-            member=member,
-            entries_per_page=10,
+        embed = Embed(
+            title="Help Error",
+            description=error,
+            color=Color.red(),
         )
-        view.embed.title = "Help Error"
-        view.embed.description = f"> {error}"
-        await view.send()
+        embed.set_image(url=WHITE_BAR)
+        await context.reply(embed=embed)
 
     async def on_help_command_error(self, ctx: Context, error: Exception):
         """Error detection
