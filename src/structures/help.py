@@ -135,6 +135,7 @@ class CustomHelp(HelpCommand):
             member=self.context.author,
             values=group.commands,
             inline=False,
+            entries_per_page=10,
         )
 
         view.embed.title = f"Group {group.qualified_name!r}"
