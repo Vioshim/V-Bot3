@@ -77,7 +77,7 @@ class CustomHelp(HelpCommand):
                 for item in commands
                 if isinstance(item, Command)
             ]
-            text_signatures = "n".join(signatures) or "No Commands"
+            text_signatures = "\n".join(signatures) or "No Commands"
             return cog_name, text_signatures
 
         await view.send()
