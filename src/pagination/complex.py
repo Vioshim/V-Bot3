@@ -298,7 +298,7 @@ class Complex(Simple):
         """
         amount = len(self._choices or set())
         if self.keep_working or amount < self._max_values:
-            await super(Complex, self).edit(page=page, modifying_embed=False)
+            await super(Complex, self).edit(page=page)
         else:
             await self.delete(force=True)
 
