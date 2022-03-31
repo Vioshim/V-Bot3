@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
-from discord import Color, Embed, SlashCommand
+from discord import Color, Embed, MessageCommand, SlashCommand
+from discord.ext.commands import Command
 
 from src.utils.etc import WHITE_BAR
 
@@ -71,10 +72,11 @@ class CustomHelp(HelpCommand):
             """
             cog, commands = item
             cog_name = getattr(cog, "qualified_name", "No category")
-            signatures = []
-            for item in commands:
-                if not isinstance(item, SlashCommand):
-                    signatures.append(self.get_command_signature(item))
+            signatures = [
+                self.get_command_signature(item)
+                for item in commands
+                if isinstance(item, Command)
+            ]
             text_signatures = "n".join(signatures) or "No Commands"
             return cog_name, text_signatures
 
