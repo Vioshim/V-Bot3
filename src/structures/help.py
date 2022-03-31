@@ -17,12 +17,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 from discord import Color, Embed
-from discord.ext.commands import Command
 
 from src.utils.etc import WHITE_BAR
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Group, Cog
+    from discord.ext.commands import Command, Group, Cog
     from src.context.context import Context
 
 from discord.ext.commands import HelpCommand
@@ -72,11 +71,7 @@ class CustomHelp(HelpCommand):
             """
             cog, commands = item
             cog_name = getattr(cog, "qualified_name", "No category")
-            signatures = [
-                self.get_command_signature(item)
-                for item in commands
-                if isinstance(item, Command)
-            ]
+            signatures = map(self.get_command_signature, commands)
             text_signatures = "\n".join(signatures) or "No Commands"
             return cog_name, text_signatures
 
