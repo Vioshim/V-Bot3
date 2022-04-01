@@ -704,7 +704,13 @@ class RPThreadView(View):
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        await resp.send_modal(RPModal(bot=self.bot, cool_down=self.cool_down, role_cool_down=self.role_cool_down, ))
+        await resp.send_modal(
+            RPModal(
+                bot=self.bot,
+                cool_down=self.cool_down,
+                role_cool_down=self.role_cool_down,
+            )
+        )
 
     @button(
         label="Enable Pings",
