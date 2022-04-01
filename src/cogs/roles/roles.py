@@ -593,7 +593,7 @@ class RPModal(Modal):
         role_cool_down: dict[int, datetime],
         last_claimer: dict[int, int],
         thread: Thread,
-        ocs: set[Character]
+        ocs: set[Character],
     ) -> None:
         super().__init__(title="Pinging a RP Search")
         self.bot = bot
@@ -704,11 +704,15 @@ class RPThreadView(View):
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
+        ocs = self.bot.get_cog("Submission").rpers.get(member.id, {}).values()
         await resp.send_modal(
             RPModal(
                 bot=self.bot,
                 cool_down=self.cool_down,
                 role_cool_down=self.role_cool_down,
+                last_claimer=self.last_claimer,
+                thread=self.thread,
+                ocs=ocs
             )
         )
 
