@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from datetime import datetime
+from difflib import get_close_matches
 from time import mktime
 from typing import Optional
 
@@ -22,14 +22,16 @@ from discord import (
     CategoryChannel,
     Embed,
     Guild,
+    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
     Role,
     SelectOption,
     Thread,
+    WebhookMessage,
 )
-from discord.ui import Button, Select, View, button, select
+from discord.ui import Button, InputText, Modal, Select, View, button, select
 from discord.utils import utcnow
 
 from src.cogs.roles.area_selection import AreaSelection
@@ -540,11 +542,13 @@ class RPThreadManage(View):
         bot: CustomBot,
         thread: Thread,
         member: Member,
+        ocs: set[Character] = None,
     ):
         super(RPThreadManage, self).__init__(timeout=None)
         self.bot = bot
         self.thread = thread
         self.member = member
+        self.ocs = ocs
 
     @button(
         label="Click here to view all the user's characters.",
@@ -555,7 +559,8 @@ class RPThreadManage(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         cog = self.bot.get_cog("Submission")
-        ocs = cog.rpers.get(self.member.id, {}).values()
+        if not (ocs := self.ocs):
+            ocs = cog.rpers.get(self.member.id, {}).values()
         view = CharactersView(
             bot=self.bot,
             member=ctx.user,
@@ -577,6 +582,81 @@ class RPThreadManage(View):
                     data.name,
                     repr(data),
                 )
+
+
+class RPModal(Modal):
+
+    def __init__(
+        self,
+        bot: CustomBot,
+        cool_down: dict[int, datetime],
+        role_cool_down: dict[int, datetime],
+        last_claimer: dict[int, int],
+        thread: Thread,
+        ocs: set[Character]
+    ) -> None:
+        super().__init__(title="Pinging a RP Search")
+        self.bot = bot
+        self.cool_down = cool_down
+        self.role_cool_down = role_cool_down
+        self.last_claimer = last_claimer
+        self.thread = thread
+        self.ocs = ocs
+        if len(text := "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)) > 4000:
+            text = "\n".join(f"- {x.name}" for x in ocs)
+        self.add_item(
+            InputText(
+                style=InputTextStyle.paragraph,
+                label="Characters you have free (Will show in order)",
+                placeholder="Character names go here separated by commas, if empty, all ocs will be used.",
+                required=False,
+                value=text,
+            )
+        )
+
+    async def callback(self, interaction: Interaction):
+        info = {x.name.title(): x for x in self.ocs}
+        data = self.children[0].value or ""
+        items: list[Character] = []
+        for item in data.split("\n"):
+            item = item.removeprefix("-").strip().title()
+            item = item.split("|")[-1].strip()
+            if oc := info.get(item):
+                items.append(oc)
+            elif elements := get_close_matches(item, info, n=1):
+                items.append(elements[0])
+        resp: InteractionResponse = interaction.response
+        member: Member = interaction.user
+        embed = Embed(title=self.thread.name, color=member.color)
+        guild: Guild = member.guild
+        embed.set_image(url=WHITE_BAR)
+        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        webhook = await self.bot.webhook(910914713234325504, reason="RP Search")
+        msg: WebhookMessage = await webhook.send(
+            content="@here",
+            allowed_mentions=AllowedMentions(everyone=True),
+            embed=embed,
+            view=RPThreadManage(self.bot, self.thread, member, items),
+            username=member.display_name,
+            avatar_url=member.display_avatar.url,
+            wait=True,
+            thread=self.thread,
+        )
+        self.cool_down[member.id] = utcnow()
+        self.role_cool_down[self.thread.id] = utcnow()
+        self.last_claimer[self.thread.id] = member.id
+        async with self.bot.database() as db:
+            await db.execute(
+                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
+                msg.id,
+                member.id,
+                self.thread.id,
+                member.guild.id,
+            )
+            await resp.send_message(
+                content="Ping has been done successfully.",
+                ephemeral=True,
+            )
 
 
 class RPThreadView(View):
@@ -605,57 +685,26 @@ class RPThreadView(View):
     async def ping(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
-        await resp.defer(ephemeral=True)
-        followup = interaction.followup
         if self.last_claimer.get(self.thread.id) == member.id:
-            return await followup.send(
+            return await resp.send_message(
                 "You're the last user that pinged this thread, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
         if hours((val := self.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
-            return await followup.send(
+            return await resp.send_message(
                 "You're in cool down, you pinged one of the threads recently."
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
         if hours((val := self.role_cool_down.get(self.thread.id))) < 2:
             s = 7200 - seconds(val)
-            return await followup.send(
+            return await resp.send_message(
                 f"Thread is in cool down, check the latest thread at <#{self.thread.id}>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        embed = Embed(title=self.thread.name, color=member.color)
-        guild: Guild = member.guild
-        embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        webhook = await self.bot.webhook(910914713234325504, reason="RP Search")
-        msg = await webhook.send(
-            content="@here",
-            allowed_mentions=AllowedMentions(everyone=True),
-            embed=embed,
-            view=RPThreadManage(self.bot, self.thread, member),
-            username=member.display_name,
-            avatar_url=member.display_avatar.url,
-            wait=True,
-            thread=self.thread,
-        )
-        self.cool_down[member.id] = utcnow()
-        self.role_cool_down[self.thread.id] = utcnow()
-        self.last_claimer[self.thread.id] = member.id
-        async with self.bot.database() as db:
-            await db.execute(
-                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
-                msg.id,
-                member.id,
-                self.thread.id,
-                member.guild.id,
-            )
-            await followup.send(
-                content="Ping has been done successfully.",
-                ephemeral=True,
-            )
+        await resp.send_modal(RPModal(bot=self.bot, cool_down=self.cool_down, role_cool_down=self.role_cool_down, ))
 
     @button(
         label="Enable Pings",

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from asyncio import Future, get_running_loop
 from typing import Iterable
 
 from discord import (
@@ -27,11 +26,7 @@ from discord.ui import Button, InputText, Modal, View, button
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.utils.functions import yaml_handler
@@ -100,16 +95,7 @@ class MovepoolModal(Modal):
                 value=", ".join(data.get("event", [])),
             )
         )
-        loop = get_running_loop()
-        self._stopped: Future[bool] = loop.create_future()
         self.oc = oc
-
-    def stop(self) -> None:
-        if not self._stopped.done():
-            self._stopped.set_result(True)
-
-    async def wait(self) -> bool:
-        return await self._stopped
 
     async def callback(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
