@@ -381,7 +381,7 @@ class SubmissionView(View):
                     item
                     for item in choice.channels
                     if (
-                        "-ooc" not in item.name
+                        "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in item.name
                         and isinstance(item, TextChannel)
                     )
                 ],
