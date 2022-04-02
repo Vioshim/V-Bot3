@@ -71,10 +71,10 @@ class CustomHelp(HelpCommand):
                 title, description values
             """
             cog, commands = item
-            cog_name = getattr(cog, "qualified_name", "No category")
-            text_signatures = "\n".join(
-                self.get_command_signature(x) for x in commands if isinstance(x, Command)
-            ) or "No Commands"
+            cog_name = getattr(cog, "qualified_name", "No Category")
+            commands = filter(lambda x: isinstance(x, Command), commands)
+            commands = map(self.get_command_signature, commands)
+            text_signatures = "\n".join(commands) or "No Commands"
             return cog_name, text_signatures
 
         await view.send()
