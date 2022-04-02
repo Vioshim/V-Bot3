@@ -159,6 +159,7 @@ class TemplateView(View):
         text = dump(info, sort_keys=False)
         await self.target.edit_original_message(
             content=f"```yaml\n{text}\n```",
+            embed=None,
             view=None,
         )
         await resp.pong()
@@ -177,7 +178,7 @@ class TemplateView(View):
                 f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
             )
 
-        await self.target.edit_original_message(content=content, view=None)
+        await self.target.edit_original_message(content=content, embed=None, view=None)
         await resp.pong()
         self.stop()
 
