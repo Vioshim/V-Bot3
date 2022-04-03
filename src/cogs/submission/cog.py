@@ -1319,7 +1319,7 @@ class Submission(Cog):
             and tupper.status == Status.online
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
-            and not message.channel.name.endswith("-ooc")
+            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
         ):
             await self.on_message_proxy(message)
 
