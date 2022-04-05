@@ -1247,17 +1247,14 @@ class Submission(Cog):
             else:
                 return
 
-        former_channel = message.guild.get_channel(oc.location)
-
-        if former_channel != message.channel:
+        if oc.location != message.channel.id:
             async with self.bot.database() as db:
                 oc.location = message.channel.id
                 await oc.upsert(db)
 
         if (
-            former_channel
-            and len([x for x in self.ocs.values() if x.location == oc.location])
-            == 0
+            (former_channel := message.guild.get_channel(oc.location))
+            and not [x for x in self.ocs.values() if x.location == oc.location]
             and former_channel != channel
         ):
             await self.unclaiming(former_channel)
