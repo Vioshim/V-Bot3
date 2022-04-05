@@ -778,9 +778,7 @@ class Submission(Cog):
         if thread.archived:
             await thread.edit(archived=False)
         try:
-            await self.oc_list_webhook.edit_message(
-                oc.id, embed=embed, thread=thread
-            )
+            await self.oc_list_webhook.edit_message(oc.id, embed=embed, thread=thread,)
         except NotFound:
             if member := self.oc_list_webhook.guild.get_member(oc.author):
                 await self.register_oc(member, oc)
@@ -1252,10 +1250,11 @@ class Submission(Cog):
 
         former_channel = message.guild.get_channel(oc.location)
 
-        async with self.bot.database() as db:
-            oc.location = message.channel.id
-            await self.oc_update(oc)
-            await oc.upsert(db)
+        if former_channel != message.channel:
+            async with self.bot.database() as db:
+                oc.location = message.channel.id
+                await self.oc_update(oc)
+                await oc.upsert(db)
 
         if (
             former_channel
