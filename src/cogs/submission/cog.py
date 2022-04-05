@@ -1019,7 +1019,7 @@ class Submission(Cog):
         if self.ready:
             return
 
-        self.oc_list_webhook = await self.bot.fetch_webhook(919280056558317658)
+        self.oc_list_webhook = await self.bot.webhook(919277769735680050)
         async with self.bot.database() as db:
             await self.load_characters(db)
             await self.load_missions(db)
