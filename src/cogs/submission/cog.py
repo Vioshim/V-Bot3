@@ -1252,7 +1252,6 @@ class Submission(Cog):
         if former_channel != message.channel:
             async with self.bot.database() as db:
                 oc.location = message.channel.id
-                await self.oc_update(oc)
                 await oc.upsert(db)
 
         if (
