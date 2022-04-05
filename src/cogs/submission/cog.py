@@ -408,7 +408,6 @@ class Submission(Cog):
                     oc.id,
                 )
                 oc.location = None
-                await self.oc_update(oc)
 
     async def list_update(
         self,
