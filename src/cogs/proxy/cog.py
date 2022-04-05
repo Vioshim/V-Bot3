@@ -292,9 +292,7 @@ class Proxy(Cog):
                 elif emoji == "\N{BLACK QUESTION MARK ORNAMENT}":
                     await message.clear_reaction(emoji=emoji)
                     if user := guild.get_member(data):
-                        view = View(
-                            Button(label="Jump URL", url=message.jump_url)
-                        )
+                        view = View(Button(label="Jump URL", url=message.jump_url))
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)

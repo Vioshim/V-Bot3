@@ -241,9 +241,7 @@ class Simple(Basic):
             amount = self._entries_per_page * self._pos
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
-                self.embed.add_field(
-                    name=name, value=value, inline=self._inline
-                )
+                self.embed.add_field(name=name, value=value, inline=self._inline)
 
     async def edit(
         self,
@@ -395,9 +393,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_last(btn, interaction)
         if not resp.is_done():
-            return await self.edit(
-                page=len(self.values[:: self._entries_per_page]) - 1
-            )
+            return await self.edit(page=len(self.values[:: self._entries_per_page]) - 1)
 
     async def custom_previous(
         self,

@@ -1257,9 +1257,7 @@ class VariantCharacter(Character):
                 species.name = variant
                 data["species"] = species
                 mon = VariantCharacter(**data)
-                mon.species.movepool = await Movepool.fakemon_fetch(
-                    connection, mon.id
-                )
+                mon.species.movepool = await Movepool.fakemon_fetch(connection, mon.id)
                 await mon.retrieve(connection)
                 characters.append(mon)
 
@@ -1700,9 +1698,7 @@ def oc_process(**kwargs) -> Type[Character]:
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop(
-            "movepool", dict(event=data.get("moveset", set()))
-        ):
+        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1753,10 +1749,7 @@ def doc_convert(doc: Document) -> dict[str, Any]:
     """
 
     content_values: list[str] = [
-        cell.text
-        for table in doc.tables
-        for row in table.rows
-        for cell in row.cells
+        cell.text for table in doc.tables for row in table.rows for cell in row.cells
     ]
 
     text = [

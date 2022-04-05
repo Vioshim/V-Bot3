@@ -160,9 +160,7 @@ class PingBump(View):
                 "Alright, you won't get notified", ephemeral=True
             )
         self.mentions.add(inter.user)
-        return await resp.send_message(
-            "Alright, you will get notified", ephemeral=True
-        )
+        return await resp.send_message("Alright, you will get notified", ephemeral=True)
 
     async def on_timeout(self) -> None:
         text = f"**Bump Reminder (Prefix is {self.data.prefix}):**\n"

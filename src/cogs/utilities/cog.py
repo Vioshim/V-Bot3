@@ -92,9 +92,7 @@ class Utilities(Cog):
 
         line = stream.readline()
         if "zlib" not in line:
-            raise RuntimeError(
-                "Invalid objects.inv file, not z-lib compatible."
-            )
+            raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
         entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():

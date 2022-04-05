@@ -77,9 +77,7 @@ class InviteView(View):
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         if not interaction.user.guild_permissions.administrator:
-            await resp.send_message(
-                "You are not an administrator", ephemeral=True
-            )
+            await resp.send_message("You are not an administrator", ephemeral=True)
             return False
         return True
 
@@ -231,9 +229,7 @@ class Inviter(Cog):
                     generator.set_footer(text=choice)
                     data.setdefault(choice, set())
                     data[choice].add(message)
-                    if partnered_role := get(
-                        author.guild.roles, name="Partners"
-                    ):
+                    if partnered_role := get(author.guild.roles, name="Partners"):
                         await author.add_roles(partnered_role)
                 return
 

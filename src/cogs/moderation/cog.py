@@ -94,9 +94,7 @@ class Meeting(View):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         if member == self.reporter:
-            await resp.send_message(
-                "You are the one reporting.", ephemeral=True
-            )
+            await resp.send_message("You are the one reporting.", ephemeral=True)
             return False
         elif member == self.imposter:
             await resp.send_message("You are the one reported.", ephemeral=True)
@@ -308,9 +306,7 @@ class Moderation(Cog):
     async def report(
         self,
         ctx: ApplicationContext,
-        text: Option(
-            str, description="Message to be sent to staff", required=True
-        ),
+        text: Option(str, description="Message to be sent to staff", required=True),
         anonymous: Option(
             bool,
             description="If you want staff to know you reported it.",
@@ -397,9 +393,7 @@ class Moderation(Cog):
         if reference := message.reference:
             with suppress(DiscordException):
                 if not (msg := message.reference.resolved):
-                    msg = await message.channel.fetch_message(
-                        reference.message_id
-                    )
+                    msg = await message.channel.fetch_message(reference.message_id)
                 mentioned_users.append(msg.author)
 
         mentioned = set(afk_role.members) & set(mentioned_users)
@@ -440,9 +434,7 @@ class Moderation(Cog):
         async with ctx.typing():
             await ctx.message.delete()
             deleted = await ctx.channel.purge(limit=amount)
-        await ctx.channel.send(
-            f"Deleted {len(deleted)} message(s)", delete_after=3
-        )
+        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="bot")
     @has_guild_permissions(manage_messages=True)
@@ -459,9 +451,7 @@ class Moderation(Cog):
             deleted = await ctx.channel.purge(
                 limit=amount, check=lambda m: m.author.bot
             )
-        await ctx.channel.send(
-            f"Deleted {len(deleted)} message(s)", delete_after=3
-        )
+        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="user")
     @has_guild_permissions(manage_messages=True)
@@ -573,9 +563,7 @@ class Moderation(Cog):
             )
             return
         with suppress(DiscordException):
-            await member.send(
-                f"Kicked from {ctx.guild} by the reason: {reason}"
-            )
+            await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
         await member.kick(
             reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}"
@@ -696,9 +684,7 @@ class Moderation(Cog):
                 user=user,
                 reason=f"{user.display_name} was unbanned by {ctx.author} ({ctx.author.id}). Reason: {reason}",
             )
-            await ctx.send(
-                f"Unbanned {user} for the reason: {reason}", delete_after=3
-            )
+            await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
         else:
             await ctx.reply("Unable to retrieve the user.")
         await ctx.message.delete()

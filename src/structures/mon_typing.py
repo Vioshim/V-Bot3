@@ -384,9 +384,7 @@ class TypingDecoder(JSONDecoder):
             if emoji := dct.get("emoji", ""):
                 dct["emoji"] = PartialEmoji.from_str(emoji)
             if chart := dct.get("chart", {}):
-                dct["chart"] = frozendict(
-                    {int(k): float(v) for k, v in chart.items()}
-                )
+                dct["chart"] = frozendict({int(k): float(v) for k, v in chart.items()})
             return Typing(**dct)
         return dct
 

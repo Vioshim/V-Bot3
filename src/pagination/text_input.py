@@ -62,9 +62,7 @@ class ModernInput(Basic):
         if input_text:
             self.embed.title = input_text.label or self.embed.title
             self.embed.description = (
-                input_text.value
-                or input_text.placeholder
-                or self.embed.description
+                input_text.value or input_text.placeholder or self.embed.description
             )
             self.empty.disabled = input_text.required
         else:
@@ -83,9 +81,7 @@ class ModernInput(Basic):
         data["input_text"] = input_text = InputText(**kwargs)
         aux = ModernInput(**data)
         embed = aux.embed
-        embed.description = (
-            input_text.value or placeholder or self.embed.description
-        )
+        embed.description = input_text.value or placeholder or self.embed.description
         try:
             if origin:
                 if isinstance(origin, Interaction):
@@ -132,7 +128,9 @@ class ModernInput(Basic):
             view=None,
         )
         try:
-            message: Message = await self.bot.wait_for("message", check=text_check(interaction))
+            message: Message = await self.bot.wait_for(
+                "message", check=text_check(interaction)
+            )
             self.text = message.content
             with suppress(DiscordException):
                 await message.delete()

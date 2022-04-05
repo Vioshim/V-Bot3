@@ -55,9 +55,7 @@ def discord_url_msg(message: Message):
 
     content: str = message.content or ""
 
-    if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(
-        content
-    ):
+    if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(content):
         data = match.groupdict()
         channel_id = data.get("channel_id")
         if channel_id is None:
@@ -274,9 +272,7 @@ def float_check(data: str, a: float = None, b: float = None) -> Optional[float]:
     try:
         value = float(data)
     except ValueError:
-        text: str = "".join(
-            char for char in str(data) if char.isdigit() or char == "."
-        )
+        text: str = "".join(char for char in str(data) if char.isdigit() or char == ".")
         if text.count(".") <= 1:
             value = float(text)
     finally:

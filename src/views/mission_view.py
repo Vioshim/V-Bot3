@@ -145,9 +145,7 @@ class MissionView(View):
                     btn.disabled = True
                 await interaction.message.edit(embed=embed, view=self)
 
-                thread: Thread = await self.bot.fetch_channel(
-                    self.mission.msg_id
-                )
+                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
                 await thread.add_user(member)
                 await thread.send(
                     f"{member} joined with {choice.name} `{choice!r}` as character for this mission.",
@@ -170,9 +168,7 @@ class MissionView(View):
             async with self.bot.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
-                thread: Thread = await self.bot.fetch_channel(
-                    self.mission.msg_id
-                )
+                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
                 await thread.edit(
                     archived=False,
                     locked=True,

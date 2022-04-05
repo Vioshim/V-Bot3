@@ -127,9 +127,7 @@ class Species(metaclass=ABCMeta):
 
     @property
     def species_evolves_to(self) -> list[Species]:
-        return [
-            mon for item in self.evolves_to if (mon := Species.from_ID(item))
-        ]
+        return [mon for item in self.evolves_to if (mon := Species.from_ID(item))]
 
     @property
     def species_evolves_from(self) -> Optional[Species]:
@@ -649,8 +647,7 @@ class Variant(Species):
     @property
     def can_have_special_abilities(self) -> bool:
         return (
-            _BEASTBOOST not in self.abilities
-            and self.base.can_have_special_abilities
+            _BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
         )
 
     @classmethod
@@ -805,10 +802,7 @@ class Fusion(Species):
         types1 = self.mon1.types
         types2 = self.mon2.types
         elements: list[set[Typing]] = []
-        if (
-            self.mon1 in self.mon2.evolves_to
-            or self.mon2 in self.mon1.evolves_to
-        ):
+        if self.mon1 in self.mon2.evolves_to or self.mon2 in self.mon1.evolves_to:
             elements.append(self.mon1.types)
             elements.append(self.mon2.types)
 
@@ -817,13 +811,9 @@ class Fusion(Species):
                 elements.append(items)
             elif common := types1.intersection(types2):
                 uncommon = items - common
-                elements.extend(
-                    frozenset({x, y}) for x in common for y in uncommon
-                )
+                elements.extend(frozenset({x, y}) for x in common for y in uncommon)
             else:
-                elements.extend(
-                    frozenset({x, y}) for x in types1 for y in types2
-                )
+                elements.extend(frozenset({x, y}) for x in types1 for y in types2)
         return elements
 
     @property

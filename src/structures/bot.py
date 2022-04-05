@@ -118,9 +118,7 @@ class CustomBot(Bot):
         :class:`.Webhook`
             The webhook you requested.
         """
-        webhook: Webhook = await super(CustomBot, self).fetch_webhook(
-            webhook_id
-        )
+        webhook: Webhook = await super(CustomBot, self).fetch_webhook(webhook_id)
         if webhook.user == self.user:
             self.webhook_cache[webhook.channel.id] = webhook
         return webhook

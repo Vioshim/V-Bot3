@@ -291,10 +291,7 @@ class Basic(Generic[_M], View):
                         await message.edit(view=None)
                 self.message = None
         finally:
-            if (
-                isinstance(target := self.target, Interaction)
-                and not self.message
-            ):
+            if isinstance(target := self.target, Interaction) and not self.message:
                 with suppress(DiscordException):
                     message = await target.original_message()
                     view = self.from_message(message)

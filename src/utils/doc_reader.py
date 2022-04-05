@@ -28,9 +28,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/documents",
     "https://www.googleapis.com/auth/drive",
 ]
-DOCX_FORMAT = (
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-)
+DOCX_FORMAT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 GOOGLE_FORMAT = "application/vnd.google-apps.document"
 
 

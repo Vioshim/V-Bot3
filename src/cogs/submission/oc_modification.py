@@ -20,11 +20,14 @@ from typing import Optional, Type, Union
 
 from discord import (
     ButtonStyle,
-    DiscordException,
+    Guild,
+    HTTPException,
     InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
+    NotFound,
+    Object,
     SelectOption,
     Thread,
     User,
@@ -36,11 +39,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
@@ -189,9 +188,7 @@ class SPView(Basic):
             silent_mode=True,
         )
 
-        async with view.send(
-            title="Sp.Ability Modify", ephemeral=True
-        ) as elements:
+        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
@@ -529,9 +526,7 @@ class BackstoryMod(Mod):
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
         backstory = (
-            oc.backstory[:4000]
-            if oc.backstory
-            else "No backstory was provided."
+            oc.backstory[:4000] if oc.backstory else "No backstory was provided."
         )
         handler = text_view.handle(
             label="Write the character's Backstory.",
@@ -592,11 +587,7 @@ class ExtraMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
-        extra = (
-            oc.extra[:4000]
-            if oc.extra
-            else "No Extra Information was provided."
-        )
+        extra = oc.extra[:4000] if oc.extra else "No Extra Information was provided."
         handler = text_view.handle(
             label="Write the character's Extra Information.",
             style=InputTextStyle.paragraph,
@@ -1080,9 +1071,7 @@ class DevolutionMod(Mod):
 
         oc.species = species
 
-        oc.moveset &= set(species.total_movepool()) & set(
-            current.total_movepool()
-        )
+        oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
 
         default_image = oc.default_image or oc.image
 
@@ -1152,9 +1141,7 @@ class FusionMod(Mod):
 
         items = [oc.species]
         items.extend(oc.species.species_evolves_to)
-        values = set(
-            Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2)
-        )
+        values = set(Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2))
 
         view = ComplexInput(
             bot=bot,
@@ -1393,34 +1380,32 @@ class ModifyView(View):
                     self.oc.name,
                 )
                 modifying |= result
-
+        webhook = await self.bot.webhook(919277769735680050)
+        guild: Guild = webhook.guild
+        embed = self.oc.embed
+        embed.set_image(url="attachment://image.png")
+        kwargs = dict(embed=embed, thread=Object(id=self.oc.thread))
+        if modifying and (file := await self.bot.get_file(self.oc.generated_image)):
+            kwargs["attachments"] = []
+            kwargs["file"] = file
+        msg = None
         try:
-            webhook = await self.bot.webhook(919277769735680050)
-            thread: Thread = await self.bot.fetch_channel(self.oc.thread)
-            await thread.edit(archived=False)
-            embed = self.oc.embed
-            embed.set_image(url="attachment://image.png")
-            kwargs = dict(embed=embed, thread=thread)
-            if modifying and (
-                file := await self.bot.get_file(self.oc.generated_image)
-            ):
-                kwargs["attachments"] = []
-                kwargs["file"] = file
-            msg = await webhook.edit_message(self.oc.id, **kwargs)
-            self.oc.image = msg.embeds[0].image.url
-            async with self.bot.database() as db:
-                await self.oc.update(db)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error at updating %s's %s named %s, will re-register",
-                str(self.member),
-                repr(self.oc),
-                self.oc.name,
-                exc_info=e,
-            )
+            try:
+                msg = await webhook.edit_message(self.oc.id, **kwargs)
+            except HTTPException:
+                if not (thread := guild.get_thread(self.oc.thread)):
+                    thread: Thread = await self.bot.fetch_channel(self.oc.thread)
+                await thread.edit(archived=False)
+                msg = await webhook.edit_message(self.oc.id, **kwargs)
+        except NotFound:
             cog = self.bot.get_cog("Submission")
             await cog.registration(ctx=ctx, oc=self.oc)
-        self.stop()
+        finally:
+            if msg:
+                self.oc.image = msg.embeds[0].image.url
+                async with self.bot.database() as db:
+                    await self.oc.update(db)
+            self.stop()
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, _: Button, ctx: Interaction):
@@ -1432,12 +1417,16 @@ class ModifyView(View):
     async def delete(self, _: Button, ctx: Interaction):
         await self.target.edit_original_message(view=None)
         webhook = await self.bot.webhook(919277769735680050)
+        guild: Guild = webhook.guild
         try:
-            thread: Thread = await self.bot.fetch_channel(self.oc.thread)
-            if thread.archived:
+            try:
+                await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
+            except HTTPException:
+                if not (thread := guild.get_thread(self.oc.thread)):
+                    thread: Thread = await guild.fetch_channel(self.oc.thread)
                 await thread.edit(archived=False)
-            await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
-        except DiscordException:
+                await webhook.delete_message(self.oc.id, thread_id=thread.id)
+        except NotFound:
             cog = self.bot.get_cog("Submission")
             cog.ocs.pop(self.oc.id, None)
             cog.rpers.setdefault(self.oc.author, {})
@@ -1450,5 +1439,6 @@ class ModifyView(View):
                     self.oc.url or "None",
                 )
                 await self.oc.delete(db)
-        await ctx.followup.send("Character Has been Deleted", ephemeral=True)
-        return self.stop()
+        finally:
+            await ctx.followup.send("Character Has been Deleted", ephemeral=True)
+            self.stop()

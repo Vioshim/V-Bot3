@@ -168,9 +168,7 @@ def species_autocomplete(
     if move_id and (move := Move.from_ID(move_id)):
         mons = [i for i in mons if move in i.movepool]
 
-    options = {
-        item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
-    }
+    options = {item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)}
 
     return [
         OptionChoice(name=k, value=v)

@@ -128,9 +128,7 @@ def oc_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
         values = [OptionChoice(item, items[item]) for item in data]
     else:
         values = [
-            OptionChoice(oc.name, str(oc.id))
-            for oc in ocs
-            if oc.name.startswith(text)
+            OptionChoice(oc.name, str(oc.id)) for oc in ocs if oc.name.startswith(text)
         ]
 
     values.sort(key=lambda x: x.name)
@@ -226,9 +224,7 @@ class Submission(Cog):
         guild_ids=[719343092963999804],
         name="Read Abilities",
     )
-    async def abilities_checker(
-        self, ctx: ApplicationContext, message: Message
-    ):
+    async def abilities_checker(self, ctx: ApplicationContext, message: Message):
         await ctx.defer(ephemeral=True)
         abilities: list[Ability | SpAbility] = []
         if oc := self.ocs.get(message.id):
@@ -345,9 +341,7 @@ class Submission(Cog):
                 timestamp=utcnow(),
             )
             embed.set_image(url=REGISTERED_IMG)
-            embed.set_author(
-                name=author.display_name, icon_url=author.avatar.url
-            )
+            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
@@ -370,9 +364,7 @@ class Submission(Cog):
                 await member.send(embed=embed, files=files, view=view)
             await ctx.send_followup("User has been registered", ephemeral=True)
         else:
-            await ctx.send_followup(
-                "User is already registered", ephemeral=True
-            )
+            await ctx.send_followup("User is already registered", ephemeral=True)
 
     async def unclaiming(
         self,
@@ -397,9 +389,7 @@ class Submission(Cog):
             self.data_msg[channel.id] = m
 
         async with self.bot.database() as conn:
-            for oc in filter(
-                lambda x: x.location == channel.id, self.ocs.values()
-            ):
+            for oc in filter(lambda x: x.location == channel.id, self.ocs.values()):
                 await conn.execute(
                     """--sql
                     UPDATE CHARACTER
@@ -410,70 +400,68 @@ class Submission(Cog):
                 )
                 oc.location = None
 
-    async def list_update(
-        self,
-        member: Member | User,
-    ):
+    async def list_update(self, member: Object):
         """This function updates an user's character list message
 
         Parameters
         ----------
-        member : Member | User
+        member : Object
             User to update list
         """
         if not self.ready:
             return
-        if oc_list := self.oc_list.get(member.id, None):
-            try:
-                view = RPView(self.bot, member.id, self.oc_list)
-                await self.oc_list_webhook.edit_message(
-                    oc_list, embed=None, view=view
-                )
-                return
-            except DiscordException:
-                with suppress(DiscordException):
-                    thread = await self.bot.fetch_channel(oc_list)
-                    await thread.delete(
-                        reason="Former OC List Message was removed."
-                    )
-        message: WebhookMessage = await self.oc_list_webhook.send(
-            content=member.mention,
-            wait=True,
-            allowed_mentions=AllowedMentions(users=True),
-        )
-        thread = await message.create_thread(name=f"OCs⎱{member.id}")
-        self.oc_list[member.id] = thread.id
-        if isinstance(member, Member):
-            await thread.add_user(member)
+        if isinstance(member, int):
+            member = Object(id=member)
         view = RPView(self.bot, member.id, self.oc_list)
-        await message.edit(view=view)
+        if oc_list := self.oc_list.get(member.id):
+            try:
+                await self.oc_list_webhook.edit_message(oc_list, embed=None, view=view)
+            except NotFound:
+                oc_list = None
 
-    async def register_oc(self, member: Member, oc: Character):
-        await self.list_update(member)
+        if not oc_list:
+            message: WebhookMessage = await self.oc_list_webhook.send(
+                content=f"<@{member.id}>",
+                wait=True,
+                allowed_mentions=AllowedMentions(users=True),
+            )
+            thread = await message.create_thread(name=f"OCs⎱{member.id}")
+            self.oc_list[member.id] = thread.id
+            if user := thread.guild.get_member(member.id):
+                await thread.add_user(user)
+            await message.edit(view=view)
+
+    async def register_oc(self, oc: Type[Character]):
+        member = Object(id=oc.author)
         thread_id = self.oc_list[member.id]
         oc.thread = thread_id
-        thread: Thread = await self.bot.fetch_channel(thread_id)
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
-            embed: Embed = oc.embed
-            embed.set_image(url=f"attachment://{file.filename}")
-            msg_oc = await self.oc_list_webhook.send(
-                content=member.mention,
-                embed=embed,
-                file=file,
-                thread=thread,
-                allowed_mentions=AllowedMentions(users=True),
-                wait=True,
-            )
+        guild: Guild = self.bot.get_guild(oc.server)
+        user = guild.get_member(member.id) or member
+        embed: Embed = oc.embed
+        embed.set_image(url="attachment://image.png")
+        kwargs = dict(
+            content=f"<@{user.id}>",
+            embed=embed,
+            thread=Object(id=oc.thread),
+            allowed_mentions=AllowedMentions(users=True),
+        )
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+            kwargs["file"] = file
+            try:
+                msg_oc = await self.oc_list_webhook.send(**kwargs, wait=True)
+            except HTTPException:
+                await self.list_update(member)
+                kwargs["thread"] = Object(id=self.oc_list[member.id])
+                msg_oc = await self.oc_list_webhook.send(**kwargs, wait=True)
+
             oc.id = msg_oc.id
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(member.id, {})
-            self.rpers[member.id][oc.id] = oc
+            self.rpers.setdefault(user.id, {})
+            self.rpers[user.id][oc.id] = oc
             self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character has been registered! > %s > %s > %s",
-                str(member),
+                str(user),
                 repr(oc),
                 oc.url or "Manual",
             )
@@ -503,9 +491,7 @@ class Submission(Cog):
             if isinstance(ctx, Interaction):
                 resp: InteractionResponse = ctx.response
                 if not resp.is_done():
-                    return await ctx.response.send_message(
-                        content=text, ephemeral=True
-                    )
+                    return await ctx.response.send_message(content=text, ephemeral=True)
                 return await ctx.followup.send(content=text, ephemeral=True)
             else:
                 return await ctx.reply(content=text, delete_after=5)
@@ -607,9 +593,7 @@ class Submission(Cog):
                 bot=self.bot,
                 member=user,
                 values=(
-                    Ability.all()
-                    if oc.any_ability_at_first
-                    else oc.species.abilities
+                    Ability.all() if oc.any_ability_at_first else oc.species.abilities
                 ),
                 target=ctx,
                 max_values=max_ab,
@@ -623,9 +607,7 @@ class Submission(Cog):
                     return
                 oc.abilities = frozenset(abilities)
         if len(oc.abilities) > max_ab:
-            await send(
-                f"Max Amount of Abilities for the current Species is {max_ab}"
-            )
+            await send(f"Max Amount of Abilities for the current Species is {max_ab}")
             return
         elif not oc.any_ability_at_first and (
             ability_errors := ", ".join(
@@ -683,9 +665,7 @@ class Submission(Cog):
             if move_errors := ", ".join(
                 move.name for move in oc.moveset if move not in moves_movepool
             ):
-                await send(
-                    f"the moves [{move_errors}] were not found in the movepool"
-                )
+                await send(f"the moves [{move_errors}] were not found in the movepool")
                 return
         elif len(oc.moveset) > 6:
             await send("Max amount of moves in a pokemon is 6.")
@@ -767,7 +747,7 @@ class Submission(Cog):
                 return
             oc.image = image
 
-        await self.register_oc(member, oc)
+        await self.register_oc(oc)
 
     async def oc_update(self, oc: Type[Character]):
         embed: Embed = oc.embed
@@ -783,16 +763,14 @@ class Submission(Cog):
                 guild = self.bot.get_guild(oc.server)
                 if not (thread := guild.get_thread(oc.thread)):
                     thread: Thread = await self.bot.fetch_channel(oc.thread)
-                if thread.archived:
-                    await thread.edit(archived=False)
+                await thread.edit(archived=False)
                 await self.oc_list_webhook.edit_message(
                     oc.id,
                     embed=embed,
                     thread=thread,
                 )
         except NotFound:
-            if member := self.oc_list_webhook.guild.get_member(oc.author):
-                await self.register_oc(member, oc)
+            await self.register_oc(oc)
 
     @slash_command(
         name="ocs",
@@ -848,9 +826,7 @@ class Submission(Cog):
             )
             async with view.send(ephemeral=True):
                 if member == ctx.author:
-                    self.bot.logger.info(
-                        "User %s is reading their OCs", str(member)
-                    )
+                    self.bot.logger.info("User %s is reading their OCs", str(member))
                 else:
                     self.bot.logger.info(
                         "User %s is reading the OCs of %s",
@@ -936,9 +912,7 @@ class Submission(Cog):
                 oc_item["character"],
                 oc_item["assigned_at"],
             )
-            if (mission := missions.get(mission_id)) and (
-                oc := self.ocs.get(oc_id)
-            ):
+            if (mission := missions.get(mission_id)) and (oc := self.ocs.get(oc_id)):
                 mission.ocs |= {oc.id}
                 self.mission_claimers.setdefault(mission.id, set())
                 self.mission_claimers[mission.id].add(oc.id)
@@ -974,18 +948,14 @@ class Submission(Cog):
                     allowed_mentions=AllowedMentions(users=True),
                 )
                 mission.msg_id = msg.id
-                thread = await msg.create_thread(
-                    name=f"Mission {mission.id:03d}"
-                )
+                thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
                 await thread.add_user(member)
                 ocs = set(mission.ocs)
                 for oc_id in mission.ocs:
                     if oc := self.ocs.get(oc_id):
                         await thread.send(
                             f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
-                            view=View(
-                                Button(label="Jump URL", url=oc.jump_url)
-                            ),
+                            view=View(Button(label="Jump URL", url=oc.jump_url)),
                         )
                     else:
                         ocs.remove(oc_id)
@@ -1139,9 +1109,7 @@ class Submission(Cog):
             url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
             return doc, url
 
-    async def bio_word_doc_parser(
-        self, message: Message
-    ) -> Optional[DocumentType]:
+    async def bio_word_doc_parser(self, message: Message) -> Optional[DocumentType]:
         if attachments := message.attachments:
             with suppress(Exception):
                 file = await attachments[0].to_file()
@@ -1231,9 +1199,7 @@ class Submission(Cog):
                     await self.submission_handler(message, **msg_data)
                     return
         except Exception as e:
-            self.bot.logger.exception(
-                "Exception processing character", exc_info=e
-            )
+            self.bot.logger.exception("Exception processing character", exc_info=e)
             await message.reply(str(e), delete_after=10)
         finally:
             self.ignore -= {message.author.id}
@@ -1245,16 +1211,12 @@ class Submission(Cog):
         if "Npc" in author or "Narrator" in author:
             return
 
-        ocs = {
-            item.name: item for item in self.rpers.get(member_id, {}).values()
-        }
+        ocs = {item.name: item for item in self.rpers.get(member_id, {}).values()}
 
         if not (oc := ocs.get(author)):
             if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
                 oc = ocs[items[0]]
-            elif ocs := [
-                v for k, v in ocs.items() if k in author or author in k
-            ]:
+            elif ocs := [v for k, v in ocs.items() if k in author or author in k]:
                 oc = ocs[0]
             else:
                 return
@@ -1273,9 +1235,7 @@ class Submission(Cog):
             await self.unclaiming(former_channel)
 
         if isinstance(channel, TextChannel):
-            scheduler = await self.bot.scheduler.get_schedule(
-                f"RP[{channel.id}]"
-            )
+            scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
             scheduler.trigger = IntervalTrigger(days=3)
 
     async def on_message_proxy(self, message: Message):
@@ -1326,7 +1286,8 @@ class Submission(Cog):
             and tupper.status == Status.online
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
-            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
+            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
+            not in message.channel.name
         ):
             await self.on_message_proxy(message)
 

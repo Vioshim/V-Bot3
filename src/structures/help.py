@@ -179,9 +179,7 @@ class CustomHelp(HelpCommand):
         view.embed.description = "\n".join(commands) or "> No Commands"
 
         @view.set_parser
-        def cog_parser(
-            item: tuple[str, Callable[[Any], Any]]
-        ) -> tuple[str, str]:
+        def cog_parser(item: tuple[str, Callable[[Any], Any]]) -> tuple[str, str]:
             """Parser for cogs
 
             Attributes

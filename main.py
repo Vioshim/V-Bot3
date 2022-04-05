@@ -95,20 +95,13 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
         path = Path("src/cogs")
         path.resolve()
         for cog in path.glob("*/cog.py"):
-            item = (
-                str(cog)
-                .removesuffix(".py")
-                .replace("\\", ".")
-                .replace("/", ".")
-            )
+            item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
             bot.load_extension(item)
             logger.info("Successfully loaded %s", item)
         await bot.login(getenv("DISCORD_TOKEN"))
         await bot.connect()
     except Exception as e:
-        logger.critical(
-            "An exception occurred while trying to connect", exc_info=e
-        )
+        logger.critical("An exception occurred while trying to connect", exc_info=e)
 
 
 if __name__ == "__main__":

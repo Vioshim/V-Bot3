@@ -62,8 +62,7 @@ URL_DOMAIN_MATCH = compile(
     r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
 )
 REGEX_URL = compile(
-    r"http[s]?://"
-    r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
+    r"http[s]?://" r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+"
 )
 DISCORD_MSG_URL = compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"

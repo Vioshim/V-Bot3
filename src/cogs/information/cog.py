@@ -389,9 +389,7 @@ class Information(Cog):
             timestamp=utcnow(),
         )
         if roles := member.roles[:0:-1]:
-            embed.description = "\n".join(
-                f"> **•** {role.mention}" for role in roles
-            )
+            embed.description = "\n".join(f"> **•** {role.mention}" for role in roles)
         if icon := guild.icon:
             embed.set_footer(text=f"ID: {member.id}", icon_url=icon.url)
         else:
@@ -528,8 +526,7 @@ class Information(Cog):
         if messages := [
             message
             for message in payload.cached_messages
-            if message.id not in self.bot.msg_cache
-            and message.webhook_id != w.id
+            if message.id not in self.bot.msg_cache and message.webhook_id != w.id
         ]:
             msg = messages[0]
             fp = StringIO()
@@ -560,9 +557,7 @@ class Information(Cog):
                     info = await data.json()
                     result = info["results"][0]
                     media = result["media"][0]
-                    title: str = (
-                        result["title"] or result["content_description"]
-                    )
+                    title: str = result["title"] or result["content_description"]
                     url: str = result["itemurl"]
                     image: str = media["gif"]["url"]
                     return title, url, image
@@ -773,9 +768,7 @@ class Information(Cog):
         if hasattr(ctx.command, "on_error"):
             return
 
-        if (cog := ctx.cog) and cog._get_overridden_method(
-            cog.cog_command_error
-        ):
+        if (cog := ctx.cog) and cog._get_overridden_method(cog.cog_command_error):
             return
 
         if error_cause := error.__cause__:

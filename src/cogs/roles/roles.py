@@ -154,9 +154,7 @@ class PronounRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
@@ -333,9 +331,7 @@ class BasicRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
@@ -451,9 +447,7 @@ class RegionRoles(View):
     async def region(self, sct: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        all_roles = {
-            role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))
-        }
+        all_roles = {role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))}
         spectator: Role = ctx.guild.get_role(957069729741287434)
         if len(sct.values) == 1:
             info = MAP_ELEMENTS2[int(sct.values[0])]
@@ -585,7 +579,6 @@ class RPThreadManage(View):
 
 
 class RPModal(Modal):
-
     def __init__(
         self,
         bot: CustomBot,
@@ -712,7 +705,7 @@ class RPThreadView(View):
                 role_cool_down=self.role_cool_down,
                 last_claimer=self.last_claimer,
                 thread=self.thread,
-                ocs=ocs
+                ocs=ocs,
             )
         )
 

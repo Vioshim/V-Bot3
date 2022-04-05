@@ -176,7 +176,9 @@ class ImageKit:
             extra.append(f"oa-{transparency}")
         if isinstance(alignment, str):
             extra.append(f"otia-{alignment}")
-        if isinstance(padding, Iterable) and (padding_info := "_".join(str(item) for item in padding)):
+        if isinstance(padding, Iterable) and (
+            padding_info := "_".join(str(item) for item in padding)
+        ):
             extra.append(f"otp-{padding_info}")
         if content := ",".join(extra):
             self._media.append(f"{raw},{content}")
