@@ -1247,9 +1247,9 @@ class Submission(Cog):
             else:
                 return
 
-        if oc.location != message.channel.id:
+        if oc.location != channel.id:
             async with self.bot.database() as db:
-                oc.location = message.channel.id
+                oc.location = channel.id
                 await oc.upsert(db)
 
         if (
