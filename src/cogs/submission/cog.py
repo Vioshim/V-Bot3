@@ -773,25 +773,24 @@ class Submission(Cog):
         embed: Embed = oc.embed
         embed.set_image(url="attachment://image.png")
         try:
-            await self.oc_list_webhook.edit_message(
-                oc.id,
-                embed=embed,
-                thread=Object(id=oc.thread),
-            )
-            return
-        except HTTPException:
-            guild = self.bot.get_guild(oc.server)
-            if not (thread := guild.get_thread(oc.thread)):
-                thread: Thread = await self.bot.fetch_channel(oc.thread)
-            if thread.archived:
-                await thread.edit(archived=False)
-            await self.oc_list_webhook.edit_message(
-                oc.id,
-                embed=embed,
-                thread=thread,
-            )
-            return
-        finally:
+            try:
+                await self.oc_list_webhook.edit_message(
+                    oc.id,
+                    embed=embed,
+                    thread=Object(id=oc.thread),
+                )
+            except HTTPException:
+                guild = self.bot.get_guild(oc.server)
+                if not (thread := guild.get_thread(oc.thread)):
+                    thread: Thread = await self.bot.fetch_channel(oc.thread)
+                if thread.archived:
+                    await thread.edit(archived=False)
+                await self.oc_list_webhook.edit_message(
+                    oc.id,
+                    embed=embed,
+                    thread=thread,
+                )
+        except NotFound:
             if member := self.oc_list_webhook.guild.get_member(oc.author):
                 await self.register_oc(member, oc)
 
