@@ -34,7 +34,6 @@ from discord import (
     TextChannel,
     Thread,
     Webhook,
-    app_commands,
 )
 from discord.abc import Messageable
 from discord.ext.commands import Bot
@@ -100,7 +99,6 @@ class CustomBot(Bot):
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
         self.scam_urls: set[str] = set()
         self.webhook_cache: dict[int, Webhook] = {}
-        self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self) -> None:
         await self.load_extension("jishaku")
@@ -110,7 +108,6 @@ class CustomBot(Bot):
             item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
             await self.load_extension(item)
             self.logger.info("Successfully loaded %s", item)
-        await self.tree.sync(guild=719343092963999804)
 
     async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
         """|coro|
