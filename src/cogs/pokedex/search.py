@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from discord import AutocompleteContext, Guild, OptionChoice
+from typing import Optional
+
+from discord import Guild, Interaction
+from discord.app_commands import Choice
+from discord.app_commands.transformers import Transform, Transformer
 
 from src.cogs.submission.cog import Submission
 from src.structures.ability import Ability
-from src.structures.character import Character
+from src.structures.character import Character, FakemonCharacter
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.species import (
@@ -30,42 +34,178 @@ from src.structures.species import (
 from src.utils.functions import fix
 
 
-def move_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
-    text: str = fix(ctx.value or "")
-    return [
-        OptionChoice(name=i.name, value=i.id)
-        for i in Move.all()
-        if text in i.id or i.id in text
-    ]
+class MoveTransformer(Transformer):
+    @classmethod
+    async def transform(cls, _: Interaction, value: Optional[str]):
+        move = Move.from_ID(value)
+        if not move:
+            raise ValueError(f"Move {value!r} Not found.")
+        return move
+
+    @classmethod
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+        text: str = fix(value or "")
+        return [
+            Choice(name=i.name, value=i.id)
+            for i in Move.all()
+            if text in i.id or i.id in text
+        ]
 
 
-def default_species_autocomplete(
-    ctx: AutocompleteContext,
-) -> list[OptionChoice]:
-    text: str = fix(ctx.value or "")
-    return [
-        OptionChoice(name=i.name, value=i.id)
-        for i in Species.all()
-        if text in i.id or i.id in text
-    ]
+MoveArg = Transform[Move, MoveTransformer]
 
 
-def ability_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
-    text: str = fix(ctx.value or "")
-    return [
-        OptionChoice(name=i.name, value=i.id)
-        for i in Ability.all()
-        if text in i.id or i.id in text
-    ]
+class SpeciesTransformer(Transformer):
+    @classmethod
+    async def transform(cls, ctx: Interaction, value: Optional[str]):
+        value = value or ""
+        cog: Submission = ctx.client.get_cog("Submission")
+        if value.isdigit() and (oc := cog.ocs.get(int(value))):
+            return oc
+        mon = Species.from_ID(value.removesuffix("+"))
+        if not mon:
+            raise ValueError(f"Species {value!r} not found")
+        return mon
+
+    @classmethod
+    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+        text: str = fix(value or "")
+        cog: Submission = ctx.client.get_cog("Submission")
+        guild: Guild = ctx.guild
+        kind = ""
+        for item in map(
+            lambda x: Choice(x["name"], x["value"]), ctx.get("options", [])
+        ):
+            if item.name == "kind":
+                kind = item.value
+
+        match fix(kind):
+            case "LEGENDARY":
+                mons = Legendary.all()
+            case "MYTHICAL":
+                mons = Mythical.all()
+            case "UTRABEAST":
+                mons = UltraBeast.all()
+            case "POKEMON":
+                mons = Pokemon.all()
+            case "MEGA":
+                mons = Mega.all()
+            case "CUSTOMMEGA":
+                mons = [
+                    oc
+                    for oc in cog.ocs.values()
+                    if oc.kind == "CUSTOM MEGA" and guild.get_member(oc.author)
+                ]
+            case "FAKEMON":
+                mons = [
+                    oc
+                    for oc in cog.ocs.values()
+                    if oc.kind == "FAKEMON" and guild.get_member(oc.author)
+                ]
+            case "VARIANT":
+                mons = [
+                    oc
+                    for oc in cog.ocs.values()
+                    if oc.kind == "VARIANT" and guild.get_member(oc.author)
+                ]
+            case "FUSION":
+                mons = [
+                    oc
+                    for oc in cog.ocs.values()
+                    if oc.kind == "FUSION" and guild.get_member(oc.author)
+                ]
+            case _:
+                mons = Species.all()
+
+        mons: list[Character | Species] = list(mons)
+
+        items = {x["name"]: x["value"] for x in ctx.get("options", [])}
+
+        for name, value in items.items():
+            if name == "member" and value.isdigit():
+                mons = [i for i in mons if i.author == int(value)]
+            elif name == "location" and value.isdigit():
+                mons = [i for i in mons if i.location == int(value)]
+            elif name == "types" and (mon_type := Typing.from_ID(value)):
+                mons = [i for i in mons if mon_type in i.types]
+            elif name == "abilities" and (ability := Ability.from_ID(value)):
+                mons = [i for i in mons if ability in i.abilities]
+            elif name == "moves" and (move := Move.from_ID(value)):
+                mons = [i for i in mons if move in i.movepool]
+
+        options = {
+            item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
+        }
+
+        return [
+            Choice(name=k, value=v)
+            for k, v in options.items()
+            if v in text or text in v
+        ]
 
 
-def type_autocomplete(ctx: AutocompleteContext):
-    text: str = fix(ctx.value or "")
-    return [
-        OptionChoice(name=i.name, value=str(i))
-        for i in Typing.all()
-        if text in str(i) or str(i) in text
-    ]
+class DefaultSpeciesTransformer(Transformer):
+    @classmethod
+    async def transform(cls, _: Interaction, value: Optional[str]):
+        item = Species.single_deduce(value)
+        if not item:
+            raise ValueError(f"Species {value!r} not found")
+        return item
+
+    @classmethod
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+        text: str = fix(value or "")
+        return [
+            Choice(name=i.name, value=i.id)
+            for i in Species.all()
+            if text in i.id or i.id in text
+        ]
+
+
+SpeciesArg = Transform[Species, SpeciesTransformer]
+DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
+
+
+class AbilityTransformer(Transform):
+    @classmethod
+    async def transform(cls, _: Interaction, value: Optional[str]):
+        item = Ability.deduce(value)
+        if not item:
+            raise ValueError(f"Ability {item!r} not found")
+        return item
+
+    @classmethod
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+        text: str = fix(value or "")
+        return [
+            Choice(name=i.name, value=i.id)
+            for i in Ability.all()
+            if text in i.id or i.id in text
+        ]
+
+
+AbilityArg = Transform[Ability, AbilityTransformer]
+
+
+class TypingTransformer(Transform):
+    @classmethod
+    async def transform(cls, _: Interaction, value: Optional[str]):
+        item = Typing.deduce(value)
+        if not item:
+            raise ValueError(f"Typing {item!r} not found")
+        return item
+
+    @classmethod
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+        text: str = fix(value or "")
+        return [
+            Choice(name=i.name, value=i.id)
+            for i in Typing.all()
+            if text in str(i) or str(i) in text
+        ]
+
+
+TypingArg = Transform[Typing, TypingTransformer]
 
 
 def item_name(mon: Character | Species):
@@ -80,98 +220,33 @@ def item_value(mon: Character | Species):
     return str(mon.species.id)
 
 
-def fakemon_autocomplete(
-    ctx: AutocompleteContext,
-) -> list[OptionChoice]:
-    text: str = fix(ctx.value or "")
-    guild: Guild = ctx.interaction.guild
-    cog: Submission = ctx.bot.get_cog("Submission")
-    mons = [
-        oc
-        for oc in cog.ocs.values()
-        if oc.kind == "FAKEMON" and guild.get_member(oc.author)
-    ]
+class FakemonTransformer(Transformer):
+    @classmethod
+    async def transform(cls, ctx: Interaction, value: Optional[str]):
+        cog: Submission = ctx.client.get_cog("Submission")
+        oc = cog.ocs.get(value)
+        if not oc:
+            raise ValueError(f"Fakemon {value!r} not found.")
+        return oc
 
-    options = {
-        mon.species.name: item_value(mon)
-        for mon in sorted(mons, key=lambda x: x.species.name)
-    }
+    @classmethod
+    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+        text: str = fix(value or "")
+        guild: Guild = ctx.guild
+        cog: Submission = ctx.client.get_cog("Submission")
+        mons = [
+            oc
+            for oc in cog.ocs.values()
+            if oc.kind == "FAKEMON" and guild.get_member(oc.author)
+        ]
 
-    return [
-        OptionChoice(name=k, value=v)
-        for k, v in options.items()
-        if v in text or text in v
-    ]
+        options = {
+            mon.species.name: item_value(mon)
+            for mon in sorted(mons, key=lambda x: x.species.name)
+            if mon.species.name.lower() in text or text in mon.species.name.lower()
+        }
+
+        return [Choice(name=k, value=v) for k, v in options.items()]
 
 
-def species_autocomplete(
-    ctx: AutocompleteContext,
-) -> list[OptionChoice]:
-    text: str = fix(ctx.value or "")
-    cog: Submission = ctx.bot.get_cog("Submission")
-    guild: Guild = ctx.interaction.guild
-    match fix(ctx.options.get("kind", "")):
-        case "LEGENDARY":
-            mons = Legendary.all()
-        case "MYTHICAL":
-            mons = Mythical.all()
-        case "UTRABEAST":
-            mons = UltraBeast.all()
-        case "POKEMON":
-            mons = Pokemon.all()
-        case "MEGA":
-            mons = Mega.all()
-        case "CUSTOMMEGA":
-            mons = [
-                oc
-                for oc in cog.ocs.values()
-                if oc.kind == "CUSTOM MEGA" and guild.get_member(oc.author)
-            ]
-        case "FAKEMON":
-            mons = [
-                oc
-                for oc in cog.ocs.values()
-                if oc.kind == "FAKEMON" and guild.get_member(oc.author)
-            ]
-        case "VARIANT":
-            mons = [
-                oc
-                for oc in cog.ocs.values()
-                if oc.kind == "VARIANT" and guild.get_member(oc.author)
-            ]
-        case "FUSION":
-            mons = [
-                oc
-                for oc in cog.ocs.values()
-                if oc.kind == "FUSION" and guild.get_member(oc.author)
-            ]
-        case _:
-            mons = Species.all()
-
-    mons: list[Character | Species] = list(mons)
-
-    if member_id := ctx.options.get("member"):
-        mons = [i for i in mons if i.author == int(member_id)]
-
-    if location_id := ctx.options.get("location"):
-        mons = [i for i in mons if i.location == int(location_id)]
-
-    mon_type_id = ctx.options.get("types")
-    if mon_type_id and (mon_type := Typing.from_ID(mon_type_id)):
-        mons = [i for i in mons if mon_type in i.types]
-
-    ability_id = ctx.options.get("abilities")
-    if ability_id and (ability := Ability.from_ID(ability_id)):
-        mons = [i for i in mons if ability in i.abilities]
-
-    move_id = ctx.options.get("moves")
-    if move_id and (move := Move.from_ID(move_id)):
-        mons = [i for i in mons if move in i.movepool]
-
-    options = {item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)}
-
-    return [
-        OptionChoice(name=k, value=v)
-        for k, v in options.items()
-        if v in text or text in v
-    ]
+FakemonArg = Transform[FakemonCharacter, FakemonTransformer]

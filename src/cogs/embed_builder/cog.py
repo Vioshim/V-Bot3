@@ -34,18 +34,10 @@ from discord import (
     Webhook,
     WebhookMessage,
 )
-from discord.ext.commands import (
-    Cog,
-    CommandError,
-    MessageConverter,
-    group,
-    has_guild_permissions,
-    is_owner,
-)
+from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import MISSING, utcnow
 
-from src.context import Context
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import RAINBOW, WHITE_BAR
@@ -63,7 +55,7 @@ TIER_FINDER = compile(r"\|tier\|(.*)")
 __all__ = ("EmbedBuilder", "setup")
 
 
-class EmbedBuilder(Cog):
+class EmbedBuilder(commands.Cog):
     """Cog for embed building based on webhooks"""
 
     def __init__(self, bot: CustomBot):
@@ -71,9 +63,9 @@ class EmbedBuilder(Cog):
         self.cache: dict[tuple[int, int], WebhookMessage] = {}
         self.blame: dict[WebhookMessage, tuple[int, int]] = {}
         self.loaded: bool = False
-        self.converter: MessageConverter = MessageConverter()
+        self.converter: commands.MessageConverter = commands.MessageConverter()
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_member_remove(self, member: Member):
         """Removes messages from the user in the current guild
 
@@ -101,7 +93,7 @@ class EmbedBuilder(Cog):
         )
         await message.delete()
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, message: Message):
 
         if not message.guild or message.author.bot or not message.content:
@@ -121,6 +113,14 @@ class EmbedBuilder(Cog):
                 author: User = reference.author
                 name = author.display_name.removeprefix("URL〕")
 
+                view = View()
+                view.add_item(
+                    Button(
+                        label=f"URL Requested by {message.author.display_name}",
+                        url=reference.jump_url,
+                    )
+                )
+
                 await self.webhook_send(
                     message,
                     content=reference.content,
@@ -130,12 +130,7 @@ class EmbedBuilder(Cog):
                     files=[await item.to_file() for item in reference.attachments],
                     username=f"URL〕{name}",
                     avatar_url=author.display_avatar.url,
-                    view=View(
-                        Button(
-                            label=f"URL Requested by {message.author.display_name}",
-                            url=reference.jump_url,
-                        )
-                    ),
+                    view=view,
                 )
         elif message.content.startswith("https://replay.pokemonshowdown.com/"):
             content = message.content.split(" ")[0]
@@ -174,22 +169,24 @@ class EmbedBuilder(Cog):
                         embed.add_field(name=key, value="\n".join(value))
 
                     author = message.author
+                    view = View()
+                    view.add_item(
+                        Button(
+                            label="Watch Replay",
+                            url=content,
+                            emoji="\N{VIDEO CAMERA}",
+                        )
+                    )
 
                     await self.webhook_send(
                         message,
                         embed=embed,
                         username=f"URL〕{author.display_name}",
                         avatar_url=author.display_avatar.url,
-                        view=View(
-                            Button(
-                                label="Watch Replay",
-                                url=content,
-                                emoji="\N{VIDEO CAMERA}",
-                            )
-                        ),
+                        view=view,
                     )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message_delete(self, ctx: Message):
         """Checks if a message got deleted in order to remove it from DB
 
@@ -229,13 +226,13 @@ class EmbedBuilder(Cog):
         self.blame[message] = (author.id, author.guild.id)
 
     @asynccontextmanager
-    async def edit(self, ctx: Context, delete: bool = True):
+    async def edit(self, ctx: commands.Context, delete: bool = True):
         """Functions which edits and embed along its files
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         delete: bool = True
             If this should delete a message
 
@@ -271,23 +268,23 @@ class EmbedBuilder(Cog):
                 if item := self.cache.pop(item_cache, None):
                     del self.blame[item]
 
-    @group(
+    @commands.group(
         name="embed",
         aliases=["e"],
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed(self, ctx: Context):
+    async def embed(self, ctx: commands.Context):
         """Shows stored embed's location
 
         Parameters
         ----------
-        ctx: Context
-            Message's Context
+        ctx: commands.Context
+            Message's commands.Context
 
         Returns
         -------
@@ -315,7 +312,8 @@ class EmbedBuilder(Cog):
                 name = data.channel.name
                 emoji = None
 
-            view = View(Button(label=name, emoji=emoji, url=data.jump_url))
+            view = View()
+            view.add_item(Button(label=name, emoji=emoji, url=data.jump_url))
             await ctx.reply(embed=embed, view=view)
         else:
             await ctx.reply(embed=embed)
@@ -324,14 +322,14 @@ class EmbedBuilder(Cog):
         name="new",
         aliases=["create"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_new(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         title: str = "",
         *,
         description: str = "",
@@ -340,8 +338,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         title: str = ""
             Title of the embed. Defaults to None
         description: str = ""
@@ -382,14 +380,14 @@ class EmbedBuilder(Cog):
         await ctx.message.delete()
 
     @embed.command(name="set")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_set(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         message: Message = None,
     ):
@@ -397,8 +395,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         message: Message
             Provided Message
 
@@ -444,18 +442,18 @@ class EmbedBuilder(Cog):
         name="post",
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed_post(self, ctx: Context):
+    async def embed_post(self, ctx: commands.Context):
         """Posts an embed in another channel
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -477,18 +475,18 @@ class EmbedBuilder(Cog):
             self.write(message, ctx.author)
 
     @embed_post.command(name="raw")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed_post_raw(self, ctx: Context):
+    async def embed_post_raw(self, ctx: commands.Context):
         """Posts an embed in another channel
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -512,14 +510,14 @@ class EmbedBuilder(Cog):
             self.write(message, ctx.author)
 
     @embed.command(name="announce")
-    @is_owner()
-    async def embed_announce(self, ctx: Context):
+    @commands.is_owner()
+    async def embed_announce(self, ctx: commands.Context):
         """Posts an embed in another channel
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -536,18 +534,18 @@ class EmbedBuilder(Cog):
             self.write(message, ctx.author)
 
     @embed.command(name="unset")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed_unset(self, ctx: Context):
+    async def embed_unset(self, ctx: commands.Context):
         """Allows to remove the stored embed
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -555,7 +553,8 @@ class EmbedBuilder(Cog):
         """
         if message := self.cache.pop((ctx.author.id, ctx.guild.id), None):
             del self.blame[message]
-            view = View(Button(label="Jump URL", url=message.jump_url))
+            view = View()
+            view.add_item(Button(label="Jump URL", url=message.jump_url))
             await ctx.reply("Removed stored embed.", view=view)
         else:
             await ctx.reply("No stored embed to remove.")
@@ -564,14 +563,14 @@ class EmbedBuilder(Cog):
         name="title",
         aliases=["t"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_title(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         title: str = "",
     ):
@@ -579,8 +578,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         title: str = ""
             Title of the embed. Defaults to None
 
@@ -595,14 +594,14 @@ class EmbedBuilder(Cog):
         name="description",
         aliases=["desc", "d", "text", "content"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_description(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         description: str = "",
     ):
@@ -610,8 +609,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         description: str = ""
             Description of the embed. Defaults to None
 
@@ -626,14 +625,14 @@ class EmbedBuilder(Cog):
         name="color",
         aliases=["colour"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_color(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         color: Color = None,
     ):
@@ -641,8 +640,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         color: Color = None
             Color of the embed. Defaults to None
 
@@ -658,14 +657,14 @@ class EmbedBuilder(Cog):
         aliases=["date", "time"],
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_timestamp(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         date: AfterDateCall = None,
     ):
@@ -673,8 +672,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         date: datetime = None
             A specified Date. Defaults to None
 
@@ -686,18 +685,18 @@ class EmbedBuilder(Cog):
             embed.timestamp = date or embed.Empty
 
     @embed_timestamp.command(name="now")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed_timestamp_now(self, ctx: Context):
+    async def embed_timestamp_now(self, ctx: commands.Context):
         """Allows to edit the embed's timestamp
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -710,14 +709,14 @@ class EmbedBuilder(Cog):
         name="url",
         aliases=["link"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_url(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         url: str = "",
     ):
@@ -725,8 +724,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         url: str = ""
             Url of the embed. Defaults to None
 
@@ -741,14 +740,14 @@ class EmbedBuilder(Cog):
         name="author",
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_author(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         author: str = "",
     ):
@@ -756,8 +755,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         author: str = ""
             Embed's Author name. Defaults to None
 
@@ -776,14 +775,14 @@ class EmbedBuilder(Cog):
                 embed.remove_author()
 
     @embed_author.command(name="user")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_author_user(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         author: Union[Member, User] = None,
     ):
@@ -791,8 +790,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         author: User
             Discord User
 
@@ -812,14 +811,14 @@ class EmbedBuilder(Cog):
         name="guild",
         aliases=["server"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_author_guild(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         guild: Guild = None,
     ):
@@ -827,8 +826,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         guild: Guild
             Guild. Defaults to Current
 
@@ -848,14 +847,14 @@ class EmbedBuilder(Cog):
         name="url",
         aliases=["link"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_author_url(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         url: str = "",
     ):
@@ -863,8 +862,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         url: str = ""
             URL string
 
@@ -881,14 +880,14 @@ class EmbedBuilder(Cog):
                 )
 
     @embed_author.command(name="icon")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_author_icon(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         icon: Union[Emoji, PartialEmoji, str] = None,
     ):
@@ -896,8 +895,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context (Possible with Attachment or message reference with an Attachment)
+        ctx: commands.Context
+            commands.Context (Possible with Attachment or message reference with an Attachment)
         icon: Union[Emoji, PartialEmoji, str] = None
             Emoji or URL. Defaults to None
 
@@ -935,14 +934,14 @@ class EmbedBuilder(Cog):
         name="footer",
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_footer(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         footer: str = "",
     ):
@@ -950,8 +949,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         footer: str = ""
             Footer's text. Defaults to None
 
@@ -966,14 +965,14 @@ class EmbedBuilder(Cog):
                 embed.remove_footer()
 
     @embed_footer.command(name="user")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_footer_user(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         user: Union[Member, User] = None,
     ):
@@ -981,8 +980,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         user: User
             User as Footer. Defaults to Self
 
@@ -1001,14 +1000,14 @@ class EmbedBuilder(Cog):
         name="guild",
         aliases=["server"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_footer_guild(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         guild: Guild = None,
     ):
@@ -1016,8 +1015,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         guild: Guild
             Guild as Footer. Defaults to Self
 
@@ -1030,14 +1029,14 @@ class EmbedBuilder(Cog):
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
 
     @embed_footer.command(name="icon")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_footer_icon(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         icon: Union[Emoji, PartialEmoji, str] = None,
     ):
@@ -1045,8 +1044,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         icon: Union[Emoji, PartialEmoji, str] = None
             Footer Icon URL. Defaults to None
 
@@ -1100,14 +1099,14 @@ class EmbedBuilder(Cog):
         name="thumbnail",
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_thumbnail(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         thumbnail: Union[Emoji, PartialEmoji, str] = None,
     ):
@@ -1115,8 +1114,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         thumbnail: Union[Emoji, PartialEmoji, str] = None
             Embed's thumbnail. Defaults to None
 
@@ -1137,14 +1136,14 @@ class EmbedBuilder(Cog):
                 embed.remove_thumbnail()
 
     @embed_thumbnail.group(name="user", invoke_without_command=True)
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_thumbnail_user(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         user: Union[Member, User] = None,
     ):
@@ -1152,8 +1151,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         user: User
             User for embed. Defaults to self
         Returns
@@ -1169,14 +1168,14 @@ class EmbedBuilder(Cog):
         aliases=["server"],
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_thumbnail_guild(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         guild: Guild = None,
     ):
@@ -1184,8 +1183,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         guild: Guild
             Guild for embed. Defaults to self
         Returns
@@ -1197,14 +1196,14 @@ class EmbedBuilder(Cog):
             embed.set_thumbnail(url=guild.icon.url)
 
     @embed.group(name="image", invoke_without_command=True)
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_image(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         image: Union[Emoji, PartialEmoji, str] = None,
     ):
@@ -1212,8 +1211,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context (w/ attachment or reference to one)
+        ctx: commands.Context
+            commands.Context (w/ attachment or reference to one)
         image: Union[Emoji, PartialEmoji, str] = None
             URL. Defaults to None
         Returns
@@ -1232,14 +1231,14 @@ class EmbedBuilder(Cog):
                 embed.set_image(url=embed.Empty)
 
     @embed_image.command(name="user")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_image_user(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         user: Union[Member, User] = None,
     ):
@@ -1247,8 +1246,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         user: User
             User to take as reference. Defaults to self
 
@@ -1264,14 +1263,14 @@ class EmbedBuilder(Cog):
         name="guild",
         aliases=["server"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def embed_image_guild(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         guild: Guild = None,
     ):
@@ -1279,8 +1278,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         guild: Guild = None
             Guild to take as reference. Defaults to current
 
@@ -1293,18 +1292,18 @@ class EmbedBuilder(Cog):
             embed.set_image(url=guild.icon.url)
 
     @embed_image.command(name="rainbow")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed_image_rainbow(self, ctx: Context):
+    async def embed_image_rainbow(self, ctx: commands.Context):
         """Allows to add a rainbow line as placeholder in embed images
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -1314,18 +1313,18 @@ class EmbedBuilder(Cog):
             embed.set_image(url=RAINBOW)
 
     @embed_image.command(name="whitebar")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def embed_image_whitebar(self, ctx: Context):
+    async def embed_image_whitebar(self, ctx: commands.Context):
         """Allows to add a whitebar line as placeholder in embed images
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -1334,23 +1333,23 @@ class EmbedBuilder(Cog):
         async with self.edit(ctx) as embed:
             embed.set_image(url=WHITE_BAR)
 
-    @group(
+    @commands.group(
         name="fields",
         aliases=["field", "f"],
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def fields(self, ctx: Context):
+    async def fields(self, ctx: commands.Context):
         """Outputs the fields that the current embed has
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -1366,14 +1365,14 @@ class EmbedBuilder(Cog):
         name="add",
         aliases=["a"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_add(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         name: str,
         *,
         value: str,
@@ -1382,8 +1381,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         name: str
             Field's name
         value: str
@@ -1400,14 +1399,14 @@ class EmbedBuilder(Cog):
         name="name",
         aliases=["n"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_name(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         before: str,
         *,
         after: str,
@@ -1416,8 +1415,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         before: str
             Current Name
         after: str
@@ -1438,14 +1437,14 @@ class EmbedBuilder(Cog):
                     )
 
     @fields.command(name="value")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_value(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         name: str,
         *,
         value: str,
@@ -1454,8 +1453,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         name: str
             Field's Name
         value: str
@@ -1476,14 +1475,14 @@ class EmbedBuilder(Cog):
                     )
 
     @fields.command(name="inline")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_inline(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         name: str,
     ):
@@ -1491,8 +1490,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         name: str
             Field's Name
 
@@ -1515,14 +1514,14 @@ class EmbedBuilder(Cog):
         invoke_without_command=True,
         aliases=["d"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_delete(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         name: str,
     ):
@@ -1530,8 +1529,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         name: str
             Field's name
 
@@ -1551,18 +1550,18 @@ class EmbedBuilder(Cog):
             )
 
     @fields_delete.command(name="all")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def fields_delete_all(self, ctx: Context):
+    async def fields_delete_all(self, ctx: commands.Context):
         """Allows to enable/disable inline of fields with same name
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -1576,18 +1575,18 @@ class EmbedBuilder(Cog):
         aliases=["i"],
         invoke_without_command=True,
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
-    async def fields_index(self, ctx: Context):
+    async def fields_index(self, ctx: commands.Context):
         """Outputs the amount of fields that the current embed has
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
 
         Returns
         -------
@@ -1603,14 +1602,14 @@ class EmbedBuilder(Cog):
         name="add",
         aliases=["a"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_index_add(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         index: int,
         name: str,
         *,
@@ -1620,8 +1619,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         index: int
             Integer Index
         name: str
@@ -1640,14 +1639,14 @@ class EmbedBuilder(Cog):
         name="name",
         aliases=["n"],
     )
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_index_name(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         index: int,
         *,
         name: str,
@@ -1656,8 +1655,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         index: int
             Integer Index
         name: str
@@ -1677,14 +1676,14 @@ class EmbedBuilder(Cog):
             )
 
     @fields_index.command(name="value")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_index_value(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         index: int,
         *,
         value: str,
@@ -1693,8 +1692,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         index: int
             Integer Index
         value: str
@@ -1709,14 +1708,14 @@ class EmbedBuilder(Cog):
             embed.set_field_at(index, name=aux.name, value=value, inline=aux.inline)
 
     @fields_index.command(name="inline")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_index_inline(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         index: int,
     ):
@@ -1724,8 +1723,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         index: int
             Integer Index
 
@@ -1743,14 +1742,14 @@ class EmbedBuilder(Cog):
             )
 
     @fields_index.command(name="delete")
-    @has_guild_permissions(
+    @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
         embed_links=True,
     )
     async def fields_index_delete(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         *,
         index: int,
     ):
@@ -1758,8 +1757,8 @@ class EmbedBuilder(Cog):
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         index: int
             Integer Index
 
@@ -1770,18 +1769,18 @@ class EmbedBuilder(Cog):
         async with self.edit(ctx) as embed:
             embed.remove_field(index)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_cog_command_error(
         self,
-        ctx: Context,
-        error: CommandError,
+        ctx: commands.Context,
+        error: commands.CommandError,
     ):
         """Error handler for this class.
 
         Parameters
         ----------
-        ctx: Context
-            Context
+        ctx: commands.Context
+            commands.Context
         error: CommandError
             Error
 

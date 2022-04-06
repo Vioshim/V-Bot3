@@ -14,19 +14,18 @@
 
 from os import path
 from re import IGNORECASE, compile, escape
+from typing import Optional
 from unicodedata import name as u_name
 
 from d20 import roll
 from d20.utils import simplify_expr
-from discord import Option, OptionChoice, slash_command
-from discord.commands.permissions import is_owner
-from discord.ext.commands import Cog, command
+from discord import Interaction, InteractionResponse, app_commands
+from discord.ext import commands
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
-from src.context import ApplicationContext, Context
 from src.structures.bot import CustomBot
 from src.structures.move import Move
-from src.utils.etc import RTFM_PAGES
+from src.utils.etc import RTFMPages
 
 
 def to_string(c: str) -> str:
@@ -52,7 +51,7 @@ def to_string(c: str) -> str:
     )
 
 
-class Utilities(Cog):
+class Utilities(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self._rtfm_cache: dict[str, dict[str, str]] = {}
@@ -121,22 +120,22 @@ class Utilities(Cog):
 
     async def build_rtfm_lookup_table(self):
         cache = {}
-        for key, page in RTFM_PAGES.items():
-            async with self.bot.session.get(page + "/objects.inv") as resp:
+        for item in RTFMPages:
+            async with self.bot.session.get(f"{item.value}/objects.inv") as resp:
                 if resp.status != 200:
                     raise RuntimeError(
                         "Cannot build rtfm lookup table, try again later."
                     )
 
                 stream = SphinxObjectFileReader(await resp.read())
-                cache[key] = self.parse_object_inv(stream, page)
+                cache[item.name] = self.parse_object_inv(stream, item.value)
 
         self._rtfm_cache = cache
 
-    async def do_rtfm(self, ctx: ApplicationContext, key: str, obj: str):
+    async def do_rtfm(self, ctx: Interaction, key: RTFMPages, obj: str):
 
         if obj is None:
-            return await ctx.send_followup(RTFM_PAGES[key])
+            return await ctx.followup.send(key.value)
 
         if not self._rtfm_cache:
             await self.build_rtfm_lookup_table()
@@ -147,12 +146,12 @@ class Utilities(Cog):
         self.matches = matches[:8]
 
         if text := "\n".join(f"[`{key}`]({url})" for key, url in self.matches):
-            await ctx.send_followup(text)
+            await ctx.followup.send(text)
         else:
-            await ctx.send_followup("Could not find anything. Sorry.")
+            await ctx.followup.send("Could not find anything. Sorry.")
 
-    @command()
-    async def charinfo(self, ctx: Context, *, characters: str):
+    @commands.command()
+    async def charinfo(self, ctx: commands.Context, *, characters: str):
         """Shows you information about a number of characters.
         Only up to 25 characters at a time.
         """
@@ -162,60 +161,41 @@ class Utilities(Cog):
             return await ctx.send("Output too long to display.")
         await ctx.send(msg)
 
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Executes a manual query",
-    )
-    @is_owner()
+    @app_commands.command(description="Executes a manual query")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.checks.has_permissions(manage_messages=True)
     async def rtfm(
         self,
-        ctx: ApplicationContext,
-        key: Option(
-            str,
-            required=False,
-            choices=[
-                OptionChoice(
-                    name=item.title(),
-                    value=item,
-                )
-                for item in RTFM_PAGES
-            ],
-        ),
-        query: str = None,
+        ctx: Interaction,
+        key: Optional[RTFMPages],
+        query: Optional[str],
     ):
-        await ctx.defer(ephemeral=True)
-        if not key or key.lower() not in RTFM_PAGES:
-            query = query or ""
-            key = key or ""
-            query = key + query
-            key = "discord"
-
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        if not key:
+            key = RTFMPages.Discord
         await self.do_rtfm(ctx, key, query)
 
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Allows to use metronome",
-    )
+    @app_commands.command(description="Allows to use metronome",)
+    @app_commands.guilds(719343092963999804)
     async def metronome(
         self,
-        ctx: ApplicationContext,
+        ctx: Interaction,
     ):
+        resp: InteractionResponse = ctx.response
         item = Move.getMetronome()
-        await ctx.respond(embed=item.embed)
+        await resp.send_message(embed=item.embed)
 
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Allows to roll dice based on d20",
-    )
+    @app_commands.command(description="Allows to roll dice based on d20")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.describe(expression="Expression (Example: d20)")
     async def roll(
         self,
-        ctx: ApplicationContext,
-        expression: Option(
-            str,
-            description="Expression (Example: d20)",
-        ),
+        ctx: Interaction,
+        expression: str,
         hidden: bool = False,
     ):
+        resp: InteractionResponse = ctx.response
         try:
             value = roll(
                 expr=expression,
@@ -224,13 +204,13 @@ class Utilities(Cog):
             if len(result := value.result) >= 2000:
                 simplify_expr(value.expr)
             if len(result := value.result) <= 2000:
-                return await ctx.respond(result, ephemeral=hidden)
-            await ctx.respond(
+                return await resp.send_message(result, ephemeral=hidden)
+            await resp.send_message(
                 f"Expression is too long, result is: {value.total}",
                 ephemeral=hidden,
             )
         except Exception:
-            await ctx.respond("Invalid expression", ephemeral=True)
+            await resp.send_message("Invalid expression", ephemeral=True)
 
 
 def setup(bot: CustomBot) -> None:

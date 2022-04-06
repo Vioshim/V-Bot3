@@ -116,16 +116,7 @@ class Roles(Cog):
             if not (thread := w.channel.get_thread(m.id)):
                 thread: Thread = await w.guild.fetch_channel(m.id)
 
-            await w.edit_message(
-                m.id,
-                view=RPThreadView(
-                    bot=self.bot,
-                    cool_down=self.cool_down,
-                    role_cool_down=self.role_cool_down,
-                    last_claimer=self.last_claimer,
-                    thread=thread,
-                ),
-            )
+            await w.edit_message(m.id, view=RPThreadView(thread=thread))
 
         await self.load_rp_searches()
 

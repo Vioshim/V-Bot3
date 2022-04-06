@@ -13,44 +13,40 @@
 # limitations under the License.
 from dataclasses import astuple
 from re import IGNORECASE, compile
-from typing import Optional
+from typing import Literal, Optional
 
 from discord import (
     Embed,
     Guild,
+    Interaction,
+    InteractionResponse,
     Member,
-    Option,
-    OptionChoice,
     TextChannel,
     Thread,
     User,
+    app_commands,
 )
-from discord.commands import slash_command
-from discord.ext.commands import Cog
+from discord.ext import commands
 from discord.utils import utcnow
 
 from src.cogs.pokedex.search import (
-    ability_autocomplete,
-    default_species_autocomplete,
-    fakemon_autocomplete,
-    move_autocomplete,
-    species_autocomplete,
-    type_autocomplete,
+    AbilityArg,
+    DefaultSpeciesArg,
+    FakemonArg,
+    MoveArg,
+    SpeciesArg,
+    TypingArg,
 )
-from src.context import ApplicationContext
-from src.structures.ability import Ability
 from src.structures.bot import CustomBot
 from src.structures.character import Character, FusionCharacter
-from src.structures.mon_typing import Typing
-from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import fix
+from src.utils.functions import doc_escribe, fix
 from src.views import CharactersView, MovepoolViewSelector
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
-KINDS = [
+KINDS = Literal[
     "Legendary",
     "Mythical",
     "Ultra Beast",
@@ -61,7 +57,18 @@ KINDS = [
     "Custom Mega",
     "Mega",
 ]
-REF_KINDS = [fix(i) for i in KINDS]
+REF_KINDS = [
+    "LEGENDARY",
+    "MYTHICAL",
+    "ULTRABEAST",
+    "POKEMON",
+    "FAKEMON",
+    "VARIANT",
+    "FUSION",
+    "CUSTOMMEGA",
+    "MEGA",
+]
+
 OPERATORS = {
     "<=": lambda x, y: x <= y,
     "<": lambda x, y: x < y,
@@ -89,38 +96,22 @@ def age_parser(text: str, oc: Character):
     bool
         valid
     """
-
-    if not (text and oc.age):
-        return True
-
-    for item in text.replace(",", ";").replace("|", ";").split(";"):
-        item = item.strip()
-        if item.isdigit():
-            return int(item) == oc.age
-
-        if (
-            len(op := [foo(x) for x in item.split("-")]) == 2
-            and all(op)
-            and op[0] <= oc.age <= op[1]
-        ):
+    age: int = oc.age or 0
+    for item in map(lambda x: x.strip(), text.replace(",", ";").replace("|", ";").split(";")):
+        op = sorted(o for x in item.split("-") if isinstance(o := foo(x), int))
+        if (len(op) == 2 and op[0] <= age <= op[1]) or age in op:
             return True
 
-        for key, operator in OPERATORS.items():
-            if (
-                len(op := [foo(x) for x in item.split(key)]) == 2
-                and any(op)
-                and (
-                    operator(op[0], oc.age)
-                    if isinstance(op[0], int)
-                    else operator(oc.age, op[1])
-                )
-            ):
+        for key, operator in filter(lambda x: x[0] in item, OPERATORS.items()):
+            op1, op2 = map(foo, item.split(key))
+            op1 = op1 if isinstance(op1, int) else op2
+            if isinstance(op1, int) and operator(op1, age):
                 return True
 
     return False
 
 
-class Pokedex(Cog):
+class Pokedex(commands.Cog):
     """This is a standard Pokedex Cog"""
 
     def __init__(self, bot: CustomBot):
@@ -133,205 +124,143 @@ class Pokedex(Cog):
         """
         self.bot = bot
 
-    @slash_command(guild_ids=[719343092963999804])
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @doc_escribe()
     async def movepool(
         self,
-        ctx: ApplicationContext,
-        species: Option(
-            str,
-            description="Species to look up info about.",
-            autocomplete=default_species_autocomplete,
-            required=False,
-        ),
-        fused: Option(
-            str,
-            description="To check when fused",
-            autocomplete=default_species_autocomplete,
-            required=False,
-        ),
-        fakemon: Option(
-            str,
-            description="Search Fakemon Species",
-            autocomplete=fakemon_autocomplete,
-            required=False,
-        ),
-        move_id: Option(
-            str,
-            name="move",
-            description="Move to lookup",
-            autocomplete=move_autocomplete,
-            required=False,
-        ),
+        ctx: Interaction,
+        species: Optional[DefaultSpeciesArg],
+        fused: Optional[DefaultSpeciesArg],
+        fakemon: Optional[FakemonArg],
+        move_id: Optional[MoveArg],
     ):
-        fakemon: str = fakemon or ""
-        cog = ctx.bot.get_cog("Submission")
+        """Check for Movepool information
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        species : Optional[DefaultSpeciesArg]
+            Species to look up info about
+        fused : Optional[DefaultSpeciesArg]
+            To check when fused
+        fakemon : Optional[FakemonArg]
+            Search fakemon species
+        move_id : Optional[MoveArg]
+            Move to lookup
+        """
+        resp: InteractionResponse = ctx.response
         embed = Embed(
             title="See Movepool",
             color=ctx.user.color,
             timestamp=utcnow(),
         )
         embed.set_image(url=WHITE_BAR)
+        await resp.defer(ephemeral=True)
+        if not species:
+            species = fused
 
-        if mon := Species.from_ID(species):
-            if mon2 := Species.from_ID(fused):
-                mon = Fusion(mon, mon2)
+        if species:
+            if fused and species != fused:
+                mon = Fusion(species, fused)
                 mon_types = mon.possible_types
             else:
-                mon_types = [mon.types]
+                mon = species
+                mon_types = [species.types]
 
             embed.title = f"See {mon.name}'s movepool"
             movepool = mon.total_movepool
             if info := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon_types):
                 embed.add_field(name="Possible Types", value=info)
-        elif fakemon.isdigit() and (oc := cog.ocs.get(int(fakemon))):
-            movepool = oc.movepool
-            embed.title = f"See {oc.species.name}'s movepool"
+        elif fakemon:
+            movepool = fakemon.movepool
+            embed.title = f"See {fakemon.species.name}'s movepool"
         else:
             movepool = Movepool()
 
-        if move := Move.from_ID(move_id):
+        if move_id:
             if methods := "\n".join(
-                f"> • **{x.title()}**" for x in movepool.methods_for(move)
+                f"> • **{x.title()}**" for x in movepool.methods_for(move_id)
             ):
-                await ctx.respond(
-                    f"The pokemon can learn {move.name} through:\n{methods}.",
+                await ctx.followup.send(
+                    f"The pokemon can learn {move_id.name} through:\n{methods}.",
                     ephemeral=True,
                 )
             else:
-                await ctx.respond(
-                    f"The pokemon can not learn {move.name}.",
+                await ctx.followup.send(
+                    f"The pokemon can not learn {move_id.name}.",
                     ephemeral=True,
                 )
         else:
             view = MovepoolViewSelector(bot=self.bot, movepool=movepool)
-            await ctx.respond(embed=embed, view=view, ephemeral=True)
+            await ctx.followup.send(embed=embed, view=view, ephemeral=True)
 
-    @slash_command(guild_ids=[719343092963999804])
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @doc_escribe()
     async def find(
         self,
-        ctx: ApplicationContext,
-        name: Option(
-            str,
-            description="any name that matches(regex works).",
-            required=False,
-        ),
-        kind: Option(
-            str,
-            description="Filter by kind",
-            choices=[
-                OptionChoice(
-                    name=item,
-                    value=item.replace(" ", "").upper(),
-                )
-                for item in KINDS
-            ],
-            required=False,
-        ),
-        type_id: Option(
-            str,
-            name="type",
-            description="Type to filter",
-            autocomplete=type_autocomplete,
-            required=False,
-        ),
-        ability_id: Option(
-            str,
-            name="ability",
-            description="Ability to filter",
-            autocomplete=ability_autocomplete,
-            required=False,
-        ),
-        move_id: Option(
-            str,
-            name="move",
-            description="Move to filter",
-            autocomplete=move_autocomplete,
-            required=False,
-        ),
-        species: Option(
-            str,
-            description="Species to look up info about.",
-            autocomplete=species_autocomplete,
-            required=False,
-        ),
-        fused: Option(
-            str,
-            description="Search Fusions that contain the species",
-            autocomplete=default_species_autocomplete,
-            required=False,
-        ),
-        member: Option(
-            Member,
-            description="Member to filter",
-            required=False,
-        ),
-        location: Option(
-            TextChannel,
-            description="OCs at a location to filter",
-            required=False,
-        ),
-        backstory: Option(
-            str,
-            description="Any words to look for in backstories",
-            required=False,
-        ),
-        sp_ability: Option(
-            str,
-            description="Any words to look for in Sp Abilities",
-            required=False,
-        ),
-        pronoun: Option(
-            str,
-            description="Pronoun to Look for",
-            required=False,
-            choices=["He", "She", "Them"],
-        ),
-        age: Option(
-            str,
-            description="OC's age. e.g. 18-24, 13, >20",
-            required=False,
-        ),
+        ctx: Interaction,
+        name: Optional[str],
+        kind: Optional[KINDS],
+        _type: Optional[TypingArg],
+        ability: Optional[AbilityArg],
+        move: Optional[MoveArg],
+        species: Optional[SpeciesArg],
+        fused: Optional[DefaultSpeciesArg],
+        member: Optional[Member],
+        location: Optional[TextChannel | Thread],
+        backstory: Optional[str],
+        extra: Optional[str],
+        sp_ability: Optional[str],
+        pronoun: Optional[Literal["He", "She", "Them"]],
+        age: Optional[str],
     ):
         """Command to obtain Pokemon entries and its ocs
 
         Parameters
         ----------
-        ctx : ApplicationContext
+        ctx : Interaction
             Context
-        name : str, optional
-            Name, by default None
-        kind : str, optional
-            Kind, by default None
-        type_id : str, optional
-            Typing, by default None
-        ability_id : str, optional
-            Ability, by default None
-        move_id : str, optional
-            Move, by default None
-        species : str, optional
-            Species, by default None
-        fused : str, optional
-            Fusion, by default None
-        member : Member, optional
-            Member, by default None
-        location : TextChannel, optional
-            Channel, by default None
-        sp_ability : str, optional
-            Sp_Ability, by default None
-        pronoun : str, optional
-            pronoun, by default None
-        age : str, optional
-            age, by default None
+        name : Optional[str]
+            Any name that matches(regex works).
+        kind : Optional[KINDS]
+            Filter by kind
+        _type : Optional[TypingArg]
+            Type to filter
+        ability : Optional[AbilityArg]
+            Ability to filter
+        move : Optional[MoveArg]
+            Move to filter
+        species : Optional[SpeciesArg]
+            Species to look up info about.
+        fused : Optional[DefaultSpeciesArg]
+            Search Fusions that contain the species
+        member : Optional[Member]
+            Member to filter
+        location : Optional[TextChannel  |  Thread]
+            Location to filter
+        backstory : Optional[str]
+            Any words to look for in backstories
+        extra : Optional[str]
+            Any words to look for in the extra info
+        sp_ability : Optional[str]
+            Any words to look for in Sp Abilities
+        pronoun : Optional[Literal['He', 'She', 'Them']]
+            Pronoun to Look for
+        age : Optional[str]
+            OC's age. e.g. 18-24, 13, >20
         """
-        species: str = species or ""
+        resp: InteractionResponse = ctx.response
         text: str = ""
         guild: Guild = ctx.guild
         cog = ctx.bot.get_cog("Submission")
-        await ctx.defer(ephemeral=True)
+        await resp.defer(ephemeral=True)
         embed = Embed(
             title="Select the Character",
             url=PLACEHOLDER,
-            color=ctx.author.color,
+            color=ctx.user.color,
             timestamp=utcnow(),
         )
         embed.set_image(url=WHITE_BAR)
@@ -339,8 +268,8 @@ class Pokedex(Cog):
         total: list[Character] = [
             oc for oc in cog.ocs.values() if guild.get_member(oc.author)
         ]
-        if species.isdigit() and (oc := cog.ocs.get(int(species))):
-            ocs = [oc]
+        if isinstance(species, Character):
+            ocs = [species]
         else:
             ocs = total
 
@@ -366,30 +295,29 @@ class Pokedex(Cog):
         elif member:
             ocs = [oc for oc in ocs if oc.author == member]
 
-        fuse_mon = Species.from_ID(fused)
-        mon = Species.from_ID(species.removesuffix("+"))
-        if mon or fuse_mon:
-            if mon:
-                if fuse_mon and not isinstance(mon, Fusion):
-                    mon = Fusion(mon, fuse_mon)
+        mon = None
+        if isinstance(species, Species):
+            mon = species
+            if fused and species != fused and not isinstance(fused, Fusion):
+                mon = Fusion(species, fused)
+            if kind == "Variant":
                 ocs = [
                     oc
                     for oc in ocs
-                    if (
-                        species.endswith("+")
-                        and isinstance(oc.species, Variant)
-                        and oc.species.base == mon
-                    )
-                    or oc.species == mon
+                    if isinstance(oc.species, Variant)
+                    and oc.species.base == mon
                 ]
             else:
-                mon = fuse_mon
-                ocs = [
-                    oc
-                    for oc in ocs
-                    if isinstance(oc, FusionCharacter) and fuse_mon in oc.species.bases
-                ]
+                ocs = [oc for oc in ocs if oc.species == mon]
+        elif fused and not isinstance(fused, Fusion):
+            mon = fused
+            ocs = [
+                oc
+                for oc in ocs
+                if isinstance(oc, FusionCharacter) and species in oc.species.bases
+            ]
 
+        if isinstance(mon, Species):
             if mon.banned:
                 embed.title = f"{mon.name} - Banned Species"
             else:
@@ -411,24 +339,32 @@ class Pokedex(Cog):
                 )
 
             if isinstance(mon, Fusion):
-                embeds = [
-                    embed.set_image(url=mon.mon1.base_image),
-                    Embed(url=PLACEHOLDER).set_image(url=mon.mon2.base_image),
-                ]
+                if pronoun == "She":
+                    image1, image2 = mon.mon1.female_image, mon.mon2.female_image
+                else:
+                    image1, image2 = mon.mon1.base_image, mon.mon2.base_image
+            elif pronoun == "She":
+                image1, image2 = mon.female_image, mon.female_image_shiny
             else:
-                embeds = [
-                    embed.set_image(url=mon.base_image),
-                    Embed(url=PLACEHOLDER).set_image(url=mon.base_image_shiny),
-                ]
-        elif species and not fuse_mon:
-            embed.title = (
-                f"Unable to identify the species: {species}.\nShowing all Instead"
-            )
+                image1, image2 = mon.base_image, mon.base_image_shiny
+
+            embeds = [
+                embed.set_image(url=image1),
+                Embed(url=PLACEHOLDER).set_image(url=image2),
+            ]
         if pronoun:
             ocs = [oc for oc in ocs if oc.pronoun.name == pronoun.title()]
         if backstory:
             ocs = [
-                oc for oc in ocs if backstory.lower() in (oc.backstory or "").lower()
+                oc
+                for oc in ocs
+                if oc.backstory and backstory.lower() in oc.backstory.lower()
+            ]
+        if extra:
+            ocs = [
+                oc
+                for oc in ocs
+                if oc.extra and extra.lower() in oc.extra.lower()
             ]
         if sp_ability:
             ocs = [
@@ -437,53 +373,53 @@ class Pokedex(Cog):
                 if (item := oc.sp_ability)
                 and any(sp_ability.lower() in x.lower() for x in astuple(item))
             ]
-        if type_id and (item := Typing.from_ID(type_id)):
-            ocs = [oc for oc in ocs if item in oc.types]
-            if embed.color == ctx.author.color:
-                embed.color = item.color
-            embed.set_thumbnail(url=item.emoji.url)
-        if ability_id and (item := Ability.from_ID(ability_id)):
-            ocs = [oc for oc in ocs if item in oc.abilities]
+        if _type:
+            ocs = [oc for oc in ocs if _type in oc.types]
+            if embed.color == ctx.user.color:
+                embed.color = _type.color
+            embed.set_thumbnail(url=_type.emoji.url)
+        if ability:
+            ocs = [oc for oc in ocs if ability in oc.abilities]
             if embed.description:
                 embed.add_field(
-                    name=f"Ability - {item.name}",
-                    value=item.description,
+                    name=f"Ability - {ability.name}",
+                    value=ability.description,
                     inline=False,
                 )
             else:
-                embed.title = item.name
-                embed.description = item.description
-            if battle := item.battle:
+                embed.title = ability.name
+                embed.description = ability.description
+            if battle := ability.battle:
                 embed.add_field(
                     name="Battle effect",
                     value=battle,
                     inline=False,
                 )
-            if outside := item.outside:
+            if outside := ability.outside:
                 embed.add_field(
                     name="Usage",
                     value=outside,
                     inline=False,
                 )
-            if random_fact := item.random_fact:
+            if random_fact := ability.random_fact:
                 embed.add_field(
                     name="Random Fact",
                     value=random_fact,
                     inline=False,
                 )
-        if move_id and (item := Move.from_ID(move_id)):
-            ocs = [oc for oc in ocs if item in oc.moveset]
-            title = repr(item)
-            if item.banned:
+        if move:
+            ocs = [oc for oc in ocs if move in oc.moveset]
+            title = repr(move)
+            if move.banned:
                 title += " - Banned Move"
-            description = item.desc or item.shortDesc
-            if embed.color == ctx.author.color:
-                embed.color = item.color
-            embed.set_thumbnail(url=item.type.emoji.url)
-            embed.set_image(url=item.image)
-            power = item.base or "-"
-            acc = item.accuracy or "-"
-            pp = item.pp or "-"
+            description = move.desc or move.shortDesc
+            if embed.color == ctx.user.color:
+                embed.color = move.color
+            embed.set_thumbnail(url=move.type.emoji.url)
+            embed.set_image(url=move.image)
+            power = move.base or "-"
+            acc = move.accuracy or "-"
+            pp = move.pp or "-"
 
             if embed.description:
                 embed.add_field(
@@ -498,40 +434,23 @@ class Pokedex(Cog):
                 embed.add_field(name="Accuracy", value=acc)
                 embed.add_field(name="PP", value=pp)
             for e in embeds:
-                e.url = item.url
-        if (kind := fix(kind)) in REF_KINDS:
+                e.url = move.url
+        if kind:
             ocs = [
                 oc
                 for oc in ocs
-                if fix(oc.kind) == (kind if kind != "POKEMON" else "COMMON")
+                if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")
             ]
 
         view = CharactersView(
             bot=self.bot,
-            member=ctx.author,
+            member=ctx.user,
             ocs=ocs,
-            target=ctx.interaction,
+            target=ctx,
             keep_working=True,
         )
 
-        if not ocs or total == ocs:
-
-            amounts: dict[str, set[Character]] = {}
-            for oc in cog.ocs.values():
-                amounts.setdefault(oc.kind, set())
-                amounts[oc.kind].add(oc)
-
-            info = [(k, len(v)) for k, v in amounts.items()]
-            info.sort(key=lambda x: x[1], reverse=True)
-
-            data = "\n".join(f"{k}: {v}" for k, v in info).title()
-            data = f"```yaml\n{data}\n```"
-            if embed.description:
-                text = f"**__Total OCs in Server__**\n{data}"
-            else:
-                embed.description = data
-
-        await ctx.respond(
+        await ctx.followup.send(
             content=text,
             embeds=embeds,
             view=view,

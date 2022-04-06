@@ -16,13 +16,13 @@ from typing import Iterable
 
 from discord import (
     ButtonStyle,
-    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
     TextChannel,
+    TextStyle,
 )
-from discord.ui import Button, InputText, Modal, View, button
+from discord.ui import Button, Modal, TextInput, View, button
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
@@ -43,61 +43,56 @@ PLACEHOLDER = "Move, Move, Move"
 
 
 class MovepoolModal(Modal):
-    def __init__(self, oc: Character) -> None:
-        super().__init__(title=f"Movepool for {oc.name}")
-        data = oc.movepool.as_display_dict
-        self.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Level Moves",
-                placeholder="1: Move, Move\n2: Move, Move",
-                required=False,
-                value="\n".join(
-                    f"{k}: {', '.join(v)}"
-                    for k, v in data.get("level", {}).items()
-                    if v
-                ),
-            )
+    def __init__(self, *, oc: Character) -> None:
+        super().__init__(title=f"Movepool for {oc.name}", timeout=None)
+        movepool = oc.movepool
+        self.level = TextInput(
+            style=TextStyle.paragraph,
+            label="Level Moves",
+            placeholder="1: Move, Move\n2: Move, Move",
+            required=False,
+            value="\n".join(
+                f"{k}: {', '.join(x.name for x in v)}"
+                for k, v in movepool.level.items()
+                if v
+            ),
         )
-        self.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="TM Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("tm", [])),
-            )
+        self.tm = TextInput(
+            style=TextStyle.paragraph,
+            label="TM Moves",
+            placeholder=PLACEHOLDER,
+            required=False,
+            value=", ".join(x.name for x in movepool.tm),
         )
-        self.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Tutor Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("tutor", [])),
-            )
+        self.tutor = TextInput(
+            style=TextStyle.paragraph,
+            label="Tutor Moves",
+            placeholder=PLACEHOLDER,
+            required=False,
+            value=", ".join(x.name for x in movepool.tutor),
         )
-        self.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Egg Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("egg", [])),
-            )
+        self.egg = TextInput(
+            style=TextStyle.paragraph,
+            label="Egg Moves",
+            placeholder=PLACEHOLDER,
+            required=False,
+            value=", ".join(x.name for x in movepool.egg),
         )
-        self.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Event Moves",
-                placeholder=PLACEHOLDER,
-                required=False,
-                value=", ".join(data.get("event", [])),
-            )
+        self.event = TextInput(
+            style=TextStyle.paragraph,
+            label="Event Moves",
+            placeholder=PLACEHOLDER,
+            required=False,
+            value=", ".join(x.name for x in movepool.event),
         )
+        self.add_item(self.level)
+        self.add_item(self.tm)
+        self.add_item(self.tutor)
+        self.add_item(self.egg)
+        self.add_item(self.event)
         self.oc = oc
 
-    async def callback(self, interaction: Interaction):
+    async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
         if not isinstance(self.oc, (VariantCharacter, FakemonCharacter)):
             await resp.send_message(
@@ -106,13 +101,13 @@ class MovepoolModal(Modal):
             )
             return
 
-        kwargs = {}
-        for item in self.children:
-            key = item.label.lower().removesuffix(" moves")
-            if value := yaml_handler(item.value):
-                kwargs[key] = value
-
-        movepool = Movepool.from_dict(**kwargs)
+        movepool = Movepool.from_dict(
+            level=yaml_handler(self.level.value),
+            tm=yaml_handler(self.tm.value),
+            tutor=yaml_handler(self.tutor.value),
+            egg=yaml_handler(self.egg.value),
+            event=yaml_handler(self.event.value),
+        )
 
         self.oc.species.movepool = movepool
         self.oc.moveset &= frozenset(movepool())
@@ -131,24 +126,6 @@ class MovepoolView(Basic):
         super().__init__(bot=bot, target=target, member=member, timeout=None)
         self.oc = oc
         self.embed.title = f"Modify Movepool for {oc.name}"
-        self.embed.clear_fields()
-        for key, value in oc.movepool.as_display_dict.items():
-
-            if isinstance(value, dict):
-                if text := "\n".join(
-                    f"{k}: {', '.join(v)}" for k, v in value.items() if v
-                ):
-                    self.embed.add_field(
-                        name=f"{key.title()} Moves",
-                        value=f"```yaml\n{text[:1000]}\n```",
-                        inline=False,
-                    )
-            elif text := ", ".join(value):
-                self.embed.add_field(
-                    name=f"{key.title()} Moves",
-                    value=f"```yaml\n{text[:1000]}\n```",
-                    inline=False,
-                )
 
     @button(label="Modify Movepool")
     async def modify(self, _: Button, ctx: Interaction):

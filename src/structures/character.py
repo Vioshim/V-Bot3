@@ -18,12 +18,15 @@ from abc import ABCMeta, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
+from difflib import get_close_matches
 from io import BytesIO
 from random import sample
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
-from discord import Color, Embed, File
+from discord import Color, Embed, File, Interaction
+from discord.app_commands import Choice
+from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import utcnow
 from docx.document import Document
 from frozendict import frozendict
@@ -45,18 +48,14 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
 __all__ = (
     "ASSOCIATIONS",
     "Character",
+    "CharacterArg",
     "FakemonCharacter",
     "LegendaryCharacter",
     "FusionCharacter",
@@ -1769,13 +1768,13 @@ def doc_convert(doc: Document) -> dict[str, Any]:
         fusion=set(),
         types=set(),
         stats={
-            stat: stats_check(*value)
+            PLACEHOLDER_STATS[item.strip()]: stats_check(*content_values[index + 1 :][:1])
             for index, item in enumerate(content_values)
             if all(
                 (
-                    stat := PLACEHOLDER_STATS.get(item.strip()),
+                    item.strip() in PLACEHOLDER_STATS,
                     len(content_values) > index,
-                    len(value := content_values[index + 1 :][:1]) == 1,
+                    len(content_values[index + 1 :][:1]) == 1,
                 )
             )
         },
@@ -1824,3 +1823,37 @@ def doc_convert(doc: Document) -> dict[str, Any]:
     raw_kwargs.pop("website", None)
 
     return raw_kwargs
+
+
+class CharacterTransform(Transformer):
+    @classmethod
+    async def transform(cls, interaction: Interaction, value: str):
+        cog = interaction.client.get_cog("Submission")
+        if isinstance(value, str) and value.isdigit():
+            value = int(value)
+        return cog.ocs[value]
+
+    @classmethod
+    async def autocomplete(
+        cls, interaction: Interaction, value: str
+    ) -> list[Choice[str]]:
+        member_id = interaction.user.id
+        for item in map(lambda x: Choice(**x), interaction.data.get("options", [])):
+            if item.name == "member":
+                member_id = int(item.value)
+
+        cog = interaction.client.get_cog("Submission")
+        text: str = str(value or "").title()
+        ocs = cog.rpers.get(member_id, {}).values()
+        items = {oc.name: str(oc.id) for oc in ocs}
+        values = [
+            Choice(item, items[item])
+            for item in get_close_matches(word=text, possibilities=items, n=25)
+        ]
+        if not values:
+            values = [Choice(k, v) for k, v in items.items() if k.startswith(text)]
+        values.sort(key=lambda x: x.name)
+        return values
+
+
+CharacterArg = Transform[Type[Character], CharacterTransform]

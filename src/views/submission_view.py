@@ -24,14 +24,14 @@ from discord import (
     DiscordException,
     Embed,
     Guild,
-    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
     SelectOption,
     TextChannel,
+    TextStyle,
 )
-from discord.ui import Button, InputText, Modal, Select, View, button, select
+from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from jishaku.codeblocks import codeblock_converter
 from yaml import dump, safe_load
 
@@ -91,12 +91,19 @@ class CharacterHandlerView(Complex):
 
 
 class SubmissionModal(Modal):
-    def __init__(self, bot: CustomBot):
+    def __init__(self, text: str):
         super().__init__(title="Character Submission Template")
-        self.bot = bot
+        self.text = TextInput(
+            style=TextStyle.paragraph,
+            label=self.title,
+            placeholder="Template or Google Document goes here",
+            value=text.strip(),
+            required=True,
+        )
+        self.add_item(self.text)
 
     async def callback(self, interaction: Interaction):
-        text: str = codeblock_converter(self.children[0].value or "").content
+        text: str = codeblock_converter(self.text.value or "").content
         resp: InteractionResponse = interaction.response
         try:
             if doc_data := G_DOCUMENT.match(text):
@@ -109,7 +116,7 @@ class SubmissionModal(Modal):
                 msg_data = safe_load(text)
 
             if isinstance(msg_data, dict):
-                cog = self.bot.get_cog("Submission")
+                cog = interaction.client.get_cog("Submission")
                 await cog.submission_handler(interaction, **msg_data)
 
         except Exception as e:
@@ -138,16 +145,7 @@ class TemplateView(View):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text: str = dump(info, sort_keys=False)
-        modal = SubmissionModal(bot=self.bot)
-        modal.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label=self.title,
-                placeholder="Template or Google Document goes here",
-                value=text.strip(),
-                required=True,
-            )
-        )
+        modal = SubmissionModal(text)
         await resp.send_modal(modal)
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
@@ -400,7 +398,7 @@ class SubmissionView(View):
                 text: str
 
                 async with text_input.handle(
-                    style=InputTextStyle.short,
+                    style=TextStyle.short,
                     label="Mission's Title",
                     placeholder="Small summary that will show in the top of the paper.",
                     max_length=50,
@@ -411,7 +409,7 @@ class SubmissionView(View):
                     mission.title = text.title()
 
                 async with text_input.handle(
-                    style=InputTextStyle.paragraph,
+                    style=TextStyle.paragraph,
                     label="Mission's Description",
                     placeholder="In this area, specify what is the mission about, and describe whatever is needed.",
                     required=True,
@@ -421,7 +419,7 @@ class SubmissionView(View):
                     mission.description = text
 
                 async with text_input.handle(
-                    style=InputTextStyle.short,
+                    style=TextStyle.short,
                     label="Mission's Max amount of joiners",
                     placeholder="If you want your missions to have a max amount of joiners (1-10), if you default then there will be no limit.",
                     required=False,
@@ -431,7 +429,7 @@ class SubmissionView(View):
                     mission.max_amount = int_check(text, a=1, b=10)
 
                 async with text_input.handle(
-                    style=InputTextStyle.short,
+                    style=TextStyle.short,
                     label="Mission's Target",
                     placeholder="Either be the one that you're looking for, or the item that is being searched.",
                     required=True,
@@ -441,7 +439,7 @@ class SubmissionView(View):
                     mission.target = text
 
                 async with text_input.handle(
-                    style=InputTextStyle.short,
+                    style=TextStyle.short,
                     label="Mission's Client",
                     placeholder="The one that is making the mission and possibly reward if done.",
                     required=True,

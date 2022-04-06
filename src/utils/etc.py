@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import namedtuple
+from enum import Enum
 
 from discord import PartialEmoji
 
@@ -25,7 +26,7 @@ __all__ = (
     "MAP_ELEMENTS",
     "MAP_ELEMENTS2",
     "REGISTERED_IMG",
-    "RTFM_PAGES",
+    "RTFMPages",
 )
 
 REGISTERED_IMG = "https://cdn.discordapp.com/attachments/797618220382027839/867427444579106856/registered_1.png"
@@ -65,19 +66,19 @@ RP_CATEGORIES = [
     874018024649265172,
 ]
 
-RTFM_PAGES: dict[str, str] = {
-    "discord": "https://pycord.readthedocs.io/en/master/",
-    "python": "https://docs.python.org/3",
-    "apscheduler": "https://apscheduler.readthedocs.io/en/3.x/",
-    "bs4": "https://www.crummy.com/software/BeautifulSoup/bs4/doc/",
-    "dateparser": "https://dateparser.readthedocs.io/en/latest/",
-    "asyncpg": "https://magicstack.github.io/asyncpg/current/",
-    "black": "https://black.readthedocs.io/en/stable/",
-    "uvloop": "https://uvloop.readthedocs.io/",
-    "d20": "https://d20.readthedocs.io/en/latest/",
-    "aiohttp": "https://docs.aiohttp.org/en/stable/",
-    "python-docx": "https://python-docx.readthedocs.io/en/latest/",
-}
+
+class RTFMPages(Enum):
+    Discord = "https://discordpy.readthedocs.io/en/master/"
+    Python = "https://docs.python.org/3"
+    Apscheduler = "https://apscheduler.readthedocs.io/en/3.x/"
+    BS4 = "https://www.crummy.com/software/BeautifulSoup/bs4/doc/"
+    Dateparser = "https://dateparser.readthedocs.io/en/latest/"
+    Asyncpg = "https://magicstack.github.io/asyncpg/current/"
+    Black = "https://black.readthedocs.io/en/stable/"
+    Uvloop = "https://uvloop.readthedocs.io/"
+    D20 = "https://d20.readthedocs.io/en/latest/"
+    Aiohttp = "https://docs.aiohttp.org/en/stable/"
+    Python_Docx = "https://python-docx.readthedocs.io/en/latest/"
 
 
 MapPair = namedtuple(

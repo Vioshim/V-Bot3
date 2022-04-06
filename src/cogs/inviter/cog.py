@@ -26,7 +26,7 @@ from discord import (
     Object,
     Thread,
 )
-from discord.ext.commands import Cog
+from discord.ext import commands
 from discord.ext.commands.converter import InviteConverter
 from discord.ui import Button, Select, View, button, select
 from discord.utils import find, get, utcnow
@@ -130,20 +130,20 @@ class InviteView(View):
         self.stop()
 
 
-class Inviter(Cog):
+class Inviter(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.adapt = InviteConverter()
         self.view: Optional[InviterView] = None
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_ready(self):
         self.thread: Thread = await self.bot.fetch_channel(957604961330561065)
         messages = await self.thread.history(limit=None).flatten()
         self.view = InviterView(self.bot, messages)
         self.bot.add_view(view=self.view, message_id=957604961330561065)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, ctx: Message) -> None:
         """Discord invite detection
 
@@ -198,7 +198,8 @@ class Inviter(Cog):
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
 
-        link_view = View(Button(label="Click Here to Join", url=invite.url))
+        link_view = View()
+        link_view.add_item(Button(label="Click Here to Join", url=invite.url))
         data = self.view.data
         if (
             author.guild_permissions.administrator

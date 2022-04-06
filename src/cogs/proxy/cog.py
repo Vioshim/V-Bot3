@@ -14,34 +14,30 @@
 
 from collections import namedtuple
 from contextlib import suppress
-from typing import Union
+from typing import Literal, Optional, Union
 
 from discord import (
-    ApplicationContext,
     DiscordException,
+    Interaction,
+    InteractionResponse,
     Member,
     Message,
     NotFound,
-    Option,
     RawReactionActionEvent,
     TextChannel,
     Thread,
     WebhookMessage,
 )
-from discord.ext.commands import (
-    Cog,
-    Context,
-    command,
-    guild_only,
-    slash_command,
-)
+from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import get
 
-from src.cogs.pokedex.search import default_species_autocomplete
-from src.cogs.submission.cog import Submission, oc_autocomplete
+from src.cogs.pokedex.search import DefaultSpeciesArg
+from src.cogs.submission.cog import Submission
+from discord import app_commands
 from src.structures.bot import CustomBot
 from src.structures.species import Species
+from src.structures.character import CharacterArg
 
 NPC = namedtuple("NPC", "name avatar")
 NPCLog = namedtuple("NPCLog", "channel_id message_id")
@@ -49,7 +45,7 @@ MALE = "\N{MALE SIGN}"
 FEMALE = "\N{FEMALE SIGN}"
 
 
-class Proxy(Cog):
+class Proxy(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.npc_info: dict[NPCLog, int] = {}
@@ -99,33 +95,18 @@ class Proxy(Cog):
             else:
                 await message.delete()
 
-    @slash_command(name="npc", guild_ids=[719343092963999804])
+    @app_commands.command(name="npc", description="Slash command for NPC Narration")
+    @app_commands.describe(pokemon="Species to use")
+    @app_commands.describe(shiny="If Shiny")
+    @app_commands.describe(gender="Sprite to use")
+    @app_commands.guilds(719343092963999804)
     async def slash_npc(
         self,
-        ctx: ApplicationContext,
-        pokemon: Option(
-            str,
-            description="Species to use",
-            autocomplete=default_species_autocomplete,
-            required=False,
-        ),
-        shiny: Option(
-            bool,
-            description="If Shiny",
-            required=False,
-        ),
-        gender: Option(
-            str,
-            choices=["Male", "Female"],
-            description="Sprite to use",
-            required=False,
-        ),
-        character: Option(
-            str,
-            description="Character to Use",
-            autocomplete=oc_autocomplete,
-            required=False,
-        ),
+        ctx: Interaction,
+        pokemon: Optional[DefaultSpeciesArg],
+        shiny: Optional[bool],
+        gender: Optional[Literal['Male', 'Female']],
+        character: Optional[CharacterArg],
     ):
         """Slash command for NPC Narration
 
@@ -142,29 +123,29 @@ class Proxy(Cog):
         character : str, optional
             character id, by default None
         """
-        cog = self.bot.get_cog("Submission")
-        if (character or "").isdigit() and (oc := cog.ocs.get(int(character))):
-            self.current[ctx.author.id] = NPC(
-                name=oc.name,
-                avatar=oc.image,
+        resp: InteractionResponse = ctx.response
+        if character:
+            self.current[ctx.user.id] = NPC(
+                name=character.name,
+                avatar=character.image,
             )
-            await ctx.respond(
-                f"NPC has been set as {oc.name}, now send the message.",
+            await resp.send_message(
+                f"NPC has been set as {character.name}, now send the message.",
                 ephemeral=True,
             )
             return
-        if mon := Species.single_deduce(pokemon):
-            name = mon.name
+        if pokemon:
+            name = pokemon.name
             if shiny:
                 name = f"Shiny {name}"
                 if gender == "Female":
-                    avatar = mon.female_image_shiny
+                    avatar = pokemon.female_image_shiny
                 else:
-                    avatar = mon.base_image_shiny
+                    avatar = pokemon.base_image_shiny
             elif gender == "Female":
-                avatar = mon.female_image
+                avatar = pokemon.female_image
             else:
-                avatar = mon.base_image
+                avatar = pokemon.base_image
 
             if gender == "Male":
                 name = f"NPC〕{name} {MALE}"
@@ -173,26 +154,26 @@ class Proxy(Cog):
             else:
                 name = f"NPC〕{name}"
 
-            self.current[ctx.author.id] = NPC(
+            self.current[ctx.user.id] = NPC(
                 name=name,
                 avatar=avatar,
             )
 
-            await ctx.respond(
+            await resp.send_message(
                 "NPC has been set, now send the message.",
                 ephemeral=True,
             )
         else:
-            await ctx.respond(
+            await resp.send_message(
                 f"{pokemon} was not found, try again.",
                 ephemeral=True,
             )
 
-    @command(name="npc")
-    @guild_only()
+    @commands.command(name="npc")
+    @commands.guild_only()
     async def cmd_npc(
         self,
-        ctx: Context,
+        ctx: commands.Context,
         pokemon: str,
         *,
         text: str = None,
@@ -233,7 +214,7 @@ class Proxy(Cog):
             text=text,
         )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, message: Message):
         member: Member = message.author
         if not message.guild or member.bot or member.id not in self.current:
@@ -251,7 +232,7 @@ class Proxy(Cog):
                 text=message.content,
             )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
         """On raw reaction added
 
@@ -292,7 +273,8 @@ class Proxy(Cog):
                 elif emoji == "\N{BLACK QUESTION MARK ORNAMENT}":
                     await message.clear_reaction(emoji=emoji)
                     if user := guild.get_member(data):
-                        view = View(Button(label="Jump URL", url=message.jump_url))
+                        view = View()
+                        view.add_item(Button(label="Jump URL", url=message.jump_url))
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)

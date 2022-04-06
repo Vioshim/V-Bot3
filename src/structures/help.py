@@ -22,8 +22,7 @@ from discord.ext.commands import Command
 from src.utils.etc import WHITE_BAR
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Group, Cog
-    from src.context.context import Context
+    from discord.ext.commands import Group, Cog, Context
 
 from discord.ext.commands import HelpCommand
 

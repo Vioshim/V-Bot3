@@ -35,7 +35,8 @@ jishaku = "^2.3.2"
 python-docx = "^0.8.11"
 colour = "^0.1.5"
 humanize = "^4.0.0"
-py-cord = {git = "https://github.com/Pycord-Development/pycord.git", extras = ["voice", "speed"]}
+"discord.py" = {git = "https://github.com/Rapptz/discord.py.git", extras = ["voice"]}
+orjson = "^3.6.7"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
