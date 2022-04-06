@@ -1142,7 +1142,7 @@ class Submission(commands.Cog):
                 mission_cooldown=self.mission_cooldown,
                 **loads(contents),
             )
-            webhook = await self.bot.webhook(903437849154711552)
+            webhook = await self.bot.webhook(852180971985043466)
             await webhook.edit_message(
                 903437849154711552,
                 content=None,
