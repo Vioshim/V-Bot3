@@ -192,9 +192,7 @@ class SPView(Basic):
             silent_mode=True,
         )
 
-        async with view.send(
-            title="Sp.Ability Modify", ephemeral=True
-        ) as elements:
+        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
@@ -532,9 +530,7 @@ class BackstoryMod(Mod):
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
         backstory = (
-            oc.backstory[:4000]
-            if oc.backstory
-            else "No backstory was provided."
+            oc.backstory[:4000] if oc.backstory else "No backstory was provided."
         )
         handler = text_view.handle(
             label="Write the character's Backstory.",
@@ -595,11 +591,7 @@ class ExtraMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(bot=bot, member=member, target=target)
-        extra = (
-            oc.extra[:4000]
-            if oc.extra
-            else "No Extra Information was provided."
-        )
+        extra = oc.extra[:4000] if oc.extra else "No Extra Information was provided."
         handler = text_view.handle(
             label="Write the character's Extra Information.",
             style=TextStyle.paragraph,
@@ -1083,9 +1075,7 @@ class DevolutionMod(Mod):
 
         oc.species = species
 
-        oc.moveset &= set(species.total_movepool()) & set(
-            current.total_movepool()
-        )
+        oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
 
         default_image = oc.default_image or oc.image
 
@@ -1155,9 +1145,7 @@ class FusionMod(Mod):
 
         items = [oc.species]
         items.extend(oc.species.species_evolves_to)
-        values = set(
-            Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2)
-        )
+        values = set(Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2))
 
         view = ComplexInput(
             bot=bot,
@@ -1401,9 +1389,7 @@ class ModifyView(View):
         embed = self.oc.embed
         embed.set_image(url="attachment://image.png")
         kwargs = dict(embed=embed, thread=Object(id=self.oc.thread))
-        if modifying and (
-            file := await self.bot.get_file(self.oc.generated_image)
-        ):
+        if modifying and (file := await self.bot.get_file(self.oc.generated_image)):
             kwargs["attachments"] = [file]
         msg = None
         try:
@@ -1411,9 +1397,7 @@ class ModifyView(View):
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
             except HTTPException:
                 if not (thread := guild.get_thread(self.oc.thread)):
-                    thread: Thread = await self.bot.fetch_channel(
-                        self.oc.thread
-                    )
+                    thread: Thread = await self.bot.fetch_channel(self.oc.thread)
                 await thread.edit(archived=False)
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
         except NotFound:
@@ -1440,9 +1424,7 @@ class ModifyView(View):
         guild: Guild = webhook.guild
         try:
             try:
-                await webhook.delete_message(
-                    self.oc.id, thread_id=self.oc.thread
-                )
+                await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
             except HTTPException:
                 if not (thread := guild.get_thread(self.oc.thread)):
                     thread: Thread = await guild.fetch_channel(self.oc.thread)

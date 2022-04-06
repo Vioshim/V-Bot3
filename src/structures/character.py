@@ -248,7 +248,7 @@ class Character(metaclass=ABCMeta):
             title=self.name.title(),
             color=Color.blurple(),
             timestamp=self.created_at,
-            url=self.url
+            url=self.url,
         )
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]

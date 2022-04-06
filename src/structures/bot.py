@@ -105,12 +105,7 @@ class CustomBot(Bot):
         path = Path("src/cogs")
         path.resolve()
         for cog in path.glob("*/cog.py"):
-            item = (
-                str(cog)
-                .removesuffix(".py")
-                .replace("\\", ".")
-                .replace("/", ".")
-            )
+            item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
             await self.load_extension(item)
             self.logger.info("Successfully loaded %s", item)
 
@@ -133,9 +128,7 @@ class CustomBot(Bot):
         :class:`.Webhook`
             The webhook you requested.
         """
-        webhook: Webhook = await super(CustomBot, self).fetch_webhook(
-            webhook_id
-        )
+        webhook: Webhook = await super(CustomBot, self).fetch_webhook(webhook_id)
         if webhook.user == self.user:
             self.webhook_cache[webhook.channel.id] = webhook
         return webhook
