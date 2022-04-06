@@ -286,16 +286,25 @@ class Basic(Generic[_M], View):
         force: bool = False,
     ) -> None:
         """This method deletes the view, and stops it."""
-        if not self.message and isinstance(self.target, Interaction):
-            self.message = await self.target.original_message()
 
-        if not self.message.flags.ephemeral:
-            await self.message.delete()
-        elif force or self.from_message(self.message).id == self.id:
-            await self.message.edit(view=None)
-
-        self.message = None
-        self.stop()
+        try:
+            if self.message:
+                await self.message.delete()
+                self.message = None
+                return self.stop()
+        except NotFound:
+            view = self.from_message(self.message)
+            if force or view.id == self.id:
+                await self.message.edit(view=None)
+        else:
+            if isinstance(self.target, Interaction):
+                message = await self.target.original_message()
+                view = self.from_message(message)
+                if force or view.id == self.id:
+                    await message.edit(view=None)
+        finally:
+            self.message = None
+            self.stop()
 
     async def on_timeout(self) -> None:
         with suppress(DiscordException):
