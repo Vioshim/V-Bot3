@@ -1142,7 +1142,8 @@ class Submission(commands.Cog):
                 mission_cooldown=self.mission_cooldown,
                 **loads(contents),
             )
-            self.bot.add_view(view, message_id=903437849154711552)
+            webhook = await self.bot.webhook(903437849154711552)
+            await webhook.edit_message(903437849154711552, view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
     async def load_claimed_categories(self):
