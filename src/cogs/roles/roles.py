@@ -14,6 +14,7 @@
 from datetime import datetime
 from difflib import get_close_matches
 from time import mktime
+import jishaku
 from typing import Optional
 
 from discord import (
