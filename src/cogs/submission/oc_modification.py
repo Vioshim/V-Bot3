@@ -1430,7 +1430,7 @@ class ModifyView(View):
     @button(label="Don't make any changes", row=1)
     async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.edit_message("Alright, no changes.", view=None)
+        await resp.edit_message(content="Alright, no changes.", view=None)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
@@ -1462,5 +1462,5 @@ class ModifyView(View):
                 )
                 await self.oc.delete(db)
         finally:
-            await resp.edit_message("Character Has been Deleted", view=None)
+            await resp.edit_message(content="Character Has been Deleted", view=None)
             self.stop()
