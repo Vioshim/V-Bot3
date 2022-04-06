@@ -55,7 +55,7 @@ class MovepoolModal(Modal):
             label="Level Moves",
             placeholder="1: Move, Move\n2: Move, Move",
             required=False,
-            value="\n".join(
+            default="\n".join(
                 f"{k}: {', '.join(x.name for x in v)}"
                 for k, v in movepool.level.items()
                 if v
@@ -66,28 +66,28 @@ class MovepoolModal(Modal):
             label="TM Moves",
             placeholder=PLACEHOLDER,
             required=False,
-            value=", ".join(x.name for x in movepool.tm),
+            default=", ".join(x.name for x in movepool.tm),
         )
         self.tutor = TextInput(
             style=TextStyle.paragraph,
             label="Tutor Moves",
             placeholder=PLACEHOLDER,
             required=False,
-            value=", ".join(x.name for x in movepool.tutor),
+            default=", ".join(x.name for x in movepool.tutor),
         )
         self.egg = TextInput(
             style=TextStyle.paragraph,
             label="Egg Moves",
             placeholder=PLACEHOLDER,
             required=False,
-            value=", ".join(x.name for x in movepool.egg),
+            default=", ".join(x.name for x in movepool.egg),
         )
         self.event = TextInput(
             style=TextStyle.paragraph,
             label="Event Moves",
             placeholder=PLACEHOLDER,
             required=False,
-            value=", ".join(x.name for x in movepool.event),
+            default=", ".join(x.name for x in movepool.event),
         )
         self.add_item(self.level)
         self.add_item(self.tm)

@@ -610,7 +610,7 @@ class RPModal(Modal):
             label="Characters you have free (Will show in order)",
             placeholder="Character names go here separated by commas, if empty, all ocs will be used.",
             required=False,
-            value=text,
+            default=text,
         )
         self.add_item(self.names)
 
