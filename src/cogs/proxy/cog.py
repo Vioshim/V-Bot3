@@ -105,7 +105,7 @@ class Proxy(commands.Cog):
         ctx: Interaction,
         pokemon: Optional[DefaultSpeciesArg],
         shiny: Optional[bool],
-        gender: Optional[Literal['Male', 'Female']],
+        gender: Optional[Literal["Male", "Female"]],
         character: Optional[CharacterArg],
     ):
         """Slash command for NPC Narration
