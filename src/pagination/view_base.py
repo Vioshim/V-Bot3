@@ -220,16 +220,16 @@ class Basic(Generic[_M], View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if editing_original:
-                await target.edit_original_message(**data)
-            elif resp.is_done():
-                try:
-                    self.message = await target.followup.send(**data, wait=True)
-                except DiscordException as e:
-                    self.bot.logger.exception("Exception", exc_info=e)
-                    self.message = await target.channel.send(**data)
-            else:
-                await resp.send_message(**data)
-                self.message = await target.original_message()
+                return await target.edit_original_message(**data)
+
+            if not resp.is_done():
+                await resp.defer(ephemeral=True)
+
+            try:
+                self.message = await target.followup.send(**data, wait=True)
+            except DiscordException as e:
+                self.bot.logger.exception("Exception", exc_info=e)
+                self.message = await target.channel.send(**data)
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:
