@@ -76,7 +76,6 @@ class Roles(Cog):
 
                 self.bot.add_view(
                     view=RPThreadManage(
-                        bot=self.bot,
                         thread=thread,
                         member=member,
                     ),
@@ -104,7 +103,7 @@ class Roles(Cog):
             message_id=916482737811120128,
         )
         self.bot.add_view(
-            view=RegionRoles(bot=self.bot),
+            view=RegionRoles(timeout=None),
             message_id=956970863805231144,
         )
         w = await self.bot.webhook(910914713234325504)
