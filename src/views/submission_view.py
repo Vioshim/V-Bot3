@@ -76,14 +76,14 @@ class CharacterHandlerView(Complex):
             oc=data[0],
             target=interaction,
         )
-        await resp.send_message(
+        await resp.edit_message(
             embed=data[0].embed,
             view=view,
             ephemeral=True,
         )
         await view.wait()
-        with suppress(DiscordException):
-            await self.edit(page=None)
+        # with suppress(DiscordException):
+        # await self.edit(page=None)
         with suppress(DiscordException):
             await resp.edit_message(
                 embed=data[0].embed,
