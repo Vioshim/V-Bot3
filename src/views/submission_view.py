@@ -97,7 +97,7 @@ class SubmissionModal(Modal):
             style=TextStyle.paragraph,
             label=self.title,
             placeholder="Template or Google Document goes here",
-            value=text.strip(),
+            default=text.strip(),
             required=True,
         )
         self.add_item(self.text)

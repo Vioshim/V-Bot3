@@ -214,7 +214,7 @@ class SPView(Basic):
                     label=title,
                     style=item_style,
                     placeholder=DEFAULT_INFO_MSG,
-                    value=value,
+                    default=value,
                     origin=msg,
                     required=True,
                 ) as answer:
@@ -343,7 +343,7 @@ class NameMod(Mod):
         handler = text_view.handle(
             label="Write the character's Name.",
             placeholder="> oc.name",
-            value=oc.name,
+            default=oc.name,
             origin=target,
             required=True,
         )
@@ -403,7 +403,7 @@ class AgeMod(Mod):
         handler = text_view.handle(
             label="Write the character's Age.",
             placeholder=f"> {age}",
-            value=age,
+            default=age,
             origin=target,
             required=True,
         )
@@ -531,7 +531,7 @@ class BackstoryMod(Mod):
         handler = text_view.handle(
             label="Write the character's Backstory.",
             style=TextStyle.paragraph,
-            value=backstory,
+            default=backstory,
             origin=target,
             required=False,
         )
@@ -591,7 +591,7 @@ class ExtraMod(Mod):
         handler = text_view.handle(
             label="Write the character's Extra Information.",
             style=TextStyle.paragraph,
-            value=extra,
+            default=extra,
             origin=target,
             required=False,
         )
