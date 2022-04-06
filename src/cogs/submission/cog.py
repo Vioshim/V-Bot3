@@ -338,7 +338,7 @@ class Submission(commands.Cog):
     async def get_ocs(
         self,
         ctx: Interaction,
-        member: Optional[Member | User],
+        member: Optional[User],
         character: Optional[CharacterArg],
     ):
         resp: InteractionResponse = ctx.response
