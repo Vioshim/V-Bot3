@@ -84,7 +84,7 @@ class InviteView(View):
         return True
 
     @select(placeholder="Select Category", custom_id="partner")
-    async def process(self, sct: Select, inter: Interaction):
+    async def process(self, inter: Interaction, sct: Select):
         member: Member = inter.user
         resp: InteractionResponse = inter.response
         w = await self.bot.webhook(957602085753458708, reason="Partnership")
@@ -111,8 +111,8 @@ class InviteView(View):
     )
     async def accident(
         self,
-        btn: Button,
         inter: Interaction,
+        btn: Button,
     ) -> None:
         """Conclude Partnership
 

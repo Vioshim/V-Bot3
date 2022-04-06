@@ -61,7 +61,9 @@ class ModernInput(Basic):
         if input_text:
             self.embed.title = input_text.label or self.embed.title
             self.embed.description = (
-                input_text.value or input_text.placeholder or self.embed.description
+                input_text.value
+                or input_text.placeholder
+                or self.embed.description
             )
             self.empty.disabled = input_text.required
         else:
@@ -80,7 +82,9 @@ class ModernInput(Basic):
         data["input_text"] = input_text = TextInput(**kwargs)
         aux = ModernInput(**data)
         embed = aux.embed
-        embed.description = input_text.value or placeholder or self.embed.description
+        embed.description = (
+            input_text.value or placeholder or self.embed.description
+        )
         try:
             if origin:
                 if isinstance(origin, Interaction):
@@ -118,8 +122,8 @@ class ModernInput(Basic):
     )
     async def confirm(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(
@@ -154,8 +158,8 @@ class ModernInput(Basic):
     )
     async def confirm2(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         modal = TextModal(self.input_text)
@@ -171,8 +175,8 @@ class ModernInput(Basic):
     )
     async def cancel(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(
@@ -189,8 +193,8 @@ class ModernInput(Basic):
     )
     async def empty(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         self.text = ""

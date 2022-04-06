@@ -14,9 +14,9 @@
 from datetime import datetime
 from difflib import get_close_matches
 from time import mktime
-import jishaku
 from typing import Optional
 
+import jishaku
 from discord import (
     AllowedMentions,
     ButtonStyle,
@@ -150,7 +150,7 @@ class PronounRoles(View):
             ),
         ],
     )
-    async def pronoun(self, sct: Select, ctx: Interaction):
+    async def pronoun(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
         guild: Guild = ctx.guild
@@ -175,7 +175,7 @@ class Confirmation(View):
         label="Keep role",
         emoji=":small_check_mark:811367963235713124",
     )
-    async def keep(self, _: Button, inter: Interaction):
+    async def keep(self, inter: Interaction, _: Button):
         await inter.response.send_message(
             f"Role {self.role.mention} was not removed.",
             ephemeral=True,
@@ -186,7 +186,7 @@ class Confirmation(View):
         label="Remove Role",
         emoji=":small_x_mark:811367596866797658",
     )
-    async def remove(self, _: Button, inter: Interaction):
+    async def remove(self, inter: Interaction, _: Button):
         await inter.user.remove_roles(self.role)
         await inter.response.send_message(
             f"Role {self.role.mention} was removed.",
@@ -331,7 +331,7 @@ class BasicRoles(View):
             ),
         ],
     )
-    async def basic(self, sct: Select, ctx: Interaction):
+    async def basic(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
         guild: Guild = ctx.guild
@@ -397,15 +397,15 @@ class RegionView(View):
         )
 
     @button(label="Obtain Access", custom_id="unlock")
-    async def unlock(self, btn: Button, ctx: Interaction) -> None:
+    async def unlock(self, ctx: Interaction, btn: Button) -> None:
         await self.perms_setter(ctx, btn)
 
     @button(label="Remove Access", custom_id="lock")
-    async def lock(self, btn: Button, ctx: Interaction) -> None:
+    async def lock(self, ctx: Interaction, btn: Button) -> None:
         await self.perms_setter(ctx, btn)
 
     @button(label="More Information", custom_id="read")
-    async def read(self, _: Button, ctx: Interaction) -> None:
+    async def read(self, ctx: Interaction, _: Button) -> None:
         """Read Information
 
         Parameters
@@ -451,7 +451,7 @@ class RegionRoles(View):
             for item in MAP_ELEMENTS
         ],
     )
-    async def region(self, sct: Select, ctx: Interaction):
+    async def region(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         all_roles = {
@@ -505,7 +505,7 @@ class RegionRoles(View):
             await ctx.followup.send("Roles have been set", ephemeral=True)
 
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
-    async def region_all(self, _: Button, ctx: Interaction):
+    async def region_all(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         spectator = ctx.guild.get_role(957069729741287434)
@@ -524,7 +524,7 @@ class RegionRoles(View):
             await ctx.followup.send("Roles added.", ephemeral=True)
 
     @button(label="Remove all Map Roles", custom_id="region-none", row=1)
-    async def region_none(self, _: Button, ctx: Interaction):
+    async def region_none(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         spectator = ctx.guild.get_role(957069729741287434)
@@ -558,7 +558,7 @@ class RPThreadManage(View):
         row=1,
         custom_id="check_ocs",
     )
-    async def check_ocs(self, _: Button, ctx: Interaction):
+    async def check_ocs(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         cog = self.bot.get_cog("Submission")
@@ -672,7 +672,7 @@ class RPThreadView(View):
         style=ButtonStyle.blurple,
         row=0,
     )
-    async def ping(self, _: Button, interaction: Interaction):
+    async def ping(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         cog = interaction.client.get_cog("Roles")
@@ -714,7 +714,7 @@ class RPThreadView(View):
         style=ButtonStyle.blurple,
         row=0,
     )
-    async def get_role(self, _: Button, interaction: Interaction):
+    async def get_role(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await self.thread.add_user(interaction.user)
         await resp.send_message("Access granted.", ephemeral=True)
@@ -725,7 +725,7 @@ class RPThreadView(View):
         style=ButtonStyle.blurple,
         row=0,
     )
-    async def remove_role(self, _: Button, interaction: Interaction):
+    async def remove_role(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await self.thread.remove_user(interaction.user)
         await resp.send_message("Access removed.", ephemeral=True)

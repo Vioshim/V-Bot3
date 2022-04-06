@@ -109,7 +109,7 @@ class InvitePaginator(Complex):
         )
         self.embed.title = "Select Partner"
 
-    async def custom_choice(self, sct: Select, ctx: Interaction):
+    async def custom_choice(self, ctx: Interaction, sct: Select):
         response: InteractionResponse = ctx.response
         index = sct.values[0]
         amount = self.entries_per_page * self._pos
@@ -185,7 +185,7 @@ class InviterView(View):
         emoji="\N{HANDSHAKE}",
         custom_id="hub1",
     )
-    async def hub1(self, _: Button, ctx: Interaction):
+    async def hub1(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_message(content=HUB1, ephemeral=True)
 
@@ -195,7 +195,7 @@ class InviterView(View):
         emoji="\N{HANDSHAKE}",
         custom_id="hub2",
     )
-    async def hub2(self, _: Button, ctx: Interaction):
+    async def hub2(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_message(content=HUB2, ephemeral=True)
 
@@ -204,7 +204,7 @@ class InviterView(View):
         row=2,
         custom_id="partners",
     )
-    async def partners(self, sct: Select, ctx: Interaction):
+    async def partners(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         item = sct.values[0]
         if items := self.data.get(sct.values[0], set()):

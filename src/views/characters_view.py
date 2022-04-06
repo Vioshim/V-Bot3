@@ -64,7 +64,7 @@ class PingView(View):
         return False
 
     @button(label="Ping to RP with the OC")
-    async def ping(self, _: Button, ctx: Interaction) -> None:
+    async def ping(self, ctx: Interaction, _: Button) -> None:
         member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         if ctx.user == member:
@@ -91,7 +91,7 @@ class PingView(View):
         label="Delete Character",
         style=ButtonStyle.red,
     )
-    async def delete(self, _: Button, ctx: Interaction) -> None:
+    async def delete(self, ctx: Interaction, _: Button) -> None:
         resp: InteractionResponse = ctx.response
         member = ctx.guild.get_member(self.oc.author)
         if ctx.user != member:
@@ -129,7 +129,7 @@ class CharactersView(Complex):
         )
         self.embed.title = "Select a character"
 
-    async def custom_choice(self, sct: Select, ctx: Interaction):
+    async def custom_choice(self, ctx: Interaction, sct: Select):
         response: InteractionResponse = ctx.response
         for index in sct.values:
             try:

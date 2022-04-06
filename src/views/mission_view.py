@@ -14,7 +14,13 @@
 
 from datetime import datetime, timedelta
 
-from discord import Interaction, InteractionResponse, Member, TextChannel, Thread
+from discord import (
+    Interaction,
+    InteractionResponse,
+    Member,
+    TextChannel,
+    Thread,
+)
 from discord.ui import Button, View, button
 from discord.utils import format_dt, utcnow
 
@@ -56,7 +62,7 @@ class MissionView(View):
         self.supporting = supporting
 
     @button(label="Join Mission", custom_id="claim")
-    async def claim(self, btn: Button, interaction: Interaction) -> None:
+    async def claim(self, interaction: Interaction, btn: Button) -> None:
         """Claim Mission
 
         Parameters
@@ -141,7 +147,9 @@ class MissionView(View):
                     btn.disabled = True
                 await interaction.message.edit(embed=embed, view=self)
 
-                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
+                thread: Thread = await self.bot.fetch_channel(
+                    self.mission.msg_id
+                )
                 view = View()
                 view.add_item(Button(label="Jump URL", url=choice.jump_url))
                 await thread.add_user(member)
@@ -152,7 +160,7 @@ class MissionView(View):
 
     # noinspection PyTypeChecker
     @button(label="Conclude Mission", custom_id="remove")
-    async def remove(self, btn: Button, interaction: Interaction):
+    async def remove(self, interaction: Interaction, btn: Button):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         ch: TextChannel = interaction.channel
@@ -166,7 +174,9 @@ class MissionView(View):
             async with self.bot.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
-                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
+                thread: Thread = await self.bot.fetch_channel(
+                    self.mission.msg_id
+                )
                 await thread.edit(
                     archived=False,
                     locked=True,

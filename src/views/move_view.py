@@ -51,7 +51,7 @@ class MoveView(Complex):
         )
         self.embed.title = "Select a Move"
 
-    async def custom_choice(self, sct: Select, ctx: Interaction):
+    async def custom_choice(self, ctx: Interaction, sct: Select):
         response: InteractionResponse = ctx.response
         for index in sct.values:
             try:

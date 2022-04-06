@@ -22,17 +22,17 @@ from discord import (
     ButtonStyle,
     Guild,
     HTTPException,
-    TextStyle,
     Interaction,
     InteractionResponse,
     Member,
     NotFound,
     Object,
     SelectOption,
+    TextStyle,
     Thread,
     User,
 )
-from discord.ui import Button, TextInput, Select, View, button, select
+from discord.ui import Button, Select, TextInput, View, button, select
 
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.text_input import ModernInput
@@ -86,7 +86,7 @@ class SPView(Basic):
         return True
 
     @button(label="Add", custom_id="add")
-    async def add(self, _: Button, ctx: Interaction) -> None:
+    async def add(self, ctx: Interaction, _: Button) -> None:
         """Method to add a special ability
 
         Parameters
@@ -165,7 +165,7 @@ class SPView(Basic):
         return self.stop()
 
     @button(label="Modify", custom_id="modify")
-    async def modify(self, _: Button, ctx: Interaction) -> None:
+    async def modify(self, ctx: Interaction, _: Button) -> None:
         """Method to modify a special ability
 
         Parameters
@@ -228,7 +228,7 @@ class SPView(Basic):
         self.stop()
 
     @button(label="Remove", custom_id="remove")
-    async def delete(self, _: Button, ctx: Interaction) -> None:
+    async def delete(self, ctx: Interaction, _: Button) -> None:
         """Method to delete a special ability
 
         Parameters
@@ -1351,7 +1351,7 @@ class ModifyView(View):
         return True
 
     @select(placeholder="Select Fields to Edit", row=0)
-    async def edit(self, _: Select, ctx: Interaction):
+    async def edit(self, ctx: Interaction, _: Select):
         await self.target.edit_original_message(view=None)
         modifying: bool = False
         for item in ctx.data.get("values", []):
@@ -1408,13 +1408,13 @@ class ModifyView(View):
             self.stop()
 
     @button(label="Don't make any changes", row=1)
-    async def cancel(self, _: Button, ctx: Interaction):
+    async def cancel(self, ctx: Interaction, _: Button):
         await self.target.edit_original_message(view=None)
         await ctx.followup.send("Alright, no changes.", ephemeral=True)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
-    async def delete(self, _: Button, ctx: Interaction):
+    async def delete(self, ctx: Interaction, _: Button):
         await self.target.edit_original_message(view=None)
         webhook = await self.bot.webhook(919277769735680050)
         guild: Guild = webhook.guild
