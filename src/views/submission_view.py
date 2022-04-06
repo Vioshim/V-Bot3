@@ -66,7 +66,7 @@ class CharacterHandlerView(Complex):
             sort_key=lambda x: x.name,
         )
 
-    async def custom_choice(self, sct: Select, interaction: Interaction):
+    async def custom_choice(self, interaction: Interaction, _: Select):
         resp: InteractionResponse = interaction.response
         data: list[Type[Character]] = list(self.choices)
         view = ModifyView(
@@ -109,7 +109,9 @@ class SubmissionModal(Modal):
             if doc_data := G_DOCUMENT.match(text):
                 doc = await to_thread(docs_reader, url := doc_data.group(1))
                 msg_data = doc_convert(doc)
-                url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                url = (
+                    f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                )
                 msg_data["url"] = url
             else:
                 text = yaml_handler(text)
@@ -141,7 +143,7 @@ class TemplateView(View):
         self.title = title
 
     @button(label="Through Discord Modal", row=0, style=ButtonStyle.blurple)
-    async def mode1(self, _: Button, interaction: Interaction):
+    async def mode1(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text: str = dump(info, sort_keys=False)
@@ -149,7 +151,7 @@ class TemplateView(View):
         await resp.send_modal(modal)
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
-    async def mode2(self, _: Button, interaction: Interaction):
+    async def mode2(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
@@ -162,7 +164,7 @@ class TemplateView(View):
         self.stop()
 
     @button(label="Through Google Documents", row=2, style=ButtonStyle.blurple)
-    async def mode3(self, _: Button, interaction: Interaction):
+    async def mode3(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
 
         content = (
@@ -170,9 +172,13 @@ class TemplateView(View):
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
         )
         for item in self.template.get("Document", {}).values():
-            content += f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
+            content += (
+                f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
+            )
 
-        await self.target.edit_original_message(content=content, embed=None, view=None)
+        await self.target.edit_original_message(
+            content=content, embed=None, view=None
+        )
         await resp.pong()
         self.stop()
 
@@ -232,7 +238,7 @@ class SubmissionView(View):
         row=0,
         custom_id="a479517442c724c00cc2e15a4106d807",
     )
-    async def show_template(self, _: Select, ctx: Interaction) -> None:
+    async def show_template(self, ctx: Interaction, sct: Select) -> None:
         """Shows the provided Templates
 
         Parameters
@@ -244,7 +250,7 @@ class SubmissionView(View):
         """
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        if raw_data := ctx.data.get("values", []):
+        if raw_data := sct.values:
             template = self.kwargs.get(title := raw_data[0], {})
             view = TemplateView(
                 bot=self.bot,
@@ -274,7 +280,7 @@ class SubmissionView(View):
         row=1,
         custom_id="a78a8dc33d0f303928209f6566187c3f",
     )
-    async def oc_update(self, _: Button, ctx: Interaction):
+    async def oc_update(self, ctx: Interaction, _: Select):
         resp: InteractionResponse = ctx.response
 
         member: Member = ctx.user
@@ -339,7 +345,7 @@ class SubmissionView(View):
         row=1,
         custom_id="3ec81ed922f2f2cde42a2fc3ed3392c4",
     )
-    async def mission_create(self, _: Button, ctx: Interaction):
+    async def mission_create(self, ctx: Interaction, _: Button):
         guild: Guild = ctx.guild
         role = guild.get_role(719642423327719434)
         resp: InteractionResponse = ctx.response
@@ -393,7 +399,9 @@ class SubmissionView(View):
                 if not area:
                     return
                 mission = Mission(author=author.id, place=area.id)
-                text_input = ModernInput(bot=self.bot, member=member, target=channel)
+                text_input = ModernInput(
+                    bot=self.bot, member=member, target=channel
+                )
 
                 text: str
 
@@ -461,7 +469,9 @@ class SubmissionView(View):
                     if not item:
                         return
                     mission.difficulty = item
-                    channel: TextChannel = self.bot.get_channel(908498210211909642)
+                    channel: TextChannel = self.bot.get_channel(
+                        908498210211909642
+                    )
                     view = MissionView(
                         bot=self.bot,
                         mission=mission,

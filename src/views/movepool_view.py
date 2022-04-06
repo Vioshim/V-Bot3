@@ -26,7 +26,11 @@ from discord.ui import Button, Modal, TextInput, View, button
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
-from src.structures.character import Character, FakemonCharacter, VariantCharacter
+from src.structures.character import (
+    Character,
+    FakemonCharacter,
+    VariantCharacter,
+)
 from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.utils.functions import yaml_handler
@@ -128,7 +132,7 @@ class MovepoolView(Basic):
         self.embed.title = f"Modify Movepool for {oc.name}"
 
     @button(label="Modify Movepool")
-    async def modify(self, _: Button, ctx: Interaction):
+    async def modify(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         modal = MovepoolModal(self.oc)
         await resp.send_modal(modal)
@@ -137,7 +141,7 @@ class MovepoolView(Basic):
         self.stop()
 
     @button(label="Keep Current")
-    async def cancel(self, _: Button, ctx: Interaction):
+    async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_message(
             "Keeping current movepool",

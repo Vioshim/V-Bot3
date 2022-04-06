@@ -192,9 +192,7 @@ class Complex(Simple):
         if not (choices := self.choices):
             choices = set()
 
-        foo.placeholder = (
-            f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
-        )
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
 
         foo.options.clear()
         pages.options.clear()
@@ -249,7 +247,9 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
-                page_text = f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                page_text = (
+                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                )
                 pages.add_option(
                     label=page_text[:100],
                     value=f"{index}"[:100],
@@ -403,8 +403,8 @@ class Complex(Simple):
     )
     async def select_choice(
         self,
-        sct: Select,
         interaction: Interaction,
+        sct: Select,
     ) -> None:
         """Method used to select values from the pagination
 
@@ -428,7 +428,7 @@ class Complex(Simple):
             entries.append(str(name))
             self._choices.add(item)
 
-        await self.custom_choice(sct, interaction)
+        await self.custom_choice(interaction, sct)
 
         if not (self.silent_mode or response.is_done()) and (
             text := ", ".join(entries)
@@ -454,8 +454,8 @@ class Complex(Simple):
     )
     async def navigate(
         self,
-        sct: Select,
         interaction: Interaction,
+        sct: Select,
     ) -> None:
         """Method used to select values from the pagination
 
@@ -467,7 +467,7 @@ class Complex(Simple):
             Current interaction of the user
         """
         response: InteractionResponse = interaction.response
-        await self.custom_navigate(sct, interaction)
+        await self.custom_navigate(interaction, sct)
         if not response.is_done():
             items: list[str] = interaction.data.get("values", [])
             if items[0].isdigit():
@@ -475,8 +475,8 @@ class Complex(Simple):
 
     async def custom_choice(
         self,
-        sct: Select,
         interaction: Interaction,
+        sct: Select,
     ) -> None:
         """
         Method used to reach next first of the pagination
@@ -491,8 +491,8 @@ class Complex(Simple):
 
     async def custom_navigate(
         self,
-        sct: Select,
         interaction: Interaction,
+        sct: Select,
     ) -> None:
         """
         Method used to reach next first of the pagination
@@ -518,11 +518,11 @@ class ComplexInput(Complex):
     )
     async def message_handler(
         self,
-        btn: Button,
         ctx: Interaction,
+        btn: Button,
     ):
         response: InteractionResponse = ctx.response
-        await self.custom_message_handler(btn, ctx)
+        await self.custom_message_handler(ctx, btn)
         if response.is_done():
             return
         btn.disabled = True
@@ -545,7 +545,9 @@ class ComplexInput(Complex):
 
         current = set()
         for elem in message.content.split(","):
-            if len(self._choices or set()) < self.max_values - len(current) and (
+            if len(self._choices or set()) < self.max_values - len(
+                current
+            ) and (
                 entries := get_close_matches(
                     word=elem.strip(),
                     possibilities=aux,
@@ -573,8 +575,8 @@ class ComplexInput(Complex):
 
     async def custom_message_handler(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ):
         """
         Method used to reach next first of the pagination

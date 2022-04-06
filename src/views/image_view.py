@@ -97,7 +97,7 @@ class ImageView(Basic):
             yield self.text
 
     @button(label="I'll send an Image", row=0)
-    async def insert_image(self, btn: Button, ctx: Interaction):
+    async def insert_image(self, ctx: Interaction, btn: Button):
         btn.disabled = True
         resp: InteractionResponse = ctx.response
         if message := self.message:
@@ -131,7 +131,7 @@ class ImageView(Basic):
         self.stop()
 
     @button(label="I like the default one", row=0)
-    async def default_image(self, _: Button, ctx: Interaction):
+    async def default_image(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         if message := self.message:
             await message.edit(view=None)
@@ -145,7 +145,7 @@ class ImageView(Basic):
         self.stop()
 
     @button(label="Cancel Submission", style=ButtonStyle.red, row=0)
-    async def cancel(self, _: Button, ctx: Interaction):
+    async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         if message := self.message:
             await message.edit(view=None)

@@ -79,7 +79,7 @@ class AreaSelection(View):
         ]
 
     @select(placeholder="Select a location to check", row=0)
-    async def selection(self, _: Select, ctx: Interaction):
+    async def selection(self, ctx: Interaction, _: Select):
         resp: InteractionResponse = ctx.response
         if data := ctx.data.get("values", []):
 

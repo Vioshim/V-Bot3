@@ -101,8 +101,8 @@ class BooleanView(Basic):
     )
     async def confirm(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         try:
@@ -126,8 +126,8 @@ class BooleanView(Basic):
     )
     async def deny(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         try:
@@ -152,8 +152,8 @@ class BooleanView(Basic):
     )
     async def cancel(
         self,
-        _: Button,
         interaction: Interaction,
+        _: Button,
     ):
         resp: InteractionResponse = interaction.response
         try:

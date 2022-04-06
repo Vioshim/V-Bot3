@@ -241,7 +241,9 @@ class Simple(Basic):
             amount = self._entries_per_page * self._pos
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
-                self.embed.add_field(name=name, value=value, inline=self._inline)
+                self.embed.add_field(
+                    name=name, value=value, inline=self._inline
+                )
 
     async def edit(
         self,
@@ -277,8 +279,8 @@ class Simple(Basic):
     )
     async def first(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ) -> None:
         """
         Method used to reach next first of the pagination
@@ -291,7 +293,7 @@ class Simple(Basic):
             Current interaction of the user
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_first(btn, interaction)
+        await self.custom_first(interaction, btn)
         if not resp.is_done():
             return await self.edit(page=0)
 
@@ -302,8 +304,8 @@ class Simple(Basic):
     )
     async def previous(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ) -> None:
         """
         Method used to reach previous page of the pagination
@@ -316,7 +318,7 @@ class Simple(Basic):
             Current interaction of the user
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_previous(btn, interaction)
+        await self.custom_previous(interaction, btn)
         if not resp.is_done():
             return await self.edit(page=self._pos - 1)
 
@@ -327,8 +329,8 @@ class Simple(Basic):
     )
     async def finish(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ) -> None:
         """
         Method used to conclude the pagination
@@ -341,7 +343,7 @@ class Simple(Basic):
             Current interaction of the user
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_finish(btn, interaction)
+        await self.custom_finish(interaction, btn)
         if not resp.is_done():
             await self.delete(force=True)
 
@@ -352,8 +354,8 @@ class Simple(Basic):
     )
     async def next(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ) -> None:
         """
         Method used to reach next page of the pagination
@@ -366,7 +368,7 @@ class Simple(Basic):
             Current interaction of the user
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_next(btn, interaction)
+        await self.custom_next(interaction, btn)
         if not resp.is_done():
             return await self.edit(page=self._pos + 1)
 
@@ -377,8 +379,8 @@ class Simple(Basic):
     )
     async def last(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ) -> None:
         """
         Method used to reach last page of the pagination
@@ -391,14 +393,16 @@ class Simple(Basic):
             Current interaction of the user
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_last(btn, interaction)
+        await self.custom_last(interaction, btn)
         if not resp.is_done():
-            return await self.edit(page=len(self.values[:: self._entries_per_page]) - 1)
+            return await self.edit(
+                page=len(self.values[:: self._entries_per_page]) - 1
+            )
 
     async def custom_previous(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ):
         """Placeholder for custom defined operations
 
@@ -412,8 +416,8 @@ class Simple(Basic):
 
     async def custom_first(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ):
         """Placeholder for custom defined operations
 
@@ -427,8 +431,8 @@ class Simple(Basic):
 
     async def custom_finish(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ):
         """Placeholder for custom defined operations
 
@@ -442,8 +446,8 @@ class Simple(Basic):
 
     async def custom_next(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ):
         """Placeholder for custom defined operations
 
@@ -457,8 +461,8 @@ class Simple(Basic):
 
     async def custom_last(
         self,
-        btn: Button,
         interaction: Interaction,
+        btn: Button,
     ):
         """Placeholder for custom defined operations
 

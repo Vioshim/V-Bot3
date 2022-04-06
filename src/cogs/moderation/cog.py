@@ -100,7 +100,7 @@ class Meeting(View):
         return True
 
     @button(label="Agreed")
-    async def agreement(self, _: Button, interaction: Interaction):
+    async def agreement(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         user: Member = interaction.user
         if interaction.user.guild_permissions.manage_messages:
@@ -118,7 +118,7 @@ class Meeting(View):
             await interaction.edit_original_message(embed=self.embed)
 
     @button(label="Disagreed")
-    async def disagreement(self, _: Button, interaction: Interaction):
+    async def disagreement(self, interaction: Interaction, _: Button):
         user: Member = interaction.user
         resp: InteractionResponse = interaction.response
         if interaction.user.guild_permissions.manage_messages:

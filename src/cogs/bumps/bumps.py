@@ -152,7 +152,7 @@ class PingBump(View):
         )
 
     @button(emoji="a:SZD_desk_bell:769116713639215124")
-    async def reminder(self, _: Button, inter: Interaction) -> None:
+    async def reminder(self, inter: Interaction, _: Button) -> None:
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)

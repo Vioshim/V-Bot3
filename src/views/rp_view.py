@@ -65,7 +65,7 @@ class RPView(View):
         return True
 
     @button(label="Mention the User", style=ButtonStyle.green, custom_id="ping")
-    async def ping(self, _: Button, interaction: Interaction):
+    async def ping(self, interaction: Interaction, _: Button):
         member: Member = interaction.user
         guild = interaction.guild
         webhook = await self.bot.webhook(740568087820238919, reason="Ping")

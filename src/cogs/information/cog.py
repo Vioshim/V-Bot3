@@ -676,7 +676,8 @@ class Information(commands.Cog):
             except ValueError:
                 emoji, name = None, ctx.channel.name
 
-            view = View(
+            view = View()
+            view.add_item(
                 Button(
                     emoji=emoji,
                     label=name.replace("-", " ").title(),
