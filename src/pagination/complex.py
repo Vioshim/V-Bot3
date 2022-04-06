@@ -288,7 +288,11 @@ class Complex(Simple):
                 default=True,
             )
 
-    async def edit(self, page: Optional[int] = None) -> None:
+    async def edit(
+        self,
+        interaction: Interaction,
+        page: Optional[int] = None,
+    ) -> None:
         """Method used to edit the pagination
 
         Parameters
@@ -297,9 +301,12 @@ class Complex(Simple):
             Page to be accessed, defaults to None
         """
         amount = len(self._choices or set())
+        resp: InteractionResponse = interaction.response
         if self.keep_working or amount < self._max_values:
-            await super(Complex, self).edit(page=page)
+            await super(Complex, self).edit(interaction=interaction, page=page)
         else:
+            if not resp.is_done():
+                await resp.pong()
             await self.delete(force=True)
 
     @asynccontextmanager
@@ -445,7 +452,7 @@ class Complex(Simple):
             self.values = set(self.values) - self.choices
         if len(sct.values) == self.entries_per_page and self._pos > 1:
             self._pos -= 1
-        await self.edit(page=self._pos)
+        await self.edit(interaction=interaction, page=self._pos)
 
     @select(
         placeholder="Press to scroll pages",
@@ -468,10 +475,11 @@ class Complex(Simple):
         """
         response: InteractionResponse = interaction.response
         await self.custom_navigate(interaction, sct)
-        if not response.is_done():
-            items: list[str] = interaction.data.get("values", [])
-            if items[0].isdigit():
-                return await self.edit(page=int(items[0]))
+        if not response.is_done() and sct.values[0].isdigit():
+            return await self.edit(
+                interaction=interaction,
+                page=int(sct.values[0]),
+            )
 
     async def custom_choice(
         self,
@@ -518,11 +526,11 @@ class ComplexInput(Complex):
     )
     async def message_handler(
         self,
-        ctx: Interaction,
+        interaction: Interaction,
         btn: Button,
     ):
-        response: InteractionResponse = ctx.response
-        await self.custom_message_handler(ctx, btn)
+        response: InteractionResponse = interaction.response
+        await self.custom_message_handler(interaction, btn)
         if response.is_done():
             return
         btn.disabled = True
@@ -536,7 +544,7 @@ class ComplexInput(Complex):
         )
         message: Message = await self.bot.wait_for(
             "message",
-            check=text_check(ctx),
+            check=text_check(interaction),
         )
         aux = {}
         for item in self.values:
@@ -571,7 +579,7 @@ class ComplexInput(Complex):
                 )
                 await message.delete(delay=5)
 
-        return await self.edit(page=self._pos)
+        return await self.edit(interaction=interaction, page=self._pos)
 
     async def custom_message_handler(
         self,

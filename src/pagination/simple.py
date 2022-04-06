@@ -241,10 +241,15 @@ class Simple(Basic):
             amount = self._entries_per_page * self._pos
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
-                self.embed.add_field(name=name, value=value, inline=self._inline)
+                self.embed.add_field(
+                    name=name,
+                    value=value,
+                    inline=self._inline,
+                )
 
     async def edit(
         self,
+        interaction: Interaction,
         page: Optional[int] = None,
     ) -> None:
         """This method edits the pagination's page given an index.
@@ -264,11 +269,12 @@ class Simple(Basic):
         if self.modifying_embed:
             data["embed"] = self._embed
 
-        with suppress(DiscordException):
-            if message := self.message:
-                await message.edit(**data)
-            elif isinstance(target := self.target, Interaction):
-                await target.response.edit_message(**data)
+        resp: InteractionResponse = interaction.response
+
+        if not resp.is_done():
+            await resp.edit_message(**data)
+        elif message := self.message:
+            await message.edit(**data)
 
     @button(
         emoji=":lasttrack:952522808347467807",
@@ -293,7 +299,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_first(interaction, btn)
         if not resp.is_done():
-            return await self.edit(page=0)
+            return await self.edit(interaction=interaction, page=0)
 
     @button(
         emoji=":fastreverse:952522808599126056",
@@ -318,7 +324,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_previous(interaction, btn)
         if not resp.is_done():
-            return await self.edit(page=self._pos - 1)
+            return await self.edit(interaction=interaction, page=self._pos - 1)
 
     @button(
         emoji=":stop:952522808573968454",
@@ -343,6 +349,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_finish(interaction, btn)
         if not resp.is_done():
+            await resp.pong()
             await self.delete(force=True)
 
     @button(
@@ -368,7 +375,7 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_next(interaction, btn)
         if not resp.is_done():
-            return await self.edit(page=self._pos + 1)
+            return await self.edit(interaction=interaction, page=self._pos + 1)
 
     @button(
         emoji=":nexttrack:952522808355848292",
@@ -393,7 +400,10 @@ class Simple(Basic):
         resp: InteractionResponse = interaction.response
         await self.custom_last(interaction, btn)
         if not resp.is_done():
-            return await self.edit(page=len(self.values[:: self._entries_per_page]) - 1)
+            return await self.edit(
+                interaction=interaction,
+                page=len(self.values[:: self._entries_per_page]) - 1,
+            )
 
     async def custom_previous(
         self,
