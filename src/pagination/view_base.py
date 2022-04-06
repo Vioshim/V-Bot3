@@ -220,7 +220,8 @@ class Basic(Generic[_M], View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if editing_original:
-                self.message = await target.edit_original_message(**data)
+                data.pop("ephemeral", None)
+                await resp.edit_message(**data)
             elif resp.is_done():
                 try:
                     self.message = await target.followup.send(**data, wait=True)
