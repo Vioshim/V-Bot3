@@ -154,7 +154,7 @@ class Submission(commands.Cog):
         )
         self.ctx_menu3 = app_commands.ContextMenu(
             name="Check User's OCs",
-            callback=self.moves_checker,
+            callback=self.check_ocs,
             guild_ids=[719343092963999804],
         )
         self.bot.tree.add_command(self.ctx_menu1)
