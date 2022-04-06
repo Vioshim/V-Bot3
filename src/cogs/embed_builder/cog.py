@@ -125,9 +125,12 @@ class EmbedBuilder(commands.Cog):
                     message,
                     content=reference.content,
                     embeds=[
-                        embed_handler(reference, item) for item in reference.embeds
+                        embed_handler(reference, item)
+                        for item in reference.embeds
                     ],
-                    files=[await item.to_file() for item in reference.attachments],
+                    files=[
+                        await item.to_file() for item in reference.attachments
+                    ],
                     username=f"URL〕{name}",
                     avatar_url=author.display_avatar.url,
                     view=view,
@@ -243,7 +246,9 @@ class EmbedBuilder(commands.Cog):
         item_cache = (ctx.author.id, ctx.guild.id)
         try:
             embed = Embed()
-            if (message := self.cache.get(item_cache)) and (embeds := message.embeds):
+            if (message := self.cache.get(item_cache)) and (
+                embeds := message.embeds
+            ):
                 embed = embeds[0]
             yield embed
         finally:
@@ -350,7 +355,9 @@ class EmbedBuilder(commands.Cog):
 
         """
         embed = Embed(title=title, description=description)
-        webhook = await self.bot.webhook(ctx.channel, reason="Created by Embed Builder")
+        webhook = await self.bot.webhook(
+            ctx.channel, reason="Created by Embed Builder"
+        )
         author: Member = ctx.author
 
         if not isinstance(thread := ctx.channel, Thread):
@@ -409,9 +416,9 @@ class EmbedBuilder(commands.Cog):
             if isinstance(reference.resolved, Message):
                 message = reference.resolved
             else:
-                channel: Union[Thread, TextChannel] = guild.get_channel_or_thread(
-                    reference.channel_id
-                )
+                channel: Union[
+                    Thread, TextChannel
+                ] = guild.get_channel_or_thread(reference.channel_id)
                 message = await channel.fetch_message(reference.message_id)
 
         if isinstance(message, Message):
@@ -419,12 +426,13 @@ class EmbedBuilder(commands.Cog):
                 try:
                     webhook = await self.bot.fetch_webhook(webhook_id)
                     if isinstance(channel := message.channel, Thread):
-                        thread_id = channel.id
+                        message: WebhookMessage = await webhook.fetch_message(
+                            message.id, thread=channel
+                        )
                     else:
-                        thread_id = None
-                    message: WebhookMessage = await webhook.fetch_message(
-                        message.id, thread_id=thread_id
-                    )
+                        message: WebhookMessage = await webhook.fetch_message(
+                            message.id
+                        )
                     message.channel = channel
                     self.write(message, ctx.author)
                     await ctx.reply("Message has been set", delete_after=3)
@@ -1357,7 +1365,8 @@ class EmbedBuilder(commands.Cog):
         """
         async with self.edit(ctx) as embed:
             if content := "\n".join(
-                f"• {i}){f.name} > {f.value}" for i, f in enumerate(embed.fields)
+                f"• {i}){f.name} > {f.value}"
+                for i, f in enumerate(embed.fields)
             ):
                 await ctx.send(f"```yaml\n{content}\n```")
 
@@ -1543,7 +1552,9 @@ class EmbedBuilder(commands.Cog):
                 embed,
                 "_fields",
                 [
-                    dict(name=field.name, value=field.value, inline=field.inline)
+                    dict(
+                        name=field.name, value=field.value, inline=field.inline
+                    )
                     for field in embed.fields
                     if field.name != name
                 ],
@@ -1705,7 +1716,9 @@ class EmbedBuilder(commands.Cog):
         """
         async with self.edit(ctx) as embed:
             aux = embed.fields[index]
-            embed.set_field_at(index, name=aux.name, value=value, inline=aux.inline)
+            embed.set_field_at(
+                index, name=aux.name, value=value, inline=aux.inline
+            )
 
     @fields_index.command(name="inline")
     @commands.has_guild_permissions(

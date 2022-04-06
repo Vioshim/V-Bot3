@@ -30,6 +30,7 @@ from discord import (
     SelectOption,
     TextChannel,
     TextStyle,
+    Webhook,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from jishaku.codeblocks import codeblock_converter
@@ -123,22 +124,21 @@ class SubmissionModal(Modal):
 
         except Exception as e:
             await resp.send_message(str(e), ephemeral=True)
-        finally:
-            if not resp.is_done():
-                await resp.pong()
+
+        if not resp.is_done():
+            await resp.pong()
+        self.stop()
 
 
 class TemplateView(View):
     def __init__(
         self,
         bot: CustomBot,
-        target: Interaction,
         template: dict,
         title: str,
     ):
         super().__init__(timeout=None)
         self.bot = bot
-        self.target = target
         self.template = template
         self.title = title
 
@@ -152,21 +152,17 @@ class TemplateView(View):
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
     async def mode2(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
-        await self.target.edit_original_message(
+        await interaction.edit_original_message(
             content=f"```yaml\n{text}\n```",
             embed=None,
             view=None,
         )
-        await resp.pong()
         self.stop()
 
     @button(label="Through Google Documents", row=2, style=ButtonStyle.blurple)
     async def mode3(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-
         content = (
             "**__Available Templates__**\n\n"
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
@@ -176,10 +172,9 @@ class TemplateView(View):
                 f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
             )
 
-        await self.target.edit_original_message(
+        await interaction.edit_original_message(
             content=content, embed=None, view=None
         )
-        await resp.pong()
         self.stop()
 
 
@@ -254,7 +249,6 @@ class SubmissionView(View):
             template = self.kwargs.get(title := raw_data[0], {})
             view = TemplateView(
                 bot=self.bot,
-                target=ctx,
                 template=template,
                 title=title,
             )
