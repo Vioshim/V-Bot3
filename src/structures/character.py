@@ -1838,7 +1838,7 @@ class CharacterTransform(Transformer):
         cls, interaction: Interaction, value: str
     ) -> list[Choice[str]]:
         member_id = interaction.user.id
-        for item in map(lambda x: Choice(**x), interaction.data.get("options", [])):
+        for item in map(lambda x: Choice(name=x["name"], value=["value"]), interaction.data.get("options", [])):
             if item.name == "member":
                 member_id = int(item.value)
 
@@ -1851,7 +1851,7 @@ class CharacterTransform(Transformer):
             for item in get_close_matches(word=text, possibilities=items, n=25)
         ]
         if not values:
-            values = [Choice(k, v) for k, v in items.items() if k.startswith(text)]
+            values = [Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)]
         values.sort(key=lambda x: x.name)
         return values
 
