@@ -236,7 +236,7 @@ class Information(commands.Cog):
             if isinstance(icon, Attachment):
                 try:
                     data = await icon.read()
-                    await role.edit(icon=data)
+                    await role.edit(display_icon=data)
                 except DiscordException:
                     await ctx.followup.send(
                         "Invalid icon for discord",
