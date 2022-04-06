@@ -97,7 +97,9 @@ def age_parser(text: str, oc: Character):
         valid
     """
     age: int = oc.age or 0
-    for item in map(lambda x: x.strip(), text.replace(",", ";").replace("|", ";").split(";")):
+    for item in map(
+        lambda x: x.strip(), text.replace(",", ";").replace("|", ";").split(";")
+    ):
         op = sorted(o for x in item.split("-") if isinstance(o := foo(x), int))
         if (len(op) == 2 and op[0] <= age <= op[1]) or age in op:
             return True
@@ -324,8 +326,7 @@ class Pokedex(commands.Cog):
                 ocs = [
                     oc
                     for oc in ocs
-                    if isinstance(oc.species, Variant)
-                    and oc.species.base == mon
+                    if isinstance(oc.species, Variant) and oc.species.base == mon
                 ]
             else:
                 ocs = [oc for oc in ocs if oc.species == mon]
@@ -381,11 +382,7 @@ class Pokedex(commands.Cog):
                 if oc.backstory and backstory.lower() in oc.backstory.lower()
             ]
         if extra:
-            ocs = [
-                oc
-                for oc in ocs
-                if oc.extra and extra.lower() in oc.extra.lower()
-            ]
+            ocs = [oc for oc in ocs if oc.extra and extra.lower() in oc.extra.lower()]
         if sp_ability:
             ocs = [
                 oc
