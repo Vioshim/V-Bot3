@@ -178,7 +178,9 @@ class Pokedex(commands.Cog):
 
             embed.title = f"See {mon.name}'s movepool"
             movepool = mon.total_movepool
-            if info := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon_types):
+            if info := "\n".join(
+                f"• {'/'.join(i.name for i in x)}" for x in mon_types
+            ):
                 embed.add_field(name="Possible Types", value=info)
         elif fakemon:
             movepool = fakemon.movepool
@@ -277,7 +279,7 @@ class Pokedex(commands.Cog):
         resp: InteractionResponse = ctx.response
         text: str = ""
         guild: Guild = ctx.guild
-        cog = ctx.bot.get_cog("Submission")
+        cog = ctx.client.get_cog("Submission")
         await resp.defer(ephemeral=True)
         embed = Embed(
             title="Select the Character",
@@ -326,7 +328,8 @@ class Pokedex(commands.Cog):
                 ocs = [
                     oc
                     for oc in ocs
-                    if isinstance(oc.species, Variant) and oc.species.base == mon
+                    if isinstance(oc.species, Variant)
+                    and oc.species.base == mon
                 ]
             else:
                 ocs = [oc for oc in ocs if oc.species == mon]
@@ -335,7 +338,8 @@ class Pokedex(commands.Cog):
             ocs = [
                 oc
                 for oc in ocs
-                if isinstance(oc, FusionCharacter) and species in oc.species.bases
+                if isinstance(oc, FusionCharacter)
+                and species in oc.species.bases
             ]
 
         if isinstance(mon, Species):
@@ -348,7 +352,8 @@ class Pokedex(commands.Cog):
                 embed.set_footer(text=f"Types: {mon_types}")
             elif isinstance(mon, Fusion) and (
                 mon_types := ", ".join(
-                    "/".join(i.name for i in item) for item in mon.possible_types
+                    "/".join(i.name for i in item)
+                    for item in mon.possible_types
                 )
             ):
                 embed.set_footer(text=f"Possible Types: {mon_types}")
@@ -361,7 +366,10 @@ class Pokedex(commands.Cog):
 
             if isinstance(mon, Fusion):
                 if pronoun == "She":
-                    image1, image2 = mon.mon1.female_image, mon.mon2.female_image
+                    image1, image2 = (
+                        mon.mon1.female_image,
+                        mon.mon2.female_image,
+                    )
                 else:
                     image1, image2 = mon.mon1.base_image, mon.mon2.base_image
             elif pronoun == "She":
@@ -382,7 +390,11 @@ class Pokedex(commands.Cog):
                 if oc.backstory and backstory.lower() in oc.backstory.lower()
             ]
         if extra:
-            ocs = [oc for oc in ocs if oc.extra and extra.lower() in oc.extra.lower()]
+            ocs = [
+                oc
+                for oc in ocs
+                if oc.extra and extra.lower() in oc.extra.lower()
+            ]
         if sp_ability:
             ocs = [
                 oc
@@ -456,7 +468,8 @@ class Pokedex(commands.Cog):
             ocs = [
                 oc
                 for oc in ocs
-                if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")
+                if fix(oc.kind)
+                == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")
             ]
 
         view = CharactersView(
