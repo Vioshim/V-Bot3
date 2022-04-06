@@ -29,6 +29,7 @@ from discord import (
     Member,
     Message,
     MessageReference,
+    NotFound,
     PartialMessage,
     StickerItem,
     User,
@@ -286,28 +287,22 @@ class Basic(Generic[_M], View):
     ) -> None:
         """This method deletes the view, and stops it."""
         try:
-            if message := self.message:
-                await message.delete()
+            if self.message:
+                await self.message.delete()
                 return self.stop()
-        except DiscordException as e:
-            self.bot.logger.exception("Error 1", exc_info=e)
-
-        try:
-            if message := self.message:
+        except NotFound:
+            view = self.from_message(self.message)
+            if force or view.id == self.id:
+                await self.message.edit(view=None)
+        else:
+            if isinstance(self.target, Interaction):
+                message = await self.target.original_message()
                 view = self.from_message(message)
                 if force or view.id == self.id:
                     await message.edit(view=None)
-                    return self.stop()
-        except DiscordException as e:
-            self.bot.logger.exception("Error 2", exc_info=e)
-
-        self.message = None
-        if isinstance(self.target, Interaction):
-            message = await self.target.original_message()
-            view = self.from_message(message)
-            if force or view.id == self.id:
-                await message.edit(view=None)
-        self.stop()
+        finally:
+            self.message = None
+            self.stop()
 
     async def on_timeout(self) -> None:
         with suppress(DiscordException):
