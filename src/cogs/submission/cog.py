@@ -142,9 +142,30 @@ class Submission(commands.Cog):
         self.oc_list: dict[int, int] = {}
         self.supporting: dict[Member, Member] = {}
         self.oc_list_webhook: Optional[Webhook] = None
+        self.ctx_menu1 = app_commands.ContextMenu(
+            name="Read Moves",
+            callback=self.moves_checker,
+            guild_ids=[719343092963999804]
+        )
+        self.ctx_menu2 = app_commands.ContextMenu(
+            name="Read Abilities",
+            callback=self.abilities_checker,
+            guild_ids=[719343092963999804]
+        )
+        self.ctx_menu3 = app_commands.ContextMenu(
+            name="Check User's OCs",
+            callback=self.moves_checker,
+            guild_ids=[719343092963999804]
+        )
+        self.bot.tree.add_command(self.ctx_menu1)
+        self.bot.tree.add_command(self.ctx_menu2)
+        self.bot.tree.add_command(self.ctx_menu3)
 
-    @app_commands.context_menu(name="Read Moves")
-    @app_commands.guilds(719343092963999804)
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+        self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
+        self.bot.tree.remove_command(self.ctx_menu3.name, type=self.ctx_menu3.type)
+
     async def moves_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
@@ -191,8 +212,6 @@ class Submission(commands.Cog):
                 ephemeral=True,
             )
 
-    @app_commands.context_menu(name="Read Abilities")
-    @app_commands.guilds(719343092963999804)
     async def abilities_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
@@ -234,8 +253,6 @@ class Submission(commands.Cog):
                 ephemeral=True,
             )
 
-    @app_commands.context_menu(name="Check User's OCs")
-    @app_commands.guilds(719343092963999804)
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
