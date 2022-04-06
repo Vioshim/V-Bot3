@@ -283,16 +283,12 @@ class Inviter(commands.Cog):
         await ctx.delete()
 
 
-def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
     ----------
     bot: CustomBot
         Bot
-
-    Returns
-    -------
-
     """
-    bot.add_cog(Inviter(bot))
+    await bot.add_cog(Inviter(bot))

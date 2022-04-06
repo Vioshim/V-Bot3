@@ -458,10 +458,12 @@ class Pokedex(commands.Cog):
         )
 
 
-def setup(bot: CustomBot):
-    """Default Cog Loader
+async def setup(bot: CustomBot) -> None:
+    """Default Cog loader
 
-    :param bot: Bot
-    :return:
+    Parameters
+    ----------
+    bot: CustomBot
+        Bot
     """
-    bot.add_cog(Pokedex(bot))
+    await bot.add_cog(Pokedex(bot))

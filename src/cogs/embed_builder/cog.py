@@ -1796,16 +1796,12 @@ class EmbedBuilder(commands.Cog):
             await ctx.reply(f"{type(error)}: {error}")
 
 
-def setup(bot: CustomBot):
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
     ----------
     bot: CustomBot
         Bot
-
-    Returns
-    -------
-
     """
-    bot.add_cog(EmbedBuilder(bot))
+    await bot.add_cog(EmbedBuilder(bot))
