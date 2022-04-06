@@ -83,7 +83,10 @@ class Information(commands.Cog):
     @app_commands.describe(area="Area to get weather info about.")
     @app_commands.choices(
         area=[
-            app_commands.Choice(item.name, f"{item.lat}/{item.lon}")
+            app_commands.Choice(
+                name=item.name,
+                value=f"{item.lat}/{item.lon}",
+            )
             for item in MAP_ELEMENTS
         ]
     )

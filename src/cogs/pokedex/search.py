@@ -74,7 +74,7 @@ class SpeciesTransformer(Transformer):
         guild: Guild = ctx.guild
         kind = ""
         for item in map(
-            lambda x: Choice(x["name"], x["value"]), ctx.get("options", [])
+            lambda x: Choice(name=x["name"], value=x["value"]), ctx.get("options", [])
         ):
             if item.name == "kind":
                 kind = item.value
