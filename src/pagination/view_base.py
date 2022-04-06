@@ -289,6 +289,7 @@ class Basic(Generic[_M], View):
         try:
             if self.message:
                 await self.message.delete()
+                self.message = None
                 return self.stop()
         except NotFound:
             view = self.from_message(self.message)
