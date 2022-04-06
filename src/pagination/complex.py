@@ -192,9 +192,7 @@ class Complex(Simple):
         if not (choices := self.choices):
             choices = set()
 
-        foo.placeholder = (
-            f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
-        )
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
 
         foo.options.clear()
         pages.options.clear()
@@ -249,7 +247,9 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
-                page_text = f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                page_text = (
+                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                )
                 pages.add_option(
                     label=page_text[:100],
                     value=f"{index}"[:100],
@@ -545,7 +545,9 @@ class ComplexInput(Complex):
 
         current = set()
         for elem in message.content.split(","):
-            if len(self._choices or set()) < self.max_values - len(current) and (
+            if len(self._choices or set()) < self.max_values - len(
+                current
+            ) and (
                 entries := get_close_matches(
                     word=elem.strip(),
                     possibilities=aux,
