@@ -15,8 +15,7 @@
 from typing import Callable, Optional, TypeVar
 
 from discord import Embed, Interaction, Message, TextChannel
-from discord.app_commands.commands import T, _populate_descriptions
-from discord.ext.commands import Command, Context
+from discord.ext.commands import Context
 
 from src.utils.matches import (
     DISCORD_MSG_URL,
@@ -30,7 +29,6 @@ _T = TypeVar("_T")
 
 __all__ = (
     "fix",
-    "doc_escribe",
     "discord_url_msg",
     "common_get",
     "multiple_pop",
@@ -47,39 +45,6 @@ __all__ = (
     "embed_handler",
     "yaml_handler",
 )
-
-
-def doc_escribe(*ignore: str, **kwargs: str):
-
-    def decorator(inner: T) -> T:
-
-        parameters = {}
-        placeholder = None
-        for item in inner.__doc__.split("\n"):
-            elements = item.split(":")
-            if len(elements) == 2:
-                placeholder, _ = elements
-            elif placeholder:
-                parameters[placeholder.strip()] = item.strip()
-                placeholder = None
-
-        parameters = dict(list(parameters.items())[1:])
-
-        multiple_pop(parameters, *ignore)
-
-        parameters.update(**kwargs)
-
-        if isinstance(inner, Command):
-            _populate_descriptions(inner._params, parameters)
-        else:
-            try:
-                inner.__discord_app_commands_param_description__.update(parameters)  # type: ignore # Runtime attribute access
-            except AttributeError:
-                inner.__discord_app_commands_param_description__ = parameters  # type: ignore # Runtime attribute assignment
-
-        return inner
-
-    return decorator
 
 
 def unescape(text: str):
