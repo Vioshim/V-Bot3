@@ -86,9 +86,7 @@ class Meeting(View):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         if member == self.reporter:
-            await resp.send_message(
-                "You are the one reporting.", ephemeral=True
-            )
+            await resp.send_message("You are the one reporting.", ephemeral=True)
             return False
         elif member == self.imposter:
             await resp.send_message("You are the one reported.", ephemeral=True)
@@ -276,9 +274,7 @@ class Moderation(commands.Cog):
                 ephemeral=True,
             )
             return
-        view = Meeting(
-            reporter=interaction.user, imposter=member, reason=reason
-        )
+        view = Meeting(reporter=interaction.user, imposter=member, reason=reason)
         time = format_dt(utcnow() + timedelta(seconds=60), style="R")
         await resp.send_message(
             content=f"{moderation.mention}  -  {time}",
@@ -295,9 +291,7 @@ class Moderation(commands.Cog):
     @app_commands.command(description="Reports a situation to staff.")
     @app_commands.guilds(719343092963999804)
     @app_commands.describe(text="Message to be sent to staff")
-    @app_commands.describe(
-        anonymous="If you want staff to know you reported it."
-    )
+    @app_commands.describe(anonymous="If you want staff to know you reported it.")
     async def report(
         self,
         ctx: Interaction,
@@ -382,9 +376,7 @@ class Moderation(commands.Cog):
         if reference := message.reference:
             with suppress(DiscordException):
                 if not (msg := message.reference.resolved):
-                    msg = await message.channel.fetch_message(
-                        reference.message_id
-                    )
+                    msg = await message.channel.fetch_message(reference.message_id)
                 mentioned_users.append(msg.author)
 
         mentioned = set(afk_role.members) & set(mentioned_users)
@@ -412,9 +404,7 @@ class Moderation(commands.Cog):
         await ctx.channel.edit(slowmode_delay=time)
         await ctx.reply(content=f"Cool down set to {time} seconds")
 
-    @commands.group(
-        name="clean", aliases=["purge"], invoke_without_command=True
-    )
+    @commands.group(name="clean", aliases=["purge"], invoke_without_command=True)
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
     async def clean(self, ctx: Context, amount: int = 5) -> None:
@@ -427,9 +417,7 @@ class Moderation(commands.Cog):
         async with ctx.typing():
             await ctx.message.delete()
             deleted = await ctx.channel.purge(limit=amount)
-        await ctx.channel.send(
-            f"Deleted {len(deleted)} message(s)", delete_after=3
-        )
+        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="bot")
     @commands.has_guild_permissions(manage_messages=True)
@@ -446,9 +434,7 @@ class Moderation(commands.Cog):
             deleted = await ctx.channel.purge(
                 limit=amount, check=lambda m: m.author.bot
             )
-        await ctx.channel.send(
-            f"Deleted {len(deleted)} message(s)", delete_after=3
-        )
+        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="user")
     @commands.has_guild_permissions(manage_messages=True)
@@ -560,9 +546,7 @@ class Moderation(commands.Cog):
             )
             return
         with suppress(DiscordException):
-            await member.send(
-                f"Kicked from {ctx.guild} by the reason: {reason}"
-            )
+            await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
         await member.kick(
             reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}"
@@ -683,9 +667,7 @@ class Moderation(commands.Cog):
                 user=user,
                 reason=f"{user.display_name} was unbanned by {ctx.author} ({ctx.author.id}). Reason: {reason}",
             )
-            await ctx.send(
-                f"Unbanned {user} for the reason: {reason}", delete_after=3
-            )
+            await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
         else:
             await ctx.reply("Unable to retrieve the user.")
         await ctx.message.delete()

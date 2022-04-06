@@ -155,9 +155,7 @@ class PronounRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
@@ -336,9 +334,7 @@ class BasicRoles(View):
         member: Member = ctx.user
         guild: Guild = ctx.guild
         roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {
-            item for x in sct.options if (item := guild.get_role(int(x.value)))
-        }
+        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
         if add := roles - set(member.roles):
             await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
@@ -446,9 +442,7 @@ class RegionRoles(View):
     async def region(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        all_roles = {
-            role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))
-        }
+        all_roles = {role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))}
         spectator: Role = ctx.guild.get_role(957069729741287434)
         if len(sct.values) == 1:
             info = MAP_ELEMENTS2[int(sct.values[0])]
@@ -683,11 +677,7 @@ class RPThreadView(View):
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        ocs = (
-            interaction.client.get_cog("Submission")
-            .rpers.get(member.id, {})
-            .values()
-        )
+        ocs = interaction.client.get_cog("Submission").rpers.get(member.id, {}).values()
         await resp.send_modal(
             RPModal(
                 thread=self.thread,

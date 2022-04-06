@@ -112,4 +112,3 @@ class AreaSelection(View):
         )
         embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
         await resp.send_message(embed=embed, view=view, ephemeral=True)
-        self.stop()

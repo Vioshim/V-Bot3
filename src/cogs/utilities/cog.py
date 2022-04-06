@@ -91,9 +91,7 @@ class Utilities(commands.Cog):
 
         line = stream.readline()
         if "zlib" not in line:
-            raise RuntimeError(
-                "Invalid objects.inv file, not z-lib compatible."
-            )
+            raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
         entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
@@ -123,9 +121,7 @@ class Utilities(commands.Cog):
     async def build_rtfm_lookup_table(self):
         cache = {}
         for item in RTFMPages:
-            async with self.bot.session.get(
-                f"{item.value}/objects.inv"
-            ) as resp:
+            async with self.bot.session.get(f"{item.value}/objects.inv") as resp:
                 if resp.status != 200:
                     raise RuntimeError(
                         "Cannot build rtfm lookup table, try again later."

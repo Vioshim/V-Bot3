@@ -147,9 +147,7 @@ class MissionView(View):
                     btn.disabled = True
                 await interaction.message.edit(embed=embed, view=self)
 
-                thread: Thread = await self.bot.fetch_channel(
-                    self.mission.msg_id
-                )
+                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
                 view = View()
                 view.add_item(Button(label="Jump URL", url=choice.jump_url))
                 await thread.add_user(member)
@@ -174,9 +172,7 @@ class MissionView(View):
             async with self.bot.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
-                thread: Thread = await self.bot.fetch_channel(
-                    self.mission.msg_id
-                )
+                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
                 await thread.edit(
                     archived=False,
                     locked=True,
