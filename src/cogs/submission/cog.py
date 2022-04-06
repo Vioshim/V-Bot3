@@ -1014,7 +1014,7 @@ class Submission(commands.Cog):
 
         with suppress(TimeoutError):
             msg: Message = await self.bot.wait_for(
-                event="message",
+                "message",
                 check=message_validator(message),
                 timeout=3,
             )
