@@ -1353,7 +1353,7 @@ class ModifyView(View):
     @select(placeholder="Select Fields to Edit", row=0)
     async def edit(self, ctx: Interaction, _: Select):
         resp: InteractionResponse = ctx.response
-        await resp.edit_message(view=None)
+        await self.target.response.edit_message(view=None)
         modifying: bool = False
         for item in ctx.data.get("values", []):
             mod = Modification[item]
