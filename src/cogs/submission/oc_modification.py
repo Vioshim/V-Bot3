@@ -1425,6 +1425,7 @@ class ModifyView(View):
                 self.oc.image = msg.embeds[0].image.url
                 async with self.bot.database() as db:
                     await self.oc.update(db)
+            await resp.edit_message(view=None, embed=self.oc.embed)
             self.stop()
 
     @button(label="Don't make any changes", row=1)

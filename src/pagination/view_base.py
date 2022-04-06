@@ -285,7 +285,6 @@ class Basic(Generic[_M], View):
         force: bool = False,
     ) -> None:
         """This method deletes the view, and stops it."""
-        self.bot.logger.info("1- %s", str(self.message))
         try:
             if message := self.message:
                 await message.delete()
@@ -294,7 +293,6 @@ class Basic(Generic[_M], View):
                 if message := self.message:
                     view = self.from_message(message)
                     if force or view.id == self.id:
-                        self.bot.logger.info("2- %s", str(message))
                         await message.edit(view=None)
         finally:
             self.message = None
