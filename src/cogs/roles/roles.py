@@ -356,11 +356,9 @@ class BasicRoles(View):
 
 
 class RegionView(View):
-    def __init__(self, bot: CustomBot, info: MapPair, ctx: Interaction):
+    def __init__(self, info: MapPair):
         super(RegionView, self).__init__(timeout=None)
-        self.bot = bot
         self.info = info
-        self.ctx = ctx
         self.unlock.custom_id = f"unlock-{info.category}"
         self.lock.custom_id = f"lock-{info.category}"
         self.read.custom_id = f"read-{info.category}"
@@ -379,8 +377,7 @@ class RegionView(View):
         role: Role = ctx.guild.get_role(self.info.role)
         btn.disabled = True
         spectator = ctx.guild.get_role(957069729741287434)
-        await resp.pong()
-        await self.ctx.response.edit_message(view=self)
+        await resp.edit_message(view=self)
         if spectator in ctx.user.roles:
             await ctx.user.remove_roles(spectator)
         if btn.label == "Obtain Access":
@@ -389,7 +386,7 @@ class RegionView(View):
         else:
             await ctx.user.remove_roles(role)
             word = "Disabling"
-        self.bot.logger.info(
+        ctx.client.logger.info(
             "%s reading permissions for %s at %s",
             word,
             str(ctx.user),
@@ -417,14 +414,13 @@ class RegionView(View):
         """
         category: CategoryChannel = ctx.guild.get_channel(self.info.category)
         resp: InteractionResponse = ctx.response
-        self.bot.logger.info(
+        ctx.client.logger.info(
             "%s is reading Map Information of %s",
             str(ctx.user),
             category.name,
         )
-        await resp.pong()
-        view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
-        await self.ctx.response.edit_message(
+        view = AreaSelection(bot=ctx.client, cat=category, member=ctx.user)
+        await resp.edit_message(
             content=f"There's a total of {view.total:02d} OCs in {category.name}.",
             view=view,
         )
@@ -460,7 +456,7 @@ class RegionRoles(View):
         spectator: Role = ctx.guild.get_role(957069729741287434)
         if len(sct.values) == 1:
             info = MAP_ELEMENTS2[int(sct.values[0])]
-            view = RegionView(bot=self.bot, info=info, ctx=ctx)
+            view = RegionView(info=info)
             role: Role = ctx.guild.get_role(info.role)
             view.unlock.disabled = role in ctx.user.roles
             view.lock.disabled = role not in ctx.user.roles
