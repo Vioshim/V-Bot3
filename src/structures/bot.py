@@ -105,7 +105,12 @@ class CustomBot(Bot):
         path = Path("src/cogs")
         path.resolve()
         for cog in path.glob("*/cog.py"):
-            item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
+            item = (
+                str(cog)
+                .removesuffix(".py")
+                .replace("\\", ".")
+                .replace("/", ".")
+            )
             await self.load_extension(item)
             self.logger.info("Successfully loaded %s", item)
 
@@ -128,7 +133,9 @@ class CustomBot(Bot):
         :class:`.Webhook`
             The webhook you requested.
         """
-        webhook: Webhook = await super(CustomBot, self).fetch_webhook(webhook_id)
+        webhook: Webhook = await super(CustomBot, self).fetch_webhook(
+            webhook_id
+        )
         if webhook.user == self.user:
             self.webhook_cache[webhook.channel.id] = webhook
         return webhook
@@ -364,7 +371,7 @@ class CustomBot(Bot):
             Webhook if channel is valid.
         """
         if isinstance(channel, Thread):
-            channel: TextChannel = channel.parent
+            channel = channel.guild.get_channel(channel.parent_id)
 
         channel_id: int = getattr(channel, "id", channel)
 
@@ -374,7 +381,7 @@ class CustomBot(Bot):
         if isinstance(channel, int):
             channel: TextChannel = self.get_channel(channel)
             if isinstance(channel, Thread):
-                channel: TextChannel = channel.parent
+                channel = channel.guild.get_channel(channel.parent_id)
 
         for item in await channel.webhooks():
             if item.user == self.user:
