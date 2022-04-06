@@ -223,7 +223,7 @@ class Basic(Generic[_M], View):
                 return await target.edit_original_message(**data)
 
             if not resp.is_done():
-                await resp.defer(ephemeral=True)
+                await resp.defer(ephemeral=ephemeral)
 
             try:
                 self.message = await target.followup.send(**data, wait=True)
@@ -289,7 +289,6 @@ class Basic(Generic[_M], View):
         try:
             if message := self.message:
                 await message.delete()
-            self.message = None
         except DiscordException:
             with suppress(DiscordException):
                 if message := self.message:
@@ -297,18 +296,7 @@ class Basic(Generic[_M], View):
                     if force or view.id == self.id:
                         self.bot.logger.info("2- %s", str(message))
                         await message.edit(view=None)
-                self.message = None
         finally:
-            if (
-                isinstance(target := self.target, Interaction)
-                and not self.message
-            ):
-                with suppress(DiscordException):
-                    message = await target.original_message()
-                    view = self.from_message(message)
-                    self.bot.logger.info("3- %s", str(message))
-                    if force or view.id == self.id:
-                        await message.edit(view=None)
             self.message = None
             self.stop()
 
