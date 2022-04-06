@@ -210,7 +210,7 @@ class Pokedex(commands.Cog):
         species: Optional[SpeciesArg],
         fused: Optional[DefaultSpeciesArg],
         member: Optional[Member],
-        location: Optional[TextChannel | Thread],
+        location: Optional[TextChannel],
         backstory: Optional[str],
         extra: Optional[str],
         sp_ability: Optional[str],
