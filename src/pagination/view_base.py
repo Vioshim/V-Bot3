@@ -20,7 +20,6 @@ from typing import Generic, Optional, TypeVar, Union
 
 from discord import (
     AllowedMentions,
-    ApplicationContext,
     DiscordException,
     Embed,
     File,
@@ -82,7 +81,7 @@ class Basic(Generic[_M], View):
             )
 
         if not member:
-            if isinstance(target, (Message, Context, ApplicationContext)):
+            if isinstance(target, (Message, Context)):
                 member = target.author
             elif isinstance(target, Interaction):
                 member = target.user

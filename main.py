@@ -17,7 +17,6 @@ from contextlib import suppress
 from functools import wraps
 from logging import getLogger, setLoggerClass
 from os import getenv
-from pathlib import Path
 
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncpg import Pool, create_pool
@@ -80,7 +79,7 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
         scheduler
     """
     try:
-        bot = CustomBot(
+        async with CustomBot(
             scheduler=scheduler,
             pool=pool,
             logger=logger,
@@ -90,18 +89,11 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
             command_attrs=dict(hidden=True),
             case_insensitive=True,
             help_command=CustomHelp(),
-        )
-        bot.load_extension("jishaku")
-        path = Path("src/cogs")
-        path.resolve()
-        for cog in path.glob("*/cog.py"):
-            item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
-            bot.load_extension(item)
-            logger.info("Successfully loaded %s", item)
-        await bot.login(getenv("DISCORD_TOKEN"))
-        await bot.connect()
+        ) as bot:
+            await bot.login(getenv("DISCORD_TOKEN"))
+            await bot.connect(reconnect=True)
     except Exception as e:
-        logger.critical("An exception occurred while trying to connect", exc_info=e)
+        logger.critical("An exception occurred while trying to connect.", exc_info=e)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,8 @@
 from typing import Callable, Optional, TypeVar
 
 from discord import Embed, Interaction, Message, TextChannel
-from discord.ext.commands import Context
+from discord.app_commands.commands import T, _populate_descriptions
+from discord.ext.commands import Command, Context
 
 from src.utils.matches import (
     DISCORD_MSG_URL,
@@ -29,6 +30,7 @@ _T = TypeVar("_T")
 
 __all__ = (
     "fix",
+    "doc_escribe",
     "discord_url_msg",
     "common_get",
     "multiple_pop",
@@ -45,6 +47,39 @@ __all__ = (
     "embed_handler",
     "yaml_handler",
 )
+
+
+def doc_escribe(*ignore: str, **kwargs: str):
+
+    def decorator(inner: T) -> T:
+
+        parameters = {}
+        placeholder = None
+        for item in inner.__doc__.split("\n"):
+            elements = item.split(":")
+            if len(elements) == 2:
+                placeholder, _ = elements
+            elif placeholder:
+                parameters[placeholder.strip()] = item.strip()
+                placeholder = None
+
+        parameters = dict(list(parameters.items())[1:])
+
+        multiple_pop(parameters, *ignore)
+
+        parameters.update(**kwargs)
+
+        if isinstance(inner, Command):
+            _populate_descriptions(inner._params, parameters)
+        else:
+            try:
+                inner.__discord_app_commands_param_description__.update(parameters)  # type: ignore # Runtime attribute access
+            except AttributeError:
+                inner.__discord_app_commands_param_description__ = parameters  # type: ignore # Runtime attribute assignment
+
+        return inner
+
+    return decorator
 
 
 def unescape(text: str):
@@ -133,7 +168,7 @@ def multiple_pop(item: dict[str, _T], *args: str) -> dict[str, _T]:
         The possibly removed data
     """
 
-    return {x: elem for x in args if (elem := item.pop(x, None))}
+    return {x: item.pop(x) for x in args if x in item}
 
 
 def common_pop_get(item: dict[str, _T], *args: str) -> Optional[_T]:
@@ -194,26 +229,26 @@ def embed_modifier(embed: Embed = None, **kwargs):
     if image := kwargs.get("image", ""):
         embed.set_image(url=image)
     elif "image" in kwargs:
-        embed.remove_image()
+        embed.set_image(url=None)
 
     if thumbnail := kwargs.get("thumbnail", ""):
         embed.set_thumbnail(url=thumbnail)
     elif "thumbnail" in kwargs:
-        embed.remove_thumbnail()
+        embed.set_thumbnail(url=None)
 
     if "fields" in kwargs:
         embed.clear_fields()
         if fields := kwargs.get("fields", []):
             for field in fields:
-                if isinstance(field, tuple):
+                if isinstance(field, dict):
+                    embed.add_field(**field)
+                elif isinstance(field, tuple):
                     if len(field) == 2:
                         name, value = field
                         embed.add_field(name=name, value=value)
                     elif len(field) == 3:
                         name, value, inline = field
                         embed.add_field(name=name, value=value, inline=inline)
-                elif isinstance(field, dict):
-                    embed.add_field(**field)
 
     return embed
 

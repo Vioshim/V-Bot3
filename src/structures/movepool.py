@@ -32,8 +32,8 @@ __all__ = (
 
 move_set = set[Move]
 frozen_set = frozenset[Move]
-move_dict = dict[int, move_set]
-frozen_dict = frozendict[int, frozen_set]
+move_dict = dict[int, set[Move]]
+frozen_dict = frozendict[int, frozenset[Move]]
 
 
 @dataclass(unsafe_hash=True, repr=False, slots=True)

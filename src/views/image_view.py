@@ -80,7 +80,7 @@ class ImageView(Basic):
         try:
             await super(ImageView, self).send(file=file)
         except HTTPException:
-            self.embed.remove_image()
+            self.embed.set_image(url=None)
             self.default_image.disabled = True
             await super(ImageView, self).send(file=file)
         except Exception as e:

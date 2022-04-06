@@ -22,7 +22,7 @@ from discord import (
     ButtonStyle,
     Guild,
     HTTPException,
-    InputTextStyle,
+    TextStyle,
     Interaction,
     InteractionResponse,
     Member,
@@ -32,7 +32,7 @@ from discord import (
     Thread,
     User,
 )
-from discord.ui import Button, InputText, Select, View, button, select
+from discord.ui import Button, TextInput, Select, View, button, select
 
 from src.pagination.complex import Complex, ComplexInput
 from src.pagination.text_input import ModernInput
@@ -132,7 +132,7 @@ class SPView(Basic):
 
         text_view = ModernInput(
             bot=self.bot,
-            input_text=InputText(
+            input_text=TextInput(
                 label="Special Ability",
                 placeholder=DEFAULT_INFO_MSG,
                 required=True,
@@ -145,9 +145,9 @@ class SPView(Basic):
 
         for item in SpAbility.__slots__:
             if item == "name":
-                item_style = InputTextStyle.short
+                item_style = TextStyle.short
             else:
-                item_style = InputTextStyle.long
+                item_style = TextStyle.long
             title = f"Write the Special Ability's {item.title()}"
             async with text_view.handle(
                 placeholder=DEFAULT_INFO_MSG,
@@ -205,9 +205,9 @@ class SPView(Basic):
                 if item not in elements:
                     continue
                 if item == "name":
-                    item_style = InputTextStyle.short
+                    item_style = TextStyle.short
                 else:
-                    item_style = InputTextStyle.long
+                    item_style = TextStyle.long
                 title = f"Special Ability's {item}".title()
                 value: str = backup.get(item)
                 async with text_view.handle(
@@ -530,7 +530,7 @@ class BackstoryMod(Mod):
         )
         handler = text_view.handle(
             label="Write the character's Backstory.",
-            style=InputTextStyle.paragraph,
+            style=TextStyle.paragraph,
             value=backstory,
             origin=target,
             required=False,
@@ -590,7 +590,7 @@ class ExtraMod(Mod):
         extra = oc.extra[:4000] if oc.extra else "No Extra Information was provided."
         handler = text_view.handle(
             label="Write the character's Extra Information.",
-            style=InputTextStyle.paragraph,
+            style=TextStyle.paragraph,
             value=extra,
             origin=target,
             required=False,

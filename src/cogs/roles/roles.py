@@ -22,16 +22,16 @@ from discord import (
     CategoryChannel,
     Embed,
     Guild,
-    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
     Role,
     SelectOption,
+    TextStyle,
     Thread,
     WebhookMessage,
 )
-from discord.ui import Button, InputText, Modal, Select, View, button, select
+from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import utcnow
 
 from src.cogs.roles.area_selection import AreaSelection
@@ -582,34 +582,27 @@ class RPModal(Modal):
     def __init__(
         self,
         bot: CustomBot,
-        cool_down: dict[int, datetime],
-        role_cool_down: dict[int, datetime],
-        last_claimer: dict[int, int],
         thread: Thread,
         ocs: set[Character],
     ) -> None:
         super().__init__(title="Pinging a RP Search")
         self.bot = bot
-        self.cool_down = cool_down
-        self.role_cool_down = role_cool_down
-        self.last_claimer = last_claimer
         self.thread = thread
         self.ocs = ocs
         if len(text := "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)) > 4000:
             text = "\n".join(f"- {x.name}" for x in ocs)
-        self.add_item(
-            InputText(
-                style=InputTextStyle.paragraph,
-                label="Characters you have free (Will show in order)",
-                placeholder="Character names go here separated by commas, if empty, all ocs will be used.",
-                required=False,
-                value=text,
-            )
+        self.names = TextInput(
+            style=TextStyle.paragraph,
+            label="Characters you have free (Will show in order)",
+            placeholder="Character names go here separated by commas, if empty, all ocs will be used.",
+            required=False,
+            value=text,
         )
+        self.add_item(self.names)
 
-    async def callback(self, interaction: Interaction):
+    async def on_submit(self, interaction: Interaction):
         info = {x.name.title(): x for x in self.ocs}
-        data = self.children[0].value or ""
+        data = self.names.value or ""
         items: list[Character] = []
         for item in data.split("\n"):
             item = item.removeprefix("-").strip().title()
@@ -635,9 +628,10 @@ class RPModal(Modal):
             wait=True,
             thread=self.thread,
         )
-        self.cool_down[member.id] = utcnow()
-        self.role_cool_down[self.thread.id] = utcnow()
-        self.last_claimer[self.thread.id] = member.id
+        cog = self.bot.get_cog("Roles")
+        cog.cool_down[member.id] = utcnow()
+        cog.role_cool_down[self.thread.id] = utcnow()
+        cog.last_claimer[self.thread.id] = member.id
         async with self.bot.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
@@ -653,19 +647,8 @@ class RPModal(Modal):
 
 
 class RPThreadView(View):
-    def __init__(
-        self,
-        bot: CustomBot,
-        cool_down: dict[int, datetime],
-        role_cool_down: dict[int, datetime],
-        last_claimer: dict[int, int],
-        thread: Thread,
-    ):
+    def __init__(self, thread: Thread):
         super(RPThreadView, self).__init__(timeout=None)
-        self.bot = bot
-        self.cool_down = cool_down
-        self.role_cool_down = role_cool_down
-        self.last_claimer = last_claimer
         self.thread = thread
 
     @button(
@@ -678,32 +661,30 @@ class RPThreadView(View):
     async def ping(self, _: Button, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
-        if self.last_claimer.get(self.thread.id) == member.id:
+        cog = interaction.client.get_cog("Roles")
+        if cog.last_claimer.get(self.thread.id) == member.id:
             return await resp.send_message(
                 "You're the last user that pinged this thread, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
-        if hours((val := self.cool_down.get(member.id))) < 2:
+        if hours((val := cog.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
                 "You're in cool down, you pinged one of the threads recently."
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        if hours((val := self.role_cool_down.get(self.thread.id))) < 2:
+        if hours((val := cog.role_cool_down.get(self.thread.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
                 f"Thread is in cool down, check the latest thread at <#{self.thread.id}>."
                 f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        ocs = self.bot.get_cog("Submission").rpers.get(member.id, {}).values()
+        ocs = interaction.client.get_cog("Submission").rpers.get(member.id, {}).values()
         await resp.send_modal(
             RPModal(
-                bot=self.bot,
-                cool_down=self.cool_down,
-                role_cool_down=self.role_cool_down,
-                last_claimer=self.last_claimer,
+                bot=interaction.client,
                 thread=self.thread,
                 ocs=ocs,
             )

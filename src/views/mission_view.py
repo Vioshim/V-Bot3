@@ -14,13 +14,7 @@
 
 from datetime import datetime, timedelta
 
-from discord import (
-    Interaction,
-    InteractionResponse,
-    Member,
-    TextChannel,
-    Thread,
-)
+from discord import Interaction, InteractionResponse, Member, TextChannel, Thread
 from discord.ui import Button, View, button
 from discord.utils import format_dt, utcnow
 
@@ -98,9 +92,11 @@ class MissionView(View):
 
         if items := [oc for oc in ocs if oc.id in self.mission.ocs]:
             oc = items[0]
+            view = View()
+            view.add_item(Button(label="Jump URL", url=oc.jump_url))
             await resp.send_message(
                 f"Your character {oc.name!r} is already participating in the mission.",
-                view=View(Button(label="Jump URL", url=oc.jump_url)),
+                view=view,
                 ephemeral=True,
             )
             return
@@ -146,10 +142,12 @@ class MissionView(View):
                 await interaction.message.edit(embed=embed, view=self)
 
                 thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
+                view = View()
+                view.add_item(Button(label="Jump URL", url=choice.jump_url))
                 await thread.add_user(member)
                 await thread.send(
                     f"{member} joined with {choice.name} `{choice!r}` as character for this mission.",
-                    view=View(Button(label="Jump URL", url=choice.jump_url)),
+                    view=view,
                 )
 
     # noinspection PyTypeChecker

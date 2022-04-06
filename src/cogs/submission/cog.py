@@ -30,26 +30,23 @@ from discord import (
     Embed,
     Guild,
     HTTPException,
-    InputTextStyle,
     Interaction,
     InteractionResponse,
     Member,
     Message,
     NotFound,
     Object,
-    Option,
-    OptionChoice,
     RawMessageDeleteEvent,
-    RawThreadDeleteEvent,
     Status,
     TextChannel,
+    TextStyle,
     Thread,
     User,
     Webhook,
     WebhookMessage,
+    app_commands,
 )
-from discord.commands import has_role, message_command, slash_command, user_command
-from discord.ext.commands import Cog
+from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import utcnow
 from docx import Document
@@ -59,13 +56,18 @@ from orjson import loads
 from yaml import safe_load
 from yaml.error import MarkedYAMLError
 
-from src.context import ApplicationContext, AutocompleteContext
 from src.pagination.boolean import BooleanView
 from src.pagination.complex import ComplexInput
 from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, doc_convert, fetch_all, oc_process
+from src.structures.character import (
+    Character,
+    CharacterArg,
+    doc_convert,
+    fetch_all,
+    oc_process,
+)
 from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -106,36 +108,6 @@ CLAIM_MESSAGE = """
 """.strip()
 
 
-def oc_autocomplete(ctx: AutocompleteContext) -> list[OptionChoice]:
-    """Method to autocomplete the requested OCs
-
-    Parameters
-    ----------
-    ctx : AutocompleteContext
-        Context
-
-    Returns
-    -------
-    list[OptionChoice]
-        Values
-    """
-    member_id = int(ctx.options.get("member") or ctx.interaction.user.id)
-    cog: Submission = ctx.bot.get_cog("Submission")
-    text: str = str(ctx.value or "").title()
-    ocs = cog.rpers.get(member_id, {}).values()
-    items = {oc.name: str(oc.id) for oc in ocs}
-    if data := get_close_matches(word=text, possibilities=items, n=25):
-        values = [OptionChoice(item, items[item]) for item in data]
-    else:
-        values = [
-            OptionChoice(oc.name, str(oc.id)) for oc in ocs if oc.name.startswith(text)
-        ]
-
-    values.sort(key=lambda x: x.name)
-
-    return values
-
-
 def message_validator(message: Message):
     """Function used for checking compatiblity between messages
 
@@ -156,7 +128,7 @@ def message_validator(message: Message):
     return checker
 
 
-class Submission(Cog):
+class Submission(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.ready: bool = False
@@ -171,12 +143,11 @@ class Submission(Cog):
         self.supporting: dict[Member, Member] = {}
         self.oc_list_webhook: Optional[Webhook] = None
 
-    @message_command(
-        guild_ids=[719343092963999804],
-        name="Read Moves",
-    )
-    async def moves_checker(self, ctx: ApplicationContext, message: Message):
-        await ctx.defer(ephemeral=True)
+    @app_commands.context_menu(name="Read Moves")
+    @app_commands.guilds(719343092963999804)
+    async def moves_checker(self, ctx: Interaction, message: Message):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
         moves = []
         if oc := self.ocs.get(message.id):
             moves = list(oc.moveset.copy())
@@ -194,7 +165,7 @@ class Submission(Cog):
                     url=moves[0].url,
                 )
             )
-            await ctx.send_followup(
+            await ctx.followup.send(
                 embed=moves[0].embed,
                 ephemeral=True,
                 view=view,
@@ -203,29 +174,28 @@ class Submission(Cog):
             moves.sort(key=lambda x: x.name)
             view = MoveView(
                 bot=self.bot,
-                member=ctx.author,
+                member=ctx.user,
                 moves=moves,
-                target=ctx.interaction,
+                target=ctx,
                 keep_working=True,
             )
             async with view.send(ephemeral=True):
                 self.bot.logger.info(
                     "User %s is reading the moves at %s",
-                    str(ctx.author),
+                    str(ctx.user),
                     message.jump_url,
                 )
         else:
-            await ctx.send_followup(
+            await ctx.followup.send(
                 "This message does not include moves.",
                 ephemeral=True,
             )
 
-    @message_command(
-        guild_ids=[719343092963999804],
-        name="Read Abilities",
-    )
-    async def abilities_checker(self, ctx: ApplicationContext, message: Message):
-        await ctx.defer(ephemeral=True)
+    @app_commands.context_menu(name="Read Abilities")
+    @app_commands.guilds(719343092963999804)
+    async def abilities_checker(self, ctx: Interaction, message: Message):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
         abilities: list[Ability | SpAbility] = []
         if oc := self.ocs.get(message.id):
             if sp_ability := oc.sp_ability:
@@ -247,35 +217,32 @@ class Submission(Cog):
             abilities.sort(key=lambda x: x.name)
             view = AbilityView(
                 bot=self.bot,
-                member=ctx.author,
+                member=ctx.user,
                 abilities=abilities,
-                target=ctx.interaction,
+                target=ctx,
                 keep_working=True,
             )
             async with view.send(ephemeral=True):
                 self.bot.logger.info(
                     "User %s is reading the abilities at %s",
-                    str(ctx.author),
+                    str(ctx.user),
                     message.jump_url,
                 )
         else:
-            await ctx.send_followup(
+            await ctx.followup.send(
                 "This message does not include abilities.",
                 ephemeral=True,
             )
 
-    @user_command(
-        name="Check User's OCs",
-        guild_ids=[719343092963999804],
-    )
-    async def check_ocs(self, ctx: ApplicationContext, member: Member):
-        if member is None:
-            member: Member = ctx.author
-        await ctx.defer(ephemeral=True)
+    @app_commands.context_menu(name="Check User's OCs")
+    @app_commands.guilds(719343092963999804)
+    async def check_ocs(self, ctx: Interaction, member: Member):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
         ocs: list[Character] = list(self.rpers.get(member.id, {}).values())
         if len(ocs) == 1:
             view = PingView(ocs[0], ctx.user.id == ocs[0].author)
-            await ctx.send_followup(
+            await ctx.followup.send(
                 "The user only has one character",
                 ephemeral=True,
                 embed=ocs[0].embed,
@@ -284,9 +251,9 @@ class Submission(Cog):
         elif ocs:
             view = CharactersView(
                 bot=self.bot,
-                member=ctx.author,
+                member=ctx.user,
                 ocs=ocs,
-                target=ctx.interaction,
+                target=ctx,
                 keep_working=True,
             )
             embed = view.embed
@@ -298,40 +265,33 @@ class Submission(Cog):
             async with view.send(ephemeral=True):
                 self.bot.logger.info(
                     "User %s is reading the OCs of %s",
-                    str(ctx.author),
+                    str(ctx.user),
                     str(member),
                 )
         else:
-            await ctx.send_followup(
-                f"{member.mention} has no characters.", ephemeral=True
+            await ctx.followup.send(
+                f"{member.mention} has no characters.",
+                ephemeral=True,
             )
 
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Grants registered role to an user",
-    )
-    @has_role("Moderation")
-    async def register(
-        self,
-        ctx: ApplicationContext,
-        member: Option(
-            Member,
-            description="User to register",
-        ),
-    ) -> None:
-        """Register Command
+    @app_commands.command(description="Grants registered role to an user")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.checks.has_role("Moderation")
+    async def register(self, ctx: Interaction, member: Member) -> None:
+        """Grants registered role to an user
 
         Parameters
         ----------
         ctx : Context
             Context
         member : Member
-            Member
+            User to register
         """
+        resp: InteractionResponse = ctx.response
         guild: Guild = ctx.guild
         role = guild.get_role(719642423327719434)
-        author: Member = ctx.author
-        await ctx.defer(ephemeral=True)
+        author: Member = ctx.user
+        await resp.defer(ephemeral=True)
         if role not in member.roles:
             await member.add_roles(role, reason=f"Registered by {author}")
             embed = Embed(
@@ -345,31 +305,110 @@ class Submission(Cog):
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
-            view = View(
+            view = View()
+            view.add_item(
                 Button(
                     label="Maps",
                     url="https://discord.com/channels/719343092963999804/812180282739392522/906430640898056222",
-                ),
+                )
+            )
+            view.add_item(
                 Button(
                     label="Story-lines",
                     url="https://discord.com/channels/719343092963999804/903627523911458816/",
-                ),
+                )
+            )
+            view.add_item(
                 Button(
                     label="RP Planning",
                     url="https://discord.com/channels/719343092963999804/722617383738540092/",
-                ),
+                )
             )
 
             with suppress(DiscordException):
                 await member.send(embed=embed, files=files, view=view)
-            await ctx.send_followup("User has been registered", ephemeral=True)
+            await ctx.followup.send("User has been registered", ephemeral=True)
         else:
-            await ctx.send_followup("User is already registered", ephemeral=True)
+            await ctx.followup.send("User is already registered", ephemeral=True)
 
-    async def unclaiming(
+    @app_commands.command(name="ocs", description="Allows to show characters")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.describe(member="Member, if not provided, it's current user.")
+    @app_commands.describe(character="Search by name, directly")
+    async def get_ocs(
         self,
-        channel: Union[TextChannel, int],
+        ctx: Interaction,
+        member: Optional[Member | User],
+        character: Optional[CharacterArg],
     ):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        if member is None:
+            member = ctx.user
+        if character:
+            view = PingView(character, ctx.user.id == character.author)
+            return await ctx.followup.send(
+                embed=character.embed, view=view, ephemeral=True
+            )
+        if ocs := list(self.rpers.get(member.id, {}).values()):
+            ocs.sort(key=lambda x: x.name)
+            if len(ocs) == 1:
+                await ctx.followup.send(
+                    f"{member.mention} has only one character.",
+                    embed=ocs[0].embed,
+                    ephemeral=True,
+                )
+                return
+            view = CharactersView(
+                bot=self.bot,
+                member=ctx.user,
+                ocs=ocs,
+                target=ctx,
+                keep_working=True,
+            )
+            embed = view.embed
+            embed.color = member.color
+            embed.set_author(
+                name=member.display_name,
+                icon_url=member.display_avatar.url,
+            )
+            async with view.send(ephemeral=True):
+                if member == ctx.user:
+                    self.bot.logger.info("User %s is reading their OCs", str(member))
+                else:
+                    self.bot.logger.info(
+                        "User %s is reading the OCs of %s",
+                        str(ctx.user),
+                        str(member),
+                    )
+        else:
+            await ctx.followup.send(
+                f"{member.mention} has no characters.", ephemeral=True
+            )
+
+    @app_commands.command(description="Allows to create OCs as an user")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.describe(member="Member, if not provided, it's current user.")
+    @app_commands.checks.has_role("Moderation")
+    async def submit_as(self, ctx: Interaction, member: Optional[Member | User]):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True)
+        if not member:
+            member = ctx.user
+        if ctx.user == member:
+            self.supporting.pop(ctx.user, None)
+            await ctx.followup.send(
+                content="OCs registered now will be assigned to your account.!",
+                ephemeral=True,
+            )
+        else:
+            self.supporting[ctx.user] = member
+            await ctx.followup.send(
+                content=f"OCs registered now will be assigned to {member.mention}!",
+                ephemeral=True,
+            )
+
+    async def unclaiming(self, channel: Union[TextChannel, int]):
         """This method is used when a channel has been inactivate for 3 days.
 
         Parameters
@@ -380,13 +419,10 @@ class Submission(Cog):
         if isinstance(channel, int):
             channel: TextChannel = self.bot.get_channel(channel)
         if not self.data_msg.get(channel.id):
-            if (msgs := await channel.history(limit=1).flatten()) and msgs[
-                0
-            ].content == CLAIM_MESSAGE:
-                m = msgs[0]
-            else:
-                m = await channel.send(CLAIM_MESSAGE)
-            self.data_msg[channel.id] = m
+            async for msg in channel.history(limit=1):
+                if msg.content != CLAIM_MESSAGE:
+                    msg = await channel.send(CLAIM_MESSAGE)
+                self.data_msg[channel.id] = msg
 
         async with self.bot.database() as conn:
             for oc in filter(lambda x: x.location == channel.id, self.ocs.values()):
@@ -688,9 +724,9 @@ class Submission(Cog):
                     for item in SpAbility.__slots__:
 
                         if item == "name":
-                            style = InputTextStyle.short
+                            style = TextStyle.short
                         else:
-                            style = InputTextStyle.paragraph
+                            style = TextStyle.paragraph
 
                         async with text_view.handle(
                             label=f"Special Ability's {item.title()}",
@@ -709,7 +745,7 @@ class Submission(Cog):
         if not (oc.url or oc.backstory):
             async with text_view.handle(
                 label="Character's Backstory",
-                style=InputTextStyle.paragraph,
+                style=TextStyle.paragraph,
                 placeholder=(
                     "Don't worry about having to write too much, this is just a summary of information "
                     "that people can keep in mind when interacting with your character. You can provide "
@@ -724,7 +760,7 @@ class Submission(Cog):
         if not (oc.url or oc.extra):
             async with text_view.handle(
                 label="Character's Extra information",
-                style=InputTextStyle.paragraph,
+                style=TextStyle.paragraph,
                 placeholder=(
                     "In this area, you can write down information you want people to consider when they are rping with them, "
                     "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
@@ -771,334 +807,6 @@ class Submission(Cog):
                 )
         except NotFound:
             await self.register_oc(oc)
-
-    @slash_command(
-        name="ocs",
-        guild_ids=[719343092963999804],
-        description="Allows to show characters",
-    )
-    async def get_ocs(
-        self,
-        ctx: ApplicationContext,
-        member: Option(
-            Member,
-            description="Member, if not provided, it's current user.",
-            required=False,
-        ),
-        character: Option(
-            str,
-            description="Search by name, directly",
-            autocomplete=oc_autocomplete,
-            required=False,
-        ),
-    ):
-        await ctx.defer(ephemeral=True)
-        if member is None:
-            member: Member = ctx.author
-        if isinstance(member, int):
-            try:
-                member = await self.bot.fetch_user(member)
-            except DiscordException:
-                return await ctx.send_followup("User no longer in Discord")
-        if (character or "").isdigit() and (oc := self.ocs.get(int(character))):
-            view = PingView(oc, ctx.user.id == oc.author)
-            return await ctx.send_followup(embed=oc.embed, view=view)
-        if ocs := list(self.rpers.get(member.id, {}).values()):
-            ocs.sort(key=lambda x: x.name)
-            if len(ocs) == 1:
-                await ctx.send_followup(
-                    f"{member.mention} has only one character.",
-                    embed=ocs[0].embed,
-                )
-                return
-            view = CharactersView(
-                bot=self.bot,
-                member=ctx.author,
-                ocs=ocs,
-                target=ctx.interaction,
-                keep_working=True,
-            )
-            embed = view.embed
-            embed.color = member.color
-            embed.set_author(
-                name=member.display_name,
-                icon_url=member.display_avatar.url,
-            )
-            async with view.send(ephemeral=True):
-                if member == ctx.author:
-                    self.bot.logger.info("User %s is reading their OCs", str(member))
-                else:
-                    self.bot.logger.info(
-                        "User %s is reading the OCs of %s",
-                        str(ctx.author),
-                        str(member),
-                    )
-        else:
-            await ctx.send_followup(f"{member.mention} has no characters.")
-
-    @slash_command(
-        name="submit_as",
-        guild_ids=[719343092963999804],
-        description="Allows to create OCs as an user",
-    )
-    @has_role("Moderation")
-    async def submit_as(
-        self,
-        ctx: ApplicationContext,
-        member: Option(
-            User,
-            description="Member, if not provided, it's current user.",
-            required=False,
-        ),
-    ):
-        await ctx.defer(ephemeral=True)
-        if isinstance(member, int):
-            try:
-                member: User = await self.bot.fetch_user(member)
-            except HTTPException:
-                await ctx.send_followup(
-                    content="User does not exist in discord.",
-                    ephemeral=True,
-                )
-                return
-        elif not member:
-            member: Member = ctx.author
-        if ctx.author == member:
-            self.supporting.pop(ctx.author, None)
-            await ctx.send_followup(
-                content="OCs registered now will be assigned to your account.!",
-                ephemeral=True,
-            )
-        else:
-            self.supporting[ctx.author] = member
-            await ctx.send_followup(
-                content=f"OCs registered now will be assigned to {member.mention}!",
-                ephemeral=True,
-            )
-
-    async def load_characters(self, db: Connection):
-        self.bot.logger.info("Loading all Characters.")
-        for oc in await fetch_all(db):
-            self.ocs[oc.id] = oc
-            self.rpers.setdefault(oc.author, {})
-            self.rpers[oc.author][oc.id] = oc
-        self.bot.logger.info("Finished loading all characters")
-
-    async def load_profiles(self):
-        self.bot.logger.info("Loading All Profiles")
-        channel = await self.bot.fetch_channel(919277769735680050)
-        async for m in channel.history(limit=None):
-            if m.mentions and m.webhook_id:
-                user = m.mentions[0]
-                self.oc_list[user.id] = m.id
-                view = RPView(self.bot, user.id, self.oc_list)
-                self.bot.add_view(view=view, message_id=m.id)
-
-        self.bot.logger.info("Finished loading all Profiles.")
-
-    async def load_missions(self, db: Connection):
-        self.bot.logger.info("Loading claimed missions")
-        missions: dict[int, Mission] = {}
-
-        async for item in db.cursor("SELECT * FROM MISSIONS;"):
-            mission = Mission(**dict(item))
-            if mission.id:
-                self.missions.add(mission)
-                missions[mission.id] = mission
-
-        async for oc_item in db.cursor("SELECT * FROM MISSION_ASSIGNMENT;"):
-            mission_id, oc_id, assigned_at = (
-                oc_item["mission"],
-                oc_item["character"],
-                oc_item["assigned_at"],
-            )
-            if (mission := missions.get(mission_id)) and (oc := self.ocs.get(oc_id)):
-                mission.ocs |= {oc.id}
-                self.mission_claimers.setdefault(mission.id, set())
-                self.mission_claimers[mission.id].add(oc.id)
-                self.mission_cooldown.setdefault(oc.author, assigned_at)
-                if self.mission_cooldown[oc.author] < assigned_at:
-                    self.mission_cooldown[oc.author] = assigned_at
-
-        self.bot.logger.info("Finished loading claimed missions")
-
-    async def load_mission_views(self, db: Connection):
-        self.bot.logger.info("Loading mission views")
-
-        channel: TextChannel = await self.bot.fetch_channel(908498210211909642)
-
-        for mission in self.missions:
-            view = MissionView(
-                bot=self.bot,
-                mission=mission,
-                mission_claimers=self.mission_claimers,
-                mission_cooldown=self.mission_cooldown,
-                supporting=self.supporting,
-            )
-            try:
-                message = await channel.fetch_message(mission.msg_id)
-                await message.edit(view=view)
-            except DiscordException:
-                if not (member := channel.guild.get_member(mission.author)):
-                    return await mission.remove(db)
-                msg = await channel.send(
-                    content=member.mention,
-                    embed=mission.embed,
-                    view=view,
-                    allowed_mentions=AllowedMentions(users=True),
-                )
-                mission.msg_id = msg.id
-                thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
-                await thread.add_user(member)
-                ocs = set(mission.ocs)
-                for oc_id in mission.ocs:
-                    if oc := self.ocs.get(oc_id):
-                        await thread.send(
-                            f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
-                            view=View(Button(label="Jump URL", url=oc.jump_url)),
-                        )
-                    else:
-                        ocs.remove(oc_id)
-                mission.ocs = frozenset(ocs)
-
-                mission.msg_id = msg.id
-                await mission.upsert(db)
-
-        self.bot.logger.info("Finished loading mission views")
-
-    async def load_submssions(self):
-        self.bot.logger.info("Loading Submission menu")
-        source = Path("resources/templates.json")
-        async with aiopen(source.resolve(), mode="r") as f:
-            contents = await f.read()
-            view = SubmissionView(
-                bot=self.bot,
-                ocs=self.ocs,
-                rpers=self.rpers,
-                oc_list=self.oc_list,
-                supporting=self.supporting,
-                missions=self.missions,
-                mission_claimers=self.mission_claimers,
-                mission_cooldown=self.mission_cooldown,
-                **loads(contents),
-            )
-            self.bot.add_view(view, message_id=903437849154711552)
-        self.bot.logger.info("Finished loading Submission menu")
-
-    async def load_claimed_categories(self):
-        items: list[list[TextChannel]] = [
-            [
-                x
-                for x in self.bot.get_channel(ch).channels
-                if "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in x.name
-            ]
-            for ch in RP_CATEGORIES
-        ]
-        for channel in chain(*items):
-            async for m in channel.history(limit=1):
-
-                date = m.created_at + timedelta(days=3)
-
-                if m.author == self.bot.user and m.content == CLAIM_MESSAGE:
-                    self.data_msg[channel.id] = m
-
-                trigger = IntervalTrigger(days=3, start_time=date)
-
-                await self.bot.scheduler.add_schedule(
-                    self.unclaiming,
-                    trigger=trigger,
-                    id=f"RP[{channel.id}]",
-                    args=[channel.id],
-                    conflict_policy=ConflictPolicy.replace,
-                )
-
-    @Cog.listener()
-    async def on_ready(self) -> None:
-        """On ready, the parameters from Cog submisisons are loaded."""
-
-        if self.ready:
-            return
-
-        self.oc_list_webhook = await self.bot.webhook(919277769735680050)
-        async with self.bot.database() as db:
-            await self.load_characters(db)
-            await self.load_missions(db)
-            await self.load_mission_views(db)
-
-        await self.load_profiles()
-        await self.load_submssions()
-        await self.load_claimed_categories()
-        self.ready = True
-
-    @Cog.listener()
-    async def on_raw_thread_delete(
-        self,
-        payload: RawThreadDeleteEvent,
-    ) -> None:
-        """Detects if threads were removed
-
-        Parameters
-        ----------
-        payload : RawThreadDeleteEvent
-            Information
-        """
-        if payload.parent_id != 919277769735680050:
-            return
-        if payload.thread_id in self.oc_list.values():
-            author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.thread_id
-            ][0]
-            async with self.bot.database() as db:
-                del self.oc_list[author_id]
-
-                for oc in self.rpers.pop(author_id, {}).values():
-                    del self.ocs[oc.id]
-                    self.bot.logger.info(
-                        "Character Removed as Thread was removed! > %s - %s > %s",
-                        oc.name,
-                        repr(oc),
-                        oc.url or "None",
-                    )
-                    await oc.delete(db)
-
-    @Cog.listener()
-    async def on_raw_message_delete(
-        self,
-        payload: RawMessageDeleteEvent,
-    ) -> None:
-        """Detects if ocs or lists were deleted
-
-        Parameters
-        ----------
-        payload : RawMessageDeleteEvent
-            Information
-        """
-        if oc := self.ocs.get(payload.message_id):
-            del self.ocs[oc.id]
-            self.rpers.setdefault(oc.author, {})
-            self.rpers[oc.author].pop(oc.id, None)
-            async with self.bot.database() as db:
-                self.bot.logger.info(
-                    "Character Removed as message was removed! > %s - %s > %s",
-                    oc.name,
-                    repr(oc),
-                    oc.url or "None",
-                )
-                await oc.delete(db)
-        if payload.message_id in self.oc_list.values():
-            author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.message_id
-            ][0]
-            del self.oc_list[author_id]
-            async with self.bot.database() as db:
-                for oc in self.rpers.pop(author_id, {}).values():
-                    del self.ocs[oc.id]
-                    self.bot.logger.info(
-                        "Character Removed as Thread was removed! > %s > %s",
-                        str(type(oc)),
-                        oc.url or "None",
-                    )
-                    await oc.delete(db)
 
     async def bio_google_doc_parser(
         self, message: Message
@@ -1269,7 +977,145 @@ class Submission(Cog):
                 )
             await self.on_message_tupper(msg, message.author.id)
 
-    @Cog.listener()
+    async def load_characters(self, db: Connection):
+        self.bot.logger.info("Loading all Characters.")
+        for oc in await fetch_all(db):
+            self.ocs[oc.id] = oc
+            self.rpers.setdefault(oc.author, {})
+            self.rpers[oc.author][oc.id] = oc
+        self.bot.logger.info("Finished loading all characters")
+
+    async def load_profiles(self):
+        self.bot.logger.info("Loading All Profiles")
+        channel = await self.bot.fetch_channel(919277769735680050)
+        async for m in channel.history(limit=None):
+            if m.mentions and m.webhook_id:
+                user = m.mentions[0]
+                self.oc_list[user.id] = m.id
+                view = RPView(self.bot, user.id, self.oc_list)
+                self.bot.add_view(view=view, message_id=m.id)
+
+        self.bot.logger.info("Finished loading all Profiles.")
+
+    async def load_missions(self, db: Connection):
+        self.bot.logger.info("Loading claimed missions")
+        missions: dict[int, Mission] = {}
+
+        async for item in db.cursor("SELECT * FROM MISSIONS;"):
+            mission = Mission(**dict(item))
+            if mission.id:
+                self.missions.add(mission)
+                missions[mission.id] = mission
+
+        async for oc_item in db.cursor("SELECT * FROM MISSION_ASSIGNMENT;"):
+            mission_id, oc_id, assigned_at = (
+                oc_item["mission"],
+                oc_item["character"],
+                oc_item["assigned_at"],
+            )
+            if (mission := missions.get(mission_id)) and (oc := self.ocs.get(oc_id)):
+                mission.ocs |= {oc.id}
+                self.mission_claimers.setdefault(mission.id, set())
+                self.mission_claimers[mission.id].add(oc.id)
+                self.mission_cooldown.setdefault(oc.author, assigned_at)
+                if self.mission_cooldown[oc.author] < assigned_at:
+                    self.mission_cooldown[oc.author] = assigned_at
+
+        self.bot.logger.info("Finished loading claimed missions")
+
+    async def load_mission_views(self, db: Connection):
+        self.bot.logger.info("Loading mission views")
+
+        channel: TextChannel = await self.bot.fetch_channel(908498210211909642)
+
+        for mission in self.missions:
+            view = MissionView(
+                bot=self.bot,
+                mission=mission,
+                mission_claimers=self.mission_claimers,
+                mission_cooldown=self.mission_cooldown,
+                supporting=self.supporting,
+            )
+            try:
+                message = await channel.fetch_message(mission.msg_id)
+                await message.edit(view=view)
+            except DiscordException:
+                if not (member := channel.guild.get_member(mission.author)):
+                    return await mission.remove(db)
+                msg = await channel.send(
+                    content=member.mention,
+                    embed=mission.embed,
+                    view=view,
+                    allowed_mentions=AllowedMentions(users=True),
+                )
+                mission.msg_id = msg.id
+                thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
+                await thread.add_user(member)
+                ocs = set(mission.ocs)
+                for oc_id in mission.ocs:
+                    if oc := self.ocs.get(oc_id):
+                        view = View()
+                        view.add_item(Button(label="Jump URL", url=oc.jump_url))
+                        await thread.send(
+                            f"{member} joined with {oc.name} `{oc!r}` as character for this mission.",
+                            view=view,
+                        )
+                    else:
+                        ocs.remove(oc_id)
+                mission.ocs = frozenset(ocs)
+
+                mission.msg_id = msg.id
+                await mission.upsert(db)
+
+        self.bot.logger.info("Finished loading mission views")
+
+    async def load_submssions(self):
+        self.bot.logger.info("Loading Submission menu")
+        source = Path("resources/templates.json")
+        async with aiopen(source.resolve(), mode="r") as f:
+            contents = await f.read()
+            view = SubmissionView(
+                bot=self.bot,
+                ocs=self.ocs,
+                rpers=self.rpers,
+                oc_list=self.oc_list,
+                supporting=self.supporting,
+                missions=self.missions,
+                mission_claimers=self.mission_claimers,
+                mission_cooldown=self.mission_cooldown,
+                **loads(contents),
+            )
+            self.bot.add_view(view, message_id=903437849154711552)
+        self.bot.logger.info("Finished loading Submission menu")
+
+    async def load_claimed_categories(self):
+        items: list[list[TextChannel]] = [
+            [
+                x
+                for x in self.bot.get_channel(ch).channels
+                if "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in x.name
+            ]
+            for ch in RP_CATEGORIES
+        ]
+        for channel in chain(*items):
+            async for m in channel.history(limit=1):
+
+                date = m.created_at + timedelta(days=3)
+
+                if m.author == self.bot.user and m.content == CLAIM_MESSAGE:
+                    self.data_msg[channel.id] = m
+
+                trigger = IntervalTrigger(days=3, start_time=date)
+
+                await self.bot.scheduler.add_schedule(
+                    self.unclaiming,
+                    trigger=trigger,
+                    id=f"RP[{channel.id}]",
+                    args=[channel.id],
+                    conflict_policy=ConflictPolicy.replace,
+                )
+
+    @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
         """on_message handler
 
@@ -1291,7 +1137,7 @@ class Submission(Cog):
         ):
             await self.on_message_proxy(message)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message_edit(self, _: Message, message: Message):
         """on_message_edit handler
 
@@ -1304,6 +1150,88 @@ class Submission(Cog):
         """
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
+
+    @commands.Cog.listener()
+    async def on_thread_delete(self, thread: Thread) -> None:
+        """Detects if threads were removed
+
+        Parameters
+        ----------
+        payload : RawThreadDeleteEvent
+            Information
+        """
+        if thread.parent_id != 919277769735680050:
+            return
+        ocs = [oc for oc in self.ocs.values() if oc.thread == thread.id]
+
+        if not ocs:
+            return
+
+        self.oc_list.pop(ocs[0].author, None)
+        async with self.bot.database() as db:
+            for oc in ocs:
+                self.ocs.pop(oc.id, None)
+                self.bot.logger.info(
+                    "Character Removed as Thread was removed! > %s - %s > %s",
+                    oc.name,
+                    repr(oc),
+                    oc.url or "None",
+                )
+                await oc.delete(db)
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
+        """Detects if ocs or lists were deleted
+
+        Parameters
+        ----------
+        payload : RawMessageDeleteEvent
+            Information
+        """
+        if oc := self.ocs.get(payload.message_id):
+            del self.ocs[oc.id]
+            self.rpers.setdefault(oc.author, {})
+            self.rpers[oc.author].pop(oc.id, None)
+            async with self.bot.database() as db:
+                self.bot.logger.info(
+                    "Character Removed as message was removed! > %s - %s > %s",
+                    oc.name,
+                    repr(oc),
+                    oc.url or "None",
+                )
+                await oc.delete(db)
+        if payload.message_id in self.oc_list.values():
+            author_id: int = [
+                k for k, v in self.oc_list.items() if v == payload.message_id
+            ][0]
+            del self.oc_list[author_id]
+            async with self.bot.database() as db:
+                for oc in self.rpers.pop(author_id, {}).values():
+                    del self.ocs[oc.id]
+                    self.bot.logger.info(
+                        "Character Removed as Thread was removed! > %s > %s",
+                        str(type(oc)),
+                        oc.url or "None",
+                    )
+                    await oc.delete(db)
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        """On ready, the parameters from Cog submisisons are loaded."""
+
+        if self.ready:
+            return
+
+        self.oc_list_webhook = await self.bot.webhook(919277769735680050)
+        async with self.bot.database() as db:
+            await self.load_characters(db)
+            await self.load_missions(db)
+            await self.load_mission_views(db)
+
+        await self.load_profiles()
+        await self.load_submssions()
+        await self.load_claimed_categories()
+        self.ready = True
 
 
 def setup(bot: CustomBot) -> None:

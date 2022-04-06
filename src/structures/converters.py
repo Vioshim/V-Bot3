@@ -26,10 +26,9 @@ from discord.ext.commands import (
     PartialEmojiConversionFailure,
     PartialEmojiConverter,
     UserConverter,
+    Context
 )
 from discord.file import File
-
-from src.context.context import Context
 from src.structures.exceptions import (
     NoDateFound,
     NoImageFound,

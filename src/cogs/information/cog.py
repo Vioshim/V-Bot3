@@ -19,7 +19,6 @@ from typing import Optional
 
 from colour import Color
 from discord import (
-    ApplicationContext,
     Attachment,
     Colour,
     DiscordException,
@@ -27,26 +26,16 @@ from discord import (
     File,
     Guild,
     HTTPException,
+    Interaction,
+    InteractionResponse,
     Member,
     Message,
-    Option,
-    OptionChoice,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
+    Role,
+    app_commands,
 )
-from discord.ext.commands import (
-    CheckFailure,
-    Cog,
-    CommandError,
-    CommandNotFound,
-    CommandOnCooldown,
-    Context,
-    DisabledCommand,
-    MaxConcurrencyReached,
-    UserInputError,
-    has_role,
-    slash_command,
-)
+from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import find, format_dt, get, utcnow
 from yaml import dump
@@ -84,29 +73,26 @@ GIPHY_API = getenv("GIPHY_API")
 WEATHER_API = getenv("WEATHER_API")
 
 
-class Information(Cog):
+class Information(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
 
-    @slash_command(guild_ids=[719343092963999804])
+    @app_commands.command(description="Weather information from the selected area.")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.describe(area="Area to get weather info about.")
+    @app_commands.choices(
+        area=[
+            app_commands.Choice(item.name, f"{item.lat}/{item.lon}")
+            for item in MAP_ELEMENTS
+        ]
+    )
     async def weather(
         self,
-        ctx: ApplicationContext,
-        area: Option(
-            str,
-            name="area",
-            description="Area to get weather info about.",
-            choices=[
-                OptionChoice(
-                    name=item.name,
-                    value=f"{item.lat}/{item.lon}",
-                )
-                for item in MAP_ELEMENTS
-            ],
-        ),
+        ctx: Interaction,
+        area: app_commands.Choice[str],
     ):
-        """Weather information from the selected area.
+        """
 
         Parameters
         ----------
@@ -115,15 +101,16 @@ class Information(Cog):
         area : str, optional
             area
         """
+        resp: InteractionResponse = ctx.response
         if not isinstance(area, str):
-            await ctx.respond("Wrong format", ephemeral=True)
+            await resp.send_message("Wrong format", ephemeral=True)
         else:
             try:
-                lat, lon = area.split("/")
+                lat, lon = area.value.split("/")
                 URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API}"
                 async with self.bot.session.get(URL) as f:
                     if f.status != 200:
-                        await ctx.respond("Invalid response", ephemeral=True)
+                        await resp.send_message("Invalid response", ephemeral=True)
                     data: dict = await f.json()
                     if weather := data.get("weather", []):
                         info: dict = weather[0]
@@ -134,7 +121,7 @@ class Information(Cog):
                         )
                         embed = Embed(
                             title=f"{main}: {desc}".title(),
-                            color=ctx.author.color,
+                            color=ctx.user.color,
                             timestamp=utcnow(),
                         )
                         main_info = data["main"]
@@ -160,53 +147,45 @@ class Information(Cog):
                             embed.set_footer(
                                 text=f"Wind(Speed: {speed}, Degrees: {deg} °)"
                             )
-                        await ctx.respond(embed=embed, ephemeral=True)
+                        await resp.send_message(embed=embed, ephemeral=True)
                         return
-                await ctx.respond("Invalid value", ephemeral=True)
+                await resp.send_message("Invalid value", ephemeral=True)
             except ValueError:
-                await ctx.respond("Invalid value", ephemeral=True)
+                await resp.send_message("Invalid value", ephemeral=True)
 
-    @slash_command(guild_ids=[719343092963999804])
-    @has_role("Booster")
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @app_commands.has_role("Booster")
     async def custom_role(
         self,
-        ctx: ApplicationContext,
-        name: Option(
-            str,
-            description="Role Name",
-            required=False,
-        ),
-        color: Option(
-            str,
-            description="Name or Hex color",
-            required=False,
-        ),
-        icon: Option(
-            Attachment,
-            description="Valid Role Icon",
-            required=False,
-        ),
+        ctx: Interaction,
+        name: Optional[str],
+        color: Optional[str],
+        icon: Optional[Attachment],
     ):
         """Create custom roles (no info deletes them)
 
         Parameters
         ----------
-        ctx : ApplicationContext
-            Context
+        ctx : Interaction
+            Interaction
         name : Option, optional
-            Name
+            Role Name
         color : Option, optional
-            Color
+            Name or Hex color
         icon : Option, optional
-            Icon
+            Valid Role Icon
         """
+        resp: InteractionResponse = ctx.response
         guild: Guild = ctx.guild
+
+        await resp.defer(ephemeral=True)
 
         AFK = get(guild.roles, name="AFK")
         BOOSTER = guild.premium_subscriber_role
 
         if not (AFK and BOOSTER):
-            await ctx.respond("No function set here", ephemeral=True)
+            await ctx.followup.send("No function set here", ephemeral=True)
             return
 
         role = find(
@@ -218,19 +197,19 @@ class Information(Cog):
             if not role:
                 guild: Guild = ctx.guild
                 try:
-                    role = await guild.create_role(name=name)
+                    role: Role = await guild.create_role(name=name)
                     await role.edit(position=AFK.position - 1)
-                    await ctx.author.add_roles(role)
+                    await ctx.user.add_roles(role)
                 except DiscordException as e:
-                    await ctx.respond(str(e), ephemeral=True)
+                    await ctx.followup.send(str(e), ephemeral=True)
                     return
             elif not (name or color or icon):
                 try:
                     await role.delete()
                 except DiscordException as e:
-                    await ctx.respond(str(e), ephemeral=True)
+                    await ctx.followup.send(str(e), ephemeral=True)
                 else:
-                    await ctx.respond("Role deleted", ephemeral=True)
+                    await ctx.followup.send("Role deleted", ephemeral=True)
                 return
 
             if isinstance(color, str):
@@ -238,12 +217,12 @@ class Information(Cog):
                     data = Color(color)
                     await role.edit(colour=int(data.hex[1:], base=16))
                 except ValueError:
-                    await ctx.respond(
+                    await ctx.followup.send(
                         "Invalid color",
                         ephemeral=True,
                     )
                 except DiscordException:
-                    await ctx.respond(
+                    await ctx.followup.send(
                         "Invalid color for discord",
                         ephemeral=True,
                     )
@@ -252,19 +231,19 @@ class Information(Cog):
                     data = await icon.read()
                     await role.edit(icon=data)
                 except DiscordException:
-                    await ctx.respond(
+                    await ctx.followup.send(
                         "Invalid icon for discord",
                         ephemeral=True,
                     )
-            if not ctx.interaction.response.is_done():
-                await ctx.respond("Role added/modified.", ephemeral=True)
+            if not ctx.response.is_done():
+                await ctx.followup.send("Role added/modified.", ephemeral=True)
         else:
-            await ctx.respond(
+            await ctx.followup.send(
                 "You have to provide a name for the role",
                 ephemeral=True,
             )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, message: Message):
 
         if not (message.content and message.channel.id in channels):
@@ -372,7 +351,7 @@ class Information(Cog):
             embed.description = text
             await msg.edit(embed=embed)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_member_remove(self, member: Member):
         await self.member_count(member.guild)
         if not (log_id := LOGS.get(member.guild.id)):
@@ -433,7 +412,7 @@ class Information(Cog):
                 avatar_url=member.display_avatar.url,
             )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_member_join(self, member: Member):
         if not (log_id := LOGS.get(member.guild.id)):
             return
@@ -467,7 +446,7 @@ class Information(Cog):
                 )
             await log.send(embed=embed, file=file, view=view)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
         if past.premium_since == now.premium_since:
             return
@@ -507,7 +486,7 @@ class Information(Cog):
             log = await self.bot.webhook(log_id, reason="Logging")
             await log.send(content=now.mention, embed=embed)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_raw_bulk_message_delete(
         self, payload: RawBulkMessageDeleteEvent
     ) -> None:
@@ -544,7 +523,8 @@ class Information(Cog):
             finally:
                 name = name.replace("-", " ").title()
 
-            view = View(Button(emoji=emoji, label=name, url=msg.jump_url))
+            view = View()
+            view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
             await w.send(embed=embed, file=file, view=view)
 
         self.bot.msg_cache -= payload.message_ids
@@ -574,7 +554,7 @@ class Information(Cog):
                     image: str = result["images"]["original"]["url"]
                     return title, url, image
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_raw_message_delete(
         self,
         payload: RawMessageDeleteEvent,
@@ -706,8 +686,8 @@ class Information(Cog):
                 avatar_url=user.display_avatar.url,
             )
 
-    @Cog.listener()
-    async def on_command(self, ctx: Context) -> None:
+    @commands.Cog.listener()
+    async def on_command(self, ctx: commands.Context) -> None:
         """This allows me to check when commands are being used.
 
         Parameters
@@ -730,8 +710,8 @@ class Information(Cog):
                 ctx.command.qualified_name,
             )
 
-    @Cog.listener()
-    async def on_command_error(self, ctx: Context, error: CommandError) -> None:
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
         """Command error handler
 
         Parameters
@@ -743,17 +723,17 @@ class Information(Cog):
         """
         error = getattr(error, "original", error)
 
-        if isinstance(error, CommandNotFound):
+        if isinstance(error, commands.CommandNotFound):
             return
 
         if isinstance(
             error,
             (
-                CheckFailure,
-                UserInputError,
-                CommandOnCooldown,
-                MaxConcurrencyReached,
-                DisabledCommand,
+                commands.CheckFailure,
+                commands.UserInputError,
+                commands.CommandOnCooldown,
+                commands.MaxConcurrencyReached,
+                commands.DisabledCommand,
             ),
         ):
             await ctx.send(
@@ -787,7 +767,7 @@ class Information(Cog):
             exc_info=error,
         )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
         for guild in self.bot.guilds:

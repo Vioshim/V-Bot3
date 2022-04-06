@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from asyncio import Future, get_running_loop
 from contextlib import asynccontextmanager, suppress
 from typing import Optional, TypeVar, Union
 
@@ -27,7 +26,7 @@ from discord import (
     User,
 )
 from discord.abc import Messageable
-from discord.ui import Button, InputText, Modal, button
+from discord.ui import Button, Modal, TextInput, button
 
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
@@ -44,7 +43,7 @@ class ModernInput(Basic):
         self,
         *,
         bot: CustomBot,
-        input_text: InputText = None,
+        input_text: TextInput = None,
         member: Union[Member, User],
         target: _M = None,
         timeout: Optional[float] = None,
@@ -78,7 +77,7 @@ class ModernInput(Basic):
         origin = kwargs.pop("origin", None)
         if placeholder := kwargs.get("placeholder"):
             kwargs["placeholder"] = placeholder[:100]
-        data["input_text"] = input_text = InputText(**kwargs)
+        data["input_text"] = input_text = TextInput(**kwargs)
         aux = ModernInput(**data)
         embed = aux.embed
         embed.description = input_text.value or placeholder or self.embed.description
@@ -212,28 +211,16 @@ class ModernInput(Basic):
 
 
 class TextModal(Modal):
-    def __init__(self, item: InputText) -> None:
+    def __init__(self, item: TextInput) -> None:
         super(TextModal, self).__init__(title=DEFAULT_MSG)
         self.text: Optional[str] = None
+        self.item = item
         self.add_item(item)
-        loop = get_running_loop()
-        self._stopped: Future[bool] = loop.create_future()
 
-    async def callback(self, interaction: Interaction) -> None:
+    async def on_submit(self, interaction: Interaction) -> None:
         """Runs whenever the modal is closed."""
-        self.text = self.children[0].value or ""
-        # Stop the modal.
-        self.stop()
-        # Respond to the interaction.
+        self.text = self.item.value or ""
         await interaction.response.send_message(
             "Parameter has been added.", ephemeral=True
         )
-
-    def stop(self) -> None:
-        """Stops listening to interaction events from the modal."""
-        if not self._stopped.done():
-            self._stopped.set_result(True)
-
-    async def wait(self) -> bool:
-        """Waits for the modal to be closed."""
-        return await self._stopped
+        self.stop()
