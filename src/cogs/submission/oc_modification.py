@@ -1352,7 +1352,8 @@ class ModifyView(View):
 
     @select(placeholder="Select Fields to Edit", row=0)
     async def edit(self, ctx: Interaction, _: Select):
-        await self.target.edit_original_message(view=None)
+        resp: InteractionResponse = ctx.response
+        await resp.edit_message(view=None)
         modifying: bool = False
         for item in ctx.data.get("values", []):
             mod = Modification[item]
@@ -1409,13 +1410,15 @@ class ModifyView(View):
 
     @button(label="Don't make any changes", row=1)
     async def cancel(self, ctx: Interaction, _: Button):
-        await self.target.edit_original_message(view=None)
+        resp: InteractionResponse = ctx.response
+        await resp.edit_message(view=None)
         await ctx.followup.send("Alright, no changes.", ephemeral=True)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, ctx: Interaction, _: Button):
-        await self.target.edit_original_message(view=None)
+        resp: InteractionResponse = ctx.response
+        await resp.edit_message(view=None)
         webhook = await self.bot.webhook(919277769735680050)
         guild: Guild = webhook.guild
         try:

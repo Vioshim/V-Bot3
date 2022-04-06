@@ -380,7 +380,7 @@ class RegionView(View):
         btn.disabled = True
         spectator = ctx.guild.get_role(957069729741287434)
         await resp.pong()
-        await self.ctx.edit_original_message(view=self)
+        await self.ctx.response.edit_message(view=self)
         if spectator in ctx.user.roles:
             await ctx.user.remove_roles(spectator)
         if btn.label == "Obtain Access":
@@ -424,7 +424,7 @@ class RegionView(View):
         )
         await resp.pong()
         view = AreaSelection(bot=self.bot, cat=category, member=ctx.user)
-        await self.ctx.edit_original_message(
+        await self.ctx.response.edit_message(
             content=f"There's a total of {view.total:02d} OCs in {category.name}.",
             view=view,
         )

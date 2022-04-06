@@ -115,7 +115,7 @@ class Meeting(View):
             self.embed.set_footer(
                 text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}"
             )
-            await interaction.edit_original_message(embed=self.embed)
+            await resp.edit_message(embed=self.embed)
 
     @button(label="Disagreed")
     async def disagreement(self, interaction: Interaction, _: Button):
@@ -133,7 +133,7 @@ class Meeting(View):
             self.embed.set_footer(
                 text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}"
             )
-            await interaction.edit_original_message(embed=self.embed)
+            await resp.edit_message(embed=self.embed)
 
     async def on_timeout(self):
         await self.process()
