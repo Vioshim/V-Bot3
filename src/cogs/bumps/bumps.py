@@ -130,7 +130,7 @@ class PingBump(View):
     @property
     def timedelta(self):
         if date := self.date:
-            return date - utcnow()
+            return date.replace(tzinfo=None) - utcnow().replace(tzinfo=None)
 
     @property
     def date(self) -> datetime:
