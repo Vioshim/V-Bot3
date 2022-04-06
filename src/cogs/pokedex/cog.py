@@ -42,7 +42,7 @@ from src.structures.character import Character, FusionCharacter
 from src.structures.movepool import Movepool
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import doc_escribe, fix
+from src.utils.functions import fix
 from src.views import CharactersView, MovepoolViewSelector
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
@@ -126,7 +126,12 @@ class Pokedex(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @doc_escribe()
+    @app_commands.describe(
+        species="Species to look up info about",
+        fused="To check when fused",
+        fakemon="Search fakemon species",
+        move_id="Move to lookup",
+    )
     async def movepool(
         self,
         ctx: Interaction,
@@ -198,7 +203,22 @@ class Pokedex(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @doc_escribe()
+    @app_commands.describe(
+        name="Any name that matches(regex works).",
+        kind="Filter by kind",
+        _type="Type to filter",
+        ability="Ability to filter",
+        move="Move to filter",
+        species="Species to look up info about.",
+        fused="Search Fusions that contain the species",
+        member="Member to filter",
+        location="Location to filter",
+        backstory="Any words to look for in backstories",
+        extra="Any words to look for in the extra info",
+        sp_ability="Any words to look for in Sp Abilities",
+        pronoun="Pronoun to Look for",
+        age="OC's age. e.g. 18-24, 13, >20",
+    )
     async def find(
         self,
         ctx: Interaction,
