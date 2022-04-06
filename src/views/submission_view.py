@@ -102,7 +102,7 @@ class SubmissionModal(Modal):
         )
         self.add_item(self.text)
 
-    async def callback(self, interaction: Interaction):
+    async def on_submit(self, interaction: Interaction):
         text: str = codeblock_converter(self.text.value or "").content
         resp: InteractionResponse = interaction.response
         try:
