@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from itertools import groupby
+
 from discord import (
     CategoryChannel,
     Interaction,
@@ -54,12 +56,13 @@ class AreaSelection(View):
         cog = bot.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
 
-        for oc in cog.ocs.values():
+        def foo(oc: Character):
             ch = guild.get_channel_or_thread(oc.location)
             if ch and cat == ch.category:
-                self.entries.setdefault(str(ch.id), set())
-                self.entries[str(ch.id)].add(oc)
+                return cat
 
+        entries = groupby(cog.ocs.values(), key=foo)
+        self.entries = {str(k.id): set(v) for k, v in entries if k}
         self.total = sum(len(item) for item in self.entries.values())
 
         def handle(item: TextChannel) -> str:
@@ -79,35 +82,34 @@ class AreaSelection(View):
         ]
 
     @select(placeholder="Select a location to check", row=0)
-    async def selection(self, ctx: Interaction, _: Select):
+    async def selection(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        if data := ctx.data.get("values", []):
+        channel: TextChannel = self.bot.get_channel(int(sct.values[0]))
+        self.bot.logger.info(
+            "%s is reading Channel Information of %s",
+            str(ctx.user),
+            channel.name,
+        )
 
-            channel: TextChannel = self.bot.get_channel(int(idx := data[0]))
-            self.bot.logger.info(
-                "%s is reading Channel Information of %s",
-                str(ctx.user),
-                channel.name,
-            )
+        ocs = self.entries.get(sct.values[0], set())
+        view = CharactersView(
+            target=ctx,
+            member=ctx.user,
+            ocs=ocs,
+            bot=self.bot,
+            keep_working=True,
+        )
 
-            ocs = self.entries.get(idx, set())
-            view = CharactersView(
-                target=ctx,
-                member=ctx.user,
-                ocs=ocs,
-                bot=self.bot,
-                keep_working=True,
-            )
+        embed = view.embed
 
-            embed = view.embed
-
-            embed.title = channel.name[2:].replace("-", " ").title()
-            embed.description = channel.topic or "No description yet"
-            embed.color = ctx.user.color
-            embed.timestamp = utcnow()
-            embed.set_author(
-                name=ctx.user.display_name,
-                icon_url=ctx.user.display_avatar.url,
-            )
-            embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
-            await resp.send_message(embed=embed, view=view, ephemeral=True)
+        embed.title = channel.name[2:].replace("-", " ").title()
+        embed.description = channel.topic or "No description yet"
+        embed.color = ctx.user.color
+        embed.timestamp = utcnow()
+        embed.set_author(
+            name=ctx.user.display_name,
+            icon_url=ctx.user.display_avatar.url,
+        )
+        embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
+        await resp.send_message(embed=embed, view=view, ephemeral=True)
+        self.stop()

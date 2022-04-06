@@ -16,7 +16,6 @@ from difflib import get_close_matches
 from time import mktime
 from typing import Optional
 
-import jishaku
 from discord import (
     AllowedMentions,
     ButtonStyle,
@@ -30,6 +29,7 @@ from discord import (
     SelectOption,
     TextStyle,
     Thread,
+    Webhook,
     WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
@@ -427,10 +427,6 @@ class RegionView(View):
 
 
 class RegionRoles(View):
-    def __init__(self, bot: CustomBot):
-        super().__init__(timeout=None)
-        self.bot = bot
-
     @select(
         placeholder="Select Map Roles",
         custom_id="region",
@@ -481,6 +477,7 @@ class RegionRoles(View):
                 embed=embed,
                 ephemeral=True,
             )
+            await view.wait()
         elif choosen_roles := {
             role
             for x in map(int, sct.values)
@@ -499,6 +496,7 @@ class RegionRoles(View):
             all_roles.add(spectator)
             await ctx.user.remove_roles(*all_roles)
             await ctx.followup.send("Roles have been set", ephemeral=True)
+        self.stop()
 
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
     async def region_all(self, ctx: Interaction, _: Button):
@@ -538,13 +536,11 @@ class RegionRoles(View):
 class RPThreadManage(View):
     def __init__(
         self,
-        bot: CustomBot,
         thread: Thread,
         member: Member,
         ocs: set[Character] = None,
     ):
         super(RPThreadManage, self).__init__(timeout=None)
-        self.bot = bot
         self.thread = thread
         self.member = member
         self.ocs = ocs
@@ -557,11 +553,11 @@ class RPThreadManage(View):
     async def check_ocs(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        cog = self.bot.get_cog("Submission")
+        cog = ctx.client.get_cog("Submission")
         if not (ocs := self.ocs):
             ocs = cog.rpers.get(self.member.id, {}).values()
         view = CharactersView(
-            bot=self.bot,
+            bot=ctx.client,
             member=ctx.user,
             target=ctx,
             ocs=ocs,
@@ -574,7 +570,7 @@ class RPThreadManage(View):
         )
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
-                self.bot.logger.info(
+                ctx.client.logger.info(
                     "User %s is currently reading %s's character %s [%s]",
                     str(ctx.user),
                     str(self.member),
@@ -586,20 +582,14 @@ class RPThreadManage(View):
 class RPModal(Modal):
     def __init__(
         self,
-        bot: CustomBot,
         thread: Thread,
         ocs: set[Character],
     ) -> None:
         super().__init__(title="Pinging a RP Search")
-        self.bot = bot
         self.thread = thread
         self.ocs = ocs
-        if (
-            len(
-                text := "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
-            )
-            > 4000
-        ):
+        text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
+        if len(text) > 4000:
             text = "\n".join(f"- {x.name}" for x in ocs)
         self.names = TextInput(
             style=TextStyle.paragraph,
@@ -627,22 +617,24 @@ class RPModal(Modal):
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        webhook = await self.bot.webhook(910914713234325504, reason="RP Search")
+        webhook: Webhook = await interaction.client.webhook(
+            910914713234325504, reason="RP Search"
+        )
         msg: WebhookMessage = await webhook.send(
             content="@here",
             allowed_mentions=AllowedMentions(everyone=True),
             embed=embed,
-            view=RPThreadManage(self.bot, self.thread, member, items),
+            view=RPThreadManage(self.thread, member, items),
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             wait=True,
             thread=self.thread,
         )
-        cog = self.bot.get_cog("Roles")
+        cog = interaction.client.get_cog("Roles")
         cog.cool_down[member.id] = utcnow()
         cog.role_cool_down[self.thread.id] = utcnow()
         cog.last_claimer[self.thread.id] = member.id
-        async with self.bot.database() as db:
+        async with interaction.client.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
                 msg.id,
@@ -698,7 +690,6 @@ class RPThreadView(View):
         )
         await resp.send_modal(
             RPModal(
-                bot=interaction.client,
                 thread=self.thread,
                 ocs=ocs,
             )
