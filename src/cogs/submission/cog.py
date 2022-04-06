@@ -390,7 +390,7 @@ class Submission(commands.Cog):
     @app_commands.guilds(719343092963999804)
     @app_commands.describe(member="Member, if not provided, it's current user.")
     @app_commands.checks.has_role("Moderation")
-    async def submit_as(self, ctx: Interaction, member: Optional[Member | User]):
+    async def submit_as(self, ctx: Interaction, member: Optional[User]):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         if not member:

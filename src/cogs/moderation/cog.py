@@ -33,11 +33,11 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
+from discord.ext.commands import Context
 from discord.ui import Button, View, button
 from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
 
-from src.context import Context
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
