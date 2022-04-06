@@ -270,7 +270,7 @@ class Simple(Basic):
             if message := self.message:
                 await message.edit(**data)
             elif isinstance(target := self.target, Interaction):
-                await target.edit_original_message(**data)
+                await target.response.edit_message(**data)
 
     @button(
         emoji=":lasttrack:952522808347467807",

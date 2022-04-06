@@ -154,7 +154,7 @@ class CharactersView(Complex):
                         ephemeral=True,
                     )
                 else:
-                    await ctx.edit_original_message(
+                    await response.edit_message(
                         embed=embed,
                         view=view,
                     )

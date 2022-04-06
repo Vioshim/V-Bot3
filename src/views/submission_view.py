@@ -85,7 +85,7 @@ class CharacterHandlerView(Complex):
         with suppress(DiscordException):
             await self.edit(page=None)
         with suppress(DiscordException):
-            await interaction.edit_original_message(
+            await resp.edit_message(
                 embed=data[0].embed,
                 view=None,
             )
@@ -152,9 +152,10 @@ class TemplateView(View):
 
     @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
     async def mode2(self, interaction: Interaction, _: Button):
+        resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
         text = dump(info, sort_keys=False)
-        await interaction.edit_original_message(
+        await resp.edit_message(
             content=f"```yaml\n{text}\n```",
             embed=None,
             view=None,
@@ -163,6 +164,7 @@ class TemplateView(View):
 
     @button(label="Through Google Documents", row=2, style=ButtonStyle.blurple)
     async def mode3(self, interaction: Interaction, _: Button):
+        resp: InteractionResponse = interaction.response
         content = (
             "**__Available Templates__**\n\n"
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
@@ -172,9 +174,7 @@ class TemplateView(View):
                 f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
             )
 
-        await interaction.edit_original_message(
-            content=content, embed=None, view=None
-        )
+        await resp.edit_message(content=content, embed=None, view=None)
         self.stop()
 
 
@@ -305,7 +305,7 @@ class SubmissionView(View):
             )
             await view.wait()
             with suppress(DiscordException):
-                await ctx.edit_original_message(
+                await resp.edit_message(
                     embed=values[0].embed,
                     view=None,
                 )

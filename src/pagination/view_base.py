@@ -224,7 +224,8 @@ class Basic(Generic[_M], View):
             elif resp.is_done():
                 try:
                     self.message = await target.followup.send(**data, wait=True)
-                except DiscordException:
+                except DiscordException as e:
+                    self.bot.logger.exception("Exception", exc_info=e)
                     self.message = await target.channel.send(**data)
             else:
                 ctx = await resp.send_message(**data)
@@ -290,7 +291,10 @@ class Basic(Generic[_M], View):
                         await message.edit(view=None)
                 self.message = None
         finally:
-            if isinstance(target := self.target, Interaction) and not self.message:
+            if (
+                isinstance(target := self.target, Interaction)
+                and not self.message
+            ):
                 with suppress(DiscordException):
                     message = await target.original_message()
                     view = self.from_message(message)

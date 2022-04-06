@@ -125,7 +125,7 @@ class InvitePaginator(Complex):
                 ephemeral=True,
             )
         else:
-            await ctx.edit_original_message(
+            await response.edit_message(
                 content=item.content,
                 embed=embed,
                 view=view,
