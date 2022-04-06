@@ -150,9 +150,12 @@ class Utilities(commands.Cog):
         self.matches = matches[:8]
 
         if text := "\n".join(f"[`{key}`]({url})" for key, url in self.matches):
-            await ctx.followup.send(text)
+            await ctx.followup.send(text, ephemeral=True)
         else:
-            await ctx.followup.send("Could not find anything. Sorry.")
+            await ctx.followup.send(
+                "Could not find anything. Sorry.",
+                ephemeral=True,
+            )
 
     @commands.command()
     async def charinfo(self, ctx: commands.Context, *, characters: str):

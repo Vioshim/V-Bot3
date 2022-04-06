@@ -324,7 +324,7 @@ class SubmissionView(View):
             )
 
             oc: Type[Character]
-            async with view.send(single=True) as oc:
+            async with view.send(single=True, ephemeral=True) as oc:
                 if isinstance(oc, Character):
                     self.bot.logger.info(
                         "%s is modifying a Character(%s) aka %s",
