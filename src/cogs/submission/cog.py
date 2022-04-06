@@ -1234,7 +1234,7 @@ class Submission(commands.Cog):
         self.ready = True
 
 
-def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
@@ -1242,4 +1242,4 @@ def setup(bot: CustomBot) -> None:
     bot: CustomBot
         Bot
     """
-    bot.add_cog(Submission(bot))
+    await bot.add_cog(Submission(bot))

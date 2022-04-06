@@ -774,16 +774,12 @@ class Information(commands.Cog):
             await self.member_count(guild)
 
 
-def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
     ----------
     bot: CustomBot
         Bot
-
-    Returns
-    -------
-
     """
-    bot.add_cog(Information(bot))
+    await bot.add_cog(Information(bot))

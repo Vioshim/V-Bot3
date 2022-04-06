@@ -721,10 +721,12 @@ class Moderation(commands.Cog):
         await ctx.message.delete()
 
 
-def setup(bot: CustomBot):
-    """Default Cog Loader
+async def setup(bot: CustomBot) -> None:
+    """Default Cog loader
 
-    :param bot: Bot
-    :return:
+    Parameters
+    ----------
+    bot: CustomBot
+        Bot
     """
-    bot.add_cog(Moderation(bot))
+    await bot.add_cog(Moderation(bot))

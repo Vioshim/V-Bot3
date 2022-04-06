@@ -83,7 +83,7 @@ class Bump(Cog):
                 await bump.send()
 
 
-def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
@@ -91,4 +91,4 @@ def setup(bot: CustomBot) -> None:
     bot: CustomBot
         Bot
     """
-    bot.add_cog(Bump(bot))
+    await bot.add_cog(Bump(bot))

@@ -284,7 +284,7 @@ class Proxy(commands.Cog):
                 )
 
 
-def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
@@ -292,4 +292,4 @@ def setup(bot: CustomBot) -> None:
     bot: CustomBot
         Bot
     """
-    bot.add_cog(Proxy(bot))
+    await bot.add_cog(Proxy(bot))

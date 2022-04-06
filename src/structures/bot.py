@@ -101,12 +101,12 @@ class CustomBot(Bot):
         self.webhook_cache: dict[int, Webhook] = {}
 
     async def setup_hook(self) -> None:
-        self.load_extension("jishaku")
+        await self.load_extension("jishaku")
         path = Path("src/cogs")
         path.resolve()
         for cog in path.glob("*/cog.py"):
             item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
-            self.load_extension(item)
+            await self.load_extension(item)
             self.logger.info("Successfully loaded %s", item)
 
     async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
