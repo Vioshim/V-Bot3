@@ -285,6 +285,7 @@ class Basic(Generic[_M], View):
         force: bool = False,
     ) -> None:
         """This method deletes the view, and stops it."""
+        self.bot.logger.info("1- %s", str(self.message))
         try:
             if message := self.message:
                 await message.delete()
@@ -294,6 +295,7 @@ class Basic(Generic[_M], View):
                 if message := self.message:
                     view = self.from_message(message)
                     if force or view.id == self.id:
+                        self.bot.logger.info("2- %s", str(message))
                         await message.edit(view=None)
                 self.message = None
         finally:
@@ -304,6 +306,7 @@ class Basic(Generic[_M], View):
                 with suppress(DiscordException):
                     message = await target.original_message()
                     view = self.from_message(message)
+                    self.bot.logger.info("3- %s", str(message))
                     if force or view.id == self.id:
                         await message.edit(view=None)
             self.message = None
