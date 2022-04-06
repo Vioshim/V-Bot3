@@ -39,7 +39,11 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, FakemonCharacter, VariantCharacter
+from src.structures.character import (
+    Character,
+    FakemonCharacter,
+    VariantCharacter,
+)
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
@@ -1400,8 +1404,7 @@ class ModifyView(View):
         if modifying and (
             file := await self.bot.get_file(self.oc.generated_image)
         ):
-            kwargs["attachments"] = []
-            kwargs["file"] = file
+            kwargs["attachments"] = [file]
         msg = None
         try:
             try:
