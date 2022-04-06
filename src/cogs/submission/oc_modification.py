@@ -1363,7 +1363,6 @@ class ModifyView(View):
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
             return False
-        await resp.defer(ephemeral=True)
         return True
 
     @select(placeholder="Select Fields to Edit", row=0)
@@ -1431,14 +1430,12 @@ class ModifyView(View):
     @button(label="Don't make any changes", row=1)
     async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.edit_message(view=None)
-        await ctx.followup.send("Alright, no changes.", ephemeral=True)
+        await resp.edit_message("Alright, no changes.", view=None)
         return self.stop()
 
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.edit_message(view=None)
         webhook = await self.bot.webhook(919277769735680050)
         guild: Guild = webhook.guild
         try:
@@ -1465,7 +1462,5 @@ class ModifyView(View):
                 )
                 await self.oc.delete(db)
         finally:
-            await ctx.followup.send(
-                "Character Has been Deleted", ephemeral=True
-            )
+            await resp.edit_message("Character Has been Deleted", view=None)
             self.stop()
