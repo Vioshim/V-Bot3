@@ -163,7 +163,7 @@ class ModernInput(Basic):
     ):
         resp: InteractionResponse = interaction.response
         modal = TextModal(self.input_text)
-        await resp.send_modal(modal=modal)
+        await resp.send_modal(modal)
         await modal.wait()
         self.text = modal.text
         self.stop()
