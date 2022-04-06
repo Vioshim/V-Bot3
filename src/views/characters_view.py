@@ -23,7 +23,6 @@ from discord import (
     InteractionResponse,
     Member,
     TextChannel,
-    Thread,
     Webhook,
 )
 from discord.ui import Button, Select, View, button
