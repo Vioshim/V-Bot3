@@ -79,7 +79,6 @@ class CharacterHandlerView(Complex):
         await resp.edit_message(
             embed=data[0].embed,
             view=view,
-            ephemeral=True,
         )
         await view.wait()
         # with suppress(DiscordException):
@@ -324,7 +323,7 @@ class SubmissionView(View):
             )
 
             oc: Type[Character]
-            async with view.send(single=True, editing_original=True) as oc:
+            async with view.send(single=True, ephemeral=True) as oc:
                 if isinstance(oc, Character):
                     self.bot.logger.info(
                         "%s is modifying a Character(%s) aka %s",
