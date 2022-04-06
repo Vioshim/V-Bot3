@@ -39,11 +39,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
@@ -1425,7 +1421,7 @@ class ModifyView(View):
                 self.oc.image = msg.embeds[0].image.url
                 async with self.bot.database() as db:
                     await self.oc.update(db)
-            await resp.edit_message(view=None, embed=self.oc.embed)
+            await ctx.edit_original_message(view=None, embed=self.oc.embed)
             self.stop()
 
     @button(label="Don't make any changes", row=1)
