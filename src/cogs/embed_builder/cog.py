@@ -256,9 +256,8 @@ class EmbedBuilder(commands.Cog):
                 if message and ctx.message.attachments:
                     files, embed = await self.bot.embed_raw(embed)
                     await message.edit(
-                        files=files,
                         embed=embed,
-                        attachments=[],
+                        attachments=files,
                     )
                 elif embed := embed_handler(message, embed):
                     await message.edit(embed=embed)
@@ -690,7 +689,7 @@ class EmbedBuilder(commands.Cog):
 
         """
         async with self.edit(ctx) as embed:
-            embed.timestamp = date or embed.Empty
+            embed.timestamp = date
 
     @embed_timestamp.command(name="now")
     @commands.has_guild_permissions(
@@ -1141,7 +1140,7 @@ class EmbedBuilder(commands.Cog):
             elif thumbnail:
                 embed.set_thumbnail(url=thumbnail)
             else:
-                embed.remove_thumbnail()
+                embed.set_thumbnail(url=None)
 
     @embed_thumbnail.group(name="user", invoke_without_command=True)
     @commands.has_guild_permissions(
@@ -1227,8 +1226,7 @@ class EmbedBuilder(commands.Cog):
         -------
 
         """
-        method = self.edit(ctx)
-        async with method as embed:
+        async with self.edit(ctx) as embed:
             if attachments := ctx.message.attachments:
                 embed.set_image(url=attachments[-1].proxy_url)
             elif isinstance(image, (Emoji, PartialEmoji)):
@@ -1236,7 +1234,7 @@ class EmbedBuilder(commands.Cog):
             elif image:
                 embed.set_image(url=image)
             else:
-                embed.set_image(url=embed.Empty)
+                embed.set_image(url=None)
 
     @embed_image.command(name="user")
     @commands.has_guild_permissions(
