@@ -96,19 +96,24 @@ def age_parser(text: str, oc: Character):
     bool
         valid
     """
-    age: int = oc.age or 0
-    for item in map(
-        lambda x: x.strip(), text.replace(",", ";").replace("|", ";").split(";")
-    ):
-        op = sorted(o for x in item.split("-") if isinstance(o := foo(x), int))
-        if (len(op) == 2 and op[0] <= age <= op[1]) or age in op:
+    if not text:
+        return True
+
+    age = oc.age or 0
+
+    text = text.replace(",", ";").replace("|", ";")
+    for item in map(lambda x: x.strip(), text.split(";")):
+        if item.isdigit() and int(item) == age:
             return True
 
-        for key, operator in filter(lambda x: x[0] in item, OPERATORS.items()):
-            op1, op2 = map(foo, item.split(key))
-            op1 = op1 if isinstance(op1, int) else op2
-            if isinstance(op1, int) and operator(op1, age):
-                return True
+        op = [val for x in item.split("-") if isinstance(val := foo(x), int)]
+        if len(op) == 2 and op[0] <= age <= op[1]:
+            return age != 0
+
+        for key, operator in filter(lambda x: x[0] in text, OPERATORS.items()):
+            op = [foo(x) or 0 for x in item.split(key)]
+            if operator(op[0], age) if op[0] else operator(age, op[1]):
+                return age != 0
 
     return False
 
@@ -178,7 +183,9 @@ class Pokedex(commands.Cog):
 
             embed.title = f"See {mon.name}'s movepool"
             movepool = mon.total_movepool
-            if info := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon_types):
+            if info := "\n".join(
+                f"• {'/'.join(i.name for i in x)}" for x in mon_types
+            ):
                 embed.add_field(name="Possible Types", value=info)
         elif fakemon:
             movepool = fakemon.movepool
@@ -326,7 +333,8 @@ class Pokedex(commands.Cog):
                 ocs = [
                     oc
                     for oc in ocs
-                    if isinstance(oc.species, Variant) and oc.species.base == mon
+                    if isinstance(oc.species, Variant)
+                    and oc.species.base == mon
                 ]
             else:
                 ocs = [oc for oc in ocs if oc.species == mon]
@@ -335,7 +343,8 @@ class Pokedex(commands.Cog):
             ocs = [
                 oc
                 for oc in ocs
-                if isinstance(oc, FusionCharacter) and species in oc.species.bases
+                if isinstance(oc, FusionCharacter)
+                and species in oc.species.bases
             ]
 
         if isinstance(mon, Species):
@@ -348,7 +357,8 @@ class Pokedex(commands.Cog):
                 embed.set_footer(text=f"Types: {mon_types}")
             elif isinstance(mon, Fusion) and (
                 mon_types := ", ".join(
-                    "/".join(i.name for i in item) for item in mon.possible_types
+                    "/".join(i.name for i in item)
+                    for item in mon.possible_types
                 )
             ):
                 embed.set_footer(text=f"Possible Types: {mon_types}")
@@ -385,7 +395,11 @@ class Pokedex(commands.Cog):
                 if oc.backstory and backstory.lower() in oc.backstory.lower()
             ]
         if extra:
-            ocs = [oc for oc in ocs if oc.extra and extra.lower() in oc.extra.lower()]
+            ocs = [
+                oc
+                for oc in ocs
+                if oc.extra and extra.lower() in oc.extra.lower()
+            ]
         if sp_ability:
             ocs = [
                 oc
@@ -459,7 +473,8 @@ class Pokedex(commands.Cog):
             ocs = [
                 oc
                 for oc in ocs
-                if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")
+                if fix(oc.kind)
+                == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")
             ]
 
         view = CharactersView(
