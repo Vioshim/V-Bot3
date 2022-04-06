@@ -228,11 +228,17 @@ class Basic(Generic[_M], View):
                     self.bot.logger.exception("Exception", exc_info=e)
                     self.message = await target.channel.send(**data)
             else:
-                ctx = await resp.send_message(**data)
-                self.message = await ctx.original_message()
+                await resp.send_message(**data)
+                self.message = await target.original_message()
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:
+            self.bot.logger.info(
+                "%s %s %s",
+                str(target),
+                repr(target),
+                str(type(target)),
+            )
             self.message = await target.send(**data)
 
         if message := self.message:
