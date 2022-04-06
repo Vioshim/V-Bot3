@@ -535,7 +535,7 @@ class ComplexInput(Complex):
             content="Write down the choice in that case.", ephemeral=True
         )
         message: Message = await self.bot.wait_for(
-            event="message",
+            "message",
             check=text_check(ctx),
         )
         aux = {}
