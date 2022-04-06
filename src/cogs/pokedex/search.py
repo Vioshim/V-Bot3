@@ -166,7 +166,7 @@ SpeciesArg = Transform[Species, SpeciesTransformer]
 DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
 
 
-class AbilityTransformer(Transform):
+class AbilityTransformer(Transformer):
     @classmethod
     async def transform(cls, _: Interaction, value: Optional[str]):
         item = Ability.deduce(value)
@@ -187,7 +187,7 @@ class AbilityTransformer(Transform):
 AbilityArg = Transform[Ability, AbilityTransformer]
 
 
-class TypingTransformer(Transform):
+class TypingTransformer(Transformer):
     @classmethod
     async def transform(cls, _: Interaction, value: Optional[str]):
         item = Typing.deduce(value)
