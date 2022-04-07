@@ -350,7 +350,7 @@ class Simple(Basic):
         await self.custom_finish(interaction, btn)
         if not resp.is_done():
             await resp.pong()
-            await self.delete(force=True)
+            await self.delete()
 
     @button(
         emoji=":fastforward:952522808347488326",
