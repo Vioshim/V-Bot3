@@ -77,6 +77,7 @@ class Information(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
+        self.bot.tree.on_error = self.on_error
 
     @app_commands.command(
         description="Weather information from the selected area."
@@ -723,7 +724,6 @@ class Information(commands.Cog):
                 ctx.command.qualified_name,
             )
 
-    @commands.Cog.listener()
     async def on_error(
         self,
         interaction: Interaction,
