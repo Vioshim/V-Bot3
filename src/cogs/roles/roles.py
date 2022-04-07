@@ -540,7 +540,7 @@ class RPThreadManage(View):
         self.ocs = ocs
 
     @button(
-        label="Click here to view all the user's characters.",
+        label="Click to Read User's OCs.".center(80, "\u2008"),
         row=1,
         custom_id="check_ocs",
     )

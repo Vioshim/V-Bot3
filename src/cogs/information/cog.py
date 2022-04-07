@@ -79,9 +79,7 @@ class Information(commands.Cog):
         self.join: dict[Member, Message] = {}
         self.bot.tree.on_error = self.on_error
 
-    @app_commands.command(
-        description="Weather information from the selected area."
-    )
+    @app_commands.command(description="Weather information from the selected area.")
     @app_commands.guilds(719343092963999804)
     @app_commands.describe(area="Area to get weather info about.")
     @app_commands.choices(
@@ -116,9 +114,7 @@ class Information(commands.Cog):
                 URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API}"
                 async with self.bot.session.get(URL) as f:
                     if f.status != 200:
-                        await resp.send_message(
-                            "Invalid response", ephemeral=True
-                        )
+                        await resp.send_message("Invalid response", ephemeral=True)
                     data: dict = await f.json()
                     if weather := data.get("weather", []):
                         info: dict = weather[0]
@@ -376,9 +372,7 @@ class Information(commands.Cog):
             timestamp=utcnow(),
         )
         if roles := member.roles[:0:-1]:
-            embed.description = "\n".join(
-                f"> **•** {role.mention}" for role in roles
-            )
+            embed.description = "\n".join(f"> **•** {role.mention}" for role in roles)
         if icon := guild.icon:
             embed.set_footer(text=f"ID: {member.id}", icon_url=icon.url)
         else:
@@ -515,8 +509,7 @@ class Information(commands.Cog):
         if messages := [
             message
             for message in payload.cached_messages
-            if message.id not in self.bot.msg_cache
-            and message.webhook_id != w.id
+            if message.id not in self.bot.msg_cache and message.webhook_id != w.id
         ]:
             msg = messages[0]
             fp = StringIO()
@@ -548,9 +541,7 @@ class Information(commands.Cog):
                     info = await data.json()
                     result = info["results"][0]
                     media = result["media"][0]
-                    title: str = (
-                        result["title"] or result["content_description"]
-                    )
+                    title: str = result["title"] or result["content_description"]
                     url: str = result["itemurl"]
                     image: str = media["gif"]["url"]
                     return title, url, image
@@ -810,9 +801,7 @@ class Information(commands.Cog):
         if hasattr(ctx.command, "on_error"):
             return
 
-        if (cog := ctx.cog) and cog._get_overridden_method(
-            cog.cog_command_error
-        ):
+        if (cog := ctx.cog) and cog._get_overridden_method(cog.cog_command_error):
             return
 
         if error_cause := error.__cause__:

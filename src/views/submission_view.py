@@ -141,7 +141,7 @@ class TemplateView(View):
         self.template = template
         self.title = title
 
-    @button(label="Through Discord Modal", row=0, style=ButtonStyle.blurple)
+    @button(label="Form", row=0, style=ButtonStyle.blurple)
     async def mode1(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
@@ -149,7 +149,7 @@ class TemplateView(View):
         modal = SubmissionModal(text)
         await resp.send_modal(modal)
 
-    @button(label="Through Discord Message", row=1, style=ButtonStyle.blurple)
+    @button(label="Message", row=0, style=ButtonStyle.blurple)
     async def mode2(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         info = self.template.get("Template", {})
@@ -161,7 +161,7 @@ class TemplateView(View):
         )
         self.stop()
 
-    @button(label="Through Google Documents", row=2, style=ButtonStyle.blurple)
+    @button(label="Google Document", row=0, style=ButtonStyle.blurple)
     async def mode3(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         content = (
