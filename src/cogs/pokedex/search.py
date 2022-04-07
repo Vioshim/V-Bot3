@@ -112,29 +112,32 @@ class SpeciesTransformer(Transformer):
                 mons = Species.all()
 
         mons: list[Character | Species] = list(mons)
+        filters = []
 
         if member := ctx.namespace.member:
-            mons = filter(lambda x: x.author == member.id, mons)
+            filters.append(lambda x: x.author == member.id)
         if location := ctx.namespace.location:
-
             def foo(oc: Character):
                 ch = guild.get_channel_or_thread(oc.location)
                 if isinstance(ch, Thread):
                     return ch.parent_id == location.id
                 return oc.location == location.id
-
+            filters.append(foo)
             mons = filter(foo, mons)
         if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
-            mons = filter(lambda x: mon_type in x.types, mons)
+            filters.append(lambda x: mon_type in x.types)
         if (abilities := ctx.namespace.abilities) and (
             ability := Ability.from_ID(abilities)
         ):
-            mons = filter(lambda x: ability in x.abilities, mons)
+            filters.append(lambda x: ability in x.abilities)
         if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
-            mons = filter(lambda x: move in x.movepool, mons)
+            filters.append(lambda x: move in x.movepool)
 
         options = {
-            item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
+            item_name(mon): item_value(mon) for mon in sorted(
+                filter(lambda x: all(i(x) for i in filters), mons),
+                key=item_name
+            )
         }
 
         return [
