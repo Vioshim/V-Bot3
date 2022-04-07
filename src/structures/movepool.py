@@ -18,7 +18,6 @@ from dataclasses import astuple, dataclass, field
 from json import JSONDecoder, JSONEncoder
 from typing import Any, Callable, Iterable, Union
 
-from asyncpg.connection import Connection
 from frozendict import frozendict
 
 from src.structures.move import Move
@@ -51,7 +50,9 @@ class Movepool:
     other: frozen_set = field(default_factory=frozen_set)
 
     def __post_init__(self):
-        self.level = frozen_dict({k: frozen_set(v) for k, v in self.level.items()})
+        self.level = frozen_dict(
+            {k: frozen_set(v) for k, v in self.level.items()}
+        )
         self.tm = frozen_set(self.tm)
         self.event = frozen_set(self.event)
         self.tutor = frozen_set(self.tutor)
@@ -410,7 +411,11 @@ class Movepool:
 
         return Movepool(
             level=frozen_dict(
-                {k: entry for k, v in sorted(self.level.items()) if (entry := foo(v))}
+                {
+                    k: entry
+                    for k, v in sorted(self.level.items())
+                    if (entry := foo(v))
+                }
             ),
             tm=foo(self.tm),
             event=foo(self.event),
@@ -470,8 +475,8 @@ class Movepool:
             """
             return sorted(move.id for move in moves)
 
-        return dict(
-            level={k: foo(v) for k, v in sorted(self.level.items())},
+        data = dict(
+            level={k: foo(v) for k, v in sorted(self.level.items()) if v},
             egg=foo(self.egg),
             event=foo(self.event),
             tm=foo(self.tm),
@@ -479,6 +484,8 @@ class Movepool:
             levelup=foo(self.levelup),
             other=foo(self.other),
         )
+
+        return {k: v for k, v in data.items() if v}
 
     @property
     def as_display_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:
@@ -505,8 +512,8 @@ class Movepool:
             """
             return sorted(move.name for move in moves)
 
-        return dict(
-            level={k: foo(v) for k, v in sorted(self.level.items())},
+        data = dict(
+            level={k: foo(v) for k, v in sorted(self.level.items()) if v},
             egg=foo(self.egg),
             event=foo(self.event),
             tm=foo(self.tm),
@@ -514,6 +521,8 @@ class Movepool:
             levelup=foo(self.levelup),
             other=foo(self.other),
         )
+
+        return {k: v for k, v in data.items() if v}
 
     @property
     def level_moves(self) -> move_set:
@@ -528,136 +537,6 @@ class Movepool:
         for level in self.level.values():
             moves.update(level)
         return frozenset(moves)
-
-    @classmethod
-    async def fakemon_fetch(cls, connection: Connection, id: int) -> Movepool:
-        """Obtains movepool out of a Fakemon ID
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-        id : int
-            fakemon's ID
-
-        Returns
-        -------
-        Movepool
-            resulting movepool
-        """
-        item_set = set[Move]
-        level_set = dict[str, item_set]
-        items = dict(
-            level=level_set(),
-            egg=item_set(),
-            event=item_set(),
-            tm=item_set(),
-            tutor=item_set(),
-            levelup=item_set(),
-            other=item_set(),
-        )
-        async for item in connection.cursor(
-            """--sql
-            SELECT MOVE, METHOD
-            FROM FAKEMON_MOVEPOOL
-            WHERE FAKEMON = $1 AND METHOD != 'LEVEL';
-            """,
-            id,
-        ):
-            move, method = item["move"], item["method"]
-            method: str = method.lower()
-            items.setdefault(method, set())
-            items[method].add(Move.from_ID(move))
-
-        async for item in connection.cursor(
-            """--sql
-                SELECT MOVE, LEVEL
-                FROM FAKEMON_LEARNSET
-                WHERE FAKEMON = $1;
-                """,
-            id,
-        ):
-            move, level = item["move"], item["level"]
-            items["level"].setdefault(level, set())
-            items["level"][level].add(Move.from_ID(move))
-
-        return cls.from_dict(**items)
-
-    async def upsert(self, connection: Connection, id: int) -> None:
-        """Fakemon Upsert Method for Fakemons
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-        id : int
-            Fakemon's ID
-        """
-        await connection.execute(
-            """--sql
-            DELETE FROM FAKEMON_MOVEPOOL
-            WHERE FAKEMON = $1;
-            """,
-            id,
-        )
-        await connection.execute(
-            """--sql
-            DELETE FROM FAKEMON_LEARNSET
-            WHERE FAKEMON = $1;
-            """,
-            id,
-        )
-
-        movepool_elements = []
-        learnset_elements = []
-
-        data = dict(
-            TM=self.tm,
-            EVENT=self.event,
-            TUTOR=self.tutor,
-            EGG=self.egg,
-            LEVELUP=self.levelup,
-            OTHER=self.other,
-        )
-
-        for level, values in self.level.items():
-            learnset_elements.extend(
-                (
-                    id,
-                    m.id,
-                    level,
-                )
-                for m in values
-            )
-
-        for key, value in data.items():
-            movepool_elements.extend(
-                (
-                    id,
-                    m.id,
-                    key,
-                )
-                for m in value
-            )
-
-        if movepool_elements:
-            await connection.executemany(
-                """
-                --sql
-                INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, MOVE, METHOD)
-                VALUES ($1, $2, $3);
-                """,
-                movepool_elements,
-            )
-        if learnset_elements:
-            await connection.executemany(
-                """
-                --sql
-                INSERT INTO FAKEMON_LEARNSET(FAKEMON, MOVE, LEVEL)
-                VALUES ($1, $2, $3);
-                """,
-                learnset_elements,
-            )
 
 
 class MovepoolEncoder(JSONEncoder):
