@@ -479,18 +479,18 @@ class Submission(commands.Cog):
                 allowed_mentions=AllowedMentions(users=True),
             )
             thread = await message.create_thread(name=f"OCs⎱{member.id}")
-            self.oc_list[member.id] = thread.id
+            self.oc_list[member.id] = oc_list = thread.id
             if user := thread.guild.get_member(member.id):
                 await thread.add_user(user)
             await message.edit(view=view)
+        return oc_list
 
     async def register_oc(self, oc: Type[Character]):
         member = Object(id=oc.author)
         try:
             thread_id = self.oc_list[member.id]
-        except IndexError:
-            await self.list_update(member)
-            thread_id = self.oc_list[member.id]
+        except KeyError:
+            thread_id = await self.list_update(member)
         oc.thread = thread_id
         guild: Guild = self.bot.get_guild(oc.server)
         user = guild.get_member(member.id) or member
