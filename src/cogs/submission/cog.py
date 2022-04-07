@@ -529,6 +529,7 @@ class Submission(commands.Cog):
         self,
         ctx: Union[Interaction, Message],
         oc: Type[Character],
+        worker: Member,
     ):
         """This is the function which handles the registration process,
         it will try to autocomplete data it can deduce, or ask about what
@@ -540,8 +541,9 @@ class Submission(commands.Cog):
             Message that is being interacted with
         oc : Type[Character]
             Character
+        worker : Member
+            User that interacts
         """
-        member: Member = ctx.guild.get_member(oc.author)
 
         async def send(text: str):
             if isinstance(ctx, Interaction):
@@ -559,13 +561,9 @@ class Submission(commands.Cog):
             return
 
         if isinstance(ctx, Message):
-            user = ctx.author
             await send(
                 "Starting submission process",
             )
-        else:
-            user = member
-        worker: Member = self.supporting.get(user, user)
 
         if isinstance(species := oc.species, Fakemon):  # type: ignore
             if not oc.url:
@@ -868,7 +866,7 @@ class Submission(commands.Cog):
             if oc := oc_process(**msg_data):
                 oc.author = author.id
                 oc.server = message.guild.id
-                await self.registration(ctx=message, oc=oc)
+                await self.registration(ctx=message, oc=oc, worker=refer_author)
                 if isinstance(message, Message):
                     with suppress(DiscordException):
                         await message.delete()
