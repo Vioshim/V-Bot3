@@ -89,19 +89,11 @@ class MovepoolModal(Modal):
             required=False,
             default=", ".join(x.name for x in movepool.event),
         )
-        self.other = TextInput(
-            style=TextStyle.paragraph,
-            label="Other Moves",
-            placeholder=PLACEHOLDER,
-            required=False,
-            default=", ".join(x.name for x in movepool.other),
-        )
         self.add_item(self.level)
         self.add_item(self.tm)
         self.add_item(self.tutor)
         self.add_item(self.egg)
         self.add_item(self.event)
-        self.add_item(self.other)
         self.oc = oc
 
     async def on_submit(self, interaction: Interaction) -> None:
@@ -119,7 +111,6 @@ class MovepoolModal(Modal):
             tutor=yaml_handler(self.tutor.value),
             egg=yaml_handler(self.egg.value),
             event=yaml_handler(self.event.value),
-            other=yaml_handler(self.other.value),
         )
 
         self.oc.species.movepool = movepool
