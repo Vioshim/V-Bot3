@@ -49,12 +49,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1686,9 +1681,7 @@ def oc_process(**kwargs) -> Type[Character]:
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop(
-            "movepool", dict(event=data.get("moveset", set()))
-        ):
+        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1739,10 +1732,7 @@ def doc_convert(doc: Document) -> dict[str, Any]:
     """
 
     content_values: list[str] = [
-        cell.text
-        for table in doc.tables
-        for row in table.rows
-        for cell in row.cells
+        cell.text for table in doc.tables for row in table.rows for cell in row.cells
     ]
 
     text = [
@@ -1833,13 +1823,12 @@ class CharacterTransform(Transformer):
     async def autocomplete(
         cls, interaction: Interaction, value: str
     ) -> list[Choice[str]]:
-        member_id = interaction.user.id
-        for name, value in map(
-            lambda x: (x["name"], x["value"]),
-            interaction.data.get("options", []),
-        ):
-            if name == "member":
-                member_id = int(value)
+        options = [
+            int(x["value"])
+            for x in interaction.data.get("options", [])
+            if x["name"] == "member"
+        ]
+        member_id = next(options, interaction.user.id)
 
         cog = interaction.client.get_cog("Submission")
         text: str = str(value or "").title()
@@ -1851,9 +1840,7 @@ class CharacterTransform(Transformer):
         ]
         if not values:
             values = [
-                Choice(name=k, value=v)
-                for k, v in items.items()
-                if k.startswith(text)
+                Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)
             ]
         values.sort(key=lambda x: x.name)
         return values[:25]
