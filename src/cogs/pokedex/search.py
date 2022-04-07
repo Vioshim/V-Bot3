@@ -51,7 +51,7 @@ class MoveTransformer(Transformer):
             Choice(name=i.name, value=i.id)
             for i in Move.all()
             if text in i.id or i.id in text
-        ]
+        ][:25]
 
 
 MoveArg = Transform[Move, MoveTransformer]
@@ -146,7 +146,7 @@ class SpeciesTransformer(Transformer):
             Choice(name=k, value=v)
             for k, v in options.items()
             if v in text or text in v
-        ]
+        ][:25]
 
 
 class DefaultSpeciesTransformer(Transformer):
@@ -166,7 +166,7 @@ class DefaultSpeciesTransformer(Transformer):
             Choice(name=i.name, value=i.id)
             for i in Species.all()
             if text in i.id or i.id in text
-        ]
+        ][:25]
 
 
 SpeciesArg = Transform[Species, SpeciesTransformer]
@@ -190,7 +190,7 @@ class AbilityTransformer(Transformer):
             Choice(name=i.name, value=i.id)
             for i in Ability.all()
             if text in i.id or i.id in text
-        ]
+        ][:25]
 
 
 AbilityArg = Transform[Ability, AbilityTransformer]
@@ -213,7 +213,7 @@ class TypingTransformer(Transformer):
             Choice(name=i.name, value=i.id)
             for i in Typing.all()
             if text in str(i) or str(i) in text
-        ]
+        ][:25]
 
 
 TypingArg = Transform[Typing, TypingTransformer]
@@ -260,7 +260,7 @@ class FakemonTransformer(Transformer):
             or text in mon.species.name.lower()
         }
 
-        return [Choice(name=k, value=v) for k, v in options.items()]
+        return [Choice(name=k, value=v) for k, v in options.items()][:25]
 
 
 FakemonArg = Transform[FakemonCharacter, FakemonTransformer]
