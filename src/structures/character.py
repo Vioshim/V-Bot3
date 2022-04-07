@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from difflib import get_close_matches
 from io import BytesIO
+from json import dumps
 from random import sample
 from typing import Any, Optional, Type
 
@@ -30,7 +31,7 @@ from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import utcnow
 from docx.document import Document
 from frozendict import frozendict
-from orjson import dumps, loads
+from orjson import loads
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import Typing
@@ -1205,7 +1206,7 @@ class VariantCharacter(Character):
             self.id,
             self.species.base.id,
             self.species.name,
-            str(dumps(self.movepool.as_dict)),
+            dumps(self.movepool.as_dict),
         )
 
     @classmethod
