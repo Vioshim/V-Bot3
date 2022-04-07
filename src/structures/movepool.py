@@ -50,9 +50,7 @@ class Movepool:
     other: frozen_set = field(default_factory=frozen_set)
 
     def __post_init__(self):
-        self.level = frozen_dict(
-            {k: frozen_set(v) for k, v in self.level.items()}
-        )
+        self.level = frozen_dict({k: frozen_set(v) for k, v in self.level.items()})
         self.tm = frozen_set(self.tm)
         self.event = frozen_set(self.event)
         self.tutor = frozen_set(self.tutor)
@@ -411,11 +409,7 @@ class Movepool:
 
         return Movepool(
             level=frozen_dict(
-                {
-                    k: entry
-                    for k, v in sorted(self.level.items())
-                    if (entry := foo(v))
-                }
+                {k: entry for k, v in sorted(self.level.items()) if (entry := foo(v))}
             ),
             tm=foo(self.tm),
             event=foo(self.event),
@@ -475,7 +469,7 @@ class Movepool:
             """
             return sorted(move.id for move in moves)
 
-        data = dict(
+        elements = dict(
             level={k: foo(v) for k, v in sorted(self.level.items()) if v},
             egg=foo(self.egg),
             event=foo(self.event),
@@ -485,7 +479,7 @@ class Movepool:
             other=foo(self.other),
         )
 
-        return {k: v for k, v in data.items() if v}
+        return {k: v for k, v in elements.items() if v}
 
     @property
     def as_display_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:
@@ -512,7 +506,7 @@ class Movepool:
             """
             return sorted(move.name for move in moves)
 
-        data = dict(
+        elements = dict(
             level={k: foo(v) for k, v in sorted(self.level.items()) if v},
             egg=foo(self.egg),
             event=foo(self.event),
@@ -522,7 +516,7 @@ class Movepool:
             other=foo(self.other),
         )
 
-        return {k: v for k, v in data.items() if v}
+        return {k: v for k, v in elements.items() if v}
 
     @property
     def level_moves(self) -> move_set:
