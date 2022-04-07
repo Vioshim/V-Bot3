@@ -978,7 +978,8 @@ class FakemonCharacter(Character):
             evolves_from: Optional[str] = data.pop("evolves_from", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
-            movepool = Movepool(**loads(data.pop("movepool", "{}")))
+            movepool_data = loads(data.pop("movepool", "{}"))
+            movepool = Movepool.from_dict(**movepool_data)
             stats = {k.upper(): v for k, v in stats.items()}
             if species := data.get("species", ""):
                 data["species"] = Fakemon(
@@ -1233,7 +1234,8 @@ class VariantCharacter(Character):
             data = dict(item)
             multiple_pop(data, "kind", "types", "moveset", "abilities")
             variant = data.pop("variant", None)
-            movepool = Movepool(**loads(data.pop("movepool", "{}")))
+            movepool_data = loads(data.pop("movepool", "{}"))
+            movepool = Movepool.from_dict(**movepool_data)
             if species := Variant.from_ID(data.pop("species", None)):
                 species.name = variant
                 species.movepool = movepool
