@@ -49,7 +49,12 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -966,7 +971,7 @@ class FakemonCharacter(Character):
         characters: list[FakemonCharacter] = []
         async for item in connection.cursor(
             """--sql
-            SELECT C.*, F.NAME AS SPECIES, F.EVOLVES_FROM,
+            SELECT C.*, F.NAME AS SPECIES, F.EVOLVES_FROM, F.MOVEPOOL,
             F.HP, F.ATK, F.DEF, F.SPA, F.SPD, F.SPE
             FROM FAKEMON F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
@@ -1020,7 +1025,7 @@ class FakemonCharacter(Character):
                 self.species.SPD,
                 self.species.SPE,
                 getattr(self.evolves_from, "id", None),
-                dumps(self.movepool.as_dict)
+                dumps(self.movepool.as_dict),
             )
 
 
@@ -1205,7 +1210,7 @@ class VariantCharacter(Character):
             self.id,
             self.species.base.id,
             self.species.name,
-            dumps(self.movepool.as_dict)
+            dumps(self.movepool.as_dict),
         )
 
     @classmethod
@@ -1225,7 +1230,7 @@ class VariantCharacter(Character):
         characters: list[VariantCharacter] = []
         async for item in connection.cursor(
             """--sql
-            SELECT C.*, F.SPECIES AS SPECIES, F.NAME AS VARIANT
+            SELECT C.*, F.SPECIES AS SPECIES, F.NAME AS VARIANT, F.MOVEPOOL
             FROM VARIANT_CHARACTER F, CHARACTER C
             WHERE C.ID = F.ID and C.kind = $1;
             """,
