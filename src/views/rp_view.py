@@ -42,9 +42,12 @@ class RPView(View):
         self.last_ping = None
         self.oc_list = oc_list
         self.server = server
-        self.url = f"https://discord.com/channels/{server}/{oc_list[member_id]}/"
         btn = Button(label="Check User's OCs", url=self.url)
         self.add_item(btn)
+
+    @property
+    def url(self):
+        return f"https://discord.com/channels/{self.server}/{self.oc_list[self.member_id]}/"
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -53,13 +56,17 @@ class RPView(View):
             await resp.send_message("Can't ping yourself", ephemeral=True)
             return False
         if registered not in interaction.user.roles:
-            await resp.send_message("Only registered users can ping", ephemeral=True)
+            await resp.send_message(
+                "Only registered users can ping", ephemeral=True
+            )
             return False
         if not (member := interaction.guild.get_member(self.member_id)):
             await resp.send_message("User isn't here anymore.", ephemeral=True)
             return False
         if registered not in member.roles:
-            await resp.send_message("User is no longer registered.", ephemeral=True)
+            await resp.send_message(
+                "User is no longer registered.", ephemeral=True
+            )
             return False
 
         return True
