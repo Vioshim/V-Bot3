@@ -299,7 +299,7 @@ class Basic(Generic[_M], View):
         except HTTPException:
             if isinstance(self.target, Interaction):
                 message = await self.target.original_message()
-                view = self.from_message(self.message)
+                view = self.from_message(message)
                 if force or view.id == self.id:
                     await message.edit(view=None)
         finally:
