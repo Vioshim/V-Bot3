@@ -465,10 +465,9 @@ class Submission(commands.Cog):
             return
         if isinstance(member, int):
             member = Object(id=member)
-        view = RPView(self.bot, member.id, self.oc_list)
         if oc_list := self.oc_list.get(member.id):
             try:
-                await self.oc_list_webhook.edit_message(oc_list, embed=None, view=view)
+                await self.oc_list_webhook.edit_message(oc_list, embed=None)
             except NotFound:
                 oc_list = None
 
@@ -482,6 +481,7 @@ class Submission(commands.Cog):
             self.oc_list[member.id] = oc_list = thread.id
             if user := thread.guild.get_member(member.id):
                 await thread.add_user(user)
+            view = RPView(self.bot, member.id, self.oc_list)
             await message.edit(view=view)
         return oc_list
 
