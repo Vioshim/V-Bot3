@@ -24,12 +24,15 @@ from src.structures.character import Character, FakemonCharacter
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.species import (
+    Fakemon,
+    Fusion,
     Legendary,
     Mega,
     Mythical,
     Pokemon,
     Species,
     UltraBeast,
+    Variant,
 )
 from src.utils.functions import fix
 
@@ -43,7 +46,9 @@ class MoveTransformer(Transformer):
         return move
 
     @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, _: Interaction, value: str
+    ) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -68,12 +73,14 @@ class SpeciesTransformer(Transformer):
         return mon
 
     @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, ctx: Interaction, value: str
+    ) -> list[Choice[str]]:
         text: str = fix(value or "")
         cog: Submission = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
 
-        match fix(ctx.namespace.kind):
+        match kind := fix(ctx.namespace.kind):
             case "LEGENDARY":
                 mons = Legendary.all()
             case "MYTHICAL":
@@ -115,16 +122,27 @@ class SpeciesTransformer(Transformer):
         filters = []
 
         if member := ctx.namespace.member:
-            filters.append(lambda x: x.author == member.id)
+            ocs1 = {x.species for x in cog.rpers.get(member.id, {}).values()}
+            filters.append(
+                lambda x: x.author == member.id
+                if isinstance(x, Character)
+                else x in ocs1
+            )
         if location := ctx.namespace.location:
-            def foo(oc: Character):
+
+            def foo2(oc: Character):
                 ch = guild.get_channel_or_thread(oc.location)
                 if isinstance(ch, Thread):
                     return ch.parent_id == location.id
                 return oc.location == location.id
-            filters.append(foo)
-            mons = filter(foo, mons)
-        if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
+
+            ocs2 = {x.species for x in cog.ocs.values() if foo2(x)}
+            filters.append(
+                lambda x: foo2(x) if isinstance(x, Character) else x in ocs2
+            )
+        if (mon_type := ctx.namespace.types) and (
+            mon_type := Typing.from_ID(mon_type)
+        ):
             filters.append(lambda x: mon_type in x.types)
         if (abilities := ctx.namespace.abilities) and (
             ability := Ability.from_ID(abilities)
@@ -134,9 +152,10 @@ class SpeciesTransformer(Transformer):
             filters.append(lambda x: move in x.movepool)
 
         options = {
-            item_name(mon): item_value(mon) for mon in sorted(
+            item_name(mon): item_value(mon)
+            for mon in sorted(
                 filter(lambda x: all(i(x) for i in filters), mons),
-                key=item_name
+                key=item_name,
             )
         }
 
@@ -156,7 +175,9 @@ class DefaultSpeciesTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, _: Interaction, value: str
+    ) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -178,7 +199,9 @@ class AbilityTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, _: Interaction, value: str
+    ) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -199,7 +222,9 @@ class TypingTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, _: Interaction, value: str
+    ) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -233,7 +258,9 @@ class FakemonTransformer(Transformer):
         return oc
 
     @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, ctx: Interaction, value: str
+    ) -> list[Choice[str]]:
         text: str = fix(value or "")
         guild: Guild = ctx.guild
         cog: Submission = ctx.client.get_cog("Submission")
@@ -246,7 +273,8 @@ class FakemonTransformer(Transformer):
         options = {
             mon.species.name: item_value(mon)
             for mon in sorted(mons, key=lambda x: x.species.name)
-            if mon.species.name.lower() in text or text in mon.species.name.lower()
+            if mon.species.name.lower() in text
+            or text in mon.species.name.lower()
         }
 
         return [Choice(name=k, value=v) for k, v in options.items()][:25]
