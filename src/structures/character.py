@@ -1205,7 +1205,7 @@ class VariantCharacter(Character):
             self.id,
             self.species.base.id,
             self.species.name,
-            dumps(self.movepool.as_dict),
+            str(dumps(self.movepool.as_dict)),
         )
 
     @classmethod
@@ -1823,7 +1823,7 @@ class CharacterTransform(Transformer):
     async def autocomplete(
         cls, interaction: Interaction, value: str
     ) -> list[Choice[str]]:
-        member_id = int(interaction.namespace.member or interaction.user.id)
+        member_id = (interaction.namespace.member or interaction.user).id
         cog = interaction.client.get_cog("Submission")
         text: str = str(value or "").title()
         ocs = cog.rpers.get(member_id, {}).values()

@@ -14,7 +14,7 @@
 
 from typing import Optional
 
-from discord import Guild, Interaction
+from discord import Guild, Interaction, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 
@@ -113,18 +113,25 @@ class SpeciesTransformer(Transformer):
 
         mons: list[Character | Species] = list(mons)
 
-        if (member := ctx.namespace.member) and member.isdigit():
-            mons = [i for i in mons if i.author == int(member)]
-        if (location := ctx.namespace.location) and location.isdigit():
-            mons = [i for i in mons if i.location == int(location)]
+        if member := ctx.namespace.member:
+            mons = filter(lambda x: x.author == member.id, mons)
+        if location := ctx.namespace.location:
+
+            def foo(oc: Character):
+                ch = guild.get_channel_or_thread(oc.location)
+                if isinstance(ch, Thread):
+                    return ch.parent_id == location.id
+                return oc.location == location.id
+
+            mons = filter(foo, mons)
         if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
-            mons = [i for i in mons if mon_type in i.types]
+            mons = filter(lambda x: mon_type in x.types, mons)
         if (abilities := ctx.namespace.abilities) and (
             ability := Ability.from_ID(abilities)
         ):
-            mons = [i for i in mons if ability in i.abilities]
+            mons = filter(lambda x: ability in x.abilities, mons)
         if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
-            mons = [i for i in mons if move in i.movepool]
+            mons = filter(lambda x: move in x.movepool, mons)
 
         options = {
             item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
