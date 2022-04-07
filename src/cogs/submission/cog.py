@@ -541,7 +541,6 @@ class Submission(commands.Cog):
         oc : Type[Character]
             Character
         """
-
         member: Member = ctx.guild.get_member(oc.author)
 
         async def send(text: str):
@@ -561,18 +560,18 @@ class Submission(commands.Cog):
 
         if isinstance(ctx, Message):
             user = ctx.author
-
             await send(
                 "Starting submission process",
             )
         else:
             user = member
+        worker: Member = self.supporting.get(user, user)
 
         if isinstance(species := oc.species, Fakemon):  # type: ignore
             if not oc.url:
                 stats_view = StatsView(
                     bot=self.bot,
-                    member=user,
+                    member=worker,
                     target=ctx,
                 )
                 async with stats_view:
@@ -591,7 +590,7 @@ class Submission(commands.Cog):
             if not 1 <= len(species.types) <= 2:
                 view = ComplexInput(
                     bot=self.bot,
-                    member=user,
+                    member=worker,
                     target=ctx,
                     values=Typing.all(),
                     max_values=2,
@@ -613,7 +612,7 @@ class Submission(commands.Cog):
             if not species.types:
                 view = ComplexInput(
                     bot=self.bot,
-                    member=user,
+                    member=worker,
                     target=ctx,
                     values=values,
                     max_values=1,
@@ -648,7 +647,7 @@ class Submission(commands.Cog):
         elif not oc.abilities or len(oc.abilities) > max_ab:
             ability_view = ComplexInput(
                 bot=self.bot,
-                member=user,
+                member=worker,
                 values=(
                     Ability.all() if oc.any_ability_at_first else oc.species.abilities
                 ),
@@ -678,13 +677,13 @@ class Submission(commands.Cog):
             )
             return
 
-        text_view = ModernInput(bot=self.bot, member=user, target=ctx)
+        text_view = ModernInput(bot=self.bot, member=worker, target=ctx)
 
         if isinstance(species := oc.species, (Variant, Fakemon)):
             view = MovepoolView(
                 bot=self.bot,
                 target=ctx,
-                member=user,
+                member=worker,
                 oc=oc,
             )
             await view.send()
@@ -699,7 +698,7 @@ class Submission(commands.Cog):
 
             moves_view = ComplexInput(
                 bot=self.bot,
-                member=user,
+                member=worker,
                 values=movepool,
                 timeout=None,
                 target=ctx,
@@ -729,7 +728,7 @@ class Submission(commands.Cog):
             return
 
         if oc.sp_ability == SpAbility():
-            bool_view = BooleanView(bot=self.bot, member=user, target=ctx)
+            bool_view = BooleanView(bot=self.bot, member=worker, target=ctx)
             async with bool_view.handle(
                 title="Does the character have an Special Ability?",
                 description=(
@@ -795,7 +794,7 @@ class Submission(commands.Cog):
 
         image_view = ImageView(
             bot=self.bot,
-            member=user,
+            member=worker,
             target=ctx,
             default_img=oc.image or oc.default_image,
         )
