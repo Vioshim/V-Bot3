@@ -39,11 +39,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion
@@ -1424,12 +1420,12 @@ class ModifyView(View):
         guild: Guild = webhook.guild
         try:
             try:
-                await webhook.delete_message(self.oc.id, thread_id=self.oc.thread)
+                await webhook.delete_message(self.oc.id, thread=Object(id=self.oc.thread))
             except HTTPException:
                 if not (thread := guild.get_thread(self.oc.thread)):
                     thread: Thread = await guild.fetch_channel(self.oc.thread)
                 await thread.edit(archived=False)
-                await webhook.delete_message(self.oc.id, thread_id=thread.id)
+                await webhook.delete_message(self.oc.id, thread=thread)
         except NotFound:
             cog = self.bot.get_cog("Submission")
             cog.ocs.pop(self.oc.id, None)

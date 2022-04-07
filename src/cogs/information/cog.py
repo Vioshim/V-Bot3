@@ -734,8 +734,10 @@ class Information(commands.Cog):
             error, "original", error
         )
         resp: InteractionResponse = interaction.response
-        if command.on_error:
+        if command and command.on_error:
             return
+
+        name = command.name if command else ""
 
         if not resp.is_done():
             await resp.defer(ephemeral=True)
@@ -744,7 +746,7 @@ class Information(commands.Cog):
             await interaction.followup.send(
                 embed=Embed(
                     color=Colour.red(),
-                    title=f"Error - {command.name}",
+                    title=f"Error - {name}",
                     description=str(error),
                 ),
                 ephemeral=True,
@@ -755,7 +757,7 @@ class Information(commands.Cog):
             await interaction.followup.send(
                 embed=Embed(
                     color=Colour.red(),
-                    title=f"Unexpected error - {command.name}",
+                    title=f"Unexpected error - {name}",
                     description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
                 ),
                 ephemeral=True,
