@@ -165,7 +165,7 @@ class Complex(Simple):
                 str(self.member),
                 exc_info=exc_val,
             )
-        await self.delete(force=True)
+        await self.delete()
 
     @property
     def choices(self) -> set[_T]:
@@ -307,7 +307,7 @@ class Complex(Simple):
         else:
             if not resp.is_done():
                 await resp.pong()
-            await self.delete(force=True)
+            await self.delete()
 
     @asynccontextmanager
     async def send(

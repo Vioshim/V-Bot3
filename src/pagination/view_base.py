@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import datetime
 from typing import Generic, Optional, TypeVar, Union
 
@@ -30,7 +29,6 @@ from discord import (
     Member,
     Message,
     MessageReference,
-    NotFound,
     PartialMessage,
     StickerItem,
     User,
@@ -282,30 +280,22 @@ class Basic(Generic[_M], View):
     def embed(self, embed: Embed):
         self._embed = embed
 
-    async def delete(
-        self,
-        force: bool = False,
-    ) -> None:
+    async def delete(self) -> None:
         """This method deletes the view, and stops it."""
 
         try:
             if self.message:
                 if self.message.flags.ephemeral:
-                    view = self.from_message(self.message)
-                    if force or view.id == self.id:
-                        await self.message.edit(view=None)
+                    await self.message.edit(view=None)
                 else:
                     await self.message.delete()
         except HTTPException:
             if isinstance(self.target, Interaction):
                 message = await self.target.original_message()
-                view = self.from_message(message)
-                if force or view.id == self.id:
-                    await message.edit(view=None)
+                await message.edit(view=None)
         finally:
             self.message = None
             self.stop()
 
     async def on_timeout(self) -> None:
-        with suppress(DiscordException):
-            await self.delete()
+        await self.delete()
