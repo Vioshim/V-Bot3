@@ -72,14 +72,8 @@ class SpeciesTransformer(Transformer):
         text: str = fix(value or "")
         cog: Submission = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
-        kind = ""
-        for name, value in map(
-            lambda x: (x["name"], x["value"]), ctx.data.get("options", [])
-        ):
-            if name == "kind":
-                kind = value
 
-        match fix(kind):
+        match fix(ctx.namespace.kind):
             case "LEGENDARY":
                 mons = Legendary.all()
             case "MYTHICAL":
@@ -119,19 +113,18 @@ class SpeciesTransformer(Transformer):
 
         mons: list[Character | Species] = list(mons)
 
-        items = {x["name"]: x["value"] for x in ctx.data.get("options", [])}
-
-        for name, value in items.items():
-            if name == "member" and value.isdigit():
-                mons = [i for i in mons if i.author == int(value)]
-            elif name == "location" and value.isdigit():
-                mons = [i for i in mons if i.location == int(value)]
-            elif name == "types" and (mon_type := Typing.from_ID(value)):
-                mons = [i for i in mons if mon_type in i.types]
-            elif name == "abilities" and (ability := Ability.from_ID(value)):
-                mons = [i for i in mons if ability in i.abilities]
-            elif name == "moves" and (move := Move.from_ID(value)):
-                mons = [i for i in mons if move in i.movepool]
+        if (member := ctx.namespace.member) and member.isdigit():
+            mons = [i for i in mons if i.author == int(member)]
+        if (location := ctx.namespace.location) and location.isdigit():
+            mons = [i for i in mons if i.location == int(location)]
+        if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
+            mons = [i for i in mons if mon_type in i.types]
+        if (abilities := ctx.namespace.abilities) and (
+            ability := Ability.from_ID(abilities)
+        ):
+            mons = [i for i in mons if ability in i.abilities]
+        if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
+            mons = [i for i in mons if move in i.movepool]
 
         options = {
             item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
