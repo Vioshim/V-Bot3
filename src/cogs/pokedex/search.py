@@ -43,9 +43,7 @@ class MoveTransformer(Transformer):
         return move
 
     @classmethod
-    async def autocomplete(
-        cls, _: Interaction, value: str
-    ) -> list[Choice[str]]:
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -70,9 +68,7 @@ class SpeciesTransformer(Transformer):
         return mon
 
     @classmethod
-    async def autocomplete(
-        cls, ctx: Interaction, value: str
-    ) -> list[Choice[str]]:
+    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
         cog: Submission = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
@@ -138,8 +134,7 @@ class SpeciesTransformer(Transformer):
                 mons = [i for i in mons if move in i.movepool]
 
         options = {
-            item_name(mon): item_value(mon)
-            for mon in sorted(mons, key=item_name)
+            item_name(mon): item_value(mon) for mon in sorted(mons, key=item_name)
         }
 
         return [
@@ -158,9 +153,7 @@ class DefaultSpeciesTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(
-        cls, _: Interaction, value: str
-    ) -> list[Choice[str]]:
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -182,9 +175,7 @@ class AbilityTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(
-        cls, _: Interaction, value: str
-    ) -> list[Choice[str]]:
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -205,9 +196,7 @@ class TypingTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(
-        cls, _: Interaction, value: str
-    ) -> list[Choice[str]]:
+    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
         return [
             Choice(name=i.name, value=i.id)
@@ -241,9 +230,7 @@ class FakemonTransformer(Transformer):
         return oc
 
     @classmethod
-    async def autocomplete(
-        cls, ctx: Interaction, value: str
-    ) -> list[Choice[str]]:
+    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
         guild: Guild = ctx.guild
         cog: Submission = ctx.client.get_cog("Submission")
@@ -256,8 +243,7 @@ class FakemonTransformer(Transformer):
         options = {
             mon.species.name: item_value(mon)
             for mon in sorted(mons, key=lambda x: x.species.name)
-            if mon.species.name.lower() in text
-            or text in mon.species.name.lower()
+            if mon.species.name.lower() in text or text in mon.species.name.lower()
         }
 
         return [Choice(name=k, value=v) for k, v in options.items()][:25]

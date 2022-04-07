@@ -1420,7 +1420,10 @@ class ModifyView(View):
         guild: Guild = webhook.guild
         try:
             try:
-                await webhook.delete_message(self.oc.id, thread=Object(id=self.oc.thread))
+                await webhook.delete_message(
+                    self.oc.id,
+                    thread=Object(id=self.oc.thread),
+                )
             except HTTPException:
                 if not (thread := guild.get_thread(self.oc.thread)):
                     thread: Thread = await guild.fetch_channel(self.oc.thread)
