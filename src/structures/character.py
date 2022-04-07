@@ -1860,7 +1860,7 @@ class CharacterTransform(Transformer):
                 Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)
             ]
         values.sort(key=lambda x: x.name)
-        return values
+        return values[:25]
 
 
 CharacterArg = Transform[Type[Character], CharacterTransform]
