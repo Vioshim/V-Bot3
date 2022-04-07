@@ -109,9 +109,7 @@ class SubmissionModal(Modal):
             if doc_data := G_DOCUMENT.match(text):
                 doc = await to_thread(docs_reader, url := doc_data.group(1))
                 msg_data = doc_convert(doc)
-                url = (
-                    f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
-                )
+                url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
                 msg_data["url"] = url
             else:
                 text = yaml_handler(text)
@@ -171,9 +169,7 @@ class TemplateView(View):
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
         )
         for item in self.template.get("Document", {}).values():
-            content += (
-                f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
-            )
+            content += f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
 
         await resp.edit_message(content=content, embed=None, view=None)
         self.stop()
@@ -394,9 +390,7 @@ class SubmissionView(View):
                 if not area:
                     return
                 mission = Mission(author=author.id, place=area.id)
-                text_input = ModernInput(
-                    bot=self.bot, member=member, target=channel
-                )
+                text_input = ModernInput(bot=self.bot, member=member, target=channel)
 
                 text: str
 
@@ -464,9 +458,7 @@ class SubmissionView(View):
                     if not item:
                         return
                     mission.difficulty = item
-                    channel: TextChannel = self.bot.get_channel(
-                        908498210211909642
-                    )
+                    channel: TextChannel = self.bot.get_channel(908498210211909642)
                     view = MissionView(
                         bot=self.bot,
                         mission=mission,
