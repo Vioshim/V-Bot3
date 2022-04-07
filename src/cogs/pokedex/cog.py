@@ -228,6 +228,7 @@ class Pokedex(commands.Cog):
         pronoun="Pronoun to Look for",
         age="OC's age. e.g. 18-24, 13, >20",
     )
+    @app_commands.rename(_type="type")
     async def find(
         self,
         ctx: Interaction,
