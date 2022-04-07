@@ -737,7 +737,7 @@ class Information(commands.Cog):
         if command.on_error:
             return
 
-        if resp.is_done():
+        if not resp.is_done():
             await resp.defer(ephemeral=True)
 
         if isinstance(error, app_commands.AppCommandError):
