@@ -49,7 +49,12 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1823,13 +1828,7 @@ class CharacterTransform(Transformer):
     async def autocomplete(
         cls, interaction: Interaction, value: str
     ) -> list[Choice[str]]:
-        options = [
-            int(x["value"])
-            for x in interaction.data.get("options", [])
-            if x["name"] == "member"
-        ]
-        member_id = next(options, interaction.user.id)
-
+        member_id = interaction.namespace.member or interaction.user.id
         cog = interaction.client.get_cog("Submission")
         text: str = str(value or "").title()
         ocs = cog.rpers.get(member_id, {}).values()
