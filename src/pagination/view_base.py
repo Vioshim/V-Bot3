@@ -24,6 +24,7 @@ from discord import (
     Embed,
     File,
     GuildSticker,
+    HTTPException,
     Interaction,
     InteractionResponse,
     Member,
@@ -289,17 +290,16 @@ class Basic(Generic[_M], View):
 
         try:
             if self.message:
-                await self.message.delete()
-                self.message = None
-                return self.stop()
-        except NotFound:
-            view = self.from_message(self.message)
-            if force or view.id == self.id:
-                await self.message.edit(view=None)
-        else:
+                if self.message.flags.ephemeral:
+                    view = self.from_message(self.message)
+                    if force or view.id == self.id:
+                        await self.message.edit(view=None)
+                else:
+                    await self.message.delete()
+        except HTTPException:
             if isinstance(self.target, Interaction):
                 message = await self.target.original_message()
-                view = self.from_message(message)
+                view = self.from_message(self.message)
                 if force or view.id == self.id:
                     await message.edit(view=None)
         finally:
