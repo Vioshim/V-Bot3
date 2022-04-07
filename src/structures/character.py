@@ -1834,12 +1834,12 @@ class CharacterTransform(Transformer):
         cls, interaction: Interaction, value: str
     ) -> list[Choice[str]]:
         member_id = interaction.user.id
-        for item in map(
-            lambda x: Choice(name=x["name"], value=["value"]),
+        for name, value in map(
+            lambda x: (x["name"], x["value"]),
             interaction.data.get("options", []),
         ):
-            if item.name == "member":
-                member_id = int(item.value)
+            if name == "member":
+                member_id = int(value)
 
         cog = interaction.client.get_cog("Submission")
         text: str = str(value or "").title()
