@@ -30,6 +30,7 @@ from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import utcnow
 from docx.document import Document
 from frozendict import frozendict
+from orjson import dumps, loads
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import Typing
@@ -977,9 +978,9 @@ class FakemonCharacter(Character):
             evolves_from: Optional[str] = data.pop("evolves_from", None)
             fakemon_id = data["id"]
             stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
+            movepool = Movepool(**loads(data.pop("movepool", "{}")))
             stats = {k.upper(): v for k, v in stats.items()}
             if species := data.get("species", ""):
-                movepool = await Movepool.fakemon_fetch(connection, fakemon_id)
                 data["species"] = Fakemon(
                     id=fakemon_id,
                     name=str(species),
@@ -1005,9 +1006,9 @@ class FakemonCharacter(Character):
             await super(FakemonCharacter, self).upsert(connection)
             await connection.execute(
                 """--sql
-                INSERT INTO FAKEMON(ID, NAME, HP, ATK, DEF, SPA, SPD, SPE, EVOLVES_FROM)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (ID) DO UPDATE SET
-                NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8, EVOLVES_FROM = $9;
+                INSERT INTO FAKEMON(ID, NAME, HP, ATK, DEF, SPA, SPD, SPE, EVOLVES_FROM, MOVEPOOL)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb) ON CONFLICT (ID) DO UPDATE SET
+                NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8, EVOLVES_FROM = $9, MOVEPOOL = $10::jsonb;
                 """,
                 oc_id,
                 self.species.name,
@@ -1018,13 +1019,8 @@ class FakemonCharacter(Character):
                 self.species.SPD,
                 self.species.SPE,
                 getattr(self.evolves_from, "id", None),
+                dumps(self.movepool.as_dict)
             )
-            movepool = self.movepool
-
-            if evolves_from := self.evolves_from:
-                movepool = movepool.without_moves(evolves_from.movepool)
-
-            await movepool.upsert(connection, oc_id)
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -1201,30 +1197,15 @@ class VariantCharacter(Character):
         await super(VariantCharacter, self).upsert(connection)
         await connection.execute(
             """--sql
-            INSERT INTO VARIANT_CHARACTER(ID, SPECIES, NAME)
-            VALUES ($1, $2, $3) ON CONFLICT (ID)
-            DO UPDATE SET SPECIES = $2, NAME = $3;
+            INSERT INTO VARIANT_CHARACTER(ID, SPECIES, NAME, MOVEPOOL)
+            VALUES ($1, $2, $3, $4::JSONB) ON CONFLICT (ID)
+            DO UPDATE SET SPECIES = $2, NAME = $3, MOVEPOOL = $4::JSONB;
             """,
             self.id,
             self.species.base.id,
             self.species.name,
+            dumps(self.movepool.as_dict)
         )
-        await connection.execute(
-            """--sql
-            DELETE FROM FAKEMON_MOVEPOOL
-            WHERE FAKEMON = $1;
-            """,
-            self.id,
-        )
-        reference = set(self.species.movepool()) | set(self.moveset)
-        if moves := reference - set(self.species.base.movepool()):
-            await connection.executemany(
-                """--sql
-                INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, MOVE, METHOD)
-                VALUES ($1, $2, $3);
-                """,
-                [(self.id, item.name, "EVENT") for item in moves],
-            )
 
     @classmethod
     async def fetch_all(cls, connection: Connection):
@@ -1252,11 +1233,12 @@ class VariantCharacter(Character):
             data = dict(item)
             multiple_pop(data, "kind", "types", "moveset", "abilities")
             variant = data.pop("variant", None)
+            movepool = Movepool(**loads(data.pop("movepool", "{}")))
             if species := Variant.from_ID(data.pop("species", None)):
                 species.name = variant
+                species.movepool = movepool
                 data["species"] = species
                 mon = VariantCharacter(**data)
-                mon.species.movepool = await Movepool.fakemon_fetch(connection, mon.id)
                 await mon.retrieve(connection)
                 characters.append(mon)
 
@@ -1697,7 +1679,9 @@ def oc_process(**kwargs) -> Type[Character]:
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
+        if movepool := data.pop(
+            "movepool", dict(event=data.get("moveset", set()))
+        ):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1748,7 +1732,10 @@ def doc_convert(doc: Document) -> dict[str, Any]:
     """
 
     content_values: list[str] = [
-        cell.text for table in doc.tables for row in table.rows for cell in row.cells
+        cell.text
+        for table in doc.tables
+        for row in table.rows
+        for cell in row.cells
     ]
 
     text = [
@@ -1857,7 +1844,9 @@ class CharacterTransform(Transformer):
         ]
         if not values:
             values = [
-                Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)
+                Choice(name=k, value=v)
+                for k, v in items.items()
+                if k.startswith(text)
             ]
         values.sort(key=lambda x: x.name)
         return values[:25]
