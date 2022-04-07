@@ -1398,7 +1398,7 @@ class ModifyView(View):
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
         except NotFound:
             cog = self.bot.get_cog("Submission")
-            await cog.registration(ctx=ctx, oc=self.oc)
+            await cog.registration(ctx=ctx, oc=self.oc, worker=ctx.user)
         finally:
             if msg:
                 self.oc.image = msg.embeds[0].image.url
