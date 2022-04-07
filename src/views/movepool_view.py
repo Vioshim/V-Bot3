@@ -47,7 +47,7 @@ PLACEHOLDER = "Move, Move, Move"
 
 
 class MovepoolModal(Modal):
-    def __init__(self, *, oc: Character) -> None:
+    def __init__(self, oc: Character) -> None:
         super().__init__(title=f"Movepool for {oc.name}", timeout=None)
         movepool = oc.movepool
         self.level = TextInput(
