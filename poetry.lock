@@ -316,7 +316,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a4071+g4ce60b4c"
+version = "2.0.0a4074+g95deb553"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -337,7 +337,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "4ce60b4cacaa7ab7fd6186f48c73bba6d09ad6a8"
+resolved_reference = "95deb553328d4d1c3e8b6b50239b67c56c4576fa"
 
 [[package]]
 name = "distlib"
