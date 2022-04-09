@@ -490,7 +490,6 @@ class RegionRoles(View):
             all_roles.add(spectator)
             await ctx.user.remove_roles(*all_roles)
             await ctx.followup.send("Roles have been set", ephemeral=True)
-        self.stop()
 
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
     async def region_all(self, ctx: Interaction, _: Button):
