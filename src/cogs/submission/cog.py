@@ -493,7 +493,7 @@ class Submission(commands.Cog):
             self.oc_list[member.id] = oc_list = thread.id
             if user := thread.guild.get_member(member.id):
                 await thread.add_user(user)
-            view = RPView(self.bot, member.id, self.oc_list)
+            view = RPView(member.id, self.oc_list)
             await message.edit(view=view)
         return oc_list
 
@@ -1063,7 +1063,7 @@ class Submission(commands.Cog):
             if m.mentions and m.webhook_id:
                 user = m.mentions[0]
                 self.oc_list[user.id] = m.id
-                view = RPView(self.bot, user.id, self.oc_list)
+                view = RPView(user.id, self.oc_list)
                 self.bot.add_view(view=view, message_id=m.id)
 
         self.bot.logger.info("Finished loading all Profiles.")
