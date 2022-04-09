@@ -77,9 +77,7 @@ class InviteView(View):
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         if not interaction.user.guild_permissions.administrator:
-            await resp.send_message(
-                "You are not an administrator", ephemeral=True
-            )
+            await resp.send_message("You are not an administrator", ephemeral=True)
             return False
         return True
 
@@ -233,9 +231,7 @@ class Inviter(commands.Cog):
                     generator.set_footer(text=choice)
                     data.setdefault(choice, set())
                     data[choice].add(message)
-                    if partnered_role := get(
-                        author.guild.roles, name="Partners"
-                    ):
+                    if partnered_role := get(author.guild.roles, name="Partners"):
                         await author.add_roles(partnered_role)
                 return
 
@@ -287,14 +283,11 @@ class Inviter(commands.Cog):
         await ctx.delete()
 
     @commands.Cog.listener()
-    async def on_raw_message_delete(
-        self, payload: RawMessageDeleteEvent
-    ) -> None:
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
         if payload.channel_id == 957604961330561065:
             data = self.view.data
             self.view.data = {
-                k: [x for x in v if x.id != payload.message_id]
-                for k, v in data.items()
+                k: [x for x in v if x.id != payload.message_id] for k, v in data.items()
             }
 
 

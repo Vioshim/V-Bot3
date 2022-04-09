@@ -155,17 +155,11 @@ class CharactersView(Complex):
             oc=item,
             deleter=interaction.user.id == item.author,
         )
-        if not response.is_done():
-            await response.send_message(
-                embed=embed,
-                view=view,
-                ephemeral=True,
-            )
-        else:
-            await response.edit_message(
-                embed=embed,
-                view=view,
-            )
+        await response.send_message(
+            embed=embed,
+            view=view,
+            ephemeral=True,
+        )
         await super(CharactersView, self).select_choice(interaction, sct)
 
     @property

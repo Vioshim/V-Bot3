@@ -409,9 +409,10 @@ class RegionView(View):
             category.name,
         )
         view = AreaSelection(bot=ctx.client, cat=category, member=ctx.user)
-        await resp.edit_message(
+        await resp.send_message(
             content=f"There's a total of {view.total:02d} OCs in {category.name}.",
             view=view,
+            ephemeral=True,
         )
 
 
@@ -464,7 +465,6 @@ class RegionRoles(View):
                 embed=embed,
                 ephemeral=True,
             )
-            await view.wait()
         elif choosen_roles := {
             role
             for x in map(int, sct.values)
@@ -606,7 +606,9 @@ class RPModal(Modal):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         embed = Embed(
-            title=self.thread.name, color=member.color, description=self.message.value
+            title=self.thread.name,
+            color=member.color,
+            description=self.message.value,
         )
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)

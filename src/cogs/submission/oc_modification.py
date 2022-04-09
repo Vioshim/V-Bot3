@@ -195,9 +195,7 @@ class SPView(Basic):
             silent_mode=True,
         )
 
-        async with view.send(
-            title="Sp.Ability Modify", ephemeral=True
-        ) as elements:
+        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
@@ -526,9 +524,7 @@ class BackstoryMod(Mod):
         """
         text_view = ModernInput(member=member, target=target)
         backstory = (
-            oc.backstory[:4000]
-            if oc.backstory
-            else "No backstory was provided."
+            oc.backstory[:4000] if oc.backstory else "No backstory was provided."
         )
         handler = text_view.handle(
             label="Write the character's Backstory.",
@@ -586,11 +582,7 @@ class ExtraMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(member=member, target=target)
-        extra = (
-            oc.extra[:4000]
-            if oc.extra
-            else "No Extra Information was provided."
-        )
+        extra = oc.extra[:4000] if oc.extra else "No Extra Information was provided."
         handler = text_view.handle(
             label="Write the character's Extra Information.",
             style=TextStyle.paragraph,
@@ -941,8 +933,7 @@ class EvolutionMod(Mod):
                 text_component=TextInput(
                     label="Fusion Typing",
                     placeholder=" | ".join(
-                        "/".join(i.name for i in x).title()
-                        for x in possible_types
+                        "/".join(i.name for i in x).title() for x in possible_types
                     ),
                     default="/".join(
                         i.name for i in random_choice(possible_types)
@@ -958,9 +949,7 @@ class EvolutionMod(Mod):
 
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
 
-        abilities: Iterable[Ability] = (
-            species.abilities or ALL_ABILITIES.values()
-        )
+        abilities: Iterable[Ability] = species.abilities or ALL_ABILITIES.values()
 
         view = Complex(
             member=member,
@@ -1095,8 +1084,7 @@ class DevolutionMod(Mod):
                 text_component=TextInput(
                     label="Fusion Typing",
                     placeholder=" | ".join(
-                        "/".join(i.name for i in x).title()
-                        for x in possible_types
+                        "/".join(i.name for i in x).title() for x in possible_types
                     ),
                     default="/".join(
                         i.name for i in random_choice(possible_types)
@@ -1112,9 +1100,7 @@ class DevolutionMod(Mod):
 
         oc.species = species
 
-        oc.moveset &= set(species.total_movepool()) & set(
-            current.total_movepool()
-        )
+        oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
 
         default_image = oc.default_image or oc.image
 
@@ -1217,9 +1203,7 @@ class FusionMod(Mod):
                 placeholder=" | ".join(
                     "/".join(i.name for i in x).title() for x in possible_types
                 ),
-                default="/".join(
-                    i.name for i in random_choice(possible_types)
-                ).title(),
+                default="/".join(i.name for i in random_choice(possible_types)).title(),
             ),
         )
         view.embed.title = "Select the Fusion's new typing"
@@ -1427,9 +1411,7 @@ class ModifyView(View):
         embed = self.oc.embed
         embed.set_image(url="attachment://image.png")
         kwargs = dict(embed=embed, thread=Object(id=self.oc.thread))
-        if modifying and (
-            file := await ctx.client.get_file(self.oc.generated_image)
-        ):
+        if modifying and (file := await ctx.client.get_file(self.oc.generated_image)):
             kwargs["attachments"] = [file]
         msg = None
         try:
@@ -1437,9 +1419,7 @@ class ModifyView(View):
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
             except HTTPException:
                 if not (thread := guild.get_thread(self.oc.thread)):
-                    thread: Thread = await ctx.client.fetch_channel(
-                        self.oc.thread
-                    )
+                    thread: Thread = await ctx.client.fetch_channel(self.oc.thread)
                 await thread.edit(archived=False)
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
         except NotFound:
@@ -1489,7 +1469,5 @@ class ModifyView(View):
                 )
                 await self.oc.delete(db)
         finally:
-            await resp.edit_message(
-                content="Character Has been Deleted", view=None
-            )
+            await resp.edit_message(content="Character Has been Deleted", view=None)
             self.stop()

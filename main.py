@@ -92,9 +92,7 @@ async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
             await bot.login(getenv("DISCORD_TOKEN"))
             await bot.connect(reconnect=True)
     except Exception as e:
-        logger.critical(
-            "An exception occurred while trying to connect.", exc_info=e
-        )
+        logger.critical("An exception occurred while trying to connect.", exc_info=e)
 
 
 if __name__ == "__main__":
