@@ -58,13 +58,11 @@ logger = getLogger(__name__)
 class CharacterHandlerView(Complex):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         target: Interaction,
         values: set[Character],
     ):
         super(CharacterHandlerView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=values,
