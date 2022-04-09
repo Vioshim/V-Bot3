@@ -39,7 +39,6 @@ from src.cogs.pokedex.search import (
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character, FusionCharacter
-from src.structures.movepool import Movepool
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
@@ -186,27 +185,36 @@ class Pokedex(commands.Cog):
             if info := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon_types):
                 embed.add_field(name="Possible Types", value=info)
         elif fakemon:
+            species = fakemon
             movepool = fakemon.movepool
             embed.title = f"See {fakemon.species.name}'s movepool"
-        else:
-            movepool = Movepool()
 
         if move_id:
             if methods := "\n".join(
                 f"> • **{x.title()}**" for x in movepool.methods_for(move_id)
             ):
                 await ctx.followup.send(
-                    f"The pokemon can learn {move_id.name} through:\n{methods}.",
+                    f"{species.name} can learn {move_id.name} through:\n{methods}.",
                     ephemeral=True,
                 )
             else:
                 await ctx.followup.send(
-                    f"The pokemon can not learn {move_id.name}.",
+                    f"{species.name} can not learn {move_id.name}.",
                     ephemeral=True,
                 )
         else:
-            view = MovepoolViewSelector(bot=self.bot, movepool=movepool)
-            await ctx.followup.send(embed=embed, view=view, ephemeral=True)
+            view = MovepoolViewSelector(
+                bot=self.bot,
+                movepool=movepool,
+                member=ctx.user,
+                target=ctx,
+            )
+            async with view.send(embed=embed, ephemeral=True):
+                self.bot.logger.info(
+                    "%s is reading %s's movepool",
+                    str(ctx.user),
+                    species.name,
+                )
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)

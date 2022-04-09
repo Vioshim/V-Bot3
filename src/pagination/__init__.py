@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from src.pagination.boolean import BooleanView
-from src.pagination.complex import Complex, ComplexInput
+from src.pagination.complex import Complex
 from src.pagination.simple import Simple
 from src.pagination.view_base import Basic
 
@@ -21,6 +21,5 @@ __all__ = (
     "Basic",
     "BooleanView",
     "Complex",
-    "ComplexInput",
     "Simple",
 )

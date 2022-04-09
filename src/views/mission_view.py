@@ -25,7 +25,6 @@ from discord.ui import Button, View, button
 from discord.utils import format_dt, utcnow
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mission import Mission
 
@@ -35,7 +34,6 @@ __all__ = ("MissionView",)
 class MissionView(View):
     def __init__(
         self,
-        bot: CustomBot,
         mission: Mission,
         mission_claimers: dict[int, set[int]],
         mission_cooldown: dict[int, datetime],
@@ -55,7 +53,6 @@ class MissionView(View):
             mission id and the ocs that claim it
         """
         super(MissionView, self).__init__(timeout=None)
-        self.bot = bot
         self.mission = mission
         self.mission_claimers = mission_claimers
         self.mission_cooldown = mission_cooldown
@@ -73,7 +70,7 @@ class MissionView(View):
             Interaction
         """
         resp: InteractionResponse = interaction.response
-        cog = self.bot.get_cog("Submission")
+        cog = interaction.client.get_cog("Submission")
         member: Member = self.supporting.get(interaction.user, interaction.user)
 
         ocs: list[Character] = list(cog.rpers.get(member.id, {}).values())
@@ -118,7 +115,6 @@ class MissionView(View):
             return
 
         view_select = Complex(
-            bot=self.bot,
             member=interaction.user,
             target=interaction,
             values=ocs,
@@ -136,7 +132,7 @@ class MissionView(View):
             if choice is None:
                 return
 
-            async with self.bot.database() as db:
+            async with interaction.client.database() as db:
 
                 assigned_at = await self.mission.upsert_oc(
                     connection=db, oc_id=choice.id
@@ -147,7 +143,9 @@ class MissionView(View):
                     btn.disabled = True
                 await interaction.message.edit(embed=embed, view=self)
 
-                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
+                thread: Thread = await interaction.client.fetch_channel(
+                    self.mission.msg_id
+                )
                 view = View()
                 view.add_item(Button(label="Jump URL", url=choice.jump_url))
                 await thread.add_user(member)
@@ -169,10 +167,12 @@ class MissionView(View):
         ):
             self.claim.disabled = True
             btn.disabled = True
-            async with self.bot.database() as db:
+            async with interaction.client.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
-                thread: Thread = await self.bot.fetch_channel(self.mission.msg_id)
+                thread: Thread = await interaction.client.fetch_channel(
+                    self.mission.msg_id
+                )
                 await thread.edit(
                     archived=False,
                     locked=True,

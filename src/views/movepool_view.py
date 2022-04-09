@@ -12,32 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable
-
 from discord import (
-    ButtonStyle,
     Interaction,
     InteractionResponse,
     Member,
     TextChannel,
     TextStyle,
+    User,
 )
-from discord.ui import Button, Modal, TextInput, View, button
+from discord.ui import Button, Modal, Select, TextInput, button, select
 
+from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
 from src.structures.character import (
     Character,
     FakemonCharacter,
     VariantCharacter,
 )
-from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.utils.functions import yaml_handler
 from src.views.move_view import MoveView
 
 __all__ = (
-    "MovepoolButton",
     "MovepoolView",
     "MovepoolViewSelector",
     "MovepoolModal",
@@ -122,12 +118,11 @@ class MovepoolModal(Modal):
 class MovepoolView(Basic):
     def __init__(
         self,
-        bot: CustomBot,
         target: Interaction | TextChannel,
         member: Member,
         oc: Character,
     ):
-        super().__init__(bot=bot, target=target, member=member, timeout=None)
+        super().__init__(target=target, member=member, timeout=None)
         self.oc = oc
         self.embed.title = f"Modify Movepool for {oc.name}"
 
@@ -151,45 +146,54 @@ class MovepoolView(Basic):
         self.stop()
 
 
-class MovepoolButton(Button):
+def movepool_parser(movepool: Movepool):
+    def inner(item: str):
+        moves = movepool[item]
+        return item.title(), f"{len(moves):02d} moves in this category."
+
+    return inner
+
+
+class MovepoolViewSelector(Complex):
     def __init__(
         self,
-        bot: CustomBot,
-        moves: Iterable[Move],
-        label: str = None,
+        *,
+        member: Member | User,
+        movepool: Movepool,
+        target: Interaction | TextChannel,
+        timeout: float = None,
     ):
-        moves = set(moves)
         super().__init__(
-            style=ButtonStyle.blurple,
-            label=label,
+            member=member,
+            values=movepool.__slots__,
+            target=target,
+            parser=movepool_parser(movepool),
+            emoji_parser="\N{FLOPPY DISK}",
+            keep_working=True,
+            sort_key=str,
+            timeout=timeout,
         )
-        self.moves = moves
-        self.bot = bot
+        self.movepool = movepool
 
-    async def callback(self, interaction: Interaction):
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
+    async def select_choice(
+        self,
+        interaction: Interaction,
+        sct: Select,
+    ) -> None:
         view = MoveView(
-            bot=self.bot,
+            bot=interaction.client,
             member=interaction.user,
             target=interaction,
-            moves=self.moves,
+            moves=self.movepool[self.current_choice],
         )
         await interaction.response.send_message(
             embed=view.embed,
             view=view,
             ephemeral=True,
         )
-
-
-class MovepoolViewSelector(View):
-    def __init__(
-        self,
-        bot: CustomBot,
-        movepool: Movepool,
-        timeout: float = None,
-    ):
-        super(MovepoolViewSelector, self).__init__(timeout=timeout)
-        self.bot = bot
-        for item in movepool.__slots__:
-            if moves := movepool[item]:
-                btn = MovepoolButton(bot=bot, moves=moves, label=item)
-                self.add_item(btn)
+        await super(MovepoolViewSelector, self).select_choice(interaction, sct)

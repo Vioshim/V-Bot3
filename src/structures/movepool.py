@@ -50,7 +50,9 @@ class Movepool:
     other: frozen_set = field(default_factory=frozen_set)
 
     def __post_init__(self):
-        self.level = frozen_dict({k: frozen_set(v) for k, v in self.level.items()})
+        level = {k: frozen_set(v) for k, v in self.level.items()}
+        level = {k: v for k, v in level.items() if v}
+        self.level = frozen_dict(level)
         self.tm = frozen_set(self.tm)
         self.event = frozen_set(self.event)
         self.tutor = frozen_set(self.tutor)
@@ -407,10 +409,10 @@ class Movepool:
             items = sorted(data, key=lambda x: x.name)
             return frozen_set(items)
 
+        level = {k: foo(v) for k, v in sorted(self.level.items())}
+
         return Movepool(
-            level=frozen_dict(
-                {k: entry for k, v in sorted(self.level.items()) if (entry := foo(v))}
-            ),
+            level=frozen_dict(level),
             tm=foo(self.tm),
             event=foo(self.event),
             tutor=foo(self.event),
@@ -519,7 +521,7 @@ class Movepool:
         return {k: v for k, v in elements.items() if v}
 
     @property
-    def level_moves(self) -> move_set:
+    def level_moves(self):
         """Moves the pokemon can learn through level
 
         Returns
@@ -530,7 +532,7 @@ class Movepool:
         moves: set[Move] = set()
         for level in self.level.values():
             moves.update(level)
-        return frozenset(moves)
+        return frozen_set(moves)
 
 
 class MovepoolEncoder(JSONEncoder):

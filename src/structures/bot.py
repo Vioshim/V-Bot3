@@ -141,7 +141,7 @@ class CustomBot(Bot):
         message : Message
             message to process
         """
-        if message.content:
+        if message.content and message.author != self.user:
             elements = URL_DOMAIN_MATCH.findall(message.content)
             if self.scam_urls.intersection(elements):
                 with suppress(DiscordException):

@@ -8,5 +8,5 @@
 | `Basic`         | Basic Class for View Handling            |
 | `BooleanView`   | Yes/No Prompt for Discord Interactions   |
 | `Complex`       | Multiple Selector Dropdown Menu          |
-| `ComplexInput`  | Multiple Selector Dropdown Menu w/ Input |
 | `Simple`        | Paginator View for display purposes      |
+| `ModernInput`   | Paginator View for text input by modals  |

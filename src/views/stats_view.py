@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import asdict, dataclass
+from __future__ import annotations
+
+from contextlib import suppress
+from dataclasses import asdict, astuple, dataclass
 from enum import Enum
 from typing import Optional, TypeVar
 
-from discord import Member
+from discord import Interaction, InteractionResponse, Member, TextStyle
 from discord.abc import Messageable
+from discord.ui import TextInput
+from yaml import safe_load
 
-from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
+from src.pagination.complex import Complex, DefaultModal
+from src.utils.functions import yaml_handler
 
 _M = TypeVar("_M", bound=Messageable)
 
@@ -45,20 +50,20 @@ class StatItem:
         return " ".join(f"{k}:{v}" for k, v in asdict(self).items())
 
 
-class Stats(StatItem, Enum):
+class Stats(Enum):
     """
     Class which represents the most common fakemon stats
     """
 
-    PHYSICAL_ATTACKER = (2, 4, 5, 1, 2, 4)
-    PHYSICAL_BALANCED = (3, 5, 5, 1, 1, 3)
-    PHYSICAL_DEFENDER = (4, 5, 4, 2, 1, 2)
-    OVERALL_ATTACKER = (1, 1, 5, 5, 1, 5)
-    OVERALL_BALANCED = (3, 3, 3, 3, 3, 3)
-    OVERALL_DEFENDER = (5, 5, 1, 1, 5, 1)
-    SPECIAL_ATTACKER = (2, 2, 1, 5, 4, 4)
-    SPECIAL_BALANCED = (3, 1, 1, 5, 5, 3)
-    SPECIAL_DEFENDER = (4, 1, 2, 4, 5, 2)
+    PHYSICAL_ATTACKER = StatItem(2, 4, 5, 1, 2, 4)
+    PHYSICAL_BALANCED = StatItem(3, 5, 5, 1, 1, 3)
+    PHYSICAL_DEFENDER = StatItem(4, 5, 4, 2, 1, 2)
+    OVERALL_ATTACKER = StatItem(1, 1, 5, 5, 1, 5)
+    OVERALL_BALANCED = StatItem(3, 3, 3, 3, 3, 3)
+    OVERALL_DEFENDER = StatItem(5, 5, 1, 1, 5, 1)
+    SPECIAL_ATTACKER = StatItem(2, 2, 1, 5, 4, 4)
+    SPECIAL_BALANCED = StatItem(3, 1, 1, 5, 5, 3)
+    SPECIAL_DEFENDER = StatItem(4, 1, 2, 4, 5, 2)
 
     def __str__(self) -> str:
         """str method
@@ -88,19 +93,57 @@ class Stats(StatItem, Enum):
                 return "\N{SCALES}"
 
 
+DEFAULT = """
+HP: 3
+ATK: 3
+DEF: 3
+SPA: 3
+SPD: 3
+SPE: 3
+""".strip()
+
+
+class StatsModal(DefaultModal):
+    stat = TextInput(
+        label="Stats",
+        style=TextStyle.paragraph,
+        placeholder=DEFAULT.replace("3", "1 - 5"),
+        default=DEFAULT,
+        required=True,
+    )
+
+    def __init__(self, view: StatsView) -> None:
+        super().__init__(view, title="Fill the Stats")
+        self.text = Optional[StatItem] = None
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        text = yaml_handler(self.stat.value or "")
+        resp: InteractionResponse = interaction.response
+        if not isinstance(item := safe_load(text), dict):
+            with suppress(TypeError):
+                stats = StatItem(**item)
+                info = astuple(stats)
+                if all(1 <= stat <= 5 for stat in info) and sum(info) <= 18:
+                    await resp.send_message(
+                        f"Stats asigned as {stats!r}", ephemeral=True
+                    )
+                    self.text = stats
+                    self.stop()
+                    self.view.stop()
+
+
 class StatsView(Complex):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         target: _M,
     ):
         super(StatsView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=Stats,
             timeout=None,
+            text_component=StatsModal(self),
         )
         self.embed.title = "Select the Set of Stats"
         self.embed.description = (

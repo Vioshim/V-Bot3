@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractproperty
 from base64 import b64encode
-from typing import Iterable
+from dataclasses import dataclass, field
+from typing import Iterable, Optional
 
 from src.utils.matches import (
     DISCORD_MATCH,
@@ -53,6 +55,92 @@ def image_formatter(text: str) -> str:
     return text
 
 
+class ImageKitTransformation(ABC):
+    @abstractproperty
+    def tokenize(self) -> str:
+        """Tokenize property
+
+        Returns
+        -------
+        str
+            tokenized data
+        """
+
+
+@dataclass(unsafe_hash=True)
+class ImageTransformation(ImageKitTransformation):
+    image: str
+    height: Optional[int] = None
+    weight: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+
+    def __post_init__(self):
+        self.image = image_formatter(self.image)
+
+    @property
+    def tokenize(self) -> str:
+        items = [f"oi-{self.image}"]
+        if self.height and isinstance(self.height, int):
+            items.append(f"oh-{self.height}")
+        if self.weight and isinstance(self.weight, int):
+            items.append(f"ow-{self.height}")
+        if isinstance(self.x, int):
+            items.append(f"ox-N{abs(self.x)}" if self.x < 0 else f"ox-{self.x}")
+        if isinstance(self.y, int):
+            items.append(f"oy-N{abs(self.y)}" if self.y < 0 else f"oy-{self.y}")
+        return ",".join(items)
+
+
+@dataclass(unsafe_hash=True)
+class TextTransformation(ImageKitTransformation):
+    text: str
+    font: Optional[str] = None
+    font_size: Optional[int] = None
+    color: Optional[int] = None
+    transparency: Optional[int] = None
+    radius: Optional[int] = None
+    padding: Iterable[int] = field(default_factory=frozenset)
+    alignment: Optional[str] = None
+    background: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+
+    @property
+    def tokenize(self) -> str:
+        encoded = b64encode(self.text.encode("utf-8"))
+        decoded = encoded.decode("utf-8")
+
+        raw = f"ote-{decoded}"
+        if isinstance(self.font, str):
+            raw = f"otf-{self.font},{raw}"
+        extra = []
+
+        if isinstance(self.radius, int):
+            extra.append(f"or-{self.radius}")
+        if isinstance(self.font_size, int):
+            extra.append(f"ots-{self.font_size}")
+        if isinstance(self.color, int):
+            color_text = f"{self.color:#08x}"[2:].upper()
+            extra.append(f"ofc-{color_text}")
+        if isinstance(self.x, int):
+            extra.append(f"ox-N{abs(self.x)}" if self.x < 0 else f"ox-{self.x}")
+        if isinstance(self.y, int):
+            extra.append(f"oy-N{abs(self.y)}" if self.y < 0 else f"oy-{self.y}")
+        if isinstance(self.background, int):
+            background_text = f"{self.color:#08x}"[2:].upper()
+            extra.append(f"otbg-{background_text}")
+        if isinstance(self.transparency, int):
+            extra.append(f"oa-{self.transparency}")
+        if isinstance(self.alignment, str):
+            extra.append(f"otia-{self.alignment}")
+        if padding_info := "_".join(map(str, self.padding)):
+            extra.append(f"otp-{padding_info}")
+        if content := ",".join(extra):
+            return f"{raw},{content}"
+        return raw
+
+
 class ImageKit:
     def __init__(self, base: str, height: int = None, weight: int = None):
         """Init Method
@@ -67,33 +155,24 @@ class ImageKit:
             Weight, by default None
         """
         self._base = image_formatter(base)
-        self._height = height
-        self._weight = weight
-        self._media: list[str] = []
+        self.height = height
+        self.weight = weight
+        self.elements: list[ImageKitTransformation] = []
 
     def __str__(self):
         return self.url
 
     def __repr__(self):
-        return f"ImageKit(base={self._base}, extra={len(self._media)})"
-
-    @property
-    def media(self):
-        return self._media
-
-    @media.setter
-    def media(self, media: Iterable[str]):
-        self._media = []
-        for item in media:
-            self.add_image(image=item)
+        return f"ImageKit(base={self._base!r}, extra={len(self.elements)})"
 
     @property
     def url(self) -> str:
-        if content := ":".join(self._media):
-            if "?tr" in (text := self.base_url):
-                return f"{text}:{content}"
-            return f"{text}?tr:{content}"
-        return self.base_url
+        text = self.base_url
+        if content := ":".join(x.tokenize for x in self.elements):
+            if "?tr=" not in text:
+                text += "?tr"
+            return f"{text}:{content}"
+        return text
 
     @property
     def base_url(self) -> str:
@@ -106,11 +185,10 @@ class ImageKit:
         """
         base = f"{IMAGEKIT_API}/{self._base}"
         extra: list[str] = []
-        if self._weight or self._height:
-            if weight := self._weight:
-                extra.append(f"w-{weight}")
-            if height := self._height:
-                extra.append(f"h-{height}")
+        if weight := self.weight:
+            extra.append(f"w-{weight}")
+        if height := self.height:
+            extra.append(f"h-{height}")
         if extra_text := ",".join(extra):
             return f"{base}?tr={extra_text}"
         return base
@@ -124,16 +202,15 @@ class ImageKit:
         x: int = None,
         y: int = None,
     ):
-        entries = [f"oi-{image_formatter(image)}"]
-        if isinstance(height, int) and height:
-            entries.append(f"oh-{height}")
-        if isinstance(weight, int) and weight:
-            entries.append(f"ow-{weight}")
-        if isinstance(x, int):
-            entries.append(f"ox-N{abs(x)}" if x < 0 else f"ox-{x}")
-        if isinstance(y, int):
-            entries.append(f"oy-N{abs(y)}" if y < 0 else f"oy-{y}")
-        self._media.append(",".join(entries))
+        self.elements.append(
+            ImageTransformation(
+                image=image,
+                height=height,
+                weight=weight,
+                x=x,
+                y=y,
+            )
+        )
 
     def add_text(
         self,
@@ -149,38 +226,18 @@ class ImageKit:
         x: int = None,
         y: int = None,
     ):
-
-        encoded = b64encode(text.encode("utf-8"))
-        decoded = encoded.decode("utf-8")
-
-        raw = f"ote-{decoded}"
-        if isinstance(font, str):
-            raw = f"otf-{font},{raw}"
-        extra = []
-
-        if isinstance(radius, int):
-            extra.append(f"or-{radius}")
-        if isinstance(font_size, int):
-            extra.append(f"ots-{font_size}")
-        if isinstance(color, int):
-            color_text = f"{color:#08x}"[2:].upper()
-            extra.append(f"ofc-{color_text}")
-        if isinstance(x, int):
-            extra.append(f"ox-N{abs(x)}" if x < 0 else f"ox-{x}")
-        if isinstance(y, int):
-            extra.append(f"oy-N{abs(y)}" if y < 0 else f"oy-{y}")
-        if isinstance(background, int):
-            background_text = f"{color:#08x}"[2:].upper()
-            extra.append(f"otbg-{background_text}")
-        if isinstance(transparency, int):
-            extra.append(f"oa-{transparency}")
-        if isinstance(alignment, str):
-            extra.append(f"otia-{alignment}")
-        if isinstance(padding, Iterable) and (
-            padding_info := "_".join(str(item) for item in padding)
-        ):
-            extra.append(f"otp-{padding_info}")
-        if content := ",".join(extra):
-            self._media.append(f"{raw},{content}")
-        else:
-            self._media.append(raw)
+        self.elements.append(
+            TextTransformation(
+                text=text,
+                font=font,
+                font_size=font_size,
+                color=color,
+                transparency=transparency,
+                radius=radius,
+                padding=padding,
+                alignment=alignment,
+                background=background,
+                x=x,
+                y=y,
+            )
+        )

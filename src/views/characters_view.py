@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger, setLoggerClass
 from typing import Optional, Union
 
 from discord import (
@@ -25,11 +26,15 @@ from discord import (
     TextChannel,
     Webhook,
 )
-from discord.ui import Button, Select, View, button
+from discord.ui import Button, Select, View, button, select
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
 from src.structures.character import Character
+from src.structures.logger import ColoredLogger
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = ("CharactersView", "PingView")
 
@@ -111,14 +116,12 @@ class PingView(View):
 class CharactersView(Complex):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         target: Union[Interaction, Webhook, TextChannel],
         ocs: set[Character],
         keep_working: bool = False,
     ):
         super(CharactersView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=ocs,
@@ -129,41 +132,41 @@ class CharactersView(Complex):
         )
         self.embed.title = "Select a character"
 
-    async def custom_choice(self, ctx: Interaction, sct: Select):
-        response: InteractionResponse = ctx.response
-        for index in sct.values:
-            try:
-                amount = self.entries_per_page * self._pos
-                chunk = self.values[amount : amount + self.entries_per_page]
-                item: Character = chunk[int(index)]
-                embed = item.embed
-                guild: Guild = self.member.guild
-                if author := guild.get_member(item.author):
-                    embed.set_author(
-                        name=author.display_name,
-                        icon_url=author.display_avatar.url,
-                    )
-                view = PingView(
-                    oc=item,
-                    deleter=ctx.user.id == item.author,
-                )
-                if not response.is_done():
-                    await response.send_message(
-                        embed=embed,
-                        view=view,
-                        ephemeral=True,
-                    )
-                else:
-                    await response.edit_message(
-                        embed=embed,
-                        view=view,
-                    )
-            except Exception as e:
-                self.bot.logger.exception(
-                    "Chunk: %s",
-                    str(chunk),
-                    exc_info=e,
-                )
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
+    async def select_choice(
+        self,
+        interaction: Interaction,
+        sct: Select,
+    ) -> None:
+        response: InteractionResponse = interaction.response
+        item: Character = self.current_choice
+        embed = item.embed
+        guild: Guild = self.member.guild
+        if author := guild.get_member(item.author):
+            embed.set_author(
+                name=author.display_name,
+                icon_url=author.display_avatar.url,
+            )
+        view = PingView(
+            oc=item,
+            deleter=interaction.user.id == item.author,
+        )
+        if not response.is_done():
+            await response.send_message(
+                embed=embed,
+                view=view,
+                ephemeral=True,
+            )
+        else:
+            await response.edit_message(
+                embed=embed,
+                view=view,
+            )
+        await super(CharactersView, self).select_choice(interaction, sct)
 
     @property
     def choice(self) -> Optional[Character]:

@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager, suppress
+from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
 from discord import (
@@ -32,8 +33,13 @@ from discord.abc import Messageable
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
+from src.structures.logger import ColoredLogger
 from src.utils.matches import REGEX_URL
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
+
 
 _M = TypeVar("_M", bound=Messageable)
 
@@ -53,13 +59,11 @@ def check(ctx: Interaction):
 class ImageView(Basic):
     def __init__(
         self,
-        bot: CustomBot,
         member: Union[Member, User],
         target: _M,
         default_img: File | str = None,
     ):
         super(ImageView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
         )
@@ -84,7 +88,7 @@ class ImageView(Basic):
             self.default_image.disabled = True
             await super(ImageView, self).send(file=file)
         except Exception as e:
-            self.bot.logger.exception(
+            logger.exception(
                 "Exception occurred, target: %s, user: %s",
                 str(self.target),
                 str(self.member),
@@ -108,13 +112,13 @@ class ImageView(Basic):
             content="Alright, now send the URL or Attach an image.",
             ephemeral=True,
         )
-        received: Message = await self.bot.wait_for("message", check=check(ctx))
+        received: Message = await ctx.client.wait_for("message", check=check(ctx))
         if attachments := received.attachments:
             self.text = attachments[0].proxy_url
             self.received = received
             with suppress(DiscordException):
                 await received.delete()
-        elif file := await self.bot.get_file(
+        elif file := await ctx.client.get_file(
             url=received.content,
             filename="image",
         ):
@@ -130,7 +134,7 @@ class ImageView(Basic):
             self.text = None
         self.stop()
 
-    @button(label="I like the default one", row=0)
+    @button(label="I like the image", row=0)
     async def default_image(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         if message := self.message:
