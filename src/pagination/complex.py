@@ -448,7 +448,9 @@ class Complex(Simple):
 
                 await interaction.followup.send(content=content, ephemeral=True)
 
-        if not self.keep_working:
+        if self.keep_working:
+            self._choices = self.current_choices
+        else:
             self._choices |= self.current_choices
             self.values = set(self.values) - self.choices
             if len(sct.values) == self.entries_per_page:
