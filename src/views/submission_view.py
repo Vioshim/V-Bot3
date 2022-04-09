@@ -40,7 +40,6 @@ from yaml import dump, safe_load
 from src.cogs.submission.oc_modification import ModifyView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
-from src.structures.bot import CustomBot
 from src.structures.character import Character, doc_convert
 from src.structures.logger import ColoredLogger
 from src.structures.mission import Mission
@@ -82,20 +81,20 @@ class CharacterHandlerView(Complex):
         _: Select,
     ) -> None:
         resp: InteractionResponse = interaction.response
-        data: list[Type[Character]] = list(self.choices)
+        oc: Character = self.current_choice
         view = ModifyView(
             member=interaction.user,
-            oc=data[0],
+            oc=self.current_choice,
             target=interaction,
         )
         await resp.edit_message(
-            embed=data[0].embed,
+            embed=oc.embed,
             view=view,
         )
         await view.wait()
         with suppress(DiscordException):
             await resp.edit_message(
-                embed=data[0].embed,
+                embed=oc.embed,
                 view=None,
             )
 
@@ -119,7 +118,9 @@ class SubmissionModal(Modal):
             if doc_data := G_DOCUMENT.match(text):
                 doc = await to_thread(docs_reader, url := doc_data.group(1))
                 msg_data = doc_convert(doc)
-                url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                url = (
+                    f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                )
                 msg_data["url"] = url
             else:
                 text = yaml_handler(text)
@@ -364,7 +365,9 @@ class SubmissionView(View):
             emoji_parser=lambda x: x.name[0],
             text_component=TextInput(
                 label="Region",
-                placeholder=" | ".join(x.name[2:].capitalize() for x in locations),
+                placeholder=" | ".join(
+                    x.name[2:].capitalize() for x in locations
+                ),
                 default=random_choice(locations).name[2:].capitalize(),
                 required=True,
             ),
@@ -377,7 +380,8 @@ class SubmissionView(View):
                 item
                 for item in choice.channels
                 if (
-                    "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in item.name
+                    "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
+                    not in item.name
                     and isinstance(item, TextChannel)
                 )
             ]
@@ -478,7 +482,9 @@ class SubmissionView(View):
                     if not item:
                         return
                     mission.difficulty = item
-                    channel: TextChannel = ctx.client.get_channel(908498210211909642)
+                    channel: TextChannel = ctx.client.get_channel(
+                        908498210211909642
+                    )
                     view = MissionView(
                         mission=mission,
                         mission_claimers=self.mission_claimers,
