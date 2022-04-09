@@ -84,7 +84,7 @@ class ImageTransformation(ImageKitTransformation):
         if self.height and isinstance(self.height, int):
             items.append(f"oh-{self.height}")
         if self.weight and isinstance(self.weight, int):
-            items.append(f"ow-{self.height}")
+            items.append(f"ow-{self.weight}")
         if isinstance(self.x, int):
             items.append(f"ox-N{abs(self.x)}" if self.x < 0 else f"ox-{self.x}")
         if isinstance(self.y, int):
