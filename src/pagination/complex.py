@@ -107,7 +107,7 @@ class Complex(Simple):
         self._choices: set[_T] = set()
         self._max_values = max_values
         self._emoji_parser = emoji_parser
-        self._text_component = text_component
+        self.text_component = text_component
         super().__init__(
             timeout=timeout,
             member=member,
@@ -155,15 +155,6 @@ class Complex(Simple):
         self.menu_format()
 
     @property
-    def text_component(self):
-        return self._text_component
-
-    @text_component.setter
-    def text_component(self, text_component):
-        self._text_component = text_component
-        self.menu_format()
-
-    @property
     def current_chunk(self):
         amount = self.entries_per_page * self._pos
         return self.values[amount : amount + self.entries_per_page]
@@ -197,7 +188,6 @@ class Complex(Simple):
         foo: Select = self.select_choice
         pages: Select = self.navigate
         choices = self._choices
-        self.message_handler.disabled = not self._text_component
         foo.placeholder = (
             f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
         )
