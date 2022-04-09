@@ -55,7 +55,9 @@ __all__ = ("Complex",)
 
 
 class DefaultModal(Modal):
-    def __init__(self, view: Complex, title: str = "Fill the information") -> None:
+    def __init__(
+        self, view: Complex, title: str = "Fill the information"
+    ) -> None:
         super().__init__(title=title)
         self.text: Optional[str] = None
         self.view = view
@@ -188,9 +190,7 @@ class Complex(Simple):
         foo: Select = self.select_choice
         pages: Select = self.navigate
         choices = self._choices
-        foo.placeholder = (
-            f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
-        )
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
         foo.options.clear()
         pages.options.clear()
         # Then gets defined the amount of entries an user can pick
@@ -236,7 +236,9 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(str(index + 1)), len(str(total_pages)))
-                page_text = f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                page_text = (
+                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                )
                 if len(page_text) > 100:
                     page_text = f"Page {index + 1:0{digits}d}"
                 pages.add_option(
@@ -432,14 +434,6 @@ class Complex(Simple):
         """
         response: InteractionResponse = interaction.response
 
-        self.choices |= self.current_choices
-
-        if not self.keep_working:
-            self.values = set(self.values) - self.choices
-
-        if len(sct.values) == self.entries_per_page:
-            self._pos = max(self._pos - 1, 0)
-
         if not response.is_done():
 
             if self.silent_mode:
@@ -453,6 +447,14 @@ class Complex(Simple):
                     content = "Nothing has been selected."
 
                 await interaction.followup.send(content=content, ephemeral=True)
+
+        self.choices |= self.current_choices
+
+        if not self.keep_working:
+            self.values = set(self.values) - self.choices
+
+        if len(sct.values) == self.entries_per_page:
+            self._pos = max(self._pos - 1, 0)
 
         await self.edit(interaction=interaction, page=self._pos)
 
