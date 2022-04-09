@@ -202,7 +202,6 @@ class Submission(commands.Cog):
         elif moves:
             moves.sort(key=lambda x: x.name)
             view = MoveView(
-                bot=self.bot,
                 member=ctx.user,
                 moves=moves,
                 target=ctx,
@@ -243,7 +242,6 @@ class Submission(commands.Cog):
         if abilities:
             abilities.sort(key=lambda x: x.name)
             view = AbilityView(
-                bot=self.bot,
                 member=ctx.user,
                 abilities=abilities,
                 target=ctx,
@@ -275,7 +273,6 @@ class Submission(commands.Cog):
             )
         elif ocs:
             view = CharactersView(
-                bot=self.bot,
                 member=ctx.user,
                 ocs=ocs,
                 target=ctx,
@@ -389,7 +386,6 @@ class Submission(commands.Cog):
                 )
                 return
             view = CharactersView(
-                bot=self.bot,
                 member=ctx.user,
                 ocs=ocs,
                 target=ctx,
@@ -588,7 +584,6 @@ class Submission(commands.Cog):
         if isinstance(species := oc.species, Fakemon):  # type: ignore
             if not oc.url:
                 stats_view = StatsView(
-                    bot=self.bot,
                     member=worker,
                     target=ctx,
                 )
@@ -724,11 +719,10 @@ class Submission(commands.Cog):
             )
             return
 
-        text_view = ModernInput(bot=self.bot, member=worker, target=ctx)
+        text_view = ModernInput(member=worker, target=ctx)
 
         if isinstance(species := oc.species, (Variant, Fakemon)):
             view = MovepoolView(
-                bot=self.bot,
                 target=ctx,
                 member=worker,
                 oc=oc,
@@ -776,7 +770,7 @@ class Submission(commands.Cog):
             return
 
         if oc.sp_ability == SpAbility():
-            bool_view = BooleanView(bot=self.bot, member=worker, target=ctx)
+            bool_view = BooleanView(member=worker, target=ctx)
             async with bool_view.handle(
                 title="Does the character have an Special Ability?",
                 description=(
@@ -841,7 +835,6 @@ class Submission(commands.Cog):
                 oc.extra = text or None
 
         image_view = ImageView(
-            bot=self.bot,
             member=worker,
             target=ctx,
             default_img=oc.image or oc.default_image,
@@ -1110,7 +1103,6 @@ class Submission(commands.Cog):
 
         for mission in self.missions:
             view = MissionView(
-                bot=self.bot,
                 mission=mission,
                 mission_claimers=self.mission_claimers,
                 mission_cooldown=self.mission_cooldown,
@@ -1157,7 +1149,6 @@ class Submission(commands.Cog):
         async with aiopen(source.resolve(), mode="r") as f:
             contents = await f.read()
             view = SubmissionView(
-                bot=self.bot,
                 ocs=self.ocs,
                 rpers=self.rpers,
                 oc_list=self.oc_list,

@@ -96,7 +96,6 @@ class AreaSelection(View):
             target=ctx,
             member=ctx.user,
             ocs=ocs,
-            bot=self.bot,
             keep_working=True,
         )
 

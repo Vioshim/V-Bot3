@@ -46,7 +46,6 @@ class CustomHelp(HelpCommand):
         target = self.get_destination()
 
         view = Simple(
-            bot=self.context.bot,
             timeout=None,
             member=self.context.author,
             target=target,
@@ -100,7 +99,6 @@ class CustomHelp(HelpCommand):
         target = self.get_destination()
 
         view = Simple(
-            bot=self.context.bot,
             timeout=None,
             target=target,
             member=self.context.author,
@@ -130,7 +128,6 @@ class CustomHelp(HelpCommand):
         target = self.get_destination()
 
         view = Simple(
-            bot=self.context.bot,
             timeout=None,
             target=target,
             member=self.context.author,
@@ -165,7 +162,6 @@ class CustomHelp(HelpCommand):
         target = self.get_destination()
 
         view = Simple(
-            bot=self.context.bot,
             timeout=None,
             target=target,
             member=self.context.author,
