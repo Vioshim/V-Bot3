@@ -16,7 +16,7 @@ from contextlib import suppress
 from datetime import datetime
 from typing import Optional
 
-from discord import DiscordException, Thread, Webhook, WebhookMessage
+from discord import DiscordException, Thread, Webhook
 from discord.ext.commands import Cog
 
 from src.cogs.roles.roles import (
@@ -32,6 +32,14 @@ from src.structures.bot import CustomBot
 __all__ = ("Roles", "setup")
 
 
+ROLE_VIEWS = {
+    916482734933811232: PronounRoles(timeout=None),
+    916482736309534762: BasicRoles(timeout=None),
+    916482737811120128: ColorRoles(timeout=None),
+    956970863805231144: RegionRoles(timeout=None),
+}
+
+
 class Roles(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -39,7 +47,6 @@ class Roles(Cog):
         self.role_cool_down: dict[int, datetime] = {}
         self.last_claimer: dict[int, int] = {}
         self.webhook: Optional[Webhook] = None
-        self.msgs: dict[int, WebhookMessage] = {}
 
     async def load_rp_searches(self):
         self.bot.logger.info("Loading existing RP Searches")
@@ -90,32 +97,19 @@ class Roles(Cog):
             910914713234325504,
             reason="RP Pinging",
         )
-        self.bot.add_view(
-            view=PronounRoles(timeout=None),
-            message_id=916482734933811232,
-        )
-        self.bot.add_view(
-            view=BasicRoles(timeout=None),
-            message_id=916482736309534762,
-        )
-        self.bot.add_view(
-            view=ColorRoles(timeout=None),
-            message_id=916482737811120128,
-        )
-        self.bot.add_view(
-            view=RegionRoles(timeout=None),
-            message_id=956970863805231144,
-        )
-        w = await self.bot.webhook(910914713234325504)
+        for msg_id, view in ROLE_VIEWS.items():
+            self.bot.add_view(view=view, message_id=msg_id)
 
-        async for m in w.channel.history(limit=None):
-            if m.webhook_id != w.id:
+        async for m in self.webhook.channel.history(limit=None):
+            if m.webhook_id != self.webhook.id:
                 continue
 
-            if not (thread := w.channel.get_thread(m.id)):
-                thread: Thread = await w.guild.fetch_channel(m.id)
+            if not (thread := self.webhook.channel.get_thread(m.id)):
+                thread: Thread = await self.webhook.guild.fetch_channel(m.id)
+            if thread.archived:
+                await thread.edit(archived=False)
 
-            await w.edit_message(m.id, view=RPThreadView(thread=thread))
+            await self.webhook.edit_message(m.id, view=RPThreadView(thread=thread))
 
         await self.load_rp_searches()
 

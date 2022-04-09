@@ -39,7 +39,6 @@ from discord.abc import Messageable, Snowflake
 from discord.ext.commands import Context
 from discord.ui import View
 
-from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
 _M = TypeVar("_M", bound=Messageable)
@@ -53,7 +52,6 @@ class Basic(Generic[_M], View):
     def __init__(
         self,
         *,
-        bot: CustomBot,
         target: _M = None,
         member: Union[Member, User] = None,
         timeout: Optional[float] = 180.0,
@@ -63,8 +61,6 @@ class Basic(Generic[_M], View):
 
         Parameters
         ----------
-        bot : CustomBot
-            Bot
         member : Union[Member, User]
             Member
         target : _M
@@ -102,11 +98,10 @@ class Basic(Generic[_M], View):
                 text=guild.name,
                 icon_url=guild.icon.url,
             )
-        self.bot = bot
-        self._embed = embed
-        self._member = member
-        self._target = target
-        self._message: Optional[Message] = None
+        self.embed = embed
+        self.member = member
+        self.target = target
+        self.message: Optional[Message] = None
 
     async def interaction_check(
         self,
@@ -120,7 +115,7 @@ class Basic(Generic[_M], View):
         bool
             If validation is successful
         """
-        if self._member != interaction.user:
+        if self.member != interaction.user:
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
             return False
@@ -185,7 +180,7 @@ class Basic(Generic[_M], View):
         thread: Snowflake, optional
             if message is sent to a thread, defaults to None
         """
-        target = self._target
+        target = self.target
 
         if not target:
             target = await self.member.create_dm()
@@ -229,57 +224,14 @@ class Basic(Generic[_M], View):
             try:
                 self.message = await target.followup.send(**data, wait=True)
             except DiscordException as e:
-                self.bot.logger.exception("Exception", exc_info=e)
+                target.client.logger.exception("Exception", exc_info=e)
                 self.message = await target.channel.send(**data)
+            if message := self.message:
+                target.client.msg_cache.add(message.id)
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:
-            self.bot.logger.info(
-                "%s %s %s",
-                str(target),
-                repr(target),
-                str(type(target)),
-            )
             self.message = await target.send(**data)
-
-        if message := self.message:
-            self.bot.msg_cache.add(message.id)
-
-    @property
-    def target(self):
-        return self._target
-
-    @target.setter
-    def target(self, target: _M):
-        self._target = target
-
-    @property
-    def message(self):
-        return self._message
-
-    @message.setter
-    def message(self, message: Optional[Message]):
-        self._message = message
-
-    @message.deleter
-    def message(self):
-        self._message = None
-
-    @property
-    def member(self) -> Union[Member, User]:
-        return self._member
-
-    @member.setter
-    def member(self, member: Union[Member, User]):
-        self._member = member
-
-    @property
-    def embed(self):
-        return self._embed
-
-    @embed.setter
-    def embed(self, embed: Embed):
-        self._embed = embed
 
     async def delete(self) -> None:
         """This method deletes the view, and stops it."""

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from random import sample
 from typing import Optional, Union
 
 from discord import (
@@ -19,13 +20,13 @@ from discord import (
     InteractionResponse,
     Member,
     TextChannel,
+    TextStyle,
     Webhook,
 )
-from discord.ui import Select
+from discord.ui import Select, TextInput, select
 
 from src.pagination.complex import Complex
 from src.structures.ability import Ability, SpAbility
-from src.structures.bot import CustomBot
 
 __all__ = ("AbilityView",)
 
@@ -40,14 +41,14 @@ def ability_emoji_parser(x: Ability | SpAbility) -> Optional[str]:
 class AbilityView(Complex):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         target: Union[Interaction, Webhook, TextChannel],
         abilities: set[Ability | SpAbility],
         keep_working: bool = False,
+        max_values: int = 1,
     ):
+        placeholder = ", ".join(["Ability"] * max_values)
         super(AbilityView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=abilities,
@@ -56,38 +57,27 @@ class AbilityView(Complex):
             keep_working=keep_working,
             sort_key=lambda x: x.name,
             emoji_parser=ability_emoji_parser,
+            max_values=max_values,
+            text_component=TextInput(
+                label="Ability",
+                style=TextStyle.paragraph,
+                placeholder=placeholder,
+                default=", ".join(x.name for x in sample(abilities, 2)),
+            ),
         )
         self.embed.title = "Select an Ability"
 
-    async def custom_choice(self, ctx: Interaction, sct: Select):
-        response: InteractionResponse = ctx.response
-        for index in sct.values:
-            try:
-                amount = self.entries_per_page * self._pos
-                chunk = self.values[amount : amount + self.entries_per_page]
-                item: Ability | SpAbility = chunk[int(index)]
-                embed = item.embed
-                await response.send_message(
-                    embed=embed,
-                    ephemeral=True,
-                )
-            except IndexError:
-                pass
-            except Exception as e:
-                self.bot.logger.exception(
-                    "Chunk: %s",
-                    str(chunk),
-                    exc_info=e,
-                )
-
-    @property
-    def choice(self) -> Optional[Ability | SpAbility]:
-        """Method Override
-
-        Returns
-        -------
-        set[Move]
-            Desired Moves
-        """
-        if value := super(AbilityView, self).choice:
-            return value
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
+    async def select_choice(
+        self,
+        interaction: Interaction,
+        sct: Select,
+    ) -> None:
+        response: InteractionResponse = interaction.response
+        item: Ability | SpAbility = self.current_choice
+        await response.send_message(embed=item.embed, ephemeral=True)
+        await super(AbilityView, self).select_choice(interaction, sct)

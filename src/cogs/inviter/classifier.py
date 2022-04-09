@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from itertools import groupby
+from logging import getLogger, setLoggerClass
 from typing import Optional, Union
 
 from discord import (
@@ -28,7 +29,11 @@ from discord.utils import remove_markdown
 from humanize import naturaltime
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
+from src.structures.logger import ColoredLogger
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = ("InviterView",)
 
@@ -92,13 +97,11 @@ def msg_parser(msg: Message):
 class InvitePaginator(Complex):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         target: Union[Interaction, Webhook, TextChannel],
         messages: set[Message],
     ):
         super(InvitePaginator, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=messages,
@@ -109,27 +112,26 @@ class InvitePaginator(Complex):
         )
         self.embed.title = "Select Partner"
 
-    async def custom_choice(self, ctx: Interaction, sct: Select):
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
+    async def select_choice(
+        self,
+        ctx: Interaction,
+        sct: Select,
+    ) -> None:
         response: InteractionResponse = ctx.response
-        index = sct.values[0]
-        amount = self.entries_per_page * self._pos
-        chunk = self.values[amount : amount + self.entries_per_page]
-        item: Message = chunk[int(index)]
-        embed = item.embeds[0]
+        item: Message = self.current_choice
         view = View.from_message(item)
-        if not response.is_done():
-            await response.send_message(
-                content=item.content,
-                embed=embed,
-                view=view,
-                ephemeral=True,
-            )
-        else:
-            await response.edit_message(
-                content=item.content,
-                embed=embed,
-                view=view,
-            )
+        await response.send_message(
+            content=item.content,
+            embeds=item.embeds,
+            view=view,
+            ephemeral=True,
+        )
+        await super(InvitePaginator, self).select_choice(ctx, sct)
 
     @property
     def choice(self) -> Optional[Message]:
@@ -147,11 +149,9 @@ class InvitePaginator(Complex):
 class InviterView(View):
     def __init__(
         self,
-        bot: CustomBot,
         messages: list[Message],
     ):
         super().__init__(timeout=None)
-        self.bot = bot
         messages = [x for x in messages if x.embeds]
         self.data: dict[str, set[Message]] = {
             k: set(v)
@@ -209,7 +209,6 @@ class InviterView(View):
         item = sct.values[0]
         if items := self.data.get(sct.values[0], set()):
             view = InvitePaginator(
-                bot=self.bot,
                 member=ctx.user,
                 target=ctx,
                 messages=items,
@@ -217,7 +216,7 @@ class InviterView(View):
             embed = view.embed
             embed.title = title = f"{item} Partnerships".title()
             async with view.send(ephemeral=True):
-                self.bot.logger.info(
+                logger.info(
                     "User %s is reading %s",
                     str(ctx.user),
                     title,

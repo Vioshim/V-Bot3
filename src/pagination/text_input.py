@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import asynccontextmanager, suppress
+from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
 from discord import (
@@ -29,8 +30,12 @@ from discord.abc import Messageable
 from discord.ui import Button, Modal, TextInput, button
 
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
+from src.structures.logger import ColoredLogger
 from src.utils.functions import text_check
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = ("ModernInput", "TextModal")
 
@@ -42,7 +47,6 @@ class ModernInput(Basic):
     def __init__(
         self,
         *,
-        bot: CustomBot,
         input_text: TextInput = None,
         member: Union[Member, User],
         target: _M = None,
@@ -50,7 +54,6 @@ class ModernInput(Basic):
         embed: Embed = None,
     ):
         super(ModernInput, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             timeout=timeout,
@@ -70,7 +73,6 @@ class ModernInput(Basic):
     @asynccontextmanager
     async def handle(self, **kwargs):
         data = dict(
-            bot=self.bot,
             member=kwargs.pop("member", self.member),
             target=kwargs.pop("target", self.target),
         )
@@ -101,7 +103,7 @@ class ModernInput(Basic):
                 await aux.wait()
             yield aux.text
         except Exception as e:
-            self.bot.logger.exception(
+            logger.exception(
                 "Exception occurred, target: %s, user: %s",
                 str(self.target),
                 str(self.member),
@@ -127,7 +129,7 @@ class ModernInput(Basic):
             view=None,
         )
         try:
-            message: Message = await self.bot.wait_for(
+            message: Message = await interaction.client.wait_for(
                 "message", check=text_check(interaction)
             )
             self.text = message.content
@@ -140,7 +142,7 @@ class ModernInput(Basic):
                 embed=None,
             )
         except DiscordException as e:
-            self.bot.logger.exception(
+            logger.exception(
                 "Error editing message",
                 exc_info=e,
             )
@@ -202,7 +204,7 @@ class ModernInput(Basic):
             if message := self.message:
                 await message.delete(delay=1)
         except DiscordException as e:
-            self.bot.logger.exception(
+            logger.exception(
                 "Error deleting message",
                 exc_info=e,
             )
@@ -219,8 +221,6 @@ class TextModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         """Runs whenever the modal is closed."""
-        self.text = self.item.value or ""
-        await interaction.response.send_message(
-            "Parameter has been added.", ephemeral=True
-        )
+        resp: InteractionResponse = interaction.response
+        await resp.send_message("Parameter has been added.", ephemeral=True)
         self.stop()

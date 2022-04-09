@@ -16,7 +16,10 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass
 from enum import Enum
 from itertools import combinations
-from typing import Optional, Type, Union
+from logging import getLogger, setLoggerClass
+from random import choice as random_choice
+from random import sample
+from typing import Iterable, Optional, Type, Union
 
 from discord import (
     ButtonStyle,
@@ -31,24 +34,29 @@ from discord import (
     TextStyle,
     Thread,
     User,
+    Webhook,
 )
 from discord.ui import Button, Select, TextInput, View, button, select
 
-from src.pagination.complex import Complex, ComplexInput
+from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, SpAbility
-from src.structures.bot import CustomBot
+from src.structures.ability import ALL_ABILITIES, Ability, SpAbility
 from src.structures.character import (
     Character,
     FakemonCharacter,
     VariantCharacter,
 )
+from src.structures.logger import ColoredLogger
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
-from src.structures.species import Fusion
+from src.structures.species import Fusion, Species
 from src.utils.functions import int_check
 from src.views import ImageView, MovepoolView
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = ("Modification", "ModifyView")
 
@@ -58,13 +66,11 @@ DEFAULT_INFO_MSG = "If you need to write too much, I recommend to move to Google
 class SPView(Basic):
     def __init__(
         self,
-        bot: CustomBot,
         oc: Type[Character],
         member: Union[Member, User],
         target: Interaction,
     ):
         super(SPView, self).__init__(
-            bot=bot,
             target=target,
             member=member,
             timeout=None,
@@ -103,8 +109,7 @@ class SPView(Basic):
         resp: InteractionResponse = ctx.response
         backup = set(self.oc.abilities)
         if len(self.oc.abilities) > 1:
-            view = ComplexInput(
-                bot=self.bot,
+            view = Complex(
                 member=self.member,
                 target=ctx,
                 values=self.oc.abilities,
@@ -135,7 +140,6 @@ class SPView(Basic):
         message = await ctx.original_message()
 
         text_view = ModernInput(
-            bot=self.bot,
             input_text=TextInput(
                 label="Special Ability",
                 placeholder=DEFAULT_INFO_MSG,
@@ -180,7 +184,6 @@ class SPView(Basic):
             Interaction
         """
         view = Complex(
-            bot=self.bot,
             member=self.member,
             values=list(SpAbility.__slots__),
             target=ctx,
@@ -192,12 +195,13 @@ class SPView(Basic):
             silent_mode=True,
         )
 
-        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
+        async with view.send(
+            title="Sp.Ability Modify", ephemeral=True
+        ) as elements:
             if not isinstance(elements, set):
                 return self.stop()
 
             text_view = ModernInput(
-                bot=self.bot,
                 member=self.member,
                 target=ctx,
             )
@@ -272,7 +276,6 @@ class Mod(metaclass=ABCMeta):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -284,8 +287,6 @@ class Mod(metaclass=ABCMeta):
         ----------
         oc : Type[Character]
             Character to modify
-        bot : CustomBot
-            Bot instance
         member : Union[User, Member]
             User that interacts with the bot
         target : T
@@ -321,7 +322,6 @@ class NameMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -331,8 +331,6 @@ class NameMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -343,7 +341,7 @@ class NameMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = ModernInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(member=member, target=target)
         handler = text_view.handle(
             label="Write the character's Name.",
             placeholder="> oc.name",
@@ -380,7 +378,6 @@ class AgeMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -390,8 +387,6 @@ class AgeMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -402,7 +397,7 @@ class AgeMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = ModernInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(member=member, target=target)
         age = str(oc.age) if oc.age else "Unknown"
         handler = text_view.handle(
             label="Write the character's Age.",
@@ -440,7 +435,6 @@ class PronounMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -450,8 +444,6 @@ class PronounMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -463,13 +455,19 @@ class PronounMod(Mod):
             Bool If Updatable, None if cancelled
         """
         view = Complex(
-            bot=bot,
             member=member,
             target=target,
             timeout=None,
             values=Pronoun,
             parser=lambda x: (x.name, f"Sets Pronoun as {x.name}"),
             sort_key=lambda x: x.name,
+            text_component=TextInput(
+                label="Pronoun",
+                placeholder="He | She | Them",
+                default=oc.pronoun.name,
+                min_length=2,
+                max_length=4,
+            ),
         )
         aux: Optional[bool] = None
         origin = await target.original_message()
@@ -477,7 +475,8 @@ class PronounMod(Mod):
         view.embed.description = f"> {oc.pronoun.name}"
         await origin.edit(embed=view.embed, view=view)
         await view.wait()
-        if isinstance(item := view.choice, Pronoun):
+        item = Pronoun.deduce(view.choice)
+        if isinstance(item, Pronoun):
             aux = item != oc.pronoun
             oc.pronoun = item
         return aux
@@ -506,7 +505,6 @@ class BackstoryMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -516,8 +514,6 @@ class BackstoryMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -528,9 +524,11 @@ class BackstoryMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = ModernInput(bot=bot, member=member, target=target)
+        text_view = ModernInput(member=member, target=target)
         backstory = (
-            oc.backstory[:4000] if oc.backstory else "No backstory was provided."
+            oc.backstory[:4000]
+            if oc.backstory
+            else "No backstory was provided."
         )
         handler = text_view.handle(
             label="Write the character's Backstory.",
@@ -568,7 +566,6 @@ class ExtraMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -578,8 +575,6 @@ class ExtraMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -590,8 +585,12 @@ class ExtraMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        text_view = ModernInput(bot=bot, member=member, target=target)
-        extra = oc.extra[:4000] if oc.extra else "No Extra Information was provided."
+        text_view = ModernInput(member=member, target=target)
+        extra = (
+            oc.extra[:4000]
+            if oc.extra
+            else "No Extra Information was provided."
+        )
         handler = text_view.handle(
             label="Write the character's Extra Information.",
             style=TextStyle.paragraph,
@@ -628,7 +627,6 @@ class MovesetMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -638,8 +636,6 @@ class MovesetMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -652,13 +648,18 @@ class MovesetMod(Mod):
         """
         moves = oc.total_movepool() or ALL_MOVES.values()
 
-        view = ComplexInput(
-            bot=bot,
+        view = Complex(
             member=member,
             values=moves,
             timeout=None,
             target=target,
             max_values=6,
+            text_component=TextInput(
+                label="Moveset",
+                style=TextStyle.paragraph,
+                placeholder="Move, Move, Move, Move, Move, Move",
+                default=", ".join(x.name for x in oc.moveset),
+            ),
         )
         aux: Optional[bool] = None
         origin = await target.original_message()
@@ -697,7 +698,6 @@ class AbilitiesMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -707,8 +707,6 @@ class AbilitiesMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -719,14 +717,22 @@ class AbilitiesMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        view = ComplexInput(
-            bot=bot,
+
+        placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
+
+        view = Complex(
             member=member,
             values=oc.species.abilities or ALL_ABILITIES.values(),
             timeout=None,
             target=target,
             max_values=oc.max_amount_abilities,
             parser=lambda x: (x.name, x.description),
+            text_component=TextInput(
+                label="Ability",
+                style=TextStyle.paragraph,
+                placeholder=placeholder,
+                default=", ".join(x.name for x in oc.abilities),
+            ),
         )
         origin = await target.original_message()
         view.embed.title = "Select the abilities. Current ones below"
@@ -766,7 +772,6 @@ class ImageMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -776,8 +781,6 @@ class ImageMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -789,7 +792,6 @@ class ImageMod(Mod):
             Bool If Updatable, None if cancelled
         """
         view = ImageView(
-            bot=bot,
             member=member,
             default_img=oc.image,
             target=target,
@@ -833,7 +835,6 @@ class MovepoolMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -843,8 +844,6 @@ class MovepoolMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             Member
         target : Interaction
@@ -856,7 +855,7 @@ class MovepoolMod(Mod):
             Bool If Updatable, None if cancelled
         """
         origin = await target.original_message()
-        view = MovepoolView(bot, target, member, oc)
+        view = MovepoolView(target, member, oc)
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
@@ -886,7 +885,6 @@ class EvolutionMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -896,8 +894,6 @@ class EvolutionMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -911,14 +907,18 @@ class EvolutionMod(Mod):
         origin = await target.original_message()
 
         values = oc.species.species_evolves_to
-
-        view = ComplexInput(
-            bot=bot,
+        view = Complex(
             member=member,
-            values=set(values),
+            values=values,
             timeout=None,
             target=target,
             parser=lambda x: (x.name, f"Evolve to {x.name}"),
+            text_component=TextInput(
+                label="Evolve to",
+                style=TextStyle.paragraph,
+                placeholder=" | ".join(x.name for x in set(values)),
+                default=random_choice(values).name,
+            ),
         )
         view.embed.title = "Select the Evolution"
         await origin.edit(content=None, embed=view.embed, view=view)
@@ -929,8 +929,7 @@ class EvolutionMod(Mod):
         oc.species = species
         if not oc.types and isinstance(species, Fusion):
             possible_types = species.possible_types
-            view = ComplexInput(
-                bot=bot,
+            view = Complex(
                 member=member,
                 values=possible_types,
                 timeout=None,
@@ -938,6 +937,16 @@ class EvolutionMod(Mod):
                 parser=lambda x: (
                     "/".join(i.name for i in x).title(),
                     f"Sets the typing to {'/'.join(i.name for i in x).title()}",
+                ),
+                text_component=TextInput(
+                    label="Fusion Typing",
+                    placeholder=" | ".join(
+                        "/".join(i.name for i in x).title()
+                        for x in possible_types
+                    ),
+                    default="/".join(
+                        i.name for i in random_choice(possible_types)
+                    ).title(),
                 ),
             )
             view.embed.title = "Select the new typing"
@@ -947,14 +956,31 @@ class EvolutionMod(Mod):
                 return
             species.types = types
 
-        view = ComplexInput(
-            bot=bot,
+        placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
+
+        abilities: Iterable[Ability] = (
+            species.abilities or ALL_ABILITIES.values()
+        )
+
+        view = Complex(
             member=member,
-            values=species.abilities or ALL_ABILITIES.values(),
+            values=abilities,
             timeout=None,
             target=target,
             max_values=oc.max_amount_abilities,
             parser=lambda x: (x.name, x.description),
+            text_component=TextInput(
+                label="Ability",
+                style=TextStyle.paragraph,
+                placeholder=placeholder,
+                default=", ".join(
+                    x.name
+                    for x in sample(
+                        abilities,
+                        k=oc.max_amount_abilities,
+                    )
+                ),
+            ),
         )
 
         await origin.edit(content=None, embed=view.embed, view=view)
@@ -966,7 +992,6 @@ class EvolutionMod(Mod):
         default_image: str = oc.default_image or oc.image
 
         view = ImageView(
-            bot=bot,
             member=member,
             default_img=default_image,
             target=target,
@@ -1005,7 +1030,6 @@ class DevolutionMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -1015,8 +1039,6 @@ class DevolutionMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -1031,20 +1053,26 @@ class DevolutionMod(Mod):
 
         current = oc.species
 
-        total = []
+        total: list[Species | Fusion] = []
 
         if isinstance(current, Fusion):
             total.extend(current.total_species_evolves_from)
         elif item := current.species_evolves_from:
             total.append(item)
 
-        view = ComplexInput(
-            bot=bot,
+        view = Complex(
             member=member,
             values=set(total),
             timeout=None,
             target=target,
             parser=lambda x: (x.name, f"Devolve to {x.name}"),
+            text_component=TextInput(
+                label="Devolving",
+                style=TextStyle.paragraph,
+                placeholder=" | ".join(x.name for x in set(total)),
+                default=random_choice(total).name,
+                required=True,
+            ),
         )
         view.embed.title = "Select the Devolution"
         await origin.edit(content=None, embed=view.embed, view=view)
@@ -1055,8 +1083,7 @@ class DevolutionMod(Mod):
 
         if not species.types and isinstance(species, Fusion):
             possible_types = species.possible_types
-            view = ComplexInput(
-                bot=bot,
+            view = Complex(
                 member=member,
                 values=possible_types,
                 timeout=None,
@@ -1064,6 +1091,16 @@ class DevolutionMod(Mod):
                 parser=lambda x: (
                     "/".join(i.name for i in x).title(),
                     f"Sets the typing to {'/'.join(i.name for i in x).title()}",
+                ),
+                text_component=TextInput(
+                    label="Fusion Typing",
+                    placeholder=" | ".join(
+                        "/".join(i.name for i in x).title()
+                        for x in possible_types
+                    ),
+                    default="/".join(
+                        i.name for i in random_choice(possible_types)
+                    ).title(),
                 ),
             )
             view.embed.title = "Select the Fusion's new typing"
@@ -1075,12 +1112,13 @@ class DevolutionMod(Mod):
 
         oc.species = species
 
-        oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
+        oc.moveset &= set(species.total_movepool()) & set(
+            current.total_movepool()
+        )
 
         default_image = oc.default_image or oc.image
 
         view = ImageView(
-            bot=bot,
             member=member,
             default_img=default_image,
             target=target,
@@ -1119,7 +1157,6 @@ class FusionMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -1129,8 +1166,6 @@ class FusionMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -1145,15 +1180,20 @@ class FusionMod(Mod):
 
         items = [oc.species]
         items.extend(oc.species.species_evolves_to)
-        values = set(Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2))
-
-        view = ComplexInput(
-            bot=bot,
+        values = [Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2)]
+        view = Complex(
             member=member,
-            values=values,
+            values=set(values),
             timeout=None,
             target=target,
             parser=lambda x: (x.name, f"Evolve to {x.name}"),
+            text_component=TextInput(
+                label="Evolving",
+                style=TextStyle.paragraph,
+                placeholder=" | ".join(x.name for x in values),
+                default=random_choice(values).name,
+                required=True,
+            ),
         )
         view.embed.title = "Select the Fused Evolution"
         await origin.edit(content=None, embed=view.embed, view=view)
@@ -1163,8 +1203,7 @@ class FusionMod(Mod):
             return
 
         possible_types = species.possible_types
-        view = ComplexInput(
-            bot=bot,
+        view = Complex(
             member=member,
             values=set(possible_types),
             timeout=None,
@@ -1172,6 +1211,15 @@ class FusionMod(Mod):
             parser=lambda x: (
                 "/".join(i.name for i in x).title(),
                 f"Sets the typing to {'/'.join(i.name for i in x).title()}",
+            ),
+            text_component=TextInput(
+                label="Fusion Typing",
+                placeholder=" | ".join(
+                    "/".join(i.name for i in x).title() for x in possible_types
+                ),
+                default="/".join(
+                    i.name for i in random_choice(possible_types)
+                ).title(),
             ),
         )
         view.embed.title = "Select the Fusion's new typing"
@@ -1186,7 +1234,6 @@ class FusionMod(Mod):
         default_image: str = oc.default_image or oc.image
 
         view = ImageView(
-            bot=bot,
             member=member,
             default_img=default_image,
             target=target,
@@ -1223,7 +1270,6 @@ class SpAbilityMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -1233,8 +1279,6 @@ class SpAbilityMod(Mod):
         ----------
         oc : Type[Character]
             Character
-        bot : CustomBot
-            Bot
         member : Union[User, Member]
             User
         target : T
@@ -1245,7 +1289,7 @@ class SpAbilityMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        view = SPView(bot=bot, oc=oc, member=member, target=target)
+        view = SPView(oc=oc, member=member, target=target)
         view.embed.title = "Special Ability Management"
         await view.send()
         await view.wait()
@@ -1283,7 +1327,6 @@ class Modification(Enum):
     async def method(
         self,
         oc: Type[Character],
-        bot: CustomBot,
         member: Union[User, Member],
         target: Interaction,
     ) -> Optional[bool]:
@@ -1293,8 +1336,6 @@ class Modification(Enum):
         ----------
         oc : Type[Character]
             Character to modify
-        bot : CustomBot
-            Bot instance
         member : Union[User, Member]
             User interacting
         target : T
@@ -1305,13 +1346,12 @@ class Modification(Enum):
         Optional[bool]
             Bool if updatable, None if cancelled.
         """
-        return await self.value.method(oc, bot, member, target)
+        return await self.value.method(oc, member, target)
 
 
 class ModifyView(View):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         oc: Character,
         target: Interaction,
@@ -1328,7 +1368,6 @@ class ModifyView(View):
             character
         """
         super(ModifyView, self).__init__(timeout=None)
-        self.bot = bot
         self.member = member
         self.oc = oc
         self.target = target
@@ -1362,12 +1401,11 @@ class ModifyView(View):
             mod = Modification[item]
             result = await mod.method(
                 oc=self.oc,
-                bot=self.bot,
                 member=self.member,
                 target=ctx,
             )
             if result is None:
-                self.bot.logger.info(
+                logger.info(
                     "At %s, %s cancelled modifications to Character(%s) aka %s",
                     mod.label,
                     str(ctx.user),
@@ -1376,7 +1414,7 @@ class ModifyView(View):
                 )
                 break
             else:
-                self.bot.logger.info(
+                logger.info(
                     "Field %s, modified by %s to Character(%s) aka %s",
                     mod.label,
                     str(ctx.user),
@@ -1384,12 +1422,14 @@ class ModifyView(View):
                     self.oc.name,
                 )
                 modifying |= result
-        webhook = await self.bot.webhook(919277769735680050)
+        webhook: Webhook = await ctx.client.webhook(919277769735680050)
         guild: Guild = webhook.guild
         embed = self.oc.embed
         embed.set_image(url="attachment://image.png")
         kwargs = dict(embed=embed, thread=Object(id=self.oc.thread))
-        if modifying and (file := await self.bot.get_file(self.oc.generated_image)):
+        if modifying and (
+            file := await ctx.client.get_file(self.oc.generated_image)
+        ):
             kwargs["attachments"] = [file]
         msg = None
         try:
@@ -1397,16 +1437,18 @@ class ModifyView(View):
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
             except HTTPException:
                 if not (thread := guild.get_thread(self.oc.thread)):
-                    thread: Thread = await self.bot.fetch_channel(self.oc.thread)
+                    thread: Thread = await ctx.client.fetch_channel(
+                        self.oc.thread
+                    )
                 await thread.edit(archived=False)
                 msg = await webhook.edit_message(self.oc.id, **kwargs)
         except NotFound:
-            cog = self.bot.get_cog("Submission")
+            cog = ctx.client.get_cog("Submission")
             await cog.registration(ctx=ctx, oc=self.oc, worker=ctx.user)
         finally:
             if msg:
                 self.oc.image = msg.embeds[0].image.url
-                async with self.bot.database() as db:
+                async with ctx.client.database() as db:
                     await self.oc.update(db)
             await ctx.edit_original_message(view=None, embed=self.oc.embed)
             self.stop()
@@ -1420,7 +1462,7 @@ class ModifyView(View):
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        webhook = await self.bot.webhook(919277769735680050)
+        webhook = await ctx.client.webhook(919277769735680050)
         guild: Guild = webhook.guild
         try:
             try:
@@ -1434,12 +1476,12 @@ class ModifyView(View):
                 await thread.edit(archived=False)
                 await webhook.delete_message(self.oc.id, thread=thread)
         except NotFound:
-            cog = self.bot.get_cog("Submission")
+            cog = ctx.client.get_cog("Submission")
             cog.ocs.pop(self.oc.id, None)
             cog.rpers.setdefault(self.oc.author, {})
             cog.rpers[self.oc.author].pop(self.oc.id, None)
-            async with self.bot.database() as db:
-                self.bot.logger.info(
+            async with ctx.client.database() as db:
+                logger.info(
                     "Character Removed as message was removed! > %s - %s > %s",
                     self.oc.name,
                     repr(self.oc),
@@ -1447,5 +1489,7 @@ class ModifyView(View):
                 )
                 await self.oc.delete(db)
         finally:
-            await resp.edit_message(content="Character Has been Deleted", view=None)
+            await resp.edit_message(
+                content="Character Has been Deleted", view=None
+            )
             self.stop()

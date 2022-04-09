@@ -21,10 +21,9 @@ from discord import (
     TextChannel,
     Webhook,
 )
-from discord.ui import Button, Select, View
+from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
 from src.structures.move import Move
 
 __all__ = ("MoveView",)
@@ -33,14 +32,12 @@ __all__ = ("MoveView",)
 class MoveView(Complex):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
         target: Union[Interaction, Webhook, TextChannel],
         moves: set[Move],
         keep_working: bool = False,
     ):
         super(MoveView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=moves,
@@ -51,34 +48,31 @@ class MoveView(Complex):
         )
         self.embed.title = "Select a Move"
 
-    async def custom_choice(self, ctx: Interaction, sct: Select):
-        response: InteractionResponse = ctx.response
-        for index in sct.values:
-            try:
-                amount = self.entries_per_page * self._pos
-                chunk = self.values[amount : amount + self.entries_per_page]
-                item: Move = chunk[int(index)]
-                embed = item.embed
-                view = View()
-                view.add_item(
-                    Button(
-                        label="Click here to check more information at Bulbapedia.",
-                        url=item.url,
-                    )
-                )
-                await response.send_message(
-                    embed=embed,
-                    view=view,
-                    ephemeral=True,
-                )
-            except IndexError:
-                pass
-            except Exception as e:
-                self.bot.logger.exception(
-                    "Chunk: %s",
-                    str(chunk),
-                    exc_info=e,
-                )
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
+    async def select_choice(
+        self,
+        interaction: Interaction,
+        _: Select,
+    ) -> None:
+        response: InteractionResponse = interaction.response
+        item: Move = self.current_choice
+        embed = item.embed
+        view = View()
+        view.add_item(
+            Button(
+                label="Click here to check more information at Bulbapedia.",
+                url=item.url,
+            )
+        )
+        await response.send_message(
+            embed=embed,
+            view=view,
+            ephemeral=True,
+        )
 
     @property
     def choice(self) -> Optional[Move]:
@@ -89,5 +83,4 @@ class MoveView(Complex):
         set[Move]
             Desired Moves
         """
-        if value := super(MoveView, self).choice:
-            return value
+        return super(MoveView, self).choice

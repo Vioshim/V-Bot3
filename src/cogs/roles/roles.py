@@ -13,6 +13,7 @@
 # limitations under the License.
 from datetime import datetime
 from difflib import get_close_matches
+from logging import getLogger, setLoggerClass
 from time import mktime
 from typing import Optional
 
@@ -36,29 +37,21 @@ from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import utcnow
 
 from src.cogs.roles.area_selection import AreaSelection
-from src.structures.bot import CustomBot
 from src.structures.character import Character
+from src.structures.logger import ColoredLogger
 from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR, MapPair
 from src.views.characters_view import CharactersView
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = (
     "PronounRoles",
     "BasicRoles",
     "ColorRoles",
     "RPThreadView",
-    "QUERIES",
 )
-
-QUERIES = [
-    """--sql
-DELETE FROM RP_SEARCH
-WHERE (CREATED_AT + INTERVAL '1 day') <= CURRENT_TIMESTAMP
-RETURNING *;
-""",
-    """--sql
-SELECT * FROM RP_SEARCH;
-""",
-]
 
 
 def hours(test: datetime = None) -> int:
@@ -410,7 +403,7 @@ class RegionView(View):
         """
         category: CategoryChannel = ctx.guild.get_channel(self.info.category)
         resp: InteractionResponse = ctx.response
-        ctx.client.logger.info(
+        logger.info(
             "%s is reading Map Information of %s",
             str(ctx.user),
             category.name,
@@ -490,7 +483,6 @@ class RegionRoles(View):
             all_roles.add(spectator)
             await ctx.user.remove_roles(*all_roles)
             await ctx.followup.send("Roles have been set", ephemeral=True)
-        self.stop()
 
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
     async def region_all(self, ctx: Interaction, _: Button):
@@ -564,7 +556,7 @@ class RPThreadManage(View):
         )
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
-                ctx.client.logger.info(
+                logger.info(
                     "User %s is currently reading %s's character %s [%s]",
                     str(ctx.user),
                     str(self.member),
@@ -579,7 +571,7 @@ class RPModal(Modal):
         thread: Thread,
         ocs: set[Character],
     ) -> None:
-        super().__init__(title="Pinging a RP Search")
+        super().__init__(title=f"Pinging {thread.name}")
         self.thread = thread
         self.ocs = ocs
         text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
@@ -592,7 +584,14 @@ class RPModal(Modal):
             required=False,
             default=text,
         )
+        self.message = TextInput(
+            style=TextStyle.paragraph,
+            label="Message",
+            placeholder=f"Describe what you're looking for in this {thread.name} (Optional)",
+            required=False,
+        )
         self.add_item(self.names)
+        self.add_item(self.message)
 
     async def on_submit(self, interaction: Interaction):
         info = {x.name.title(): x for x in self.ocs}
@@ -607,7 +606,9 @@ class RPModal(Modal):
                 items.append(elements[0])
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
-        embed = Embed(title=self.thread.name, color=member.color)
+        embed = Embed(
+            title=self.thread.name, color=member.color, description=self.message.value
+        )
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -666,15 +667,15 @@ class RPThreadView(View):
         if hours((val := cog.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                "You're in cool down, you pinged one of the threads recently."
+                "You're in cool down, you pinged one of the threads recently.\n"
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
         if hours((val := cog.role_cool_down.get(self.thread.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                f"Thread is in cool down, check the latest thread at <#{self.thread.id}>."
-                f"Or try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                f"Thread is in cool down, check the latest thread at <#{self.thread.id}>.\n"
+                f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
         ocs = interaction.client.get_cog("Submission").rpers.get(member.id, {}).values()

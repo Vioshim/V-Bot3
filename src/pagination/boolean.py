@@ -17,11 +17,11 @@ from typing import Optional, TypeVar, Union
 
 from discord import (
     ButtonStyle,
-    DiscordException,
     Embed,
     Interaction,
     InteractionResponse,
     Member,
+    Message,
     User,
 )
 from discord.abc import Messageable
@@ -69,7 +69,7 @@ class BooleanView(Basic):
 
         aux = BooleanView(**data)
         try:
-            if origin := kwargs.get("origin"):
+            if isinstance(origin := kwargs.get("origin"), Message):
                 await origin.edit(
                     content=None,
                     embed=aux.embed,
@@ -105,20 +105,12 @@ class BooleanView(Basic):
         _: Button,
     ):
         resp: InteractionResponse = interaction.response
-        try:
-            self.value = True
-            await resp.edit_message(
-                content=f"{self.embed.title}\nAnswer: Yes",
-                view=None,
-            )
-            await self.message.delete(delay=1)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error deleting message",
-                exc_info=e,
-            )
-        finally:
-            self.stop()
+        self.value = True
+        await resp.edit_message(
+            content=f"{self.embed.title}\nAnswer: Yes",
+            view=None,
+        )
+        await self.delete()
 
     @button(
         label="No",
@@ -130,20 +122,12 @@ class BooleanView(Basic):
         _: Button,
     ):
         resp: InteractionResponse = interaction.response
-        try:
-            self.value = False
-            await resp.edit_message(
-                content=f"{self.embed.title}\nAnswer: No",
-                view=None,
-            )
-            await self.message.delete(delay=1)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error deleting message",
-                exc_info=e,
-            )
-        finally:
-            self.stop()
+        self.value = False
+        await resp.edit_message(
+            content=f"{self.embed.title}\nAnswer: No",
+            view=None,
+        )
+        await self.delete()
 
     @button(
         label="Cancel Process",
@@ -156,17 +140,9 @@ class BooleanView(Basic):
         _: Button,
     ):
         resp: InteractionResponse = interaction.response
-        try:
-            self.value = None
-            await resp.edit_message(
-                content="Process has been cancelled",
-                view=None,
-            )
-            await self.message.delete(delay=1)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error deleting message",
-                exc_info=e,
-            )
-        finally:
-            self.stop()
+        self.value = None
+        await resp.edit_message(
+            content="Process has been cancelled",
+            view=None,
+        )
+        await self.delete()

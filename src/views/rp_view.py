@@ -23,21 +23,17 @@ from discord import (
 from discord.ui import Button, View, button
 from discord.utils import utcnow
 
-from src.structures.bot import CustomBot
-
 __all__ = ("RPView",)
 
 
 class RPView(View):
     def __init__(
         self,
-        bot: CustomBot,
         member_id: int,
         oc_list: dict[int, int],
         server: int = 719343092963999804,
     ):
         super(RPView, self).__init__(timeout=None)
-        self.bot = bot
         self.member_id = member_id
         self.last_ping = None
         self.oc_list = oc_list
@@ -71,7 +67,7 @@ class RPView(View):
     async def ping(self, interaction: Interaction, _: Button):
         member: Member = interaction.user
         guild = interaction.guild
-        webhook = await self.bot.webhook(740568087820238919, reason="Ping")
+        webhook = await interaction.client.webhook(740568087820238919, reason="Ping")
         embed = Embed(
             title="User has pinged you.", timestamp=utcnow(), color=member.color
         )

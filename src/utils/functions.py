@@ -55,7 +55,9 @@ def discord_url_msg(message: Message):
 
     content: str = message.content or ""
 
-    if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(content):
+    if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(
+        content
+    ):
         data = match.groupdict()
         channel_id = data.get("channel_id")
         if channel_id is None:
@@ -110,7 +112,7 @@ def common_get(item: dict[str, _T], *args: str) -> Optional[_T]:
     Returns
     -------
     Optional[_T]
-        The possibly removed data
+        The possibly obtained data
     """
     for arg in args:
         if data := item.get(arg):
@@ -272,7 +274,9 @@ def float_check(data: str, a: float = None, b: float = None) -> Optional[float]:
     try:
         value = float(data)
     except ValueError:
-        text: str = "".join(char for char in str(data) if char.isdigit() or char == ".")
+        text: str = "".join(
+            char for char in str(data) if char.isdigit() or char == "."
+        )
         if text.count(".") <= 1:
             value = float(text)
     finally:
@@ -419,31 +423,26 @@ def message_line(message: Message):
 
 
 def embed_handler(message: Message, embed: Embed) -> Embed:
-    """Embed handler function
-
-    Parameters
-    ----------
-    message : Message
-        Message
-    embed : Embed
-        Embed
-
-    Returns
-    -------
-    Embed
-        Embed with corrections
-    """
-    if not message:
-        return
     for item in message.attachments:
         URL = f"attachment://{item.filename}"
-        if (image := embed.image) and item.url == image.url:
-            embed.set_image(url=URL)
-        if (thumbnail := embed.thumbnail) and item.url == thumbnail.url:
-            embed.set_thumbnail(url=URL)
-        if (author := embed.author) and item.url == author.icon_url:
-            embed.set_author(name=author.name, icon_url=URL, url=author.url)
-        if (footer := embed.footer) and item.url == footer.icon_url:
-            embed.set_footer(text=footer.text, icon_url=URL)
+        if item.url == embed.image.url:
+            embed.set_image(
+                url=URL,
+            )
+        if item.url == embed.thumbnail.url:
+            embed.set_thumbnail(
+                url=URL,
+            )
+        if item.url == embed.author.icon_url:
+            embed.set_author(
+                name=embed.author.name,
+                icon_url=URL,
+                url=embed.author.url,
+            )
+        if item.url == embed.footer.icon_url:
+            embed.set_footer(
+                text=embed.footer.text,
+                icon_url=URL,
+            )
 
     return embed

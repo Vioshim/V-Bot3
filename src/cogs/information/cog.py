@@ -444,7 +444,7 @@ class Information(commands.Cog):
             if value := cog.oc_list.get(member.id):
                 view.add_item(
                     Button(
-                        label="User Characters",
+                        label="User Characters".center(80, "\u2008"),
                         url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                     )
                 )
@@ -525,7 +525,7 @@ class Information(commands.Cog):
             except ValueError:
                 emoji, name = None, msg.channel.name
             finally:
-                name = name.replace("-", " ").title()
+                name = name.replace("-", " ").title().center(80, "\u2008")
 
             view = View()
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
@@ -667,12 +667,14 @@ class Information(commands.Cog):
                 emoji = emoji[0]
             except ValueError:
                 emoji, name = None, ctx.channel.name
+            finally:
+                name = name.replace("-", " ").title().center(80, "\u2008")
 
             view = View()
             view.add_item(
                 Button(
                     emoji=emoji,
-                    label=name.replace("-", " ").title(),
+                    label=name,
                     url=ctx.jump_url,
                 )
             )
@@ -725,7 +727,7 @@ class Information(commands.Cog):
             error, "original", error
         )
         resp: InteractionResponse = interaction.response
-        if command and command._has_any_error_handlers:
+        if command and command._has_any_error_handlers():
             return
 
         name = command.name if command else ""

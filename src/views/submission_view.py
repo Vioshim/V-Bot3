@@ -15,6 +15,8 @@
 from asyncio import to_thread
 from contextlib import suppress
 from datetime import datetime
+from logging import getLogger, setLoggerClass
+from random import choice as random_choice
 from typing import Type, Union
 
 from discord import (
@@ -30,23 +32,27 @@ from discord import (
     SelectOption,
     TextChannel,
     TextStyle,
-    Webhook,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from jishaku.codeblocks import codeblock_converter
 from yaml import dump, safe_load
 
 from src.cogs.submission.oc_modification import ModifyView
-from src.pagination.complex import Complex, ComplexInput
+from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.structures.bot import CustomBot
 from src.structures.character import Character, doc_convert
+from src.structures.logger import ColoredLogger
 from src.structures.mission import Mission
 from src.utils.doc_reader import docs_reader
 from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
 from src.utils.functions import int_check, yaml_handler
 from src.utils.matches import G_DOCUMENT
 from src.views.mission_view import MissionView
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 
 class CharacterHandlerView(Complex):
@@ -67,11 +73,19 @@ class CharacterHandlerView(Complex):
             sort_key=lambda x: x.name,
         )
 
-    async def custom_choice(self, interaction: Interaction, _: Select):
+    @select(
+        row=1,
+        placeholder="Select the elements",
+        custom_id="selector",
+    )
+    async def select_choice(
+        self,
+        interaction: Interaction,
+        _: Select,
+    ) -> None:
         resp: InteractionResponse = interaction.response
         data: list[Type[Character]] = list(self.choices)
         view = ModifyView(
-            bot=self.bot,
             member=interaction.user,
             oc=data[0],
             target=interaction,
@@ -81,8 +95,6 @@ class CharacterHandlerView(Complex):
             view=view,
         )
         await view.wait()
-        # with suppress(DiscordException):
-        # await self.edit(page=None)
         with suppress(DiscordException):
             await resp.edit_message(
                 embed=data[0].embed,
@@ -132,12 +144,10 @@ class SubmissionModal(Modal):
 class TemplateView(View):
     def __init__(
         self,
-        bot: CustomBot,
         template: dict,
         title: str,
     ):
         super().__init__(timeout=None)
-        self.bot = bot
         self.template = template
         self.title = title
 
@@ -168,8 +178,9 @@ class TemplateView(View):
             "**__Available Templates__**\n\n"
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
         )
-        for item in self.template.get("Document", {}).values():
-            content += f"\nhttps://docs.google.com/document/d/{item}/edit?usp=sharing"
+
+        for key, item in self.template.get("Document", {}).items():
+            content += f"\n• [{key}](https://docs.google.com/document/d/{item}/edit?usp=sharing)"
 
         await resp.edit_message(content=content, embed=None, view=None)
         self.stop()
@@ -178,7 +189,6 @@ class TemplateView(View):
 class SubmissionView(View):
     def __init__(
         self,
-        bot: CustomBot,
         ocs: dict[int, Character],
         rpers: dict[int, dict[int, Character]],
         oc_list: dict[int, int],
@@ -206,7 +216,6 @@ class SubmissionView(View):
             All Missions
         """
         super(SubmissionView, self).__init__(timeout=None)
-        self.bot = bot
         self.kwargs = kwargs
         self.ocs = ocs
         self.rpers = rpers
@@ -242,28 +251,26 @@ class SubmissionView(View):
         """
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        if raw_data := sct.values:
-            template = self.kwargs.get(title := raw_data[0], {})
-            view = TemplateView(
-                bot=self.bot,
-                template=template,
-                title=title,
-            )
-            embed = Embed(
-                title="How do you want to register your character?",
-                color=0xFFFFFE,
-            )
-            embed.set_image(
-                url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png",
-            )
-            embed.set_footer(
-                text="After sending, bot will ask for backstory, extra info and image."
-            )
-            await ctx.followup.send(
-                embed=embed,
-                view=view,
-                ephemeral=True,
-            )
+        template = self.kwargs.get(title := sct.values[0], {})
+        view = TemplateView(
+            template=template,
+            title=title,
+        )
+        embed = Embed(
+            title="How do you want to register your character?",
+            color=0xFFFFFE,
+        )
+        embed.set_image(
+            url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png",
+        )
+        embed.set_footer(
+            text="After sending, bot will ask for backstory, extra info and image."
+        )
+        await ctx.followup.send(
+            embed=embed,
+            view=view,
+            ephemeral=True,
+        )
 
     @button(
         label="Modify Character",
@@ -289,7 +296,6 @@ class SubmissionView(View):
 
         if len(values) == 1:
             view = ModifyView(
-                bot=self.bot,
                 member=ctx.user,
                 oc=values[0],
                 target=ctx,
@@ -308,7 +314,6 @@ class SubmissionView(View):
                 )
         else:
             view = CharacterHandlerView(
-                bot=self.bot,
                 member=ctx.user,
                 target=ctx,
                 values=values,
@@ -323,7 +328,7 @@ class SubmissionView(View):
             oc: Type[Character]
             async with view.send(single=True, ephemeral=True) as oc:
                 if isinstance(oc, Character):
-                    self.bot.logger.info(
+                    logger.info(
                         "%s is modifying a Character(%s) aka %s",
                         str(ctx.user),
                         repr(oc),
@@ -350,8 +355,7 @@ class SubmissionView(View):
         ]
         member: Member = ctx.user
         channel: TextChannel = ctx.channel
-        view = ComplexInput(
-            bot=self.bot,
+        view = Complex(
             member=member,
             target=ctx,
             values=locations,
@@ -360,29 +364,45 @@ class SubmissionView(View):
                 f"Sets it at {x.name[2:].capitalize()}",
             ),
             emoji_parser=lambda x: x.name[0],
+            text_component=TextInput(
+                label="Region",
+                placeholder=" | ".join(x.name[2:].capitalize() for x in locations),
+                default=random_choice(locations).name[2:].capitalize(),
+                required=True,
+            ),
         )
         choice: CategoryChannel
         async with view.send(title="Select Region", single=True) as choice:
             if not choice:
                 return
-            view = ComplexInput(
-                bot=self.bot,
+            areas = [
+                item
+                for item in choice.channels
+                if (
+                    "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in item.name
+                    and isinstance(item, TextChannel)
+                )
+            ]
+            view = Complex(
                 member=ctx.user,
                 target=channel,
-                values=[
-                    item
-                    for item in choice.channels
-                    if (
-                        "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
-                        not in item.name
-                        and isinstance(item, TextChannel)
-                    )
-                ],
+                values=areas,
                 parser=lambda x: (
                     x.name[2:].replace("-", " ").capitalize(),
                     x.topic[:50] if x.topic else "No description.",
                 ),
                 emoji_parser=lambda x: x.name[0],
+                text_component=TextInput(
+                    label="Area",
+                    placeholder=" | ".join(
+                        x.name[2:].replace("-", " ").capitalize() for x in areas
+                    ),
+                    default=random_choice(areas)
+                    .name[2:]
+                    .replace("-", " ")
+                    .capitalize(),
+                    required=True,
+                ),
             )
             area: TextChannel
             author = self.supporting.get(ctx.user, ctx.user)
@@ -390,7 +410,10 @@ class SubmissionView(View):
                 if not area:
                     return
                 mission = Mission(author=author.id, place=area.id)
-                text_input = ModernInput(bot=self.bot, member=member, target=channel)
+                text_input = ModernInput(
+                    member=member,
+                    target=channel,
+                )
 
                 text: str
 
@@ -446,7 +469,6 @@ class SubmissionView(View):
                     mission.client = text
 
                 view = Complex(
-                    bot=self.bot,
                     member=member,
                     target=channel,
                     values=range(1, 7),
@@ -458,9 +480,8 @@ class SubmissionView(View):
                     if not item:
                         return
                     mission.difficulty = item
-                    channel: TextChannel = self.bot.get_channel(908498210211909642)
+                    channel: TextChannel = ctx.client.get_channel(908498210211909642)
                     view = MissionView(
-                        bot=self.bot,
                         mission=mission,
                         mission_claimers=self.mission_claimers,
                         mission_cooldown=self.mission_cooldown,
@@ -474,10 +495,10 @@ class SubmissionView(View):
                     )
                     mission.msg_id = msg.id
                     self.missions.add(mission)
-                    async with self.bot.database() as session:
+                    async with ctx.client.database() as session:
                         await mission.upsert(session)
                         thread = await msg.create_thread(
                             name=f"Mission {mission.id:03d}"
                         )
                         await thread.add_user(author)
-                        self.bot.logger.info("Mission added: %s", repr(mission))
+                        logger.info("Mission added: %s", repr(mission))

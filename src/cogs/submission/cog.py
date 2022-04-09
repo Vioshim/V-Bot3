@@ -18,6 +18,8 @@ from datetime import datetime, timedelta
 from difflib import get_close_matches
 from itertools import chain
 from pathlib import Path
+from random import choice as random_choice
+from random import sample
 from typing import Any, Optional, Type, Union
 
 from aiofiles import open as aiopen
@@ -47,7 +49,7 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.ui import Button, View
+from discord.ui import Button, TextInput, View
 from discord.utils import utcnow
 from docx import Document
 from docx.document import Document as DocumentType
@@ -57,7 +59,7 @@ from yaml import safe_load
 from yaml.error import MarkedYAMLError
 
 from src.pagination.boolean import BooleanView
-from src.pagination.complex import ComplexInput
+from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
@@ -162,9 +164,15 @@ class Submission(commands.Cog):
         self.bot.tree.add_command(self.ctx_menu3)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
-        self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
-        self.bot.tree.remove_command(self.ctx_menu3.name, type=self.ctx_menu3.type)
+        self.bot.tree.remove_command(
+            self.ctx_menu1.name, type=self.ctx_menu1.type
+        )
+        self.bot.tree.remove_command(
+            self.ctx_menu2.name, type=self.ctx_menu2.type
+        )
+        self.bot.tree.remove_command(
+            self.ctx_menu3.name, type=self.ctx_menu3.type
+        )
 
     async def moves_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
@@ -318,7 +326,9 @@ class Submission(commands.Cog):
                 timestamp=utcnow(),
             )
             embed.set_image(url=REGISTERED_IMG)
-            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
+            embed.set_author(
+                name=author.display_name, icon_url=author.avatar.url
+            )
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
@@ -346,7 +356,9 @@ class Submission(commands.Cog):
                 await member.send(embed=embed, files=files, view=view)
             await ctx.followup.send("User has been registered", ephemeral=True)
         else:
-            await ctx.followup.send("User is already registered", ephemeral=True)
+            await ctx.followup.send(
+                "User is already registered", ephemeral=True
+            )
 
     @app_commands.command(name="ocs", description="Allows to show characters")
     @app_commands.guilds(719343092963999804)
@@ -391,7 +403,9 @@ class Submission(commands.Cog):
             )
             async with view.send(ephemeral=True):
                 if member == ctx.user:
-                    self.bot.logger.info("User %s is reading their OCs", str(member))
+                    self.bot.logger.info(
+                        "User %s is reading their OCs", str(member)
+                    )
                 else:
                     self.bot.logger.info(
                         "User %s is reading the OCs of %s",
@@ -442,7 +456,9 @@ class Submission(commands.Cog):
                 self.data_msg[channel.id] = msg
 
         async with self.bot.database() as conn:
-            for oc in filter(lambda x: x.location == channel.id, self.ocs.values()):
+            for oc in filter(
+                lambda x: x.location == channel.id, self.ocs.values()
+            ):
                 await conn.execute(
                     """--sql
                     UPDATE CHARACTER
@@ -502,7 +518,9 @@ class Submission(commands.Cog):
             thread=Object(id=oc.thread),
             allowed_mentions=AllowedMentions(users=True),
         )
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if file := await self.bot.get_file(
+            url=oc.generated_image, filename="image"
+        ):
             kwargs["file"] = file
             try:
                 msg_oc = await self.oc_list_webhook.send(**kwargs, wait=True)
@@ -549,7 +567,9 @@ class Submission(commands.Cog):
             if isinstance(ctx, Interaction):
                 resp: InteractionResponse = ctx.response
                 if not resp.is_done():
-                    return await ctx.response.send_message(content=text, ephemeral=True)
+                    return await ctx.response.send_message(
+                        content=text, ephemeral=True
+                    )
                 return await ctx.followup.send(content=text, ephemeral=True)
             else:
                 return await ctx.reply(content=text, delete_after=5)
@@ -586,8 +606,7 @@ class Submission(commands.Cog):
                 )
                 return
             if not 1 <= len(species.types) <= 2:
-                view = ComplexInput(
-                    bot=self.bot,
+                view = Complex(
                     member=worker,
                     target=ctx,
                     values=Typing.all(),
@@ -596,6 +615,11 @@ class Submission(commands.Cog):
                     parser=lambda x: (
                         str(x),
                         f"Adds the typing {x}",
+                    ),
+                    text_component=TextInput(
+                        label="Character's Types",
+                        placeholder="Type, Type",
+                        required=True,
                     ),
                 )
                 async with view.send(
@@ -608,8 +632,7 @@ class Submission(commands.Cog):
         elif isinstance(species, Fusion):  # type: ignore
             values = species.possible_types
             if not species.types:
-                view = ComplexInput(
-                    bot=self.bot,
+                view = Complex(
                     member=worker,
                     target=ctx,
                     values=values,
@@ -618,6 +641,15 @@ class Submission(commands.Cog):
                     parser=lambda x: (
                         "/".join(str(i) for i in x),
                         f"Adds the typing {'/'.join(str(i) for i in x)}",
+                    ),
+                    text_component=TextInput(
+                        label="Fusion Typing",
+                        placeholder=" | ".join(
+                            "/".join(i.name for i in x).title() for x in values
+                        ),
+                        default="/".join(
+                            i.name for i in random_choice(values)
+                        ).title(),
                     ),
                 )
                 async with view.send(
@@ -643,14 +675,29 @@ class Submission(commands.Cog):
         ):
             oc.abilities = species.abilities
         elif not oc.abilities or len(oc.abilities) > max_ab:
-            ability_view = ComplexInput(
-                bot=self.bot,
+            values = (
+                Ability.all()
+                if oc.any_ability_at_first
+                else oc.species.abilities
+            )
+            placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
+            ability_view = Complex(
                 member=worker,
-                values=(
-                    Ability.all() if oc.any_ability_at_first else oc.species.abilities
-                ),
+                values=values,
                 target=ctx,
                 max_values=max_ab,
+                text_component=TextInput(
+                    label="Ability",
+                    style=TextStyle.paragraph,
+                    placeholder=placeholder,
+                    default=", ".join(
+                        x.name
+                        for x in sample(
+                            values,
+                            k=oc.max_amount_abilities,
+                        )
+                    ),
+                ),
             )
 
             async with ability_view.send(
@@ -661,7 +708,9 @@ class Submission(commands.Cog):
                     return
                 oc.abilities = frozenset(abilities)
         if len(oc.abilities) > max_ab:
-            await send(f"Max Amount of Abilities for the current Species is {max_ab}")
+            await send(
+                f"Max Amount of Abilities for the current Species is {max_ab}"
+            )
             return
         elif not oc.any_ability_at_first and (
             ability_errors := ", ".join(
@@ -694,8 +743,7 @@ class Submission(commands.Cog):
             else:
                 movepool = Move.all()
 
-            moves_view = ComplexInput(
-                bot=self.bot,
+            moves_view = Complex(
                 member=worker,
                 values=movepool,
                 timeout=None,
@@ -719,7 +767,9 @@ class Submission(commands.Cog):
             if move_errors := ", ".join(
                 move.name for move in oc.moveset if move not in moves_movepool
             ):
-                await send(f"the moves [{move_errors}] were not found in the movepool")
+                await send(
+                    f"the moves [{move_errors}] were not found in the movepool"
+                )
                 return
         elif len(oc.moveset) > 6:
             await send("Max amount of moves in a pokemon is 6.")
@@ -835,7 +885,9 @@ class Submission(commands.Cog):
             url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
             return doc, url
 
-    async def bio_word_doc_parser(self, message: Message) -> Optional[DocumentType]:
+    async def bio_word_doc_parser(
+        self, message: Message
+    ) -> Optional[DocumentType]:
         if attachments := message.attachments:
             with suppress(Exception):
                 file = await attachments[0].to_file()
@@ -925,7 +977,9 @@ class Submission(commands.Cog):
                     await self.submission_handler(message, **msg_data)
                     return
         except Exception as e:
-            self.bot.logger.exception("Exception processing character", exc_info=e)
+            self.bot.logger.exception(
+                "Exception processing character", exc_info=e
+            )
             await message.reply(str(e), delete_after=10)
         finally:
             self.ignore -= {message.author.id}
@@ -937,12 +991,16 @@ class Submission(commands.Cog):
         if "Npc" in author or "Narrator" in author:
             return
 
-        ocs = {item.name: item for item in self.rpers.get(member_id, {}).values()}
+        ocs = {
+            item.name: item for item in self.rpers.get(member_id, {}).values()
+        }
 
         if not (oc := ocs.get(author)):
             if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
                 oc = ocs[items[0]]
-            elif ocs := [v for k, v in ocs.items() if k in author or author in k]:
+            elif ocs := [
+                v for k, v in ocs.items() if k in author or author in k
+            ]:
                 oc = ocs[0]
             else:
                 return
@@ -961,7 +1019,9 @@ class Submission(commands.Cog):
             await self.unclaiming(former_channel)
 
         if isinstance(channel, TextChannel):
-            scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
+            scheduler = await self.bot.scheduler.get_schedule(
+                f"RP[{channel.id}]"
+            )
             scheduler.trigger = IntervalTrigger(days=3)
 
     async def on_message_proxy(self, message: Message):
@@ -1031,7 +1091,9 @@ class Submission(commands.Cog):
                 oc_item["character"],
                 oc_item["assigned_at"],
             )
-            if (mission := missions.get(mission_id)) and (oc := self.ocs.get(oc_id)):
+            if (mission := missions.get(mission_id)) and (
+                oc := self.ocs.get(oc_id)
+            ):
                 mission.ocs |= {oc.id}
                 self.mission_claimers.setdefault(mission.id, set())
                 self.mission_claimers[mission.id].add(oc.id)
@@ -1067,7 +1129,9 @@ class Submission(commands.Cog):
                     allowed_mentions=AllowedMentions(users=True),
                 )
                 mission.msg_id = msg.id
-                thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
+                thread = await msg.create_thread(
+                    name=f"Mission {mission.id:03d}"
+                )
                 await thread.add_user(member)
                 ocs = set(mission.ocs)
                 for oc_id in mission.ocs:
@@ -1116,7 +1180,8 @@ class Submission(commands.Cog):
             [
                 x
                 for x in self.bot.get_channel(ch).channels
-                if "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in x.name
+                if "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
+                not in x.name
             ]
             for ch in RP_CATEGORIES
         ]
@@ -1203,7 +1268,9 @@ class Submission(commands.Cog):
                 await oc.delete(db)
 
     @commands.Cog.listener()
-    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
+    async def on_raw_message_delete(
+        self, payload: RawMessageDeleteEvent
+    ) -> None:
         """Detects if ocs or lists were deleted
 
         Parameters

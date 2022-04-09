@@ -14,22 +14,13 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
 
-from discord import (
-    DiscordException,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    Member,
-    User,
-)
+from discord import Embed, Interaction, InteractionResponse, Member, User
 from discord.abc import Messageable
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
 
 _T = TypeVar("_T", bound=Sized)
 _M = TypeVar("_M", bound=Messageable)
@@ -68,7 +59,6 @@ class Simple(Basic):
     def __init__(
         self,
         *,
-        bot: CustomBot,
         member: Union[Member, User],
         values: Iterable[_T],
         target: _M = None,
@@ -76,7 +66,7 @@ class Simple(Basic):
         embed: Embed = None,
         inline: bool = False,
         entries_per_page: int = 25,
-        parser: Callable[[_T], tuple[str, str]] = default_parser,
+        parser: Callable[[_T], tuple[str, str]] = None,
         sort_key: Callable[[_T], Any] = None,
         modifying_embed: bool = True,
     ):
@@ -84,8 +74,6 @@ class Simple(Basic):
 
         Parameters
         ----------
-        bot : CustomBot
-            Bot
         member : Union[Member, User]
             Member
         target : _M
@@ -106,7 +94,6 @@ class Simple(Basic):
             key used for sorting
         """
         super().__init__(
-            bot=bot,
             member=member,
             target=target,
             timeout=timeout,
@@ -119,9 +106,9 @@ class Simple(Basic):
         items: list[_T] = list(values)
         self._sort_key = sort_key
         self._values = items
-        self._inline = inline
+        self.inline = inline
         self._pos = 0
-        self._parser = parser or default_parser
+        self._parser = parser
         self._entries_per_page = entries_per_page
         if not isinstance(values, list) or sort_key:
             self.sort(sort_key=sort_key)
@@ -148,41 +135,34 @@ class Simple(Basic):
             self._sort_key = str
             self.values.sort(key=str, reverse=reverse)
 
-    def set_parser(
-        self,
-        item: Callable[[_T], tuple[str, str]] = None,
-    ) -> None:
-        """Function used for setting a parser
+    @property
+    def pos(self):
+        return self._pos
 
-        Parameters
-        ----------
-        item : Callable[[_T], tuple[str, str]], optional
-            Function to add, defaults to None
-        """
-        if item:
-            self._parser = item
-        else:
-            self._parser = default_parser
+    @pos.setter
+    def pos(self, pos: int):
+        self._pos = pos
         self.menu_format()
 
-    def parser(
-        self,
-        item: _T,
-    ) -> tuple[str, str]:
-        """This method parses an item and returns a tuple which will set
-        values and description for the select choices
+    @pos.deleter
+    def pos(self):
+        self._pos = 0
+        self.menu_format()
 
-        Parameters
-        ----------
-        item : _T
-            Independant element
+    @property
+    def parser(self):
+        if self._parser:
+            return self._parser
+        return default_parser
 
-        Returns
-        -------
-        tuple[str, str]
-            generated name and description for the item
-        """
-        return self._parser(item)
+    @parser.setter
+    def parser(self, parser: Callable[[_T], tuple[str, str]]):
+        self._parser = parser
+        self.menu_format()
+
+    @parser.deleter
+    def parser(self):
+        self._parser = None
 
     @property
     def values(self) -> list[_T]:
@@ -211,6 +191,12 @@ class Simple(Basic):
         self._pos = 0
         self.menu_format()
 
+    @entries_per_page.deleter
+    def entries_per_page(self):
+        self._entries_per_page = 25
+        self._pos = 0
+        self.menu_format()
+
     def buttons_format(self) -> None:
         """This method formats the first buttons based on the
         current page that is being viewed..
@@ -225,12 +211,7 @@ class Simple(Basic):
             self.last.disabled = True
 
     def menu_format(self):
-        """Default Formatter
-
-        Returns
-        -------
-
-        """
+        """Default Formatter"""
         self.buttons_format()
         self.embed.clear_fields()
         if chunks := len(self.values[:: self._entries_per_page]):
@@ -242,9 +223,9 @@ class Simple(Basic):
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
                 self.embed.add_field(
-                    name=name,
-                    value=value,
-                    inline=self._inline,
+                    name=name[:256],
+                    value=value[:1024],
+                    inline=self.inline,
                 )
 
     async def edit(
@@ -259,15 +240,14 @@ class Simple(Basic):
         page : int, optional
             page's index, defaults to None
         """
-        if isinstance(page, int):
-            self._pos = page
-            self.menu_format()
-            data = dict(view=self)
-        else:
-            data = dict(view=None)
+        data = {}
 
         if self.modifying_embed:
-            data["embed"] = self._embed
+            data["embed"] = self.embed
+
+        if isinstance(page, int):
+            self.pos = page
+            data["view"] = self
 
         resp: InteractionResponse = interaction.response
 
@@ -284,22 +264,19 @@ class Simple(Basic):
     async def first(
         self,
         interaction: Interaction,
-        btn: Button,
+        _: Button,
     ) -> None:
         """
         Method used to reach next first of the pagination
 
         Parameters
         ----------
-        btn: Button
-            Button which interacts with the User
         interaction: Interaction
             Current interaction of the user
+        _: Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_first(interaction, btn)
-        if not resp.is_done():
-            return await self.edit(interaction=interaction, page=0)
+        return await self.edit(interaction=interaction, page=0)
 
     @button(
         emoji=":fastreverse:952522808599126056",
@@ -309,22 +286,19 @@ class Simple(Basic):
     async def previous(
         self,
         interaction: Interaction,
-        btn: Button,
+        _: Button,
     ) -> None:
         """
         Method used to reach previous page of the pagination
 
         Parameters
         ----------
-        btn: Button
-            Button which interacts with the User
         interaction: Interaction
             Current interaction of the user
+        _: Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_previous(interaction, btn)
-        if not resp.is_done():
-            return await self.edit(interaction=interaction, page=self._pos - 1)
+        return await self.edit(interaction=interaction, page=self._pos - 1)
 
     @button(
         emoji=":stop:952522808573968454",
@@ -334,23 +308,22 @@ class Simple(Basic):
     async def finish(
         self,
         interaction: Interaction,
-        btn: Button,
+        _: Button,
     ) -> None:
         """
         Method used to conclude the pagination
 
         Parameters
         ----------
-        btn: discord.ui.Button
-            Button which interacts with the User
         interaction: discord.Interaction
             Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_finish(interaction, btn)
         if not resp.is_done():
             await resp.pong()
-            await self.delete()
+        await self.delete()
 
     @button(
         emoji=":fastforward:952522808347488326",
@@ -360,22 +333,19 @@ class Simple(Basic):
     async def next(
         self,
         interaction: Interaction,
-        btn: Button,
+        _: Button,
     ) -> None:
         """
         Method used to reach next page of the pagination
 
         Parameters
         ----------
-        btn: discord.ui.Button
-            Button which interacts with the User
         interaction: discord.Interaction
             Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_next(interaction, btn)
-        if not resp.is_done():
-            return await self.edit(interaction=interaction, page=self._pos + 1)
+        return await self.edit(interaction=interaction, page=self._pos + 1)
 
     @button(
         emoji=":nexttrack:952522808355848292",
@@ -385,97 +355,19 @@ class Simple(Basic):
     async def last(
         self,
         interaction: Interaction,
-        btn: Button,
+        _: Button,
     ) -> None:
         """
         Method used to reach last page of the pagination
 
         Parameters
         ----------
-        btn: discord.ui.Button
-            Button which interacts with the User
         interaction: discord.Interaction
             Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_last(interaction, btn)
-        if not resp.is_done():
-            return await self.edit(
-                interaction=interaction,
-                page=len(self.values[:: self._entries_per_page]) - 1,
-            )
-
-    async def custom_previous(
-        self,
-        interaction: Interaction,
-        btn: Button,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_first(
-        self,
-        interaction: Interaction,
-        btn: Button,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_finish(
-        self,
-        interaction: Interaction,
-        btn: Button,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_next(
-        self,
-        interaction: Interaction,
-        btn: Button,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_last(
-        self,
-        interaction: Interaction,
-        btn: Button,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
+        return await self.edit(
+            interaction=interaction,
+            page=len(self.values[:: self._entries_per_page]) - 1,
+        )
