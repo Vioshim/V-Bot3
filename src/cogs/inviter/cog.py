@@ -26,6 +26,7 @@ from discord import (
     Object,
     RawMessageDeleteEvent,
     Thread,
+    Webhook,
 )
 from discord.ext import commands
 from discord.ext.commands.converter import InviteConverter
@@ -43,7 +44,6 @@ __all__ = ("Inviter", "setup")
 class InviteView(View):
     def __init__(
         self,
-        bot: CustomBot,
         invite: Invite,
         embed: Embed,
         author: Member,
@@ -51,7 +51,6 @@ class InviteView(View):
         **kwargs,
     ):
         super().__init__(timeout=None)
-        self.bot = bot
         self.invite = invite
         self.embed = embed
         self.author = author
@@ -88,7 +87,9 @@ class InviteView(View):
     async def process(self, inter: Interaction, sct: Select):
         member: Member = inter.user
         resp: InteractionResponse = inter.response
-        w = await self.bot.webhook(957602085753458708, reason="Partnership")
+        w: Webhook = await inter.client.webhook(
+            957602085753458708, reason="Partnership"
+        )
         self.embed.set_footer(text=sct.values[0])
         message = await w.send(
             content=self.invite.url,
@@ -143,7 +144,7 @@ class Inviter(commands.Cog):
     async def on_ready(self):
         self.thread: Thread = await self.bot.fetch_channel(957604961330561065)
         messages = [m async for m in self.thread.history(limit=None)]
-        self.view = InviterView(self.bot, messages)
+        self.view = InviterView(messages)
         self.bot.add_view(view=self.view, message_id=957604961330561065)
 
     @commands.Cog.listener()
@@ -270,7 +271,6 @@ class Inviter(commands.Cog):
 
         files_embed, embed = await self.bot.embed_raw(embed=embed)
         view = InviteView(
-            self.bot,
             invite,
             generator,
             ctx.author,

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import asynccontextmanager
+from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
 from discord import (
@@ -28,8 +29,12 @@ from discord.abc import Messageable
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
+from src.structures.logger import ColoredLogger
 from src.utils.functions import embed_modifier
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = ("BooleanView",)
 
@@ -40,14 +45,12 @@ class BooleanView(Basic):
     def __init__(
         self,
         *,
-        bot: CustomBot,
         member: Union[Member, User],
         target: _M = None,
         timeout: Optional[float] = None,
         embed: Embed = None,
     ):
         super(BooleanView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             timeout=timeout,
@@ -58,7 +61,6 @@ class BooleanView(Basic):
     @asynccontextmanager
     async def handle(self, **kwargs):
         data = dict(
-            bot=self.bot,
             member=kwargs.get("member", self.member),
             target=kwargs.get("target", self.target),
             embed=kwargs.get("embed", self.embed),
@@ -86,7 +88,7 @@ class BooleanView(Basic):
                 await aux.wait()
             yield aux.value
         except Exception as e:
-            self.bot.logger.exception(
+            logger.exception(
                 "Exception occurred, target: %s, user: %s",
                 str(self.target),
                 str(self.member),

@@ -204,7 +204,6 @@ class Pokedex(commands.Cog):
                 )
         else:
             view = MovepoolViewSelector(
-                bot=self.bot,
                 movepool=movepool,
                 member=ctx.user,
                 target=ctx,
@@ -477,7 +476,6 @@ class Pokedex(commands.Cog):
             ]
 
         view = CharactersView(
-            bot=self.bot,
             member=ctx.user,
             ocs=ocs,
             target=ctx,

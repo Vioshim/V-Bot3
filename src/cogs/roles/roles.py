@@ -543,7 +543,6 @@ class RPThreadManage(View):
         if not (ocs := self.ocs):
             ocs = cog.rpers.get(self.member.id, {}).values()
         view = CharactersView(
-            bot=ctx.client,
             member=ctx.user,
             target=ctx,
             ocs=ocs,
