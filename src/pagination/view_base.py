@@ -206,7 +206,7 @@ class Basic(Generic[_M], View):
         )
 
         if not embeds and not embed:
-            data["embed"] = self._embed
+            data["embed"] = self.embed
 
         data = {k: v for k, v in data.items() if v}
 
