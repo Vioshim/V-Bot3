@@ -66,7 +66,8 @@ class AreaSelection(View):
         self.total = sum(len(item) for item in self.entries.values())
 
         def handle(item: TextChannel) -> str:
-            text = f"{len(self.entries.get(str(item.id), [])):02d}"
+            cat = item.category
+            text = f"{len(self.entries.get(str(cat.id), [])):02d}"
             text += item.name[1:]
             return text.replace("-", " ").title()
 
