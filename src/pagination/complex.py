@@ -448,13 +448,11 @@ class Complex(Simple):
 
                 await interaction.followup.send(content=content, ephemeral=True)
 
-        self.choices |= self.current_choices
-
         if not self.keep_working:
+            self._choices |= self.current_choices
             self.values = set(self.values) - self.choices
-
-        if len(sct.values) == self.entries_per_page:
-            self._pos = max(self._pos - 1, 0)
+            if len(sct.values) == self.entries_per_page:
+                self._pos = max(self._pos - 1, 0)
 
         await self.edit(interaction=interaction, page=self._pos)
 
