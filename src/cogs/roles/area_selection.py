@@ -60,7 +60,7 @@ class AreaSelection(View):
         def foo(oc: Character):
             ch = guild.get_channel_or_thread(oc.location)
             if ch and cat == ch.category:
-                return cat
+                return True
 
         def foo2(oc: Character):
             ch = guild.get_channel_or_thread(oc.location)
@@ -68,14 +68,12 @@ class AreaSelection(View):
                 ch = ch.parent
             return ch
 
-        entries = groupby(cog.ocs.values(), key=foo)
-        entries2 = groupby(cog.ocs.values(), key=foo2)
+        entries = groupby(filter(foo, cog.ocs.values()), key=foo2)
         self.entries = {str(k.id): set(v) for k, v in entries if k}
-        self.entries2 = {str(k.id): set(v) for k, v in entries2 if k}
         self.total = sum(len(item) for item in self.entries.values())
 
         def handle(item: TextChannel) -> str:
-            text = f"{len(self.entries2.get(str(item.id), [])):02d}"
+            text = f"{len(self.entries.get(str(item.id), [])):02d}"
             text += item.name[1:]
             return text.replace("-", " ").title()
 
@@ -100,7 +98,7 @@ class AreaSelection(View):
             channel.name,
         )
 
-        ocs = self.entries2.get(sct.values[0], set())
+        ocs = self.entries.get(sct.values[0], set())
         view = CharactersView(
             target=ctx,
             member=ctx.user,
