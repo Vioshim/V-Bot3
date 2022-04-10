@@ -341,7 +341,6 @@ class CustomBot(Bot):
         finally:
             await self.pool.release(connection)
 
-    # noinspection PyTypeChecker
     async def webhook(
         self,
         channel: Union[Messageable, int],
@@ -364,7 +363,7 @@ class CustomBot(Bot):
             Webhook if channel is valid.
         """
         if isinstance(channel, Thread):
-            channel = channel.guild.get_channel(channel.parent_id)
+            channel = channel.parent
 
         channel_id: int = getattr(channel, "id", channel)
 
@@ -374,7 +373,7 @@ class CustomBot(Bot):
         if isinstance(channel, int):
             channel: TextChannel = self.get_channel(channel)
             if isinstance(channel, Thread):
-                channel = channel.guild.get_channel(channel.parent_id)
+                channel = channel.parent
 
         for item in await channel.webhooks():
             if item.user == self.user:
