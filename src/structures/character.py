@@ -50,7 +50,12 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1682,7 +1687,9 @@ def oc_process(**kwargs) -> Type[Character]:
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
+        if movepool := data.pop(
+            "movepool", dict(event=data.get("moveset", set()))
+        ):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1733,7 +1740,10 @@ def doc_convert(doc: Document) -> dict[str, Any]:
     """
 
     content_values: list[str] = [
-        cell.text for table in doc.tables for row in table.rows for cell in row.cells
+        cell.text
+        for table in doc.tables
+        for row in table.rows
+        for cell in row.cells
     ]
 
     text = [
@@ -1830,12 +1840,14 @@ class CharacterTransform(Transformer):
         ocs = cog.rpers.get(member_id, {}).values()
         items = {oc.name: str(oc.id) for oc in ocs}
         values = [
-            Choice(item, items[item])
+            Choice(name=item, value=items[item])
             for item in get_close_matches(word=text, possibilities=items, n=25)
         ]
         if not values:
             values = [
-                Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)
+                Choice(name=k, value=v)
+                for k, v in items.items()
+                if k.startswith(text)
             ]
         values.sort(key=lambda x: x.name)
         return values[:25]
