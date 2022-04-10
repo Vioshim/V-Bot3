@@ -14,13 +14,7 @@
 
 from datetime import datetime, timedelta
 
-from discord import (
-    Interaction,
-    InteractionResponse,
-    Member,
-    TextChannel,
-    Thread,
-)
+from discord import Interaction, InteractionResponse, Member, TextChannel, Thread
 from discord.ui import Button, View, button
 from discord.utils import format_dt, utcnow
 
@@ -170,14 +164,12 @@ class MissionView(View):
             async with interaction.client.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
-                thread: Thread = await interaction.client.fetch_channel(
-                    self.mission.msg_id
-                )
-                await thread.edit(
-                    archived=False,
-                    locked=True,
-                    reason=f"{member} concluded the mission.",
-                )
+                if not (thread := member.guild.get_thread(self.mission.msg_id)):
+                    thread: Thread = await interaction.client.fetch_channel(
+                        self.mission.msg_id
+                    )
+                await thread.edit(archived=False, locked=True)
+                # reason=f"{member} concluded the mission.",
                 await thread.send(embed=self.mission.embed)
             await interaction.followup.send(
                 "Mission has been concluded.",
