@@ -56,6 +56,18 @@ def image_formatter(text: str) -> str:
     return text
 
 
+def item_parse(key: str, item: int | str | Enum):
+    if isinstance(item, Focus):
+        name = item.name.replace("_", "")
+    elif isinstance(item, DefaultFonts):
+        name = item.name.replace("_", "%20")
+    elif isinstance(item, Enum):
+        name = item.name if isinstance(item.value, int) else item.value
+    else:
+        name = item
+    return f"{key}-{name}"
+
+
 class ImageKitTransformation(ABC):
     @abstractproperty
     def tokenize(self) -> str:
@@ -69,20 +81,10 @@ class ImageKitTransformation(ABC):
 
     def token_parse(self, elements: dict[str, Any]):
         return ",".join(
-            f"{k}-{v}" for k, v in elements.items() if isinstance(v, (int, str))
+            item_parse(k, v)
+            for k, v in elements.items()
+            if isinstance(v, (int, str))
         )
-
-
-def item_parse(key: str, item: int | str | Enum):
-    if isinstance(item, Focus):
-        name = item.name.replace("_", "")
-    elif isinstance(item, DefaultFonts):
-        name = item.name.replace("_", "%20")
-    elif isinstance(item, Enum):
-        name = item.name if isinstance(item.value, int) else item.value
-    else:
-        name = item
-    return f"{key}-{name}"
 
 
 class ImageMethod(ABC):
