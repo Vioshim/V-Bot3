@@ -151,7 +151,7 @@ class RoleSelect(View, metaclass=ABCMeta):
 
 class PronounRoles(RoleSelect):
     @select(
-        placeholder="Select Pronoun/s",
+        placeholder="Select Pronoun Roles",
         custom_id="pronouns",
         min_values=0,
         max_values=3,
@@ -179,7 +179,7 @@ class PronounRoles(RoleSelect):
 
 class ColorRoles(RoleSelect):
     @select(
-        placeholder="",
+        placeholder="Select Color Roles",
         custom_id="colors",
         options=[
             SelectOption(
@@ -319,9 +319,9 @@ class RPSearchRoles(RoleSelect):
 
     @select(
         placeholder="Select RP Search Roles",
+        custom_id="rp-search",
         min_values=0,
         max_values=len(RP_SEARCH_ROLES),
-        custom_id="rp-search",
         options=[
             SelectOption(
                 label=f"{key} RP Search",
