@@ -11,16 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from difflib import get_close_matches
 from logging import getLogger, setLoggerClass
 from time import mktime
-from typing import Optional
+from typing import Iterable
 
 from discord import (
     AllowedMentions,
-    ButtonStyle,
     CategoryChannel,
+    Color,
     Embed,
     Guild,
     Interaction,
@@ -34,7 +35,7 @@ from discord import (
     WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import utcnow
+from discord.utils import get, utcnow
 
 from src.cogs.roles.area_selection import AreaSelection
 from src.structures.character import Character
@@ -46,11 +47,14 @@ setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 
+
 __all__ = (
     "PronounRoles",
     "BasicRoles",
     "ColorRoles",
-    "RPThreadView",
+    "RPSearchRoles",
+    "RPSearchManage",
+    "RPRolesView",
 )
 
 
@@ -88,38 +92,64 @@ def seconds(test: datetime) -> int:
     return int((utcnow() - test).total_seconds())
 
 
-PRONOUN_ROLES = dict(
-    He=738230651840626708,
-    She=738230653916807199,
-    Them=874721683381030973,
-)
-
-BASIC_ROLES = {
-    "Radio": 805878418225889280,
-    "Announcements": 908809235012419595,
-}
-
-COLOR_ROLES = dict(
-    red=794274172813312000,
-    crimson=794274956296847370,
-    orange=794275894209282109,
-    golden=794275428696064061,
-    yellow=794274424777080884,
-    green=794274561570504765,
-    lime=794276035326902342,
-    cyan=794276172762185799,
-    light_blue=794274301707812885,
-    deep_blue=794275553477394475,
-    violet=794275765533278208,
-    pink=794274741061025842,
-    light_brown=794275107958292500,
-    dark_brown=794275288271028275,
-    silver=850018780762472468,
-    gray=794273806176223303,
+RP_SEARCH_ROLES = dict(
+    Any=962719564167254077,
+    Plot=962719564863508510,
+    Action=962719565182271590,
+    Narrated=962719566402813992,
+    Romance=962719567149408256,
+    Drama=962719567694659604,
+    Literate=962719568172814368,
+    Horror=962719570148331560,
 )
 
 
-class PronounRoles(View):
+class RoleSelect(View, metaclass=ABCMeta):
+    @abstractmethod
+    async def choice(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
+        guild = ctx.guild
+
+        def get_role(items: Iterable):
+            for x in items:
+                if isinstance(x, SelectOption):
+                    x = x.value
+                if role := guild.get_role(int(x)):
+                    yield role
+
+        roles = set(get_role(sct.values))
+        total = set(get_role(sct.options))
+
+        await resp.defer(ephemeral=True)
+
+        embed = Embed(
+            title=sct.placeholder.removeprefix("Select "),
+            color=Color.blurple(),
+            timestamp=utcnow(),
+        )
+        embed.set_image(url=WHITE_BAR)
+        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+
+        if add := set(roles) - set(member.roles):
+            embed.add_field(
+                name="**__Roles Added__**",
+                value="\n".join(f"> • {role.mention}" for role in add),
+                inline=False,
+            )
+            await member.add_roles(*add)
+        if remove := (total - roles) & set(member.roles):
+            embed.add_field(
+                name="**__Roles Removed__**",
+                value="\n".join(f"> • {role.mention}" for role in remove),
+                inline=False,
+            )
+            await member.remove_roles(*remove)
+
+        await ctx.followup.send(embed=embed, ephemeral=True)
+
+
+class PronounRoles(RoleSelect):
     @select(
         placeholder="Select Pronoun/s",
         custom_id="pronouns",
@@ -143,170 +173,106 @@ class PronounRoles(View):
             ),
         ],
     )
-    async def pronoun(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
-        guild: Guild = ctx.guild
-        roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
-        if add := roles - set(member.roles):
-            await member.add_roles(*add)
-        if remove := (total - roles) & set(member.roles):
-            await member.remove_roles(*remove)
-        text: str = ", ".join(role.mention for role in roles)
-        await resp.send_message(f"Roles [{text}] has been set!", ephemeral=True)
+    async def choice(self, ctx: Interaction, sct: Select):
+        await super(PronounRoles, self).choice(ctx, sct)
 
 
-class Confirmation(View):
-    def __init__(self, role: Role):
-        super().__init__()
-        self.role = role
-
-    @button(
-        label="Keep role",
-        emoji=":small_check_mark:811367963235713124",
+class ColorRoles(RoleSelect):
+    @select(
+        placeholder="",
+        options=[
+            SelectOption(
+                label="Red",
+                value="794274172813312000",
+                emoji=":red:952523311395528728",
+            ),
+            SelectOption(
+                label="Crimson",
+                value="794274956296847370",
+                emoji=":crimson:952523311680745492",
+            ),
+            SelectOption(
+                label="Orange",
+                value="794275894209282109",
+                emoji=":orange:952523311756218428",
+            ),
+            SelectOption(
+                label="Golden",
+                emoji=":golden:952523311429074966",
+                value="794275428696064061",
+            ),
+            SelectOption(
+                label="Yellow",
+                emoji=":yellow:952523311697494086",
+                value="794274424777080884",
+            ),
+            SelectOption(
+                label="Green",
+                emoji=":green:952523311890452520",
+                value="794274561570504765",
+            ),
+            SelectOption(
+                label="Lime",
+                emoji=":lime:952523311865270302",
+                value="794276035326902342",
+            ),
+            SelectOption(
+                label="Cyan",
+                emoji=":cyan:952523311735255100",
+                value="794276172762185799",
+            ),
+            SelectOption(
+                label="Light Blue",
+                emoji=":light_blue:952523313794670622",
+                value="794274301707812885",
+            ),
+            SelectOption(
+                label="Deep Blue",
+                emoji=":deep_blue:952523311680725013",
+                value="794275553477394475",
+            ),
+            SelectOption(
+                label="Violet",
+                emoji=":violet:952523311743660052",
+                value="794275765533278208",
+            ),
+            SelectOption(
+                label="Pink",
+                emoji=":pink:952523311743635486",
+                value="794274741061025842",
+            ),
+            SelectOption(
+                label="Light Brown",
+                emoji=":light_brown:952523311764627536",
+                value="794275107958292500",
+            ),
+            SelectOption(
+                label="Dark Brown",
+                emoji=":dark_brown:952523311642972200",
+                value="794275288271028275",
+            ),
+            SelectOption(
+                label="Silver",
+                emoji=":silver:952523311680745532",
+                value="850018780762472468",
+            ),
+            SelectOption(
+                label="Gray",
+                emoji=":gray:952523311714295898",
+                value="794273806176223303",
+            ),
+        ],
+        min_values=0,
     )
-    async def keep(self, inter: Interaction, _: Button):
-        await inter.response.send_message(
-            f"Role {self.role.mention} was not removed.",
-            ephemeral=True,
-        )
-        self.stop()
-
-    @button(
-        label="Remove Role",
-        emoji=":small_x_mark:811367596866797658",
-    )
-    async def remove(self, inter: Interaction, _: Button):
-        await inter.user.remove_roles(self.role)
-        await inter.response.send_message(
-            f"Role {self.role.mention} was removed.",
-            ephemeral=True,
-        )
-        self.stop()
+    async def choice(self, ctx: Interaction, sct: Select):
+        await super(ColorRoles, self).choice(ctx, sct)
 
 
-class ColorButton(Button):
-    async def callback(self, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        guild = ctx.guild
-        role = guild.get_role(int(self.custom_id))
-        total = set(map(guild.get_role, COLOR_ROLES.values()))
-        total.remove(role)
-        if role in ctx.user.roles:
-            view = Confirmation(role)
-            await resp.send_message(
-                f"You have the role {role.mention} already",
-                ephemeral=True,
-                view=view,
-            )
-        elif role:
-            await resp.send_message(
-                f"Role {role.mention} is being added to your account.",
-                ephemeral=True,
-            )
-            await ctx.user.add_roles(role)
-        if data := set(ctx.user.roles).intersection(total):
-            await ctx.user.remove_roles(*data)
-
-
-COLORS = [
-    ColorButton(
-        emoji=":red:952523311395528728",
-        custom_id="794274172813312000",
-        row=0,
-    ),
-    ColorButton(
-        emoji=":crimson:952523311680745492",
-        custom_id="794274956296847370",
-        row=0,
-    ),
-    ColorButton(
-        emoji=":orange:952523311756218428",
-        custom_id="794275894209282109",
-        row=0,
-    ),
-    ColorButton(
-        emoji=":golden:952523311429074966",
-        custom_id="794275428696064061",
-        row=0,
-    ),
-    ColorButton(
-        emoji=":yellow:952523311697494086",
-        custom_id="794274424777080884",
-        row=1,
-    ),
-    ColorButton(
-        emoji=":green:952523311890452520",
-        custom_id="794274561570504765",
-        row=1,
-    ),
-    ColorButton(
-        emoji=":lime:952523311865270302",
-        custom_id="794276035326902342",
-        row=1,
-    ),
-    ColorButton(
-        emoji=":cyan:952523311735255100",
-        custom_id="794276172762185799",
-        row=1,
-    ),
-    ColorButton(
-        emoji=":light_blue:952523313794670622",
-        custom_id="794274301707812885",
-        row=2,
-    ),
-    ColorButton(
-        emoji=":deep_blue:952523311680725013",
-        custom_id="794275553477394475",
-        row=2,
-    ),
-    ColorButton(
-        emoji=":violet:952523311743660052",
-        custom_id="794275765533278208",
-        row=2,
-    ),
-    ColorButton(
-        emoji=":pink:952523311743635486",
-        custom_id="794274741061025842",
-        row=2,
-    ),
-    ColorButton(
-        emoji=":light_brown:952523311764627536",
-        custom_id="794275107958292500",
-        row=3,
-    ),
-    ColorButton(
-        emoji=":dark_brown:952523311642972200",
-        custom_id="794275288271028275",
-        row=3,
-    ),
-    ColorButton(
-        emoji=":silver:952523311680745532",
-        custom_id="850018780762472468",
-        row=3,
-    ),
-    ColorButton(
-        emoji=":gray:952523311714295898",
-        custom_id="794273806176223303",
-        row=3,
-    ),
-]
-
-
-class ColorRoles(View):
-    def __init__(self, timeout: Optional[float] = None):
-        super().__init__(timeout=timeout)
-        for item in COLORS:
-            self.add_item(item)
-
-
-class BasicRoles(View):
+class BasicRoles(RoleSelect):
     @select(
         placeholder="Select Basic Roles",
         min_values=0,
         max_values=2,
-        custom_id="62a0a35098d0666728712d4f05a140d1",
         options=[
             SelectOption(
                 label="Radio",
@@ -322,26 +288,49 @@ class BasicRoles(View):
             ),
         ],
     )
-    async def basic(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
-        guild: Guild = ctx.guild
-        roles = {item for x in sct.values if (item := guild.get_role(int(x)))}
-        total = {item for x in sct.options if (item := guild.get_role(int(x.value)))}
-        if add := roles - set(member.roles):
-            await member.add_roles(*add)
-        if remove := (total - roles) & set(member.roles):
-            await member.remove_roles(*remove)
-        if text := ", ".join(role.mention for role in roles):
+    async def choice(self, ctx: Interaction, sct: Select):
+        await super(BasicRoles, self).choice(ctx, sct)
+
+
+class RPSearchRoles(RoleSelect):
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        resp: InteractionResponse = interaction.response
+        member: Member = interaction.user
+        role = get(interaction.guild.roles, name="Registered")
+        if role and role not in member.roles:
+            view = View()
+            view.add_item(
+                Button(
+                    label="OC Submissions",
+                    url="https://discord.com/channels/719343092963999804/852180971985043466/961345742222536744",
+                    emoji="\N{OPEN BOOK}",
+                )
+            )
+
             await resp.send_message(
-                f"Roles [{text}] has been set!",
+                "In order to use this function, you have to make a character.",
+                view=view,
                 ephemeral=True,
             )
-        else:
-            await resp.send_message(
-                "Roles unset!",
-                ephemeral=True,
+            return False
+        return True
+
+    @select(
+        placeholder="Select RP Search Roles",
+        min_values=0,
+        max_values=len(RP_SEARCH_ROLES),
+        options=[
+            SelectOption(
+                label=f"{key} RP Search",
+                emoji="💠",
+                value=str(item),
+                description=f"Enables {key} RP search ping notifications.",
             )
+            for key, item in RP_SEARCH_ROLES.items()
+        ],
+    )
+    async def choice(self, ctx: Interaction, sct: Select):
+        await super(RPSearchRoles, self).choice(ctx, sct)
 
 
 class RegionView(View):
@@ -416,12 +405,11 @@ class RegionView(View):
         )
 
 
-class RegionRoles(View):
+class RegionRoles(RoleSelect):
     @select(
         placeholder="Select Map Roles",
         custom_id="region",
         row=0,
-        min_values=0,
         max_values=len(MAP_ELEMENTS),
         options=[
             SelectOption(
@@ -433,10 +421,12 @@ class RegionRoles(View):
             for item in MAP_ELEMENTS
         ],
     )
-    async def region(self, ctx: Interaction, sct: Select):
+    async def choice(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        all_roles = {role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))}
+        all_roles = {
+            role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))
+        }
         spectator: Role = ctx.guild.get_role(957069729741287434)
         if len(sct.values) == 1:
             info = MAP_ELEMENTS2[int(sct.values[0])]
@@ -478,10 +468,11 @@ class RegionRoles(View):
                 await ctx.user.remove_roles(*all_roles)
                 if spectator not in ctx.user.roles:
                     await ctx.user.add_roles(spectator)
-            await ctx.followup.send("Roles have been set", ephemeral=True)
         else:
             all_roles.add(spectator)
             await ctx.user.remove_roles(*all_roles)
+
+        if not resp.is_done():
             await ctx.followup.send("Roles have been set", ephemeral=True)
 
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
@@ -519,15 +510,13 @@ class RegionRoles(View):
         await ctx.followup.send("Roles removed.", ephemeral=True)
 
 
-class RPThreadManage(View):
+class RPSearchManage(View):
     def __init__(
         self,
-        thread: Thread,
         member: Member,
         ocs: set[Character] = None,
     ):
-        super(RPThreadManage, self).__init__(timeout=None)
-        self.thread = thread
+        super(RPSearchManage, self).__init__(timeout=None)
         self.member = member
         self.ocs = ocs
 
@@ -567,11 +556,13 @@ class RPThreadManage(View):
 class RPModal(Modal):
     def __init__(
         self,
-        thread: Thread,
+        user: Member,
+        role: Role,
         ocs: set[Character],
     ) -> None:
-        super().__init__(title=f"Pinging {thread.name}")
-        self.thread = thread
+        super().__init__(title=f"Pinging {role.name}")
+        self.user = user
+        self.role = role
         self.ocs = ocs
         text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
         if len(text) > 4000:
@@ -586,7 +577,8 @@ class RPModal(Modal):
         self.message = TextInput(
             style=TextStyle.paragraph,
             label="Message",
-            placeholder=f"Describe what you're looking for in this {thread.name} (Optional)",
+            placeholder=f"Describe what you're looking for in this {self.role.name} (Optional)",
+            default=f"{user.display_name} is looking to RP with their registered characters.",
             required=False,
         )
         self.add_item(self.names)
@@ -602,11 +594,11 @@ class RPModal(Modal):
             if oc := info.get(item):
                 items.append(oc)
             elif elements := get_close_matches(item, info, n=1):
-                items.append(elements[0])
+                items.append(info[elements[0]])
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         embed = Embed(
-            title=self.thread.name,
+            title=self.role.name,
             color=member.color,
             description=self.message.value,
         )
@@ -614,29 +606,45 @@ class RPModal(Modal):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         webhook: Webhook = await interaction.client.webhook(
-            910914713234325504, reason="RP Search"
+            958122815171756042, reason="RP Search"
         )
-        msg: WebhookMessage = await webhook.send(
-            content="@here",
-            allowed_mentions=AllowedMentions(everyone=True),
+        if self.role not in self.user.roles:
+            await self.user.add_roles(self.role)
+        msg1: WebhookMessage = await webhook.send(
+            content=self.role.mention,
+            allowed_mentions=AllowedMentions(roles=True),
             embed=embed,
-            view=RPThreadManage(self.thread, member, items),
+            view=RPSearchManage(member, items),
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             wait=True,
-            thread=self.thread,
         )
+
+        thread = await msg1.create_thread(
+            name=f"{self.role.name} - {self.user.display_name}"
+        )
+        msg2: WebhookMessage = await webhook.send(
+            allowed_mentions=AllowedMentions(roles=True),
+            embed=embed,
+            view=RPSearchManage(member, items),
+            username=member.display_name,
+            avatar_url=member.display_avatar.url,
+            thread=thread,
+            wait=True,
+        )
+        await thread.add_user(self.user)
         cog = interaction.client.get_cog("Roles")
         cog.cool_down[member.id] = utcnow()
-        cog.role_cool_down[self.thread.id] = utcnow()
-        cog.last_claimer[self.thread.id] = member.id
+        cog.role_cool_down[self.role.id] = utcnow()
+        cog.last_claimer[self.role.id] = member.id
         async with interaction.client.database() as db:
             await db.execute(
-                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER) VALUES ($1, $2, $3, $4)",
-                msg.id,
+                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE) VALUES ($1, $2, $3, $4, $5)",
+                msg1.id,
                 member.id,
-                self.thread.id,
+                self.role.id,
                 member.guild.id,
+                msg2.id,
             )
             await resp.send_message(
                 content="Ping has been done successfully.",
@@ -644,67 +652,53 @@ class RPModal(Modal):
             )
 
 
-class RPThreadView(View):
-    def __init__(self, thread: Thread):
-        super(RPThreadView, self).__init__(timeout=None)
-        self.thread = thread
-
-    @button(
-        label="Ping Role",
-        custom_id="ping-role",
-        emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
-        style=ButtonStyle.blurple,
-        row=0,
+class RPRolesView(View):
+    @select(
+        placeholder="Select a role to Ping",
+        max_values=len(RP_SEARCH_ROLES),
+        options=[
+            SelectOption(
+                label=f"{key} RP Search",
+                emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
+                value=str(item),
+                description=f"Pings {key} RP search.",
+            )
+            for key, item in RP_SEARCH_ROLES.items()
+        ],
     )
-    async def ping(self, interaction: Interaction, _: Button):
+    async def choice(self, interaction: Interaction, sct: Select):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         cog = interaction.client.get_cog("Roles")
-        if cog.last_claimer.get(self.thread.id) == member.id:
+        role: Role = interaction.guild.get_role(int(sct.values[0]))
+        if cog.last_claimer.get(role.id) == member.id:
             return await resp.send_message(
-                "You're the last user that pinged this thread, no need to keep pinging, just ask in the RP planning and discuss.",
+                "You're the last user that pinged this role, no need to keep pinging, just ask in the RP planning and discuss.",
                 ephemeral=True,
             )
         if hours((val := cog.cool_down.get(member.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                "You're in cool down, you pinged one of the threads recently.\n"
+                "You're in cool down, you pinged one of the roles recently.\n"
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        if hours((val := cog.role_cool_down.get(self.thread.id))) < 2:
+        if hours((val := cog.role_cool_down.get(role.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                f"Thread is in cool down, check the latest thread at <#{self.thread.id}>.\n"
+                f"Thread is in cool down, check the ping at {role.mention}.\n"
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        ocs = interaction.client.get_cog("Submission").rpers.get(member.id, {}).values()
+        ocs = (
+            interaction.client.get_cog("Submission")
+            .rpers.get(member.id, {})
+            .values()
+        )
         await resp.send_modal(
             RPModal(
-                thread=self.thread,
+                user=member,
+                role=role,
                 ocs=ocs,
             )
         )
-
-    @button(
-        label="Enable Pings",
-        custom_id="obtain-role",
-        style=ButtonStyle.blurple,
-        row=0,
-    )
-    async def get_role(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        await self.thread.add_user(interaction.user)
-        await resp.send_message("Access granted.", ephemeral=True)
-
-    @button(
-        label="Disable Pings",
-        custom_id="remove-role",
-        style=ButtonStyle.blurple,
-        row=0,
-    )
-    async def remove_role(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        await self.thread.remove_user(interaction.user)
-        await resp.send_message("Access removed.", ephemeral=True)
