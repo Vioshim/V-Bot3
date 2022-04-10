@@ -32,15 +32,6 @@ from src.structures.bot import CustomBot
 __all__ = ("Roles", "setup")
 
 
-ROLE_VIEWS = {
-    916482734933811232: PronounRoles(timeout=None),
-    916482736309534762: BasicRoles(timeout=None),
-    916482737811120128: ColorRoles(timeout=None),
-    956970863805231144: RegionRoles(timeout=None),
-    962732430832304178: RPSearchRoles(timeout=None),
-}
-
-
 class Roles(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -50,19 +41,26 @@ class Roles(Cog):
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
-        w = await self.bot.webhook(719709333369258015)
-        vio = w.guild.get_member(self.bot.owner_id)
-        for msg_id, view in ROLE_VIEWS.items():
-            # self.bot.add_view(view=view, message_id=msg_id)
-            m = await w.fetch_message(msg_id)
-            files, embed = await self.bot.embed_raw(m.embeds[0])
-            await w.send(
-                files=files,
-                embed=embed,
-                username=vio.display_name,
-                avatar_url=vio.display_avatar.url,
-                view=view,
-            )
+        self.bot.add_view(
+            view=PronounRoles(timeout=None),
+            message_id=962830900599603200,
+        )
+        self.bot.add_view(
+            view=BasicRoles(timeout=None),
+            message_id=962830903971827792,
+        )
+        self.bot.add_view(
+            view=ColorRoles(timeout=None),
+            message_id=962830941368246322,
+        )
+        self.bot.add_view(
+            view=RegionRoles(timeout=None),
+            message_id=962830944576864356,
+        )
+        self.bot.add_view(
+            view=RPSearchRoles(timeout=None),
+            message_id=962830949815554088,
+        )
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
@@ -105,9 +103,10 @@ class Roles(Cog):
                     message_id=aux,
                 )
 
-        view = RPRolesView(timeout=None)
-        w = await self.bot.webhook(910914713234325504, reason="RP Search")
-        await w.edit_message(962727445096714240, view=view)
+        self.bot.add_view(
+            view=RPRolesView(timeout=None),
+            message_id=962727445096714240,
+        )
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @Cog.listener()
