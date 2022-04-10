@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
 from datetime import datetime
 from typing import Optional
 
-from discord import DiscordException, Thread, Webhook
+from discord import Webhook
 from discord.ext.commands import Cog
 
 from src.cogs.roles.roles import (
@@ -24,8 +23,9 @@ from src.cogs.roles.roles import (
     ColorRoles,
     PronounRoles,
     RegionRoles,
-    RPThreadManage,
-    RPThreadView,
+    RPRolesView,
+    RPSearchManage,
+    RPSearchRoles,
 )
 from src.structures.bot import CustomBot
 
@@ -37,6 +37,7 @@ ROLE_VIEWS = {
     916482736309534762: BasicRoles(timeout=None),
     916482737811120128: ColorRoles(timeout=None),
     956970863805231144: RegionRoles(timeout=None),
+    962732430832304178: RPSearchRoles(timeout=None),
 }
 
 
@@ -46,30 +47,44 @@ class Roles(Cog):
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
         self.last_claimer: dict[int, int] = {}
-        self.webhook: Optional[Webhook] = None
+
+    async def load_self_roles(self):
+        self.bot.logger.info("Loading Self Roles")
+        w = await self.bot.webhook(719709333369258015)
+        vio = w.guild.get_member(self.bot.owner_id)
+        for msg_id, view in ROLE_VIEWS.items():
+            # self.bot.add_view(view=view, message_id=msg_id)
+            m = await w.fetch_message(msg_id)
+            files, embed = await self.bot.embed_raw(m.embeds[0])
+            await w.send(
+                files=files,
+                embed=embed,
+                username=vio.display_name,
+                avatar_url=vio.display_avatar.url,
+                view=view,
+            )
+        self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
         self.bot.logger.info("Loading existing RP Searches")
         async with self.bot.database() as db:
             async for item in db.cursor("SELECT * FROM RP_SEARCH;"):
-                msg_id, member_id, role_id, server_id, created_at = (
+                msg_id, member_id, role_id, server_id, created_at, aux = (
                     item["id"],
                     item["member"],
                     item["role"],
                     item["server"],
                     item["created_at"],
+                    item["message"],
                 )
 
                 if not (guild := self.bot.get_guild(server_id)):
                     continue
 
                 member = guild.get_member(member_id)
+                role = guild.get_role(role_id)
 
-                if not (thread := guild.get_thread(role_id)):
-                    with suppress(DiscordException):
-                        thread = await guild.fetch_channel(role_id)
-
-                if not (member and thread):
+                if not (member and role):
                     continue
 
                 self.role_cool_down.setdefault(role_id, created_at)
@@ -82,35 +97,23 @@ class Roles(Cog):
                     self.cool_down[member_id] = created_at
 
                 self.bot.add_view(
-                    view=RPThreadManage(
-                        thread=thread,
-                        member=member,
-                    ),
+                    view=RPSearchManage(member=member),
                     message_id=msg_id,
                 )
+                self.bot.add_view(
+                    view=RPSearchManage(member=member),
+                    message_id=aux,
+                )
+
+        view = RPRolesView(timeout=None)
+        w = await self.bot.webhook(910914713234325504, reason="RP Search")
+        await w.edit_message(962727445096714240, view=view)
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @Cog.listener()
     async def on_ready(self):
         """Loads the views"""
-        self.webhook = await self.bot.webhook(
-            910914713234325504,
-            reason="RP Pinging",
-        )
-        for msg_id, view in ROLE_VIEWS.items():
-            self.bot.add_view(view=view, message_id=msg_id)
-
-        async for m in self.webhook.channel.history(limit=None):
-            if m.webhook_id != self.webhook.id:
-                continue
-
-            if not (thread := self.webhook.channel.get_thread(m.id)):
-                thread: Thread = await self.webhook.guild.fetch_channel(m.id)
-            if thread.archived:
-                await thread.edit(archived=False)
-
-            await self.webhook.edit_message(m.id, view=RPThreadView(thread=thread))
-
+        await self.load_self_roles()
         await self.load_rp_searches()
 
 
