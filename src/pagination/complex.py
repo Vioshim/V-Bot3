@@ -55,7 +55,9 @@ __all__ = ("Complex",)
 
 
 class DefaultModal(Modal):
-    def __init__(self, view: Complex, title: str = "Fill the information") -> None:
+    def __init__(
+        self, view: Complex, title: str = "Fill the information"
+    ) -> None:
         super().__init__(title=title)
         self.text: Optional[str] = None
         self.view = view
@@ -188,9 +190,7 @@ class Complex(Simple):
         foo: Select = self.select_choice
         pages: Select = self.navigate
         choices = self._choices
-        foo.placeholder = (
-            f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
-        )
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
         foo.options.clear()
         pages.options.clear()
         # Then gets defined the amount of entries an user can pick
@@ -236,7 +236,9 @@ class Complex(Simple):
                 # The amount of digits required get determined for formatting purpose
 
                 digits = max(len(str(index + 1)), len(str(total_pages)))
-                page_text = f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                page_text = (
+                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
+                )
                 if len(page_text) > 100:
                     page_text = f"Page {index + 1:0{digits}d}"
                 pages.add_option(
@@ -496,6 +498,5 @@ class Complex(Simple):
         component = self.text_component
         if isinstance(component, TextInput):
             component = DefaultModal(view=self)
-        if isinstance(component, Modal):
-            await response.send_modal(component)
-            await component.wait()
+        await response.send_modal(component)
+        await component.wait()

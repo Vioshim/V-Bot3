@@ -252,7 +252,7 @@ class TextTransformation(ImageKitTransformation):
 
     @property
     def tokenize(self) -> str:
-        encoded = b64encode(self.text.encode("utf-8"))
+        encoded = b64encode(str(self.text).encode("utf-8"))
         decoded = encoded.decode("utf-8")
         elements = {
             "otf": self.font,
