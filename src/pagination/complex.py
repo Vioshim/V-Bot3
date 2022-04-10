@@ -121,6 +121,8 @@ class Complex(Simple):
             sort_key=sort_key,
             modifying_embed=False,
         )
+        if not text_component:
+            self.remove_item(self.message_handler)
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
