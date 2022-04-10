@@ -180,6 +180,7 @@ class PronounRoles(RoleSelect):
 class ColorRoles(RoleSelect):
     @select(
         placeholder="",
+        custom_id="colors",
         options=[
             SelectOption(
                 label="Red",
@@ -271,6 +272,7 @@ class ColorRoles(RoleSelect):
 class BasicRoles(RoleSelect):
     @select(
         placeholder="Select Basic Roles",
+        custom_id="basic",
         min_values=0,
         max_values=2,
         options=[
@@ -319,6 +321,7 @@ class RPSearchRoles(RoleSelect):
         placeholder="Select RP Search Roles",
         min_values=0,
         max_values=len(RP_SEARCH_ROLES),
+        custom_id="rp-search",
         options=[
             SelectOption(
                 label=f"{key} RP Search",
