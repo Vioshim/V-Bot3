@@ -658,6 +658,7 @@ class RPModal(Modal):
 class RPRolesView(View):
     @select(
         placeholder="Select a role to Ping",
+        custom_id="rp-view",
         options=[
             SelectOption(
                 label=f"{key} RP Search",
