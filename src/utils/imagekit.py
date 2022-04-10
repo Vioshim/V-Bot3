@@ -240,7 +240,7 @@ class TextTransformation(ImageKitTransformation):
     color: Optional[int] = None
     transparency: Optional[int] = None
     radius: Optional[int] = None
-    padding: Iterable[int] = field(default_factory=frozenset)
+    padding: Optional[int | str] = None
     alignment: Optional[str] = None
     background: Optional[int] = None
     background_transparency: Optional[int] = None
@@ -263,6 +263,7 @@ class TextTransformation(ImageKitTransformation):
             "oa": self.transparency,
             "otia": self.alignment,
             "ott": self.typography,
+            "otp": self.padding,
         }
         if isinstance(self.color, int):
             elements["otc"] = hex(self.color)[2:].upper()
@@ -280,8 +281,6 @@ class TextTransformation(ImageKitTransformation):
             if isinstance(self.overlay_transparency, int):
                 overlay += f"{self.overlay_transparency:02d}"
             elements["otc"] = overlay
-        if padding_info := "_".join(map(str, self.padding)):
-            elements["otp"] = padding_info
 
         return self.token_parse(elements)
 
