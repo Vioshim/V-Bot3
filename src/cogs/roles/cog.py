@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from datetime import datetime
-from typing import Optional
 
-from discord import Webhook
 from discord.ext.commands import Cog
 
 from src.cogs.roles.roles import (
