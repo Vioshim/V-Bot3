@@ -81,7 +81,7 @@ class ImageKitTransformation(ABC):
         return ",".join(
             item_parse(k, v)
             for k, v in elements.items()
-            if isinstance(v, (int, str))
+            if isinstance(v, (int, str, Enum))
         )
 
 
@@ -235,7 +235,7 @@ class ImageTransformation(ImageKitTransformation):
 class TextTransformation(ImageKitTransformation):
     text: str
     width: Optional[int] = None
-    font: Optional[DefaultFonts | str] = None
+    font: Optional[DefaultFonts | Fonts | str] = None
     font_size: Optional[int] = None
     color: Optional[int] = None
     transparency: Optional[int] = None
