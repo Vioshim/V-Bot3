@@ -45,16 +45,6 @@ class CustomHelp(HelpCommand):
 
         target = self.get_destination()
 
-        view = Simple(
-            timeout=None,
-            member=self.context.author,
-            target=target,
-            values=mapping.items(),
-            entries_per_page=10,
-        )
-        view.embed.title = "Help Command - Bot Options"
-
-        @view.set_parser
         def mapping_parser(item: tuple[Cog, list[Command]]) -> tuple[str, str]:
             """Parsing Method
 
@@ -74,6 +64,16 @@ class CustomHelp(HelpCommand):
             commands = map(self.get_command_signature, commands)
             text_signatures = "\n".join(commands) or "No Commands"
             return cog_name, text_signatures
+
+        view = Simple(
+            timeout=None,
+            member=self.context.author,
+            target=target,
+            values=mapping.items(),
+            entries_per_page=10,
+            parser=mapping_parser,
+        )
+        view.embed.title = "Help Command - Bot Options"
 
         await view.send()
 
@@ -127,6 +127,9 @@ class CustomHelp(HelpCommand):
 
         target = self.get_destination()
 
+        def group_parser(cmd: Command):
+            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
+
         view = Simple(
             timeout=None,
             target=target,
@@ -134,14 +137,11 @@ class CustomHelp(HelpCommand):
             values=group.commands,
             inline=False,
             entries_per_page=10,
+            parser=group_parser,
         )
 
         view.embed.title = f"Group {group.qualified_name!r}"
         view.embed.description = text
-
-        @view.set_parser
-        def group_parser(cmd: Command):
-            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
 
         await view.send()
 
@@ -161,19 +161,6 @@ class CustomHelp(HelpCommand):
 
         target = self.get_destination()
 
-        view = Simple(
-            timeout=None,
-            target=target,
-            member=self.context.author,
-            values=cog.get_listeners(),
-            inline=False,
-            entries_per_page=10,
-        )
-
-        view.embed.title = (f"Cog {cog.qualified_name} - Commands",)
-        view.embed.description = "\n".join(commands) or "> No Commands"
-
-        @view.set_parser
         def cog_parser(item: tuple[str, Callable[[Any], Any]]) -> tuple[str, str]:
             """Parser for cogs
 
@@ -194,6 +181,19 @@ class CustomHelp(HelpCommand):
                     return name, f"> {entry}"
                 return name, "\n".join(split)
             return name, "> Not Documented"
+
+        view = Simple(
+            timeout=None,
+            target=target,
+            member=self.context.author,
+            values=cog.get_listeners(),
+            inline=False,
+            entries_per_page=10,
+            parser=cog_parser,
+        )
+
+        view.embed.title = (f"Cog {cog.qualified_name} - Commands",)
+        view.embed.description = "\n".join(commands) or "> No Commands"
 
         await view.send()
 

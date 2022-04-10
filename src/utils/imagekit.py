@@ -15,7 +15,8 @@
 from abc import ABC, abstractproperty
 from base64 import b64encode
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
+from enum import Enum, IntEnum, auto
+from typing import Any, Iterable, Optional
 
 from src.utils.matches import (
     DISCORD_MATCH,
@@ -66,6 +67,131 @@ class ImageKitTransformation(ABC):
             tokenized data
         """
 
+    def token_parse(self, elements: dict[str, Any]):
+        return ",".join(
+            f"{k}-{v}" for k, v in elements.items() if isinstance(v, (int, str))
+        )
+
+
+def item_parse(key: str, item: int | str | Enum):
+    if isinstance(item, DefaultFonts):
+        name = item.name.replace("_", "%20")
+    elif isinstance(item, Enum):
+        name = item.name if isinstance(item.value, int) else item.value
+    else:
+        name = item
+    return f"{key}-{name}"
+
+
+class ImageMethod(ABC):
+    @abstractproperty
+    def tokenize(self) -> str:
+        """Tokenize property
+
+        Returns
+        -------
+        str
+            tokenized data
+        """
+
+    def token_parse(self, elements: dict[str, Any]):
+
+        return ",".join(
+            item_parse(k, v)
+            for k, v in elements.items()
+            if isinstance(v, (int, str, Enum))
+        )
+
+
+class Focus(IntEnum):  # fo-foo
+    left = auto()
+    right = auto()
+    top = auto()
+    bottom = auto()
+    top_left = auto()
+    top_right = auto()
+    bottom_left = auto()
+    bottom_right = auto()
+    auto = auto()
+    face = auto()
+    custom = auto()
+
+
+class CropStrategy(IntEnum):  # cm-foo
+    extract = auto()
+    pad_resize = auto()
+
+
+class DefaultFonts(IntEnum):  # otf-foo
+    AbrilFatFace = auto()
+    Amarnath = auto()
+    Arvo = auto()
+    Audiowide = auto()
+    Chivo = auto()
+    Crimson_Text = auto()
+    exo = auto()
+    Fredoka_One = auto()
+    Gravitas_One = auto()
+    Kanit = auto()
+    Lato = auto()
+    Lobster = auto()
+    Lora = auto()
+    Monoton = auto()
+    Montserrat = auto()
+    PT_Mono = auto()
+    Open_Sans = auto()
+    Roboto = auto()
+    Old_Standard = auto()
+    Ubuntu = auto()
+    Vollkorn = auto()
+
+    @property
+    def supports_bold_or_italics(self):
+        match self:
+            case (
+                self.AbrilFatFace
+                | self.Audiowide
+                | self.Fredoka_One
+                | self.Gravitas_One
+                | self.Lobster
+                | self.Monoton
+                | self.Montserrat
+                | self.PT_Mono
+            ):
+                return False
+            case _:
+                return True
+
+
+class Fonts(Enum):  # otf-foo
+    TCM = "TCM______hBLPaUPE87t.TTF"
+    unifont = "unifont_HcfNyZlJoK.otf"
+    Arial = "ARIALN_b9DmSdG5S.TTF"
+    Whitney_Black = "Whitney-BlackSC_HkjaO2ePAg.ttf"
+
+
+class Typography(Enum):  # ott-foo
+    bold = "b"
+    italics = "i"
+
+
+@dataclass(unsafe_hash=True)
+class ImagePadResizeCropStrategy(ImageMethod):
+    # w-{},h-{},cm-pad_resize,bg-{}
+    height: Optional[int] = None
+    weight: Optional[int] = None
+    background: Optional[int] = None
+    mode: Optional[Focus] = None
+
+    @property
+    def tokenize(self) -> str:
+        elements = dict(
+            h=self.height, w=self.weight, cm="pad_resize", mode=self.mode
+        )
+        if self.background:
+            elements["bg"] = hex(self.background)[2:].upper()
+        return self.token_parse(elements)
+
 
 @dataclass(unsafe_hash=True)
 class ImageTransformation(ImageKitTransformation):
@@ -74,28 +200,40 @@ class ImageTransformation(ImageKitTransformation):
     weight: Optional[int] = None
     x: Optional[int] = None
     y: Optional[int] = None
+    centered_x: Optional[int] = None
+    centered_y: Optional[int] = None
+    focus: Optional[Focus] = None
+    strat: Optional[CropStrategy] = None
+    trimming: bool = True
 
     def __post_init__(self):
         self.image = image_formatter(self.image)
 
     @property
     def tokenize(self) -> str:
-        items = [f"oi-{self.image}"]
-        if self.height and isinstance(self.height, int):
-            items.append(f"oh-{self.height}")
-        if self.weight and isinstance(self.weight, int):
-            items.append(f"ow-{self.weight}")
+        elements = dict(
+            oi=self.image,
+            oh=self.height,
+            ow=self.weight,
+            xc=self.centered_x,
+            yc=self.centered_y,
+            oifo=self.focus,
+            cm=self.strat,
+        )
         if isinstance(self.x, int):
-            items.append(f"ox-N{abs(self.x)}" if self.x < 0 else f"ox-{self.x}")
+            elements["ox"] = f"N{abs(self.x)}" if self.x < 0 else f"{self.x}"
         if isinstance(self.y, int):
-            items.append(f"oy-N{abs(self.y)}" if self.y < 0 else f"oy-{self.y}")
-        return ",".join(items)
+            elements["oy"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
+        if not self.trimming:
+            elements["oit"] = "false"
+        return self.token_parse(elements)
 
 
 @dataclass(unsafe_hash=True)
 class TextTransformation(ImageKitTransformation):
     text: str
-    font: Optional[str] = None
+    width: Optional[int] = None
+    font: Optional[DefaultFonts | str] = None
     font_size: Optional[int] = None
     color: Optional[int] = None
     transparency: Optional[int] = None
@@ -103,6 +241,10 @@ class TextTransformation(ImageKitTransformation):
     padding: Iterable[int] = field(default_factory=frozenset)
     alignment: Optional[str] = None
     background: Optional[int] = None
+    background_transparency: Optional[int] = None
+    overlay: Optional[int] = None
+    overlay_transparency: Optional[int] = None
+    typography: Optional[Typography] = None
     x: Optional[int] = None
     y: Optional[int] = None
 
@@ -110,35 +252,36 @@ class TextTransformation(ImageKitTransformation):
     def tokenize(self) -> str:
         encoded = b64encode(self.text.encode("utf-8"))
         decoded = encoded.decode("utf-8")
-
-        raw = f"ote-{decoded}"
-        if isinstance(self.font, str):
-            raw = f"otf-{self.font},{raw}"
-        extra = []
-
-        if isinstance(self.radius, int):
-            extra.append(f"or-{self.radius}")
-        if isinstance(self.font_size, int):
-            extra.append(f"ots-{self.font_size}")
+        elements = {
+            "otf": self.font,
+            "otw": self.width,
+            "ote": decoded,
+            "or": self.radius,
+            "ots": self.font_size,
+            "oa": self.transparency,
+            "otia": self.alignment,
+            "ott": self.typography,
+        }
         if isinstance(self.color, int):
-            color_text = f"{self.color:#08x}"[2:].upper()
-            extra.append(f"ofc-{color_text}")
+            elements["otc"] = hex(self.color)[2:].upper()
         if isinstance(self.x, int):
-            extra.append(f"ox-N{abs(self.x)}" if self.x < 0 else f"ox-{self.x}")
+            elements["ox"] = f"N{abs(self.x)}" if self.x < 0 else f"{self.x}"
         if isinstance(self.y, int):
-            extra.append(f"oy-N{abs(self.y)}" if self.y < 0 else f"oy-{self.y}")
+            elements["oy"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
         if isinstance(self.background, int):
-            background_text = f"{self.color:#08x}"[2:].upper()
-            extra.append(f"otbg-{background_text}")
-        if isinstance(self.transparency, int):
-            extra.append(f"oa-{self.transparency}")
-        if isinstance(self.alignment, str):
-            extra.append(f"otia-{self.alignment}")
+            color = hex(self.color)[2:].upper()
+            if isinstance(self.background_transparency, int):
+                color += f"{self.background_transparency:02d}"
+            elements["otbg"] = color
+        if isinstance(self.overlay, int):
+            overlay = hex(self.overlay)[2:].upper()
+            if isinstance(self.overlay_transparency, int):
+                overlay += f"{self.overlay_transparency:02d}"
+            elements["otc"] = overlay
         if padding_info := "_".join(map(str, self.padding)):
-            extra.append(f"otp-{padding_info}")
-        if content := ",".join(extra):
-            return f"{raw},{content}"
-        return raw
+            elements["otp"] = padding_info
+
+        return self.token_parse(elements)
 
 
 class ImageKit:
@@ -196,11 +339,15 @@ class ImageKit:
     def add_image(
         self,
         image: str,
-        *,
-        height: int = None,
-        weight: int = None,
-        x: int = None,
-        y: int = None,
+        height: Optional[int] = None,
+        weight: Optional[int] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        centered_x: Optional[int] = None,
+        centered_y: Optional[int] = None,
+        focus: Optional[Focus] = None,
+        strat: Optional[CropStrategy] = None,
+        trimming: bool = True,
     ):
         self.elements.append(
             ImageTransformation(
@@ -209,26 +356,37 @@ class ImageKit:
                 weight=weight,
                 x=x,
                 y=y,
+                centered_x=centered_x,
+                centered_y=centered_y,
+                focus=focus,
+                strat=strat,
+                trimming=trimming,
             )
         )
 
     def add_text(
         self,
         text: str,
-        font: str = None,
-        font_size: int = None,
-        color: int = None,
-        transparency: int = None,
-        radius: int = None,
-        padding: Iterable[int] = None,
-        alignment: str = None,
-        background: int = None,
-        x: int = None,
-        y: int = None,
+        width: Optional[int] = None,
+        font: Optional[DefaultFonts | str] = None,
+        font_size: Optional[int] = None,
+        color: Optional[int] = None,
+        transparency: Optional[int] = None,
+        radius: Optional[int] = None,
+        padding: Iterable[int] = [],
+        alignment: Optional[str] = None,
+        background: Optional[int] = None,
+        background_transparency: Optional[int] = None,
+        overlay: Optional[int] = None,
+        overlay_transparency: Optional[int] = None,
+        typography: Optional[Typography] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
     ):
         self.elements.append(
             TextTransformation(
                 text=text,
+                width=width,
                 font=font,
                 font_size=font_size,
                 color=color,
@@ -237,6 +395,10 @@ class ImageKit:
                 padding=padding,
                 alignment=alignment,
                 background=background,
+                background_transparency=background_transparency,
+                overlay=overlay,
+                overlay_transparency=overlay_transparency,
+                typography=typography,
                 x=x,
                 y=y,
             )
