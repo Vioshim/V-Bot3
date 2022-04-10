@@ -74,7 +74,9 @@ class ImageKitTransformation(ABC):
 
 
 def item_parse(key: str, item: int | str | Enum):
-    if isinstance(item, DefaultFonts):
+    if isinstance(item, Focus):
+        name = item.name.replace("_", "")
+    elif isinstance(item, DefaultFonts):
         name = item.name.replace("_", "%20")
     elif isinstance(item, Enum):
         name = item.name if isinstance(item.value, int) else item.value
@@ -112,7 +114,7 @@ class Focus(IntEnum):  # fo-foo
     top_right = auto()
     bottom_left = auto()
     bottom_right = auto()
-    auto = auto()
+    auto_ = auto()
     face = auto()
     custom = auto()
 
