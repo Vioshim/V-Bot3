@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractproperty
 from base64 import b64encode
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum, IntEnum, auto
 from typing import Any, Iterable, Optional
 
@@ -57,9 +57,7 @@ def image_formatter(text: str) -> str:
 
 
 def item_parse(key: str, item: int | str | Enum):
-    if isinstance(item, Focus):
-        name = item.name.replace("_", "")
-    elif isinstance(item, DefaultFonts):
+    if isinstance(item, DefaultFonts):
         name = item.name.replace("_", "%20")
     elif isinstance(item, Enum):
         name = item.name if isinstance(item.value, int) else item.value
