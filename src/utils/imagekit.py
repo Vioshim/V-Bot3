@@ -271,10 +271,10 @@ class TextTransformation(ImageKitTransformation):
         if isinstance(self.y, int):
             elements["oy"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
         if isinstance(self.background, int):
-            color = hex(self.color)[2:].upper()
+            background = hex(self.background)[2:].upper()
             if isinstance(self.background_transparency, int):
-                color += f"{self.background_transparency:02d}"
-            elements["otbg"] = color
+                background += f"{self.background_transparency:02d}"
+            elements["otbg"] = background
         if isinstance(self.overlay, int):
             overlay = hex(self.overlay)[2:].upper()
             if isinstance(self.overlay_transparency, int):
