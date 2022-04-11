@@ -30,7 +30,6 @@ from discord import (
     Role,
     SelectOption,
     TextStyle,
-    Thread,
     Webhook,
     WebhookMessage,
 )
