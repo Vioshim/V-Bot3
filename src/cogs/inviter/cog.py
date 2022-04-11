@@ -24,6 +24,7 @@ from discord import (
     Member,
     Message,
     Object,
+    RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     Thread,
     Webhook,
@@ -136,14 +137,22 @@ class Inviter(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.adapt = InviteConverter()
-        self.view: Optional[InviterView] = None
+        self.ready = False
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.thread: Thread = await self.bot.fetch_channel(957604961330561065)
-        messages = [m async for m in self.thread.history(limit=None)]
-        self.view = InviterView(messages)
-        self.bot.add_view(view=self.view, message_id=957604961330561065)
+        if not self.ready:
+            self.thread: Thread = await self.bot.fetch_channel(957604961330561065)
+            if self.thread.archived:
+                await self.thread.edit(archived=False)
+            self.messages = [m async for m in self.thread.history(limit=None)]
+            w = await self.bot.webhook(957602085753458708)
+            self.view = InviterView(self.messages)
+            self.message = await w.edit_message(
+                957604961330561065,
+                view=self.view,
+            )
+            self.ready = True
 
     @commands.Cog.listener()
     async def on_message(self, ctx: Message) -> None:
@@ -284,11 +293,21 @@ class Inviter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
-        if payload.channel_id == 957604961330561065:
-            data = self.view.data
-            self.view.data = {
-                k: [x for x in v if x.id != payload.message_id] for k, v in data.items()
-            }
+        if payload.channel_id != 957604961330561065:
+            return
+        if any(x.id == payload.message_id for x in self.messages):
+            self.messages = [x for x in self.messages if x.id != payload.message_id]
+            self.view.data = self.messages
+            await self.message.edit(view=self.view)
+
+    @commands.Cog.listener()
+    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
+        if payload.channel_id != 957604961330561065:
+            return
+        if any(x.id in payload.message_ids for x in self.messages):
+            self.messages = [x for x in self.messages if x.id not in payload.message_ids]
+            self.view.data = self.messages
+            await self.message.edit(view=self.view)
 
 
 async def setup(bot: CustomBot) -> None:
