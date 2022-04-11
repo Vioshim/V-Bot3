@@ -19,6 +19,7 @@ from typing import Optional
 
 from colour import Color
 from discord import (
+    AllowedMentions,
     Attachment,
     Colour,
     DiscordException,
@@ -30,6 +31,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    NotFound,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     Role,
@@ -56,6 +58,7 @@ channels = {
     957711698205216799: "RP",
     957726527666151505: "Game",
     839105256235335680: "Random Fact",
+    723228500835958987: "Announcement",
 }
 
 LOGS = {
@@ -250,7 +253,7 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message):
 
-        if not (message.content and message.channel.id in channels):
+        if message.mention_everyone or not (message.content and message.channel.id in channels):
             return
 
         if message.author.bot:
@@ -269,9 +272,16 @@ class Information(commands.Cog):
 
         member: Member = message.author
         guild: Guild = member.guild
-        self.bot.msg_cache_add(message)
-
         word = channels.get(message.channel.id, "Question")
+
+        content = ""
+        if word == "Announcement":
+            if any(isinstance(x, Role) for x in message.mentions):
+                return
+            if role := get(guild.roles, name="Announcements"):
+                content = role.mention
+
+        self.bot.msg_cache_add(message)
 
         embed = Embed(
             title=word,
@@ -296,7 +306,9 @@ class Information(commands.Cog):
                 files.append(file)
 
         msg = await webhook.send(
+            content=content,
             embeds=embeds,
+            allowed_mentions=AllowedMentions(roles=True),
             files=files,
             wait=True,
             username=member.display_name,
@@ -313,6 +325,10 @@ class Information(commands.Cog):
 
         if "RP" in word and (tupper := guild.get_member(431544605209788416)):
             await thread.add_user(tupper)
+
+        if word == "Announcement":
+            with suppress(HTTPException, NotFound):
+                await msg.publish()
 
         await message.delete()
 
