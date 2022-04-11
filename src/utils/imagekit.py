@@ -187,9 +187,7 @@ class ImagePadResizeCropStrategy(ImageMethod):
 
     @property
     def tokenize(self) -> str:
-        elements = dict(
-            h=self.height, w=self.weight, cm="pad_resize", mode=self.mode
-        )
+        elements = dict(h=self.height, w=self.weight, cm="pad_resize", mode=self.mode)
         if self.background:
             elements["bg"] = hex(self.background)[2:].upper()
         return self.token_parse(elements)

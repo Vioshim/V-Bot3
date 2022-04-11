@@ -32,7 +32,6 @@ def inv_msg_parser(message: Message):
 
 
 class InviterView(MessageView):
-
     def __init__(self, messages: list[Message]):
         super().__init__(messages=messages, parser=inv_msg_parser)
 
@@ -46,7 +45,7 @@ class InviterView(MessageView):
                 emoji="\N{HANDSHAKE}",
             )
             for key in DATA.keys()
-        ]
+        ],
     )
     async def hubs(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response

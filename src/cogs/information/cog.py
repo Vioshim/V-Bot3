@@ -25,6 +25,7 @@ from discord import (
     DiscordException,
     Embed,
     File,
+    Forbidden,
     Guild,
     HTTPException,
     Interaction,
@@ -35,10 +36,12 @@ from discord import (
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     Role,
+    SelectOption,
+    Webhook,
     app_commands,
 )
 from discord.ext import commands
-from discord.ui import Button, View
+from discord.ui import Button, Select, View, button, select
 from discord.utils import find, format_dt, get, utcnow
 from yaml import dump
 
@@ -74,6 +77,68 @@ MSG_INFO = {
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
 WEATHER_API = getenv("WEATHER_API")
+
+
+PING_ROLES = {
+    "Announcements": 908809235012419595,
+    "Radio": 805878418225889280,
+    "Partners": 725582056620294204,
+    "Moderation": 720296534742138880,
+    "No": None,
+}
+
+
+class AnnouncementView(View):
+    def __init__(self, *, member: Member, message: Message, **kwargs):
+        super().__init__()
+        self.member = member
+        self.message = message
+        self.kwargs = kwargs
+
+    @select(
+        placeholder="Role to Ping",
+        options=[
+            SelectOption(
+                label=f"{k} Role",
+                value=f"{v}",
+                description=f"Pings the {k} role" if v else "No pings",
+                emoji="\N{CHEERING MEGAPHONE}",
+            )
+            for k, v in PING_ROLES.items()
+        ],
+    )
+    async def ping(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        if role := ctx.guild.get_role(sct.values[0]):
+            self.kwargs["content"] = role.mention
+            self.kwargs["allowed_mentions"] = AllowedMentions(roles=True)
+        await resp.pong()
+
+    @button(label="Proceed")
+    async def confirm(self, ctx: Interaction, _: Button):
+        with suppress(HTTPException, Forbidden, NotFound):
+            await ctx.delete_original_message()
+            await ctx.message.delete()
+        webhook: Webhook = await ctx.client.webook(ctx.channel)
+        msg = await webhook.send(**self.kwargs, wait=True)
+        word = channels.get(ctx.channel_id, "Question")
+        thread = await msg.create_thread(name=f"{word} {msg.id}")
+        await thread.add_user(ctx.user)
+        if word == "Poll":
+            await msg.add_reaction("\N{THUMBS UP SIGN}")
+            await msg.add_reaction("\N{THUMBS DOWN SIGN}")
+        if "RP" in word and (tupper := ctx.guild.get_member(431544605209788416)):
+            await thread.add_user(tupper)
+
+    @button(label="Cancel")
+    async def cancel(self, ctx: Interaction, _: Button):
+        with suppress(HTTPException, Forbidden, NotFound):
+            await ctx.delete_original_message()
+            await ctx.message.delete()
+
+    async def on_timeout(self) -> None:
+        with suppress(HTTPException, Forbidden, NotFound):
+            await self.message.delete()
 
 
 class Information(commands.Cog):
@@ -253,7 +318,9 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message):
 
-        if message.mention_everyone or not (message.content and message.channel.id in channels):
+        if message.mention_everyone or not (
+            message.content and message.channel.id in channels
+        ):
             return
 
         if message.author.bot:
@@ -275,11 +342,13 @@ class Information(commands.Cog):
         word = channels.get(message.channel.id, "Question")
 
         content = ""
+        allowed_mentions = AllowedMentions.none()
         if word == "Announcement":
             if any(isinstance(x, Role) for x in message.mentions):
                 return
             if role := get(guild.roles, name="Announcements"):
                 content = role.mention
+                allowed_mentions = AllowedMentions(roles=True)
 
         self.bot.msg_cache_add(message)
 
@@ -305,28 +374,21 @@ class Information(commands.Cog):
                 file = await item.to_file()
                 files.append(file)
 
-        msg = await webhook.send(
+        view = AnnouncementView(
+            member=member,
+            message=message,
             content=content,
             embeds=embeds,
-            allowed_mentions=AllowedMentions(roles=True),
+            allowed_mentions=allowed_mentions,
             files=files,
-            wait=True,
             username=member.display_name,
             avatar_url=member.display_avatar.url,
         )
+        if word != "Announcement":
+            view.remove_item(view.ping)
 
-        thread = await msg.create_thread(name=f"{word} {msg.id}")
-
-        await thread.add_user(member)
-
-        if word == "Poll":
-            await msg.add_reaction("\N{THUMBS UP SIGN}")
-            await msg.add_reaction("\N{THUMBS DOWN SIGN}")
-
-        if "RP" in word and (tupper := guild.get_member(431544605209788416)):
-            await thread.add_user(tupper)
-
-        await message.delete()
+        await message.reply("Confirmation", view=view)
+        await view.wait()
 
     async def member_count(self, guild: Guild):
         """Function which updates the member count and the Information's view"""
