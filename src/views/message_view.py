@@ -128,7 +128,7 @@ class MessagePaginator(Complex):
         await super(MessagePaginator, self).select_choice(ctx, sct)
 
 
-class MessageView(Complex):
+class MessageView:
 
     def __init__(
         self,
