@@ -119,7 +119,6 @@ class AnnouncementView(View):
     async def ping(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.pong()
-        await ctx.message.delete()
         if role := ctx.guild.get_role(sct.values[0]):
             self.kwargs["content"] = role.mention
             self.kwargs["allowed_mentions"] = AllowedMentions(roles=True)
@@ -129,7 +128,6 @@ class AnnouncementView(View):
             self.kwargs["allowed_mentions"] = AllowedMentions.none()
             info = "Alright, won't ping."
         await resp.send_message(info, ephemeral=True)
-        self.stop()
 
     @button(label="Proceed")
     async def confirm(self, ctx: Interaction, _: Button):
