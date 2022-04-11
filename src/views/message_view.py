@@ -66,8 +66,7 @@ def get_date(message: Message):
 
 
 def msg_parser(msg: Message):
-    date = get_date(msg)
-    return get_title(msg), date
+    return get_title(msg), get_date(msg)
 
 
 class MessagePaginator(Complex):
