@@ -168,8 +168,7 @@ class MissionView(View):
                     thread: Thread = await interaction.client.fetch_channel(
                         self.mission.msg_id
                     )
-                await thread.edit(archived=False, locked=True)
-                # reason=f"{member} concluded the mission.",
+                await thread.edit(archived=False, locked=True, reason=f"{member} concluded the mission.",)
                 await thread.send(embed=self.mission.embed)
             await interaction.followup.send(
                 "Mission has been concluded.",
