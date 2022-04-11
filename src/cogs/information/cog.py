@@ -152,7 +152,9 @@ class AnnouncementView(View):
 
     @button(label="Cancel")
     async def cancel(self, ctx: Interaction, _: Button):
-        await ctx.delete_original_message()
+        resp: InteractionResponse = ctx.response
+        await resp.pong()
+        await ctx.message.delete()
         self.stop()
 
 
