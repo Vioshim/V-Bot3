@@ -53,7 +53,7 @@ __all__ = ("Information", "setup")
 
 
 channels = {
-    766018765690241034: "Question",
+    766018765690241034: "OC Question",
     918703451830100028: "Poll",
     728800301888307301: "Suggestion",
     769304918694690866: "Story",
@@ -62,6 +62,7 @@ channels = {
     957726527666151505: "Game",
     839105256235335680: "Random Fact",
     723228500835958987: "Announcement",
+    740606964727546026: "Question",
 }
 
 LOGS = {
@@ -89,11 +90,19 @@ PING_ROLES = {
 
 
 class AnnouncementView(View):
-    def __init__(self, *, member: Member, message: Message, **kwargs):
+    def __init__(self, *, member: Member, **kwargs):
         super().__init__()
         self.member = member
-        self.message = message
         self.kwargs = kwargs
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        resp: InteractionResponse = interaction.response
+        if interaction.user != self.member:
+            await resp.send_message(
+                f"Message requested by {self.member.mention}", ephemeral=True
+            )
+            return False
+        return True
 
     @select(
         placeholder="Role to Ping",
@@ -112,38 +121,34 @@ class AnnouncementView(View):
         if role := ctx.guild.get_role(sct.values[0]):
             self.kwargs["content"] = role.mention
             self.kwargs["allowed_mentions"] = AllowedMentions(roles=True)
-        await resp.pong()
+            info = f"Alright, will ping {role.mention}"
+        else:
+            self.kwargs["content"] = ""
+            self.kwargs["allowed_mentions"] = AllowedMentions.none()
+            info = "Alright, won't ping."
+        await resp.send_message(info, ephemeral=True)
 
     @button(label="Proceed")
     async def confirm(self, ctx: Interaction, _: Button):
-        with suppress(HTTPException, Forbidden, NotFound):
-            await ctx.message.delete()
-            await ctx.delete_original_message()
+        await ctx.delete_original_message()
         webhook: Webhook = await ctx.client.webhook(ctx.channel)
         msg = await webhook.send(**self.kwargs, wait=True)
         word = channels.get(ctx.channel_id, "Question")
         thread = await msg.create_thread(name=f"{word} {msg.id}")
         await thread.add_user(ctx.user)
-        if word == "Poll":
-            await msg.add_reaction("\N{THUMBS UP SIGN}")
-            await msg.add_reaction("\N{THUMBS DOWN SIGN}")
-        if "RP" in word and (
-            tupper := ctx.guild.get_member(431544605209788416)
-        ):
-            await thread.add_user(tupper)
+        match word:
+            case "Poll":
+                await msg.add_reaction("\N{THUMBS UP SIGN}")
+                await msg.add_reaction("\N{THUMBS DOWN SIGN}")
+            case "RP" | "OC Question" | "Story" | "Storyline":
+                if tupper := ctx.guild.get_member(431544605209788416):
+                    await thread.add_user(tupper)
         self.stop()
 
     @button(label="Cancel")
     async def cancel(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.pong()
-        with suppress(HTTPException, Forbidden, NotFound):
-            await ctx.message.delete()
+        await ctx.delete_original_message()
         self.stop()
-
-    async def on_timeout(self) -> None:
-        with suppress(HTTPException, Forbidden, NotFound):
-            await self.message.delete()
 
 
 class Information(commands.Cog):
@@ -152,9 +157,7 @@ class Information(commands.Cog):
         self.join: dict[Member, Message] = {}
         self.bot.tree.on_error = self.on_error
 
-    @app_commands.command(
-        description="Weather information from the selected area."
-    )
+    @app_commands.command(description="Weather information from the selected area.")
     @app_commands.guilds(719343092963999804)
     @app_commands.describe(area="Area to get weather info about.")
     @app_commands.choices(
@@ -189,9 +192,7 @@ class Information(commands.Cog):
                 URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API}"
                 async with self.bot.session.get(URL) as f:
                     if f.status != 200:
-                        await resp.send_message(
-                            "Invalid response", ephemeral=True
-                        )
+                        await resp.send_message("Invalid response", ephemeral=True)
                     data: dict = await f.json()
                     if weather := data.get("weather", []):
                         info: dict = weather[0]
@@ -350,15 +351,6 @@ class Information(commands.Cog):
         guild: Guild = member.guild
         word = channels.get(message.channel.id, "Question")
 
-        content = ""
-        allowed_mentions = AllowedMentions.none()
-        if word == "Announcement":
-            if any(isinstance(x, Role) for x in message.mentions):
-                return
-            if role := get(guild.roles, name="Announcements"):
-                content = role.mention
-                allowed_mentions = AllowedMentions(roles=True)
-
         self.bot.msg_cache_add(message)
 
         embed = Embed(
@@ -385,10 +377,7 @@ class Information(commands.Cog):
 
         view = AnnouncementView(
             member=member,
-            message=message,
-            content=content,
             embeds=embeds,
-            allowed_mentions=allowed_mentions,
             files=files,
             username=member.display_name,
             avatar_url=member.display_avatar.url,
@@ -398,6 +387,8 @@ class Information(commands.Cog):
 
         await message.reply("Confirmation", view=view)
         await view.wait()
+        with suppress(NotFound, HTTPException, Forbidden):
+            await message.delete()
 
     async def member_count(self, guild: Guild):
         """Function which updates the member count and the Information's view"""
@@ -455,9 +446,7 @@ class Information(commands.Cog):
             timestamp=utcnow(),
         )
         if roles := member.roles[:0:-1]:
-            embed.description = "\n".join(
-                f"> **•** {role.mention}" for role in roles
-            )
+            embed.description = "\n".join(f"> **•** {role.mention}" for role in roles)
         if icon := guild.icon:
             embed.set_footer(text=f"ID: {member.id}", icon_url=icon.url)
         else:
@@ -594,8 +583,7 @@ class Information(commands.Cog):
         if messages := [
             message
             for message in payload.cached_messages
-            if message.id not in self.bot.msg_cache
-            and message.webhook_id != w.id
+            if message.id not in self.bot.msg_cache and message.webhook_id != w.id
         ]:
             msg = messages[0]
             fp = StringIO()
@@ -627,9 +615,7 @@ class Information(commands.Cog):
                     info = await data.json()
                     result = info["results"][0]
                     media = result["media"][0]
-                    title: str = (
-                        result["title"] or result["content_description"]
-                    )
+                    title: str = result["title"] or result["content_description"]
                     url: str = result["itemurl"]
                     image: str = media["gif"]["url"]
                     return title, url, image
@@ -891,9 +877,7 @@ class Information(commands.Cog):
         if hasattr(ctx.command, "on_error"):
             return
 
-        if (cog := ctx.cog) and cog._get_overridden_method(
-            cog.cog_command_error
-        ):
+        if (cog := ctx.cog) and cog._get_overridden_method(cog.cog_command_error):
             return
 
         if error_cause := error.__cause__:
