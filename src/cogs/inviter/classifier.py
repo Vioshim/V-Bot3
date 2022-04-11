@@ -33,6 +33,9 @@ def msg_parser(message: Message):
 
 class InviterView(MessageView):
 
+    def __init__(self, messages: list[Message]):
+        super().__init__(messages=messages, parser=msg_parser)
+
     @select(
         placeholder="Select RP Hub",
         custom_id="hubs",

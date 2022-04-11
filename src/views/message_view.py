@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from contextlib import suppress
-from email import message
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from typing import Callable
@@ -134,8 +133,10 @@ class MessageView(View):
     def __init__(
         self,
         messages: list[Message],
+        parser: Callable[[Message], tuple[str, str]] = msg_parser,
     ):
         super().__init__(timeout=None)
+        self.parser = parser
         self._data: dict[str, set[Message]] = {
             k: set(v)
             for k, v in groupby(
@@ -194,7 +195,7 @@ class MessageView(View):
                 member=ctx.user,
                 target=ctx,
                 messages=items,
-                parser=msg_parser,
+                parser=self.parser,
             )
             embed = view.embed
             embed.title = f"{item} Group".title()
