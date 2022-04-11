@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import suppress
+from email import message
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from typing import Callable
@@ -111,12 +112,12 @@ class MessagePaginator(Complex):
                     file = await attach.to_file(use_cached=True)
                     files.append(file)
             embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
-            if not (files or embeds):
-                await ctx.followup.send("Message information is unknown.", ephemeral=True)
-                with suppress(HTTPException, NotFound, Forbidden):
-                    await item.delete()
 
-        if not response.is_done():
+        if not (files or embeds or item.content):
+            await ctx.followup.send("Message information is unknown.", ephemeral=True)
+            with suppress(HTTPException, NotFound, Forbidden):
+                await item.delete()
+        else:
             await ctx.followup.send(
                 content=item.content,
                 embeds=embeds,
@@ -193,6 +194,7 @@ class MessageView(View):
                 member=ctx.user,
                 target=ctx,
                 messages=items,
+                parser=msg_parser,
             )
             embed = view.embed
             embed.title = f"{item} Group".title()
