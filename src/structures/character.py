@@ -1687,9 +1687,7 @@ def oc_process(**kwargs) -> Type[Character]:
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop(
-            "movepool", dict(event=data.get("moveset", set()))
-        ):
+        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1740,10 +1738,7 @@ def doc_convert(doc: Document) -> dict[str, Any]:
     """
 
     content_values: list[str] = [
-        cell.text
-        for table in doc.tables
-        for row in table.rows
-        for cell in row.cells
+        cell.text for table in doc.tables for row in table.rows for cell in row.cells
     ]
 
     text = [
@@ -1845,9 +1840,7 @@ class CharacterTransform(Transformer):
         ]
         if not values:
             values = [
-                Choice(name=k, value=v)
-                for k, v in items.items()
-                if k.startswith(text)
+                Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)
             ]
         values.sort(key=lambda x: x.name)
         return values[:25]

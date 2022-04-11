@@ -301,11 +301,15 @@ class Inviter(commands.Cog):
             await self.message.edit(view=self.view)
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
+    async def on_raw_bulk_message_delete(
+        self, payload: RawBulkMessageDeleteEvent
+    ) -> None:
         if payload.channel_id != 957604961330561065:
             return
         if any(x.id in payload.message_ids for x in self.messages):
-            self.messages = [x for x in self.messages if x.id not in payload.message_ids]
+            self.messages = [
+                x for x in self.messages if x.id not in payload.message_ids
+            ]
             self.view.data = self.messages
             await self.message.edit(view=self.view)
 

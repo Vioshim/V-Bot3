@@ -69,7 +69,7 @@ def msg_parser(msg: Message):
     description = get_date(msg)
     if msg.embeds:
         description = msg.embeds[0].description or description
-    return get_title(msg),  description
+    return get_title(msg), description
 
 
 class MessagePaginator(Complex):
@@ -113,7 +113,10 @@ class MessagePaginator(Complex):
                 with suppress(HTTPException, NotFound, Forbidden):
                     file = await attach.to_file(use_cached=True)
                     files.append(file)
-            embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
+            embeds = [
+                Embed(title=sticker.name).set_image(url=sticker.url)
+                for sticker in item.stickers
+            ]
 
         if not (files or embeds or item.content):
             await ctx.followup.send("Message information is unknown.", ephemeral=True)
@@ -132,7 +135,6 @@ class MessagePaginator(Complex):
 
 
 class MessageView(View):
-
     def __init__(
         self,
         messages: list[Message],
