@@ -326,10 +326,6 @@ class Information(commands.Cog):
         if "RP" in word and (tupper := guild.get_member(431544605209788416)):
             await thread.add_user(tupper)
 
-        if word == "Announcement":
-            with suppress(HTTPException, NotFound):
-                await msg.publish()
-
         await message.delete()
 
     async def member_count(self, guild: Guild):
