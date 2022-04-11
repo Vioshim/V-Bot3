@@ -17,7 +17,7 @@ from json import load
 from discord import Interaction, InteractionResponse, Message, SelectOption
 from discord.ui import Select, select
 
-from src.views.message_view import MessageView, get_date, get_title
+from src.views.message_view import MessageView, msg_parser
 
 __all__ = ("InviterView",)
 
@@ -26,18 +26,15 @@ with open("resources/hub_partners.json", mode="r") as f:
     DATA: dict[str, str] = load(f)
 
 
-def msg_parser(message: Message):
-    msg = get_title(message)
-    description = get_date(message)
-    if message.embeds:
-        description = message.embeds[0].description or description
-    return msg.split("partnered with ")[-1], description
+def inv_msg_parser(message: Message):
+    info, desc = msg_parser(message)
+    return info.split("partnered with ")[-1], desc
 
 
 class InviterView(MessageView):
 
     def __init__(self, messages: list[Message]):
-        super().__init__(messages=messages, parser=msg_parser)
+        super().__init__(messages=messages, parser=inv_msg_parser)
 
     @select(
         placeholder="Select RP Hub",
