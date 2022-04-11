@@ -28,7 +28,10 @@ with open("resources/hub_partners.json", mode="r") as f:
 
 def msg_parser(message: Message):
     msg = get_title(message)
-    return msg.split("partnered with ")[-1], get_date(message)
+    description = get_date(message)
+    if message.embeds:
+        description = message.embeds[0].description or description
+    return msg.split("partnered with ")[-1], description
 
 
 class InviterView(MessageView):
