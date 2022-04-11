@@ -66,7 +66,10 @@ def get_date(message: Message):
 
 
 def msg_parser(msg: Message):
-    return get_title(msg), get_date(msg)
+    description = get_date(msg)
+    if msg.embeds:
+        description = msg.embeds[0].description or description
+    return get_title(msg),  description
 
 
 class MessagePaginator(Complex):
