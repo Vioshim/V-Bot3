@@ -106,9 +106,8 @@ class MessagePaginator(Complex):
         view = View.from_message(item)
         await response.defer(ephemeral=True)
         files = []
-        if item.content or item.embeds:
-            embeds = item.embeds
-        else:
+        embeds = item.embeds
+        if not (item.content or embeds):
             for attach in item.attachments:
                 with suppress(HTTPException, NotFound, Forbidden):
                     file = await attach.to_file(use_cached=True)
@@ -119,7 +118,10 @@ class MessagePaginator(Complex):
             ]
 
         if not (files or embeds or item.content):
-            await ctx.followup.send("Message information is unknown.", ephemeral=True)
+            await ctx.followup.send(
+                "Message information is unknown.",
+                ephemeral=True,
+            )
             with suppress(HTTPException, NotFound, Forbidden):
                 await item.delete()
         else:
@@ -142,38 +144,38 @@ class MessageView(View):
     ):
         super().__init__(timeout=None)
         self.parser = parser
-        self._data: dict[str, set[Message]] = {
-            k: set(v)
-            for k, v in groupby(
-                filter(lambda x: x.webhook_id, messages),
-                key=lambda x: x.embeds[0].footer.text,
-            )
-            if k and v
-        }
+        self._messages = messages
+        self.data: dict[str, set[Message]] = {}
         self.setup()
 
-    @property
-    def data(self):
-        return self._data
+    def group_method(self, messages: set[Message]):
+        return {
+            k: set(v)
+            for k, v in groupby(
+                filter(lambda x: x.webhook_id and x.embeds, messages),
+                key=lambda x: x.embeds[0].footer.text,
+            )
+            if k
+        }
 
-    @data.setter
-    def data(self, data: list[Message] | dict[str, set[Message]]):
-        if isinstance(data, list):
-            self._data: dict[str, set[Message]] = {
-                k: set(v)
-                for k, v in groupby(
-                    filter(lambda x: x.webhook_id, data),
-                    key=lambda x: x.embeds[0].footer.text,
-                )
-                if k and v
-            }
-        else:
-            self._data = data
+    @property
+    def messages(self):
+        return self._messages
+
+    @messages.setter
+    def messages(self, messages: list[Message]):
+        self._messages = messages
+        self.setup()
+
+    @messages.deleter
+    def messages(self):
+        self._messages = []
         self.setup()
 
     def setup(self):
         sct: Select = self.select_msg
         sct.options.clear()
+        self._data = self.group_method(self.messages)
         for key, value in self.data.items():
             sct.add_option(
                 label=key,
@@ -195,7 +197,7 @@ class MessageView(View):
     async def select_msg(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         item = sct.values[0]
-        if items := self.data.get(sct.values[0], set()):
+        if items := self.data.get(sct.values[0]):
             view = MessagePaginator(
                 member=ctx.user,
                 target=ctx,

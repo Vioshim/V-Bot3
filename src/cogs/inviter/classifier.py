@@ -50,7 +50,6 @@ class InviterView(MessageView):
     async def hubs(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         key = sct.values[0]
-        if info := DATA.get(key):
-            await resp.send_message(content=info, ephemeral=True)
-        else:
-            await resp.send_message(content=f"Unknown info for {key}", ephemeral=True)
+        if not (info := DATA.get(key)):
+            info = f"Unknown info for {key}"
+        await resp.send_message(content=info, ephemeral=True)
