@@ -88,7 +88,6 @@ class Proxy(commands.Cog):
         )
         self.npc_info[item] = message.author.id
 
-        self.bot.msg_cache.add(message.id)
         with suppress(DiscordException):
             if message.mentions:
                 await message.delete(delay=300)

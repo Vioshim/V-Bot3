@@ -677,7 +677,7 @@ class Information(commands.Cog):
         if (
             not ctx.guild
             or ctx.webhook_id == w.id
-            or self.bot.user.id == user.id
+            or self.bot.user == user
             or user.id == self.bot.owner_id
             or user.id in self.bot.owner_ids
         ):

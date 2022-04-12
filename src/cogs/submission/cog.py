@@ -998,7 +998,6 @@ class Submission(commands.Cog):
                 check=message_validator(message),
                 timeout=3,
             )
-            self.bot.msg_cache_add(message)
             if isinstance(channel := message.channel, TextChannel):
                 trigger = IntervalTrigger(days=3)
                 await self.bot.scheduler.add_schedule(
