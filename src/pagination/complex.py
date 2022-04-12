@@ -119,8 +119,6 @@ class Complex(Simple):
         self._max_values = max_values
         self._emoji_parser = emoji_parser
         self.text_component = text_component
-        if not text_component:
-            self.remove_item(self.message_handler)
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
@@ -186,6 +184,10 @@ class Complex(Simple):
         self.buttons_format()
         # First, the current stored values in each option get cleared.
         # aside of changing the placeholder text
+        if not self.text_component:
+            self.remove_item(self.message_handler)
+        elif self.message_handler not in self.children:
+            self.add_item(self.message_handler)
 
         foo: Select = self.select_choice
         pages: Select = self.navigate

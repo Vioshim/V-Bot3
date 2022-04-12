@@ -143,8 +143,8 @@ class StatsView(Complex):
             target=target,
             values=Stats,
             timeout=None,
-            text_component=StatsModal(self),
         )
+        self.text_component = StatsModal(self)
         self.embed.title = "Select the Set of Stats"
         self.embed.description = (
             "Keep in mind that stats for fakemon work from 1 to 5"
@@ -155,6 +155,7 @@ class StatsView(Complex):
             "> **4** - High\n"
             "> **5** - Very High"
         )
+        self.menu_format()
 
     @property
     def choice(self) -> Optional[Stats]:
