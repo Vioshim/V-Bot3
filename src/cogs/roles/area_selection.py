@@ -117,4 +117,5 @@ class AreaSelection(View):
             icon_url=ctx.user.display_avatar.url,
         )
         embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
-        await resp.send_message(embed=embed, view=view, ephemeral=True)
+        async with view.send(ephemeral=True, embed=embed):
+            self.bot.logger.info("%s user is checking ocs at %s", str(ctx.user), channel.name)

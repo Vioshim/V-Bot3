@@ -481,13 +481,8 @@ class Pokedex(commands.Cog):
             target=ctx,
             keep_working=True,
         )
-
-        await ctx.followup.send(
-            content=text,
-            embeds=embeds,
-            view=view,
-            ephemeral=True,
-        )
+        async with view.send(ephemeral=True, embeds=embeds, content=text):
+            self.bot.logger.info("%s is reading ocs /find %s", str(ctx.user), repr(ctx.namespace))
 
 
 async def setup(bot: CustomBot) -> None:
