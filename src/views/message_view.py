@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from contextlib import suppress
+from email import message
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from typing import Callable
@@ -175,7 +176,7 @@ class MessageView(View):
     def setup(self):
         sct: Select = self.select_msg
         sct.options.clear()
-        self._data = self.group_method(self.messages)
+        self.data = self.group_method(self.messages)
         for key, value in self.data.items():
             sct.add_option(
                 label=key,
