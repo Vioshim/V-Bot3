@@ -58,7 +58,7 @@ def get_title(message: Message):
         value = value or f"{len(stickers)} Stickers"
     elif stickers:
         value = value or f"Sticker: {stickers[0].name}"
-    return remove_markdown(value or "Unknown").removeprefix("> ")
+    return remove_markdown(value or "Unknown")
 
 
 def get_date(message: Message):
@@ -69,7 +69,7 @@ def msg_parser(msg: Message):
     description = get_date(msg)
     if msg.embeds:
         description = msg.embeds[0].description or description
-    return get_title(msg), description
+    return get_title(msg), remove_markdown(description)
 
 
 class MessagePaginator(Complex):

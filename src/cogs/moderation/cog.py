@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 from re import MULTILINE, compile
 from typing import Optional, Union
 
+from aiohttp import ClientResponseError
 from apscheduler.triggers.cron import CronTrigger
 from discord import (
     AllowedMentions,
@@ -203,29 +204,31 @@ class Moderation(commands.Cog):
         seconds : str, optional
             Seconds to retrieve, by default 300
         """
-        async with self.bot.session.get(
-            f"{API}/recent/{seconds}",
-            params=API_PARAM,
-        ) as data:
-            items: list[dict[str, str]] = await data.json()
-            for item in items:
-                handler = item.get("type")
-                domains: list[str] = set(item.get("domains", []))
-                if handler == "add":
-                    self.bot.scam_urls |= domains
-                elif handler == "delete":
-                    self.bot.scam_urls -= domains
+        with suppress(ClientResponseError):
+            async with self.bot.session.get(
+                f"{API}/recent/{seconds}",
+                params=API_PARAM,
+            ) as data:
+                items: list[dict[str, str]] = await data.json()
+                for item in items:
+                    handler = item.get("type")
+                    domains: list[str] = set(item.get("domains", []))
+                    if handler == "add":
+                        self.bot.scam_urls |= domains
+                    elif handler == "delete":
+                        self.bot.scam_urls -= domains
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Initialize the scam urls and schedule each 5 minutes"""
         if not self.bot.scam_urls:
-            async with self.bot.session.get(
-                f"{API}/all",
-                params=API_PARAM,
-            ) as data:
-                entries = await data.json()
-                self.bot.scam_urls = set(entries)
+            with suppress(ClientResponseError):
+                async with self.bot.session.get(
+                    f"{API}/all",
+                    params=API_PARAM,
+                ) as data:
+                    entries = await data.json()
+                    self.bot.scam_urls = set(entries)
 
         await self.bot.scheduler.add_schedule(
             self.scam_changes,
