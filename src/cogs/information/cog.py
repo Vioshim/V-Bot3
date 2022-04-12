@@ -82,6 +82,7 @@ WEATHER_API = getenv("WEATHER_API")
 
 PING_ROLES = {
     "Announcements": 908809235012419595,
+    "Everyone": 719343092963999804,
     "Radio": 805878418225889280,
     "Partners": 725582056620294204,
     "Moderation": 720296534742138880,
@@ -112,6 +113,7 @@ class AnnouncementView(View):
                 value=f"{v}",
                 description=f"Pings the {k} role" if v else "No pings",
                 emoji="\N{CHEERING MEGAPHONE}",
+                default=v is None,
             )
             for k, v in PING_ROLES.items()
         ],
@@ -120,7 +122,11 @@ class AnnouncementView(View):
         resp: InteractionResponse = ctx.response
         if role := ctx.guild.get_role(sct.values[0]):
             self.kwargs["content"] = role.mention
-            self.kwargs["allowed_mentions"] = AllowedMentions(roles=True)
+            if role.is_default():
+                mentions = AllowedMentions(everyone=True)
+            else:
+                mentions = AllowedMentions(roles=True)
+            self.kwargs["allowed_mentions"] = mentions
             info = f"Alright, will ping {role.mention}"
         else:
             self.kwargs["content"] = ""
