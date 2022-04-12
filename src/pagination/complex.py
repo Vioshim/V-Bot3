@@ -102,13 +102,7 @@ class Complex(Simple):
         sort_key: Callable[[_T], Any] = None,
         text_component: Optional[TextInput | Modal] = None,
     ):
-        self.silent_mode = silent_mode
-        self.keep_working = keep_working
-        self._choices: set[_T] = set()
-        self._max_values = max_values
-        self._emoji_parser = emoji_parser
-        self.text_component = text_component
-        super().__init__(
+        super(Complex, self).__init__(
             timeout=timeout,
             member=member,
             target=target,
@@ -119,6 +113,12 @@ class Complex(Simple):
             sort_key=sort_key,
             modifying_embed=False,
         )
+        self.silent_mode = silent_mode
+        self.keep_working = keep_working
+        self._choices: set[_T] = set()
+        self._max_values = max_values
+        self._emoji_parser = emoji_parser
+        self.text_component = text_component
         if not text_component:
             self.remove_item(self.message_handler)
 
