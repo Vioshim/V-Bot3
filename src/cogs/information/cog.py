@@ -118,7 +118,6 @@ class AnnouncementView(View):
     )
     async def ping(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        await resp.pong()
         if role := ctx.guild.get_role(sct.values[0]):
             self.kwargs["content"] = role.mention
             self.kwargs["allowed_mentions"] = AllowedMentions(roles=True)
