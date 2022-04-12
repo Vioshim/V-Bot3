@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from contextlib import suppress
-from email import message
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from typing import Callable
@@ -59,7 +58,7 @@ def get_title(message: Message):
         value = value or f"{len(stickers)} Stickers"
     elif stickers:
         value = value or f"Sticker: {stickers[0].name}"
-    return remove_markdown(value or "Unknown")
+    return remove_markdown(value or "Unknown").removeprefix("> ")
 
 
 def get_date(message: Message):
