@@ -143,7 +143,6 @@ class StatsView(Complex):
             target=target,
             values=Stats,
             timeout=None,
-            text_component=StatsModal(self)
         )
         self.embed.title = "Select the Set of Stats"
         self.embed.description = (
