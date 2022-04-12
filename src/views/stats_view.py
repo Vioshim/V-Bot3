@@ -75,6 +75,9 @@ class Stats(Enum):
         """
         return self.name.replace("_", " ").title()
 
+    def __repr__(self) -> str:
+        return repr(self.value)
+
     @property
     def emoji(self) -> str:
         """Emoji which represents the set

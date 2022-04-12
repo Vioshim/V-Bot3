@@ -14,6 +14,7 @@
 
 from asyncio import ALL_COMPLETED, TimeoutError, to_thread, wait
 from contextlib import suppress
+from dataclasses import asdict
 from datetime import datetime, timedelta
 from difflib import get_close_matches
 from itertools import chain
@@ -572,7 +573,7 @@ class Submission(commands.Cog):
                 async with stats_view:
                     if not (stats := stats_view.choice):
                         return
-                    species.set_stats(*stats.value)
+                    species.set_stats(**asdict(stats.value))
             if (
                 sum(species.stats) > 18
                 or min(species.stats) < 1
