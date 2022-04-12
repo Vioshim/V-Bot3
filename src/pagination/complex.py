@@ -121,6 +121,7 @@ class Complex(Simple):
         self.text_component = text_component
 
     async def __aenter__(self) -> set[_T]:
+        self.menu_format()
         await super(Complex, self).send()
         await self.wait()
         return self.choices
@@ -378,6 +379,7 @@ class Complex(Simple):
             If the message is gonna be edited, defaults to False
         """
         try:
+            self.menu_format()
             embed = embed or self.embed
             self.embed = embed_modifier(embed, **kwargs)
             await super(Complex, self).send(
