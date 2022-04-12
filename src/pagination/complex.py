@@ -380,12 +380,12 @@ class Complex(Simple):
         """
         try:
             self.menu_format()
-            embed = embed or self.embed
-            self.embed = embed_modifier(embed, **kwargs)
+            embed = embed_modifier(embed, **kwargs)
+            self.embed = embed
+            embeds = embeds or [embed or self.embed]
             await super(Complex, self).send(
                 content=content,
                 tts=tts,
-                embed=self.embed,
                 embeds=embeds,
                 file=file,
                 files=files,
