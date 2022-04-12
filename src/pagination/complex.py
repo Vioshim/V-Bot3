@@ -382,7 +382,7 @@ class Complex(Simple):
             self.menu_format()
             embed = embed_modifier(embed, **kwargs)
             self.embed = embed
-            embeds = embeds or [embed or self.embed]
+            embeds = embeds or [embed]
             await super(Complex, self).send(
                 content=content,
                 tts=tts,
