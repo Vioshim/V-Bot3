@@ -69,27 +69,12 @@ class SPView(Basic):
         super(SPView, self).__init__(
             target=target,
             member=member,
-            timeout=None,
+            timeout=180,
         )
         self.oc = oc
-        self.used: bool = False
         self.add.disabled = oc.sp_ability is not None
         self.modify.disabled = oc.sp_ability is None
         self.delete.disabled = oc.sp_ability is None
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        check = await super(SPView, self).interaction_check(interaction)
-        resp: InteractionResponse = interaction.response
-        if not check:
-            return False
-        if self.used:
-            await resp.send_message(
-                "You're already using one of the options.",
-                ephemeral=True,
-            )
-            return False
-        self.used = True
-        return True
 
     @button(label="Add", custom_id="add")
     async def add(self, ctx: Interaction, _: Button) -> None:
