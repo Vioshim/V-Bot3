@@ -124,7 +124,7 @@ class Roles(Cog):
     @app_commands.guilds(719343092963999804)
     @app_commands.choices(
         role=[
-            Choice(name=k, value=v)
+            Choice(name=k, value=str(v))
             for k, v in RP_SEARCH_ROLES.items()
         ],
     )
