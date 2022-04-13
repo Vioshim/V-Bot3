@@ -18,7 +18,6 @@ from threading import Thread
 from discord import (
     CategoryChannel,
     Interaction,
-    InteractionResponse,
     Member,
     SelectOption,
     TextChannel,

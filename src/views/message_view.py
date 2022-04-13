@@ -19,6 +19,7 @@ from typing import Callable
 
 from discord import (
     Embed,
+    Emoji,
     Forbidden,
     HTTPException,
     Interaction,
@@ -26,6 +27,7 @@ from discord import (
     Member,
     Message,
     NotFound,
+    PartialEmoji,
     SelectOption,
     TextChannel,
     Webhook,
@@ -141,10 +143,12 @@ class MessageView(View):
         self,
         messages: list[Message],
         parser: Callable[[Message], tuple[str, str]] = msg_parser,
+        emoji: PartialEmoji | Emoji | str = "\N{E-MAIL SYMBOL}",
     ):
         super().__init__(timeout=None)
         self.parser = parser
         self._messages = messages
+        self.emoji = emoji
         self.data: dict[str, set[Message]] = {}
         self.setup()
 
@@ -181,7 +185,7 @@ class MessageView(View):
                 label=key,
                 value=key,
                 description=f"{len(value)} messages.",
-                emoji="\N{HANDSHAKE}",
+                emoji=self.emoji,
             )
         if not sct.options:
             sct.append_option(SelectOption(label="Empty", value="Empty"))
