@@ -482,7 +482,9 @@ class Pokedex(commands.Cog):
             keep_working=True,
         )
         async with view.send(ephemeral=True, embeds=embeds, content=text):
-            self.bot.logger.info("%s is reading ocs /find %s", str(ctx.user), repr(ctx.namespace))
+            self.bot.logger.info(
+                "%s is reading ocs /find %s", str(ctx.user), repr(ctx.namespace)
+            )
 
 
 async def setup(bot: CustomBot) -> None:

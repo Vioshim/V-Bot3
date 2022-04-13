@@ -22,7 +22,8 @@ from re import split
 from typing import Any, Optional
 
 from asyncpg import Connection, Record
-from discord import Embed
+from discord import Embed, Interaction, InteractionResponse, TextStyle
+from discord.ui import Modal, TextInput
 from frozendict import frozendict
 
 from src.utils.functions import fix
@@ -32,6 +33,7 @@ __all__ = (
     "AbilityDecoder",
     "AbilityEncoder",
     "SpAbility",
+    "SPAbilityModal",
     "ALL_ABILITIES",
 )
 
@@ -338,6 +340,61 @@ class AbilityDecoder(JSONDecoder):
         if all(x in dct for x in Ability.__slots__):
             return Ability(**dct)
         return dct
+
+
+class SPAbilityModal(Modal):
+    def __init__(self, *, sp_ability: SpAbility = None) -> None:
+        super().__init__(title="Special Ability", timeout=None)
+        if not sp_ability:
+            sp_ability = SpAbility()
+        self.sp_ability = sp_ability
+        self.name = TextInput(
+            label="Name",
+            placeholder="How your OC refers to it?",
+            max_length=100,
+            default=sp_ability.name,
+        )
+        self.description = TextInput(
+            label="Description",
+            placeholder="Describe how it works",
+            style=TextStyle.paragraph,
+            default=sp_ability.description,
+        )
+        self.origin = TextInput(
+            label="Origin",
+            placeholder="Explain the story of how your oc obtained this",
+            style=TextStyle.paragraph,
+            default=sp_ability.origin,
+        )
+        self.pros = TextInput(
+            label="Pros",
+            placeholder="How it makes your oc's life easier?",
+            style=TextStyle.paragraph,
+            default=sp_ability.pros,
+        )
+        self.cons = TextInput(
+            label="Cons",
+            placeholder="How it makes your oc's life harder?",
+            style=TextStyle.paragraph,
+            default=sp_ability.cons,
+        )
+        self.add_item(self.name)
+        self.add_item(self.description)
+        self.add_item(self.origin)
+        self.add_item(self.pros)
+        self.add_item(self.cons)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        self.sp_ability = SpAbility(
+            name=self.name.value,
+            description=self.description.value,
+            origin=self.origin.value,
+            pros=self.pros.value,
+            cons=self.cons.value,
+        )
+        await resp.send_message("Special ability added/modified", ephemeral=True)
+        self.stop()
 
 
 with open("resources/abilities.json", mode="r") as f:
