@@ -170,6 +170,7 @@ class Information(commands.Cog):
         self.join: dict[Member, Message] = {}
         self.ready = False
         self.message: Optional[WebhookMessage] = None
+        self.view: Optional[MessageView] = None
         self.bot.tree.on_error = self.on_error
 
     @app_commands.command(description="Weather information from the selected area.")
@@ -930,12 +931,12 @@ class Information(commands.Cog):
         if not self.ready:
             for guild in self.bot.guilds:
                 await self.member_count(guild)
-            self.thread: Thread = await self.bot.fetch_channel(913555643699458088)
-            if self.thread.archived:
-                await self.thread.edit(archived=False)
-            iterator = self.thread.history(limit=None, oldest_first=True)
+            thread: Thread = await self.bot.fetch_channel(913555643699458088)
+            if thread.archived:
+                await thread.edit(archived=False)
+            iterator = thread.history(limit=None, oldest_first=True)
             messages = [m async for m in iterator]
-            w = await self.bot.webhook(957602085753458708)
+            w = await self.bot.webhook(thread)
             self.view = MessageView(messages)
             self.message = await w.edit_message(
                 913555643699458088,
