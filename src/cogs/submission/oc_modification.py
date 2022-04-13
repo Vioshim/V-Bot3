@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import Enum
 from itertools import combinations
 from logging import getLogger, setLoggerClass
@@ -41,7 +41,7 @@ from discord.ui import Button, Select, TextInput, View, button, select
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, Ability, SpAbility, SPAbilityModal
+from src.structures.ability import ALL_ABILITIES, Ability, SPAbilityModal
 from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.logger import ColoredLogger
 from src.structures.move import ALL_MOVES
@@ -69,12 +69,11 @@ class SPView(Basic):
         super(SPView, self).__init__(
             target=target,
             member=member,
-            timeout=180,
         )
         self.oc = oc
         self.add.disabled = oc.sp_ability is not None
         self.modify.disabled = oc.sp_ability is None
-        self.delete.disabled = oc.sp_ability is None
+        self.remove.disabled = oc.sp_ability is None
 
     @button(label="Add", custom_id="add")
     async def add(self, ctx: Interaction, _: Button) -> None:
@@ -138,7 +137,7 @@ class SPView(Basic):
         self.stop()
 
     @button(label="Remove", custom_id="remove")
-    async def delete(self, ctx: Interaction, _: Button) -> None:
+    async def remove(self, ctx: Interaction, _: Button) -> None:
         """Method to delete a special ability
 
         Parameters
@@ -1199,7 +1198,7 @@ class Modification(Enum):
     Evolution = EvolutionMod()
     Fusion = FusionMod()
     Devolution = DevolutionMod()
-    SpAbility = SpAbilityMod()
+    SpAbility_ = SpAbilityMod()
 
     @property
     def label(self) -> str:
@@ -1263,7 +1262,7 @@ class ModifyView(View):
         self.edit.options = [
             SelectOption(
                 label=item.label,
-                value=item.name,
+                value=item.name.removesuffix("_"),
                 description=item.description,
                 emoji="\N{PENCIL}",
             )
