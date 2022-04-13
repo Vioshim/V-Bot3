@@ -16,7 +16,7 @@ from datetime import datetime
 from difflib import get_close_matches
 from logging import getLogger, setLoggerClass
 from time import mktime
-from typing import Iterable
+from typing import Iterable, Optional
 
 from discord import (
     AllowedMentions,
@@ -559,11 +559,13 @@ class RPModal(Modal):
         user: Member,
         role: Role,
         ocs: set[Character],
+        to_user: Optional[Member] = None
     ) -> None:
         super().__init__(title=f"Pinging {role.name}")
         self.user = user
         self.role = role
         self.ocs = ocs
+        self.to_user = to_user
         text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
         if len(text) > 4000:
             text = "\n".join(f"- {x.name}" for x in ocs)
@@ -605,24 +607,28 @@ class RPModal(Modal):
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        webhook: Webhook = await interaction.client.webhook(
-            958122815171756042, reason="RP Search"
-        )
-        if self.role not in self.user.roles:
+
+        reference = self.role
+        channel = 958122815171756042
+        name = f"{self.role.name} - {self.user.display_name}"
+        if self.to_user:
+            channel = 740568087820238919
+            reference = self.to_user
+            name += f" - {self.to_user.display_name}"
+        elif self.role not in self.user.roles:
             await self.user.add_roles(self.role)
+
+        webhook: Webhook = await interaction.client.webhook(channel, reason="RP Search")
         msg1: WebhookMessage = await webhook.send(
-            content=self.role.mention,
-            allowed_mentions=AllowedMentions(roles=True),
+            content=reference.mention,
+            allowed_mentions=AllowedMentions(roles=True, users=True),
             embed=embed,
             view=RPSearchManage(member, items),
             username=member.display_name,
             avatar_url=member.display_avatar.url,
             wait=True,
         )
-
-        thread = await msg1.create_thread(
-            name=f"{self.role.name} - {self.user.display_name}"
-        )
+        thread = await msg1.create_thread(name=name)
         msg2: WebhookMessage = await webhook.send(
             allowed_mentions=AllowedMentions(roles=True),
             embed=embed,
@@ -634,9 +640,9 @@ class RPModal(Modal):
         )
         await thread.add_user(self.user)
         cog = interaction.client.get_cog("Roles")
-        cog.cool_down[member.id] = utcnow()
-        cog.role_cool_down[self.role.id] = utcnow()
-        cog.last_claimer[self.role.id] = member.id
+        cog.cool_down[reference.id] = utcnow()
+        cog.role_cool_down[reference.id] = utcnow()
+        cog.last_claimer[reference.id] = member.id
         async with interaction.client.database() as db:
             await db.execute(
                 "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE) VALUES ($1, $2, $3, $4, $5)",
@@ -686,7 +692,7 @@ class RPRolesView(View):
         if hours((val := cog.role_cool_down.get(role.id))) < 2:
             s = 7200 - seconds(val)
             return await resp.send_message(
-                f"Thread is in cool down, check the ping at {role.mention}.\n"
+                "Thread is in cool down, check the ping at <#958122815171756042>.\n"
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )

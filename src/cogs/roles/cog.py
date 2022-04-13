@@ -13,10 +13,14 @@
 # limitations under the License.
 
 from datetime import datetime
+from typing import Optional
 
+from discord import Interaction, InteractionResponse, Member, Role, app_commands
+from discord.app_commands import Choice
 from discord.ext.commands import Cog
 
 from src.cogs.roles.roles import (
+    RP_SEARCH_ROLES,
     BasicRoles,
     ColorRoles,
     PronounRoles,
@@ -24,6 +28,9 @@ from src.cogs.roles.roles import (
     RPRolesView,
     RPSearchManage,
     RPSearchRoles,
+    hours,
+    seconds,
+    RPModal,
 )
 from src.structures.bot import CustomBot
 
@@ -112,6 +119,60 @@ class Roles(Cog):
         """Loads the views"""
         await self.load_self_roles()
         await self.load_rp_searches()
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @app_commands.choices(
+        role=[
+            Choice(name=k, value=v)
+            for k, v in RP_SEARCH_ROLES.items()
+        ],
+    )
+    async def ping(self, interaction: Interaction, role: str, member: Optional[Member] = None):
+        """Command used to ping roles, and even users.
+
+        Parameters
+        ----------
+        interaction : Interaction
+            Interaction
+        role : str
+            Role to ping
+        member : Optional[Member], optional
+            Member to ping
+        """
+        resp: InteractionResponse = interaction.response
+        user: Member = interaction.user
+        guild = interaction.guild
+        role: Role = guild.get_role(int(role))
+        reference = member or role
+        if self.last_claimer.get(reference.id) == user.id:
+            return await resp.send_message(
+                f"You're the last user that pinged {reference.mention}, no need to keep pinging, just ask in the RP planning and discuss.",
+                ephemeral=True,
+            )
+        if hours((val := self.cool_down.get(user.id))) < 2:
+            s = 7200 - seconds(val)
+            return await resp.send_message(
+                "You're in cool down, you pinged one of the roles recently.\n"
+                f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                ephemeral=True,
+            )
+        if hours((val := self.role_cool_down.get(reference.id))) < 2:
+            s = 7200 - seconds(val)
+            return await resp.send_message(
+                "Thread is in cool down, check the pings at <#958122815171756042>.\n"
+                f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
+                ephemeral=True,
+            )
+        ocs = interaction.client.get_cog("Submission").rpers.get(user.id, {}).values()
+        await resp.send_modal(
+            RPModal(
+                user=user,
+                role=role,
+                ocs=ocs,
+                to_user=member,
+            )
+        )
 
 
 async def setup(bot: CustomBot) -> None:
