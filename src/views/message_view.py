@@ -71,7 +71,7 @@ def msg_parser(msg: Message):
     description = get_date(msg)
     if msg.embeds:
         description = msg.embeds[0].description or description
-    return get_title(msg), remove_markdown(description)
+    return get_title(msg).split(": ")[-1], remove_markdown(description)
 
 
 class MessagePaginator(Complex):
