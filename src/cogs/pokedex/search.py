@@ -24,15 +24,12 @@ from src.structures.character import Character, FakemonCharacter
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.species import (
-    Fakemon,
-    Fusion,
     Legendary,
     Mega,
     Mythical,
     Pokemon,
     Species,
     UltraBeast,
-    Variant,
 )
 from src.utils.functions import fix
 
@@ -76,7 +73,7 @@ class SpeciesTransformer(Transformer):
         cog: Submission = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
 
-        match kind := fix(ctx.namespace.kind):
+        match fix(ctx.namespace.kind):
             case "LEGENDARY":
                 mons = Legendary.all()
             case "MYTHICAL":

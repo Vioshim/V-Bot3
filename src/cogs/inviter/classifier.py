@@ -33,7 +33,11 @@ def inv_msg_parser(message: Message):
 
 class InviterView(MessageView):
     def __init__(self, messages: list[Message]):
-        super().__init__(messages=messages, parser=inv_msg_parser)
+        super(InviterView, self).__init__(
+            messages=messages,
+            parser=inv_msg_parser,
+            emoji="\N{HANDSHAKE}",
+        )
 
     @select(
         placeholder="Select RP Hub",

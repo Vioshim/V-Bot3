@@ -217,22 +217,6 @@ class Pokedex(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @app_commands.describe(
-        name="Any name that matches(regex works).",
-        kind="Filter by kind",
-        _type="Type to filter",
-        ability="Ability to filter",
-        move="Move to filter",
-        species="Species to look up info about.",
-        fused="Search Fusions that contain the species",
-        member="Member to filter",
-        location="Location to filter",
-        backstory="Any words to look for in backstories",
-        extra="Any words to look for in the extra info",
-        sp_ability="Any words to look for in Sp Abilities",
-        pronoun="Pronoun to Look for",
-        age="OC's age. e.g. 18-24, 13, >20",
-    )
     @app_commands.rename(_type="type")
     async def find(
         self,
@@ -483,7 +467,9 @@ class Pokedex(commands.Cog):
         )
         async with view.send(ephemeral=True, embeds=embeds, content=text):
             self.bot.logger.info(
-                "%s is reading ocs /find %s", str(ctx.user), repr(ctx.namespace)
+                "%s is reading ocs /find %s",
+                str(ctx.user),
+                repr(ctx.namespace),
             )
 
 

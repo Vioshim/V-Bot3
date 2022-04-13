@@ -37,7 +37,9 @@ from discord import (
     RawMessageDeleteEvent,
     Role,
     SelectOption,
+    Thread,
     Webhook,
+    WebhookMessage,
     app_commands,
 )
 from discord.ext import commands
@@ -48,6 +50,7 @@ from yaml import dump
 from src.structures.bot import CustomBot
 from src.utils.etc import MAP_ELEMENTS, WHITE_BAR
 from src.utils.functions import message_line
+from src.views.message_view import MessageView
 
 __all__ = ("Information", "setup")
 
@@ -92,7 +95,7 @@ PING_ROLES = {
 
 class AnnouncementView(View):
     def __init__(self, *, member: Member, **kwargs):
-        super().__init__()
+        super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
 
@@ -165,11 +168,12 @@ class Information(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.join: dict[Member, Message] = {}
+        self.ready = False
+        self.message: Optional[WebhookMessage] = None
         self.bot.tree.on_error = self.on_error
 
     @app_commands.command(description="Weather information from the selected area.")
     @app_commands.guilds(719343092963999804)
-    @app_commands.describe(area="Area to get weather info about.")
     @app_commands.choices(
         area=[
             app_commands.Choice(
@@ -191,7 +195,7 @@ class Information(commands.Cog):
         ctx : ApplicationContext
             ctx
         area : str, optional
-            area
+            Area to get weather info about.
         """
         resp: InteractionResponse = ctx.response
         if not isinstance(area, str):
@@ -585,6 +589,13 @@ class Information(commands.Cog):
         messages: list[Message]
             Messages that were deleted.
         """
+        if payload.channel_id == 957604961330561065:
+            messages = self.view.messages
+            if any(x.id in payload.message_ids for x in messages):
+                messages = [x for x in messages if x.id not in payload.message_ids]
+                self.view.messages = messages
+                await self.message.edit(view=self.view)
+
         if not (payload.guild_id and (log_id := LOGS.get(payload.guild_id))):
             return
 
@@ -654,6 +665,13 @@ class Information(commands.Cog):
         payload: RawMessageDeleteEvent
             Deleted Message Event
         """
+        if payload.channel_id == 957604961330561065:
+            messages = self.view.messages
+            if any(x.id == payload.message_id for x in messages):
+                messages = [x for x in messages if x.id != payload.message_id]
+                self.view.messages = messages
+                await self.message.edit(view=self.view)
+
         if not (ctx := payload.cached_message):
             self.bot.msg_cache -= {payload.message_id}
             return
@@ -909,8 +927,21 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
-        for guild in self.bot.guilds:
-            await self.member_count(guild)
+        if not self.ready:
+            for guild in self.bot.guilds:
+                await self.member_count(guild)
+            self.thread: Thread = await self.bot.fetch_channel(913555643699458088)
+            if self.thread.archived:
+                await self.thread.edit(archived=False)
+            iterator = self.thread.history(limit=None, oldest_first=True)
+            messages = [m async for m in iterator]
+            w = await self.bot.webhook(957602085753458708)
+            self.view = MessageView(messages)
+            self.message = await w.edit_message(
+                913555643699458088,
+                view=self.view,
+            )
+            self.ready = True
 
 
 async def setup(bot: CustomBot) -> None:

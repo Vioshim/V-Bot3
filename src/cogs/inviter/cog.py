@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
 from discord import (
     ButtonStyle,
     Color,
@@ -27,6 +28,7 @@ from discord import (
     RawMessageDeleteEvent,
     Thread,
     Webhook,
+    WebhookMessage,
 )
 from discord.ext import commands
 from discord.ext.commands.converter import InviteConverter
@@ -137,6 +139,7 @@ class Inviter(commands.Cog):
         self.bot = bot
         self.adapt = InviteConverter()
         self.ready = False
+        self.message: Optional[WebhookMessage] = None
 
     @commands.Cog.listener()
     async def on_ready(self):

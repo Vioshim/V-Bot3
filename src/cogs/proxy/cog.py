@@ -27,6 +27,7 @@ from discord import (
     TextChannel,
     Thread,
     WebhookMessage,
+    app_commands,
 )
 from discord.ext import commands
 from discord.ui import Button, View
@@ -34,10 +35,9 @@ from discord.utils import get
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
 from src.cogs.submission.cog import Submission
-from discord import app_commands
 from src.structures.bot import CustomBot
-from src.structures.species import Species
 from src.structures.character import CharacterArg
+from src.structures.species import Species
 
 NPC = namedtuple("NPC", "name avatar")
 NPCLog = namedtuple("NPCLog", "channel_id message_id")
@@ -95,9 +95,6 @@ class Proxy(commands.Cog):
                 await message.delete()
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
-    @app_commands.describe(pokemon="Species to use")
-    @app_commands.describe(shiny="If Shiny")
-    @app_commands.describe(gender="Sprite to use")
     @app_commands.guilds(719343092963999804)
     async def slash_npc(
         self,
@@ -114,11 +111,11 @@ class Proxy(commands.Cog):
         ctx : ApplicationContext
             Context
         pokemon : str, optional
-            Pokemon, by default None
+            "Species to use"
         shiny : bool, optional
-            if shiny, by default None
+            If Shiny
         gender : str, optional
-            pronoun, by default None
+            Sprite to use
         character : str, optional
             character id, by default None
         """
