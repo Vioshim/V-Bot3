@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import Optional
+
 from discord import (
     ButtonStyle,
     Color,
@@ -144,11 +145,12 @@ class Inviter(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         if not self.ready:
-            self.thread: Thread = await self.bot.fetch_channel(957604961330561065)
-            if self.thread.archived:
-                await self.thread.edit(archived=False)
-            messages = [m async for m in self.thread.history(limit=None)]
-            w = await self.bot.webhook(957602085753458708)
+            thread: Thread = await self.bot.fetch_channel(957604961330561065)
+            if thread.archived:
+                await thread.edit(archived=False)
+            iterator = thread.history(limit=None, oldest_first=True)
+            messages = [m async for m in iterator]
+            w = await self.bot.webhook(thread)
             self.view = InviterView(messages)
             self.message = await w.edit_message(
                 957604961330561065,
