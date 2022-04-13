@@ -86,7 +86,7 @@ PING_ROLES = {
     "Radio": 805878418225889280,
     "Partners": 725582056620294204,
     "Moderation": 720296534742138880,
-    "No": None,
+    "No": 0,
 }
 
 
@@ -120,7 +120,7 @@ class AnnouncementView(View):
     )
     async def ping(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        if role := ctx.guild.get_role(sct.values[0]):
+        if role := ctx.guild.get_role(int(sct.values[0])):
             self.kwargs["content"] = role.mention
             if role.is_default():
                 mentions = AllowedMentions(everyone=True)

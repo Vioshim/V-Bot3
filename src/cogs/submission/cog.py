@@ -115,7 +115,7 @@ class SPAbView(View):
         super().__init__(timeout=None)
         self.sp_ability = SpAbility()
         self.member = member
-        
+
     async def interaction_check(self, interaction: Interaction) -> bool:
         return interaction.user == self.member
 
@@ -580,7 +580,12 @@ class Submission(commands.Cog):
                 resp: InteractionResponse = ctx.response
                 if not resp.is_done():
                     await resp.defer(ephemeral=True)
-                return await ctx.followup.send(text, wait=True, ephemeral=True, view=view)
+                return await ctx.followup.send(
+                    text,
+                    wait=True,
+                    ephemeral=True,
+                    view=view,
+                )
             elif view:
                 return await ctx.reply(text, view=view)
             return await ctx.reply(text, delete_after=5)
