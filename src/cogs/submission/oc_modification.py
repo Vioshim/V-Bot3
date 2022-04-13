@@ -1179,7 +1179,7 @@ class SpAbilityMod(Mod):
         """
         view = SPView(oc=oc, member=member, target=target)
         view.embed.title = "Special Ability Management"
-        await view.send()
+        await view.send(ephemeral=True)
         await view.wait()
         return False
 
