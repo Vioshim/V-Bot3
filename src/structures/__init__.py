@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import Ability, SpAbility, SPAbilityModal
 from src.structures.bot import CustomBot
 from src.structures.character import (
     ASSOCIATIONS,

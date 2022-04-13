@@ -50,7 +50,7 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.ui import Button, TextInput, View
+from discord.ui import Button, TextInput, View, button
 from discord.utils import utcnow
 from docx import Document
 from docx.document import Document as DocumentType
@@ -59,10 +59,9 @@ from orjson import loads
 from yaml import safe_load
 from yaml.error import MarkedYAMLError
 
-from src.pagination.boolean import BooleanView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import Ability, SpAbility, SPAbilityModal
 from src.structures.bot import CustomBot
 from src.structures.character import (
     Character,
@@ -109,6 +108,38 @@ CLAIM_MESSAGE = """
 **　 　　。　　　　ﾟ　　　.　　　　　.**
 **,　　　　.　 .　　       .               。**
 """.strip()
+
+
+class SPAbView(View):
+    def __init__(self, member: Member):
+        super().__init__(timeout=None)
+        self.sp_ability = SpAbility()
+        self.member = member
+        
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return interaction.user == self.member
+
+    @button(label="Yes")
+    async def confirm(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        modal = SPAbilityModal(self.sp_ability)
+        await resp.send_modal(modal)
+        await modal.wait()
+        self.sp_ability = modal.sp_ability
+        self.stop()
+
+    @button(label="No")
+    async def deny(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.send_message("Alright, no Sp Ability", ephemeral=True)
+        self.stop()
+
+    @button(label="Cancel")
+    async def cancel(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.send_message("Process concluded", ephemeral=True)
+        self.sp_ability = None
+        self.stop()
 
 
 def message_validator(message: Message):
@@ -544,14 +575,15 @@ class Submission(commands.Cog):
             User that interacts
         """
 
-        async def send(text: str):
+        async def send(text: str, view: View = None):
             if isinstance(ctx, Interaction):
                 resp: InteractionResponse = ctx.response
                 if not resp.is_done():
-                    return await ctx.response.send_message(content=text, ephemeral=True)
-                return await ctx.followup.send(content=text, ephemeral=True)
-            else:
-                return await ctx.reply(content=text, delete_after=5)
+                    await resp.defer(ephemeral=True)
+                return await ctx.followup.send(text, wait=True, ephemeral=True, view=view)
+            elif view:
+                return await ctx.reply(text, view=view)
+            return await ctx.reply(text, delete_after=5)
 
         if not self.ready:
             await send(
@@ -743,39 +775,17 @@ class Submission(commands.Cog):
             return
 
         if oc.sp_ability == SpAbility():
-            bool_view = BooleanView(member=worker, target=ctx)
-            async with bool_view.handle(
-                title="Does the character have an Special Ability?",
-                description=(
-                    "Special abilities are basically unique traits that their OC's kind usually can't do, "
-                    "it's like being born with an unique power that could have been obtained by different "
-                    "reasons, they are known for having pros and cons."
-                ),
-            ) as answer:
-                if answer is None:
-                    return
-                if answer:
-                    data: dict[str, str] = {}
-                    for item in SpAbility.__slots__:
+            sp_view = SPAbView(worker)
+            message = await send("Continue", sp_view)
+            await sp_view.wait()
+            with suppress(DiscordException):
+                await message.delete()
+            if sp_view.sp_ability is None:
+                return
 
-                        if item == "name":
-                            style = TextStyle.short
-                        else:
-                            style = TextStyle.paragraph
-
-                        async with text_view.handle(
-                            label=f"Special Ability's {item.title()}",
-                            style=style,
-                            placeholder=(
-                                f"Here you'll define the Special Ability's {item.title()}, "
-                                "make sure it is actually understandable."
-                            ),
-                            required=True,
-                        ) as answer:
-                            if not answer:
-                                return
-                            data[item] = answer
-                    oc.sp_ability = SpAbility(**data)
+            oc.sp_ability = sp_view.sp_ability
+            if oc.sp_ability == SpAbility():
+                oc.sp_ability = None
 
         if not (oc.url or oc.backstory):
             async with text_view.handle(

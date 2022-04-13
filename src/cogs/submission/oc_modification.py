@@ -41,12 +41,8 @@ from discord.ui import Button, Select, TextInput, View, button, select
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, Ability, SpAbility
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.ability import ALL_ABILITIES, Ability, SpAbility, SPAbilityModal
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.logger import ColoredLogger
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
@@ -107,6 +103,10 @@ class SPView(Basic):
             Interaction
         """
         resp: InteractionResponse = ctx.response
+        modal = SPAbilityModal()
+        await resp.send_modal(modal)
+        await modal.wait()
+        self.sp_ability = modal.sp_ability
         backup = set(self.oc.abilities)
         if len(self.oc.abilities) > 1:
             view = Complex(
@@ -130,47 +130,9 @@ class SPView(Basic):
             ) as items:
                 if isinstance(items, set):
                     self.oc.abilities -= items
-                    backup = set(self.oc.abilities)
                 else:
-                    return self.stop()
-
-        else:
-            await resp.send_message("Proceeding", ephemeral=True)
-
-        message = await ctx.original_message()
-
-        text_view = ModernInput(
-            input_text=TextInput(
-                label="Special Ability",
-                placeholder=DEFAULT_INFO_MSG,
-                required=True,
-            ),
-            member=self.member,
-            target=ctx,
-        )
-
-        data: dict[str, str] = {}
-
-        for item in SpAbility.__slots__:
-            if item == "name":
-                item_style = TextStyle.short
-            else:
-                item_style = TextStyle.long
-            title = f"Write the Special Ability's {item.title()}"
-            async with text_view.handle(
-                placeholder=DEFAULT_INFO_MSG,
-                style=item_style,
-                label=title,
-                origin=message,
-            ) as answer:
-                data[item] = answer
-                if not isinstance(answer, str):
-                    break
-        else:
-            self.oc.sp_ability = SpAbility(**data)
-
-        self.oc.abilities = frozenset(backup)
-        return self.stop()
+                    self.sp_ability = None
+        self.stop()
 
     @button(label="Modify", custom_id="modify")
     async def modify(self, ctx: Interaction, _: Button) -> None:
@@ -183,54 +145,11 @@ class SPView(Basic):
         ctx : Interaction
             Interaction
         """
-        view = Complex(
-            member=self.member,
-            values=list(SpAbility.__slots__),
-            target=ctx,
-            timeout=None,
-            parser=lambda x: (
-                str(x).title(),
-                f"Modify Sp. Ability's {x}".title(),
-            ),
-            silent_mode=True,
-        )
-
-        async with view.send(title="Sp.Ability Modify", ephemeral=True) as elements:
-            if not isinstance(elements, set):
-                return self.stop()
-
-            text_view = ModernInput(
-                member=self.member,
-                target=ctx,
-            )
-            backup = asdict(self.oc.sp_ability)
-
-            msg = await ctx.original_message()
-
-            for item in SpAbility.__slots__:
-                if item not in elements:
-                    continue
-                if item == "name":
-                    item_style = TextStyle.short
-                else:
-                    item_style = TextStyle.long
-                title = f"Special Ability's {item}".title()
-                value: str = backup.get(item)
-                async with text_view.handle(
-                    label=title,
-                    style=item_style,
-                    placeholder=DEFAULT_INFO_MSG,
-                    default=value,
-                    origin=msg,
-                    required=True,
-                ) as answer:
-                    if not (answer and isinstance(answer, str)):
-                        break
-                    backup[item] = answer
-
-            else:
-                self.oc.sp_ability = SpAbility(**backup)
-
+        resp: InteractionResponse = ctx.response
+        modal = SPAbilityModal(self.oc.sp_ability)
+        await resp.send_modal(modal)
+        await modal.wait()
+        self.sp_ability = modal.sp_ability
         self.stop()
 
     @button(label="Remove", custom_id="remove")

@@ -90,7 +90,6 @@ class AreaSelection(View):
 
     @select(placeholder="Select a location to check", row=0)
     async def selection(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
         channel: TextChannel = self.bot.get_channel(int(sct.values[0]))
         self.bot.logger.info(
             "%s is reading Channel Information of %s",
@@ -118,4 +117,6 @@ class AreaSelection(View):
         )
         embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
         async with view.send(ephemeral=True, embed=embed):
-            self.bot.logger.info("%s user is checking ocs at %s", str(ctx.user), channel.name)
+            self.bot.logger.info(
+                "%s user is checking ocs at %s", str(ctx.user), channel.name
+            )
