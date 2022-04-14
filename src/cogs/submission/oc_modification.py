@@ -564,7 +564,6 @@ class MovesetMod(Mod):
             title="Write the character's moveset. Current below",
             description=description,
             editing_original=True,
-            ephemeral=True,
         ) as choices:
             if isinstance(choices, set):
                 oc.moveset = frozenset(choices)
@@ -636,7 +635,7 @@ class AbilitiesMod(Mod):
                 value=item.description,
                 inline=False,
             )
-        async with view.send(ephemeral=True, editing_original=True) as choices:
+        async with view.send(editing_original=True) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
 
@@ -743,7 +742,7 @@ class MovepoolMod(Mod):
             Bool If Updatable, None if cancelled
         """
         view = MovepoolView(target, member, oc)
-        await view.send(editing_original=True, ephemeral=True)
+        await view.send(editing_original=True)
         await view.wait()
         return False
 
@@ -806,7 +805,6 @@ class EvolutionMod(Mod):
         )
         async with view.send(
             title="Select the Evolution",
-            ephemeral=True,
             editing_original=True,
             single=True,
         ) as species:
@@ -837,7 +835,6 @@ class EvolutionMod(Mod):
             )
             async with view2.send(
                 title="Select the new typing",
-                ephemeral=True,
                 editing_original=True,
                 single=True,
             ) as types:
@@ -869,10 +866,7 @@ class EvolutionMod(Mod):
                 ),
             ),
         )
-        async with view3.send(
-            editing_original=True,
-            ephemeral=True,
-        ) as abilities:
+        async with view3.send(editing_original=True) as abilities:
             if isinstance(abilities, set):
                 oc.abilities = frozenset(abilities)
 
@@ -958,7 +952,6 @@ class DevolutionMod(Mod):
         )
         async with view.send(
             editing_original=True,
-            ephemeral=True,
             title="Select the Devolution",
             single=True,
         ) as species:
@@ -989,7 +982,6 @@ class DevolutionMod(Mod):
             async with view.send(
                 title="Select the Fusion's new typing",
                 editing_original=True,
-                ephemeral=True,
                 single=True,
             ) as types:
                 if not types:
@@ -1078,7 +1070,6 @@ class FusionMod(Mod):
         )
         async with view.send(
             title="Select the Fused Evolution",
-            ephemeral=True,
             single=True,
             editing_original=True,
         ) as species:
@@ -1106,7 +1097,6 @@ class FusionMod(Mod):
         async with view.send(
             title="Select the Fusion's new typing",
             editing_original=True,
-            ephemeral=True,
             single=True,
         ) as types:
             if not types:
@@ -1172,7 +1162,7 @@ class SpAbilityMod(Mod):
         """
         view = SPView(oc=oc, member=member, target=target)
         view.embed.title = "Special Ability Management"
-        await view.send(ephemeral=True, editing_original=True)
+        await view.send(editing_original=True)
         await view.wait()
         return False
 
