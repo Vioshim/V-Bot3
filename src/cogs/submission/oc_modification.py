@@ -253,7 +253,7 @@ class NameMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.name = answer.title()
-                return False
+        return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -310,7 +310,7 @@ class AgeMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.age = int_check(answer, 13, 99)
-                return False
+        return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -440,7 +440,7 @@ class BackstoryMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.backstory = answer or None
-                return False
+        return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -497,7 +497,7 @@ class ExtraMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.extra = answer or None
-                return False
+        return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -638,6 +638,7 @@ class AbilitiesMod(Mod):
         async with view.send(editing_original=True) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
+        return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -1049,8 +1050,6 @@ class FusionMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        origin = await target.original_message()
-
         items = [oc.species]
         items.extend(oc.species.species_evolves_to)
         values = [Fusion(mon1=i, mon2=j) for i, j in combinations(items, r=2)]
