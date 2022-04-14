@@ -50,12 +50,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import (
-    common_pop_get,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -1626,7 +1621,7 @@ def oc_process(**kwargs) -> Type[Character]:
     elif species := Fusion.deduce(data.pop("fusion", "")):
         data["species"] = species
     else:
-        aux = common_pop_get(data, "species", "pokemon")
+        aux = common_pop_get(data, "species", "pokemon") or ""
         method = Species.any_deduce if "," in aux else Species.single_deduce
         if species := method(aux):
             data["species"] = species
