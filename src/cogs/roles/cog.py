@@ -123,12 +123,14 @@ class Roles(Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.choices(
-        role=[
-            Choice(name=k, value=str(v))
-            for k, v in RP_SEARCH_ROLES.items()
-        ],
+        role=[Choice(name=k, value=str(v)) for k, v in RP_SEARCH_ROLES.items()],
     )
-    async def ping(self, interaction: Interaction, role: str, member: Optional[Member] = None):
+    async def ping(
+        self,
+        interaction: Interaction,
+        role: str,
+        member: Optional[Member] = None,
+    ):
         """Command used to ping roles, and even users.
 
         Parameters

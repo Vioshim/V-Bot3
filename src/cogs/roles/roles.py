@@ -559,7 +559,7 @@ class RPModal(Modal):
         user: Member,
         role: Role,
         ocs: set[Character],
-        to_user: Optional[Member] = None
+        to_user: Optional[Member] = None,
     ) -> None:
         super().__init__(title=f"Pinging {role.name}")
         self.user = user

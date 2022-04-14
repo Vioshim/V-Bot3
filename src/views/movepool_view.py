@@ -24,11 +24,7 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
-from src.structures.character import (
-    Character,
-    FakemonCharacter,
-    VariantCharacter,
-)
+from src.structures.character import Character, FakemonCharacter, VariantCharacter
 from src.structures.movepool import Movepool
 from src.utils.functions import yaml_handler
 from src.views.move_view import MoveView
@@ -111,8 +107,8 @@ class MovepoolModal(Modal):
 
         self.oc.species.movepool = movepool
         self.oc.moveset &= frozenset(movepool())
-
         await resp.send_message("Movepool has been changed.", ephemeral=True)
+        self.stop()
 
 
 class MovepoolView(Basic):
