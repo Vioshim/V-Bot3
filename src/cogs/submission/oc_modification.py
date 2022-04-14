@@ -1245,8 +1245,8 @@ class ModifyView(View):
 
         self.edit.options = [
             SelectOption(
-                label=item.label,
-                value=item.name.removesuffix("_"),
+                label=item.label.removesuffix("_"),
+                value=item.name,
                 description=item.description,
                 emoji="\N{PENCIL}",
             )
