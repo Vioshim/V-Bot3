@@ -558,18 +558,16 @@ class MovesetMod(Mod):
             ),
             emoji_parser=lambda x: x.type.emoji,
         )
-        view.menu_format()
         aux: Optional[bool] = None
-        origin = await target.original_message()
-        view.embed.title = "Write the character's moveset. Current below"
-        view.embed.description = (
-            "\n".join(repr(move) for move in oc.moveset) or "No Moves"
-        )
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(moves := view.choices, set):
-            oc.moveset = frozenset(moves)
+        description = "\n".join(repr(move) for move in oc.moveset) or "No Moves"
+        async with view.send(
+            title="Write the character's moveset. Current below",
+            description=description,
+            editing_original=True,
+            ephemeral=True,
+        ) as choices:
+            if isinstance(choices, set):
+                oc.moveset = frozenset(choices)
         return aux
 
 
@@ -617,7 +615,6 @@ class AbilitiesMod(Mod):
         """
 
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
-
         view = Complex(
             member=member,
             values=oc.species.abilities or ALL_ABILITIES.values(),
@@ -632,8 +629,6 @@ class AbilitiesMod(Mod):
                 default=", ".join(x.name for x in oc.abilities),
             ),
         )
-        view.menu_format()
-        origin = await target.original_message()
         view.embed.title = "Select the abilities. Current ones below"
         for index, item in enumerate(oc.abilities, start=1):
             view.embed.add_field(
@@ -641,11 +636,9 @@ class AbilitiesMod(Mod):
                 value=item.description,
                 inline=False,
             )
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(abilities := view.choices, set):
-            oc.abilities = frozenset(abilities)
+        async with view.send(ephemeral=True, editing_original=True) as choices:
+            if isinstance(choices, set):
+                oc.abilities = frozenset(choices)
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -690,19 +683,15 @@ class ImageMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        view = ImageView(
+        async with ImageView(
             member=member,
             default_img=oc.image,
             target=target,
-        )
-        view.message = origin = await target.original_message()
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(image := view.text, str):
-            aux = oc.image != image
-            oc.image = image
-            return aux
+        ).send() as text:
+            if text and isinstance(text, str):
+                aux = oc.image != text
+                oc.image = text
+                return aux
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -753,11 +742,9 @@ class MovepoolMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        origin = await target.original_message()
         view = MovepoolView(target, member, oc)
-        await origin.edit(content=None, embed=view.embed, view=view)
+        await view.send(editing_original=True, ephemeral=True)
         await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
         return False
 
 
@@ -803,8 +790,6 @@ class EvolutionMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        origin = await target.original_message()
-
         values = oc.species.species_evolves_to
         view = Complex(
             member=member,
@@ -819,17 +804,19 @@ class EvolutionMod(Mod):
                 default=random_choice(values).name,
             ),
         )
-        view.embed.title = "Select the Evolution"
-        view.menu_format()
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        if not (species := view.choice):
-            return
+        async with view.send(
+            title="Select the Evolution",
+            ephemeral=True,
+            editing_original=True,
+            single=True,
+        ) as species:
+            if not species:
+                return
 
-        oc.species = species
+            oc.species = species
         if not oc.types and isinstance(species, Fusion):
             possible_types = species.possible_types
-            view = Complex(
+            view2 = Complex(
                 member=member,
                 values=possible_types,
                 timeout=None,
@@ -848,19 +835,21 @@ class EvolutionMod(Mod):
                     ).title(),
                 ),
             )
-            view.embed.title = "Select the new typing"
-            view.menu_format()
-            await origin.edit(content=None, embed=view.embed, view=view)
-            await view.wait()
-            if not (types := view.choice):
-                return
-            species.types = types
+            async with view2.send(
+                title="Select the new typing",
+                ephemeral=True,
+                editing_original=True,
+                single=True,
+            ) as types:
+                if not (types := view.choice):
+                    return
+                species.types = types
 
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
 
         abilities: Iterable[Ability] = species.abilities or ALL_ABILITIES.values()
 
-        view = Complex(
+        view3 = Complex(
             member=member,
             values=abilities,
             timeout=None,
@@ -880,26 +869,23 @@ class EvolutionMod(Mod):
                 ),
             ),
         )
-        view.menu_format()
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(abilities := view.choices, set):
-            oc.abilities = frozenset(abilities)
+        async with view3.send(
+            editing_original=True,
+            ephemeral=True,
+        ) as abilities:
+            if isinstance(abilities, set):
+                oc.abilities = frozenset(abilities)
 
         default_image: str = oc.default_image or oc.image
 
-        view = ImageView(
+        view4 = ImageView(
             member=member,
             default_img=default_image,
             target=target,
         )
-
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(image := view.text, str):
-            oc.image = image
+        async with view4.send() as image:
+            if isinstance(image, str):
+                oc.image = image
         return True
 
 
@@ -947,8 +933,6 @@ class DevolutionMod(Mod):
         Optional[bool]
             Bool If Updatable, None if cancelled
         """
-        origin = await target.original_message()
-
         current = oc.species
 
         total: list[Species | Fusion] = []
@@ -972,13 +956,14 @@ class DevolutionMod(Mod):
                 required=True,
             ),
         )
-        view.menu_format()
-        view.embed.title = "Select the Devolution"
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        species: Optional[Fusion] = view.choice
-        if not species:
-            return
+        async with view.send(
+            editing_original=True,
+            ephemeral=True,
+            title="Select the Devolution",
+            single=True,
+        ) as species:
+            if not isinstance(species, Species):
+                return
 
         if not species.types and isinstance(species, Fusion):
             possible_types = species.possible_types
@@ -1001,13 +986,15 @@ class DevolutionMod(Mod):
                     ).title(),
                 ),
             )
-            view.menu_format()
-            view.embed.title = "Select the Fusion's new typing"
-            await origin.edit(content=None, embed=view.embed, view=view)
-            await view.wait()
-            if not (types := view.choice):
-                return
-            species.types = types
+            async with view.send(
+                title="Select the Fusion's new typing",
+                editing_original=True,
+                ephemeral=True,
+                single=True,
+            ) as types:
+                if not types:
+                    return
+                species.types = types
 
         oc.species = species
 
@@ -1020,12 +1007,9 @@ class DevolutionMod(Mod):
             default_img=default_image,
             target=target,
         )
-
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(image := view.text, str):
-            oc.image = image
+        async with view.send() as image:
+            if image and isinstance(image, str):
+                oc.image = image
         return True
 
 
@@ -1092,13 +1076,14 @@ class FusionMod(Mod):
                 required=True,
             ),
         )
-        view.menu_format()
-        view.embed.title = "Select the Fused Evolution"
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        species: Optional[Fusion] = view.choice
-        if not species:
-            return
+        async with view.send(
+            title="Select the Fused Evolution",
+            ephemeral=True,
+            single=True,
+            editing_original=True,
+        ) as species:
+            if not isinstance(species, Fusion):
+                return
 
         possible_types = species.possible_types
         view = Complex(
@@ -1118,13 +1103,15 @@ class FusionMod(Mod):
                 default="/".join(i.name for i in random_choice(possible_types)).title(),
             ),
         )
-        view.menu_format()
-        view.embed.title = "Select the Fusion's new typing"
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        if not (types := view.choice):
-            return
-        species.types = types
+        async with view.send(
+            title="Select the Fusion's new typing",
+            editing_original=True,
+            ephemeral=True,
+            single=True,
+        ) as types:
+            if not types:
+                return
+            species.types = types
 
         oc.species = species
 
@@ -1135,12 +1122,9 @@ class FusionMod(Mod):
             default_img=default_image,
             target=target,
         )
-
-        await origin.edit(content=None, embed=view.embed, view=view)
-        await view.wait()
-        await origin.edit(content="Modification done", embed=None, view=None)
-        if isinstance(image := view.text, str):
-            oc.image = image
+        async with view.send() as image:
+            if image and isinstance(image, str):
+                oc.image = image
         return True
 
 
@@ -1188,7 +1172,7 @@ class SpAbilityMod(Mod):
         """
         view = SPView(oc=oc, member=member, target=target)
         view.embed.title = "Special Ability Management"
-        await view.send(ephemeral=True)
+        await view.send(ephemeral=True, editing_original=True)
         await view.wait()
         return False
 
