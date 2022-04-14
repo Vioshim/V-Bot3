@@ -556,6 +556,7 @@ class MovesetMod(Mod):
                 placeholder="Move, Move, Move, Move, Move, Move",
                 default=", ".join(x.name for x in oc.moveset),
             ),
+            emoji_parser=lambda x: x.type.emoji,
         )
         view.menu_format()
         aux: Optional[bool] = None
