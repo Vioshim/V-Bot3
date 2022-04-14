@@ -79,7 +79,6 @@ class DefaultModal(Modal):
 
         await self.view.update(interaction=interaction)
         self.stop()
-        self.view.stop()
 
 
 class Complex(Simple):
@@ -290,7 +289,7 @@ class Complex(Simple):
         interaction : Interaction
             Interaction to use
         """
-        await super(Complex, self).edit(interaction=interaction, page=self._pos)
+        await self.edit(interaction=interaction)
 
     async def edit(
         self,
