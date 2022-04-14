@@ -370,6 +370,7 @@ class PronounMod(Mod):
                 max_length=4,
             ),
         )
+        view.menu_format()
         aux: Optional[bool] = None
         origin = await target.original_message()
         view.embed.title = "Write the character's Pronoun. Current below"
@@ -556,6 +557,7 @@ class MovesetMod(Mod):
                 default=", ".join(x.name for x in oc.moveset),
             ),
         )
+        view.menu_format()
         aux: Optional[bool] = None
         origin = await target.original_message()
         view.embed.title = "Write the character's moveset. Current below"
@@ -629,6 +631,7 @@ class AbilitiesMod(Mod):
                 default=", ".join(x.name for x in oc.abilities),
             ),
         )
+        view.menu_format()
         origin = await target.original_message()
         view.embed.title = "Select the abilities. Current ones below"
         for index, item in enumerate(oc.abilities, start=1):
@@ -816,6 +819,7 @@ class EvolutionMod(Mod):
             ),
         )
         view.embed.title = "Select the Evolution"
+        view.menu_format()
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         if not (species := view.choice):
@@ -844,6 +848,7 @@ class EvolutionMod(Mod):
                 ),
             )
             view.embed.title = "Select the new typing"
+            view.menu_format()
             await origin.edit(content=None, embed=view.embed, view=view)
             await view.wait()
             if not (types := view.choice):
@@ -874,7 +879,7 @@ class EvolutionMod(Mod):
                 ),
             ),
         )
-
+        view.menu_format()
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
         await origin.edit(content="Modification done", embed=None, view=None)
@@ -966,6 +971,7 @@ class DevolutionMod(Mod):
                 required=True,
             ),
         )
+        view.menu_format()
         view.embed.title = "Select the Devolution"
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
@@ -994,6 +1000,7 @@ class DevolutionMod(Mod):
                     ).title(),
                 ),
             )
+            view.menu_format()
             view.embed.title = "Select the Fusion's new typing"
             await origin.edit(content=None, embed=view.embed, view=view)
             await view.wait()
@@ -1084,6 +1091,7 @@ class FusionMod(Mod):
                 required=True,
             ),
         )
+        view.menu_format()
         view.embed.title = "Select the Fused Evolution"
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
@@ -1109,6 +1117,7 @@ class FusionMod(Mod):
                 default="/".join(i.name for i in random_choice(possible_types)).title(),
             ),
         )
+        view.menu_format()
         view.embed.title = "Select the Fusion's new typing"
         await origin.edit(content=None, embed=view.embed, view=view)
         await view.wait()
