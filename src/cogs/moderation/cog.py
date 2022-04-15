@@ -87,7 +87,7 @@ class Meeting(View):
         if member == self.reporter:
             await resp.send_message("You are the one reporting.", ephemeral=True)
             return False
-        elif member == self.imposter:
+        if member == self.imposter:
             await resp.send_message("You are the one reported.", ephemeral=True)
             return False
         if member in self.attack:

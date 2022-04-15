@@ -577,7 +577,7 @@ class Submission(commands.Cog):
                     ephemeral=True,
                     view=view,
                 )
-            elif view:
+            if view:
                 return await ctx.reply(text, view=view)
             return await ctx.reply(text, delete_after=5)
 
@@ -701,7 +701,7 @@ class Submission(commands.Cog):
         if len(oc.abilities) > max_ab:
             await send(f"Max Amount of Abilities for the current Species is {max_ab}")
             return
-        elif not oc.any_ability_at_first and (
+        if not oc.any_ability_at_first and (
             ability_errors := ", ".join(ability.name for ability in oc.abilities if ability not in species.abilities)
         ):
             await send(f"the abilities [{ability_errors}] were not found in the species")
