@@ -338,7 +338,7 @@ class Species(metaclass=ABCMeta):
         """
         if isinstance(item, cls):
             return item
-        elif isinstance(item, str):
+        if isinstance(item, str):
             values = {i.id: i for i in cls.all()} or ALL_SPECIES
             items = {x for i in item.split("_") if (x := values.get(i))}
             if len(items) == 2:
