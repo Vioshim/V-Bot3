@@ -137,7 +137,7 @@ class EmbedBuilder(commands.Cog):
                     (p1, score1), (p2, score2) = PLAYER_FINDER.findall(log)
                     p1 = f"{p1} ({score1})"
                     p2 = f"{p2} ({score2})"
-                    items = {}
+                    items: dict[str, list[str]] = {}
                     for index, name in POKEMON_FINDER.findall(log):
                         name = f"• {name}"
                         if index == "1":

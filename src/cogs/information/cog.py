@@ -122,10 +122,11 @@ class AnnouncementView(View):
     async def ping(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         if role := ctx.guild.get_role(int(sct.values[0])):
-            self.kwargs["content"] = role.mention
             if role.is_default():
+                self.kwargs["content"] = "@everyone"
                 mentions = AllowedMentions(everyone=True)
             else:
+                self.kwargs["content"] = role.mention
                 mentions = AllowedMentions(roles=True)
             self.kwargs["allowed_mentions"] = mentions
             info = f"Alright, will ping {role.mention}"
@@ -409,27 +410,14 @@ class Information(commands.Cog):
         if not msg.embeds:
             return
 
-        embed = msg.embeds[0]
-
+        embed = msg.embeds[0].copy()
+        embed.clear_fields()
         members = len([m for m in guild.members if not m.bot])
         total = len(guild.members)
-
-        data: dict[str, int] = {}
-
-        if cog := self.bot.get_cog("Submission"):
-            ocs = [oc for oc in cog.ocs.values() if oc.server == guild.id and guild.get_member(oc.author)]
-            if total_ocs := len(ocs):
-                data["Characters"] = total_ocs
-
-        data["Members   "] = members
-        data["Bots      "] = total - members
-        data["Total     "] = total
-
-        text = "\n".join(f"{key}: {value:03d}" for key, value in data.items())
-        text = f"```yaml\n{text}\n```"
-
-        if embed.description != text:
-            embed.description = text
+        embed.add_field(name="**__Members__**", value=f"`{members:04d}`")
+        embed.add_field(name="**__Bots__**", value=f"`{total - members:02d}`")
+        embed.add_field(name="**__Total__**", value=f"`{total:04d}`")
+        if embed.fields == msg.embeds[0].fields:
             await msg.edit(embed=embed)
 
     @commands.Cog.listener()
