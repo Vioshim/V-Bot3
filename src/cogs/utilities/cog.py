@@ -69,8 +69,7 @@ class Utilities(commands.Cog):
 
         if lazy:
             return (z for _, _, z in sorted(suggestions, key=sort_key))
-        else:
-            return [z for _, _, z in sorted(suggestions, key=sort_key)]
+        return [z for _, _, z in sorted(suggestions, key=sort_key)]
 
     def parse_object_inv(self, stream: SphinxObjectFileReader, url: str):
 
