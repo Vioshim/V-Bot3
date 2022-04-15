@@ -788,8 +788,9 @@ class Submission(commands.Cog):
             if sp_view.sp_ability is None:
                 return
 
-            oc.sp_ability = sp_view.sp_ability
-            if oc.sp_ability == SpAbility():
+            if sp_view.sp_ability != SpAbility():
+                oc.sp_ability = sp_view.sp_ability
+            else:
                 oc.sp_ability = None
 
         if not (oc.url or oc.backstory):
