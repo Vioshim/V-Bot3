@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from asyncio import ALL_COMPLETED, TimeoutError, to_thread, wait
+from asyncio import TimeoutError, as_completed, to_thread
 from contextlib import suppress
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -21,7 +21,7 @@ from itertools import chain
 from pathlib import Path
 from random import choice as random_choice
 from random import sample
-from typing import Any, Optional, Type, Union
+from typing import Optional, Type, Union
 
 from aiofiles import open as aiopen
 from apscheduler.enums import ConflictPolicy
@@ -356,8 +356,8 @@ class Submission(commands.Cog):
             view = View()
             view.add_item(
                 Button(
-                    label="Maps",
-                    url="https://discord.com/channels/719343092963999804/812180282739392522/906430640898056222",
+                    label="Maps & Roles",
+                    url="https://discord.com/channels/719343092963999804/719709333369258015/962830944576864356",
                 )
             )
             view.add_item(
@@ -433,11 +433,19 @@ class Submission(commands.Cog):
                 f"{member.mention} has no characters.", ephemeral=True
             )
 
-    @app_commands.command(description="Allows to create OCs as an user")
+    @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @app_commands.describe(member="Member, if not provided, it's current user.")
     @app_commands.checks.has_role("Moderation")
     async def submit_as(self, ctx: Interaction, member: Optional[User]):
+        """Allows to create OCs as an user
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        member : Optional[User]
+            Member, if not provided, it's current user.
+        """
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         if not member:
@@ -921,44 +929,38 @@ class Submission(commands.Cog):
         ):
             return
         self.ignore.add(message.author.id)
+
         try:
-            done, _ = await wait(
+            for item in as_completed(
                 [
                     self.bio_google_doc_parser(message),
                     self.bio_discord_doc_parser(message),
                     self.bio_word_doc_parser(message),
-                ],
-                return_when=ALL_COMPLETED,
-            )
-
-            for result in map(lambda x: x.result(), done):
-                msg_data: Optional[dict[str, Any]] = result
-
-                if isinstance(result, tuple):
-                    result, url = result
+                ]
+            ):
+                msg_data = await item
+                if isinstance(msg_data, tuple):
+                    result, url = msg_data
                     msg_data = doc_convert(result)
                     msg_data["url"] = url
-                elif isinstance(result, DocumentType):
-                    if result.tables:
-                        msg_data = doc_convert(result)
+                elif isinstance(msg_data, DocumentType):
+                    if msg_data.tables:
+                        msg_data = doc_convert(msg_data)
                     else:
-                        with suppress(MarkedYAMLError):
-                            msg_data = safe_load(
-                                yaml_handler(
-                                    "\n".join(
-                                        element
-                                        for p in result.paragraphs
-                                        if (element := p.text.strip())
-                                    )
+                        msg_data = safe_load(
+                            yaml_handler(
+                                "\n".join(
+                                    element
+                                    for p in msg_data.paragraphs
+                                    if (element := p.text.strip())
                                 )
                             )
-
-                if isinstance(msg_data, dict):
-                    await self.submission_handler(message, **msg_data)
-                    return
+                        )
+                if msg_data and isinstance(msg_data, dict):
+                    return await self.submission_handler(message, **msg_data)
         except Exception as e:
             self.bot.logger.exception("Exception processing character", exc_info=e)
-            await message.reply(str(e), delete_after=10)
+            await message.reply(str(e), delete_after=15)
         finally:
             self.ignore -= {message.author.id}
 
