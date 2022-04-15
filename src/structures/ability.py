@@ -343,7 +343,7 @@ class AbilityDecoder(JSONDecoder):
 
 
 class SPAbilityModal(Modal):
-    def __init__(self, *, sp_ability: SpAbility = None) -> None:
+    def __init__(self, sp_ability: SpAbility = None) -> None:
         super().__init__(title="Special Ability", timeout=None)
         if not sp_ability:
             sp_ability = SpAbility()
