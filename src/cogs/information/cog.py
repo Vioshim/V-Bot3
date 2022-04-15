@@ -823,12 +823,12 @@ class Information(commands.Cog):
     async def on_error(
         self,
         interaction: Interaction,
-        command: Optional[app_commands.Command | app_commands.ContextMenu],
         error: app_commands.AppCommandError,
     ):
         error: Exception | app_commands.AppCommandError = getattr(
             error, "original", error
         )
+        command = interaction.command
         resp: InteractionResponse = interaction.response
         if command and command._has_any_error_handlers():
             return
