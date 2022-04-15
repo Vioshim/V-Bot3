@@ -90,7 +90,7 @@ class SPView(Basic):
         modal = SPAbilityModal()
         await resp.send_modal(modal)
         await modal.wait()
-        self.sp_ability = modal.sp_ability
+        self.oc.sp_ability = modal.sp_ability
         backup = set(self.oc.abilities)
         if len(self.oc.abilities) > 1:
             view = Complex(
@@ -133,7 +133,7 @@ class SPView(Basic):
         modal = SPAbilityModal(self.oc.sp_ability)
         await resp.send_modal(modal)
         await modal.wait()
-        self.sp_ability = modal.sp_ability
+        self.oc.sp_ability = modal.sp_ability
         self.stop()
 
     @button(label="Remove", custom_id="remove")
