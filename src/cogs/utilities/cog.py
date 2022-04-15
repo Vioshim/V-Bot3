@@ -43,11 +43,7 @@ def to_string(c: str) -> str:
     """
     digit = f"{ord(c):x}"
     name = u_name(c, "Name not found.")
-    return (
-        f"`\\U{digit:>08}`: {name} - {c}"
-        " \N{EM DASH} "
-        f"<http://www.fileformat.info/info/unicode/char/{digit}>"
-    )
+    return f"`\\U{digit:>08}`: {name} - {c}" " \N{EM DASH} " f"<http://www.fileformat.info/info/unicode/char/{digit}>"
 
 
 class Utilities(commands.Cog):
@@ -90,9 +86,7 @@ class Utilities(commands.Cog):
 
         line = stream.readline()
         if "zlib" not in line:
-            raise RuntimeError(
-                "Invalid objects.inv file, not z-lib compatible."
-            )
+            raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
         entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
@@ -122,13 +116,9 @@ class Utilities(commands.Cog):
     async def build_rtfm_lookup_table(self):
         cache = {}
         for item in RTFMPages:
-            async with self.bot.session.get(
-                f"{item.value}/objects.inv"
-            ) as resp:
+            async with self.bot.session.get(f"{item.value}/objects.inv") as resp:
                 if resp.status != 200:
-                    raise RuntimeError(
-                        "Cannot build rtfm lookup table, try again later."
-                    )
+                    raise RuntimeError("Cannot build rtfm lookup table, try again later.")
 
                 stream = SphinxObjectFileReader(await resp.read())
                 cache[item.name] = self.parse_object_inv(stream, item.value)
