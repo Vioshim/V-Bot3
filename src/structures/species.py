@@ -646,9 +646,7 @@ class Variant(Species):
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return (
-            _BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
-        )
+        return _BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Variant]:
@@ -683,9 +681,7 @@ class Variant(Species):
         """
         if not item:
             return
-        if (mon := Species.from_ID(item.removesuffix("+"))) and not isinstance(
-            mon, Fusion
-        ):
+        if (mon := Species.from_ID(item.removesuffix("+"))) and not isinstance(mon, Fusion):
             return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
 
@@ -914,9 +910,5 @@ class SpeciesDecoder(JSONDecoder):
 
 with open("resources/species.json", mode="r") as f:
     entries: list[Species] = load(f, cls=SpeciesDecoder)
-    ALL_SPECIES: frozendict[str, Species] = frozendict(
-        {item.id: item for item in entries}
-    )
-    SPECIES_BY_NAME: frozendict[str, Species] = frozendict(
-        {item.name: item for item in entries}
-    )
+    ALL_SPECIES: frozendict[str, Species] = frozendict({item.id: item for item in entries})
+    SPECIES_BY_NAME: frozendict[str, Species] = frozendict({item.name: item for item in entries})

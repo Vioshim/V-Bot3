@@ -93,9 +93,7 @@ class Complex(Simple):
         max_values: int = 1,
         entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = None,
-        emoji_parser: Union[
-            str, Callable[[_T], Union[str, PartialEmoji, Emoji]]
-        ] = None,
+        emoji_parser: Union[str, Callable[[_T], Union[str, PartialEmoji, Emoji]]] = None,
         silent_mode: bool = False,
         keep_working: bool = False,
         sort_key: Callable[[_T], Any] = None,
@@ -192,9 +190,7 @@ class Complex(Simple):
         foo: Select = self.select_choice
         pages: Select = self.navigate
         choices = self._choices
-        foo.placeholder = (
-            f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
-        )
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
         foo.options.clear()
         pages.options.clear()
         # Then gets defined the amount of entries an user can pick

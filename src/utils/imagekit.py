@@ -78,11 +78,7 @@ class ImageKitTransformation(ABC):
         """
 
     def token_parse(self, elements: dict[str, Any]):
-        return ",".join(
-            item_parse(k, v)
-            for k, v in elements.items()
-            if isinstance(v, (int, str, Enum))
-        )
+        return ",".join(item_parse(k, v) for k, v in elements.items() if isinstance(v, (int, str, Enum)))
 
 
 class ImageMethod(ABC):
@@ -98,11 +94,7 @@ class ImageMethod(ABC):
 
     def token_parse(self, elements: dict[str, Any]):
 
-        return ",".join(
-            item_parse(k, v)
-            for k, v in elements.items()
-            if isinstance(v, (int, str, Enum))
-        )
+        return ",".join(item_parse(k, v) for k, v in elements.items() if isinstance(v, (int, str, Enum)))
 
 
 class Focus(IntEnum):  # fo-foo

@@ -43,9 +43,7 @@ from src.structures.converters import AfterDateCall
 from src.utils.etc import RAINBOW, WHITE_BAR
 from src.utils.functions import discord_url_msg, embed_handler
 
-PLAYER_FINDER = compile(
-    r"\|raw\|(.*)'s rating: \d+ &rarr; <strong>\d+</strong><br />\((.*)\)"
-)
+PLAYER_FINDER = compile(r"\|raw\|(.*)'s rating: \d+ &rarr; <strong>\d+</strong><br />\((.*)\)")
 POKEMON_FINDER = compile(r"\|poke\|p(\d)\|(.*)\|")
 RULE_FINDER = compile(r"\|rule\|(.*)")
 GAMETYPE_FINDER = compile(r"\|gametype\|(.*)")
@@ -124,9 +122,7 @@ class EmbedBuilder(commands.Cog):
                 await self.webhook_send(
                     message,
                     content=reference.content,
-                    embeds=[
-                        embed_handler(reference, item) for item in reference.embeds
-                    ],
+                    embeds=[embed_handler(reference, item) for item in reference.embeds],
                     files=[await item.to_file() for item in reference.attachments],
                     username=f"URL〕{name}",
                     avatar_url=author.display_avatar.url,
@@ -158,9 +154,7 @@ class EmbedBuilder(commands.Cog):
 
                     embed = Embed(
                         title=f"{tier} - {gametype}",
-                        description="\n".join(
-                            f"• {i}" for i in RULE_FINDER.findall(log)
-                        ),
+                        description="\n".join(f"• {i}" for i in RULE_FINDER.findall(log)),
                         color=author.color,
                         timestamp=datetime.fromtimestamp(item["uploadtime"]),
                     )
@@ -201,13 +195,7 @@ class EmbedBuilder(commands.Cog):
         """
         if (
             ctx.webhook_id
-            and (
-                items := [
-                    item
-                    for item in self.blame
-                    if not (ctx.channel == item.channel and ctx.id == item.id)
-                ]
-            )
+            and (items := [item for item in self.blame if not (ctx.channel == item.channel and ctx.id == item.id)])
             and (data := self.blame.pop(items[0], None))
         ):
             self.cache.pop(data, None)
@@ -261,9 +249,7 @@ class EmbedBuilder(commands.Cog):
                     with suppress(DiscordException):
                         await ctx.message.delete()
             except DiscordException as e:
-                self.bot.logger.exception(
-                    "exception while editing an embed", exc_info=e
-                )
+                self.bot.logger.exception("exception while editing an embed", exc_info=e)
                 if item := self.cache.pop(item_cache, None):
                     del self.blame[item]
 
@@ -408,9 +394,7 @@ class EmbedBuilder(commands.Cog):
             if isinstance(reference.resolved, Message):
                 message = reference.resolved
             else:
-                channel: Union[Thread, TextChannel] = guild.get_channel_or_thread(
-                    reference.channel_id
-                )
+                channel: Union[Thread, TextChannel] = guild.get_channel_or_thread(reference.channel_id)
                 message = await channel.fetch_message(reference.message_id)
 
         if isinstance(message, Message):
@@ -418,13 +402,9 @@ class EmbedBuilder(commands.Cog):
                 try:
                     webhook = await self.bot.fetch_webhook(webhook_id)
                     if isinstance(channel := message.channel, Thread):
-                        message: WebhookMessage = await webhook.fetch_message(
-                            message.id, thread=channel
-                        )
+                        message: WebhookMessage = await webhook.fetch_message(message.id, thread=channel)
                     else:
-                        message: WebhookMessage = await webhook.fetch_message(
-                            message.id
-                        )
+                        message: WebhookMessage = await webhook.fetch_message(message.id)
                     message.channel = channel
                     self.write(message, ctx.author)
                     await ctx.reply("Message has been set", delete_after=3)
@@ -1355,9 +1335,7 @@ class EmbedBuilder(commands.Cog):
 
         """
         async with self.edit(ctx) as embed:
-            if content := "\n".join(
-                f"• {i}){f.name} > {f.value}" for i, f in enumerate(embed.fields)
-            ):
+            if content := "\n".join(f"• {i}){f.name} > {f.value}" for i, f in enumerate(embed.fields)):
                 await ctx.send(f"```yaml\n{content}\n```")
 
     @fields.command(

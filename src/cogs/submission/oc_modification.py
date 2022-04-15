@@ -56,7 +56,9 @@ logger = getLogger(__name__)
 
 __all__ = ("Modification", "ModifyView")
 
-DEFAULT_INFO_MSG = "If you need to write too much, I recommend to move to Google documents, otherwise, try to be concise."
+DEFAULT_INFO_MSG = (
+    "If you need to write too much, I recommend to move to Google documents, otherwise, try to be concise."
+)
 
 
 class SPView(Basic):
@@ -427,9 +429,7 @@ class BackstoryMod(Mod):
             Bool If Updatable, None if cancelled
         """
         text_view = ModernInput(member=member, target=target)
-        backstory = (
-            oc.backstory[:4000] if oc.backstory else "No backstory was provided."
-        )
+        backstory = oc.backstory[:4000] if oc.backstory else "No backstory was provided."
         handler = text_view.handle(
             label="Write the character's Backstory.",
             style=TextStyle.paragraph,
@@ -826,12 +826,8 @@ class EvolutionMod(Mod):
                 ),
                 text_component=TextInput(
                     label="Fusion Typing",
-                    placeholder=" | ".join(
-                        "/".join(i.name for i in x).title() for x in possible_types
-                    ),
-                    default="/".join(
-                        i.name for i in random_choice(possible_types)
-                    ).title(),
+                    placeholder=" | ".join("/".join(i.name for i in x).title() for x in possible_types),
+                    default="/".join(i.name for i in random_choice(possible_types)).title(),
                 ),
             )
             async with view2.send(
@@ -972,12 +968,8 @@ class DevolutionMod(Mod):
                 ),
                 text_component=TextInput(
                     label="Fusion Typing",
-                    placeholder=" | ".join(
-                        "/".join(i.name for i in x).title() for x in possible_types
-                    ),
-                    default="/".join(
-                        i.name for i in random_choice(possible_types)
-                    ).title(),
+                    placeholder=" | ".join("/".join(i.name for i in x).title() for x in possible_types),
+                    default="/".join(i.name for i in random_choice(possible_types)).title(),
                 ),
             )
             async with view.send(
@@ -1087,9 +1079,7 @@ class FusionMod(Mod):
             ),
             text_component=TextInput(
                 label="Fusion Typing",
-                placeholder=" | ".join(
-                    "/".join(i.name for i in x).title() for x in possible_types
-                ),
+                placeholder=" | ".join("/".join(i.name for i in x).title() for x in possible_types),
                 default="/".join(i.name for i in random_choice(possible_types)).title(),
             ),
         )

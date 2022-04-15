@@ -74,9 +74,7 @@ class Meeting(View):
             colour=reporter.color,
             timestamp=utcnow(),
         )
-        embed.set_author(
-            name=reporter.display_name, icon_url=reporter.display_avatar.url
-        )
+        embed.set_author(name=reporter.display_name, icon_url=reporter.display_avatar.url)
         embed.set_thumbnail(url=self.imposter.display_avatar.url)
         embed.set_footer(text="Agreed: 0 | Disagreed: 0")
         if reason:
@@ -104,16 +102,12 @@ class Meeting(View):
         user: Member = interaction.user
         if interaction.user.guild_permissions.manage_messages:
             self.moderator = interaction.user
-            await resp.send_message(
-                "Please congrat the users that did this.", ephemeral=True
-            )
+            await resp.send_message("Please congrat the users that did this.", ephemeral=True)
             await self.process(method=True)
             self.stop()
         else:
             self.attack.add(user)
-            self.embed.set_footer(
-                text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}"
-            )
+            self.embed.set_footer(text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}")
             await resp.edit_message(embed=self.embed)
 
     @button(label="Disagreed")
@@ -123,15 +117,11 @@ class Meeting(View):
         if interaction.user.guild_permissions.manage_messages:
             self.moderator = interaction.user
             await self.process(method=False)
-            await resp.send_message(
-                "Please warn the user that did this.", ephemeral=True
-            )
+            await resp.send_message("Please warn the user that did this.", ephemeral=True)
             self.stop()
         else:
             self.defend.add(user)
-            self.embed.set_footer(
-                text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}"
-            )
+            self.embed.set_footer(text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}")
             await resp.edit_message(embed=self.embed)
 
     async def on_timeout(self):
@@ -434,9 +424,7 @@ class Moderation(commands.Cog):
         """
         async with ctx.typing():
             await ctx.message.delete()
-            deleted = await ctx.channel.purge(
-                limit=amount, check=lambda m: m.author.bot
-            )
+            deleted = await ctx.channel.purge(limit=amount, check=lambda m: m.author.bot)
         await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="user")
@@ -466,9 +454,7 @@ class Moderation(commands.Cog):
         channel: TextChannel = ctx.channel
         async with ctx.typing():
             await ctx.message.delete()
-            deleted = await channel.purge(
-                limit=amount, check=lambda m: m.author.id == user.id
-            )
+            deleted = await channel.purge(limit=amount, check=lambda m: m.author.id == user.id)
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="regex")
@@ -544,16 +530,12 @@ class Moderation(commands.Cog):
         :return:
         """
         if member.top_role >= ctx.author.top_role:
-            await ctx.reply(
-                "You can't kick someone with same or higher role than yours."
-            )
+            await ctx.reply("You can't kick someone with same or higher role than yours.")
             return
         with suppress(DiscordException):
             await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
-        await member.kick(
-            reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}"
-        )
+        await member.kick(reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}")
 
     @commands.command(name="ban")
     @commands.has_guild_permissions(ban_members=True)
@@ -585,9 +567,7 @@ class Moderation(commands.Cog):
                 )
             else:
                 with suppress(DiscordException):
-                    await user.send(
-                        content=f"You've been banned from {ctx.guild} by: {reason}"
-                    )
+                    await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
                 await user.ban(
                     reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                     delete_message_days=0,
@@ -631,9 +611,7 @@ class Moderation(commands.Cog):
                         )
                     else:
                         with suppress(DiscordException):
-                            await user.send(
-                                content=f"You've been banned from {ctx.guild} by: {reason}"
-                            )
+                            await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
                         # noinspection PyTypeChecker
                         await user.ban(
                             reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
@@ -714,9 +692,7 @@ class Moderation(commands.Cog):
         elif roles[0] not in user.roles:  # 0 -> 1
             embed.add_field(name="Note", value=roles[0].mention)
             await user.add_roles(roles[0], reason=reason)
-        embed.set_author(
-            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
-        )
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
         if isinstance(mod_channel, TextChannel):
             files, embed = await self.bot.embed_raw(embed)

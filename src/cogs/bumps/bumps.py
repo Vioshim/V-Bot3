@@ -134,9 +134,7 @@ class PingBump(View):
 
     @property
     def date(self) -> datetime:
-        if (embeds := self.after.embeds) and (
-            data := self.data.format_date.search(embeds[0].description)
-        ):
+        if (embeds := self.after.embeds) and (data := self.data.format_date.search(embeds[0].description)):
             return parse(
                 data.group(1),
                 settings=dict(
@@ -156,9 +154,7 @@ class PingBump(View):
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)
-            return await resp.send_message(
-                "Alright, you won't get notified", ephemeral=True
-            )
+            return await resp.send_message("Alright, you won't get notified", ephemeral=True)
         self.mentions.add(inter.user)
         return await resp.send_message("Alright, you will get notified", ephemeral=True)
 

@@ -456,9 +456,7 @@ class RegionRoles(RoleSelect):
                 ephemeral=True,
             )
         elif choosen_roles := {
-            role
-            for x in map(int, sct.values)
-            if (role := ctx.guild.get_role(MAP_ELEMENTS2[x].role))
+            role for x in map(int, sct.values) if (role := ctx.guild.get_role(MAP_ELEMENTS2[x].role))
         }:
             if all_roles != choosen_roles:
                 if removed_roles := (all_roles - choosen_roles) | {spectator}:
@@ -481,15 +479,11 @@ class RegionRoles(RoleSelect):
         await resp.defer(ephemeral=True)
         spectator = ctx.guild.get_role(957069729741287434)
         if roles := [
-            role
-            for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS)
-            if role in ctx.user.roles
+            role for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS) if role in ctx.user.roles
         ]:
             await ctx.user.remove_roles(*roles)
         if spectator in ctx.user.roles:
-            await ctx.followup.send(
-                "You already have the Spectator role.", ephemeral=True
-            )
+            await ctx.followup.send("You already have the Spectator role.", ephemeral=True)
         else:
             await ctx.user.add_roles(spectator)
             await ctx.followup.send("Roles added.", ephemeral=True)
@@ -500,9 +494,7 @@ class RegionRoles(RoleSelect):
         await resp.defer(ephemeral=True)
         spectator = ctx.guild.get_role(957069729741287434)
         if roles := [
-            role
-            for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS)
-            if role in ctx.user.roles
+            role for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS) if role in ctx.user.roles
         ]:
             await ctx.user.remove_roles(*roles)
         if spectator in ctx.user.roles:

@@ -102,9 +102,7 @@ class AnnouncementView(View):
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         if interaction.user != self.member:
-            await resp.send_message(
-                f"Message requested by {self.member.mention}", ephemeral=True
-            )
+            await resp.send_message(f"Message requested by {self.member.mention}", ephemeral=True)
             return False
         return True
 
@@ -236,14 +234,10 @@ class Information(commands.Cog):
                             )
 
                         embed.set_image(url=WHITE_BAR)
-                        embed.set_thumbnail(
-                            url=f"http://openweathermap.org/img/w/{icon}.png"
-                        )
+                        embed.set_thumbnail(url=f"http://openweathermap.org/img/w/{icon}.png")
                         if wind := data.get("wind", {}):
                             deg, speed = wind["deg"], wind["speed"]
-                            embed.set_footer(
-                                text=f"Wind(Speed: {speed}, Degrees: {deg} °)"
-                            )
+                            embed.set_footer(text=f"Wind(Speed: {speed}, Degrees: {deg} °)")
                         await resp.send_message(embed=embed, ephemeral=True)
                         return
                 await resp.send_message("Invalid value", ephemeral=True)
@@ -343,9 +337,7 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message):
 
-        if message.mention_everyone or not (
-            message.content and message.channel.id in channels
-        ):
+        if message.mention_everyone or not (message.content and message.channel.id in channels):
             return
 
         if message.author.bot:
@@ -425,11 +417,7 @@ class Information(commands.Cog):
         data: dict[str, int] = {}
 
         if cog := self.bot.get_cog("Submission"):
-            ocs = [
-                oc
-                for oc in cog.ocs.values()
-                if oc.server == guild.id and guild.get_member(oc.author)
-            ]
+            ocs = [oc for oc in cog.ocs.values() if oc.server == guild.id and guild.get_member(oc.author)]
             if total_ocs := len(ocs):
                 data["Characters"] = total_ocs
 
@@ -580,9 +568,7 @@ class Information(commands.Cog):
             await log.send(content=now.mention, embed=embed)
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(
-        self, payload: RawBulkMessageDeleteEvent
-    ) -> None:
+    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
         """This coroutine triggers upon raw bulk message deletions. YAML Format to Myst.bin
 
         Parameters
@@ -722,11 +708,7 @@ class Information(commands.Cog):
                 aux.add_field(name="Sticker Name", value=item.name)
 
             for item in ctx.embeds:
-                if (
-                    item.type == "gifv"
-                    and isinstance(url := item.url, str)
-                    and (items := url.split("-"))
-                ):
+                if item.type == "gifv" and isinstance(url := item.url, str) and (items := url.split("-")):
 
                     image_id = items[-1]
 
@@ -825,9 +807,7 @@ class Information(commands.Cog):
         interaction: Interaction,
         error: app_commands.AppCommandError,
     ):
-        error: Exception | app_commands.AppCommandError = getattr(
-            error, "original", error
-        )
+        error: Exception | app_commands.AppCommandError = getattr(error, "original", error)
         command = interaction.command
         resp: InteractionResponse = interaction.response
         if command and command._has_any_error_handlers():

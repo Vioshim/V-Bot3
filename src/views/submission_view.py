@@ -260,9 +260,7 @@ class SubmissionView(View):
         embed.set_image(
             url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png",
         )
-        embed.set_footer(
-            text="After sending, bot will ask for backstory, extra info and image."
-        )
+        embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(
             embed=embed,
             view=view,
@@ -285,9 +283,7 @@ class SubmissionView(View):
         member = self.supporting.get(member, member)
 
         if not (values := list(self.rpers.get(member.id, {}).values())):
-            return await ctx.followup.send(
-                "You don't have characters to modify", ephemeral=True
-            )
+            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
 
         values.sort(key=lambda x: x.name)
 
@@ -343,13 +339,9 @@ class SubmissionView(View):
         role = guild.get_role(719642423327719434)
         resp: InteractionResponse = ctx.response
         if role not in ctx.user.roles:
-            await resp.send_message(
-                "You don't have a character registered", ephemeral=True
-            )
+            await resp.send_message("You don't have a character registered", ephemeral=True)
             return
-        locations: list[CategoryChannel] = [
-            guild.get_channel(item) for item in RP_CATEGORIES
-        ]
+        locations: list[CategoryChannel] = [guild.get_channel(item) for item in RP_CATEGORIES]
         member: Member = ctx.user
         channel: TextChannel = ctx.channel
         view = Complex(
@@ -375,10 +367,7 @@ class SubmissionView(View):
             areas = [
                 item
                 for item in choice.channels
-                if (
-                    "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in item.name
-                    and isinstance(item, TextChannel)
-                )
+                if ("\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in item.name and isinstance(item, TextChannel))
             ]
             view = Complex(
                 member=ctx.user,
@@ -391,13 +380,8 @@ class SubmissionView(View):
                 emoji_parser=lambda x: x.name[0],
                 text_component=TextInput(
                     label="Area",
-                    placeholder=" | ".join(
-                        x.name[2:].replace("-", " ").capitalize() for x in areas
-                    ),
-                    default=random_choice(areas)
-                    .name[2:]
-                    .replace("-", " ")
-                    .capitalize(),
+                    placeholder=" | ".join(x.name[2:].replace("-", " ").capitalize() for x in areas),
+                    default=random_choice(areas).name[2:].replace("-", " ").capitalize(),
                     required=True,
                 ),
             )
@@ -494,8 +478,6 @@ class SubmissionView(View):
                     self.missions.add(mission)
                     async with ctx.client.database() as session:
                         await mission.upsert(session)
-                        thread = await msg.create_thread(
-                            name=f"Mission {mission.id:03d}"
-                        )
+                        thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
                         await thread.add_user(author)
                         logger.info("Mission added: %s", repr(mission))

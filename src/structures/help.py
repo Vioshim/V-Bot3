@@ -120,10 +120,7 @@ class CustomHelp(HelpCommand):
             Group
         """
         aliases = "\n".join(f"> • {item}" for item in group.aliases) or "None"
-        text = (
-            f"__**Short Document**__\n> {group.short_doc}\n\n"
-            f"__**Aliases**__\n{aliases}"
-        )
+        text = f"__**Short Document**__\n> {group.short_doc}\n\n" f"__**Aliases**__\n{aliases}"
 
         target = self.get_destination()
 
@@ -224,6 +221,4 @@ class CustomHelp(HelpCommand):
         error: Exception
             Exception that occurred
         """
-        ctx.bot.logger.exception(
-            "Help Command > %s > %s", str(ctx.author), error, exc_info=error
-        )
+        ctx.bot.logger.exception("Help Command > %s > %s", str(ctx.author), error, exc_info=error)

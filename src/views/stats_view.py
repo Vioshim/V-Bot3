@@ -127,9 +127,7 @@ class StatsModal(DefaultModal):
                 stats = StatItem(**item)
                 info = astuple(stats)
                 if all(1 <= stat <= 5 for stat in info) and sum(info) <= 18:
-                    await resp.send_message(
-                        f"Stats asigned as {stats!r}", ephemeral=True
-                    )
+                    await resp.send_message(f"Stats asigned as {stats!r}", ephemeral=True)
                     self.text = stats
                     self.stop()
                     self.view.stop()

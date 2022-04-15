@@ -105,9 +105,7 @@ class ColoredFormatter(Formatter):
         """
         level_name: str = record.levelname
         if self.use_color and level_name in COLORS:
-            level_name_color: str = (
-                COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
-            )
+            level_name_color: str = COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
             record.levelname = level_name_color
             pathname = record.pathname.replace("/root/V-Bot3/src/", "")
             pathname = pathname.replace("/root/V-Bot3/", "")
