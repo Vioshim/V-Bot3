@@ -68,9 +68,7 @@ class RPView(View):
         member: Member = interaction.user
         guild = interaction.guild
         webhook = await interaction.client.webhook(740568087820238919, reason="Ping")
-        embed = Embed(
-            title="User has pinged you.", timestamp=utcnow(), color=member.color
-        )
+        embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=member.color)
         embed.set_author(name=member.display_name)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         embed.set_thumbnail(url=member.display_avatar.url)

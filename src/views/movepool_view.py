@@ -47,11 +47,7 @@ class MovepoolModal(Modal):
             label="Level Moves",
             placeholder="1: Move, Move\n2: Move, Move",
             required=False,
-            default="\n".join(
-                f"{k}: {', '.join(x.name for x in v)}"
-                for k, v in movepool.level.items()
-                if v
-            ),
+            default="\n".join(f"{k}: {', '.join(x.name for x in v)}" for k, v in movepool.level.items() if v),
         )
         self.tm = TextInput(
             style=TextStyle.paragraph,

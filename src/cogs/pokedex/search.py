@@ -45,11 +45,7 @@ class MoveTransformer(Transformer):
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
-        return [
-            Choice(name=i.name, value=i.id)
-            for i in Move.all()
-            if text in i.id or i.id in text
-        ][:25]
+        return [Choice(name=i.name, value=i.id) for i in Move.all() if text in i.id or i.id in text][:25]
 
 
 MoveArg = Transform[Move, MoveTransformer]
@@ -85,29 +81,13 @@ class SpeciesTransformer(Transformer):
             case "MEGA":
                 mons = Mega.all()
             case "CUSTOMMEGA":
-                mons = [
-                    oc
-                    for oc in cog.ocs.values()
-                    if oc.kind == "CUSTOM MEGA" and guild.get_member(oc.author)
-                ]
+                mons = [oc for oc in cog.ocs.values() if oc.kind == "CUSTOM MEGA" and guild.get_member(oc.author)]
             case "FAKEMON":
-                mons = [
-                    oc
-                    for oc in cog.ocs.values()
-                    if oc.kind == "FAKEMON" and guild.get_member(oc.author)
-                ]
+                mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON" and guild.get_member(oc.author)]
             case "VARIANT":
-                mons = [
-                    oc
-                    for oc in cog.ocs.values()
-                    if oc.kind == "VARIANT" and guild.get_member(oc.author)
-                ]
+                mons = [oc for oc in cog.ocs.values() if oc.kind == "VARIANT" and guild.get_member(oc.author)]
             case "FUSION":
-                mons = [
-                    oc
-                    for oc in cog.ocs.values()
-                    if oc.kind == "FUSION" and guild.get_member(oc.author)
-                ]
+                mons = [oc for oc in cog.ocs.values() if oc.kind == "FUSION" and guild.get_member(oc.author)]
             case _:
                 mons = Species.all()
 
@@ -116,11 +96,7 @@ class SpeciesTransformer(Transformer):
 
         if member := ctx.namespace.member:
             ocs1 = {x.species for x in cog.rpers.get(member.id, {}).values()}
-            filters.append(
-                lambda x: x.author == member.id
-                if isinstance(x, Character)
-                else x in ocs1
-            )
+            filters.append(lambda x: x.author == member.id if isinstance(x, Character) else x in ocs1)
         if location := ctx.namespace.location:
 
             def foo2(oc: Character):
@@ -133,9 +109,7 @@ class SpeciesTransformer(Transformer):
             filters.append(lambda x: foo2(x) if isinstance(x, Character) else x in ocs2)
         if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
             filters.append(lambda x: mon_type in x.types)
-        if (abilities := ctx.namespace.abilities) and (
-            ability := Ability.from_ID(abilities)
-        ):
+        if (abilities := ctx.namespace.abilities) and (ability := Ability.from_ID(abilities)):
             filters.append(lambda x: ability in x.abilities)
         if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
             filters.append(lambda x: move in x.movepool)
@@ -148,11 +122,7 @@ class SpeciesTransformer(Transformer):
             )
         }
 
-        return [
-            Choice(name=k, value=v)
-            for k, v in options.items()
-            if v in text or text in v
-        ][:25]
+        return [Choice(name=k, value=v) for k, v in options.items() if v in text or text in v][:25]
 
 
 class DefaultSpeciesTransformer(Transformer):
@@ -166,11 +136,7 @@ class DefaultSpeciesTransformer(Transformer):
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
-        return [
-            Choice(name=i.name, value=i.id)
-            for i in Species.all()
-            if text in i.id or i.id in text
-        ][:25]
+        return [Choice(name=i.name, value=i.id) for i in Species.all() if text in i.id or i.id in text][:25]
 
 
 SpeciesArg = Transform[Species, SpeciesTransformer]
@@ -188,11 +154,7 @@ class AbilityTransformer(Transformer):
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
-        return [
-            Choice(name=i.name, value=i.id)
-            for i in Ability.all()
-            if text in i.id or i.id in text
-        ][:25]
+        return [Choice(name=i.name, value=i.id) for i in Ability.all() if text in i.id or i.id in text][:25]
 
 
 AbilityArg = Transform[Ability, AbilityTransformer]
@@ -209,11 +171,7 @@ class TypingTransformer(Transformer):
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         text: str = fix(value or "")
-        return [
-            Choice(name=i.name, value=i.id)
-            for i in Typing.all()
-            if text in str(i) or str(i) in text
-        ][:25]
+        return [Choice(name=i.name, value=i.id) for i in Typing.all() if text in str(i) or str(i) in text][:25]
 
 
 TypingArg = Transform[Typing, TypingTransformer]
@@ -245,11 +203,7 @@ class FakemonTransformer(Transformer):
         text: str = fix(value or "")
         guild: Guild = ctx.guild
         cog: Submission = ctx.client.get_cog("Submission")
-        mons = [
-            oc
-            for oc in cog.ocs.values()
-            if oc.kind == "FAKEMON" and guild.get_member(oc.author)
-        ]
+        mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON" and guild.get_member(oc.author)]
 
         options = {
             mon.species.name: item_value(mon)

@@ -129,11 +129,7 @@ def evaluate(message: Message, *proxies: Tupper) -> list[tuple[Tupper, str]]:
     values: list[tuple[Tupper, str]] = []
     proxy_msgs: list[tuple[Tupper, str]] = []
     for paragraph in message.content.split("\n"):
-        if findings := [
-            (item, search.group(1).strip())
-            for item in proxies
-            if (search := item(paragraph))
-        ]:
+        if findings := [(item, search.group(1).strip()) for item in proxies if (search := item(paragraph))]:
             values.append(findings[0])
             proxy, _ = findings[0]
             current = proxy
@@ -143,27 +139,17 @@ def evaluate(message: Message, *proxies: Tupper) -> list[tuple[Tupper, str]]:
         else:
             break
     else:
-        for key, paragraphs in groupby(
-            values, itemgetter(0)
-        ):  # type: Tupper, list[str]
+        for key, paragraphs in groupby(values, itemgetter(0)):  # type: Tupper, list[str]
             data = map(lambda z: z[1], paragraphs)
             entry = key, reduce(lambda x, y: f"{x}\n{y}", data)
             proxy_msgs.append(entry)
         if not proxy_msgs:
-            if findings := [
-                (item, search.group(1).strip())
-                for item in proxies
-                if (search := item(message.content))
-            ]:
+            if findings := [(item, search.group(1).strip()) for item in proxies if (search := item(message.content))]:
                 proxy_msgs.append(findings[0])
         elif len(proxy_msgs) == 1:
             proxy, text = proxy_msgs[0]
             if proxy is None and (
-                findings := [
-                    (item, search.group(1).strip())
-                    for item in proxies
-                    if (search := item(text))
-                ]
+                findings := [(item, search.group(1).strip()) for item in proxies if (search := item(text))]
             ):
                 return findings
     return proxy_msgs

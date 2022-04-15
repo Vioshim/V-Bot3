@@ -190,9 +190,7 @@ class Pokedex(commands.Cog):
             embed.title = f"See {fakemon.species.name}'s movepool"
 
         if move_id:
-            if methods := "\n".join(
-                f"> • **{x.title()}**" for x in movepool.methods_for(move_id)
-            ):
+            if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
                 await ctx.followup.send(
                     f"{species.name} can learn {move_id.name} through:\n{methods}.",
                     ephemeral=True,
@@ -284,9 +282,7 @@ class Pokedex(commands.Cog):
         )
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
-        total: list[Character] = [
-            oc for oc in cog.ocs.values() if guild.get_member(oc.author)
-        ]
+        total: list[Character] = [oc for oc in cog.ocs.values() if guild.get_member(oc.author)]
         if isinstance(species, Character):
             ocs = [species]
         else:
@@ -320,20 +316,12 @@ class Pokedex(commands.Cog):
             if fused and species != fused and not isinstance(fused, Fusion):
                 mon = Fusion(species, fused)
             if kind == "Variant":
-                ocs = [
-                    oc
-                    for oc in ocs
-                    if isinstance(oc.species, Variant) and oc.species.base == mon
-                ]
+                ocs = [oc for oc in ocs if isinstance(oc.species, Variant) and oc.species.base == mon]
             else:
                 ocs = [oc for oc in ocs if oc.species == mon]
         elif fused and not isinstance(fused, Fusion):
             mon = fused
-            ocs = [
-                oc
-                for oc in ocs
-                if isinstance(oc, FusionCharacter) and species in oc.species.bases
-            ]
+            ocs = [oc for oc in ocs if isinstance(oc, FusionCharacter) and species in oc.species.bases]
 
         if isinstance(mon, Species):
             if mon.banned:
@@ -344,9 +332,7 @@ class Pokedex(commands.Cog):
             if mon_types := ", ".join(i.name for i in mon.types):
                 embed.set_footer(text=f"Types: {mon_types}")
             elif isinstance(mon, Fusion) and (
-                mon_types := ", ".join(
-                    "/".join(i.name for i in item) for item in mon.possible_types
-                )
+                mon_types := ", ".join("/".join(i.name for i in item) for item in mon.possible_types)
             ):
                 embed.set_footer(text=f"Possible Types: {mon_types}")
 
@@ -376,19 +362,14 @@ class Pokedex(commands.Cog):
         if pronoun:
             ocs = [oc for oc in ocs if oc.pronoun.name == pronoun.title()]
         if backstory:
-            ocs = [
-                oc
-                for oc in ocs
-                if oc.backstory and backstory.lower() in oc.backstory.lower()
-            ]
+            ocs = [oc for oc in ocs if oc.backstory and backstory.lower() in oc.backstory.lower()]
         if extra:
             ocs = [oc for oc in ocs if oc.extra and extra.lower() in oc.extra.lower()]
         if sp_ability:
             ocs = [
                 oc
                 for oc in ocs
-                if (item := oc.sp_ability)
-                and any(sp_ability.lower() in x.lower() for x in astuple(item))
+                if (item := oc.sp_ability) and any(sp_ability.lower() in x.lower() for x in astuple(item))
             ]
         if _type:
             ocs = [oc for oc in ocs if _type in oc.types]
@@ -453,11 +434,7 @@ class Pokedex(commands.Cog):
             for e in embeds:
                 e.url = move.url
         if kind:
-            ocs = [
-                oc
-                for oc in ocs
-                if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")
-            ]
+            ocs = [oc for oc in ocs if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")]
 
         view = CharactersView(
             member=ctx.user,

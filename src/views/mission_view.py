@@ -98,9 +98,7 @@ class MissionView(View):
             )
             return
 
-        if (time := self.mission_cooldown.get(member.id)) and (
-            reference_time := time + timedelta(days=3)
-        ) >= utcnow():
+        if (time := self.mission_cooldown.get(member.id)) and (reference_time := time + timedelta(days=3)) >= utcnow():
             time: str = format_dt(reference_time, style="R")
             await resp.send_message(
                 f"You are in cool down: {time}.",
@@ -128,18 +126,14 @@ class MissionView(View):
 
             async with interaction.client.database() as db:
 
-                assigned_at = await self.mission.upsert_oc(
-                    connection=db, oc_id=choice.id
-                )
+                assigned_at = await self.mission.upsert_oc(connection=db, oc_id=choice.id)
                 self.mission_cooldown[member.id] = assigned_at
                 embed = self.mission.embed
                 if limit and len(self.mission.ocs) >= limit:
                     btn.disabled = True
                 await interaction.message.edit(embed=embed, view=self)
 
-                thread: Thread = await interaction.client.fetch_channel(
-                    self.mission.msg_id
-                )
+                thread: Thread = await interaction.client.fetch_channel(self.mission.msg_id)
                 view = View()
                 view.add_item(Button(label="Jump URL", url=choice.jump_url))
                 await thread.add_user(member)
@@ -155,19 +149,14 @@ class MissionView(View):
         member: Member = interaction.user
         ch: TextChannel = interaction.channel
         await resp.defer(ephemeral=True)
-        if (
-            member.id == self.mission.author
-            or ch.permissions_for(member).manage_messages
-        ):
+        if member.id == self.mission.author or ch.permissions_for(member).manage_messages:
             self.claim.disabled = True
             btn.disabled = True
             async with interaction.client.database() as db:
                 await self.mission.remove(db)
                 await interaction.message.delete()
                 if not (thread := member.guild.get_thread(self.mission.msg_id)):
-                    thread: Thread = await interaction.client.fetch_channel(
-                        self.mission.msg_id
-                    )
+                    thread: Thread = await interaction.client.fetch_channel(self.mission.msg_id)
                 await thread.edit(
                     archived=False,
                     locked=True,

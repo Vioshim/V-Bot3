@@ -114,10 +114,7 @@ class MessagePaginator(Complex):
                 with suppress(HTTPException, NotFound, Forbidden):
                     file = await attach.to_file(use_cached=True)
                     files.append(file)
-            embeds = [
-                Embed(title=sticker.name).set_image(url=sticker.url)
-                for sticker in item.stickers
-            ]
+            embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
 
         if not (files or embeds or item.content):
             await ctx.followup.send(

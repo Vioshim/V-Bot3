@@ -48,9 +48,7 @@ class Mission:
             self.created_at = utcnow()
 
     def __repr__(self):
-        return (
-            f"Mission(id={self.id}, difficulty={self.difficulty}, ocs={len(self.ocs)})"
-        )
+        return f"Mission(id={self.id}, difficulty={self.difficulty}, ocs={len(self.ocs)})"
 
     async def upsert(self, connection: Connection) -> None:
         if isinstance(self.id, int):

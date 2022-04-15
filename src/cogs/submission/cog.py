@@ -207,11 +207,7 @@ class Submission(commands.Cog):
         if oc := self.ocs.get(message.id):
             moves = list(oc.moveset.copy())
         elif text := message.content:
-            moves = [
-                move
-                for move in Move.all()
-                if move.name in text.title() or move.id in text.upper()
-            ]
+            moves = [move for move in Move.all() if move.name in text.title() or move.id in text.upper()]
         if len(moves) == 1:
             view = View()
             view.add_item(
@@ -254,16 +250,8 @@ class Submission(commands.Cog):
                 abilities.append(sp_ability)
             abilities.extend(oc.abilities)
         elif text := message.content:
-            abilities.extend(
-                ab
-                for ab in Ability.all()
-                if ab.name in text.title() or ab.id in text.upper()
-            )
-            abilities.extend(
-                sp
-                for x in self.ocs.values()
-                if (sp := x.sp_ability) and sp.name.lower() in text.lower()
-            )
+            abilities.extend(ab for ab in Ability.all() if ab.name in text.title() or ab.id in text.upper())
+            abilities.extend(sp for x in self.ocs.values() if (sp := x.sp_ability) and sp.name.lower() in text.lower())
 
         if abilities:
             abilities.sort(key=lambda x: x.name)
@@ -343,8 +331,7 @@ class Submission(commands.Cog):
         if role not in member.roles:
             await member.add_roles(role, reason=f"Registered by {author}")
             embed = Embed(
-                description="You can try to use /ping `<role>` for finding a RP. "
-                "(<#910914713234325504> also works)",
+                description="You can try to use /ping `<role>` for finding a RP. " "(<#910914713234325504> also works)",
                 colour=member.colour,
                 timestamp=utcnow(),
             )
@@ -395,9 +382,7 @@ class Submission(commands.Cog):
             member = ctx.user
         if character:
             view = PingView(character, ctx.user.id == character.author)
-            return await ctx.followup.send(
-                embed=character.embed, view=view, ephemeral=True
-            )
+            return await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
         if ocs := list(self.rpers.get(member.id, {}).values()):
             ocs.sort(key=lambda x: x.name)
             if len(ocs) == 1:
@@ -429,9 +414,7 @@ class Submission(commands.Cog):
                         str(member),
                     )
         else:
-            await ctx.followup.send(
-                f"{member.mention} has no characters.", ephemeral=True
-            )
+            await ctx.followup.send(f"{member.mention} has no characters.", ephemeral=True)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -619,11 +602,7 @@ class Submission(commands.Cog):
                     if not (stats := stats_view.choice):
                         return
                     species.set_stats(**asdict(stats.value))
-            if (
-                sum(species.stats) > 18
-                or min(species.stats) < 1
-                or max(species.stats) > 5
-            ):
+            if sum(species.stats) > 18 or min(species.stats) < 1 or max(species.stats) > 5:
                 await send(
                     "Max stats is 18. Min 1. Max 5",
                 )
@@ -667,9 +646,7 @@ class Submission(commands.Cog):
                     ),
                     text_component=TextInput(
                         label="Fusion Typing",
-                        placeholder=" | ".join(
-                            "/".join(i.name for i in x).title() for x in values
-                        ),
+                        placeholder=" | ".join("/".join(i.name for i in x).title() for x in values),
                         default="/".join(i.name for i in random_choice(values)).title(),
                     ),
                 )
@@ -681,9 +658,7 @@ class Submission(commands.Cog):
                         return
                     species.types = frozenset(types)
             elif oc.types not in values:
-                items = ", ".join(
-                    "/".join(i.name for i in item) for item in values
-                ).title()
+                items = ", ".join("/".join(i.name for i in item) for item in values).title()
                 await send(
                     f"Invalid typing for the fusion, valid types are {items}",
                 )
@@ -691,8 +666,7 @@ class Submission(commands.Cog):
 
         max_ab = oc.max_amount_abilities
         if not isinstance(species, Fakemon) and (
-            isinstance(species, (Legendary, Mythical, UltraBeast))
-            or len(species.abilities) == 1
+            isinstance(species, (Legendary, Mythical, UltraBeast)) or len(species.abilities) == 1
         ):
             oc.abilities = species.abilities
         elif not oc.abilities or len(oc.abilities) > max_ab:
@@ -728,15 +702,9 @@ class Submission(commands.Cog):
             await send(f"Max Amount of Abilities for the current Species is {max_ab}")
             return
         elif not oc.any_ability_at_first and (
-            ability_errors := ", ".join(
-                ability.name
-                for ability in oc.abilities
-                if ability not in species.abilities
-            )
+            ability_errors := ", ".join(ability.name for ability in oc.abilities if ability not in species.abilities)
         ):
-            await send(
-                f"the abilities [{ability_errors}] were not found in the species"
-            )
+            await send(f"the abilities [{ability_errors}] were not found in the species")
             return
 
         text_view = ModernInput(member=worker, target=ctx)
@@ -778,9 +746,7 @@ class Submission(commands.Cog):
 
         if not oc.any_move_at_first:
             moves_movepool = species.total_movepool()
-            if move_errors := ", ".join(
-                move.name for move in oc.moveset if move not in moves_movepool
-            ):
+            if move_errors := ", ".join(move.name for move in oc.moveset if move not in moves_movepool):
                 await send(f"the moves [{move_errors}] were not found in the movepool")
                 return
         elif len(oc.moveset) > 6:
@@ -866,9 +832,7 @@ class Submission(commands.Cog):
         except NotFound:
             await self.register_oc(oc)
 
-    async def bio_google_doc_parser(
-        self, message: Message
-    ) -> Optional[tuple[DocumentType, str]]:
+    async def bio_google_doc_parser(self, message: Message) -> Optional[tuple[DocumentType, str]]:
         text: str = codeblock_converter(message.content or "").content
         if doc_data := G_DOCUMENT.match(text):
             doc = await to_thread(docs_reader, url := doc_data.group(1))
@@ -948,13 +912,7 @@ class Submission(commands.Cog):
                         msg_data = doc_convert(msg_data)
                     else:
                         msg_data = safe_load(
-                            yaml_handler(
-                                "\n".join(
-                                    element
-                                    for p in msg_data.paragraphs
-                                    if (element := p.text.strip())
-                                )
-                            )
+                            yaml_handler("\n".join(element for p in msg_data.paragraphs if (element := p.text.strip())))
                         )
                 if msg_data and isinstance(msg_data, dict):
                     return await self.submission_handler(message, **msg_data)
@@ -1186,8 +1144,7 @@ class Submission(commands.Cog):
             and tupper.status == Status.online
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
-            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
-            not in message.channel.name
+            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
         ):
             await self.on_message_proxy(message)
 
@@ -1255,9 +1212,7 @@ class Submission(commands.Cog):
                 )
                 await oc.delete(db)
         if payload.message_id in self.oc_list.values():
-            author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.message_id
-            ][0]
+            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
             del self.oc_list[author_id]
             async with self.bot.database() as db:
                 for oc in self.rpers.pop(author_id, {}).values():

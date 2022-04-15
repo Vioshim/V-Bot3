@@ -52,11 +52,7 @@ class EmbedModal(Modal):
             style=TextStyle.paragraph,
             default=description[:4000],
         )
-        color = (
-            hex(self.reference.color.value).removeprefix("0x").upper()
-            if self.reference.color
-            else None
-        )
+        color = hex(self.reference.color.value).removeprefix("0x").upper() if self.reference.color else None
         self.e_color = TextInput(
             label="Color",
             default=color,
@@ -116,9 +112,7 @@ class EmbedModificationView(View):
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         if interaction.user != self.author:
-            await resp.send_message(
-                f"This embed is being modified by {self.author}", ephemeral=True
-            )
+            await resp.send_message(f"This embed is being modified by {self.author}", ephemeral=True)
             return False
         return True
 

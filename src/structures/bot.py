@@ -321,16 +321,12 @@ class CustomBot(Bot):
             Connection
         """
         connection: Connection = await self.pool.acquire(timeout=timeout)
-        transaction = connection.transaction(
-            isolation=isolation, readonly=readonly, deferrable=deferrable
-        )
+        transaction = connection.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable)
         await transaction.start()
         try:
             yield connection
         except Exception as e:
-            self.logger.exception(
-                "An exception occurred in the transaction", exc_info=e
-            )
+            self.logger.exception("An exception occurred in the transaction", exc_info=e)
             if not connection.is_closed():
                 await transaction.rollback()
             if raise_on_error:

@@ -191,12 +191,7 @@ class Proxy(commands.Cog):
             member: Member = ctx.author
             cog: Submission = self.bot.get_cog("Submission")
             ocs = cog.rpers.get(member.id, {}).values()
-            if ocs := [
-                x
-                for x in ocs
-                if pokemon.lower() in x.name.lower()
-                or x.name.lower() in pokemon.lower()
-            ]:
+            if ocs := [x for x in ocs if pokemon.lower() in x.name.lower() or x.name.lower() in pokemon.lower()]:
                 oc = ocs[0]
                 npc = NPC(name=oc.name, avatar=oc.image)
             else:
@@ -253,9 +248,7 @@ class Proxy(commands.Cog):
         if not registered:
             return
 
-        channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(
-            payload.channel_id
-        )
+        channel: Union[Thread, TextChannel] = await self.bot.fetch_channel(payload.channel_id)
         reference: TextChannel = getattr(channel, "parent", channel)
         if registered not in reference.overwrites:
             return
@@ -275,9 +268,7 @@ class Proxy(commands.Cog):
                         with suppress(DiscordException):
                             await payload.member.send(text, view=view)
             except NotFound:
-                await payload.member.send(
-                    "That proxy was sent by an user who is no longer in discord."
-                )
+                await payload.member.send("That proxy was sent by an user who is no longer in discord.")
 
 
 async def setup(bot: CustomBot) -> None:

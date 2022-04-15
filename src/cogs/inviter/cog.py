@@ -88,9 +88,7 @@ class InviteView(View):
     async def process(self, inter: Interaction, sct: Select):
         member: Member = inter.user
         resp: InteractionResponse = inter.response
-        w: Webhook = await inter.client.webhook(
-            957602085753458708, reason="Partnership"
-        )
+        w: Webhook = await inter.client.webhook(957602085753458708, reason="Partnership")
         self.embed.set_footer(text=sct.values[0])
         message = await w.send(
             content=self.invite.url,
@@ -128,9 +126,7 @@ class InviteView(View):
         """
         member: Member = inter.user
         resp: InteractionResponse = inter.response
-        await resp.send_message(
-            f"{btn.label!r} has been chosen by {member.display_name}"
-        )
+        await resp.send_message(f"{btn.label!r} has been chosen by {member.display_name}")
         await inter.message.delete()
         self.stop()
 
@@ -167,12 +163,7 @@ class Inviter(commands.Cog):
         ctx: Message
             Message to be scanned
         """
-        if (
-            not ctx.guild
-            or ctx.author == self.bot.user
-            or ctx.webhook_id
-            or not (match := INVITE.search(ctx.content))
-        ):
+        if not ctx.guild or ctx.author == self.bot.user or ctx.webhook_id or not (match := INVITE.search(ctx.content)):
             return
 
         context = await self.bot.get_context(ctx)
@@ -216,10 +207,7 @@ class Inviter(commands.Cog):
         link_view = View()
         link_view.add_item(Button(label="Click Here to Join", url=invite.url))
         data = self.view.data
-        if (
-            author.guild_permissions.administrator
-            and ctx.channel.id == 957604961330561065
-        ):
+        if author.guild_permissions.administrator and ctx.channel.id == 957604961330561065:
             w = await self.bot.webhook(957602085753458708, reason="Partnership")
             message = await w.send(
                 content=invite.url,
@@ -306,9 +294,7 @@ class Inviter(commands.Cog):
             await self.message.edit(view=self.view)
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(
-        self, payload: RawBulkMessageDeleteEvent
-    ) -> None:
+    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
         if payload.channel_id != 957604961330561065:
             return
         messages = self.view.messages
