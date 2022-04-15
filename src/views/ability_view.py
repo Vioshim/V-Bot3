@@ -34,7 +34,7 @@ __all__ = ("AbilityView",)
 def ability_emoji_parser(x: Ability | SpAbility) -> Optional[str]:
     if isinstance(x, Ability):
         return "\N{LARGE BLUE CIRCLE}"
-    if isinstance(SpAbility):
+    if isinstance(x, SpAbility):
         return "\N{LARGE GREEN CIRCLE}"
 
 
