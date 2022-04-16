@@ -1531,21 +1531,20 @@ async def fetch_all(connection: Connection):
     connection : Connection
         asyncpg connection
     """
-
-    for item in as_completed(
-        [
-            PokemonCharacter.fetch_all(connection),
-            MegaCharacter.fetch_all(connection),
-            LegendaryCharacter.fetch_all(connection),
-            MythicalCharacter.fetch_all(connection),
-            UltraBeastCharacter.fetch_all(connection),
-            FakemonCharacter.fetch_all(connection),
-            FusionCharacter.fetch_all(connection),
-            CustomMegaCharacter.fetch_all(connection),
-            VariantCharacter.fetch_all(connection),
-        ]
-    ):
-        for oc in await item:
+    coros = [
+        PokemonCharacter,
+        MegaCharacter,
+        LegendaryCharacter,
+        MythicalCharacter,
+        UltraBeastCharacter,
+        FakemonCharacter,
+        FusionCharacter,
+        CustomMegaCharacter,
+        VariantCharacter,
+    ]
+    for item in coros:
+        data = await item.fetch_all(connection)
+        for oc in data:
             yield oc
 
 
