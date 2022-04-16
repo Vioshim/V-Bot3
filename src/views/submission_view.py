@@ -14,23 +14,17 @@
 
 from asyncio import to_thread
 from contextlib import suppress
-from datetime import datetime
 from logging import getLogger, setLoggerClass
-from random import choice as random_choice
-from typing import Type, Union
+from typing import Union
 
 from discord import (
-    AllowedMentions,
     ButtonStyle,
-    CategoryChannel,
     DiscordException,
     Embed,
-    Guild,
     Interaction,
     InteractionResponse,
     Member,
     SelectOption,
-    TextChannel,
     TextStyle,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
@@ -39,15 +33,11 @@ from yaml import dump, safe_load
 
 from src.cogs.submission.oc_modification import ModifyView
 from src.pagination.complex import Complex
-from src.pagination.text_input import ModernInput
 from src.structures.character import Character, doc_convert
 from src.structures.logger import ColoredLogger
-from src.structures.mission import Mission
 from src.utils.doc_reader import docs_reader
-from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES
-from src.utils.functions import int_check, yaml_handler
+from src.utils.functions import yaml_handler
 from src.utils.matches import G_DOCUMENT
-from src.views.mission_view import MissionView
 
 setLoggerClass(ColoredLogger)
 
@@ -118,7 +108,9 @@ class SubmissionModal(Modal):
             if doc_data := G_DOCUMENT.match(text):
                 doc = await to_thread(docs_reader, url := doc_data.group(1))
                 msg_data = doc_convert(doc)
-                url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                url = (
+                    f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+                )
                 msg_data["url"] = url
             else:
                 text = yaml_handler(text)
@@ -190,9 +182,6 @@ class SubmissionView(View):
         rpers: dict[int, dict[int, Character]],
         oc_list: dict[int, int],
         supporting: dict[Member, Member],
-        missions: set[Mission],
-        mission_claimers: dict[int, set[int]],
-        mission_cooldown: dict[int, datetime],
         **kwargs: Union[str, dict],
     ):
         """Init method
@@ -209,17 +198,12 @@ class SubmissionView(View):
             OC list
         supporting : dict[Member, Member]
             Mods assisting to
-        missions : set[Mission]
-            All Missions
         """
         super(SubmissionView, self).__init__(timeout=None)
         self.kwargs = kwargs
         self.ocs = ocs
         self.rpers = rpers
         self.oc_list = oc_list
-        self.missions = missions
-        self.mission_claimers = mission_claimers
-        self.mission_cooldown = mission_cooldown
         self.supporting = supporting
         self.show_template.options = [
             SelectOption(
@@ -260,7 +244,9 @@ class SubmissionView(View):
         embed.set_image(
             url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png",
         )
-        embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
+        embed.set_footer(
+            text="After sending, bot will ask for backstory, extra info and image."
+        )
         await ctx.followup.send(
             embed=embed,
             view=view,
@@ -283,7 +269,9 @@ class SubmissionView(View):
         member = self.supporting.get(member, member)
 
         if not (values := list(self.rpers.get(member.id, {}).values())):
-            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
+            return await ctx.followup.send(
+                "You don't have characters to modify", ephemeral=True
+            )
 
         values.sort(key=lambda x: x.name)
 
@@ -318,7 +306,6 @@ class SubmissionView(View):
                 icon_url=member.display_avatar.url,
             )
 
-            oc: Type[Character]
             async with view.send(single=True, ephemeral=True) as oc:
                 if isinstance(oc, Character):
                     logger.info(
@@ -327,157 +314,3 @@ class SubmissionView(View):
                         repr(oc),
                         oc.name,
                     )
-
-    @button(
-        label="Publish a Mission!",
-        emoji="✉",
-        row=1,
-        custom_id="3ec81ed922f2f2cde42a2fc3ed3392c4",
-    )
-    async def mission_create(self, ctx: Interaction, _: Button):
-        guild: Guild = ctx.guild
-        role = guild.get_role(719642423327719434)
-        resp: InteractionResponse = ctx.response
-        if role not in ctx.user.roles:
-            await resp.send_message("You don't have a character registered", ephemeral=True)
-            return
-        locations: list[CategoryChannel] = [guild.get_channel(item) for item in RP_CATEGORIES]
-        member: Member = ctx.user
-        channel: TextChannel = ctx.channel
-        view = Complex(
-            member=member,
-            target=ctx,
-            values=locations,
-            parser=lambda x: (
-                x.name[2:].capitalize(),
-                f"Sets it at {x.name[2:].capitalize()}",
-            ),
-            emoji_parser=lambda x: x.name[0],
-            text_component=TextInput(
-                label="Region",
-                placeholder=" | ".join(x.name[2:].capitalize() for x in locations),
-                default=random_choice(locations).name[2:].capitalize(),
-                required=True,
-            ),
-        )
-        choice: CategoryChannel
-        async with view.send(title="Select Region", single=True) as choice:
-            if not choice:
-                return
-            areas = [
-                item
-                for item in choice.channels
-                if ("\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in item.name and isinstance(item, TextChannel))
-            ]
-            view = Complex(
-                member=ctx.user,
-                target=channel,
-                values=areas,
-                parser=lambda x: (
-                    x.name[2:].replace("-", " ").capitalize(),
-                    x.topic[:50] if x.topic else "No description.",
-                ),
-                emoji_parser=lambda x: x.name[0],
-                text_component=TextInput(
-                    label="Area",
-                    placeholder=" | ".join(x.name[2:].replace("-", " ").capitalize() for x in areas),
-                    default=random_choice(areas).name[2:].replace("-", " ").capitalize(),
-                    required=True,
-                ),
-            )
-            area: TextChannel
-            author = self.supporting.get(ctx.user, ctx.user)
-            async with view.send(title="Select Area", single=True) as area:
-                if not area:
-                    return
-                mission = Mission(author=author.id, place=area.id)
-                text_input = ModernInput(
-                    member=member,
-                    target=channel,
-                )
-
-                text: str
-
-                async with text_input.handle(
-                    style=TextStyle.short,
-                    label="Mission's Title",
-                    placeholder="Small summary that will show in the top of the paper.",
-                    max_length=50,
-                    required=True,
-                ) as text:
-                    if not text:
-                        return
-                    mission.title = text.title()
-
-                async with text_input.handle(
-                    style=TextStyle.paragraph,
-                    label="Mission's Description",
-                    placeholder="In this area, specify what is the mission about, and describe whatever is needed.",
-                    required=True,
-                ) as text:
-                    if not text:
-                        return
-                    mission.description = text
-
-                async with text_input.handle(
-                    style=TextStyle.short,
-                    label="Mission's Max amount of joiners",
-                    placeholder="If you want your missions to have a max amount of joiners (1-10), if you default then there will be no limit.",
-                    required=False,
-                ) as text:
-                    if text is None:
-                        return
-                    mission.max_amount = int_check(text, a=1, b=10)
-
-                async with text_input.handle(
-                    style=TextStyle.short,
-                    label="Mission's Target",
-                    placeholder="Either be the one that you're looking for, or the item that is being searched.",
-                    required=True,
-                ) as text:
-                    if not text:
-                        return
-                    mission.target = text
-
-                async with text_input.handle(
-                    style=TextStyle.short,
-                    label="Mission's Client",
-                    placeholder="The one that is making the mission and possibly reward if done.",
-                    required=True,
-                ) as text:
-                    if not text:
-                        return
-                    mission.client = text
-
-                view = Complex(
-                    member=member,
-                    target=channel,
-                    values=range(1, 7),
-                    emoji_parser=lambda x: DICE_NUMBERS[x - 1],
-                    parser=lambda x: (str(x), f"Sets to {x} / 6"),
-                )
-                view.embed.title = "Mission's Difficulty"
-                async with view.send(single=True) as item:
-                    if not item:
-                        return
-                    mission.difficulty = item
-                    channel: TextChannel = ctx.client.get_channel(908498210211909642)
-                    view = MissionView(
-                        mission=mission,
-                        mission_claimers=self.mission_claimers,
-                        mission_cooldown=self.mission_cooldown,
-                        supporting=self.supporting,
-                    )
-                    msg = await channel.send(
-                        content=author.mention,
-                        embed=mission.embed,
-                        view=view,
-                        allowed_mentions=AllowedMentions(users=True),
-                    )
-                    mission.msg_id = msg.id
-                    self.missions.add(mission)
-                    async with ctx.client.database() as session:
-                        await mission.upsert(session)
-                        thread = await msg.create_thread(name=f"Mission {mission.id:03d}")
-                        await thread.add_user(author)
-                        logger.info("Mission added: %s", repr(mission))

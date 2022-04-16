@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+from asyncio import as_completed
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -50,7 +51,12 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import (
+    common_pop_get,
+    int_check,
+    multiple_pop,
+    stats_check,
+)
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -317,7 +323,9 @@ class Character(metaclass=ABCMeta):
             URL
         """
         if image := self.image or self.default_image:
-            if image.startswith(f"https://cdn.discordapp.com/attachments/{self.thread}/"):
+            if image.startswith(
+                f"https://cdn.discordapp.com/attachments/{self.thread}/"
+            ):
                 return image
 
             kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
@@ -1522,22 +1530,23 @@ async def fetch_all(connection: Connection):
     ----------
     connection : Connection
         asyncpg connection
-
-    Returns
-    -------
-    list[Type[Character]]
-        Characters
     """
-    data: list[Type[Character]] = []
 
-    for kind in ASSOCIATIONS.values():
-        try:
-            values = await kind.fetch_all(connection)
-            data.extend(values)
-        except Exception as e:
-            print(f"Exception at {kind}: {e}")
-
-    return data
+    for item in as_completed(
+        [
+            PokemonCharacter.fetch_all(connection),
+            MegaCharacter.fetch_all(connection),
+            LegendaryCharacter.fetch_all(connection),
+            MythicalCharacter.fetch_all(connection),
+            UltraBeastCharacter.fetch_all(connection),
+            FakemonCharacter.fetch_all(connection),
+            FusionCharacter.fetch_all(connection),
+            CustomMegaCharacter.fetch_all(connection),
+            VariantCharacter.fetch_all(connection),
+        ]
+    ):
+        for oc in await item:
+            yield oc
 
 
 def kind_deduce(item: Optional[Species], *args, **kwargs):
@@ -1632,7 +1641,9 @@ def oc_process(**kwargs) -> Type[Character]:
     if species.banned:
         raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(*type_info)):
+    if (type_info := common_pop_get(data, "types", "type")) and (
+        types := Typing.deduce_many(*type_info)
+    ):
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.types = types
         elif species.types != types:
@@ -1651,7 +1662,9 @@ def oc_process(**kwargs) -> Type[Character]:
 
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.abilities = abilities
-        elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
+        elif abilities_txt := "/".join(
+            x.name for x in abilities if x not in species.abilities
+        ):
             species = Variant(
                 base=species,
                 name=f"{abilities_txt}-Granted {species.name}",
@@ -1676,7 +1689,9 @@ def oc_process(**kwargs) -> Type[Character]:
         if stats := data.pop("stats", {}):
             species.set_stats(**stats)
 
-        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
+        if movepool := data.pop(
+            "movepool", dict(event=data.get("moveset", set()))
+        ):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
@@ -1684,7 +1699,9 @@ def oc_process(**kwargs) -> Type[Character]:
 
     if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
         data["sp_ability"] = value
-    elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
+    elif "false" not in (value := str(value).lower()) and (
+        "true" in value or "yes" in value
+    ):
         data["sp_ability"] = SpAbility()
 
     return kind_deduce(species, **data)
@@ -1724,9 +1741,18 @@ def doc_convert(doc: Document) -> dict[str, Any]:
         Info
     """
 
-    content_values: list[str] = [cell.text for table in doc.tables for row in table.rows for cell in row.cells]
+    content_values: list[str] = [
+        cell.text
+        for table in doc.tables
+        for row in table.rows
+        for cell in row.cells
+    ]
 
-    text = [strip.replace("\u2019", "'") for item in content_values if (strip := item.strip())]
+    text = [
+        strip.replace("\u2019", "'")
+        for item in content_values
+        if (strip := item.strip())
+    ]
 
     movepool_typing = dict[str, set[str] | dict[int, set[str]]]
     if url := getattr(doc, "url", None):
@@ -1739,7 +1765,9 @@ def doc_convert(doc: Document) -> dict[str, Any]:
         fusion=set(),
         types=set(),
         stats={
-            PLACEHOLDER_STATS[item.strip()]: stats_check(*content_values[index + 1 :][:1])
+            PLACEHOLDER_STATS[item.strip()]: stats_check(
+                *content_values[index + 1 :][:1]
+            )
             for index, item in enumerate(content_values)
             if all(
                 (
@@ -1805,17 +1833,24 @@ class CharacterTransform(Transformer):
         return cog.ocs[value]
 
     @classmethod
-    async def autocomplete(cls, interaction: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(
+        cls, interaction: Interaction, value: str
+    ) -> list[Choice[str]]:
         member_id = (interaction.namespace.member or interaction.user).id
         cog = interaction.client.get_cog("Submission")
         text: str = str(value or "").title()
         ocs = cog.rpers.get(member_id, {}).values()
         items = {oc.name: str(oc.id) for oc in ocs}
         values = [
-            Choice(name=item, value=items[item]) for item in get_close_matches(word=text, possibilities=items, n=25)
+            Choice(name=item, value=items[item])
+            for item in get_close_matches(word=text, possibilities=items, n=25)
         ]
         if not values:
-            values = [Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)]
+            values = [
+                Choice(name=k, value=v)
+                for k, v in items.items()
+                if k.startswith(text)
+            ]
         values.sort(key=lambda x: x.name)
         return values[:25]
 

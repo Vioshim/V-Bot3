@@ -66,6 +66,7 @@ channels = {
     839105256235335680: "Random Fact",
     723228500835958987: "Announcement",
     740606964727546026: "Question",
+    908498210211909642: "Mission",
 }
 
 LOGS = {
@@ -152,7 +153,7 @@ class AnnouncementView(View):
             case "Poll":
                 await msg.add_reaction("\N{THUMBS UP SIGN}")
                 await msg.add_reaction("\N{THUMBS DOWN SIGN}")
-            case "RP" | "OC Question" | "Story" | "Storyline":
+            case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
                 if tupper := ctx.guild.get_member(431544605209788416):
                     await thread.add_user(tupper)
         self.stop()
