@@ -108,9 +108,7 @@ class SubmissionModal(Modal):
             if doc_data := G_DOCUMENT.match(text):
                 doc = await to_thread(docs_reader, url := doc_data.group(1))
                 msg_data = doc_convert(doc)
-                url = (
-                    f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
-                )
+                url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
                 msg_data["url"] = url
             else:
                 text = yaml_handler(text)
@@ -244,9 +242,7 @@ class SubmissionView(View):
         embed.set_image(
             url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png",
         )
-        embed.set_footer(
-            text="After sending, bot will ask for backstory, extra info and image."
-        )
+        embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(
             embed=embed,
             view=view,
@@ -269,9 +265,7 @@ class SubmissionView(View):
         member = self.supporting.get(member, member)
 
         if not (values := list(self.rpers.get(member.id, {}).values())):
-            return await ctx.followup.send(
-                "You don't have characters to modify", ephemeral=True
-            )
+            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
 
         values.sort(key=lambda x: x.name)
 

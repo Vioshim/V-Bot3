@@ -191,15 +191,9 @@ class Submission(commands.Cog):
         self.bot.tree.add_command(self.ctx_menu3)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(
-            self.ctx_menu1.name, type=self.ctx_menu1.type
-        )
-        self.bot.tree.remove_command(
-            self.ctx_menu2.name, type=self.ctx_menu2.type
-        )
-        self.bot.tree.remove_command(
-            self.ctx_menu3.name, type=self.ctx_menu3.type
-        )
+        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+        self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
+        self.bot.tree.remove_command(self.ctx_menu3.name, type=self.ctx_menu3.type)
 
     async def moves_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
@@ -208,11 +202,7 @@ class Submission(commands.Cog):
         if oc := self.ocs.get(message.id):
             moves = list(oc.moveset.copy())
         elif text := message.content:
-            moves = [
-                move
-                for move in Move.all()
-                if move.name in text.title() or move.id in text.upper()
-            ]
+            moves = [move for move in Move.all() if move.name in text.title() or move.id in text.upper()]
         if len(moves) == 1:
             view = View()
             view.add_item(
@@ -255,16 +245,8 @@ class Submission(commands.Cog):
                 abilities.append(sp_ability)
             abilities.extend(oc.abilities)
         elif text := message.content:
-            abilities.extend(
-                ab
-                for ab in Ability.all()
-                if ab.name in text.title() or ab.id in text.upper()
-            )
-            abilities.extend(
-                sp
-                for x in self.ocs.values()
-                if (sp := x.sp_ability) and sp.name.lower() in text.lower()
-            )
+            abilities.extend(ab for ab in Ability.all() if ab.name in text.title() or ab.id in text.upper())
+            abilities.extend(sp for x in self.ocs.values() if (sp := x.sp_ability) and sp.name.lower() in text.lower())
 
         if abilities:
             abilities.sort(key=lambda x: x.name)
@@ -344,15 +326,12 @@ class Submission(commands.Cog):
         if role not in member.roles:
             await member.add_roles(role, reason=f"Registered by {author}")
             embed = Embed(
-                description="You can try to use /ping `<role>` for finding a RP. "
-                "(<#910914713234325504> also works)",
+                description="You can try to use /ping `<role>` for finding a RP. " "(<#910914713234325504> also works)",
                 colour=member.colour,
                 timestamp=utcnow(),
             )
             embed.set_image(url=REGISTERED_IMG)
-            embed.set_author(
-                name=author.display_name, icon_url=author.avatar.url
-            )
+            embed.set_author(name=author.display_name, icon_url=author.avatar.url)
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             files, embed = await self.bot.embed_raw(embed)
 
@@ -380,9 +359,7 @@ class Submission(commands.Cog):
                 await member.send(embed=embed, files=files, view=view)
             await ctx.followup.send("User has been registered", ephemeral=True)
         else:
-            await ctx.followup.send(
-                "User is already registered", ephemeral=True
-            )
+            await ctx.followup.send("User is already registered", ephemeral=True)
 
     @app_commands.command(name="ocs", description="Allows to show characters")
     @app_commands.guilds(719343092963999804)
@@ -400,9 +377,7 @@ class Submission(commands.Cog):
             member = ctx.user
         if character:
             view = PingView(character, ctx.user.id == character.author)
-            return await ctx.followup.send(
-                embed=character.embed, view=view, ephemeral=True
-            )
+            return await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
         if ocs := list(self.rpers.get(member.id, {}).values()):
             ocs.sort(key=lambda x: x.name)
             if len(ocs) == 1:
@@ -426,9 +401,7 @@ class Submission(commands.Cog):
             )
             async with view.send(ephemeral=True):
                 if member == ctx.user:
-                    self.bot.logger.info(
-                        "User %s is reading their OCs", str(member)
-                    )
+                    self.bot.logger.info("User %s is reading their OCs", str(member))
                 else:
                     self.bot.logger.info(
                         "User %s is reading the OCs of %s",
@@ -436,9 +409,7 @@ class Submission(commands.Cog):
                         str(member),
                     )
         else:
-            await ctx.followup.send(
-                f"{member.mention} has no characters.", ephemeral=True
-            )
+            await ctx.followup.send(f"{member.mention} has no characters.", ephemeral=True)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -487,9 +458,7 @@ class Submission(commands.Cog):
                 self.data_msg[channel.id] = msg
 
         async with self.bot.database() as conn:
-            for oc in filter(
-                lambda x: x.location == channel.id, self.ocs.values()
-            ):
+            for oc in filter(lambda x: x.location == channel.id, self.ocs.values()):
                 await conn.execute(
                     """--sql
                     UPDATE CHARACTER
@@ -549,9 +518,7 @@ class Submission(commands.Cog):
             thread=Object(id=oc.thread),
             allowed_mentions=AllowedMentions(users=True),
         )
-        if file := await self.bot.get_file(
-            url=oc.generated_image, filename="image"
-        ):
+        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
             kwargs["file"] = file
             try:
                 msg_oc = await self.oc_list_webhook.send(**kwargs, wait=True)
@@ -630,11 +597,7 @@ class Submission(commands.Cog):
                     if not (stats := stats_view.choice):
                         return
                     species.set_stats(**asdict(stats.value))
-            if (
-                sum(species.stats) > 18
-                or min(species.stats) < 1
-                or max(species.stats) > 5
-            ):
+            if sum(species.stats) > 18 or min(species.stats) < 1 or max(species.stats) > 5:
                 await send(
                     "Max stats is 18. Min 1. Max 5",
                 )
@@ -678,12 +641,8 @@ class Submission(commands.Cog):
                     ),
                     text_component=TextInput(
                         label="Fusion Typing",
-                        placeholder=" | ".join(
-                            "/".join(i.name for i in x).title() for x in values
-                        ),
-                        default="/".join(
-                            i.name for i in random_choice(values)
-                        ).title(),
+                        placeholder=" | ".join("/".join(i.name for i in x).title() for x in values),
+                        default="/".join(i.name for i in random_choice(values)).title(),
                     ),
                 )
                 async with view.send(
@@ -694,9 +653,7 @@ class Submission(commands.Cog):
                         return
                     species.types = frozenset(types)
             elif oc.types not in values:
-                items = ", ".join(
-                    "/".join(i.name for i in item) for item in values
-                ).title()
+                items = ", ".join("/".join(i.name for i in item) for item in values).title()
                 await send(
                     f"Invalid typing for the fusion, valid types are {items}",
                 )
@@ -704,16 +661,11 @@ class Submission(commands.Cog):
 
         max_ab = oc.max_amount_abilities
         if not isinstance(species, Fakemon) and (
-            isinstance(species, (Legendary, Mythical, UltraBeast))
-            or len(species.abilities) == 1
+            isinstance(species, (Legendary, Mythical, UltraBeast)) or len(species.abilities) == 1
         ):
             oc.abilities = species.abilities
         elif not oc.abilities or len(oc.abilities) > max_ab:
-            values = (
-                Ability.all()
-                if oc.any_ability_at_first
-                else oc.species.abilities
-            )
+            values = Ability.all() if oc.any_ability_at_first else oc.species.abilities
             placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
             ability_view = Complex(
                 member=worker,
@@ -742,20 +694,12 @@ class Submission(commands.Cog):
                     return
                 oc.abilities = frozenset(abilities)
         if len(oc.abilities) > max_ab:
-            await send(
-                f"Max Amount of Abilities for the current Species is {max_ab}"
-            )
+            await send(f"Max Amount of Abilities for the current Species is {max_ab}")
             return
         if not oc.any_ability_at_first and (
-            ability_errors := ", ".join(
-                ability.name
-                for ability in oc.abilities
-                if ability not in species.abilities
-            )
+            ability_errors := ", ".join(ability.name for ability in oc.abilities if ability not in species.abilities)
         ):
-            await send(
-                f"the abilities [{ability_errors}] were not found in the species"
-            )
+            await send(f"the abilities [{ability_errors}] were not found in the species")
             return
 
         text_view = ModernInput(member=worker, target=ctx)
@@ -797,12 +741,8 @@ class Submission(commands.Cog):
 
         if not oc.any_move_at_first:
             moves_movepool = species.total_movepool()
-            if move_errors := ", ".join(
-                move.name for move in oc.moveset if move not in moves_movepool
-            ):
-                await send(
-                    f"the moves [{move_errors}] were not found in the movepool"
-                )
+            if move_errors := ", ".join(move.name for move in oc.moveset if move not in moves_movepool):
+                await send(f"the moves [{move_errors}] were not found in the movepool")
                 return
         elif len(oc.moveset) > 6:
             await send("Max amount of moves in a pokemon is 6.")
@@ -887,18 +827,14 @@ class Submission(commands.Cog):
         except NotFound:
             await self.register_oc(oc)
 
-    async def bio_google_doc_parser(
-        self, message: Message
-    ) -> Optional[tuple[DocumentType, str]]:
+    async def bio_google_doc_parser(self, message: Message) -> Optional[tuple[DocumentType, str]]:
         text: str = codeblock_converter(message.content or "").content
         if doc_data := G_DOCUMENT.match(text):
             doc = await to_thread(docs_reader, url := doc_data.group(1))
             url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
             return doc, url
 
-    async def bio_word_doc_parser(
-        self, message: Message
-    ) -> Optional[DocumentType]:
+    async def bio_word_doc_parser(self, message: Message) -> Optional[DocumentType]:
         if attachments := message.attachments:
             with suppress(Exception):
                 file = await attachments[0].to_file()
@@ -971,20 +907,12 @@ class Submission(commands.Cog):
                         msg_data = doc_convert(msg_data)
                     else:
                         msg_data = safe_load(
-                            yaml_handler(
-                                "\n".join(
-                                    element
-                                    for p in msg_data.paragraphs
-                                    if (element := p.text.strip())
-                                )
-                            )
+                            yaml_handler("\n".join(element for p in msg_data.paragraphs if (element := p.text.strip())))
                         )
                 if msg_data and isinstance(msg_data, dict):
                     return await self.submission_handler(message, **msg_data)
         except Exception as e:
-            self.bot.logger.exception(
-                "Exception processing character", exc_info=e
-            )
+            self.bot.logger.exception("Exception processing character", exc_info=e)
             await message.reply(str(e), delete_after=15)
         finally:
             self.ignore -= {message.author.id}
@@ -996,16 +924,12 @@ class Submission(commands.Cog):
         if "Npc" in author or "Narrator" in author:
             return
 
-        ocs = {
-            item.name: item for item in self.rpers.get(member_id, {}).values()
-        }
+        ocs = {item.name: item for item in self.rpers.get(member_id, {}).values()}
 
         if not (oc := ocs.get(author)):
             if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
                 oc = ocs[items[0]]
-            elif ocs := [
-                v for k, v in ocs.items() if k in author or author in k
-            ]:
+            elif ocs := [v for k, v in ocs.items() if k in author or author in k]:
                 oc = ocs[0]
             else:
                 return
@@ -1024,9 +948,7 @@ class Submission(commands.Cog):
             await self.unclaiming(former_channel)
 
         if isinstance(channel, TextChannel):
-            scheduler = await self.bot.scheduler.get_schedule(
-                f"RP[{channel.id}]"
-            )
+            scheduler = await self.bot.scheduler.get_schedule(f"RP[{channel.id}]")
             scheduler.trigger = IntervalTrigger(days=3)
 
     async def on_message_proxy(self, message: Message):
@@ -1104,8 +1026,7 @@ class Submission(commands.Cog):
             [
                 x
                 for x in self.bot.get_channel(ch).channels
-                if "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
-                not in x.name
+                if "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in x.name
             ]
             for ch in RP_CATEGORIES
         ]
@@ -1144,8 +1065,7 @@ class Submission(commands.Cog):
             and tupper.status == Status.online
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
-            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}"
-            not in message.channel.name
+            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
         ):
             await self.on_message_proxy(message)
 
@@ -1192,9 +1112,7 @@ class Submission(commands.Cog):
                 await oc.delete(db)
 
     @commands.Cog.listener()
-    async def on_raw_message_delete(
-        self, payload: RawMessageDeleteEvent
-    ) -> None:
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
         """Detects if ocs or lists were deleted
 
         Parameters
@@ -1215,9 +1133,7 @@ class Submission(commands.Cog):
                 )
                 await oc.delete(db)
         if payload.message_id in self.oc_list.values():
-            author_id: int = [
-                k for k, v in self.oc_list.items() if v == payload.message_id
-            ][0]
+            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
             del self.oc_list[author_id]
             async with self.bot.database() as db:
                 for oc in self.rpers.pop(author_id, {}).values():

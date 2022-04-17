@@ -49,7 +49,7 @@ from yaml import dump
 
 from src.structures.bot import CustomBot
 from src.utils.etc import MAP_ELEMENTS, WHITE_BAR
-from src.utils.functions import message_line
+from src.utils.functions import embed_handler, message_line
 from src.views.message_view import MessageView
 
 __all__ = ("Information", "setup")
@@ -423,7 +423,7 @@ class Information(commands.Cog):
         if not msg.embeds:
             return
 
-        embed = msg.embeds[0].copy()
+        embed = embed_handler(msg, msg.embeds[0].copy())
         embed.clear_fields()
         members = len([m for m in guild.members if not m.bot])
         total = len(guild.members)
