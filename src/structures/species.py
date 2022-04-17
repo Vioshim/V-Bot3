@@ -695,9 +695,11 @@ class Fusion(Species):
     mon2: Optional[Species] = None
 
     def __init__(self, mon1: Species, mon2: Species):
+        ids = sorted((mon1.id, mon2.id))
+        names = sorted((mon1.name, mon2.name))
         super(Fusion, self).__init__(
-            id=f"{mon1.id}_{mon2.id}",
-            name=f"{mon1.name}/{mon2.name}",
+            id="_".join(ids),
+            name="_".join(names),
             height=round((mon1.height + mon2.height) / 2),
             weight=round((mon1.weight + mon2.weight) / 2),
             HP=round((mon1.HP + mon2.HP) / 2),

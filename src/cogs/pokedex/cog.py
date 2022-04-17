@@ -33,9 +33,11 @@ from src.cogs.pokedex.search import (
     AbilityArg,
     DefaultSpeciesArg,
     FakemonArg,
+    GroupByArg,
     MoveArg,
     SpeciesArg,
     TypingArg,
+    age_parser,
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character, FusionCharacter
@@ -67,54 +69,6 @@ REF_KINDS = [
     "CUSTOMMEGA",
     "MEGA",
 ]
-
-OPERATORS = {
-    "<=": lambda x, y: x <= y,
-    "<": lambda x, y: x < y,
-    ">=": lambda x, y: x >= y,
-    ">": lambda x, y: x > y,
-}
-
-
-def foo(x: str) -> Optional[int]:
-    x = x.strip()
-    if x.isdigit():
-        return int(x)
-
-
-def age_parser(text: str, oc: Character):
-    """Filter through range
-
-    Parameters
-    ----------
-    text : str
-        Range
-
-    Returns
-    -------
-    bool
-        valid
-    """
-    if not text:
-        return True
-
-    age = oc.age or 0
-
-    text = text.replace(",", ";").replace("|", ";")
-    for item in map(lambda x: x.strip(), text.split(";")):
-        if item.isdigit() and int(item) == age:
-            return True
-
-        op = [val for x in item.split("-") if isinstance(val := foo(x), int)]
-        if len(op) == 2 and op[0] <= age <= op[1]:
-            return age != 0
-
-        for key, operator in filter(lambda x: x[0] in text, OPERATORS.items()):
-            op = [foo(x) or 0 for x in item.split(key)]
-            if operator(op[0], age) if op[0] else operator(age, op[1]):
-                return age != 0
-
-    return False
 
 
 class Pokedex(commands.Cog):
@@ -233,6 +187,8 @@ class Pokedex(commands.Cog):
         sp_ability: Optional[str],
         pronoun: Optional[Literal["He", "She", "Them"]],
         age: Optional[str],
+        group_by: Optional[GroupByArg],
+        amount: Optional[str],
     ):
         """Command to obtain Pokemon entries and its ocs
 
@@ -268,6 +224,10 @@ class Pokedex(commands.Cog):
             Pronoun to Look for
         age : Optional[str]
             OC's age. e.g. 18-24, 13, >20
+        group_by : Optional[GroupByArg]
+            Group by method
+        amount : amount
+            Groupby limit search
         """
         resp: InteractionResponse = ctx.response
         text: str = ""
@@ -435,19 +395,34 @@ class Pokedex(commands.Cog):
                 e.url = move.url
         if kind:
             ocs = [oc for oc in ocs if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")]
+        if group_by:
+            view = group_by.generate(ctx, ocs, amount=amount)
+        else:
+            view = CharactersView(
+                member=ctx.user,
+                ocs=ocs,
+                target=ctx,
+                keep_working=True,
+            )
 
-        view = CharactersView(
-            member=ctx.user,
-            ocs=ocs,
-            target=ctx,
-            keep_working=True,
-        )
         async with view.send(ephemeral=True, embeds=embeds, content=text):
             self.bot.logger.info(
-                "%s is reading ocs /find %s",
+                "%s is reading /find %s",
                 str(ctx.user),
                 repr(ctx.namespace),
             )
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @app_commands.choices()
+    async def group_by(
+        self,
+        ctx: Interaction,
+        param: Literal[""],
+        amount: Optional[str],
+        reverse: bool = False,
+    ):
+        pass
 
 
 async def setup(bot: CustomBot) -> None:

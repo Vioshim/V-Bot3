@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from asyncio import as_completed
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime

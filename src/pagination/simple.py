@@ -222,8 +222,8 @@ class Simple(Basic):
             for item in self.values[amount : amount + self._entries_per_page]:
                 name, value = self.parser(item)
                 self.embed.add_field(
-                    name=name[:256],
-                    value=value[:1024],
+                    name=str(name)[:256],
+                    value=str(value)[:1024],
                     inline=self.inline,
                 )
 
