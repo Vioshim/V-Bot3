@@ -56,8 +56,8 @@ SEREBII_IMAGE = compile(r"https://www\.serebii\.net/(.+)", IGNORECASE)
 G_DOCUMENT = compile(r"https://docs\.google\.com/document/d/(.+)/", IGNORECASE)
 
 EMOJI_REGEX = compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")
-URL_DOMAIN_MATCH = compile(r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]")
-REGEX_URL = compile(r"http[s]?://" r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+")
+URL_DOMAIN_MATCH = compile(r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+")
+REGEX_URL = compile(r"http[s]?://((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+)")
 DISCORD_MSG_URL = compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"
     r"(?:[0-9]{15,20}|@me)"

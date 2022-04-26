@@ -166,7 +166,8 @@ class Roles(Cog):
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        ocs = interaction.client.get_cog("Submission").rpers.get(user.id, {}).values()
+        cog = interaction.client.get_cog("Submission")
+        ocs = [oc for oc in cog.ocs.values() if oc.author == user.id]
         await resp.send_modal(
             RPModal(
                 user=user,

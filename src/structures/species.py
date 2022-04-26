@@ -697,9 +697,12 @@ class Fusion(Species):
     def __init__(self, mon1: Species, mon2: Species):
         ids = sorted((mon1.id, mon2.id))
         names = sorted((mon1.name, mon2.name))
+        abilities = mon1.abilities | mon2.abilities
+        self.mon1 = mon1
+        self.mon2 = mon2
         super(Fusion, self).__init__(
             id="_".join(ids),
-            name="_".join(names),
+            name="/".join(names),
             height=round((mon1.height + mon2.height) / 2),
             weight=round((mon1.weight + mon2.weight) / 2),
             HP=round((mon1.HP + mon2.HP) / 2),
@@ -710,12 +713,10 @@ class Fusion(Species):
             SPE=round((mon1.SPE + mon2.SPE) / 2),
             banned=mon1.banned or mon2.banned,
             movepool=mon1.movepool + mon2.movepool,
-            abilities=mon1.abilities | mon2.abilities,
+            abilities=abilities,
             evolves_from=None,
             evolves_to=frozenset(),
         )
-        self.mon1 = mon1
-        self.mon2 = mon2
         if len(items := self.possible_types) == 1:
             self.types = frozenset(items[0])
         item1 = self.mon1.evolves_to
@@ -723,6 +724,10 @@ class Fusion(Species):
         self.evolves_to = frozenset(zip(item1, item2))
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
             self.evolves_from = item1, item2
+
+    def __post_init__(self):
+        super(Fusion, self).__post_init__()
+        self.abilities = self.mon1.abilities | self.mon2.abilities
 
     def __eq__(self, other: Fusion):
         if isinstance(other, Fusion):

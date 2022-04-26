@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from asyncio import to_thread
-from contextlib import suppress
 from logging import getLogger, setLoggerClass
 from typing import Union
 
@@ -82,11 +81,13 @@ class CharacterHandlerView(Complex):
             view=view,
         )
         await view.wait()
-        with suppress(DiscordException):
+        try:
             await resp.edit_message(
                 embed=oc.embed,
                 view=None,
             )
+        except DiscordException:
+            pass
 
 
 class SubmissionModal(Modal):
@@ -177,7 +178,6 @@ class SubmissionView(View):
     def __init__(
         self,
         ocs: dict[int, Character],
-        rpers: dict[int, dict[int, Character]],
         oc_list: dict[int, int],
         supporting: dict[Member, Member],
         **kwargs: Union[str, dict],
@@ -190,8 +190,6 @@ class SubmissionView(View):
             Bot instance
         ocs : dict[int, Character]
             OCs
-        rpers : dict[int, dict[int, Character]]
-            OCs per rper
         oc_list : dict[int, int]
             OC list
         supporting : dict[Member, Member]
@@ -200,7 +198,6 @@ class SubmissionView(View):
         super(SubmissionView, self).__init__(timeout=None)
         self.kwargs = kwargs
         self.ocs = ocs
-        self.rpers = rpers
         self.oc_list = oc_list
         self.supporting = supporting
         self.show_template.options = [
@@ -263,8 +260,7 @@ class SubmissionView(View):
         await resp.defer(ephemeral=True)
 
         member = self.supporting.get(member, member)
-
-        if not (values := list(self.rpers.get(member.id, {}).values())):
+        if not (values := [oc for oc in self.ocs.values() if member.id == oc.author]):
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
 
         values.sort(key=lambda x: x.name)
@@ -282,11 +278,13 @@ class SubmissionView(View):
                 ephemeral=True,
             )
             await view.wait()
-            with suppress(DiscordException):
+            try:
                 await resp.edit_message(
                     embed=values[0].embed,
                     view=None,
                 )
+            except DiscordException:
+                pass
         else:
             view = CharacterHandlerView(
                 member=ctx.user,

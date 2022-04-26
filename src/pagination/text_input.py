@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
@@ -129,8 +129,10 @@ class ModernInput(Basic):
         try:
             message: Message = await interaction.client.wait_for("message", check=text_check(interaction))
             self.text = message.content
-            with suppress(DiscordException):
+            try:
                 await message.delete()
+            except DiscordException:
+                pass
             msg = await interaction.original_message()
             await msg.edit(
                 content="Parameter has been added.",
@@ -218,5 +220,6 @@ class TextModal(Modal):
     async def on_submit(self, interaction: Interaction) -> None:
         """Runs whenever the modal is closed."""
         resp: InteractionResponse = interaction.response
+        self.text = self.item.value or ""
         await resp.send_message("Parameter has been added.", ephemeral=True)
         self.stop()

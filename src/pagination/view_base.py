@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import datetime
 from typing import Generic, Optional, TypeVar, Union
 
@@ -243,10 +242,12 @@ class Basic(Generic[_M], View):
                 else:
                     await self.message.delete()
         except HTTPException:
-            with suppress(HTTPException):
+            try:
                 if isinstance(self.target, Interaction):
                     message = await self.target.original_message()
                     await message.edit(view=None)
+            except HTTPException:
+                pass
         finally:
             self.message = None
             self.stop()

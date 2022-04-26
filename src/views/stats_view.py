@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from dataclasses import asdict, astuple, dataclass
 from enum import Enum
 from typing import Optional, TypeVar
@@ -122,8 +121,8 @@ class StatsModal(DefaultModal):
     async def on_submit(self, interaction: Interaction) -> None:
         text = yaml_handler(self.stat.value or "")
         resp: InteractionResponse = interaction.response
-        if not isinstance(item := safe_load(text), dict):
-            with suppress(TypeError):
+        try:
+            if not isinstance(item := safe_load(text), dict):
                 stats = StatItem(**item)
                 info = astuple(stats)
                 if all(1 <= stat <= 5 for stat in info) and sum(info) <= 18:
@@ -131,6 +130,8 @@ class StatsModal(DefaultModal):
                     self.text = stats
                     self.stop()
                     self.view.stop()
+        except TypeError:
+            pass
 
 
 class StatsView(Complex):

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from collections import namedtuple
-from contextlib import suppress
 from typing import Literal, Optional, Union
 
 from discord import (
@@ -88,11 +87,13 @@ class Proxy(commands.Cog):
         )
         self.npc_info[item] = message.author.id
 
-        with suppress(DiscordException):
+        try:
             if message.mentions:
                 await message.delete(delay=300)
             else:
                 await message.delete()
+        except DiscordException:
+            pass
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
     @app_commands.guilds(719343092963999804)
@@ -190,8 +191,11 @@ class Proxy(commands.Cog):
         else:
             member: Member = ctx.author
             cog: Submission = self.bot.get_cog("Submission")
-            ocs = cog.rpers.get(member.id, {}).values()
-            if ocs := [x for x in ocs if pokemon.lower() in x.name.lower() or x.name.lower() in pokemon.lower()]:
+            if ocs := [
+                x
+                for x in cog.ocs.values()
+                if oc.author == member.id and (pokemon.lower() in x.name.lower() or x.name.lower() in pokemon.lower())
+            ]:
                 oc = ocs[0]
                 npc = NPC(name=oc.name, avatar=oc.image)
             else:
@@ -265,8 +269,10 @@ class Proxy(commands.Cog):
                         view = View()
                         view.add_item(Button(label="Jump URL", url=message.jump_url))
                         text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
-                        with suppress(DiscordException):
+                        try:
                             await payload.member.send(text, view=view)
+                        except DiscordException:
+                            pass
             except NotFound:
                 await payload.member.send("That proxy was sent by an user who is no longer in discord.")
 

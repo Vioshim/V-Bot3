@@ -32,7 +32,7 @@ from discord import (
     WebhookMessage,
 )
 from discord.ext import commands
-from discord.ext.commands.converter import InviteConverter
+from discord.ext.commands.converter import InviteConverter, BadInviteArgument
 from discord.ui import Button, Select, View, button, select
 from discord.utils import find, get, utcnow
 
@@ -144,8 +144,7 @@ class Inviter(commands.Cog):
             thread: Thread = await self.bot.fetch_channel(957604961330561065)
             if thread.archived:
                 await thread.edit(archived=False)
-            iterator = thread.history(limit=None, oldest_first=True)
-            messages = [m async for m in iterator]
+            messages = [m async for m in thread.history(limit=None, oldest_first=True)]
             w = await self.bot.webhook(thread)
             self.view = InviterView(messages)
             self.message = await w.edit_message(
@@ -168,7 +167,10 @@ class Inviter(commands.Cog):
 
         context = await self.bot.get_context(ctx)
 
-        invite = await self.adapt.convert(ctx=context, argument=match.group())
+        try:
+            invite = await self.adapt.convert(ctx=context, argument=match.group())
+        except BadInviteArgument:
+            return
 
         guild: Guild = ctx.guild
         author: Member = ctx.author

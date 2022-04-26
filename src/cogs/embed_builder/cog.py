@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from datetime import datetime
 from re import compile
 from typing import Union
@@ -37,10 +37,10 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import MISSING, utcnow
-
+from src.cogs.information.cog import Information
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
-from src.utils.etc import RAINBOW, WHITE_BAR
+from src.utils.etc import RAINBOW, WHITE_BAR, SETTING_EMOJI
 from src.utils.functions import discord_url_msg, embed_handler
 
 PLAYER_FINDER = compile(r"\|raw\|(.*)'s rating: \d+ &rarr; <strong>\d+</strong><br />\((.*)\)")
@@ -98,7 +98,7 @@ class EmbedBuilder(commands.Cog):
             return
 
         if data := discord_url_msg(message):
-            with suppress(DiscordException):
+            try:
                 guild_id, message_id, channel_id = data
                 if guild := self.bot.get_guild(guild_id):
                     if not (channel := guild.get_channel_or_thread(channel_id)):
@@ -116,18 +116,17 @@ class EmbedBuilder(commands.Cog):
                     Button(
                         label=f"URL Requested by {message.author.display_name}",
                         url=reference.jump_url,
+                        emoji=SETTING_EMOJI,
                     )
                 )
 
-                await self.webhook_send(
-                    message,
-                    content=reference.content,
-                    embeds=[embed_handler(reference, item) for item in reference.embeds],
-                    files=[await item.to_file() for item in reference.attachments],
-                    username=f"URL〕{name}",
-                    avatar_url=author.display_avatar.url,
-                    view=view,
-                )
+                cog: Information = self.bot.get_cog("Information")
+                kwargs = await cog.embed_info(reference)
+                kwargs["view"] = view
+                kwargs["username"] = f"URL〕{name}"
+                await self.webhook_send(message, **kwargs)
+            except DiscordException:
+                pass
         elif message.content.startswith("https://replay.pokemonshowdown.com/"):
             content = message.content.split(" ")[0]
             async with self.bot.session.get(url=f"{content}.json") as session:
@@ -246,8 +245,10 @@ class EmbedBuilder(commands.Cog):
                     await message.edit(embed=embed)
                 if delete:
                     self.bot.msg_cache.add(ctx.message.id)
-                    with suppress(DiscordException):
+                    try:
                         await ctx.message.delete()
+                    except DiscordException:
+                        pass
             except DiscordException as e:
                 self.bot.logger.exception("exception while editing an embed", exc_info=e)
                 if item := self.cache.pop(item_cache, None):

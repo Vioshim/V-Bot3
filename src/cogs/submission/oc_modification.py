@@ -255,7 +255,7 @@ class NameMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.name = answer.title()
-        return False
+            return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -312,7 +312,7 @@ class AgeMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.age = int_check(answer, 13, 99)
-        return False
+            return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -440,7 +440,7 @@ class BackstoryMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.backstory = answer or None
-        return False
+            return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -497,7 +497,7 @@ class ExtraMod(Mod):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.extra = answer or None
-        return False
+            return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -638,7 +638,7 @@ class AbilitiesMod(Mod):
         async with view.send(editing_original=True) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
-        return False
+            return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -842,7 +842,7 @@ class EvolutionMod(Mod):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
 
         abilities: Iterable[Ability] = species.abilities or ALL_ABILITIES.values()
-
+        default = ", ".join(x.name for x in sample(abilities, k=oc.max_amount_abilities))
         view3 = Complex(
             member=member,
             values=abilities,
@@ -854,13 +854,7 @@ class EvolutionMod(Mod):
                 label="Ability",
                 style=TextStyle.paragraph,
                 placeholder=placeholder,
-                default=", ".join(
-                    x.name
-                    for x in sample(
-                        abilities,
-                        k=oc.max_amount_abilities,
-                    )
-                ),
+                default=default,
             ),
         )
         async with view3.send(editing_original=True) as abilities:
@@ -877,7 +871,7 @@ class EvolutionMod(Mod):
         async with view4.send() as image:
             if isinstance(image, str):
                 oc.image = image
-        return True
+            return True
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -995,7 +989,7 @@ class DevolutionMod(Mod):
         async with view.send() as image:
             if image and isinstance(image, str):
                 oc.image = image
-        return True
+            return True
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -1104,7 +1098,7 @@ class FusionMod(Mod):
         async with view.send() as image:
             if image and isinstance(image, str):
                 oc.image = image
-        return True
+            return True
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -1318,7 +1312,7 @@ class ModifyView(View):
     @button(style=ButtonStyle.red, label="Delete Character", row=1)
     async def delete(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        webhook = await ctx.client.webhook(919277769735680050)
+        webhook: Webhook = await ctx.client.webhook(919277769735680050)
         guild: Guild = webhook.guild
         try:
             try:
@@ -1334,8 +1328,6 @@ class ModifyView(View):
         except NotFound:
             cog = ctx.client.get_cog("Submission")
             cog.ocs.pop(self.oc.id, None)
-            cog.rpers.setdefault(self.oc.author, {})
-            cog.rpers[self.oc.author].pop(self.oc.id, None)
             async with ctx.client.database() as db:
                 logger.info(
                     "Character Removed as message was removed! > %s - %s > %s",

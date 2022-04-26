@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from abc import ABC, abstractclassmethod
+from enum import Enum
 from itertools import groupby
 from typing import Iterable, Optional
+from rapidfuzz import process
 
 from discord import (
     Guild,
     Interaction,
-    InteractionResponse,
     Member,
     TextChannel,
     Thread,
@@ -27,24 +28,15 @@ from discord import (
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
-
-from pagination.complex import Complex
+from src.pagination.complex import Complex
 from src.cogs.submission.cog import Submission
 from src.structures.ability import Ability
 from src.structures.character import Character, FakemonCharacter
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
-from src.structures.species import (
-    Fusion,
-    Legendary,
-    Mega,
-    Mythical,
-    Pokemon,
-    Species,
-    UltraBeast,
-)
+from src.structures.species import Fusion, Legendary, Mega, Mythical, Pokemon, Species, UltraBeast
 from src.utils.functions import fix
-from views import CharactersView
+from src.views.characters_view import CharactersView
 
 OPERATORS = {
     "<=": lambda x, y: x <= y,
@@ -52,6 +44,18 @@ OPERATORS = {
     ">=": lambda x, y: x >= y,
     ">": lambda x, y: x > y,
 }
+
+
+def item_name(mon: Character | Species):
+    if isinstance(mon, Character):
+        mon = mon.species
+    return getattr(mon, "name", mon)
+
+
+def item_value(mon: Character | Species):
+    if isinstance(mon, Character):
+        mon = mon.species
+    return str(mon.id)
 
 
 def foo(x: str) -> Optional[int]:
@@ -63,7 +67,7 @@ def foo(x: str) -> Optional[int]:
 def amount_parser(text: Optional[str], ocs: Iterable[Character]):
     ocs = frozenset(ocs)
     if not text:
-        return True
+        return bool(ocs)
 
     amount = len(ocs)
 
@@ -129,8 +133,12 @@ class MoveTransformer(Transformer):
 
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
-        text: str = fix(value or "")
-        return [Choice(name=i.name, value=i.id) for i in Move.all() if text in i.id or i.id in text][:25]
+        items = list(Move.all())
+        if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = items[:25]
+        return [Choice(name=x.name, value=x.id) for x in options]
 
 
 MoveArg = Transform[Move, MoveTransformer]
@@ -150,37 +158,35 @@ class SpeciesTransformer(Transformer):
 
     @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
-        text: str = fix(value or "")
         cog: Submission = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
-
-        match fix(ctx.namespace.kind):
-            case "LEGENDARY":
-                mons = Legendary.all()
-            case "MYTHICAL":
-                mons = Mythical.all()
-            case "UTRABEAST":
-                mons = UltraBeast.all()
-            case "POKEMON":
-                mons = Pokemon.all()
-            case "MEGA":
-                mons = Mega.all()
-            case "CUSTOMMEGA":
-                mons = [oc for oc in cog.ocs.values() if oc.kind == "CUSTOM MEGA" and guild.get_member(oc.author)]
-            case "FAKEMON":
-                mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON" and guild.get_member(oc.author)]
-            case "VARIANT":
-                mons = [oc for oc in cog.ocs.values() if oc.kind == "VARIANT" and guild.get_member(oc.author)]
-            case "FUSION":
-                mons = [oc for oc in cog.ocs.values() if oc.kind == "FUSION" and guild.get_member(oc.author)]
-            case _:
-                mons = Species.all()
-
+        mons = cog.ocs.values()
+        filters = [lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True]
+        if fused := Species.from_ID(ctx.namespace.fused):
+            mons = {
+                (set(x.species.bases) - {fused}).pop()
+                for x in mons
+                if isinstance(x.species, Fusion) and fused in x.species.bases
+            }
+        else:
+            match kind := fix(ctx.namespace.kind):
+                case "LEGENDARY":
+                    mons = Legendary.all()
+                case "MYTHICAL":
+                    mons = Mythical.all()
+                case "UTRABEAST":
+                    mons = UltraBeast.all()
+                case "POKEMON" | "COMMON":
+                    mons = Pokemon.all()
+                case "MEGA":
+                    mons = Mega.all()
+                case "CUSTOMMEGA" | "FAKEMON" | "VARIANT" | "FUSION":
+                    filters.append(lambda x: fix(x.kind) == kind)
+                case _:
+                    mons = Species.all()
         mons: list[Character | Species] = list(mons)
-        filters = []
-
         if member := ctx.namespace.member:
-            ocs1 = {x.species for x in cog.rpers.get(member.id, {}).values()}
+            ocs1 = {x.species for x in cog.ocs.values() if x.author == member.id}
             filters.append(lambda x: x.author == member.id if isinstance(x, Character) else x in ocs1)
         if location := ctx.namespace.location:
 
@@ -199,29 +205,30 @@ class SpeciesTransformer(Transformer):
         if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
             filters.append(lambda x: move in x.movepool)
 
-        options = {
-            item_name(mon): item_value(mon)
-            for mon in sorted(
-                filter(lambda x: all(i(x) for i in filters), mons),
-                key=item_name,
-            )
-        }
-
-        return [Choice(name=k, value=v) for k, v in options.items() if v in text or text in v][:25]
+        values = {mon for mon in mons if all(i(mon) for i in filters)}
+        if options := process.extract(value, choices=values, limit=25, score_cutoff=60, processor=item_name):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = list(values)[:25]
+        return [Choice(name=item_name(x), value=item_value(x)) for x in options]
 
 
 class DefaultSpeciesTransformer(Transformer):
     @classmethod
     async def transform(cls, _: Interaction, value: Optional[str]):
-        item = Species.single_deduce(value)
+        item = Species.from_ID(value)
         if not item:
             raise ValueError(f"Species {value!r} not found")
         return item
 
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
-        text: str = fix(value or "")
-        return [Choice(name=i.name, value=i.id) for i in Species.all() if text in i.id or i.id in text][:25]
+        items = list(Species.all())
+        if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = items[:25]
+        return [Choice(name=x.name, value=x.id) for x in options]
 
 
 SpeciesArg = Transform[Species, SpeciesTransformer]
@@ -231,15 +238,19 @@ DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
 class AbilityTransformer(Transformer):
     @classmethod
     async def transform(cls, _: Interaction, value: Optional[str]):
-        item = Ability.deduce(value)
+        item = Ability.from_ID(value)
         if not item:
             raise ValueError(f"Ability {item!r} not found")
         return item
 
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
-        text: str = fix(value or "")
-        return [Choice(name=i.name, value=i.id) for i in Ability.all() if text in i.id or i.id in text][:25]
+        items = list(Ability.all())
+        if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = items[:25]
+        return [Choice(name=x.name, value=x.id) for x in options]
 
 
 AbilityArg = Transform[Ability, AbilityTransformer]
@@ -248,30 +259,22 @@ AbilityArg = Transform[Ability, AbilityTransformer]
 class TypingTransformer(Transformer):
     @classmethod
     async def transform(cls, _: Interaction, value: Optional[str]):
-        item = Typing.deduce(value)
+        item = Typing.from_ID(value)
         if not item:
             raise ValueError(f"Typing {item!r} not found")
         return item
 
     @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
-        text: str = fix(value or "")
-        return [Choice(name=i.name, value=i.id) for i in Typing.all() if text in str(i) or str(i) in text][:25]
+        items = list(Typing.all())
+        if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=str):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = items[:25]
+        return [Choice(name=x.name, value=str(x)) for x in options]
 
 
 TypingArg = Transform[Typing, TypingTransformer]
-
-
-def item_name(mon: Character | Species):
-    if isinstance(mon, Species):
-        return mon.name
-    return mon.species.name
-
-
-def item_value(mon: Character | Species):
-    if isinstance(mon, Species):
-        return str(mon.id)
-    return str(mon.species.id)
 
 
 class FakemonTransformer(Transformer):
@@ -285,18 +288,14 @@ class FakemonTransformer(Transformer):
 
     @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
-        text: str = fix(value or "")
         guild: Guild = ctx.guild
         cog: Submission = ctx.client.get_cog("Submission")
         mons = [oc for oc in cog.ocs.values() if oc.kind == "FAKEMON" and guild.get_member(oc.author)]
-
-        options = {
-            mon.species.name: item_value(mon)
-            for mon in sorted(mons, key=lambda x: x.species.name)
-            if mon.species.name.lower() in text or text in mon.species.name.lower()
-        }
-
-        return [Choice(name=k, value=v) for k, v in options.items()][:25]
+        if options := process.extract(value, choices=mons, limit=25, score_cutoff=60, processor=item_name):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = mons[:25]
+        return [Choice(name=x.species.name, value=str(x.id)) for x in options]
 
 
 FakemonArg = Transform[FakemonCharacter, FakemonTransformer]
@@ -309,13 +308,19 @@ class GroupByComplex(Complex):
         target: Interaction,
         data: dict[str, list[Character]],
     ):
+        self.data = data
+
+        def inner_parser(item: str):
+            elements = self.data.get(item, [])
+            return item, f"Group has {len(elements):02d} OCs."
+
         super(GroupByComplex, self).__init__(
             member=member,
             target=target,
-            values=data.keys(),
+            parser=inner_parser,
+            values=list(data.keys()),
             keep_working=True,
         )
-        self.data = data
 
     @select(
         row=1,
@@ -327,17 +332,16 @@ class GroupByComplex(Complex):
         interaction: Interaction,
         sct: Select,
     ) -> None:
-        resp: InteractionResponse = interaction.response
         key = self.current_choice
         ocs = self.data.get(key, [])
         view = CharactersView(
             member=interaction.user,
             target=interaction,
-            values=ocs,
+            ocs=ocs,
             keep_working=True,
         )
-        await resp.send_message(embed=view.embed, view=view, ephemeral=True)
-        await super(GroupByComplex, self).select_choice(interaction, sct)
+        async with view.send(ephemeral=True):
+            await super(GroupByComplex, self).select_choice(interaction, sct)
 
 
 class OCGroupBy(ABC):
@@ -362,6 +366,7 @@ class OCGroupBy(ABC):
             Characters per category
         """
 
+    @classmethod
     def generate(
         cls,
         ctx: Interaction,
@@ -383,18 +388,21 @@ class OCGroupBy(ABC):
 class OCGroupByKind(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        ocs = sorted(ocs, key=lambda x: x.kind)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
 
 
 class OCGroupByAge(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        ocs = sorted(ocs, key=lambda x: x.age or 0)
         return {str(k or "Unknown"): frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
 
 
 class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        ocs = sorted(ocs, key=lambda x: x.kind)
         items = {
             k.title(): frozenset(v)
             for k, v in groupby(ocs, key=lambda x: x.kind)
@@ -406,6 +414,7 @@ class OCGroupBySpecies(OCGroupBy):
                 "ULTRA BEAST",
             ]
         }
+        ocs = sorted(ocs, key=lambda x: x.species.name)
         items.update(
             (
                 item.name,
@@ -435,6 +444,7 @@ class OCGroupByType(OCGroupBy):
 class OCGroupByPronoun(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        ocs = sorted(ocs, key=lambda x: x.pronoun.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun.name)}
 
 
@@ -462,12 +472,13 @@ class OCGroupByLocation(OCGroupBy):
                 aux.setdefault(ch, set())
                 aux[ch].add(oc)
 
-        return {k.name.split("〛")[-1].replace("-", " ").title(): frozenset(v) for k, v in aux.items()}
+        return {k.name.replace("-", " ").title(): frozenset(v) for k, v in aux.items()}
 
 
 class OCGroupByMember(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
         return {
             m.display_name[:100]: frozenset(v)
@@ -476,28 +487,32 @@ class OCGroupByMember(OCGroupBy):
         }
 
 
-GROUP_BY_METHODS: dict[str, OCGroupBy] = {
-    "Kind": OCGroupByKind,
-    "Age": OCGroupByAge,
-    "Species": OCGroupBySpecies,
-    "Type": OCGroupByType,
-    "Pronoun": OCGroupByPronoun,
-    "Move": OCGroupByMove,
-    "Ability": OCGroupByAbility,
-    "Location": OCGroupByLocation,
-    "Member": OCGroupByMember,
-}
+class GroupByArg(Enum):
+    Kind = OCGroupByKind
+    Age = OCGroupByAge
+    Species = OCGroupBySpecies
+    Type = OCGroupByType
+    Pronoun = OCGroupByPronoun
+    Move = OCGroupByMove
+    Ability = OCGroupByAbility
+    Location = OCGroupByLocation
+    Member = OCGroupByMember
 
+    def generate(
+        self,
+        ctx: Interaction,
+        ocs: Iterable[Character],
+        amount: Optional[str] = None,
+    ):
+        """Short cut generate
 
-class GroupTransformer(Transformer):
-    @classmethod
-    async def transform(cls, ctx: Interaction, value: Optional[str]):
-        return GROUP_BY_METHODS[value]
+        Args:
+            ctx (Interaction): Interaction
+            ocs (Iterable[Character]): OCs
+            amount (Optional[str], optional): Amount. Defaults to None.
 
-    @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
-        value = (value or "").lower()
-        return [Choice(name=x, value=x) for x in GROUP_BY_METHODS if value in x.lower()]
-
-
-GroupByArg = Transform[OCGroupBy, GroupTransformer]
+        Returns:
+            GroupByComplex: Information complex paginator groups.
+        """
+        value: OCGroupBy = self.value
+        return value.generate(ctx=ctx, ocs=ocs, amount=amount)

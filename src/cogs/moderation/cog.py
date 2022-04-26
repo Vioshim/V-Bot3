@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import timedelta
 from re import MULTILINE, compile
 from typing import Optional, Union
 
@@ -186,6 +185,18 @@ class Moderation(commands.Cog):
         self.bot = bot
         self.loaded: bool = False
 
+    async def scam_all(self):
+        """Function to load all API data"""
+        try:
+            async with self.bot.session.get(
+                f"{API}/all",
+                params=API_PARAM,
+            ) as data:
+                entries = await data.json()
+                self.bot.scam_urls = set(entries)
+        except ClientResponseError:
+            self.bot.logger.error("Scam API is down.")
+
     async def scam_changes(self, seconds: str = 300):
         """Function to load API Changes
 
@@ -194,7 +205,7 @@ class Moderation(commands.Cog):
         seconds : str, optional
             Seconds to retrieve, by default 300
         """
-        with suppress(ClientResponseError):
+        try:
             async with self.bot.session.get(
                 f"{API}/recent/{seconds}",
                 params=API_PARAM,
@@ -207,21 +218,21 @@ class Moderation(commands.Cog):
                         self.bot.scam_urls |= domains
                     elif handler == "delete":
                         self.bot.scam_urls -= domains
+        except ClientResponseError:
+            self.bot.logger.error("Scam API is down.")
+
+    async def scam_load(self):
+        if not self.bot.scam_urls:
+            await self.scam_all()
+        else:
+            await self.scam_changes()
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Initialize the scam urls and schedule each 5 minutes"""
-        if not self.bot.scam_urls:
-            with suppress(ClientResponseError):
-                async with self.bot.session.get(
-                    f"{API}/all",
-                    params=API_PARAM,
-                ) as data:
-                    entries = await data.json()
-                    self.bot.scam_urls = set(entries)
-
+        await self.scam_all()
         await self.bot.scheduler.add_schedule(
-            self.scam_changes,
+            self.scam_load,
             id="Nitro Scam List",
             trigger=CronTrigger(
                 minute="0,5,10,15,20,25,30,35,40,45,50,55",
@@ -281,43 +292,6 @@ class Moderation(commands.Cog):
         await msg.edit(view=view)
         await view.wait()
 
-    @app_commands.command(description="Reports a situation to staff.")
-    @app_commands.guilds(719343092963999804)
-    @app_commands.describe(text="Message to be sent to staff")
-    @app_commands.describe(anonymous="If you want staff to know you reported it.")
-    async def report(
-        self,
-        ctx: Interaction,
-        text: str,
-        anonymous: Optional[bool],
-    ):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-
-        embed = Embed(title="New Report", description=text, timestamp=utcnow())
-
-        embed.set_image(url=WHITE_BAR)
-
-        if not anonymous:
-            embed.set_author(
-                name=ctx.user.display_name,
-                icon_url=ctx.user.display_avatar.url,
-            )
-        else:
-            embed.set_author(name="Anonymous Source")
-
-        channel = self.bot.get_channel(877376320093425685)
-        if guild := channel.guild:
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-
-        await channel.send(embed=embed)
-
-        await ctx.followup.send(
-            "Report has been sent successfully!. This is how it looks.",
-            embed=embed,
-            ephemeral=True,
-        )
-
     @app_commands.command(description="Sets yourself as AFK")
     @app_commands.guilds(719343092963999804)
     @app_commands.describe(reason="The reason why you are going AFK.")
@@ -366,14 +340,15 @@ class Moderation(commands.Cog):
             )
 
         mentioned_users = message.mentions.copy()
-        if reference := message.reference:
-            with suppress(DiscordException):
+        try:
+            if reference := message.reference:
                 if not (msg := message.reference.resolved):
                     msg = await message.channel.fetch_message(reference.message_id)
                 mentioned_users.append(msg.author)
+        except DiscordException:
+            pass
 
         mentioned = set(afk_role.members) & set(mentioned_users)
-
         if mentions := ", ".join(x.mention for x in mentioned):
             await message.reply(
                 f"The users {mentions} are AFK. Check our Audit log for more information.",
@@ -532,8 +507,10 @@ class Moderation(commands.Cog):
         if member.top_role >= ctx.author.top_role:
             await ctx.reply("You can't kick someone with same or higher role than yours.")
             return
-        with suppress(DiscordException):
+        try:
             await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
+        except DiscordException:
+            pass
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
         await member.kick(reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}")
 
@@ -566,8 +543,10 @@ class Moderation(commands.Cog):
                     delete_after=3,
                 )
             else:
-                with suppress(DiscordException):
+                try:
                     await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
+                except DiscordException:
+                    pass
                 await user.ban(
                     reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                     delete_message_days=0,
@@ -610,9 +589,10 @@ class Moderation(commands.Cog):
                             delete_after=3,
                         )
                     else:
-                        with suppress(DiscordException):
+                        try:
                             await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
-                        # noinspection PyTypeChecker
+                        except DiscordException:
+                            pass
                         await user.ban(
                             reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                             delete_message_days=0,
@@ -651,53 +631,6 @@ class Moderation(commands.Cog):
             await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
         else:
             await ctx.reply("Unable to retrieve the user.")
-        await ctx.message.delete()
-
-    @commands.command(name="warn")
-    @commands.bot_has_guild_permissions(manage_roles=True)
-    @commands.has_guild_permissions(manage_roles=True)
-    async def warn(
-        self,
-        ctx: Context,
-        user: Member,
-        *,
-        reason: str = None,
-    ) -> None:
-        """Warn an user, providing warn roles
-
-        :param ctx: Context
-        :param user: User
-        :param reason: Reason
-        :return:
-        """
-        mod_channel: TextChannel = ctx.guild.get_channel(877376320093425685)
-        guild: Guild = mod_channel.guild
-        roles: list[Role] = [
-            guild.get_role(732328576615055393),
-            guild.get_role(732412511118164048),
-            guild.get_role(732412547520659528),
-        ]
-        embed = Embed(
-            title=f"Warned by {ctx.author.display_name}",
-            description=reason or Embed.Empty,
-            color=user.color,
-            timestamp=datetime.utcnow(),
-        )
-        if roles[1] in user.roles:  # 2 -> 3
-            embed.add_field(name="Note", value=roles[2].mention)
-            await user.add_roles(roles[2], reason=reason)
-        elif roles[0] in user.roles:  # 1 -> 2
-            embed.add_field(name="Note", value=roles[1].mention)
-            await user.add_roles(roles[1], reason=reason)
-        elif roles[0] not in user.roles:  # 0 -> 1
-            embed.add_field(name="Note", value=roles[0].mention)
-            await user.add_roles(roles[0], reason=reason)
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
-        if isinstance(mod_channel, TextChannel):
-            files, embed = await self.bot.embed_raw(embed)
-            await mod_channel.send(ctx.author.mention, files=files, embed=embed)
-
         await ctx.message.delete()
 
 

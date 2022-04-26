@@ -92,6 +92,7 @@ def fix(text: str) -> str:
 
 
 def yaml_handler(text: str) -> str:
+    text = "\n".join(x.strip() for x in text.split("\n"))
     text = YAML_HANDLER1.sub(": ", text)
     text = YAML_HANDLER2.sub("\n", text)
     return text

@@ -21,7 +21,6 @@ nested-lookup = "^0.2.23"
 "mystbin.py" = "^2.2.0"
 asyncdagpi = "^4.0.0"
 python-dotenv = "^0.19.2"
-black = "^21.12b0"
 aiofiles = "^0.8.0"
 uvloop = {version = "^0.16.0", platform = "linux"}
 d20 = "^1.1.2"
@@ -37,9 +36,11 @@ colour = "^0.1.5"
 humanize = "^4.0.0"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git", extras = ["voice"]}
 orjson = "^3.6.7"
+rapidfuzz = "^2.0.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+black = {version = "^22.3.0", allow-prereleases = true}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

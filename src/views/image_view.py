@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
@@ -113,21 +113,28 @@ class ImageView(Basic):
             ephemeral=True,
         )
         received: Message = await ctx.client.wait_for("message", check=check(ctx))
+
         if attachments := received.attachments:
             self.text = attachments[0].proxy_url
             self.received = received
-            with suppress(DiscordException):
+            try:
                 await received.delete()
+            except DiscordException:
+                pass
         elif file := await ctx.client.get_file(
             url=received.content,
             filename="image",
         ):
-            with suppress(DiscordException):
+            try:
                 await received.delete()
+            except DiscordException:
+                pass
             self.received = foo = await ctx.channel.send(file=file)
             self.text = self.received.attachments[0].proxy_url
-            with suppress(DiscordException):
+            try:
                 await foo.delete()
+            except DiscordException:
+                pass
         elif image := self.message.embeds[0].image:
             self.text = image.url
         else:

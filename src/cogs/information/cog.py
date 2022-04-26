@@ -12,27 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
 from io import StringIO
 from os import getenv
+from aiohttp import ClientResponseError
 from typing import Optional
-
 from colour import Color
 from discord import (
     AllowedMentions,
     Attachment,
+    ButtonStyle,
+    ChannelType,
     Colour,
     DiscordException,
     Embed,
     File,
-    Forbidden,
     Guild,
     HTTPException,
     Interaction,
     InteractionResponse,
     Member,
     Message,
-    NotFound,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     Role,
@@ -43,12 +42,12 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.ui import Button, Select, View, button, select
+from discord.ui import Button, Select, View, button, select, Modal, TextInput
 from discord.utils import find, format_dt, get, utcnow
 from yaml import dump
 
 from src.structures.bot import CustomBot
-from src.utils.etc import MAP_ELEMENTS, WHITE_BAR
+from src.utils.etc import WHITE_BAR, SETTING_EMOJI, DEFAULT_TIMEZONE
 from src.utils.functions import embed_handler, message_line
 from src.views.message_view import MessageView
 
@@ -69,6 +68,10 @@ channels = {
     908498210211909642: "Mission",
 }
 
+private = {
+    860590339327918100: "Ticket",
+}
+
 LOGS = {
     719343092963999804: 719663963297808436,
     952517983786377287: 952588363263782962,
@@ -78,6 +81,9 @@ MSG_INFO = {
     719343092963999804: 913555643699458088,
     952517983786377287: 952617304095592478,
 }
+
+TENOR_URL = "https://g.tenor.com/v1/gifs"
+GIPHY_URL = "https://api.giphy.com/v1/gifs"
 
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
@@ -92,6 +98,40 @@ PING_ROLES = {
     "Moderation": 720296534742138880,
     "No": 0,
 }
+
+
+class AnnouncementModal(Modal):
+    def __init__(self, *, word: str, name: str, **kwargs) -> None:
+        super().__init__(title=word, timeout=None)
+        self.word = word
+        self.kwargs = kwargs
+        self.thread_name = TextInput(
+            label="Title",
+            placeholder=word,
+            default=name,
+            required=True,
+            max_length=100,
+        )
+        self.add_item(self.thread_name)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True)
+        webhook: Webhook = await interaction.client.webhook(interaction.channel)
+        if embeds := self.kwargs.get("embeds"):
+            embeds[0].title = self.thread_name.value
+        msg = await webhook.send(**self.kwargs, wait=True)
+        thread = await msg.create_thread(name=self.thread_name.value)
+        await thread.add_user(interaction.user)
+        match self.word:
+            case "Poll":
+                await msg.add_reaction("\N{THUMBS UP SIGN}")
+                await msg.add_reaction("\N{THUMBS DOWN SIGN}")
+            case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
+                if tupper := interaction.guild.get_member(431544605209788416):
+                    await thread.add_user(tupper)
+        await interaction.followup.send("Thread created successfully", ephemeral=True)
+        self.stop()
 
 
 class AnnouncementView(View):
@@ -115,7 +155,7 @@ class AnnouncementView(View):
                 value=f"{v}",
                 description=f"Pings the {k} role" if v else "No pings",
                 emoji="\N{CHEERING MEGAPHONE}",
-                default=v is None,
+                default=not v,
             )
             for k, v in PING_ROLES.items()
         ],
@@ -137,26 +177,22 @@ class AnnouncementView(View):
             info = "Alright, won't ping."
         await resp.send_message(info, ephemeral=True)
 
-    @button(label="Proceed")
+    @button(label="Proceed", style=ButtonStyle.blurple, emoji=SETTING_EMOJI)
     async def confirm(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.pong()
-        await ctx.message.delete()
-        webhook: Webhook = await ctx.client.webhook(ctx.channel)
-        msg = await webhook.send(**self.kwargs, wait=True)
-        word = channels.get(ctx.channel_id, "Question")
-        thread = await msg.create_thread(name=f"{word} {msg.id}")
-        await thread.add_user(ctx.user)
-        match word:
-            case "Poll":
-                await msg.add_reaction("\N{THUMBS UP SIGN}")
-                await msg.add_reaction("\N{THUMBS DOWN SIGN}")
-            case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
-                if tupper := ctx.guild.get_member(431544605209788416):
-                    await thread.add_user(tupper)
+        word = channels.get(ctx.channel_id)
+        data = ctx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
+        name = f"{word} {ctx.user.display_name} {data.strftime('%B %d')}"
+        modal = AnnouncementModal(word=word, name=name, **self.kwargs)
+        await resp.send_modal(modal)
+        await modal.wait()
+        try:
+            await ctx.message.delete()
+        except DiscordException:
+            pass
         self.stop()
 
-    @button(label="Cancel")
+    @button(label="Cancel", style=ButtonStyle.blurple, emoji=SETTING_EMOJI)
     async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.pong()
@@ -172,79 +208,6 @@ class Information(commands.Cog):
         self.message: Optional[WebhookMessage] = None
         self.view: Optional[MessageView] = None
         self.bot.tree.on_error = self.on_error
-
-    @app_commands.command(description="Weather information from the selected area.")
-    @app_commands.guilds(719343092963999804)
-    @app_commands.choices(
-        area=[
-            app_commands.Choice(
-                name=item.name,
-                value=f"{item.lat}/{item.lon}",
-            )
-            for item in MAP_ELEMENTS
-        ]
-    )
-    async def weather(
-        self,
-        ctx: Interaction,
-        area: app_commands.Choice[str],
-    ):
-        """
-
-        Parameters
-        ----------
-        ctx : ApplicationContext
-            ctx
-        area : str, optional
-            Area to get weather info about.
-        """
-        resp: InteractionResponse = ctx.response
-        if not isinstance(area, str):
-            await resp.send_message("Wrong format", ephemeral=True)
-        else:
-            try:
-                lat, lon = area.value.split("/")
-                URL = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={WEATHER_API}"
-                async with self.bot.session.get(URL) as f:
-                    if f.status != 200:
-                        await resp.send_message("Invalid response", ephemeral=True)
-                    data: dict = await f.json()
-                    if weather := data.get("weather", []):
-                        info: dict = weather[0]
-                        main, desc, icon = (
-                            info["main"],
-                            info["description"],
-                            info["icon"],
-                        )
-                        embed = Embed(
-                            title=f"{main}: {desc}".title(),
-                            color=ctx.user.color,
-                            timestamp=utcnow(),
-                        )
-                        main_info = data["main"]
-
-                        values = {
-                            "Temp.": main_info["temp"],
-                            "Temp. Min": main_info["temp_min"],
-                            "Temp. Max": main_info["temp_max"],
-                        }
-
-                        for k, v in values.items():
-                            embed.add_field(
-                                name=k,
-                                value=f"{v:.1f} ° C | {1.8 * v + 32:.1f} ° K",
-                            )
-
-                        embed.set_image(url=WHITE_BAR)
-                        embed.set_thumbnail(url=f"http://openweathermap.org/img/w/{icon}.png")
-                        if wind := data.get("wind", {}):
-                            deg, speed = wind["deg"], wind["speed"]
-                            embed.set_footer(text=f"Wind(Speed: {speed}, Degrees: {deg} °)")
-                        await resp.send_message(embed=embed, ephemeral=True)
-                        return
-                await resp.send_message("Invalid value", ephemeral=True)
-            except ValueError:
-                await resp.send_message("Invalid value", ephemeral=True)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -339,7 +302,10 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: Message):
 
-        if message.mention_everyone or not (message.content and message.channel.id in channels):
+        if message.mention_everyone or message.role_mentions:
+            return
+
+        if not (word := (channels | private).get(message.channel.id)):
             return
 
         if message.author.bot:
@@ -357,47 +323,54 @@ class Information(commands.Cog):
             return
 
         member: Member = message.author
-        guild: Guild = member.guild
-        word = channels.get(message.channel.id, "Question")
-
         self.bot.msg_cache_add(message)
-
-        embed = Embed(
-            title=word,
-            description=message.content,
-            timestamp=message.created_at,
-            colour=message.author.colour,
-        )
-        embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-
-        embeds = [embed]
-        files = []
-        for item in message.attachments:
-            if len(embeds) < 10 and item.content_type.startswith("image/"):
-                if embeds[0].image.url == WHITE_BAR:
-                    aux = embed
-                else:
-                    aux = Embed(color=message.author.colour)
-                    embeds.append(aux)
-                aux.set_image(url=f"attachment://{item.filename}")
-                file = await item.to_file()
-                files.append(file)
-
-        view = AnnouncementView(
-            member=member,
-            embeds=embeds,
-            files=files,
-            username=member.display_name,
-            avatar_url=member.display_avatar.url,
-        )
-        if word != "Announcement":
-            view.remove_item(view.ping)
-
-        await message.reply("Confirmation", view=view)
-        await view.wait()
-        with suppress(NotFound, HTTPException, Forbidden):
+        kwargs = await self.embed_info(message)
+        if embeds := kwargs.get("embeds", []):
+            embeds[0].title = word
+        files = kwargs.get("files", [])
+        text = f"Embeds: {len(embeds)}, Attachments: {len(files)}"
+        if message.channel.id in channels:
+            del kwargs["view"]
+            view = AnnouncementView(member=member, **kwargs)
+            if word != "Announcement":
+                view.remove_item(view.ping)
+            conf_embed = Embed(title="Confirmation", color=0xFFFFFE, timestamp=utcnow())
+            conf_embed.set_image(url=WHITE_BAR)
+            conf_embed.set_footer(text=text)
+            await message.reply(embed=conf_embed, view=view)
+            await view.wait()
+        elif message.channel.id in private:
+            data = message.created_at.astimezone(tz=DEFAULT_TIMEZONE)
+            name = f"{member.display_name} {data.strftime('%B %d, %Y')}"
+            thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread)
+            msg = await webhook.send(thread=thread, wait=True, **kwargs)
+            members = {member}
+            members.update(message.mentions)
+            for user in members:
+                if isinstance(user, Member):
+                    await thread.add_user(user)
+            if word == "Ticket":
+                mod_webhook = await self.bot.webhook(955477074016084050, reason=word)
+                view = View()
+                view.add_item(Button(label=f"See {word}", url=msg.jump_url, emoji=SETTING_EMOJI))
+                embed = Embed(
+                    title=f"New {word}",
+                    description="\n".join(f"• {x.mention}" for x in members),
+                    color=member.color,
+                    timestamp=utcnow(),
+                )
+                embed.set_image(url=WHITE_BAR)
+                embed.set_footer(text=text)
+                await mod_webhook.send(
+                    embed=embed,
+                    view=view,
+                    username=member.display_name,
+                    avatar_url=member.display_avatar.url,
+                )
+        try:
             await message.delete()
+        except DiscordException:
+            pass
 
     async def member_count(self, guild: Guild):
         """Function which updates the member count and the Information's view"""
@@ -427,9 +400,11 @@ class Information(commands.Cog):
         if not (log_id := LOGS.get(member.guild.id)):
             return
 
-        if msg := self.join.pop(member, None):
-            with suppress(DiscordException):
+        try:
+            if msg := self.join.pop(member, None):
                 await msg.delete()
+        except DiscordException:
+            pass
         guild: Guild = member.guild
         embed = Embed(
             title="Member Left - Roles",
@@ -464,8 +439,10 @@ class Information(commands.Cog):
                 roles,
             )
         ):
-            with suppress(DiscordException):
+            try:
                 await role.delete(reason="User Left")
+            except DiscordException:
+                pass
 
         asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(
@@ -536,8 +513,10 @@ class Information(commands.Cog):
                     now.guild.roles,
                 )
             ):
-                with suppress(DiscordException):
+                try:
                     await role.delete(reason="User Left")
+                except DiscordException:
+                    pass
         else:
             embed = Embed(
                 title="Has boosted the Server!",
@@ -584,7 +563,7 @@ class Information(commands.Cog):
         ]:
             msg = messages[0]
             fp = StringIO()
-            fp.write(dump(list(map(message_line, messages))))
+            dump(list(map(message_line, messages)), stream=fp)
             fp.seek(0)
             file = File(fp=fp, filename="Bulk.yaml")
             embed = Embed(title="Bulk Message Delete", timestamp=utcnow())
@@ -594,9 +573,9 @@ class Information(commands.Cog):
                 emoji, name = msg.channel.name.split("〛")
                 emoji = emoji[0]
             except ValueError:
-                emoji, name = None, msg.channel.name
+                emoji, name = SETTING_EMOJI, msg.channel.name
             finally:
-                name = name.replace("-", " ").title().center(80, "\u2008")
+                name = name.replace("-", " ").title()
 
             view = View()
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
@@ -605,9 +584,9 @@ class Information(commands.Cog):
         self.bot.msg_cache -= payload.message_ids
 
     async def tenor_fetch(self, image_id: str):
-        URL = f"https://g.tenor.com/v1/gifs?ids={image_id}&key={TENOR_API}"
-        with suppress(Exception):
-            async with self.bot.session.get(url=URL) as data:
+        try:
+            params = {"ids": image_id, "key": TENOR_API}
+            async with self.bot.session.get(url=TENOR_URL, params=params) as data:
                 if data.status == 200:
                     info = await data.json()
                     result = info["results"][0]
@@ -616,11 +595,14 @@ class Information(commands.Cog):
                     url: str = result["itemurl"]
                     image: str = media["gif"]["url"]
                     return title, url, image
+        except (ClientResponseError, IndexError, KeyError):
+            return None
 
     async def giphy_fetch(self, image_id: str):
-        URL = f"https://api.giphy.com/v1/gifs/{image_id}?api_key={GIPHY_API}"
-        with suppress(Exception):
-            async with self.bot.session.get(url=URL) as data:
+        URL = f"{GIPHY_URL}/{image_id}"
+        try:
+            params = {"api_key": GIPHY_API}
+            async with self.bot.session.get(url=URL, params=params) as data:
                 if data.status == 200:
                     info = await data.json()
                     result = info["data"]
@@ -628,6 +610,125 @@ class Information(commands.Cog):
                     url: str = result["url"]
                     image: str = result["images"]["original"]["url"]
                     return title, url, image
+        except (ClientResponseError, KeyError):
+            return None
+
+    async def gif_fetch(self, url: str):
+        image_id = url.split("-")[-1]
+        if url.startswith("https://tenor.com/"):
+            return await self.tenor_fetch(image_id)
+        if url.startswith("https://giphy.com/"):
+            return await self.giphy_fetch(image_id)
+
+    async def embed_info(self, message: Message):
+        embed = Embed(
+            title="Message",
+            description=message.content,
+            color=Colour.blurple(),
+            timestamp=utcnow(),
+        )
+        embed.set_image(url=WHITE_BAR)
+        text = f"Embeds: {len(message.embeds)}, Attachments: {len(message.attachments)}"
+        embed.set_footer(text=text, icon_url=message.guild.icon.url)
+        files = []
+        embeds: list[Embed] = [embed]
+
+        for sticker in message.stickers:
+            if embed.title == "Sticker":
+                aux = Embed(color=Colour.blurple())
+                embeds.append(aux)
+            else:
+                aux = embed
+                aux.description = None
+
+            aux.title = "Sticker"
+            aux.set_image(url=sticker.url)
+            aux.add_field(name="Sticker Name", value=sticker.name)
+
+        for e in message.embeds:
+            match e.type:
+                case "gifv":
+                    if data := await self.gif_fetch(e.url):
+                        gif_title, gif_url, gif_image = data
+                        if embed.title == "GIF":
+                            aux = Embed(color=Colour.blurple())
+                            embeds.append(aux)
+                        else:
+                            aux = embed
+                            aux.description = None
+
+                        aux.title = "GIF"
+                        aux.url = gif_url
+                        aux.set_image(url=gif_image)
+                        aux.add_field(name="GIF Title", value=gif_title)
+                case "image":
+                    if embed.description == e.url:
+                        aux = embed
+                    else:
+                        aux = Embed(color=Colour.blurple())
+                        embeds.append(aux)
+                    aux.set_image(url=e.url)
+                case "article" | "link":
+                    if message.content == e.url:
+                        aux = embed
+                        aux.title = e.title
+                        aux.description = e.description
+                        aux.url = e.url
+                    else:
+                        aux = e
+                    if provider := e.provider:
+                        aux.set_author(name=provider.name, url=provider.url or e.url)
+                    if thumbnail := e.thumbnail:
+                        aux.set_image(url=thumbnail.url)
+                        aux.set_thumbnail(url=None)
+                    if aux != embed:
+                        embeds.append(aux)
+                case _:
+                    embeds.append(e)
+
+        for attachment in message.attachments:
+            try:
+                file = await attachment.to_file(use_cached=True)
+            except HTTPException:
+                continue
+            else:
+                if attachment.content_type.startswith("image/"):
+                    if embed.image.url == WHITE_BAR:
+                        aux = embed
+                    else:
+                        aux = Embed(color=Colour.blurple())
+                        embeds.append(aux)
+                    aux.set_image(url=f"attachment://{attachment.filename}")
+                files.append(file)
+
+        try:
+            name = message.channel.name.replace("»", "")
+            emoji, name = name.split("〛")
+        except ValueError:
+            emoji, name = SETTING_EMOJI, message.channel.name
+        finally:
+            name = name.replace("-", " ").title()
+
+        view = View()
+        view.add_item(
+            Button(
+                emoji=emoji,
+                label=name,
+                url=message.jump_url,
+            )
+        )
+
+        username: str = message.author.display_name
+        if message.author.bot and "〕" not in username:
+            username = f"Bot〕{username}"
+
+        return dict(
+            embeds=embeds[:10],
+            files=files,
+            view=view,
+            username=username,
+            avatar_url=message.author.display_avatar.url,
+        )
 
     @commands.Cog.listener()
     async def on_raw_message_delete(
@@ -670,102 +771,15 @@ class Information(commands.Cog):
 
         if ctx.id in self.bot.msg_cache:
             self.bot.msg_cache.remove(ctx.id)
-        else:
-            embed = Embed(
-                title="Message Deleted",
-                description=ctx.content,
-                color=Colour.blurple(),
-                timestamp=utcnow(),
-            )
-            embed.set_image(url=WHITE_BAR)
-            text = f"Embeds: {len(ctx.embeds)}, Attachments: {len(ctx.attachments)}"
-            embed.set_footer(text=text, icon_url=ctx.guild.icon.url)
-            files = []
-
-            embeds: list[Embed] = [embed]
-
-            for item in ctx.stickers:
-                if embed.title == "Sticker Deleted":
-                    aux = Embed(color=Colour.blurple())
-                    embeds.append(aux)
-                else:
-                    aux = embed
-                    aux.description = embed.Empty
-
-                aux.title = "Sticker Deleted"
-                aux.set_image(url=item.url)
-                aux.add_field(name="Sticker Name", value=item.name)
-
-            for item in ctx.embeds:
-                if item.type == "gifv" and isinstance(url := item.url, str) and (items := url.split("-")):
-
-                    image_id = items[-1]
-
-                    if url.startswith("https://tenor.com/"):
-                        method = self.tenor_fetch
-                    elif url.startswith("https://giphy.com/"):
-                        method = self.giphy_fetch
-                    else:
-                        method = None
-
-                    if method and (data := await method(image_id)):
-                        gif_title, gif_url, gif_image = data
-                        if embed.title == "GIF Deleted":
-                            aux = Embed(color=Colour.blurple())
-                            embeds.append(aux)
-                        else:
-                            aux = embed.copy()
-                            aux.description = embed.Empty
-
-                        aux.title = "GIF Deleted"
-                        aux.url = gif_url
-                        aux.set_image(url=gif_image)
-                        aux.add_field(name="GIF Title", value=gif_title)
-                else:
-                    embeds.append(item)
-
-            for item in ctx.attachments:
-                with suppress(HTTPException):
-                    file = await item.to_file(use_cached=True)
-                    if item.content_type.startswith("image/"):
-                        if embed.image.url == WHITE_BAR:
-                            aux = embed
-                        else:
-                            aux = Embed(color=Colour.blurple())
-                            embeds.append(aux)
-                        aux.set_image(url=f"attachment://{item.filename}")
-                    files.append(file)
-
-            try:
-                emoji, name = ctx.channel.name.split("〛")
-                emoji = emoji[0]
-            except ValueError:
-                emoji, name = None, ctx.channel.name
-            finally:
-                name = name.replace("-", " ").title().center(80, "\u2008")
-
-            view = View()
-            view.add_item(
-                Button(
-                    emoji=emoji,
-                    label=name,
-                    url=ctx.jump_url,
-                )
-            )
-
-            username: str = user.display_name
-            if user.bot and "〕" not in username:
-                name = f"Bot〕{username}"
-            elif not user.bot:
-                embed.title = f"{embed.title} (User: {user.id})"
-
-            await w.send(
-                embeds=embeds[:10],
-                files=files,
-                view=view,
-                username=username,
-                avatar_url=user.display_avatar.url,
-            )
+        elif kwargs := await self.embed_info(ctx):
+            embeds: list[Embed] = kwargs.get("embeds", [])
+            for embed in embeds:
+                if embed.title:
+                    embed.title = f"{embed.title} Deleted"
+            if not ctx.webhook_id:
+                kwargs["content"] = ctx.author.mention
+                kwargs["allowed_mentions"] = AllowedMentions.none()
+            await w.send(**kwargs)
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context) -> None:

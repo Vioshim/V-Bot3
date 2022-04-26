@@ -48,6 +48,7 @@ class AbilityView(Complex):
         max_values: int = 1,
     ):
         placeholder = ", ".join(["Ability"] * max_values)
+        default = ", ".join(x.name for x in sample(abilities, 2))
         super(AbilityView, self).__init__(
             member=member,
             target=target,
@@ -62,7 +63,7 @@ class AbilityView(Complex):
                 label="Ability",
                 style=TextStyle.paragraph,
                 placeholder=placeholder,
-                default=", ".join(x.name for x in sample(abilities, 2)),
+                default=default,
             ),
         )
         self.embed.title = "Select an Ability"

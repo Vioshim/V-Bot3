@@ -66,8 +66,7 @@ class MissionView(View):
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
         member: Member = self.supporting.get(interaction.user, interaction.user)
-
-        ocs: list[Character] = list(cog.rpers.get(member.id, {}).values())
+        ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == member.id]
 
         if not ocs:
             await resp.send_message(

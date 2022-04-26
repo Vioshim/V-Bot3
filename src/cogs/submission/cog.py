@@ -13,14 +13,12 @@
 # limitations under the License.
 
 from asyncio import TimeoutError, as_completed, to_thread
-from contextlib import suppress
 from dataclasses import asdict
 from datetime import timedelta
 from difflib import get_close_matches
 from itertools import chain
 from pathlib import Path
 from random import choice as random_choice
-from random import sample
 from typing import Optional, Type, Union
 
 from aiofiles import open as aiopen
@@ -40,6 +38,7 @@ from discord import (
     NotFound,
     Object,
     RawMessageDeleteEvent,
+    RawThreadDeleteEvent,
     Status,
     TextChannel,
     TextStyle,
@@ -167,7 +166,6 @@ class Submission(commands.Cog):
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
-        self.rpers: dict[int, dict[int, Character]] = {}
         self.oc_list: dict[int, int] = {}
         self.supporting: dict[Member, Member] = {}
         self.oc_list_webhook: Optional[Webhook] = None
@@ -271,7 +269,7 @@ class Submission(commands.Cog):
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        ocs: list[Character] = list(self.rpers.get(member.id, {}).values())
+        ocs = [oc for oc in self.ocs.values() if oc.author == member.id]
         if len(ocs) == 1:
             view = PingView(ocs[0], ctx.user.id == ocs[0].author)
             await ctx.followup.send(
@@ -355,8 +353,10 @@ class Submission(commands.Cog):
                 )
             )
 
-            with suppress(DiscordException):
+            try:
                 await member.send(embed=embed, files=files, view=view)
+            except DiscordException:
+                pass
             await ctx.followup.send("User has been registered", ephemeral=True)
         else:
             await ctx.followup.send("User is already registered", ephemeral=True)
@@ -378,7 +378,7 @@ class Submission(commands.Cog):
         if character:
             view = PingView(character, ctx.user.id == character.author)
             return await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
-        if ocs := list(self.rpers.get(member.id, {}).values()):
+        if ocs := [oc for oc in self.ocs.values() if oc.author == member.id]:
             ocs.sort(key=lambda x: x.name)
             if len(ocs) == 1:
                 await ctx.followup.send(
@@ -529,8 +529,6 @@ class Submission(commands.Cog):
 
             oc.id = msg_oc.id
             oc.image = msg_oc.embeds[0].image.url
-            self.rpers.setdefault(user.id, {})
-            self.rpers[user.id][oc.id] = oc
             self.ocs[oc.id] = oc
             self.bot.logger.info(
                 "New character has been registered! > %s > %s > %s",
@@ -636,8 +634,8 @@ class Submission(commands.Cog):
                     max_values=1,
                     timeout=None,
                     parser=lambda x: (
-                        "/".join(str(i) for i in x),
-                        f"Adds the typing {'/'.join(str(i) for i in x)}",
+                        "/".join(i.name for i in x),
+                        f"Adds the typing {'/'.join(i.name for i in x)}",
                     ),
                     text_component=TextInput(
                         label="Fusion Typing",
@@ -659,30 +657,22 @@ class Submission(commands.Cog):
                 )
                 return
 
-        max_ab = oc.max_amount_abilities
-        if not isinstance(species, Fakemon) and (
-            isinstance(species, (Legendary, Mythical, UltraBeast)) or len(species.abilities) == 1
-        ):
-            oc.abilities = species.abilities
-        elif not oc.abilities or len(oc.abilities) > max_ab:
-            values = Ability.all() if oc.any_ability_at_first else oc.species.abilities
-            placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
+        max_ab: int = oc.max_amount_abilities
+        oc.abilities = species.abilities
+        if not oc.abilities or len(oc.abilities) > max_ab:
+            placeholder = ("Ability, " * max_ab).removesuffix(", ")
+            default = ", ".join(x.name for x in oc.randomize_abilities)
             ability_view = Complex(
                 member=worker,
-                values=values,
+                values=oc.usable_abilities,
+                parser=lambda x: (x.name, x.description),
                 target=ctx,
                 max_values=max_ab,
                 text_component=TextInput(
                     label="Ability",
                     style=TextStyle.paragraph,
                     placeholder=placeholder,
-                    default=", ".join(
-                        x.name
-                        for x in sample(
-                            values,
-                            k=oc.max_amount_abilities,
-                        )
-                    ),
+                    default=default,
                 ),
             )
 
@@ -726,6 +716,11 @@ class Submission(commands.Cog):
                 timeout=None,
                 target=ctx,
                 max_values=6,
+                text_component=TextInput(
+                    label="Moveset",
+                    placeholder="Move, Move, Move, Move, Move, Move",
+                    default=", ".join(x.name for x in oc.randomize_moveset),
+                ),
             )
 
             async with moves_view.send(
@@ -752,8 +747,10 @@ class Submission(commands.Cog):
             sp_view = SPAbView(worker)
             message = await send("Continue", sp_view)
             await sp_view.wait()
-            with suppress(DiscordException):
+            try:
                 await message.delete()
+            except DiscordException:
+                pass
             if sp_view.sp_ability is None:
                 return
 
@@ -836,20 +833,24 @@ class Submission(commands.Cog):
 
     async def bio_word_doc_parser(self, message: Message) -> Optional[DocumentType]:
         if attachments := message.attachments:
-            with suppress(Exception):
+            try:
                 file = await attachments[0].to_file()
                 return Document(file.fp)
+            except Exception:
+                return None
 
     async def bio_discord_doc_parser(self, message: Message) -> Optional[dict]:
         text = codeblock_converter(message.content or "").content
         if G_DOCUMENT.match(text):
             return
-        with suppress(MarkedYAMLError):
+        try:
             text = yaml_handler(text)
             if isinstance(msg_data := safe_load(text), dict):
                 if images := message.attachments:
                     msg_data["image"] = images[0].url
                 return msg_data
+        except MarkedYAMLError:
+            return None
 
     async def submission_handler(
         self,
@@ -867,8 +868,10 @@ class Submission(commands.Cog):
                 oc.server = message.guild.id
                 await self.registration(ctx=message, oc=oc, worker=refer_author)
                 if isinstance(message, Message):
-                    with suppress(DiscordException):
+                    try:
                         await message.delete()
+                    except DiscordException:
+                        pass
 
     async def on_message_submission(self, message: Message):
         """This method processes character submissions
@@ -924,7 +927,7 @@ class Submission(commands.Cog):
         if "Npc" in author or "Narrator" in author:
             return
 
-        ocs = {item.name: item for item in self.rpers.get(member_id, {}).values()}
+        ocs = {item.name: item for item in self.ocs.values() if item.author == member_id}
 
         if not (oc := ocs.get(author)):
             if items := get_close_matches(author, ocs, n=1, cutoff=0.85):
@@ -964,7 +967,7 @@ class Submission(commands.Cog):
         if context.command:
             return
 
-        with suppress(TimeoutError):
+        try:
             msg: Message = await self.bot.wait_for(
                 "message",
                 check=message_validator(message),
@@ -980,13 +983,12 @@ class Submission(commands.Cog):
                     conflict_policy=ConflictPolicy.replace,
                 )
             await self.on_message_tupper(msg, message.author.id)
+        except TimeoutError:
+            return
 
     async def load_characters(self, db: Connection):
         self.bot.logger.info("Loading all Characters.")
-        async for oc in fetch_all(db):
-            self.ocs[oc.id] = oc
-            self.rpers.setdefault(oc.author, {})
-            self.rpers[oc.author][oc.id] = oc
+        self.ocs = {oc.id: oc async for oc in fetch_all(db)}
         self.bot.logger.info("Finished loading all characters")
 
     async def load_profiles(self):
@@ -1008,7 +1010,6 @@ class Submission(commands.Cog):
             contents = await f.read()
             view = SubmissionView(
                 ocs=self.ocs,
-                rpers=self.rpers,
                 oc_list=self.oc_list,
                 supporting=self.supporting,
                 **loads(contents),
@@ -1084,7 +1085,7 @@ class Submission(commands.Cog):
             await self.on_message_submission(message)
 
     @commands.Cog.listener()
-    async def on_thread_delete(self, thread: Thread) -> None:
+    async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent) -> None:
         """Detects if threads were removed
 
         Parameters
@@ -1092,9 +1093,9 @@ class Submission(commands.Cog):
         payload : RawThreadDeleteEvent
             Information
         """
-        if thread.parent_id != 919277769735680050:
+        if payload.parent_id != 919277769735680050:
             return
-        ocs = [oc for oc in self.ocs.values() if oc.thread == thread.id]
+        ocs = [oc for oc in self.ocs.values() if oc.thread == payload.thread_id]
 
         if not ocs:
             return
@@ -1120,30 +1121,22 @@ class Submission(commands.Cog):
         payload : RawMessageDeleteEvent
             Information
         """
+        message = "Character Removed as message was removed! > %s - %s > %s"
+        ocs = []
         if oc := self.ocs.get(payload.message_id):
-            del self.ocs[oc.id]
-            self.rpers.setdefault(oc.author, {})
-            self.rpers[oc.author].pop(oc.id, None)
-            async with self.bot.database() as db:
-                self.bot.logger.info(
-                    "Character Removed as message was removed! > %s - %s > %s",
-                    oc.name,
-                    repr(oc),
-                    oc.url or "None",
-                )
-                await oc.delete(db)
-        if payload.message_id in self.oc_list.values():
+            ocs.append(oc)
+        elif payload.message_id in self.oc_list.values():
             author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
             del self.oc_list[author_id]
-            async with self.bot.database() as db:
-                for oc in self.rpers.pop(author_id, {}).values():
-                    del self.ocs[oc.id]
-                    self.bot.logger.info(
-                        "Character Removed as Thread was removed! > %s > %s",
-                        str(type(oc)),
-                        oc.url or "None",
-                    )
-                    await oc.delete(db)
+            ocs = [oc for oc in self.ocs.values() if oc.author == author_id]
+            message = "Character Removed as Thread was removed! > %s - %s > %s"
+        if not ocs:
+            return
+        async with self.bot.database() as db:
+            for oc in ocs:
+                self.ocs.pop(oc.id, None)
+                self.bot.logger.info(message, oc.name, repr(oc), oc.url or "None")
+                await oc.delete(db)
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:

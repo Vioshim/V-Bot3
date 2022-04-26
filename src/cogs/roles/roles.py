@@ -522,7 +522,7 @@ class RPSearchManage(View):
         await resp.defer(ephemeral=True)
         cog = ctx.client.get_cog("Submission")
         if not (ocs := self.ocs):
-            ocs = cog.rpers.get(self.member.id, {}).values()
+            ocs = [oc for oc in cog.ocs.values() if oc.author == self.member.id]
         view = CharactersView(
             member=ctx.user,
             target=ctx,
@@ -688,7 +688,8 @@ class RPRolesView(View):
                 f"Try again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds",
                 ephemeral=True,
             )
-        ocs = interaction.client.get_cog("Submission").rpers.get(member.id, {}).values()
+        cog = interaction.client.get_cog("Submission")
+        ocs = [oc for oc in cog.ocs.values() if oc.author == member.id]
         await resp.send_modal(
             RPModal(
                 user=member,

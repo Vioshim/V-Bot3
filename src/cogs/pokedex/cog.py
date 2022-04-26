@@ -42,6 +42,7 @@ from src.cogs.pokedex.search import (
 from src.structures.bot import CustomBot
 from src.structures.character import Character, FusionCharacter
 from src.structures.species import Fusion, Species, Variant
+from src.structures.pronouns import Pronoun
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
 from src.views import CharactersView, MovepoolViewSelector
@@ -185,7 +186,7 @@ class Pokedex(commands.Cog):
         backstory: Optional[str],
         extra: Optional[str],
         sp_ability: Optional[str],
-        pronoun: Optional[Literal["He", "She", "Them"]],
+        pronoun: Optional[Pronoun],
         age: Optional[str],
         group_by: Optional[GroupByArg],
         amount: Optional[str],
@@ -220,7 +221,7 @@ class Pokedex(commands.Cog):
             Any words to look for in the extra info
         sp_ability : Optional[str]
             Any words to look for in Sp Abilities
-        pronoun : Optional[Literal['He', 'She', 'Them']]
+        pronoun : Optional[Pronoun]
             Pronoun to Look for
         age : Optional[str]
             OC's age. e.g. 18-24, 13, >20
@@ -303,14 +304,14 @@ class Pokedex(commands.Cog):
                 )
 
             if isinstance(mon, Fusion):
-                if pronoun == "She":
+                if pronoun == Pronoun.She:
                     image1, image2 = (
                         mon.mon1.female_image,
                         mon.mon2.female_image,
                     )
                 else:
                     image1, image2 = mon.mon1.base_image, mon.mon2.base_image
-            elif pronoun == "She":
+            elif pronoun == Pronoun.She:
                 image1, image2 = mon.female_image, mon.female_image_shiny
             else:
                 image1, image2 = mon.base_image, mon.base_image_shiny
@@ -320,7 +321,7 @@ class Pokedex(commands.Cog):
                 Embed(url=PLACEHOLDER).set_image(url=image2),
             ]
         if pronoun:
-            ocs = [oc for oc in ocs if oc.pronoun.name == pronoun.title()]
+            ocs = [oc for oc in ocs if oc.pronoun == pronoun]
         if backstory:
             ocs = [oc for oc in ocs if oc.backstory and backstory.lower() in oc.backstory.lower()]
         if extra:
@@ -396,7 +397,8 @@ class Pokedex(commands.Cog):
         if kind:
             ocs = [oc for oc in ocs if fix(oc.kind) == (fix(kind) if fix(kind) != "POKEMON" else "COMMON")]
         if group_by:
-            view = group_by.generate(ctx, ocs, amount=amount)
+            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount)
+            embed.title = f"{embed.title} - Group by {group_by.name}"
         else:
             view = CharactersView(
                 member=ctx.user,
@@ -411,18 +413,6 @@ class Pokedex(commands.Cog):
                 str(ctx.user),
                 repr(ctx.namespace),
             )
-
-    @app_commands.command()
-    @app_commands.guilds(719343092963999804)
-    @app_commands.choices()
-    async def group_by(
-        self,
-        ctx: Interaction,
-        param: Literal[""],
-        amount: Optional[str],
-        reverse: bool = False,
-    ):
-        pass
 
 
 async def setup(bot: CustomBot) -> None:

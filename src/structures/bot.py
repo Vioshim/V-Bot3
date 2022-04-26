@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from io import BytesIO
 from logging import Logger
 from os import getenv
@@ -34,6 +34,8 @@ from discord import (
     TextChannel,
     Thread,
     Webhook,
+    HTTPException,
+    NotFound,
 )
 from discord.abc import Messageable
 from discord.ext.commands import Bot
@@ -41,7 +43,7 @@ from discord.utils import format_dt, utcnow
 from mystbin import Client as MystBinClient
 from orjson import dumps
 
-from src.utils.matches import URL_DOMAIN_MATCH
+from src.utils.matches import REGEX_URL
 
 __all__ = ("CustomBot",)
 
@@ -133,6 +135,20 @@ class CustomBot(Bot):
             self.webhook_cache[webhook.channel.id] = webhook
         return webhook
 
+    async def on_webhooks_update(self, channel: TextChannel):
+        """Bot's on_webhooks_update for caching
+
+        Parameters
+        ----------
+        Channel : TextChannel
+            Channel that got changes in its webhooks
+        """
+        try:
+            if webhook := self.webhook_cache.get(channel.id):
+                self.webhook_cache[channel.id] = await webhook.fetch()
+        except (HTTPException, NotFound, ValueError):
+            del self.webhook_cache[channel.id]
+
     async def on_message(self, message: Message) -> None:
         """Bot's on_message with nitro scam handler
 
@@ -141,10 +157,10 @@ class CustomBot(Bot):
         message : Message
             message to process
         """
-        if message.content and message.author != self.user:
-            elements = URL_DOMAIN_MATCH.findall(message.content)
+        if message.content and (not await self.is_owner(self.user)) and message.author != self.user:
+            elements = REGEX_URL.findall(message.content)
             if self.scam_urls.intersection(elements):
-                with suppress(DiscordException):
+                try:
                     if not message.guild:
                         await message.reply("That's a Nitro Scam")
                     else:
@@ -153,7 +169,9 @@ class CustomBot(Bot):
                             delete_message_days=1,
                             reason="Nitro Scam victim",
                         )
-                return
+                    return
+                except DiscordException:
+                    return
         await self.process_commands(message)
 
     def msg_cache_add(self, message: Union[Message, PartialMessage, int], /):
@@ -270,7 +288,7 @@ class CustomBot(Bot):
         Optional[File]
             File for discord usage
         """
-        with suppress(Exception):
+        try:
             async with self.session.get(str(url)) as resp:
                 if resp.status == 200:
                     data = await resp.read()
@@ -285,6 +303,8 @@ class CustomBot(Bot):
                         filename=filename,
                         spoiler=spoiler,
                     )
+        except Exception:
+            return None
 
     @asynccontextmanager
     async def database(

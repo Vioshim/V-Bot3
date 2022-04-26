@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from typing import Callable
@@ -111,9 +110,11 @@ class MessagePaginator(Complex):
         embeds = item.embeds
         if not (item.content or embeds):
             for attach in item.attachments:
-                with suppress(HTTPException, NotFound, Forbidden):
+                try:
                     file = await attach.to_file(use_cached=True)
                     files.append(file)
+                except (HTTPException, NotFound, Forbidden):
+                    continue
             embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
 
         if not (files or embeds or item.content):
@@ -121,8 +122,10 @@ class MessagePaginator(Complex):
                 "Message information is unknown.",
                 ephemeral=True,
             )
-            with suppress(HTTPException, NotFound, Forbidden):
-                await item.delete()
+            try:
+                item.delete()
+            except (HTTPException, NotFound, Forbidden):
+                pass
         else:
             await ctx.followup.send(
                 content=item.content,
@@ -150,14 +153,11 @@ class MessageView(View):
         self.setup()
 
     def group_method(self, messages: set[Message]):
-        return {
-            k: set(v)
-            for k, v in groupby(
-                filter(lambda x: x.webhook_id and x.embeds, messages),
-                key=lambda x: x.embeds[0].footer.text,
-            )
-            if k
-        }
+        messages = sorted(
+            filter(lambda x: x.webhook_id and x.embeds, messages),
+            key=lambda x: x.embeds[0].footer.text,
+        )
+        return {k: set(v) for k, v in groupby(messages, key=lambda x: x.embeds[0].footer.text) if k}
 
     @property
     def messages(self):

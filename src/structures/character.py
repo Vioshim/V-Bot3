@@ -15,15 +15,13 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
-from difflib import get_close_matches
 from io import BytesIO
 from json import dumps
 from random import sample
 from typing import Any, Optional, Type
-
+from rapidfuzz import process
 from asyncpg import Connection
 from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
@@ -121,18 +119,27 @@ class Character(metaclass=ABCMeta):
     def __eq__(self, other: Character):
         return self.id == other.id
 
-    def randomize_abilities(self):
-        if abilities := list(self.species.abilities):
+    @property
+    def usable_abilities(self) -> frozenset[Ability]:
+        if self.any_ability_at_first:
+            return Ability.all()
+        return self.species.abilities
+
+    @property
+    def randomize_abilities(self) -> frozenset[Ability]:
+        if abilities := list(self.usable_abilities):
             amount = min(self.max_amount_abilities, len(abilities))
             items = sample(abilities, k=amount)
-            self.abilities = frozenset(items)
+            return frozenset(items)
+        return frozenset()
 
-    def randomize_moveset(self):
+    @property
+    def randomize_moveset(self) -> frozenset[Move]:
         if movepool := self.movepool:
             moves = list(movepool())
             amount = min(6, len(moves))
-            items = sample(moves, k=amount)
-            self.moveset = frozenset(items)
+            return frozenset(sample(moves, k=amount))
+        return frozenset()
 
     @property
     def evolves_from(self) -> Optional[Type[Species]]:
@@ -1650,7 +1657,7 @@ def oc_process(**kwargs) -> Type[Character]:
 
     if ability_info := common_pop_get(data, "abilities", "ability"):
         if isinstance(ability_info, str):
-            ability_info = [ability_info]
+            ability_info = ability_info.split(",")
         if abilities := Ability.deduce_many(*ability_info):
             data["abilities"] = abilities
 
@@ -1733,28 +1740,18 @@ def doc_convert(doc: Document) -> dict[str, Any]:
 
     text = [strip.replace("\u2019", "'") for item in content_values if (strip := item.strip())]
 
-    movepool_typing = dict[str, set[str] | dict[int, set[str]]]
     if url := getattr(doc, "url", None):
         url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
-    raw_kwargs: dict[str, str | set[str] | movepool_typing | File] = dict(
-        url=url,
-        moveset=set(),
-        movepool={},
-        abilities=set(),
-        fusion=set(),
-        types=set(),
-        stats={
-            PLACEHOLDER_STATS[item.strip()]: stats_check(*content_values[index + 1 :][:1])
-            for index, item in enumerate(content_values)
-            if all(
-                (
-                    item.strip() in PLACEHOLDER_STATS,
-                    len(content_values) > index,
-                    len(content_values[index + 1 :][:1]) == 1,
-                )
-            )
-        },
-    )
+
+    raw_kwargs = dict(url=url)
+    if stats := {
+        PLACEHOLDER_STATS[item.strip()]: stats_check(*content_values[index + 1 :][:1])
+        for index, item in enumerate(content_values)
+        if item.strip() in PLACEHOLDER_STATS
+        and len(content_values) > index
+        and len(content_values[index + 1 :][:1]) == 1
+    }:
+        raw_kwargs["stats"] = stats
 
     for index, item in enumerate(text[:-1], start=1):
         if not check(next_value := text[index]):
@@ -1769,22 +1766,28 @@ def doc_convert(doc: Document) -> dict[str, Any]:
             match element.groups():
                 case ["Level", y]:
                     idx = int(y)
+                    raw_kwargs.setdefault("movepool", {})
                     raw_kwargs["movepool"].setdefault("level", {})
                     raw_kwargs["movepool"]["level"].setdefault(idx, set())
                     raw_kwargs["movepool"]["level"][idx].add(argument)
                 case ["Move", _]:
+                    raw_kwargs.setdefault("moveset", set())
                     raw_kwargs["moveset"].add(argument)
                 case ["Ability", _]:
+                    raw_kwargs.setdefault("abilities", set())
                     raw_kwargs["abilities"].add(next_value)
                 case ["Species", _]:
+                    raw_kwargs.setdefault("fusion", set())
                     raw_kwargs["fusion"].add(next_value)
                 case ["Type", _]:
+                    raw_kwargs.setdefault("types", set())
                     raw_kwargs["types"].add(next_value.upper())
                 case [x, _]:
+                    raw_kwargs.setdefault("movepool", {})
                     raw_kwargs["movepool"].setdefault(x.lower(), set())
                     raw_kwargs["movepool"][x.lower()].add(argument)
 
-    with suppress(Exception):
+    try:
         if data := list(doc.inline_shapes):
             item = data[0]
             pic = item._inline.graphic.graphicData.pic
@@ -1794,6 +1797,8 @@ def doc_convert(doc: Document) -> dict[str, Any]:
             image_part = doc_part.related_parts[rid]
             fp = BytesIO(image_part._blob)
             raw_kwargs["image"] = File(fp=fp, filename="image.png")
+    except Exception:
+        pass
 
     raw_kwargs.pop("artist", None)
     raw_kwargs.pop("website", None)
@@ -1811,18 +1816,15 @@ class CharacterTransform(Transformer):
 
     @classmethod
     async def autocomplete(cls, interaction: Interaction, value: str) -> list[Choice[str]]:
-        member_id = (interaction.namespace.member or interaction.user).id
+        if not (member := interaction.namespace.member):
+            member = interaction.user
         cog = interaction.client.get_cog("Submission")
-        text: str = str(value or "").title()
-        ocs = cog.rpers.get(member_id, {}).values()
-        items = {oc.name: str(oc.id) for oc in ocs}
-        values = [
-            Choice(name=item, value=items[item]) for item in get_close_matches(word=text, possibilities=items, n=25)
-        ]
-        if not values:
-            values = [Choice(name=k, value=v) for k, v in items.items() if k.startswith(text)]
-        values.sort(key=lambda x: x.name)
-        return values[:25]
+        ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == member.id]
+        if options := process.extract(value, choices=ocs, limit=25, score_cutoff=60, processor=lambda x: x.name):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = ocs[:25]
+        return [Choice(name=x.name, value=str(x.id)) for x in options]
 
 
 CharacterArg = Transform[Type[Character], CharacterTransform]
