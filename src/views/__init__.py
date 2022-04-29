@@ -15,28 +15,23 @@
 from src.views.ability_view import AbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
-from src.views.mission_view import MissionView
+from src.views.message_view import MessagePaginator, MessageView
 from src.views.move_view import MoveView
-from src.views.movepool_view import (
-    MovepoolModal,
-    MovepoolView,
-    MovepoolViewSelector,
-)
+from src.views.movepool_view import MovepoolModal, MovepoolView, MovepoolViewSelector
 from src.views.rp_view import RPView
 from src.views.stats_view import StatsView
-from src.views.submission_view import SubmissionView
 
 __all__ = (
     "AbilityView",
     "CharactersView",
     "PingView",
     "ImageView",
-    "MissionView",
+    "MessagePaginator",
+    "MessageView",
     "MoveView",
     "MovepoolModal",
     "MovepoolView",
     "MovepoolViewSelector",
     "RPView",
     "StatsView",
-    "SubmissionView",
 )

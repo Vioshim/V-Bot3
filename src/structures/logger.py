@@ -107,9 +107,10 @@ class ColoredFormatter(Formatter):
         if self.use_color and level_name in COLORS:
             level_name_color: str = COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
             record.levelname = level_name_color
-            pathname = record.pathname.replace("/root/V-Bot3/src/", "")
-            pathname = pathname.replace("/root/V-Bot3/", "")
-            record.pathname = pathname.replace("/app/", "")
+            pathname = record.pathname.removeprefix("/app")
+            pathname = record.pathname.removeprefix("/root/V-Bot3")
+            pathname = record.pathname.removeprefix("/src")
+            record.pathname = pathname
         return super(ColoredFormatter, self).format(record)
 
 
@@ -125,7 +126,7 @@ class ColoredLogger(Logger):
         name: str
             Logger's Name
         """
-        super().__init__(name, INFO)
+        super().__init__(name, level=INFO)
         color_formatter = ColoredFormatter(self.COLOR_FORMAT)
         console = StreamHandler()
         console.setFormatter(color_formatter)

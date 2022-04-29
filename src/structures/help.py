@@ -73,9 +73,7 @@ class CustomHelp(HelpCommand):
             entries_per_page=10,
             parser=mapping_parser,
         )
-        view.embed.title = "Help Command - Bot Options"
-
-        await view.send()
+        await view.send(title="Help Command - Bot Options")
 
     async def send_command_help(self, cmd: Command) -> None:
         """Command Help
@@ -106,10 +104,10 @@ class CustomHelp(HelpCommand):
             inline=False,
             entries_per_page=10,
         )
-        view.embed.title = f"Command {cmd.qualified_name!r}"
-        view.embed.description = cmd.description
-
-        await view.send()
+        await view.send(
+            title=f"Command {cmd.qualified_name!r}",
+            desciption=cmd.description,
+        )
 
     async def send_group_help(self, group: Group) -> None:
         """Group help
@@ -136,11 +134,10 @@ class CustomHelp(HelpCommand):
             entries_per_page=10,
             parser=group_parser,
         )
-
-        view.embed.title = f"Group {group.qualified_name!r}"
-        view.embed.description = text
-
-        await view.send()
+        await view.send(
+            title=f"Group {group.qualified_name!r}",
+            desciption=text,
+        )
 
     async def send_cog_help(self, cog: Cog) -> None:
         """Cog help
@@ -188,11 +185,10 @@ class CustomHelp(HelpCommand):
             entries_per_page=10,
             parser=cog_parser,
         )
-
-        view.embed.title = (f"Cog {cog.qualified_name} - Commands",)
-        view.embed.description = "\n".join(commands) or "> No Commands"
-
-        await view.send()
+        await view.send(
+            title=f"Cog {cog.qualified_name} - Commands",
+            desciption="\n".join(commands) or "> No Commands",
+        )
 
     async def send_error_message(self, error: str):
         """Error sending function

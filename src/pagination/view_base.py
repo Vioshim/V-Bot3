@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Generic, Optional, TypeVar, Union
+from typing import Optional, TypeVar, Union
 
 from discord import (
     AllowedMentions,
@@ -39,13 +39,14 @@ from discord.ext.commands import Context
 from discord.ui import View
 
 from src.utils.etc import WHITE_BAR
+from src.utils.functions import embed_modifier
 
 _M = TypeVar("_M", bound=Messageable)
 
 __all__ = ("Basic",)
 
 
-class Basic(Generic[_M], View):
+class Basic(View):
     """A Paginator for View-only purposes"""
 
     def __init__(
@@ -140,6 +141,7 @@ class Basic(Generic[_M], View):
         ephemeral: bool = False,
         thread: Snowflake = None,
         editing_original: bool = False,
+        **kwargs,
     ) -> None:
         """Sends the paginator towards the defined destination
 
@@ -181,13 +183,17 @@ class Basic(Generic[_M], View):
         """
         target = self.target
 
+        if not embeds:
+            embed = embed or self.embed
+            self.embed = embed_modifier(embed, **kwargs)
+            embeds = [self.embed]
+
         if not target:
             target = await self.member.create_dm()
 
         data = dict(
             content=content,
             tts=tts,
-            embed=embed,
             embeds=embeds,
             file=file,
             files=files,
@@ -215,7 +221,8 @@ class Basic(Generic[_M], View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if editing_original:
-                return await target.edit_original_message(**data)
+                self.message = await target.edit_original_message(**data)
+                return
 
             if not resp.is_done():
                 await resp.defer(ephemeral=ephemeral)

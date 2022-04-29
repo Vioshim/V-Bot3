@@ -15,27 +15,30 @@
 from abc import ABC, abstractclassmethod
 from enum import Enum
 from itertools import groupby
-from typing import Iterable, Optional
-from rapidfuzz import process
+from typing import Callable, Iterable, Optional
 
-from discord import (
-    Guild,
-    Interaction,
-    Member,
-    TextChannel,
-    Thread,
-)
+from discord import Guild, Interaction, Member, TextChannel, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
+from rapidfuzz import process
+
+from src.cogs.submission import Submission
 from src.pagination.complex import Complex
-from src.cogs.submission.cog import Submission
 from src.structures.ability import Ability
-from src.structures.character import Character, FakemonCharacter
+from src.structures.character import Character, Kind
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
-from src.structures.species import Fusion, Legendary, Mega, Mythical, Pokemon, Species, UltraBeast
-from src.utils.functions import fix
+from src.structures.species import (
+    Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Pokemon,
+    Species,
+    UltraBeast,
+    Variant,
+)
 from src.views.characters_view import CharactersView
 
 OPERATORS = {
@@ -151,7 +154,7 @@ class SpeciesTransformer(Transformer):
         cog: Submission = ctx.client.get_cog("Submission")
         if value.isdigit() and (oc := cog.ocs.get(int(value))):
             return oc
-        mon = Species.from_ID(value.removesuffix("+"))
+        mon = Species.from_ID(value)
         if not mon:
             raise ValueError(f"Species {value!r} not found")
         return mon
@@ -161,7 +164,9 @@ class SpeciesTransformer(Transformer):
         cog: Submission = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
         mons = cog.ocs.values()
-        filters = [lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True]
+        filters: list[Callable[[Character], bool]] = [
+            lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True
+        ]
         if fused := Species.from_ID(ctx.namespace.fused):
             mons = {
                 (set(x.species.bases) - {fused}).pop()
@@ -169,21 +174,24 @@ class SpeciesTransformer(Transformer):
                 if isinstance(x.species, Fusion) and fused in x.species.bases
             }
         else:
-            match kind := fix(ctx.namespace.kind):
-                case "LEGENDARY":
-                    mons = Legendary.all()
-                case "MYTHICAL":
-                    mons = Mythical.all()
-                case "UTRABEAST":
-                    mons = UltraBeast.all()
-                case "POKEMON" | "COMMON":
-                    mons = Pokemon.all()
-                case "MEGA":
-                    mons = Mega.all()
-                case "CUSTOMMEGA" | "FAKEMON" | "VARIANT" | "FUSION":
-                    filters.append(lambda x: fix(x.kind) == kind)
-                case _:
-                    mons = Species.all()
+
+            try:
+                match kind := Kind[ctx.namespace.kind]:
+                    case Kind.Legendary:
+                        mons = Legendary.all()
+                    case Kind.Mythical:
+                        mons = Mythical.all()
+                    case Kind.UltraBeast:
+                        mons = UltraBeast.all()
+                    case Kind.Common:
+                        mons = Pokemon.all()
+                    case Kind.Mega:
+                        mons = Mega.all()
+                    case _:
+                        filters.append(lambda x: x.kind == kind)
+            except KeyError:
+                mons = Species.all()
+
         mons: list[Character | Species] = list(mons)
         if member := ctx.namespace.member:
             ocs1 = {x.species for x in cog.ocs.values() if x.author == member.id}
@@ -222,13 +230,21 @@ class DefaultSpeciesTransformer(Transformer):
         return item
 
     @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         items = list(Species.all())
-        if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
+        if fused := Species.from_ID(ctx.namespace.species):
+            cog: Submission = ctx.client.get_cog("Submission")
+            options = {
+                (set(x.species.bases) - {fused}).pop()
+                for x in cog.ocs.values()
+                if isinstance(x.species, Fusion) and fused in x.species.bases
+            }
+            options = list(options)
+        elif options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
             options = [x for x, _, _ in options]
         elif not value:
-            options = items[:25]
-        return [Choice(name=x.name, value=x.id) for x in options]
+            options = items
+        return [Choice(name=x.name, value=x.id) for x in options[:25]]
 
 
 SpeciesArg = Transform[Species, SpeciesTransformer]
@@ -298,10 +314,10 @@ class FakemonTransformer(Transformer):
         return [Choice(name=x.species.name, value=str(x.id)) for x in options]
 
 
-FakemonArg = Transform[FakemonCharacter, FakemonTransformer]
+FakemonArg = Transform[Character, FakemonTransformer]
 
 
-class GroupByComplex(Complex):
+class GroupByComplex(Complex[str]):
     def __init__(
         self,
         member: Member,
@@ -388,8 +404,8 @@ class OCGroupBy(ABC):
 class OCGroupByKind(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.kind)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
+        ocs = sorted(ocs, key=lambda x: x.kind.name)
+        return {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
 
 
 class OCGroupByAge(OCGroupBy):
@@ -399,39 +415,34 @@ class OCGroupByAge(OCGroupBy):
         return {str(k or "Unknown"): frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
 
 
+def species_checker(item: Species):
+    def inner(oc_species: Species):
+        if isinstance(oc_species, Fusion):
+            return item in oc_species.bases
+        if isinstance(oc_species, Variant):
+            return item == oc_species.base
+        return oc_species == item
+
+    return inner
+
+
 class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.kind)
+        ocs = sorted(ocs, key=lambda x: x.kind.name)
         items = {
-            k.title(): frozenset(v)
+            k.name.title(): frozenset(v)
             for k, v in groupby(ocs, key=lambda x: x.kind)
             if k
             not in [
-                "COMMON",
-                "MYTHICAL",
-                "LEGENDARY",
-                "ULTRA BEAST",
+                Kind.Common,
+                Kind.Mythical,
+                Kind.Legendary,
+                Kind.UltraBeast,
             ]
         }
         ocs = sorted(ocs, key=lambda x: x.species.name)
-        items.update(
-            (
-                item.name,
-                frozenset(
-                    {
-                        oc
-                        for oc in ocs
-                        if (
-                            item in oc.species.bases
-                            if isinstance(oc.species, Fusion)
-                            else getattr(oc.species, "base", oc.species) == item
-                        )
-                    }
-                ),
-            )
-            for item in Species.all()
-        )
+        items |= {item.name: frozenset(filter(species_checker(item), ocs)) for item in Species.all()}
         return items
 
 
@@ -445,7 +456,7 @@ class OCGroupByPronoun(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.pronoun.name)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun.name)}
+        return {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun)}
 
 
 class OCGroupByMove(OCGroupBy):

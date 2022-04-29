@@ -3,34 +3,17 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
 [![Discord](https://img.shields.io/discord/719343092963999804?color=%235865F2&label=Server&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/CENcTvnarE)
 
-|     Folder/Class      |                  Description                 |
-|-----------------------|----------------------------------------------|
-| `Ability`             | dataclass of Pokemon Ability                 |
-| `SpAbility`           | dataclass of Pokemon Special Ability         |
-| `CustomBot`           | class instance of `discord.commands.ext.bot` |
-| `ASSOCIATIONS`        | dict of Species and Character                |
-| `Character`           | Character Class                              |
-| `Pronoun`             | Pronouns Enum Class                          |
-| `CustomMegaCharacter` | Custom Mega Character Class                  |
-| `FakemonCharacter`    | Fakemon Character Class                      |
-| `FusionCharacter`     | Fusion Character Class                       |
-| `LegendaryCharacter`  | Legendary Character Class                    |
-| `MegaCharacter`       | Mega Character Class                         |
-| `PokemonCharacter`    | Pokemon Character Class                      |
-| `VariantCharacter`    | Variant Character Class                      |
-| `fetch_all`           | Fetches all Character Classes                |
-| `CustomHelp`          | Help command Handler                         |
-| `ColoredLogger`       | `logging.Logger` instance                    |
-| `Mission`             | Mission Class                                |
-| `Typing`              | Pokemon Typing Class                         |
-| `Move`                | Pokemon Move Class                           |
-| `Movepool`            | Pokemon Movepool Class                       |
-| `Fakemon`             | Fakemon Class                                |
-| `Fusion`              | Fusion Class                                 |
-| `Legendary`           | Legendary Class                              |
-| `Mega`                | Mega Class                                   |
-| `Mythical`            | Mythical Class                               |
-| `Pokemon`             | Pokemon Class                                |
-| `Species`             | Species Class                                |
-| `UltraBeast`          | UltraBeast Class                             |
-| `Variant`             | Variant Class                                |
+| File            | Description                                 |
+| --------------- | ------------------------------------------- |
+| `ability.py`    | Ability, SpAbility classes                  |
+| `bot.py`        | Inherited from `discord.commands.ext.bot`   |
+| `character.py`  | Character class (Including related methods) |
+| `converters.py` | Discord Message class converters            |
+| `exceptions.py` | Custom Exceptions                           |
+| `help.py`       | Help command handler                        |
+| `logger.py`     | Inherited from `logging.Logger`             |
+| `mon_typing.py` | Pokemon typing class                        |
+| `move.py`       | Pokemon move class                          |
+| `movepool.py`   | Pokemon movepool class                      |
+| `pronouns.py`   | Pronoun Enum Class`                         |
+| `species.py`    | Species classes and related methods         |

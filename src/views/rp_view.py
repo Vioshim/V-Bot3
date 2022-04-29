@@ -43,7 +43,9 @@ class RPView(View):
 
     @property
     def url(self):
-        return f"https://discord.com/channels/{self.server}/{self.oc_list[self.member_id]}/"
+        if msg_id := self.oc_list.get(self.member_id):
+            return f"https://discord.com/channels/{self.server}/{msg_id}/"
+        return "https://discord.com/channels/{self.server}/919277769735680050/"
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response

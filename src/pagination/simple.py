@@ -14,10 +14,23 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Optional, Sized, TypeVar, Union
 
-from discord import Embed, Interaction, InteractionResponse, Member, User
-from discord.abc import Messageable
+from discord import (
+    AllowedMentions,
+    Embed,
+    File,
+    GuildSticker,
+    Interaction,
+    InteractionResponse,
+    Member,
+    Message,
+    MessageReference,
+    PartialMessage,
+    StickerItem,
+    User,
+)
+from discord.abc import Messageable, Snowflake
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
@@ -53,7 +66,7 @@ def default_parser(
     return name, description
 
 
-class Simple(Basic):
+class Simple(Generic[_T], Basic):
     """A Paginator for View-only purposes"""
 
     def __init__(
@@ -61,7 +74,7 @@ class Simple(Basic):
         *,
         member: Union[Member, User],
         values: Iterable[_T],
-        target: _M = None,
+        target: Optional[Messageable] = None,
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         inline: bool = False,
@@ -76,7 +89,7 @@ class Simple(Basic):
         ----------
         member : Union[Member, User]
             Member
-        target : _M
+        target : Optional[Messageable]
             Destination
         values : Iterable[T], optional
             Provided Values, defaults to frozenset()
@@ -226,6 +239,88 @@ class Simple(Basic):
                     value=str(value)[:1024],
                     inline=self.inline,
                 )
+
+    async def send(
+        self,
+        content: str = None,
+        *,
+        tts: bool = False,
+        embed: Embed = None,
+        embeds: list[Embed] = None,
+        file: File = None,
+        files: list[File] = None,
+        stickers: list[Union[GuildSticker, StickerItem]] = None,
+        delete_after: float = None,
+        nonce: int = None,
+        allowed_mentions: AllowedMentions = None,
+        reference: Union[Message, MessageReference, PartialMessage] = None,
+        mention_author: bool = False,
+        username: str = None,
+        avatar_url: str = None,
+        ephemeral: bool = False,
+        thread: Snowflake = None,
+        editing_original: bool = False,
+        **kwargs,
+    ) -> None:
+        """Sends the paginator towards the defined destination
+
+        Attributes
+        ----------
+        content : str, optional
+            message's content
+        tts : bool, optional
+            message's tts, defaults to False
+        embed : Embed, optional
+            message's embed, defaults to None
+            if set as None, no embed is generated.
+        embeds : list[Embed], optional
+            message's embeds, defaults to None
+        file : File, optional
+            message's file, defaults to None'
+        files : list[File], optional
+            message's file, defaults to None
+        stickers : list[Union[GuildSticker, StickerItem]], optional
+            message's stickers, defaults to None
+        delete_after : float, optional
+            defaults to None
+        nonce : int, optional
+            message's nonce, defaults to None
+        allowed_mentions : AllowedMentions, optional
+            message's allowed mentions, defaults MISSING
+        reference : Union[Message, MessageReference, PartialMessage], optional
+            message's reference, defaults to None
+        mention_author : bool, optional
+            if mentions the author of the message, defaults to MISSING
+        username : str, Optional
+            webhook username to send as, defaults to None
+        avatar_url: str, optional
+            webhook avatar_url to send as, defaults to None
+        ephemeral: bool, optional
+            if message is ephemeral, defaults to False
+        thread: Snowflake, optional
+            if message is sent to a thread, defaults to None
+        """
+        self.menu_format()
+        return await super(Simple, self).send(
+            content=content,
+            tts=tts,
+            embed=embed,
+            embeds=embeds,
+            file=file,
+            files=files,
+            stickers=stickers,
+            delete_after=delete_after,
+            nonce=nonce,
+            allowed_mentions=allowed_mentions,
+            reference=reference,
+            mention_author=mention_author,
+            username=username,
+            avatar_url=avatar_url,
+            ephemeral=ephemeral,
+            thread=thread,
+            editing_original=editing_original,
+            **kwargs,
+        )
 
     async def edit(
         self,

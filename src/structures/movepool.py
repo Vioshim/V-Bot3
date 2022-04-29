@@ -534,6 +534,9 @@ class Movepool:
             moves.update(level)
         return frozen_set(moves)
 
+    def copy(self):
+        return Movepool() + self
+
 
 class MovepoolEncoder(JSONEncoder):
     """Movepool encoder"""

@@ -14,7 +14,7 @@
 
 from itertools import groupby
 from logging import getLogger, setLoggerClass
-from typing import Callable
+from typing import Callable, Optional
 
 from discord import (
     Embed,
@@ -28,9 +28,8 @@ from discord import (
     NotFound,
     PartialEmoji,
     SelectOption,
-    TextChannel,
-    Webhook,
 )
+from discord.abc import Messageable
 from discord.ui import Select, View, select
 from discord.utils import remove_markdown
 from humanize import naturaltime
@@ -73,12 +72,12 @@ def msg_parser(msg: Message):
     return get_title(msg).split(": ")[-1], remove_markdown(description)
 
 
-class MessagePaginator(Complex):
+class MessagePaginator(Complex[Message]):
     def __init__(
         self,
         member: Member,
-        target: Interaction | Webhook | TextChannel,
         messages: set[Message],
+        target: Optional[Messageable] = None,
         parser: Callable[[Message], tuple[str, str]] = msg_parser,
     ):
         super(MessagePaginator, self).__init__(
@@ -103,37 +102,37 @@ class MessagePaginator(Complex):
         sct: Select,
     ) -> None:
         response: InteractionResponse = ctx.response
-        item: Message = self.current_choice
-        view = View.from_message(item)
-        await response.defer(ephemeral=True)
-        files = []
-        embeds = item.embeds
-        if not (item.content or embeds):
-            for attach in item.attachments:
-                try:
-                    file = await attach.to_file(use_cached=True)
-                    files.append(file)
-                except (HTTPException, NotFound, Forbidden):
-                    continue
-            embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
+        if item := self.current_choice:
+            view = View.from_message(item)
+            await response.defer(ephemeral=True)
+            files = []
+            embeds = item.embeds
+            if not (item.content or embeds):
+                for attach in item.attachments:
+                    try:
+                        file = await attach.to_file(use_cached=True)
+                        files.append(file)
+                    except (HTTPException, NotFound, Forbidden):
+                        continue
+                embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
 
-        if not (files or embeds or item.content):
-            await ctx.followup.send(
-                "Message information is unknown.",
-                ephemeral=True,
-            )
-            try:
-                item.delete()
-            except (HTTPException, NotFound, Forbidden):
-                pass
-        else:
-            await ctx.followup.send(
-                content=item.content,
-                embeds=embeds,
-                files=files,
-                view=view,
-                ephemeral=True,
-            )
+            if not (files or embeds or item.content):
+                await ctx.followup.send(
+                    "Message information is unknown.",
+                    ephemeral=True,
+                )
+                try:
+                    item.delete()
+                except (HTTPException, NotFound, Forbidden):
+                    pass
+            else:
+                await ctx.followup.send(
+                    content=item.content,
+                    embeds=embeds,
+                    files=files,
+                    view=view,
+                    ephemeral=True,
+                )
 
         await super(MessagePaginator, self).select_choice(ctx, sct)
 

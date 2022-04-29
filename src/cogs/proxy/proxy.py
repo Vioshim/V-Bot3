@@ -31,14 +31,13 @@ from datetime import datetime
 from functools import reduce
 from itertools import groupby
 from operator import itemgetter
-from re import DOTALL, MULTILINE, Pattern, compile, escape, sub
+from re import DOTALL, MULTILINE, Pattern, compile, escape
 from typing import Optional
 
 from discord import Embed, Message
 from discord.utils import snowflake_time
 from frozendict import frozendict
 
-from src.utils.functions import unescape
 from src.utils.matches import CLYDE, ID_DICEBEAR
 
 

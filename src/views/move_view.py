@@ -12,15 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Union
+from typing import Optional
 
-from discord import (
-    Interaction,
-    InteractionResponse,
-    Member,
-    TextChannel,
-    Webhook,
-)
+from discord import Interaction, InteractionResponse, Member
+from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
@@ -29,12 +24,12 @@ from src.structures.move import Move
 __all__ = ("MoveView",)
 
 
-class MoveView(Complex):
+class MoveView(Complex[Move]):
     def __init__(
         self,
         member: Member,
-        target: Union[Interaction, Webhook, TextChannel],
         moves: set[Move],
+        target: Optional[Messageable] = None,
         keep_working: bool = False,
     ):
         super(MoveView, self).__init__(
@@ -59,28 +54,17 @@ class MoveView(Complex):
         _: Select,
     ) -> None:
         response: InteractionResponse = interaction.response
-        item: Move = self.current_choice
-        embed = item.embed
-        view = View()
-        view.add_item(
-            Button(
-                label="Click here to check more information at Bulbapedia.",
-                url=item.url,
+        if item := self.current_choice:
+            embed = item.embed
+            view = View()
+            view.add_item(
+                Button(
+                    label="Click here to check more information at Bulbapedia.",
+                    url=item.url,
+                )
             )
-        )
-        await response.send_message(
-            embed=embed,
-            view=view,
-            ephemeral=True,
-        )
-
-    @property
-    def choice(self) -> Optional[Move]:
-        """Method Override
-
-        Returns
-        -------
-        set[Move]
-            Desired Moves
-        """
-        return super(MoveView, self).choice
+            await response.send_message(
+                embed=embed,
+                view=view,
+                ephemeral=True,
+            )

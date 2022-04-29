@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from random import choice
 from re import split
@@ -24,6 +23,7 @@ from typing import Any, Optional
 from discord import Embed
 from discord.utils import utcnow
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.structures.mon_typing import Typing
 from src.utils.functions import fix
@@ -214,13 +214,8 @@ class Move:
         """
         if data := cls.from_ID(item):
             return data
-        for elem in get_close_matches(
-            item,
-            possibilities=ALL_MOVES,
-            n=1,
-            cutoff=0.85,
-        ):
-            return ALL_MOVES[elem]
+        if data := process.extractOne(item, choices=cls.all(), processor=lambda x: getattr(x, "name", x)):
+            return data[0]
 
     @classmethod
     def deduce_many(
@@ -252,17 +247,13 @@ class Move:
             elif isinstance(elem, str):
                 aux.append(elem)
 
-        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
-            if data := ALL_MOVES.get(elem := fix(elem)):
-                items.add(data)
-            else:
-                for data in get_close_matches(
-                    word=elem,
-                    possibilities=ALL_MOVES,
-                    n=1,
-                    cutoff=0.85,
-                ):
-                    items.add(ALL_MOVES[data])
+        for elem in filter(bool, split(r"[^A-Za-z0-9 \.'-]", ",".join(aux))):
+            if item := ALL_MOVES.get(fix(elem)):
+                items.add(item)
+            elif data := process.extractOne(
+                elem, choices=cls.all(), processor=lambda x: getattr(x, "name", x), score_cutoff=85
+            ):
+                items.add(data[0])
 
         return frozenset(list(items)[:limit])
 

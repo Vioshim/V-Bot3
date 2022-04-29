@@ -5,7 +5,7 @@
 
 > A dynamic character submission system with the purpose to facilitate the creation of characters for role-playing purposes aimed at easing the process to all users despite limitations.
 
-|         File         |           Description           |
-|----------------------|---------------------------------|
-| `cog.py`             | Standard Cog Implementation     |
+| File                 | Description                     |
+| -------------------- | ------------------------------- |
 | `oc_modification.py` | Enumeration of OC Modifications |
+| `submission_view.py` | Submission related views        |

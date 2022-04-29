@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from collections import namedtuple
-from enum import Enum
 from datetime import timedelta, timezone
+from enum import Enum
 
 from discord import PartialEmoji
 

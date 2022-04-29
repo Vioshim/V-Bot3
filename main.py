@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from asyncio import run
-from contextlib import suppress
 from functools import wraps
 from logging import getLogger, setLoggerClass
 from os import getenv
@@ -27,18 +26,20 @@ from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 
-with suppress(ModuleNotFoundError):
-    from asyncio import set_event_loop_policy
-
-    from uvloop import EventLoopPolicy  # type: ignore
-
-    set_event_loop_policy(EventLoopPolicy())
-
 setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 
 load_dotenv()
+
+try:
+    from asyncio import set_event_loop_policy
+
+    from uvloop import EventLoopPolicy  # type: ignore
+
+    set_event_loop_policy(EventLoopPolicy())
+except ModuleNotFoundError:
+    logger.error("Not using uvloop")
 
 
 def wrap_session(func):

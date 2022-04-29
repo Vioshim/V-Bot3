@@ -17,11 +17,11 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from copy import copy
 from dataclasses import asdict, dataclass, field
-from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.structures.ability import Ability
 from src.structures.mon_typing import Typing
@@ -189,7 +189,7 @@ class Species(metaclass=ABCMeta):
         items: list[cls] = []
 
         if not item:
-            return frozenset()
+            return frozenset(items)
 
         if isinstance(item, str) or not isinstance(item, Iterable):
             item = [item]
@@ -200,45 +200,24 @@ class Species(metaclass=ABCMeta):
             elif isinstance(elem, cls):
                 items.append(elem)
 
-        entries = cls.all()
-        MOD1 = {i.id: i for i in entries} or ALL_SPECIES
-        MOD2 = {i.name: i for i in entries} or SPECIES_BY_NAME
+        entries = list(cls.all())
 
-        methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
-            (MOD1, fix),
-            (MOD2, lambda x: str(x).strip().title()),
-        ]
+        for word in filter(bool, [x.strip().title() for x in ",".join(aux).split(",")]):
+            for key, value in PHRASES.items():
+                phrase1, phrase2 = f"{value} ".title(), f"{key} ".title()
+                if word.startswith(phrase1) or word.startswith(phrase2):
+                    word = word.removeprefix(phrase1)
+                    word = word.removeprefix(phrase2)
+                    if key != "KANTO":
+                        word = f"{word} {key}".title()
+                    break
 
-        for word in ",".join(aux).split(","):
-
-            if not word:
-                continue
-
-            word = word.strip()
-
-            for elems, method in methods:
-
-                word = method(word)
-
-                for key, value in PHRASES.items():
-                    phrase1, phrase2 = method(f"{value} "), method(f"{key} ")
-                    if word.startswith(phrase1) or word.startswith(phrase2):
-                        word = word.removeprefix(phrase1)
-                        word = word.removeprefix(phrase2)
-                        if key != "KANTO":
-                            word = method(f"{word} {key}")
-                        break
-
-                if data := elems.get(word):
-                    items.append(data)
-                else:
-                    for data in get_close_matches(
-                        word=word,
-                        possibilities=elems,
-                        n=1,
-                        cutoff=0.85,
-                    ):
-                        items.append(elems[data])
+            if data := SPECIES_BY_NAME.get(word) or ALL_SPECIES.get(fix(word)):
+                items.append(data)
+            elif elements := process.extractOne(
+                word, choices=entries, processor=lambda x: getattr(x, "name", x), score_cutoff=60
+            ):
+                items.append(elements[0])
 
         return frozenset(items)
 
@@ -271,40 +250,24 @@ class Species(metaclass=ABCMeta):
             if isinstance(elem, cls):
                 return elem
 
-        entries = cls.all()
-        MOD1 = {i.id: i for i in entries} or ALL_SPECIES
-        MOD2 = {i.name: i for i in entries} or SPECIES_BY_NAME
+        entries = list(cls.all())
 
-        methods: list[tuple[dict[str, cls], Callable[[str], str]]] = [
-            (MOD1, fix),
-            (MOD2, lambda x: str(x).strip().title()),
-        ]
+        for word in filter(bool, [x.strip().title() for x in ",".join(aux).split(",")]):
+            for key, value in PHRASES.items():
+                phrase1, phrase2 = f"{value} ".title(), f"{key} ".title()
+                if word.startswith(phrase1) or word.startswith(phrase2):
+                    word = word.removeprefix(phrase1)
+                    word = word.removeprefix(phrase2)
+                    if key != "KANTO":
+                        word = f"{word} {key}".title()
+                    break
 
-        for word in filter(bool, ",".join(aux).split(", ")):
-
-            for elems, method in methods:
-
-                word = method(word)
-
-                for key, value in PHRASES.items():
-                    phrase1, phrase2 = method(f"{value} "), method(f"{key} ")
-                    if word.startswith(phrase1) or word.startswith(phrase2):
-                        word = word.removeprefix(phrase1)
-                        word = word.removeprefix(phrase2)
-                        if key != "KANTO":
-                            word = method(f"{word} {key}")
-                        break
-
-                if data := elems.get(word):
-                    return data
-
-                for data in get_close_matches(
-                    word=word,
-                    possibilities=elems,
-                    n=1,
-                    cutoff=0.85,
-                ):
-                    return elems[data]
+            if data := SPECIES_BY_NAME.get(word) or ALL_SPECIES.get(fix(word)):
+                return data
+            if elements := process.extractOne(
+                word, choices=entries, processor=lambda x: getattr(x, "name", x), score_cutoff=60
+            ):
+                return elements[0]
 
     @classmethod
     def any_deduce(cls, item: str):
@@ -619,7 +582,7 @@ class Variant(Species):
 
     def __init__(self, base: Species, name: str):
         super(Variant, self).__init__(
-            id=f"{base.id}+",
+            id=base.id,
             name=name.title(),
             shape=base.shape,
             height=base.height,
@@ -633,6 +596,12 @@ class Variant(Species):
             types=base.types,
             movepool=copy(base.movepool),
             abilities=copy(base.abilities),
+            base_image=base.base_image,
+            base_image_shiny=base.base_image_shiny,
+            female_image=base.female_image,
+            female_image_shiny=base.female_image_shiny,
+            evolves_from=base.evolves_from,
+            evolves_to=base.evolves_to,
         )
         self.base = base
 
@@ -681,7 +650,7 @@ class Variant(Species):
         """
         if not item:
             return
-        if (mon := Species.from_ID(item.removesuffix("+"))) and not isinstance(mon, Fusion):
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
 

@@ -5,7 +5,7 @@
 
 > A mechanism which allows users to ping for RP, obtain their characters, and be able to keep track of the pings that have been used and also adds roles to themselves.
 
-|     File     |              Description              |
-|--------------|---------------------------------------|
-| `cog.py`     | Standard Cog Implementation           |
-| `roles.py`   | Classes which handle the View Menus   |
+| File                | Description                         |
+| ------------------- | ----------------------------------- |
+| `area_selection.py` | Location-based views                |
+| `roles.py`          | Classes which handle the View Menus |

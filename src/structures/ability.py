@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
 from typing import Any, Optional
@@ -25,6 +24,7 @@ from asyncpg import Connection, Record
 from discord import Embed, Interaction, InteractionResponse, TextStyle
 from discord.ui import Modal, TextInput
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.utils.functions import fix
 
@@ -116,18 +116,11 @@ class Ability:
             elif isinstance(elem, Ability):
                 items.add(elem)
 
-        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
-            if data := ALL_ABILITIES.get(elem := fix(elem)):
+        for elem in filter(bool, split(r"[^A-Za-z0-9 \.'-]", ",".join(aux))):
+            if data := ALL_ABILITIES.get(fix(elem)):
                 items.add(data)
-            else:
-                for data in get_close_matches(
-                    word=elem,
-                    possibilities=ALL_ABILITIES,
-                    n=1,
-                    cutoff=0.85,
-                ):
-                    items.add(ALL_ABILITIES[data])
-
+            elif data := process.extractOne(elem, choices=cls.all(), processor=lambda x: getattr(x, "name", x)):
+                items.add(data[0])
         return frozenset(list(items)[:limit_range])
 
     @classmethod
@@ -148,15 +141,10 @@ class Ability:
         if isinstance(item, Ability):
             return item
         if isinstance(item, str):
-            if data := ALL_ABILITIES.get(item := fix(item)):
+            if data := ALL_ABILITIES.get(fix(item)):
                 return data
-            for elem in get_close_matches(
-                item,
-                possibilities=ALL_ABILITIES,
-                n=1,
-                cutoff=0.85,
-            ):
-                return ALL_ABILITIES[elem]
+            if data := process.extractOne(item, choices=cls.all(), processor=lambda x: getattr(x, "name", x)):
+                return data[0]
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Ability]:
@@ -191,6 +179,13 @@ class SpAbility:
 
     def __repr__(self) -> str:
         return f"SPAbility(name={self.name})"
+
+    def clear(self):
+        self.name = ""
+        self.description = ""
+        self.origin = ""
+        self.pros = ""
+        self.cons = ""
 
     @property
     def embed(self) -> Embed:
@@ -279,7 +274,7 @@ class SpAbility:
         str
             Result of the query
         """
-        if not self:
+        if not self or self == SpAbility():
             return await connection.execute(
                 """--sql
                 DELETE FROM SPECIAL_ABILITIES

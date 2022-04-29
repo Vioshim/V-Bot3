@@ -111,7 +111,7 @@ class PingView(View):
             self.stop()
 
 
-class CharactersView(Complex):
+class CharactersView(Complex[Character]):
     def __init__(
         self,
         member: Member,
@@ -141,33 +141,21 @@ class CharactersView(Complex):
         sct: Select,
     ) -> None:
         response: InteractionResponse = interaction.response
-        item: Character = self.current_choice
-        embed = item.embed
-        guild: Guild = self.member.guild
-        if author := guild.get_member(item.author):
-            embed.set_author(
-                name=author.display_name,
-                icon_url=author.display_avatar.url,
+        if item := self.current_choice:
+            embed = item.embed
+            guild: Guild = self.member.guild
+            if author := guild.get_member(item.author):
+                embed.set_author(
+                    name=author.display_name,
+                    icon_url=author.display_avatar.url,
+                )
+            view = PingView(
+                oc=item,
+                deleter=interaction.user.id == item.author,
             )
-        view = PingView(
-            oc=item,
-            deleter=interaction.user.id == item.author,
-        )
-        await response.send_message(
-            embed=embed,
-            view=view,
-            ephemeral=True,
-        )
-        await super(CharactersView, self).select_choice(interaction, sct)
-
-    @property
-    def choice(self) -> Optional[Character]:
-        """Method Override
-
-        Returns
-        -------
-        set[Move]
-            Desired Moves
-        """
-        if value := super(CharactersView, self).choice:
-            return value
+            await response.send_message(
+                embed=embed,
+                view=view,
+                ephemeral=True,
+            )
+            await super(CharactersView, self).select_choice(interaction, sct)

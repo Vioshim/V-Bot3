@@ -506,7 +506,7 @@ class RPSearchManage(View):
     def __init__(
         self,
         member: Member,
-        ocs: set[Character] = None,
+        ocs: set[Character | int] = None,
     ):
         super(RPSearchManage, self).__init__(timeout=None)
         self.member = member
@@ -521,7 +521,7 @@ class RPSearchManage(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
         cog = ctx.client.get_cog("Submission")
-        if not (ocs := self.ocs):
+        if not (ocs := [x for oc in self.ocs if (x := oc if isinstance(oc, Character) else cog.ocs.get(oc))]):
             ocs = [oc for oc in cog.ocs.values() if oc.author == self.member.id]
         view = CharactersView(
             member=ctx.user,
@@ -631,18 +631,27 @@ class RPModal(Modal):
             wait=True,
         )
         await thread.add_user(self.user)
-        cog = interaction.client.get_cog("Roles")
-        cog.cool_down[reference.id] = utcnow()
-        cog.role_cool_down[reference.id] = utcnow()
-        cog.last_claimer[reference.id] = member.id
+        cog0 = interaction.client.get_cog("Submission")
+        cog1 = interaction.client.get_cog("Roles")
+        cog1.cool_down[reference.id] = utcnow()
+        cog1.role_cool_down[reference.id] = utcnow()
+        cog1.last_claimer[reference.id] = member.id
+        ocs = [oc for oc in cog0.ocs.values() if oc.author == member.id]
+        ocs = [] if len(ocs) == self.ocs else [oc.id for oc in self.ocs]
         async with interaction.client.database() as db:
             await db.execute(
-                "INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE) VALUES ($1, $2, $3, $4, $5)",
+                """
+                INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE, OCS) 
+                VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (ROLE) DO UPDATE
+                    SET ID = $1, MEMBER = $2, SERVER = $4, MESSAGE = $5, OCS = $6
+                """,
                 msg1.id,
                 member.id,
                 self.role.id,
                 member.guild.id,
                 msg2.id,
+                ocs,
             )
             await resp.send_message(
                 content="Ping has been done successfully.",

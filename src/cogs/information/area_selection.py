@@ -17,7 +17,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    PermissionOverwrite,
     SelectOption,
     TextChannel,
     User,
@@ -28,13 +27,11 @@ from discord.utils import utcnow
 from src.cogs.submission.cog import Submission
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import MAP_BUTTONS
+from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2
 from src.views.characters_view import CharactersView
 
 
 class AreaSelection(View):
-
-    # noinspection PyTypeChecker
     def __init__(self, bot: CustomBot, cat: CategoryChannel, member: Member):
         super(AreaSelection, self).__init__(timeout=None)
         self.bot = bot
@@ -56,8 +53,9 @@ class AreaSelection(View):
                 row=1,
             )
             self.add_item(btn)
-        perms = cat.overwrites.get(member, PermissionOverwrite())
-        if perms.read_messages:
+        info = MAP_ELEMENTS2[self.cat.id]
+        self.role = guild.get_role(info.role)
+        if self.role in member.roles:
             self.read_one.label = "Toggle OFF"
             self.read_one.style = ButtonStyle.red
         else:
@@ -83,7 +81,6 @@ class AreaSelection(View):
             if not item.is_news()
         ]
 
-    # noinspection PyTypeChecker
     @select(placeholder="Select a location to check", row=0)
     async def selection(self, _: Select, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -109,49 +106,41 @@ class AreaSelection(View):
             embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
             await resp.send_message(embed=embed, view=view, ephemeral=True)
 
-    # noinspection PyTypeChecker
     @button(label="Toggle view ON/OFF", row=1)
     async def read_one(self, btn: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        permissions = self.cat.overwrites
-        perms = permissions.get(ctx.user, PermissionOverwrite())
-        perms.read_messages = btn.label == "Toggle ON"
-        await self.cat.set_permissions(target=ctx.user, overwrite=perms)
+        if btn.label == "Toggle ON":
+            await ctx.user.add_roles(self.role)
+        elif self.role in ctx.user.roles:
+            await ctx.user.remove_roles(self.role)
         await ctx.followup.send("Permissions have been changed.", ephemeral=True)
 
-    # noinspection PyTypeChecker
     @button(label="Enable all", row=1)
     async def read_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        for item in MAP_BUTTONS:
-            if isinstance(member := ctx.user, User):
-                guild = member.mutual_guilds[0]
-            else:
-                guild = member.guild
-            category: CategoryChannel = guild.get_channel(int(item.value))
-            permissions = category.overwrites
-            perms = permissions.get(ctx.user, PermissionOverwrite())
-            if not perms.read_messages:
-                perms.read_messages = True
-                await category.set_permissions(member, overwrite=perms, reason="Region Selection")
+        if isinstance(member := ctx.user, User):
+            guild = member.mutual_guilds[0]
+        else:
+            guild = member.guild
+        role = guild.get_role(957069729741287434)
+        await member.add_roles(role)
+        if roles := {role for item in MAP_ELEMENTS if (role := guild.get_role(item.role)) and role in member.roles}:
+            await member.remove_roles(*roles, reason="Spectator")
         await ctx.followup.send("Now you can see all the areas", ephemeral=True)
 
-    # noinspection PyTypeChecker
     @button(label="Disable all", row=1)
     async def disable_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True)
-        for item in MAP_BUTTONS:
-            if isinstance(member := ctx.user, User):
-                guild = member.mutual_guilds[0]
-            else:
-                guild = member.guild
-            category: CategoryChannel = guild.get_channel(int(item.value))
-            permissions = category.overwrites
-            perms = permissions.get(member, PermissionOverwrite())
-            if perms.read_messages is not False:
-                perms.read_messages = False
-                await category.set_permissions(member, overwrite=perms, reason="Region Selection")
+        if isinstance(member := ctx.user, User):
+            guild = member.mutual_guilds[0]
+        else:
+            guild = member.guild
+        role = guild.get_role(957069729741287434)
+        if role in member.roles:
+            await member.remove_roles(role)
+        if roles := {role for item in MAP_ELEMENTS if (role := guild.get_role(item.role)) and role in member.roles}:
+            await member.remove_roles(*roles)
         await ctx.followup.send("Now you can't see all the areas", ephemeral=True)

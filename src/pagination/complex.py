@@ -19,7 +19,7 @@ from difflib import get_close_matches
 from inspect import isfunction
 from logging import getLogger, setLoggerClass
 from types import TracebackType
-from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Optional, Sized, TypeVar, Union
 
 from discord import (
     AllowedMentions,
@@ -42,14 +42,12 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.simple import Simple
 from src.structures.logger import ColoredLogger
-from src.utils.functions import embed_modifier
 
 setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 
 _T = TypeVar("_T", bound=Sized)
-_M = TypeVar("_M", bound=Messageable)
 
 __all__ = ("Complex",)
 
@@ -81,13 +79,13 @@ class DefaultModal(Modal):
         self.stop()
 
 
-class Complex(Simple):
+class Complex(Generic[_T], Simple[_T]):
     def __init__(
         self,
         *,
         member: Union[Member, User],
         values: Iterable[_T],
-        target: _M = None,
+        target: Optional[Messageable] = None,
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         max_values: int = 1,
@@ -139,7 +137,11 @@ class Complex(Simple):
         await self.delete()
 
     @property
-    def choices(self):
+    def values(self) -> list[_T]:
+        return self._values
+
+    @property
+    def choices(self) -> set[_T]:
         return self._choices
 
     @choices.setter
@@ -153,7 +155,7 @@ class Complex(Simple):
         self.menu_format()
 
     @property
-    def current_chunk(self):
+    def current_chunk(self) -> list[_T]:
         amount = self.entries_per_page * self._pos
         return self.values[amount : amount + self.entries_per_page]
 
@@ -165,7 +167,7 @@ class Complex(Simple):
         return getattr(item, "emoji", "\N{DIAMOND SHAPE WITH A DOT INSIDE}")
 
     @property
-    def choice(self):
+    def choice(self) -> Optional[_T]:
         return next(iter(self.choices), None)
 
     @property
@@ -313,7 +315,7 @@ class Complex(Simple):
         content: str = None,
         *,
         tts: bool = False,
-        embed: Embed = None,
+        embed: Optional[Embed] = None,
         embeds: list[Embed] = None,
         file: File = None,
         files: list[File] = None,
@@ -374,14 +376,10 @@ class Complex(Simple):
             If the message is gonna be edited, defaults to False
         """
         try:
-            self.menu_format()
-            if not embeds:
-                embed = embed or self.embed
-                self.embed = embed_modifier(embed, **kwargs)
-                embeds = [self.embed]
             await super(Complex, self).send(
                 content=content,
                 tts=tts,
+                embed=embed,
                 embeds=embeds,
                 file=file,
                 files=files,
@@ -396,21 +394,24 @@ class Complex(Simple):
                 ephemeral=ephemeral,
                 thread=thread,
                 editing_original=editing_original,
+                **kwargs,
             )
             await self.wait()
-            yield self.choice if single else self.choices
+            if single:
+                yield self.choice
+            else:
+                yield self.choices
         finally:
             await self.delete()
 
     @property
-    def current_choices(self):
+    def current_choices(self) -> set[_T]:
         sct = self.select_choice
-        amount = self.entries_per_page * self._pos
-        chunk = self.values[amount : amount + self.entries_per_page]
+        chunk = self.current_chunk
         return {chunk[int(index)] for index in sct.values}
 
     @property
-    def current_choice(self):
+    def current_choice(self) -> Optional[_T]:
         return next(iter(self.current_choices), None)
 
     @select(

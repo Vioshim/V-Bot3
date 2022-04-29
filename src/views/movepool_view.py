@@ -24,8 +24,9 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
-from src.structures.character import Character, FakemonCharacter, VariantCharacter
+from src.structures.character import Character
 from src.structures.movepool import Movepool
+from src.structures.species import Fakemon, Variant
 from src.utils.functions import yaml_handler
 from src.views.move_view import MoveView
 
@@ -86,7 +87,7 @@ class MovepoolModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
-        if not isinstance(self.oc, (VariantCharacter, FakemonCharacter)):
+        if not isinstance(self.oc.species, (Fakemon, Variant)):
             await resp.send_message(
                 "Movepool can't be changed for the Species.",
                 ephemeral=True,
@@ -146,7 +147,7 @@ def movepool_parser(movepool: Movepool):
     return inner
 
 
-class MovepoolViewSelector(Complex):
+class MovepoolViewSelector(Complex[str]):
     def __init__(
         self,
         *,
@@ -178,14 +179,9 @@ class MovepoolViewSelector(Complex):
         sct: Select,
     ) -> None:
         view = MoveView(
-            bot=interaction.client,
             member=interaction.user,
             target=interaction,
             moves=self.movepool[self.current_choice],
         )
-        await interaction.response.send_message(
-            embed=view.embed,
-            view=view,
-            ephemeral=True,
-        )
-        await super(MovepoolViewSelector, self).select_choice(interaction, sct)
+        async with view.send(ephemeral=True):
+            await super(MovepoolViewSelector, self).select_choice(interaction, sct)

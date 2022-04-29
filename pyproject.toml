@@ -37,6 +37,7 @@ humanize = "^4.0.0"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git", extras = ["voice"]}
 orjson = "^3.6.7"
 rapidfuzz = "^2.0.10"
+asyncpg-stubs = {git = "https://github.com/bryanforbes/asyncpg-stubs"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

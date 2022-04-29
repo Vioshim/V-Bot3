@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, astuple, dataclass
 from enum import Enum
-from typing import Optional, TypeVar
+from typing import Optional
 
 from discord import Interaction, InteractionResponse, Member, TextStyle
 from discord.abc import Messageable
@@ -25,8 +25,6 @@ from yaml import safe_load
 
 from src.pagination.complex import Complex, DefaultModal
 from src.utils.functions import yaml_handler
-
-_M = TypeVar("_M", bound=Messageable)
 
 
 @dataclass(unsafe_hash=True)
@@ -134,17 +132,18 @@ class StatsModal(DefaultModal):
             pass
 
 
-class StatsView(Complex):
+class StatsView(Complex[StatItem]):
     def __init__(
         self,
         member: Member,
-        target: _M,
+        target: Optional[Messageable] = None,
     ):
         super(StatsView, self).__init__(
             member=member,
             target=target,
             values=Stats,
             timeout=None,
+            parser=lambda x: (str(x), repr(x)),
         )
         self.embed.title = "Select the Set of Stats"
         self.embed.description = (
@@ -156,14 +155,3 @@ class StatsView(Complex):
             "> **4** - High\n"
             "> **5** - Very High"
         )
-
-    @property
-    def choice(self) -> Optional[Stats]:
-        """Override Method
-
-        Returns
-        -------
-        Optional[Stats]
-            Desired stats
-        """
-        return super(StatsView, self).choice

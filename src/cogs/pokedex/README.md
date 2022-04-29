@@ -5,6 +5,6 @@
 
 > Implementation of commands that allow to obtain information given search parameters.
 
-|   File   |        Description          |
-|----------|-----------------------------|
-| `cog.py` | Standard Cog Implementation |
+| File        | Description                     |
+| ----------- | ------------------------------- |
+| `search.py` | Transformer and groupby classes |

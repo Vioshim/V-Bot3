@@ -77,16 +77,16 @@ class ImageView(Basic):
         self.default_image.disabled = not default_img
 
     @asynccontextmanager
-    async def send(self):
+    async def send(self, **kwargs):
         file: Optional[file] = None
         if isinstance(self.text, File):
             file = self.text
         try:
-            await super(ImageView, self).send(file=file)
+            await super(ImageView, self).send(file=file, **kwargs)
         except HTTPException:
             self.embed.set_image(url=None)
             self.default_image.disabled = True
-            await super(ImageView, self).send(file=file)
+            await super(ImageView, self).send(file=file, **kwargs)
         except Exception as e:
             logger.exception(
                 "Exception occurred, target: %s, user: %s",
@@ -95,7 +95,8 @@ class ImageView(Basic):
                 exc_info=e,
             )
         finally:
-            self.text = self.message.embeds[0].image.url
+            if self.message:
+                self.text = self.message.embeds[0].image.url
             await self.wait()
             await self.delete()
             yield self.text

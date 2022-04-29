@@ -16,8 +16,8 @@ from contextlib import asynccontextmanager
 from io import BytesIO
 from logging import Logger
 from os import getenv
-from pathlib import Path
-from typing import Literal, Optional, Union
+from pathlib import Path, PurePath
+from typing import Literal, Optional
 
 from aiohttp import ClientSession
 from apscheduler.schedulers.async_ import AsyncScheduler
@@ -28,14 +28,14 @@ from discord import (
     DiscordException,
     Embed,
     File,
+    HTTPException,
     Intents,
     Message,
+    NotFound,
     PartialMessage,
     TextChannel,
     Thread,
     Webhook,
-    HTTPException,
-    NotFound,
 )
 from discord.abc import Messageable
 from discord.ext.commands import Bot
@@ -105,11 +105,10 @@ class CustomBot(Bot):
     async def setup_hook(self) -> None:
         await self.load_extension("jishaku")
         path = Path("src/cogs")
-        path.resolve()
-        for cog in path.glob("*/cog.py"):
-            item = str(cog).removesuffix(".py").replace("\\", ".").replace("/", ".")
-            await self.load_extension(item)
-            self.logger.info("Successfully loaded %s", item)
+        for cog in map(PurePath, path.glob("*/__init__.py")):
+            route = ".".join(cog.parts[:-1])
+            await self.load_extension(route)
+            self.logger.info("Successfully loaded %s", route)
 
     async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
         """|coro|
@@ -174,12 +173,12 @@ class CustomBot(Bot):
                     return
         await self.process_commands(message)
 
-    def msg_cache_add(self, message: Union[Message, PartialMessage, int], /):
+    def msg_cache_add(self, message: Message | PartialMessage | int, /):
         """Method to add a message to the message cache
 
         Parameters
         ----------
-        message : Union[Message, PartialMessage, int]
+        message : Message | PartialMessage | int
             Message to ignore in the logs
         """
         if isinstance(message, int):
@@ -359,7 +358,7 @@ class CustomBot(Bot):
 
     async def webhook(
         self,
-        channel: Union[Messageable, int],
+        channel: Messageable | int,
         *,
         reason: str = None,
     ) -> Webhook:
@@ -368,7 +367,7 @@ class CustomBot(Bot):
 
         Parameters
         ----------
-        channel : Union[Thread, TextChannel, int]
+        channel : Messageable | int
             Channel or its ID
         reason : str, optional
             Webhook creation reason, by default None

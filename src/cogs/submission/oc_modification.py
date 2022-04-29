@@ -19,7 +19,7 @@ from itertools import combinations
 from logging import getLogger, setLoggerClass
 from random import choice as random_choice
 from random import sample
-from typing import Iterable, Optional, Type, Union
+from typing import Iterable, Optional, Type
 
 from discord import (
     ButtonStyle,
@@ -42,11 +42,12 @@ from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability, SPAbilityModal
-from src.structures.character import Character, FakemonCharacter, VariantCharacter
+from src.structures.character import Character
 from src.structures.logger import ColoredLogger
+from src.structures.mon_typing import Typing
 from src.structures.move import ALL_MOVES
 from src.structures.pronouns import Pronoun
-from src.structures.species import Fusion, Species
+from src.structures.species import Fakemon, Fusion, Species, Variant
 from src.utils.functions import int_check
 from src.views import ImageView, MovepoolView
 
@@ -65,7 +66,7 @@ class SPView(Basic):
     def __init__(
         self,
         oc: Type[Character],
-        member: Union[Member, User],
+        member: User | Member,
         target: Interaction,
     ):
         super(SPView, self).__init__(
@@ -160,8 +161,9 @@ class Mod(metaclass=ABCMeta):
     label: str = ""
     description: str = ""
 
+    @classmethod
     @abstractmethod
-    def check(self, oc: Type[Character]) -> bool:
+    def check(cls, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
@@ -175,11 +177,12 @@ class Mod(metaclass=ABCMeta):
             If it can be used or not
         """
 
+    @classmethod
     @abstractmethod
     async def method(
-        self,
+        cls,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """
@@ -207,14 +210,16 @@ class NameMod(Mod):
     label: str = "Name"
     description: str = "Modify the OC's Name"
 
-    def check(self, oc: Type[Character]) -> bool:
+    @classmethod
+    def check(cls, oc: Type[Character]) -> bool:
         """Determines whetere it can be used or not by a character
 
         Parameters
         ----------
         oc : Type[Character]
             Character
-
+        member : Member | User
+            User
         Returns
         -------
         bool
@@ -222,10 +227,11 @@ class NameMod(Mod):
         """
         return True
 
+    @classmethod
     async def method(
-        self,
+        cls,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -281,7 +287,7 @@ class AgeMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -338,7 +344,7 @@ class PronounMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -409,7 +415,7 @@ class BackstoryMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -466,7 +472,7 @@ class ExtraMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -523,7 +529,7 @@ class MovesetMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -593,7 +599,7 @@ class AbilitiesMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -664,7 +670,7 @@ class ImageMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -685,13 +691,14 @@ class ImageMod(Mod):
         """
         async with ImageView(
             member=member,
-            default_img=oc.image,
+            default_img=oc.image_url,
             target=target,
-        ).send() as text:
+        ).send(editing_original=True) as text:
             if text and isinstance(text, str):
-                aux = oc.image != text
+                if oc.image_url == text:
+                    return False
                 oc.image = text
-                return aux
+                return True
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -713,17 +720,17 @@ class MovepoolMod(Mod):
             If it can be used or not
         """
         return isinstance(
-            oc,
+            oc.species,
             (
-                FakemonCharacter,
-                VariantCharacter,
+                Fakemon,
+                Variant,
             ),
         )
 
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -771,7 +778,7 @@ class EvolutionMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -813,6 +820,7 @@ class EvolutionMod(Mod):
                 return
 
             oc.species = species
+
         if not oc.types and isinstance(species, Fusion):
             possible_types = species.possible_types
             view2 = Complex(
@@ -840,9 +848,37 @@ class EvolutionMod(Mod):
                 species.types = types
 
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
-
-        abilities: Iterable[Ability] = species.abilities or ALL_ABILITIES.values()
-        default = ", ".join(x.name for x in sample(abilities, k=oc.max_amount_abilities))
+        if isinstance(species := oc.species, Variant):
+            view = Complex(
+                member=member,
+                target=target,
+                values=Typing.all(),
+                max_values=2,
+                timeout=None,
+                parser=lambda x: (
+                    str(x),
+                    f"Adds the typing {x}",
+                ),
+                text_component=TextInput(
+                    label="Character's Types",
+                    placeholder="Type, Type",
+                    required=True,
+                    default=", ".join(x.name for x in species.types),
+                ),
+            )
+            async with view.send(
+                title="Select Typing",
+                description="Press the skip button in case you're going for single type.",
+            ) as types:
+                if not types:
+                    return
+                species.types = frozenset(types)
+                species.movepool = species.base.movepool.copy()
+            abilities: Iterable[Ability] = ALL_ABILITIES.values()
+            default = ", ".join(x.name for x in species.abilities)
+        else:
+            abilities: Iterable[Ability] = species.abilities or ALL_ABILITIES.values()
+            default = ", ".join(x.name for x in sample(abilities, k=oc.max_amount_abilities))
         view3 = Complex(
             member=member,
             values=abilities,
@@ -861,14 +897,14 @@ class EvolutionMod(Mod):
             if isinstance(abilities, set):
                 oc.abilities = frozenset(abilities)
 
-        default_image: str = oc.default_image or oc.image
+        default_image: str = oc.default_image
 
         view4 = ImageView(
             member=member,
             default_img=default_image,
             target=target,
         )
-        async with view4.send() as image:
+        async with view4.send(editing_original=True) as image:
             if isinstance(image, str):
                 oc.image = image
             return True
@@ -899,7 +935,7 @@ class DevolutionMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -975,18 +1011,21 @@ class DevolutionMod(Mod):
                     return
                 species.types = types
 
-        oc.species = species
+        if isinstance(oc.species, Variant):
+            oc.species = Variant(base=species, name=species.name)
+        else:
+            oc.species = species
 
         oc.moveset &= set(species.total_movepool()) & set(current.total_movepool())
 
-        default_image = oc.default_image or oc.image
+        default_image = oc.default_image
 
         view = ImageView(
             member=member,
             default_img=default_image,
             target=target,
         )
-        async with view.send() as image:
+        async with view.send(editing_original=True) as image:
             if image and isinstance(image, str):
                 oc.image = image
             return True
@@ -1017,7 +1056,7 @@ class FusionMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -1088,14 +1127,14 @@ class FusionMod(Mod):
 
         oc.species = species
 
-        default_image: str = oc.default_image or oc.image
+        default_image: str = oc.default_image
 
         view = ImageView(
             member=member,
             default_img=default_image,
             target=target,
         )
-        async with view.send() as image:
+        async with view.send(editing_original=True) as image:
             if image and isinstance(image, str):
                 oc.image = image
             return True
@@ -1124,7 +1163,7 @@ class SpAbilityMod(Mod):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Method
@@ -1181,7 +1220,7 @@ class Modification(Enum):
     async def method(
         self,
         oc: Type[Character],
-        member: Union[User, Member],
+        member: User | Member,
         target: Interaction,
     ) -> Optional[bool]:
         """Modifications for the given context
@@ -1297,7 +1336,7 @@ class ModifyView(View):
             await cog.registration(ctx=ctx, oc=self.oc, worker=ctx.user)
         finally:
             if msg:
-                self.oc.image = msg.embeds[0].image.url
+                self.oc.image_url = msg.embeds[0].image.url
                 async with ctx.client.database() as db:
                     await self.oc.update(db)
             await ctx.edit_original_message(view=None, embed=self.oc.embed)
@@ -1333,7 +1372,7 @@ class ModifyView(View):
                     "Character Removed as message was removed! > %s - %s > %s",
                     self.oc.name,
                     repr(self.oc),
-                    self.oc.url or "None",
+                    self.oc.document_url or "None",
                 )
                 await self.oc.delete(db)
         finally:
