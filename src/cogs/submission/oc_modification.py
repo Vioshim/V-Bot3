@@ -378,7 +378,6 @@ class PronounMod(Mod):
                 max_length=4,
             ),
         )
-        view.menu_format()
         aux: Optional[bool] = None
         origin = await target.original_message()
         view.embed.title = "Write the character's Pronoun. Current below"

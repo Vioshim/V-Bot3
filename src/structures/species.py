@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass, field
 from json import JSONDecoder, JSONEncoder, load
 from typing import Any, Iterable, Optional
 
+from asyncpg import Record
 from frozendict import frozendict
 from rapidfuzz import process
 
@@ -93,16 +94,16 @@ class Species(metaclass=ABCMeta):
     def __post_init__(self):
         self.evolves_to = frozenset(self.evolves_to)
 
-        if any(not isinstance(x, Ability) for x in self.abilities):
-            self.abilities = Ability.deduce_many(*self.abilities)
-        self.abilities = frozenset(self.abilities)
+        if isinstance(self.abilities, str):
+            self.abilities = [self.abilities]
+        self.abilities = Ability.deduce_many(*self.abilities)
 
         if isinstance(self.movepool, dict):
             self.movepool = Movepool.from_dict(**self.movepool)
 
-        if any(not isinstance(x, Typing) for x in self.types):
-            self.types = Typing.deduce_many(*self.types)
-        self.types = frozenset(self.types)
+        if isinstance(self.types, str):
+            self.types = [self.types]
+        self.types = Typing.deduce_many(*self.types)
 
     def __eq__(self, other: Species):
         if isinstance(other, Species):
@@ -215,7 +216,10 @@ class Species(metaclass=ABCMeta):
             if data := SPECIES_BY_NAME.get(word) or ALL_SPECIES.get(fix(word)):
                 items.append(data)
             elif elements := process.extractOne(
-                word, choices=entries, processor=lambda x: getattr(x, "name", x), score_cutoff=60
+                word,
+                choices=entries,
+                processor=lambda x: getattr(x, "name", x),
+                score_cutoff=85,
             ):
                 items.append(elements[0])
 
@@ -265,7 +269,10 @@ class Species(metaclass=ABCMeta):
             if data := SPECIES_BY_NAME.get(word) or ALL_SPECIES.get(fix(word)):
                 return data
             if elements := process.extractOne(
-                word, choices=entries, processor=lambda x: getattr(x, "name", x), score_cutoff=60
+                word,
+                choices=entries,
+                processor=lambda x: getattr(x, "name", x),
+                score_cutoff=85,
             ):
                 return elements[0]
 
@@ -411,56 +418,11 @@ class Fakemon(Species):
     This class Represents a fakemon
     """
 
-    HP: int = 3
-    ATK: int = 3
-    DEF: int = 3
-    SPA: int = 3
-    SPD: int = 3
-    SPE: int = 3
-
-    def __post_init__(self):
-        stats = self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
-        self.evolves_to = frozenset(self.evolves_to)
-
-        if any(not isinstance(x, Ability) for x in self.abilities):
-            self.abilities = Ability.deduce_many(*self.abilities)
-        self.abilities = frozenset(self.abilities)
-
-        if isinstance(self.movepool, dict):
-            self.movepool = Movepool.from_dict(**self.movepool)
-
-        if any(not isinstance(x, Typing) for x in self.types):
-            self.types = Typing.deduce_many(*self.types)
-        self.types = frozenset(self.types)
-
-        if sum(stats) > 18:
-            raise ValueError("Stats are very high, total max is 18")
-        if min(stats) < 1:
-            raise ValueError("Minimum stat value is 1")
-        if max(stats) > 5:
-            raise ValueError("Maximum stat value is 5")
-
-    def set_stats(
-        self,
-        HP: int = 3,
-        ATK: int = 3,
-        DEF: int = 3,
-        SPA: int = 3,
-        SPD: int = 3,
-        SPE: int = 3,
-    ):
-        stats = HP, ATK, DEF, SPA, SPD, SPE
-        if sum(stats) > 18:
-            raise ValueError("Stats are very high, total max is 18")
-        if min(stats) < 1:
-            raise ValueError("Minimum stat value is 1")
-        if max(stats) > 5:
-            raise ValueError("Maximum stat value is 5")
-        self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE = stats
-
-    @property
-    def stats(self):
-        return self.HP, self.ATK, self.DEF, self.SPA, self.SPD, self.SPE
+    @classmethod
+    def from_record(cls, record: Record):
+        if not record:
+            return
+        return Fakemon(id=record["id"], name=record["name"], evolves_from=record["evolves_from"])
 
     @property
     def requires_image(self) -> bool:
@@ -604,6 +566,17 @@ class Variant(Species):
             evolves_to=base.evolves_to,
         )
         self.base = base
+
+    @classmethod
+    def from_record(cls, record: Record):
+        if not record:
+            return
+        species = Species.from_ID(record["species"])
+        species = Variant(base=species, name=record["name"])
+        movepool_data = record["movepool"]
+        if movepool := Movepool.from_dict(**movepool_data):
+            species.movepool = movepool
+        return species
 
     @property
     def requires_image(self) -> bool:

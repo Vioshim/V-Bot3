@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
 from datetime import datetime
 from difflib import get_close_matches
 from logging import getLogger, setLoggerClass
@@ -20,9 +21,11 @@ from typing import Iterable, Optional
 
 from discord import (
     AllowedMentions,
+    ButtonStyle,
     CategoryChannel,
     Color,
     Embed,
+    File,
     Guild,
     Interaction,
     InteractionResponse,
@@ -31,7 +34,6 @@ from discord import (
     SelectOption,
     TextStyle,
     Webhook,
-    WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import get, utcnow
@@ -39,7 +41,8 @@ from discord.utils import get, utcnow
 from src.cogs.roles.area_selection import AreaSelection
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR, MapPair
+from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR, MapPair
+from src.utils.imagekit import Fonts, ImageKit
 from src.views.characters_view import CharactersView
 
 setLoggerClass(ColoredLogger)
@@ -120,7 +123,7 @@ class RoleSelect(View, metaclass=ABCMeta):
         roles = set(get_role(sct.values))
         total = set(get_role(sct.options))
 
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
 
         embed = Embed(
             title=sct.placeholder.removeprefix("Select "),
@@ -425,7 +428,7 @@ class RegionRoles(RoleSelect):
     )
     async def choice(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         all_roles = {role for x in MAP_ELEMENTS if (role := ctx.guild.get_role(x.role))}
         spectator: Role = ctx.guild.get_role(957069729741287434)
         if len(sct.values) == 1:
@@ -476,7 +479,7 @@ class RegionRoles(RoleSelect):
     @button(label="Obtain all Map Roles", custom_id="region-all", row=1)
     async def region_all(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         spectator = ctx.guild.get_role(957069729741287434)
         if roles := [
             role for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS) if role in ctx.user.roles
@@ -491,7 +494,7 @@ class RegionRoles(RoleSelect):
     @button(label="Remove all Map Roles", custom_id="region-none", row=1)
     async def region_none(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         spectator = ctx.guild.get_role(957069729741287434)
         if roles := [
             role for role in map(lambda x: ctx.guild.get_role(x.role), MAP_ELEMENTS) if role in ctx.user.roles
@@ -505,24 +508,28 @@ class RegionRoles(RoleSelect):
 class RPSearchManage(View):
     def __init__(
         self,
-        member: Member,
-        ocs: set[Character | int] = None,
+        member_id: int | Member,
+        ocs: set[int | Character] = None,
     ):
         super(RPSearchManage, self).__init__(timeout=None)
-        self.member = member
+        if not isinstance(member_id, int):
+            member_id = member_id.id
+        self.member_id = member_id
         self.ocs = ocs
 
     @button(
-        label="Click to Read User's OCs.".center(80, "\u2008"),
+        label="Click to Read User's OCs.",
         row=1,
         custom_id="check_ocs",
+        style=ButtonStyle.blurple,
+        emoji=SETTING_EMOJI,
     )
     async def check_ocs(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         cog = ctx.client.get_cog("Submission")
-        if not (ocs := [x for oc in self.ocs if (x := oc if isinstance(oc, Character) else cog.ocs.get(oc))]):
-            ocs = [oc for oc in cog.ocs.values() if oc.author == self.member.id]
+        if not self.ocs or not (ocs := [x for item in self.ocs if isinstance(x := cog.ocs.get(item, item), Character)]):
+            ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == self.member_id]
         view = CharactersView(
             member=ctx.user,
             target=ctx,
@@ -530,16 +537,19 @@ class RPSearchManage(View):
             keep_working=True,
         )
         embed = view.embed
-        embed.set_author(
-            name=self.member.display_name,
-            icon_url=self.member.display_avatar.url,
-        )
+        if member := ctx.guild.get_member(self.member_id) or ctx.client.get_user(self.member_id):
+            embed.set_author(
+                name=member.display_name,
+                icon_url=member.display_avatar.url,
+            )
+        else:
+            member = f"User(ID={self.member_id})"
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
                 logger.info(
                     "User %s is currently reading %s's character %s [%s]",
                     str(ctx.user),
-                    str(self.member),
+                    str(member),
                     data.name,
                     repr(data),
                 )
@@ -579,6 +589,8 @@ class RPModal(Modal):
         self.add_item(self.message)
 
     async def on_submit(self, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
         info = {x.name.title(): x for x in self.ocs}
         data = self.names.value or ""
         items: list[Character] = []
@@ -587,9 +599,8 @@ class RPModal(Modal):
             item = item.split("|")[-1].strip()
             if oc := info.get(item):
                 items.append(oc)
-            elif elements := get_close_matches(item, info, n=1):
+            elif elements := get_close_matches(item, info, n=1, cutoff=0.85):
                 items.append(info[elements[0]])
-        resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         embed = Embed(
             title=self.role.name,
@@ -599,7 +610,28 @@ class RPModal(Modal):
         guild: Guild = member.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-
+        items = list(OrderedDict.fromkeys(items))
+        kit = ImageKit(base="OC_list_9a1DZPDet.png", width=1500, height=1000)
+        for index, oc in enumerate(items[:6]):
+            x = 500 * (index % 3) + 25
+            y = 500 * int(index / 3) + 25
+            kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
+            for index, item in enumerate(oc.types):
+                kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * index)
+            kit.add_text(
+                text=oc.name,
+                width=330,
+                x=x,
+                y=y + 400,
+                background=0xFFFFFF,
+                background_transparency=70,
+                font=Fonts.Whitney_Black,
+                font_size=36,
+            )
+            if oc.pronoun.image:
+                kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
+        file: File = await interaction.client.get_file(kit.url)
+        embed.set_image(url=f"attachment://{file.filename}")
         reference = self.role
         channel = 958122815171756042
         name = f"{self.role.name} - {self.user.display_name}"
@@ -611,25 +643,23 @@ class RPModal(Modal):
             await self.user.add_roles(self.role)
 
         webhook: Webhook = await interaction.client.webhook(channel, reason="RP Search")
-        msg1: WebhookMessage = await webhook.send(
+        embed.set_image(url="attachment://image.png")
+
+        kwargs = dict(
             content=reference.mention,
             allowed_mentions=AllowedMentions(roles=True, users=True),
             embed=embed,
             view=RPSearchManage(member, items),
             username=member.display_name,
             avatar_url=member.display_avatar.url,
-            wait=True,
+            file=file,
         )
+        msg1 = await webhook.send(wait=True, **kwargs)
         thread = await msg1.create_thread(name=name)
-        msg2: WebhookMessage = await webhook.send(
-            allowed_mentions=AllowedMentions(roles=True),
-            embed=embed,
-            view=RPSearchManage(member, items),
-            username=member.display_name,
-            avatar_url=member.display_avatar.url,
-            thread=thread,
-            wait=True,
-        )
+        kwargs["thread"] = thread
+        del kwargs["content"]
+        embed.set_image(url=WHITE_BAR)
+        msg2 = await webhook.send(wait=True, **kwargs)
         await thread.add_user(self.user)
         cog0 = interaction.client.get_cog("Submission")
         cog1 = interaction.client.get_cog("Roles")
@@ -641,19 +671,17 @@ class RPModal(Modal):
         async with interaction.client.database() as db:
             await db.execute(
                 """
-                INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE, OCS) 
+                INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE, OCS)
                 VALUES ($1, $2, $3, $4, $5, $6)
-                ON CONFLICT (ROLE) DO UPDATE
-                    SET ID = $1, MEMBER = $2, SERVER = $4, MESSAGE = $5, OCS = $6
                 """,
                 msg1.id,
                 member.id,
-                self.role.id,
+                reference.id,
                 member.guild.id,
                 msg2.id,
                 ocs,
             )
-            await resp.send_message(
+            await interaction.followup.send(
                 content="Ping has been done successfully.",
                 ephemeral=True,
             )

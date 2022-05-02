@@ -20,6 +20,7 @@ from typing import Optional
 
 from discord import (
     AllowedMentions,
+    Attachment,
     Color,
     DeletedReferencedMessage,
     DiscordException,
@@ -34,6 +35,7 @@ from discord import (
     User,
     Webhook,
     WebhookMessage,
+    app_commands,
 )
 from discord.ext import commands
 from discord.ui import Button, View
@@ -218,6 +220,8 @@ class EmbedBuilder(commands.Cog):
         editing_attachments: bool
             if raw extracting
         """
+        if ctx.message.interaction:
+            await ctx.defer(ephemeral=True)
         item_cache = (ctx.author.id, ctx.guild.id)
         message: Optional[Message | WebhookMessage] = None
         if (ref := ctx.message.reference) and isinstance(msg := ref.resolved, Message):
@@ -250,12 +254,13 @@ class EmbedBuilder(commands.Cog):
                 except DiscordException as e:
                     if item := self.cache.pop(item_cache, None):
                         del self.blame[item]
-                    await ctx.reply(str(e), delete_after=3)
+                    await ctx.reply(str(e), delete_after=3, ephemeral=True)
             self.bot.msg_cache_add(ctx.message)
-            await ctx.message.delete(delay=0)
+            if not ctx.message.interaction:
+                await ctx.message.delete(delay=0)
 
-    @commands.group(
-        name="embed",
+    @commands.hybrid_group(
+        fallback="info",
         aliases=["e"],
         invoke_without_command=True,
     )
@@ -264,6 +269,7 @@ class EmbedBuilder(commands.Cog):
         send_messages=True,
         embed_links=True,
     )
+    @app_commands.guilds(719343092963999804)
     async def embed(self, ctx: commands.Context):
         """Shows stored embed's location
 
@@ -296,9 +302,9 @@ class EmbedBuilder(commands.Cog):
 
             view = View()
             view.add_item(Button(label=name, emoji=emoji, url=data.jump_url))
-            await ctx.reply(embed=embed, view=view)
+            await ctx.reply(embed=embed, view=view, ephemeral=True)
         else:
-            await ctx.reply(embed=embed)
+            await ctx.reply(embed=embed, ephemeral=True)
 
     @embed.command(
         name="new",
@@ -315,6 +321,7 @@ class EmbedBuilder(commands.Cog):
         title: str = "",
         *,
         description: str = "",
+        attachment: Optional[Attachment] = None,
     ):
         """Allows to create discord embeds
 
@@ -326,6 +333,8 @@ class EmbedBuilder(commands.Cog):
             Title of the embed. Defaults to None
         description: str = ""
             Description of the embed. Defaults to None
+        attachment: Optional[Attachment] = None
+            Image to use in the embed.
         """
         embed = Embed(title=title, description=description)
         webhook = await self.bot.webhook(ctx.channel, reason="Created by Embed Builder")
@@ -334,7 +343,7 @@ class EmbedBuilder(commands.Cog):
         if not isinstance(thread := ctx.channel, Thread):
             thread = MISSING
 
-        attachments = ctx.message.attachments
+        attachments = [attachment] if attachment else ctx.message.attachments
         if len(images := [x for x in attachments if x.content_type.startswith("image/")]) == 1:
             embed.set_image(url=f"attachment://{images[0].filename}")
 
@@ -348,7 +357,7 @@ class EmbedBuilder(commands.Cog):
         )
         message.channel = ctx.channel
         self.write(message, author)
-        await ctx.message.delete()
+        await ctx.message.delete(delay=0)
 
     @embed.command(name="set")
     @commands.has_guild_permissions(
@@ -360,7 +369,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        message: Message = None,
+        message: Optional[str] = None,
     ):
         """Allows to set a new editable Embed out of an existing message
 
@@ -383,32 +392,52 @@ class EmbedBuilder(commands.Cog):
                 message = await channel.fetch_message(reference.message_id)
             else:
                 message = None
+        elif message:
+            message = await self.converter.convert(ctx, message)
 
         if isinstance(message, Message):
             if message.author == self.bot.user:
                 self.write(message, ctx.author)
-                await ctx.reply("Message has been set", delete_after=2)
+                await ctx.reply(
+                    "Message has been set",
+                    delete_after=2,
+                    ephemeral=True,
+                )
             elif webhook_id := message.webhook_id:
                 webhook = await self.bot.webhook(message.channel)
                 if webhook_id != webhook.id:
-                    await ctx.reply("Message can't be set", delete_after=2)
+                    await ctx.reply(
+                        "Message can't be set",
+                        delete_after=2,
+                        ephemeral=True,
+                    )
                 else:
                     if not isinstance(thread := message.channel, Thread):
                         thread = MISSING
                     message: WebhookMessage = await webhook.fetch_message(message.id, thread=thread)
                     self.write(message, ctx.author)
-                    await ctx.reply("Message has been set", delete_after=2)
+                    await ctx.reply(
+                        "Message has been set",
+                        delete_after=2,
+                        ephemeral=True,
+                    )
             else:
                 await ctx.reply(
                     "I can't use that message for embedding purposes",
                     delete_after=2,
+                    ephemeral=True,
                 )
             await ctx.message.delete(delay=0)
         else:
-            await ctx.reply("No message was found.", delete_after=2)
+            await ctx.reply(
+                "No message was found.",
+                delete_after=2,
+                ephemeral=True,
+            )
 
     @embed.group(
         name="post",
+        fallback="copy",
         invoke_without_command=True,
     )
     @commands.has_guild_permissions(
@@ -559,7 +588,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        color: Color = None,
+        color: str = None,
     ):
         """Allows to edit the embed's color
 
@@ -571,10 +600,17 @@ class EmbedBuilder(commands.Cog):
             Color of the embed. Defaults to None
         """
         async with self.edit(ctx) as embed:
-            embed.colour = color or Color.default()
+            try:
+                if not color:
+                    embed.colour = Color.default()
+                else:
+                    embed.colour = Color.from_str(color)
+            except ValueError:
+                pass
 
     @embed.group(
         name="timestamp",
+        fallback="defined",
         aliases=["date", "time"],
         invoke_without_command=True,
     )
@@ -647,6 +683,7 @@ class EmbedBuilder(commands.Cog):
 
     @embed.group(
         name="author",
+        fallback="clear",
         invoke_without_command=True,
     )
     @commands.has_guild_permissions(
@@ -721,7 +758,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        guild: Guild = None,
+        guild: Optional[int] = None,
     ):
         """Allows to set the specified guild as Author of the embed
 
@@ -733,7 +770,7 @@ class EmbedBuilder(commands.Cog):
             Guild. Defaults to Current
         """
         async with self.edit(ctx) as embed:
-            guild = guild or ctx.guild
+            guild: Guild = self.bot.get_guild(guild) or ctx.guild
             embed.set_author(
                 name=guild.name,
                 url=embed.author.url,
@@ -782,7 +819,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        icon: Optional[Emoji | PartialEmoji | str] = None,
+        icon: Optional[str] = None,
     ):
         """Allows to edit an embed's author icon
 
@@ -822,6 +859,7 @@ class EmbedBuilder(commands.Cog):
 
     @embed.group(
         name="footer",
+        fallback="clear",
         invoke_without_command=True,
     )
     @commands.has_guild_permissions(
@@ -891,7 +929,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        guild: Guild = None,
+        guild: Optional[int] = None,
     ):
         """Allows to edit an embed's author icon
 
@@ -903,7 +941,7 @@ class EmbedBuilder(commands.Cog):
             Guild as Footer. Defaults to Self
         """
         async with self.edit(ctx) as embed:
-            guild = guild or ctx.guild
+            guild: Guild = self.bot.get_guild(guild) or ctx.guild
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
 
     @embed_footer.command(name="icon")
@@ -916,7 +954,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        icon: Optional[Emoji | PartialEmoji | str] = None,
+        icon: Optional[str] = None,
     ):
         """Allows to edit an embed's author icon
 
@@ -952,6 +990,7 @@ class EmbedBuilder(commands.Cog):
 
     @embed.group(
         name="thumbnail",
+        fallback="clear",
         invoke_without_command=True,
     )
     @commands.has_guild_permissions(
@@ -963,7 +1002,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        thumbnail: Optional[Emoji | PartialEmoji | str] = None,
+        thumbnail: Optional[str] = None,
     ):
         """Allows to edit an embed's author icon
 
@@ -985,7 +1024,7 @@ class EmbedBuilder(commands.Cog):
             else:
                 embed.set_thumbnail(url=None)
 
-    @embed_thumbnail.group(name="user", invoke_without_command=True)
+    @embed_thumbnail.command(name="user", invoke_without_command=True)
     @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
@@ -1010,7 +1049,7 @@ class EmbedBuilder(commands.Cog):
             user = user or ctx.author  # type: User
             embed.set_thumbnail(url=user.display_avatar.url)
 
-    @embed_thumbnail.group(
+    @embed_thumbnail.command(
         name="guild",
         aliases=["server"],
         invoke_without_command=True,
@@ -1024,7 +1063,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        guild: Guild = None,
+        guild: Optional[int] = None,
     ):
         """Allows to edit an embed's thumbnail by an user
 
@@ -1036,10 +1075,10 @@ class EmbedBuilder(commands.Cog):
             Guild for embed. Defaults to self
         """
         async with self.edit(ctx) as embed:
-            guild: Guild = guild or ctx.guild
+            guild: Guild = self.bot.get_guild(guild) or ctx.guild
             embed.set_thumbnail(url=guild.icon.url)
 
-    @embed.group(name="image", invoke_without_command=True)
+    @embed.group(name="image", fallback="clear", invoke_without_command=True)
     @commands.has_guild_permissions(
         manage_messages=True,
         send_messages=True,
@@ -1049,7 +1088,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        image: Optional[Emoji | PartialEmoji | str] = None,
+        image: Optional[str] = None,
     ):
         """Allows to edit an embed's image
 
@@ -1109,7 +1148,7 @@ class EmbedBuilder(commands.Cog):
         self,
         ctx: commands.Context,
         *,
-        guild: Guild = None,
+        guild: Optional[int] = None,
     ):
         """Allows to edit an embed's image based on an user
 
@@ -1121,7 +1160,7 @@ class EmbedBuilder(commands.Cog):
             Guild to take as reference. Defaults to current
         """
         async with self.edit(ctx) as embed:
-            guild: Guild = guild or ctx.guild
+            guild: Guild = self.bot.get_guild(guild) or ctx.guild
             embed.set_image(url=guild.icon.url)
 
     @embed_image.command(name="rainbow")
@@ -1158,8 +1197,9 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx) as embed:
             embed.set_image(url=WHITE_BAR)
 
-    @commands.group(
+    @commands.hybrid_group(
         name="fields",
+        fallback="info",
         aliases=["field", "f"],
         invoke_without_command=True,
     )
@@ -1344,6 +1384,7 @@ class EmbedBuilder(commands.Cog):
 
     @fields.group(
         name="delete",
+        fallback="name",
         invoke_without_command=True,
         aliases=["d"],
     )
@@ -1393,6 +1434,7 @@ class EmbedBuilder(commands.Cog):
 
     @fields.group(
         name="index",
+        fallback="info",
         aliases=["i"],
         invoke_without_command=True,
     )

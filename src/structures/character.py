@@ -17,7 +17,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from io import BytesIO
-from json import dumps
 from random import sample
 from typing import Any, Optional, Type
 
@@ -27,7 +26,6 @@ from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
 from docx.document import Document
-from orjson import loads
 from rapidfuzz import process
 
 from src.structures.ability import Ability, SpAbility
@@ -47,7 +45,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, multiple_pop, stats_check
+from src.utils.functions import common_pop_get, int_check, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
@@ -106,7 +104,6 @@ class Character:
     extra: Optional[str] = None
     abilities: frozenset[Ability] = field(default_factory=frozenset)
     moveset: frozenset[Move] = field(default_factory=frozenset)
-    types: frozenset[Typing] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
     url: Optional[str] = None
     image: Optional[int] = None
@@ -117,54 +114,36 @@ class Character:
             self.server = 719343092963999804
         if not self.can_have_special_abilities:
             self.sp_ability = None
-        if isinstance(self.sp_ability, dict):
+        elif isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
+        if isinstance(self.abilities, str):
+            self.abilities = [self.abilities]
+        self.abilities = Ability.deduce_many(*self.abilities)
+        if isinstance(self.moveset, str):
+            self.moveset = [self.moveset]
+        self.moveset = Move.deduce_many(*self.moveset)
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun[self.pronoun]
-        if isinstance(self.age, int) and self.age >= 100:
-            self.age = None
-        if not self.types:
-            self.types = self.species.types
-        self.types = Typing.deduce_many(*self.types)
-        self.moveset = Move.deduce_many(*self.moveset)
-        self.abilities = Ability.deduce_many(*self.abilities)
-        if self.kind == Kind.Fakemon:
-            if evolves_from := self.evolves_from:
-                self.species.movepool += evolves_from.movepool
-            if not self.abilities:
-                self.abilities = self.species.abilities
-            elif not self.species.abilities:
-                self.species.abilities = self.abilities
-        if isinstance(self.species, (Pokemon, Legendary, Mythical, UltraBeast)):
-            if extra_ab := ", ".join(x.name for x in self.abilities if x not in self.species.abilities):
-                self.species = Variant(
-                    base=self.species,
-                    name=f"{extra_ab}-Granted {self.species.name}",
-                )
-            elif extra_mv := ", ".join(x.name for x in self.moveset if x not in self.species.total_movepool):
-                self.species = Variant(
-                    base=self.species,
-                    name=f"{extra_mv}-Granted {self.species.name}",
-                )
-                self.species.movepool += Movepool(other=self.moveset)
-            elif self.types != self.species.types:
-                extra_tp = "/".join(x.name for x in self.types)
-                self.species = Variant(
-                    base=self.species,
-                    name=f"{extra_tp}-Typed {self.species.name}",
-                )
-                self.species.types = self.types
-        if isinstance(self.species, (Fakemon, Variant, CustomMega)):
-            self.species.abilities = self.abilities
+        if isinstance(self.age, int):
+            if self.age < 13:
+                self.age = 13
+            if self.age >= 100:
+                self.age = None
+        if not self.can_have_special_abilities:
+            self.sp_ability = None
 
     def __eq__(self, other: Character):
         return self.id == other.id
 
     @property
+    def types(self):
+        return frozenset(self.species.types)
+
+    @property
     def possible_types(self):
         if isinstance(self.species, Fusion):
-            return self.species.possible_types
-        return frozenset({self.types})
+            return frozenset([frozenset(x) for x in self.species.possible_types])
+        return frozenset({self.species.types})
 
     @property
     def kind(self):
@@ -346,30 +325,6 @@ class Character:
             else:
                 name = "Fakemon Species"
             c_embed.add_field(name=name, value=self.species.name)
-            c_embed.add_field(
-                name="HP ",
-                value=("🔳" * self.species.HP).ljust(5, "⬜"),
-            )
-            c_embed.add_field(
-                name="ATK",
-                value=("🔳" * self.species.ATK).ljust(5, "⬜"),
-            )
-            c_embed.add_field(
-                name="DEF",
-                value=("🔳" * self.species.DEF).ljust(5, "⬜"),
-            )
-            c_embed.add_field(
-                name="SPA",
-                value=("🔳" * self.species.SPA).ljust(5, "⬜"),
-            )
-            c_embed.add_field(
-                name="SPD",
-                value=("🔳" * self.species.SPD).ljust(5, "⬜"),
-            )
-            c_embed.add_field(
-                name="SPE",
-                value=("🔳" * self.species.SPE).ljust(5, "⬜"),
-            )
         elif self.kind in [Kind.CustomMega, Kind.Variant]:
             name = f"{self.kind.name} Species"
             c_embed.add_field(name=name, value=self.species.name)
@@ -436,7 +391,7 @@ class Character:
         """
         if isinstance(image := self.image, int):
             return self.image_url
-        kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
+        kit = ImageKit(base="background_Y8q8PAtEV.png", width=900)
         kit.add_image(image=image, height=400)
         if icon := self.pronoun.image:
             kit.add_image(image=icon, x=-10, y=-10)
@@ -494,53 +449,47 @@ class Character:
         async for item in connection.cursor(
             """--sql
             SELECT
-                C.*, TO_JSON(F.*) AS FAKEMON,
-                TO_JSON(V.*) AS VARIANT,
-                TO_JSON(S.*) AS SP_ABILITY
+                C.*,
+                TO_JSONB(F.*) AS FAKEMON,
+                TO_JSONB(S.*) AS SP_ABILITY,
+                TO_JSON(M.*) AS MOVEPOOL
             FROM CHARACTER C
             LEFT JOIN FAKEMON F ON C.ID = F.ID
-            LEFT JOIN VARIANT_CHARACTER V ON C.ID = V.ID
-            LEFT JOIN SPECIAL_ABILITIES S ON C.ID = S.ID;
+            LEFT JOIN SPECIAL_ABILITIES S ON C.ID = S.ID
+            LEFT JOIN MOVEPOOL M ON C.ID = M.ID;
             """
         ):
             data = dict(item)
             kind = Kind(data.pop("kind", "COMMON"))
-            if species := Species.from_ID(data.pop("species", None)):
-                data["species"] = species
-            if variant_data := loads(data.pop("variant", None) or "{}"):
+
+            species = Species.from_ID(data.pop("species", None))
+            mon_type = Typing.deduce_many(*data.pop("types"))
+            if fakemon_data := Fakemon.from_record(data.pop("fakemon")):
                 if kind == Kind.Variant:
-                    species = Species.from_ID(variant_data["species"])
-                    species = Variant(base=species, name=variant_data["name"])
-                    movepool_data = loads(data.pop("movepool", "{}"))
-                    if movepool := Movepool.from_dict(**movepool_data):
+                    species = Variant(base=species, name=fakemon_data.name)
+                elif kind == Kind.Fakemon:
+                    species = fakemon_data
+            if mon_type and isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+                species.types = mon_type
+            movepool = data.pop("movepool")
+
+            if species:
+                if kind == Kind.CustomMega:
+                    species = CustomMega(species)
+                elif movepool := Movepool.from_record(movepool):
+                    if species.movepool != movepool and kind in [Kind.Variant, Kind.Fakemon]:
                         species.movepool = movepool
-                    data["species"] = species
-                else:
-                    await connection.execute(
-                        "DELETE FROM VARIANT_CHARACTER WHERE ID = $1",
-                        data["id"],
-                    )
-            if fakemon_data := loads(data.pop("fakemon", None) or "{}"):
-                if kind == Kind.Fakemon:
-                    evolves_from: Optional[str] = fakemon_data.pop("evolves_from", None)
-                    stats = multiple_pop(fakemon_data, "hp", "atk", "def", "spa", "spd", "spe")
-                    movepool_data = fakemon_data.pop("movepool", "{}")
-                    movepool = Movepool.from_dict(**movepool_data)
-                    stats = {k.upper(): v for k, v in stats.items()}
-                    species = fakemon_data["name"]
-                    data["species"] = Fakemon(
-                        id=data["id"],
-                        name=species,
-                        movepool=movepool,
-                        evolves_from=evolves_from,
-                        **stats,
-                    )
-                else:
-                    await connection.execute("DELETE FROM FAKEMON WHERE ID = $1", data["id"])
-            sp_data = loads(data.pop("sp_ability", None) or "{}")
+                    else:
+                        await connection.execute("DELETE FROM MOVEPOOL WHERE ID = $1", data["id"])
+                data["species"] = species
+            else:
+                await connection.execute("DELETE FROM FAKEMON WHERE ID = $1", data["id"])
+
+            sp_data = data.pop("sp_ability", {})
             mon = Character(**data)
             if sp_data:
-                sp_ability = SpAbility.convert(sp_data)
+                sp_data.pop("id", None)
+                sp_ability = SpAbility(**sp_data)
                 if mon.can_have_special_abilities:
                     mon.sp_ability = sp_ability
                 else:
@@ -595,50 +544,60 @@ class Character:
         if (sp_ability := self.sp_ability) is None:
             sp_ability = SpAbility()
         await sp_ability.upsert(connection, idx=self.id)
+        movepool = self.movepool.db_dict
         match self.kind:
-            case Kind.Common | Kind.Mythical | Kind.Legendary:
-                await connection.execute(
-                    """--sql
-                    INSERT INTO POKEMON_CHARACTER(ID, SPECIES)
-                    VALUES ($1, $2) ON CONFLICT (ID)
-                    DO UPDATE SET SPECIES = $2;
-                    """,
-                    self.id,
-                    self.species.id,
-                )
             case Kind.Fakemon:
                 await connection.execute(
                     """--sql
-                    INSERT INTO FAKEMON(ID, NAME, HP, ATK, DEF, SPA, SPD, SPE, EVOLVES_FROM, MOVEPOOL)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb) ON CONFLICT (ID) DO UPDATE SET
-                    NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8, EVOLVES_FROM = $9, MOVEPOOL = $10::jsonb;
+                    INSERT INTO FAKEMON(ID, NAME, EVOLVES_FROM)
+                    VALUES ($1, $2, $3) ON CONFLICT (ID) DO UPDATE SET
+                    NAME = $2, EVOLVES_FROM = $3;
                     """,
                     self.id,
                     self.species.name,
-                    self.species.HP,
-                    self.species.ATK,
-                    self.species.DEF,
-                    self.species.SPA,
-                    self.species.SPD,
-                    self.species.SPE,
                     getattr(self.evolves_from, "id", None),
-                    dumps(self.movepool.as_dict),
+                )
+                await connection.execute(
+                    """--sql
+                    INSERT INTO MOVEPOOL(ID, LEVEL, TM, EVENT, TUTOR, EGG, LEVELUP, OTHER)
+                    VALUES ($1, $2::JSONB, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
+                    LEVEL = $2::JSONB, TM = $3, EVENT = $4, TUTOR = $5, EGG = $6, LEVELUP = $7, OTHER = $8;
+                    """,
+                    self.id,
+                    movepool["level"],
+                    movepool["tm"],
+                    movepool["event"],
+                    movepool["tutor"],
+                    movepool["egg"],
+                    movepool["levelup"],
+                    movepool["other"],
                 )
             case Kind.Variant:
                 if self.movepool == self.species.base.movepool:
-                    movepool = Movepool()
+                    await connection.execute("DELETE FROM MOVEPOOL WHERE ID = $1", self.id)
                 else:
-                    movepool = self.movepool
+                    await connection.execute(
+                        """--sql
+                        INSERT INTO MOVEPOOL(ID, LEVEL, TM, EVENT, TUTOR, EGG, LEVELUP, OTHER)
+                        VALUES ($1, $2::JSONB, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
+                        LEVEL = $2::JSONB, TM = $3, EVENT = $4, TUTOR = $5, EGG = $6, LEVELUP = $7, OTHER = $8;
+                        """,
+                        self.id,
+                        movepool["level"],
+                        movepool["tm"],
+                        movepool["event"],
+                        movepool["tutor"],
+                        movepool["egg"],
+                        movepool["levelup"],
+                        movepool["other"],
+                    )
                 await connection.execute(
                     """--sql
-                    INSERT INTO VARIANT_CHARACTER(ID, SPECIES, NAME, MOVEPOOL)
-                    VALUES ($1, $2, $3, $4::JSONB) ON CONFLICT (ID)
-                    DO UPDATE SET SPECIES = $2, NAME = $3, MOVEPOOL = $4::JSONB;
+                    INSERT INTO FAKEMON(ID, NAME) VALUES ($1, $2)
+                    ON CONFLICT (ID) DO UPDATE SET NAME = $2;
                     """,
                     self.id,
-                    self.species.base.id,
                     self.species.name,
-                    dumps(movepool.as_dict),
                 )
 
     async def delete(self, connection: Connection) -> None:
@@ -715,7 +674,6 @@ PLACEHOLDER_STATS = {
 
 def oc_process(**kwargs) -> Character:
     """Function used for processing a dict, to a character
-
     Returns
     -------
     Character
@@ -782,6 +740,37 @@ def oc_process(**kwargs) -> Character:
 
     if species.banned:
         raise ValueError(f"The Species {species.name!r} is banned currently.")
+
+    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
+        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            species.types = types
+        elif species.types != types:
+            types_txt = "/".join(i.name for i in types)
+            species = Variant(
+                base=species,
+                name=f"{types_txt}-Typed {species.name}",
+            )
+            species.types = types
+
+    if ability_info := common_pop_get(data, "abilities", "ability"):
+        if abilities := Ability.deduce_many(ability_info):
+            data["abilities"] = abilities
+
+        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            species.abilities = abilities
+        elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
+            species = Variant(
+                base=species,
+                name=f"{abilities_txt}-Granted {species.name}",
+            )
+            species.abilities = abilities
+            data["species"] = species
+
+    if move_info := common_pop_get(data, "moveset", "moves"):
+        if isinstance(move_info, str):
+            move_info = [move_info]
+        if moveset := Move.deduce_many(*move_info):
+            data["moveset"] = moveset
 
     if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
         if pronoun := Pronoun.deduce(pronoun_info):

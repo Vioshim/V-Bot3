@@ -14,13 +14,15 @@
 
 from asyncio import run
 from functools import wraps
+from json import dumps
 from logging import getLogger, setLoggerClass
 from os import getenv
 
 from apscheduler.schedulers.async_ import AsyncScheduler
-from asyncpg import Pool, create_pool
+from asyncpg import Connection, Pool, create_pool
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
+from orjson import loads
 
 from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
@@ -42,6 +44,11 @@ except ModuleNotFoundError:
     logger.error("Not using uvloop")
 
 
+async def init_connection(conn: Connection):
+    await conn.set_type_codec("json", encoder=dumps, decoder=loads, schema="pg_catalog")
+    await conn.set_type_codec("jsonb", encoder=dumps, decoder=loads, schema="pg_catalog")
+
+
 def wrap_session(func):
     """Bot wrapper, this allows the bot to start up
     its asynchronous methods
@@ -61,7 +68,10 @@ def wrap_session(func):
     async def wrapper() -> None:
         """Function Wrapper"""
         async with AsyncScheduler() as scheduler:
-            async with create_pool(getenv("POSTGRES_POOL_URI")) as pool:
+            async with create_pool(
+                getenv("POSTGRES_POOL_URI"),
+                init=init_connection,
+            ) as pool:
                 await func(pool=pool, scheduler=scheduler)
 
     return wrapper

@@ -156,7 +156,7 @@ class MovepoolViewSelector(Complex[str]):
         target: Interaction | TextChannel,
         timeout: float = None,
     ):
-        super().__init__(
+        super(MovepoolViewSelector, self).__init__(
             member=member,
             values=movepool.__slots__,
             target=target,

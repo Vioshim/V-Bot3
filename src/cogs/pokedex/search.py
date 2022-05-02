@@ -41,6 +41,13 @@ from src.structures.species import (
 )
 from src.views.characters_view import CharactersView
 
+STANDARD = [
+    Kind.Common,
+    Kind.Mythical,
+    Kind.Legendary,
+    Kind.UltraBeast,
+]
+
 OPERATORS = {
     "<=": lambda x, y: x <= y,
     "<": lambda x, y: x < y,
@@ -430,19 +437,13 @@ class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
-        items = {
-            k.name.title(): frozenset(v)
-            for k, v in groupby(ocs, key=lambda x: x.kind)
-            if k
-            not in [
-                Kind.Common,
-                Kind.Mythical,
-                Kind.Legendary,
-                Kind.UltraBeast,
-            ]
+        items = {k.name.title(): set(v) for k, v in groupby(ocs, key=lambda x: x.kind) if k not in STANDARD}
+        ocs = sorted(ocs, key=lambda x: getattr(x.species, "base", x.species).name)
+        items |= {
+            k.name.title(): set(v)
+            for k, v in groupby(ocs, key=lambda x: getattr(x.species, "base", x.species))
+            if any(x.from_class(k) for x in STANDARD)
         }
-        ocs = sorted(ocs, key=lambda x: x.species.name)
-        items |= {item.name: frozenset(filter(species_checker(item), ocs)) for item in Species.all()}
         return items
 
 

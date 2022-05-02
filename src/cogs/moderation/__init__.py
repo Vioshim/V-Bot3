@@ -306,7 +306,7 @@ class Moderation(commands.Cog):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
         afk_role: Role = member.guild.get_role(932324221168795668)
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if afk_role in member.roles:
             await ctx.followup.send(
                 "You are already AFK. If you wanna remove the Role, simply send a message in the server.",

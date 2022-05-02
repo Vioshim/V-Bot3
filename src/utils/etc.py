@@ -27,6 +27,7 @@ __all__ = (
     "MAP_ELEMENTS",
     "MAP_ELEMENTS2",
     "SETTING_EMOJI",
+    "LOADING_EMOJI",
     "REGISTERED_IMG",
     "DEFAULT_TIMEZONE",
     "RTFMPages",
@@ -37,6 +38,7 @@ RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/86341522462
 WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
 MAP_URL = "https://cdn.discordapp.com/attachments/801227409881694218/935642408434159668/Untitled147_20220125150721.png"
 SETTING_EMOJI = PartialEmoji(name="setting", id=962380600902320148, animated=True)
+LOADING_EMOJI = PartialEmoji(name="loading", id=969722876003512320, animated=True)
 DICE_NUMBERS = [
     PartialEmoji(name="one", id=952524707129868308),
     PartialEmoji(name="two", id=952524707176001546),

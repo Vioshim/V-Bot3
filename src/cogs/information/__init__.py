@@ -33,6 +33,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    NotFound,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     Role,
@@ -117,7 +118,7 @@ class AnnouncementModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         webhook: Webhook = await interaction.client.webhook(interaction.channel)
         if embeds := self.kwargs.get("embeds"):
             embeds[0].title = self.thread_name.value
@@ -236,7 +237,7 @@ class Information(commands.Cog):
         resp: InteractionResponse = ctx.response
         guild: Guild = ctx.guild
 
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
 
         AFK = get(guild.roles, name="AFK")
         BOOSTER = guild.premium_subscriber_role
@@ -816,7 +817,10 @@ class Information(commands.Cog):
         name = command.name if command else ""
 
         if not resp.is_done():
-            await resp.defer(ephemeral=True)
+            try:
+                await resp.defer(thinking=True, ephemeral=True)
+            except NotFound:
+                return
 
         if isinstance(error, app_commands.AppCommandError):
             await interaction.followup.send(
@@ -908,21 +912,22 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """Loads the program in the scheduler"""
-        if not self.ready:
-            for guild in self.bot.guilds:
-                await self.member_count(guild)
-            thread: Thread = await self.bot.fetch_channel(913555643699458088)
-            if thread.archived:
-                await thread.edit(archived=False)
-            iterator = thread.history(limit=None, oldest_first=True)
-            messages = [m async for m in iterator]
-            w = await self.bot.webhook(thread)
-            self.view = MessageView(messages)
-            self.message = await w.edit_message(
-                913555643699458088,
-                view=self.view,
-            )
-            self.ready = True
+        if self.ready:
+            return
+
+        for guild in self.bot.guilds:
+            await self.member_count(guild)
+        thread: Thread = await self.bot.fetch_channel(913555643699458088)
+        if thread.archived:
+            await thread.edit(archived=False)
+        messages = [m async for m in thread.history(limit=None, oldest_first=True)]
+        w = await self.bot.webhook(thread)
+        self.view = MessageView(messages)
+        self.message = await w.edit_message(
+            913555643699458088,
+            view=self.view,
+        )
+        self.ready = True
 
 
 async def setup(bot: CustomBot) -> None:

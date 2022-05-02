@@ -110,13 +110,12 @@ class Complex(Generic[_T], Simple[_T]):
         )
         self.silent_mode = silent_mode
         self.keep_working = keep_working
-        self._choices: set[_T] = set()
-        self._max_values = max_values
+        self.choices: set[_T] = set()
+        self.max_values = max_values
         self._emoji_parser = emoji_parser
         self.text_component = text_component
 
     async def __aenter__(self) -> set[_T]:
-        self.menu_format()
         await super(Complex, self).send()
         await self.wait()
         return self.choices
@@ -136,27 +135,12 @@ class Complex(Generic[_T], Simple[_T]):
             )
         await self.delete()
 
-    @property
-    def values(self) -> list[_T]:
-        return self._values
-
-    @property
-    def choices(self) -> set[_T]:
-        return self._choices
-
-    @choices.setter
-    def choices(self, choices: set[_T]):
-        self._choices = choices
-        self.menu_format()
-
-    @choices.deleter
-    def choices(self):
-        self._choices = set()
+    def pre_load(self):
         self.menu_format()
 
     @property
     def current_chunk(self) -> list[_T]:
-        amount = self.entries_per_page * self._pos
+        amount = self.entries_per_page * self.pos
         return self.values[amount : amount + self.entries_per_page]
 
     def emoji_parser(self, item: _T) -> Optional[PartialEmoji | Emoji | str]:
@@ -170,15 +154,6 @@ class Complex(Generic[_T], Simple[_T]):
     def choice(self) -> Optional[_T]:
         return next(iter(self.choices), None)
 
-    @property
-    def max_values(self):
-        return self._max_values
-
-    @max_values.setter
-    def max_values(self, max_values: int):
-        self._max_values = max_values
-        self.menu_format()
-
     def menu_format(self) -> None:
         """Default Formatter"""
         self.buttons_format()
@@ -191,7 +166,7 @@ class Complex(Generic[_T], Simple[_T]):
 
         foo: Select = self.select_choice
         pages: Select = self.navigate
-        choices = self._choices
+        choices = self.choices
         foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
         foo.options.clear()
         pages.options.clear()
@@ -201,7 +176,7 @@ class Complex(Generic[_T], Simple[_T]):
             self.entries_per_page,
         )
         # Now we get the indexes that each page should start with
-        indexes = self.values[:: self._entries_per_page]
+        indexes = self.values[:: self.entries_per_page]
         if total_pages := len(indexes):
             # We start to split the information in chunks
             elements: dict[int, list[_T]] = {}
@@ -218,9 +193,8 @@ class Complex(Generic[_T], Simple[_T]):
             # Example: assuming there's 4 entries per page, 100 values and user is at the page 12 in this case,
             # the range of pages would be from page 10 to page 14
 
-            amount = int(self.entries_per_page / 2)
-            min_range = max(self._pos - amount, 0)
-            max_range = min(self._pos + amount, len(elements))
+            min_range = max(self._pos - 5, 0)
+            max_range = min(self._pos + 5, len(elements))
 
             for index in range(min_range, max_range):
                 item = elements[index]
@@ -233,7 +207,7 @@ class Complex(Generic[_T], Simple[_T]):
 
                 # If the page is the same, as the current, it will be default after editing.
 
-                default = index == self._pos
+                default = index == self.pos
 
                 # The amount of digits required get determined for formatting purpose
 
@@ -250,7 +224,7 @@ class Complex(Generic[_T], Simple[_T]):
                 )
 
             # Now we start to add the information of the current page in the paginator.
-            for index, item in enumerate(elements.get(self._pos, [])):
+            for index, item in enumerate(elements.get(self.pos, [])):
                 # In each cycle, we proceed to convert the name and value (as we use its index)
                 # and determine the emoji, based on the current implementation of emoji_parser
 
@@ -412,7 +386,8 @@ class Complex(Generic[_T], Simple[_T]):
 
     @property
     def current_choice(self) -> Optional[_T]:
-        return next(iter(self.current_choices), None)
+        if self.current_choices:
+            return self.current_choices.pop()
 
     @select(
         row=1,
@@ -440,7 +415,7 @@ class Complex(Generic[_T], Simple[_T]):
             if self.silent_mode:
                 await response.pong()
             else:
-                await response.defer(ephemeral=True)
+                await response.defer(ephemeral=True, thinking=True)
                 data = map(self.parser, self.current_choices)
                 if text := "\n".join(f"> **•** {x}" for x, _ in data):
                     content = f"Great! you have selected:\n\n{text}"
@@ -450,14 +425,14 @@ class Complex(Generic[_T], Simple[_T]):
                 await interaction.followup.send(content=content, ephemeral=True)
 
         if self.keep_working:
-            self._choices = self.current_choices
+            self.choices = self.current_choices
         else:
-            self._choices |= self.current_choices
+            self.choices |= self.current_choices
             self.values = set(self.values) - self.choices
             if len(sct.values) == self.entries_per_page:
-                self._pos = max(self._pos - 1, 0)
+                self.pos = max(self._pos - 1, 0)
 
-        await self.edit(interaction=interaction, page=self._pos)
+        await self.edit(interaction=interaction, page=self.pos)
 
     @select(
         placeholder="Press to scroll pages",

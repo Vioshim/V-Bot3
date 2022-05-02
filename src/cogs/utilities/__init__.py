@@ -166,7 +166,7 @@ class Utilities(commands.Cog):
         query: Optional[str],
     ):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if not key:
             key = RTFMPages.Discord
         await self.do_rtfm(ctx, key, query)
@@ -191,6 +191,7 @@ class Utilities(commands.Cog):
         hidden: bool = False,
     ):
         resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=hidden, thinking=True)
         try:
             value = roll(
                 expr=expression,
@@ -199,13 +200,14 @@ class Utilities(commands.Cog):
             if len(result := value.result) >= 2000:
                 simplify_expr(value.expr)
             if len(result := value.result) <= 2000:
-                return await resp.send_message(result, ephemeral=hidden)
-            await resp.send_message(
-                f"Expression is too long, result is: {value.total}",
-                ephemeral=hidden,
-            )
+                await ctx.followup.send(result, ephemeral=hidden)
+            else:
+                await ctx.followup.send(
+                    f"Expression is too long, result is: {value.total}",
+                    ephemeral=hidden,
+                )
         except Exception:
-            await resp.send_message("Invalid expression", ephemeral=True)
+            await ctx.followup.send("Invalid expression", ephemeral=True)
 
 
 async def setup(bot: CustomBot) -> None:

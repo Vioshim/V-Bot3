@@ -14,11 +14,9 @@
 
 from asyncio import TimeoutError, as_completed, to_thread
 from dataclasses import asdict
-from pathlib import Path
 from random import choice as random_choice
 from typing import Optional, Type
 
-from aiofiles import open as aiopen
 from discord import (
     AllowedMentions,
     DiscordException,
@@ -46,7 +44,6 @@ from discord.utils import utcnow
 from docx import Document
 from docx.document import Document as DocumentType
 from jishaku.codeblocks import codeblock_converter
-from orjson import loads
 from rapidfuzz import process
 from yaml import safe_load
 from yaml.error import MarkedYAMLError
@@ -73,21 +70,9 @@ from src.views import (
     MoveView,
     PingView,
     RPView,
-    StatsView,
 )
 
 __all__ = ("Submission", "setup", "SPAbView")
-
-
-CLAIM_MESSAGE = """
-**。　　　　•　    　ﾟ　　。**
-**　　.　　　.　　　.　　。　　   。　.**
-** 　.　　      。             。　    .    •**
-** •     RP claimable, feel free to use it.　 。　.**
-**          Is assumed that everyone left**
-**　 　　。　　　　ﾟ　　　.　　　　　.**
-**,　　　　.　 .　　       .               。**
-""".strip()
 
 
 class SPAbView(View):
@@ -125,7 +110,6 @@ class SPAbView(View):
 class Submission(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
-        self.ready: bool = False
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
@@ -157,7 +141,7 @@ class Submission(commands.Cog):
 
     async def moves_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         moves = []
         if oc := self.ocs.get(message.id):
             moves = list(oc.moveset.copy())
@@ -168,7 +152,7 @@ class Submission(commands.Cog):
                     text.title(),
                     choices=Move.all(),
                     processor=lambda x: getattr(x, "name", x),
-                    score_cutoff=65,
+                    score_cutoff=85,
                 )
             ]
         if len(moves) == 1:
@@ -206,7 +190,7 @@ class Submission(commands.Cog):
 
     async def abilities_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         abilities: list[Ability | SpAbility] = []
         if oc := self.ocs.get(message.id):
             if sp_ability := oc.sp_ability:
@@ -221,7 +205,7 @@ class Submission(commands.Cog):
                     text.title(),
                     choices=abilities,
                     processor=lambda x: getattr(x, "name", x),
-                    score_cutoff=65,
+                    score_cutoff=85,
                 )
             ]
 
@@ -247,7 +231,7 @@ class Submission(commands.Cog):
 
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         ocs = [oc for oc in self.ocs.values() if oc.author == member.id]
         if len(ocs) == 1:
             view = PingView(ocs[0], ctx.user.id == ocs[0].author)
@@ -299,7 +283,7 @@ class Submission(commands.Cog):
         guild: Guild = ctx.guild
         role = guild.get_role(719642423327719434)
         author: Member = ctx.user
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if role not in member.roles:
             await member.add_roles(role, reason=f"Registered by {author}")
             embed = Embed(
@@ -351,7 +335,7 @@ class Submission(commands.Cog):
         character: Optional[CharacterArg],
     ):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if member is None:
             member = ctx.user
         if character:
@@ -404,7 +388,7 @@ class Submission(commands.Cog):
             Member, if not provided, it's current user.
         """
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if not member:
             member = ctx.user
         if ctx.user == member:
@@ -428,8 +412,6 @@ class Submission(commands.Cog):
         member : Object
             User to update list
         """
-        if not self.ready:
-            return
         if isinstance(member, int):
             member = Object(id=member)
         webhook = await self.bot.webhook(919277769735680050)
@@ -516,7 +498,7 @@ class Submission(commands.Cog):
             if isinstance(ctx, Interaction):
                 resp: InteractionResponse = ctx.response
                 if not resp.is_done():
-                    await resp.defer(ephemeral=True)
+                    await resp.defer(ephemeral=True, thinking=True)
                 return await ctx.followup.send(
                     text,
                     wait=True,
@@ -527,32 +509,12 @@ class Submission(commands.Cog):
                 return await ctx.reply(text, view=view)
             return await ctx.reply(text, delete_after=5)
 
-        if not self.ready:
-            await send(
-                "Bot is restarting, please be patient",
-            )
-            return
-
         if isinstance(ctx, Message):
             await send(
                 "Starting submission process",
             )
 
         if isinstance(species := oc.species, Fakemon):  # type: ignore
-            if not oc.url:
-                stats_view = StatsView(
-                    member=worker,
-                    target=ctx,
-                )
-                async with stats_view:
-                    if not (stats := stats_view.choice):
-                        return
-                    species.set_stats(**asdict(stats.value))
-            if sum(species.stats) > 18 or min(species.stats) < 1 or max(species.stats) > 5:
-                await send(
-                    "Max stats is 18. Min 1. Max 5",
-                )
-                return
             if not 1 <= len(species.types) <= 2:
                 view = Complex(
                     member=worker,
@@ -834,8 +796,7 @@ class Submission(commands.Cog):
             Message to process
         """
         if (
-            not self.ready
-            or not message.guild
+            not message.guild
             or message.mentions
             or message.author.bot
             or message.author.id in self.ignore
@@ -861,9 +822,10 @@ class Submission(commands.Cog):
                     if msg_data.tables:
                         msg_data = doc_convert(msg_data)
                     else:
-                        msg_data = safe_load(
-                            yaml_handler("\n".join(element for p in msg_data.paragraphs if (element := p.text.strip())))
+                        text = yaml_handler(
+                            "\n".join(element for p in msg_data.paragraphs if (element := p.text.strip()))
                         )
+                        msg_data = safe_load(text)
                 if msg_data and isinstance(msg_data, dict):
                     return await self.submission_handler(message, **msg_data)
         except Exception as e:
@@ -875,7 +837,6 @@ class Submission(commands.Cog):
     async def on_message_tupper(self, message: Message, member_id: int):
         channel = message.channel
         author = message.author.name.title()
-        guild: Guild = message.guild
 
         if "Npc" in author or "Narrator" in author:
             return
@@ -895,10 +856,6 @@ class Submission(commands.Cog):
             return
 
         if oc.location != channel.id:
-            if ch := guild.get_channel(oc.location):
-                current_ocs = [x for x in self.ocs.values() if x.location == ch.id]
-                if not current_ocs and ch != channel:
-                    await ch.send(CLAIM_MESSAGE)
             async with self.bot.database() as db:
                 oc.location = channel.id
                 await db.execute(
@@ -952,21 +909,8 @@ class Submission(commands.Cog):
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
-        source = Path("resources/templates.json")
-        async with aiopen(source.resolve(), mode="r") as f:
-            contents = await f.read()
-            view = SubmissionView(
-                ocs=self.ocs,
-                oc_list=self.oc_list,
-                supporting=self.supporting,
-                **loads(contents),
-            )
-            webhook = await self.bot.webhook(852180971985043466)
-            await webhook.edit_message(
-                961345742222536744,
-                content=None,
-                view=view,
-            )
+        view = SubmissionView(ocs=self.ocs, supporting=self.supporting)
+        self.bot.add_view(view=view, message_id=961345742222536744)
         self.bot.logger.info("Finished loading Submission menu")
 
     @commands.Cog.listener()
@@ -1058,17 +1002,10 @@ class Submission(commands.Cog):
                 self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
                 await oc.delete(db)
 
-    @commands.Cog.listener()
-    async def on_ready(self) -> None:
-        """On ready, the parameters from Cog submisisons are loaded."""
-
-        if self.ready:
-            return
-
+    async def cog_load(self) -> None:
         await self.load_characters()
         await self.load_profiles()
         await self.load_submssions()
-        self.ready = True
 
 
 async def setup(bot: CustomBot) -> None:

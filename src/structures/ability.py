@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
 from typing import Any, Optional
@@ -93,15 +94,12 @@ class Ability:
     ) -> frozenset[Ability]:
         """This is a method that determines the abilities out of
         the existing entries, it has a 85% of precision.
-
         Parameters
         ----------
         item : str
             String to search
-
         limit_range : int, optional
             max amount to deduce, defaults to None
-
         Returns
         -------
         frozenset[Ability]
@@ -116,23 +114,28 @@ class Ability:
             elif isinstance(elem, Ability):
                 items.add(elem)
 
-        for elem in filter(bool, split(r"[^A-Za-z0-9 \.'-]", ",".join(aux))):
-            if data := ALL_ABILITIES.get(fix(elem)):
+        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+            if data := ALL_ABILITIES.get(elem := fix(elem)):
                 items.add(data)
-            elif data := process.extractOne(elem, choices=cls.all(), processor=lambda x: getattr(x, "name", x)):
-                items.add(data[0])
+            else:
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=ALL_ABILITIES,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    items.add(ALL_ABILITIES[data])
+
         return frozenset(list(items)[:limit_range])
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Ability]:
         """This is a method that determines the ability out of
         the existing entries, it has a 85% of precision.
-
         Parameters
         ----------
         item : str
             String to search
-
         Returns
         -------
         Optional[Ability]
@@ -141,10 +144,15 @@ class Ability:
         if isinstance(item, Ability):
             return item
         if isinstance(item, str):
-            if data := ALL_ABILITIES.get(fix(item)):
+            if data := ALL_ABILITIES.get(item := fix(item)):
                 return data
-            if data := process.extractOne(item, choices=cls.all(), processor=lambda x: getattr(x, "name", x)):
-                return data[0]
+            for elem in get_close_matches(
+                item,
+                possibilities=ALL_ABILITIES,
+                n=1,
+                cutoff=0.85,
+            ):
+                return ALL_ABILITIES[elem]
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Ability]:

@@ -19,7 +19,6 @@ from src.views.message_view import MessagePaginator, MessageView
 from src.views.move_view import MoveView
 from src.views.movepool_view import MovepoolModal, MovepoolView, MovepoolViewSelector
 from src.views.rp_view import RPView
-from src.views.stats_view import StatsView
 
 __all__ = (
     "AbilityView",
@@ -33,5 +32,4 @@ __all__ = (
     "MovepoolView",
     "MovepoolViewSelector",
     "RPView",
-    "StatsView",
 )

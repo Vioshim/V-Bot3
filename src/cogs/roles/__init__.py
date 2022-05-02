@@ -45,6 +45,10 @@ class Roles(Cog):
         self.role_cool_down: dict[int, datetime] = {}
         self.last_claimer: dict[int, int] = {}
 
+    async def cog_load(self):
+        await self.load_self_roles()
+        await self.load_rp_searches()
+
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
         self.bot.add_view(
@@ -73,25 +77,14 @@ class Roles(Cog):
         self.bot.logger.info("Loading existing RP Searches")
         async with self.bot.database() as db:
             async for item in db.cursor("SELECT * FROM RP_SEARCH;"):
-                msg_id, member_id, role_id, server_id, aux, ocs = (
+                msg_id, member_id, role_id, aux, ocs = (
                     item["id"],
                     item["member"],
                     item["role"],
-                    item["server"],
                     item["message"],
                     item["ocs"],
                 )
                 created_at = snowflake_time(msg_id)
-
-                if not (guild := self.bot.get_guild(server_id)):
-                    continue
-
-                member = guild.get_member(member_id)
-                role = guild.get_role(role_id)
-
-                if not (member and role):
-                    continue
-
                 self.role_cool_down.setdefault(role_id, created_at)
                 if self.role_cool_down[role_id] > created_at:
                     self.role_cool_down[role_id] = created_at
@@ -102,31 +95,22 @@ class Roles(Cog):
                     self.cool_down[member_id] = created_at
 
                 self.bot.add_view(
-                    view=RPSearchManage(member=member, ocs=ocs),
+                    view=RPSearchManage(member_id=member_id, ocs=ocs),
                     message_id=msg_id,
                 )
                 self.bot.add_view(
-                    view=RPSearchManage(member=member, ocs=ocs),
+                    view=RPSearchManage(member_id=member_id, ocs=ocs),
                     message_id=aux,
                 )
-
         self.bot.add_view(
             view=RPRolesView(timeout=None),
             message_id=962727445096714240,
         )
         self.bot.logger.info("Finished loading existing RP Searches")
 
-    @Cog.listener()
-    async def on_ready(self):
-        """Loads the views"""
-        await self.load_self_roles()
-        await self.load_rp_searches()
-
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @app_commands.choices(
-        role=[Choice(name=k, value=str(v)) for k, v in RP_SEARCH_ROLES.items()],
-    )
+    @app_commands.choices(role=[Choice(name=k, value=str(v)) for k, v in RP_SEARCH_ROLES.items()])
     async def ping(
         self,
         interaction: Interaction,

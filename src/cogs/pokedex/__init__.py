@@ -101,7 +101,7 @@ class Pokedex(commands.Cog):
             timestamp=utcnow(),
         )
         embed.set_image(url=WHITE_BAR)
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if not species:
             species = fused
 
@@ -212,7 +212,7 @@ class Pokedex(commands.Cog):
         text: str = ""
         guild: Guild = ctx.guild
         cog = ctx.client.get_cog("Submission")
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         embed = Embed(
             title="Select the Character",
             url=PLACEHOLDER,

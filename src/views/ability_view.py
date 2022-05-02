@@ -38,7 +38,7 @@ def ability_emoji_parser(x: Ability | SpAbility) -> Optional[str]:
         return "\N{LARGE GREEN CIRCLE}"
 
 
-class AbilityView(Complex):
+class AbilityView(Complex[Ability | SpAbility]):
     def __init__(
         self,
         member: Member,

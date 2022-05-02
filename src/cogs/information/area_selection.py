@@ -109,7 +109,7 @@ class AreaSelection(View):
     @button(label="Toggle view ON/OFF", row=1)
     async def read_one(self, btn: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if btn.label == "Toggle ON":
             await ctx.user.add_roles(self.role)
         elif self.role in ctx.user.roles:
@@ -119,7 +119,7 @@ class AreaSelection(View):
     @button(label="Enable all", row=1)
     async def read_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if isinstance(member := ctx.user, User):
             guild = member.mutual_guilds[0]
         else:
@@ -133,7 +133,7 @@ class AreaSelection(View):
     @button(label="Disable all", row=1)
     async def disable_all(self, _: Button, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if isinstance(member := ctx.user, User):
             guild = member.mutual_guilds[0]
         else:

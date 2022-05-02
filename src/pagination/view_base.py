@@ -139,10 +139,12 @@ class Basic(View):
         username: str = None,
         avatar_url: str = None,
         ephemeral: bool = False,
+        thinking: bool = False,
         thread: Snowflake = None,
         editing_original: bool = False,
+        reply_to: Optional[Message] = None,
         **kwargs,
-    ) -> None:
+    ):
         """Sends the paginator towards the defined destination
 
         Attributes
@@ -178,6 +180,8 @@ class Basic(View):
             webhook avatar_url to send as, defaults to None
         ephemeral: bool, optional
             if message is ephemeral, defaults to False
+        thinking: bool, optional
+            if message is thinking, defaults to False
         thread: Snowflake, optional
             if message is sent to a thread, defaults to None
         """
@@ -208,12 +212,17 @@ class Basic(View):
             avatar_url=avatar_url,
             thread=thread,
             ephemeral=ephemeral,
+            thinking=thinking,
         )
 
         if not embeds and not embed:
             data["embed"] = self.embed
 
         data = {k: v for k, v in data.items() if v}
+
+        if reply_to:
+            self.message = await reply_to.reply(**data)
+            return self.message
 
         if isinstance(target, Message):
             target = target.channel
@@ -225,7 +234,7 @@ class Basic(View):
                 return
 
             if not resp.is_done():
-                await resp.defer(ephemeral=ephemeral)
+                await resp.defer(ephemeral=ephemeral, thinking=thinking)
 
             try:
                 self.message = await target.followup.send(**data, wait=True)
@@ -238,6 +247,8 @@ class Basic(View):
             self.message = await target.send(**data, wait=True)
         else:
             self.message = await target.send(**data)
+
+        return self.message
 
     async def delete(self) -> None:
         """This method deletes the view, and stops it."""

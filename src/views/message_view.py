@@ -104,7 +104,7 @@ class MessagePaginator(Complex[Message]):
         response: InteractionResponse = ctx.response
         if item := self.current_choice:
             view = View.from_message(item)
-            await response.defer(ephemeral=True)
+            await response.defer(thinking=True, ephemeral=True)
             files = []
             embeds = item.embeds
             if not (item.content or embeds):
@@ -143,9 +143,14 @@ class MessageView(View):
         messages: list[Message],
         parser: Callable[[Message], tuple[str, str]] = msg_parser,
         emoji: PartialEmoji | Emoji | str = "\N{E-MAIL SYMBOL}",
+        group_key: Callable[[Message], str] = None,
     ):
         super().__init__(timeout=None)
         self.parser = parser
+        if group_key:
+            self.group_key = group_key
+        else:
+            self.group_key = lambda x: x.embeds[0].footer.text
         self._messages = messages
         self.emoji = emoji
         self.data: dict[str, set[Message]] = {}
@@ -154,9 +159,9 @@ class MessageView(View):
     def group_method(self, messages: set[Message]):
         messages = sorted(
             filter(lambda x: x.webhook_id and x.embeds, messages),
-            key=lambda x: x.embeds[0].footer.text,
+            key=self.group_key,
         )
-        return {k: set(v) for k, v in groupby(messages, key=lambda x: x.embeds[0].footer.text) if k}
+        return {k: set(v) for k, v in groupby(messages, key=self.group_key) if k}
 
     @property
     def messages(self):
@@ -191,7 +196,7 @@ class MessageView(View):
 
     @select(
         placeholder="Messages by Category",
-        row=4,
+        row=3,
         custom_id="msg-filter",
     )
     async def select_msg(self, ctx: Interaction, sct: Select):

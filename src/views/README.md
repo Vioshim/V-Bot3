@@ -14,5 +14,4 @@
 | `ImageView`      | View which allows users to input images as attachment or urls  |
 | `MissionView`    | View that handles the Missions' claiming system                |
 | `RPView`         | View that pings an User for RPing purposes                     |
-| `StatsView`      | Stats selector for Fakemons                                    |
 | `SubmissionView` | View that handles Templates, Missions and Modifications in OCs |

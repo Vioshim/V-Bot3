@@ -98,17 +98,17 @@ class ImageMethod(ABC):
 
 
 class Focus(IntEnum):  # fo-foo
-    left = auto()
-    right = auto()
-    top = auto()
-    bottom = auto()
-    top_left = auto()
-    top_right = auto()
-    bottom_left = auto()
-    bottom_right = auto()
-    auto_ = auto()
-    face = auto()
-    custom = auto()
+    left = 1
+    right = 2
+    top = 3
+    bottom = 4
+    top_left = 5
+    top_right = 6
+    bottom_left = 7
+    bottom_right = 8
+    auto = 9
+    face = 10
+    custom = 11
 
 
 class CropStrategy(IntEnum):  # cm-foo
@@ -173,13 +173,13 @@ class Typography(Enum):  # ott-foo
 class ImagePadResizeCropStrategy(ImageMethod):
     # w-{},h-{},cm-pad_resize,bg-{}
     height: Optional[int] = None
-    weight: Optional[int] = None
+    width: Optional[int] = None
     background: Optional[int] = None
     mode: Optional[Focus] = None
 
     @property
     def tokenize(self) -> str:
-        elements = dict(h=self.height, w=self.weight, cm="pad_resize", mode=self.mode)
+        elements = dict(h=self.height, w=self.width, cm="pad_resize", mode=self.mode)
         if self.background:
             elements["bg"] = hex(self.background)[2:].upper()
         return self.token_parse(elements)
@@ -189,7 +189,7 @@ class ImagePadResizeCropStrategy(ImageMethod):
 class ImageTransformation(ImageKitTransformation):
     image: str
     height: Optional[int] = None
-    weight: Optional[int] = None
+    width: Optional[int] = None
     x: Optional[int] = None
     y: Optional[int] = None
     centered_x: Optional[int] = None
@@ -206,7 +206,7 @@ class ImageTransformation(ImageKitTransformation):
         elements = dict(
             oi=self.image,
             oh=self.height,
-            ow=self.weight,
+            ow=self.width,
             xc=self.centered_x,
             yc=self.centered_y,
             oifo=self.focus,
@@ -276,7 +276,7 @@ class TextTransformation(ImageKitTransformation):
 
 
 class ImageKit:
-    def __init__(self, base: str, height: int = None, weight: int = None):
+    def __init__(self, base: str, height: int = None, width: int = None):
         """Init Method
 
         Parameters
@@ -285,12 +285,12 @@ class ImageKit:
             Image Base url
         height : int, optional
             Height, by default None
-        weight : int, optional
-            Weight, by default None
+        width : int, optional
+            Width, by default None
         """
         self._base = image_formatter(base)
         self.height = height
-        self.weight = weight
+        self.width = width
         self.elements: list[ImageKitTransformation] = []
 
     def __str__(self):
@@ -315,12 +315,12 @@ class ImageKit:
         Returns
         -------
         str
-            Base URL with height/weight
+            Base URL with height/width
         """
         base = f"{IMAGEKIT_API}/{self._base}"
         extra: list[str] = []
-        if weight := self.weight:
-            extra.append(f"w-{weight}")
+        if width := self.width:
+            extra.append(f"w-{width}")
         if height := self.height:
             extra.append(f"h-{height}")
         if extra_text := ",".join(extra):
@@ -331,7 +331,7 @@ class ImageKit:
         self,
         image: str,
         height: Optional[int] = None,
-        weight: Optional[int] = None,
+        width: Optional[int] = None,
         x: Optional[int] = None,
         y: Optional[int] = None,
         centered_x: Optional[int] = None,
@@ -344,7 +344,7 @@ class ImageKit:
             ImageTransformation(
                 image=image,
                 height=height,
-                weight=weight,
+                width=width,
                 x=x,
                 y=y,
                 centered_x=centered_x,

@@ -107,8 +107,12 @@ class CustomBot(Bot):
         path = Path("src/cogs")
         for cog in map(PurePath, path.glob("*/__init__.py")):
             route = ".".join(cog.parts[:-1])
-            await self.load_extension(route)
-            self.logger.info("Successfully loaded %s", route)
+            try:
+                await self.load_extension(route)
+            except Exception as e:
+                self.logger.exception("Exception while loading %s", route, exc_info=e)
+            else:
+                self.logger.info("Successfully loaded %s", route)
 
     async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
         """|coro|
@@ -356,6 +360,37 @@ class CustomBot(Bot):
         finally:
             await self.pool.release(connection)
 
+    def webhook_lazy(self, channel: Messageable | int) -> Optional[Webhook]:
+        """Function which returns first webhook if cached
+
+        Parameters
+        ----------
+        channel : Messageable | int
+            Channel or its ID
+        reason : str, optional
+            Webhook creation reason, by default None
+
+        Returns
+        -------
+        Optional[Webhook]
+            Webhook if channel is valid.
+        """
+        if isinstance(channel, Thread):
+            channel = channel.parent
+
+        channel_id: int = getattr(channel, "id", channel)
+
+        if webhook := self.webhook_cache.get(channel_id):
+            return webhook
+
+        if isinstance(channel, int):
+            channel: TextChannel = self.get_channel(channel)
+            if isinstance(channel, Thread):
+                channel = channel.parent
+
+        if webhook := self.webhook_cache.get(channel.id):
+            return webhook
+
     async def webhook(
         self,
         channel: Messageable | int,
@@ -377,13 +412,11 @@ class CustomBot(Bot):
         Webhook
             Webhook if channel is valid.
         """
+        if webhook := self.webhook_lazy(channel):
+            return webhook
+
         if isinstance(channel, Thread):
             channel = channel.parent
-
-        channel_id: int = getattr(channel, "id", channel)
-
-        if webhook := self.webhook_cache.get(channel_id):
-            return webhook
 
         if isinstance(channel, int):
             channel: TextChannel = self.get_channel(channel)

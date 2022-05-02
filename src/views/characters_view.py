@@ -77,8 +77,12 @@ class PingView(View):
             )
             return
         try:
-            if isinstance(channel := ctx.channel, TextChannel):
-                channel = ctx.guild.get_channel(740568087820238919) or channel
+            if ctx.channel.id == 958122815171756042:
+                channel = ctx.guild.get_channel_or_thread(ctx.message.id)
+                if not channel:
+                    channel = await ctx.guild.fetch_channel(ctx.message.id)
+            elif isinstance(channel := ctx.channel, TextChannel):
+                channel = ctx.guild.get_channel(740568087820238919)
             view = View()
             view.add_item(Button(label="Character", url=self.oc.jump_url))
             await channel.send(
@@ -126,7 +130,6 @@ class CharactersView(Complex[Character]):
             timeout=None,
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
-            sort_key=lambda x: x.name,
         )
         self.embed.title = "Select a character"
 

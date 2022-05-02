@@ -14,9 +14,10 @@
 
 from json import load
 
-from discord import Interaction, InteractionResponse, Message, SelectOption
-from discord.ui import Select, select
+from discord import ButtonStyle, Interaction, InteractionResponse, Message, SelectOption
+from discord.ui import Button, Select, button, select
 
+from src.utils.etc import SETTING_EMOJI
 from src.views.message_view import MessageView, msg_parser
 
 __all__ = ("InviterView",)
@@ -49,6 +50,7 @@ class InviterView(MessageView):
                 emoji="\N{HANDSHAKE}",
             )
             for key in DATA.keys()
+            if key != "Parallel"
         ],
     )
     async def hubs(self, ctx: Interaction, sct: Select):
@@ -57,3 +59,14 @@ class InviterView(MessageView):
         if not (info := DATA.get(key)):
             info = f"Unknown info for {key}"
         await resp.send_message(content=info, ephemeral=True)
+
+    @button(
+        label="Read our Ad, send in your server before posting yours here.",
+        custom_id="ad",
+        style=ButtonStyle.blurple,
+        emoji=SETTING_EMOJI,
+        row=4,
+    )
+    async def server_ad(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.send_message(content=DATA["Parallel"], ephemeral=True)

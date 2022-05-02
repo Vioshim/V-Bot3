@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from logging import getLogger, setLoggerClass
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar
 
 from discord import (
     ButtonStyle,
@@ -59,7 +59,7 @@ def check(ctx: Interaction):
 class ImageView(Basic):
     def __init__(
         self,
-        member: Union[Member, User],
+        member: Member | User,
         target: _M,
         default_img: File | str = None,
     ):

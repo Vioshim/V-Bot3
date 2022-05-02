@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
 from json import JSONDecoder, JSONEncoder
-from typing import Any, Callable, Iterable, Union
+from typing import Any, Callable, Iterable, Optional
 
 from frozendict import frozendict
 
@@ -50,8 +50,8 @@ class Movepool:
     other: frozen_set = field(default_factory=frozen_set)
 
     def __post_init__(self):
-        level = {k: frozen_set(v) for k, v in self.level.items()}
-        level = {k: v for k, v in level.items() if v}
+        level = {int(k): frozen_set(v) for k, v in self.level.items()}
+        level = {int(k): v for k, v in level.items() if v}
         self.level = frozen_dict(level)
         self.tm = frozen_set(self.tm)
         self.event = frozen_set(self.event)
@@ -59,6 +59,20 @@ class Movepool:
         self.egg = frozen_set(self.egg)
         self.levelup = frozen_set(self.levelup)
         self.other = frozen_set(self.other)
+
+    @classmethod
+    def from_record(cls, item) -> Optional[Movepool]:
+        if not item:
+            return
+        return cls.from_dict(
+            level=item["level"],
+            tm=item["tm"],
+            event=item["event"],
+            tutor=item["tutor"],
+            egg=item["egg"],
+            levelup=item["levelup"],
+            other=item["other"],
+        )
 
     def __repr__(self) -> str:
         """Repr Method
@@ -268,7 +282,7 @@ class Movepool:
     def assign(
         self,
         key: str,
-        value: Union[str, set[Move], dict[int, set[Move]]] = None,
+        value: str | set[Move] | dict[int, set[Move]] = None,
     ):
         """Assigning method for movepool
 
@@ -336,7 +350,7 @@ class Movepool:
     def __setitem__(
         self,
         key: str,
-        value: Union[set[Move], dict[int, set[Move]]],
+        value: set[Move] | dict[int, set[Move]],
     ):
         """Assigning method for movepool
 
@@ -445,6 +459,41 @@ class Movepool:
             if value := kwargs.get(item):
                 movepool.assign(key=item, value=value)
         return movepool
+
+    @property
+    def db_dict(self) -> dict[str, list[str] | dict[str, list[str]]]:
+        """Returns a Movepool as dict with moves as strings
+
+        Returns
+        -------
+        dict[str, list[str] | dict[int, list[str]]]
+            generated values
+        """
+
+        def foo(moves: frozenset[Move]) -> list[str]:
+            """Inner method for conversion
+
+            Parameters
+            ----------
+            moves : frozenset[Move]
+                moves to convert
+
+            Returns
+            -------
+            list[str]
+                List of move IDs
+            """
+            return sorted(move.id for move in moves)
+
+        return dict(
+            level={str(k): foo(v) for k, v in sorted(self.level.items()) if v},
+            egg=foo(self.egg),
+            event=foo(self.event),
+            tm=foo(self.tm),
+            tutor=foo(self.tutor),
+            levelup=foo(self.levelup),
+            other=foo(self.other),
+        )
 
     @property
     def as_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:

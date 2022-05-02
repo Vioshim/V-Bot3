@@ -195,7 +195,7 @@ class Proxy(commands.Cog):
             if ocs := [
                 x
                 for x in cog.ocs.values()
-                if oc.author == member.id and (pokemon.lower() in x.name.lower() or x.name.lower() in pokemon.lower())
+                if x.author == member.id and (pokemon.lower() in x.name.lower() or x.name.lower() in pokemon.lower())
             ]:
                 oc = ocs[0]
                 npc = NPC(name=oc.name, avatar=oc.image_url)

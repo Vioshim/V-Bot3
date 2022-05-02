@@ -14,7 +14,6 @@
 
 from asyncio import to_thread
 from logging import getLogger, setLoggerClass
-from typing import Union
 
 from discord import (
     ButtonStyle,
@@ -23,12 +22,12 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    SelectOption,
+    Message,
     TextStyle,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from jishaku.codeblocks import codeblock_converter
-from yaml import dump, safe_load
+from yaml import safe_load
 
 from src.cogs.submission.oc_modification import ModifyView
 from src.pagination.complex import Complex
@@ -120,7 +119,7 @@ class SubmissionModal(Modal):
 
         except Exception as e:
             if not resp.is_done():
-                await resp.defer(ephemeral=True)
+                await resp.defer(ephemeral=True, thinking=True)
             await interaction.followup.send(str(e), ephemeral=True)
 
         if not resp.is_done():
@@ -129,33 +128,22 @@ class SubmissionModal(Modal):
 
 
 class TemplateView(View):
-    def __init__(
-        self,
-        template: dict,
-        title: str,
-    ):
+    def __init__(self, message: Message):
         super().__init__(timeout=None)
-        self.template = template
-        self.title = title
+        self.message = message
+        self.info = message.embeds[0].description
+        self.urls = {x.label: x.url for x in View.from_message(message).children if isinstance(x, Button)}
 
     @button(label="Form", row=0, style=ButtonStyle.blurple)
     async def mode1(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        info = self.template.get("Template", {})
-        text: str = dump(info, sort_keys=False)
-        modal = SubmissionModal(text)
+        modal = SubmissionModal(codeblock_converter(self.info).content)
         await resp.send_modal(modal)
 
     @button(label="Message", row=0, style=ButtonStyle.blurple)
     async def mode2(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        info = self.template.get("Template", {})
-        text = dump(info, sort_keys=False)
-        await resp.edit_message(
-            content=f"```yaml\n{text}\n```",
-            embed=None,
-            view=None,
-        )
+        await resp.edit_message(content=self.info, embed=None, view=None)
         self.stop()
 
     @button(label="Google Document", row=0, style=ButtonStyle.blurple)
@@ -166,8 +154,8 @@ class TemplateView(View):
             "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
         )
 
-        for key, item in self.template.get("Document", {}).items():
-            content += f"\n• [{key}](https://docs.google.com/document/d/{item}/edit?usp=sharing)"
+        for key, item in self.urls.items():
+            content += f"\n• [{key}]({item})"
 
         await resp.edit_message(content=content, embed=None, view=None)
         self.stop()
@@ -176,61 +164,27 @@ class TemplateView(View):
 class SubmissionView(View):
     def __init__(
         self,
-        ocs: dict[int, Character],
-        oc_list: dict[int, int],
+        ocs: list[Character],
         supporting: dict[Member, Member],
-        **kwargs: Union[str, dict],
     ):
-        """Init method
-
-        Parameters
-        ----------
-        bot : CustomBot
-            Bot instance
-        ocs : dict[int, Character]
-            OCs
-        oc_list : dict[int, int]
-            OC list
-        supporting : dict[Member, Member]
-            Mods assisting to
-        """
         super(SubmissionView, self).__init__(timeout=None)
-        self.kwargs = kwargs
         self.ocs = ocs
-        self.oc_list = oc_list
         self.supporting = supporting
-        self.show_template.options = [
-            SelectOption(
-                label=f"{key} Template",
-                description=f"Press to get {key} Template.",
-                value=key,
-                emoji="\N{SPIRAL NOTE PAD}",
-            )
-            for key in kwargs
-        ]
+        self.templates = {}
 
-    @select(
-        placeholder="Click here to read our templates",
-        row=0,
-        custom_id="a479517442c724c00cc2e15a4106d807",
-    )
+    @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
     async def show_template(self, ctx: Interaction, sct: Select) -> None:
-        """Shows the provided Templates
-
-        Parameters
-        ----------
-        _ : Select
-            Select
-        ctx : Interaction
-            Interaction
-        """
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-        template = self.kwargs.get(title := sct.values[0], {})
-        view = TemplateView(
-            template=template,
-            title=title,
-        )
+        await resp.defer(ephemeral=True, thinking=True)
+
+        try:
+            msg = self.templates[sct.values[0]]
+        except KeyError:
+            if not (ch := ctx.guild.get_channel_or_thread(961345742222536744)):
+                ch = await ctx.guild.fetch_channel(961345742222536744)
+            msg = await ch.fetch_message(int(sct.values[0]))
+            self.templates[str(msg.id)] = msg
+
         embed = Embed(
             title="How do you want to register your character?",
             color=0xFFFFFE,
@@ -241,22 +195,18 @@ class SubmissionView(View):
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(
             embed=embed,
-            view=view,
+            view=TemplateView(msg),
             ephemeral=True,
         )
 
-    @button(
-        label="Modify Character",
-        emoji="\N{PENCIL}",
-        row=1,
-        custom_id="a78a8dc33d0f303928209f6566187c3f",
-    )
+    @button(label="Modify Character", emoji="\N{PENCIL}", row=1, custom_id="modify")
     async def oc_update(self, ctx: Interaction, _: Select):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
-        await resp.defer(ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
         member = self.supporting.get(member, member)
-        if not (values := [oc for oc in self.ocs.values() if member.id == oc.author]):
+        values: list[Character] = [oc for oc in self.ocs.values() if member.id == oc.author]
+        if not values:
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
         values.sort(key=lambda x: x.name)
         if len(values) == 1:
@@ -273,10 +223,7 @@ class SubmissionView(View):
             )
             await view.wait()
             try:
-                await resp.edit_message(
-                    embed=values[0].embed,
-                    view=None,
-                )
+                await resp.edit_message(embed=values[0].embed, view=None)
             except DiscordException:
                 pass
         else:

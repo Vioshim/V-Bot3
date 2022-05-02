@@ -15,13 +15,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
 from typing import Any, Optional
 
 from discord import PartialEmoji
 from frozendict import frozendict
-from rapidfuzz import process
 
 from src.utils.functions import fix
 
@@ -269,8 +269,13 @@ class Typing:
             return item
         if data := ALL_TYPES.get(fix(item)):
             return data
-        if data := process.extractOne(item, choices=cls.all(), processor=str, score_cutoff=60):
-            return data[0]
+        for elem in get_close_matches(
+            item,
+            possibilities=ALL_TYPES,
+            n=1,
+            cutoff=0.85,
+        ):
+            return ALL_TYPES[elem]
 
     @classmethod
     def deduce_many(
@@ -302,12 +307,21 @@ class Typing:
             elif isinstance(elem, str):
                 aux.append(elem)
 
-        for elem in filter(bool, split(r"[^A-Za-z0-9 \.'-]", ",".join(aux))):
+        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
 
-            if data := ALL_TYPES.get(elem):
+            if not elem:
+                continue
+
+            if data := ALL_TYPES.get(elem := fix(elem)):
                 items.append(data)
-            elif data := process.extractOne(elem, choices=cls.all(), processor=str, score_cutoff=60):
-                items.append(data[0])
+            else:
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=ALL_TYPES,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    items.append(ALL_TYPES[data])
 
         if range_check and len(items) > 2:
             items = []

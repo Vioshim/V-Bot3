@@ -225,18 +225,28 @@ class Simple(Generic[_T], Basic):
     def menu_format(self):
         """Default Formatter"""
         self.buttons_format()
-        self.embed.clear_fields()
-        if chunks := len(self.values[:: self._entries_per_page]):
+        if self.entries_per_page != 1:
+            self.embed.clear_fields()
+        if chunks := len(self.values[:: self.entries_per_page]):
             self.embed.set_footer(
-                text=f"Page {self._pos + 1} / {chunks}",
+                text=f"Page {self.pos + 1} / {chunks}",
                 icon_url=self.embed.footer.icon_url,
             )
-            amount = self._entries_per_page * self._pos
-            for item in self.values[amount : amount + self._entries_per_page]:
-                name, value = self.parser(item)
+        else:
+            self.embed.set_footer(
+                text=f"Page {self.pos + 1} / {self.pos + 1}",
+                icon_url=self.embed.footer.icon_url,
+            )
+        amount = self.entries_per_page * self.pos
+        for item in self.values[amount : amount + self.entries_per_page]:
+            name, value = map(str, self.parser(item))
+            if self.entries_per_page == 1:
+                self.embed.title = name[:256]
+                self.embed.description = value[:4096]
+            else:
                 self.embed.add_field(
-                    name=str(name)[:256],
-                    value=str(value)[:1024],
+                    name=name[:256],
+                    value=value[:1024],
                     inline=self.inline,
                 )
 

@@ -147,10 +147,7 @@ class Inviter(commands.Cog):
             messages = [m async for m in thread.history(limit=None, oldest_first=True)]
             w = await self.bot.webhook(thread)
             self.view = InviterView(messages)
-            self.message = await w.edit_message(
-                957604961330561065,
-                view=self.view,
-            )
+            self.message = await w.edit_message(957604961330561065, view=self.view)
             self.ready = True
 
     @commands.Cog.listener()
@@ -163,6 +160,10 @@ class Inviter(commands.Cog):
             Message to be scanned
         """
         if not ctx.guild or ctx.author == self.bot.user or ctx.webhook_id or not (match := INVITE.search(ctx.content)):
+            if isinstance(ctx.author, Member) and ctx.author.guild_permissions.administrator:
+                return
+            if ctx.channel.id == 957602085753458708:
+                await ctx.delete()
             return
 
         context = await self.bot.get_context(ctx)
@@ -219,71 +220,62 @@ class Inviter(commands.Cog):
                 view=link_view,
                 files=files,
             )
-            view = Complex(
+            view: Complex[str] = Complex(
                 member=author,
                 values=data.keys(),
                 target=ctx.channel,
                 timeout=None,
             )
 
-            async with view.send(
-                title="Select Category",
-                single=True,
-            ) as choice:
+            async with view.send(title="Select Category", single=True) as choice:
                 if choice:
                     generator.set_footer(text=choice)
-                    data.setdefault(choice, set())
-                    data[choice].add(message)
                     if partnered_role := get(author.guild.roles, name="Partners"):
                         await author.add_roles(partnered_role)
-                return
-
-        generator.set_footer(
-            text=author.display_name,
-            icon_url=author.display_avatar.url,
-        )
-        embed = Embed(
-            title="Server Invite Detected - Possible Partner/Advertiser",
-            color=author.color,
-            description=ctx.content,
-            timestamp=utcnow(),
-        )
-        embed.set_author(
-            name=author.display_name,
-            icon_url=author.display_avatar.url,
-        )
-        if icon := invite_guild.icon:
-            embed.set_footer(text=f"ID: {author.id}", icon_url=icon.url)
-            embed.set_thumbnail(url=icon.url)
+                    await message.edit(embed=generator)
+                    messages = self.view.messages
+                    messages.append(message)
+                    self.view.messages = messages
+                    self.message = await self.message.edit(view=self.view)
+                await ctx.delete()
         else:
-            embed.set_footer(text=f"ID: {author.id}")
-        embed.add_field(name="Posted at", value=ctx.channel.mention)
-
-        if user := invite.inviter:
-            embed.add_field(
-                name=f"Invite creator - {user.name!r}",
-                value=user.mention,
+            generator.set_footer(text=author.display_name, icon_url=author.display_avatar.url)
+            embed = Embed(
+                title="Server Invite Detected - Possible Partner/Advertiser",
+                color=author.color,
+                description=ctx.content,
+                timestamp=utcnow(),
             )
+            embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
+            if icon := invite_guild.icon:
+                embed.set_footer(text=f"ID: {author.id}", icon_url=icon.url)
+                embed.set_thumbnail(url=icon.url)
+            else:
+                embed.set_footer(text=f"ID: {author.id}")
+            embed.add_field(name="Posted at", value=ctx.channel.mention)
 
-        if images := ctx.attachments:
-            embed.set_image(url=images[0].proxy_url)
+            if user := invite.inviter:
+                embed.add_field(name=f"Invite creator - {user.name!r}", value=user.mention)
 
-        files_embed, embed = await self.bot.embed_raw(embed=embed)
-        view = InviteView(
-            invite,
-            generator,
-            ctx.author,
-            data,
-            view=link_view,
-            files=files,
-        )
-        await mod_ch.send(
-            content=invite.url,
-            embed=embed,
-            files=files_embed,
-            view=view,
-        )
-        await ctx.delete()
+            if images := ctx.attachments:
+                embed.set_image(url=images[0].proxy_url)
+
+            files_embed, embed = await self.bot.embed_raw(embed=embed)
+            view = InviteView(
+                invite,
+                generator,
+                ctx.author,
+                data,
+                view=link_view,
+                files=files,
+            )
+            await mod_ch.send(
+                content=invite.url,
+                embed=embed,
+                files=files_embed,
+                view=view,
+            )
+            await ctx.delete()
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:

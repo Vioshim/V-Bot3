@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from random import choice
 from re import split
@@ -214,8 +215,13 @@ class Move:
         """
         if data := cls.from_ID(item):
             return data
-        if data := process.extractOne(item, choices=cls.all(), processor=lambda x: getattr(x, "name", x)):
-            return data[0]
+        for elem in get_close_matches(
+            item,
+            possibilities=ALL_MOVES,
+            n=1,
+            cutoff=0.85,
+        ):
+            return ALL_MOVES[elem]
 
     @classmethod
     def deduce_many(
@@ -225,14 +231,12 @@ class Move:
     ) -> frozenset[Move]:
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
-
         Parameters
         ----------
         elems : str
             Strings to search
         limit : int
             If there's a limit of moves to get
-
         Returns
         -------
         frozenset[Move]
@@ -247,13 +251,17 @@ class Move:
             elif isinstance(elem, str):
                 aux.append(elem)
 
-        for elem in filter(bool, split(r"[^A-Za-z0-9 \.'-]", ",".join(aux))):
-            if item := ALL_MOVES.get(fix(elem)):
-                items.add(item)
-            elif data := process.extractOne(
-                elem, choices=cls.all(), processor=lambda x: getattr(x, "name", x), score_cutoff=85
-            ):
-                items.add(data[0])
+        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
+            if data := ALL_MOVES.get(elem := fix(elem)):
+                items.add(data)
+            else:
+                for data in get_close_matches(
+                    word=elem,
+                    possibilities=ALL_MOVES,
+                    n=1,
+                    cutoff=0.85,
+                ):
+                    items.add(ALL_MOVES[data])
 
         return frozenset(list(items)[:limit])
 
