@@ -779,10 +779,9 @@ def oc_process(**kwargs) -> Character:
     if age := common_pop_get(data, "age", "years"):
         data["age"] = int_check(age, 13, 99)
 
-    if isinstance(species, Fakemon):
-        if stats := data.pop("stats", {}):
-            species.set_stats(**stats)
+    data.pop("stats", {})
 
+    if isinstance(species, Fakemon):
         if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
             species.movepool = Movepool.from_dict(**movepool)
 
