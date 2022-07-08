@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from apscheduler.enums import ConflictPolicy
-from apscheduler.triggers.date import DateTrigger
+from asyncio import sleep
+
 from discord import Message
 from discord.ext.commands import Cog
 
 from src.cogs.bumps.bumps import BUMPS, PingBump
 from src.structures.bot import CustomBot
+
+__all__ = ("Bump", "setup")
 
 
 class Bump(Cog):
@@ -38,6 +40,9 @@ class Bump(Cog):
         -------
 
         """
+        if ctx.author == self.bot.user:
+            return
+
         if not (ctx.author.bot and ctx.embeds):
             return
 
@@ -47,13 +52,9 @@ class Bump(Cog):
             if bump.valid:
                 await ctx.delete()
                 await bump.send()
-            elif date := bump.date:
-                await self.bot.scheduler.add_schedule(
-                    bump.send,
-                    trigger=DateTrigger(date),
-                    id=f"Bump[{ctx.id}]",
-                    conflict_policy=ConflictPolicy.replace,
-                )
+            elif timedelta := bump.timedelta:
+                await sleep(timedelta.total_seconds())
+                await bump.send()
 
     @Cog.listener()
     async def on_message_edit(self, before: Message, after: Message):
@@ -66,6 +67,8 @@ class Bump(Cog):
         after : Message
             Message after editing
         """
+        if after.author == self.bot.user:
+            return
 
         if not (after.author.bot and after.embeds):
             return
@@ -77,16 +80,12 @@ class Bump(Cog):
                 await after.delete()
                 await bump.send()
                 await bump.wait()
-            elif date := bump.date:
-                await self.bot.scheduler.add_schedule(
-                    bump.on_timeout,
-                    trigger=DateTrigger(date),
-                    id=f"Bump[{after.id}]",
-                    conflict_policy=ConflictPolicy.replace,
-                )
+            elif timedelta := bump.timedelta:
+                await sleep(timedelta.total_seconds())
+                await bump.send()
 
 
-def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot) -> None:
     """Default Cog loader
 
     Parameters
@@ -94,4 +93,4 @@ def setup(bot: CustomBot) -> None:
     bot: CustomBot
         Bot
     """
-    bot.add_cog(Bump(bot))
+    await bot.add_cog(Bump(bot))

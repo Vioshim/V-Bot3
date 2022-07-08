@@ -18,6 +18,7 @@ from typing import Union
 from dateparser import parse
 from discord import Member, Message, User
 from discord.ext.commands import (
+    Context,
     Converter,
     MemberConverter,
     MemberNotFound,
@@ -29,15 +30,14 @@ from discord.ext.commands import (
 )
 from discord.file import File
 
-from src.context.context import Context
-from src.structures.move import Move
-from src.structures.species import Species
 from src.structures.exceptions import (
     NoDateFound,
     NoImageFound,
     NoMoveFound,
     NoSpeciesFound,
 )
+from src.structures.move import Move
+from src.structures.species import Species
 from src.utils.matches import REGEX_URL
 
 
@@ -70,12 +70,12 @@ class MovesCall(Converter[Move]):
 
 
 class SpeciesCall(Converter[Species]):
-    async def convert(self, ctx: Context, argument: str) -> str:
+    async def convert(self, _: Context, argument: str) -> Species:
         """Function which converts to Species if possible
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Parsing str argument
@@ -91,7 +91,7 @@ class SpeciesCall(Converter[Species]):
             If no image was found
         """
 
-        if data := Species.deduce(argument):
+        if data := Species.single_deduce(argument):
             return data
 
         raise NoSpeciesFound(argument)
@@ -219,10 +219,7 @@ class CurrentDateCall(Converter[datetime]):
         NoDateFound
             If no date was found
         """
-        if date := parse(
-            date_string=argument,
-            settings=dict(PREFER_DATES_FROM="current_period", TIMEZONE="utc"),
-        ):
+        if date := parse(date_string=argument, settings=dict(PREFER_DATES_FROM="current_period", TIMEZONE="utc")):
             return date
         raise NoDateFound(argument)
 
@@ -248,9 +245,7 @@ class AfterDateCall(Converter[datetime]):
         NoDateFound
             If no date was found
         """
-        if date := parse(
-            argument, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc")
-        ):
+        if date := parse(argument, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc")):
             return date
         raise NoDateFound(argument)
 
@@ -276,9 +271,7 @@ class BeforeDateCall(Converter[datetime]):
         NoDateFound
             If no date was found
         """
-        if date := parse(
-            argument, settings=dict(PREFER_DATES_FROM="past", TIMEZONE="utc")
-        ):
+        if date := parse(argument, settings=dict(PREFER_DATES_FROM="past", TIMEZONE="utc")):
             return date
         raise NoDateFound(argument)
 

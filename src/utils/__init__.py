@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from src.utils.doc_reader import docs_reader
+from src.utils.doc_reader import DOCX_FORMAT, GOOGLE_FORMAT, BytesAIO, docs_aioreader
 from src.utils.etc import (
     DICE_NUMBERS,
-    MAP_BUTTONS,
-    NUMBERS,
+    MAP_ELEMENTS,
+    MAP_ELEMENTS2,
     RAINBOW,
     RP_CATEGORIES,
     WHITE_BAR,
@@ -50,10 +49,13 @@ from src.utils.matches import (
 )
 
 __all__ = (
-    "docs_reader",
+    "DOCX_FORMAT",
+    "GOOGLE_FORMAT",
+    "BytesAIO",
+    "docs_aioreader",
     "DICE_NUMBERS",
-    "MAP_BUTTONS",
-    "NUMBERS",
+    "MAP_ELEMENTS",
+    "MAP_ELEMENTS2",
     "RAINBOW",
     "RP_CATEGORIES",
     "WHITE_BAR",

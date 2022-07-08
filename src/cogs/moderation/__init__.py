@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
-from datetime import datetime, timedelta
+from datetime import timedelta
 from re import MULTILINE, compile
-from typing import Optional, Union
+from typing import Optional
 
+from aiohttp import ClientResponseError
 from apscheduler.triggers.cron import CronTrigger
 from discord import (
     AllowedMentions,
@@ -27,36 +27,30 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
-    Option,
     Role,
     TextChannel,
+    Thread,
     User,
+    app_commands,
 )
-from discord.ext.commands import (
-    Cog,
-    bot_has_guild_permissions,
-    command,
-    group,
-    has_guild_permissions,
-    has_role,
-    slash_command,
-)
+from discord.ext import commands
+from discord.ext.commands import Context
 from discord.ui import Button, View, button
 from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
 
-from src.context import ApplicationContext, Context
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
+__all__ = ("Moderation", "setup")
+
+
+API = "https://phish.sinking.yachts/v2"
+API_PARAM = {"X-Identity": "V-Bot"}
+
 
 class Meeting(View):
-    def __init__(
-        self,
-        reporter: Member,
-        imposter: Member,
-        reason: Optional[str] = None,
-    ):
+    def __init__(self, reporter: Member, imposter: Member, reason: Optional[str] = None):
         super(Meeting, self).__init__(timeout=60)
         self.reporter = reporter
         self.imposter = imposter
@@ -78,9 +72,7 @@ class Meeting(View):
             colour=reporter.color,
             timestamp=utcnow(),
         )
-        embed.set_author(
-            name=reporter.display_name, icon_url=reporter.display_avatar.url
-        )
+        embed.set_author(name=reporter.display_name, icon_url=reporter.display_avatar.url)
         embed.set_thumbnail(url=self.imposter.display_avatar.url)
         embed.set_footer(text="Agreed: 0 | Disagreed: 0")
         if reason:
@@ -91,11 +83,9 @@ class Meeting(View):
         resp: InteractionResponse = interaction.response
         member: Member = interaction.user
         if member == self.reporter:
-            await resp.send_message(
-                "You are the one reporting.", ephemeral=True
-            )
+            await resp.send_message("You are the one reporting.", ephemeral=True)
             return False
-        elif member == self.imposter:
+        if member == self.imposter:
             await resp.send_message("You are the one reported.", ephemeral=True)
             return False
         if member in self.attack:
@@ -105,40 +95,32 @@ class Meeting(View):
         return True
 
     @button(label="Agreed")
-    async def agreement(self, _: Button, interaction: Interaction):
+    async def agreement(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         user: Member = interaction.user
         if interaction.user.guild_permissions.manage_messages:
             self.moderator = interaction.user
-            await resp.send_message(
-                "Please congrat the users that did this.", ephemeral=True
-            )
+            await resp.send_message("Please congrat the users that did this.", ephemeral=True)
             await self.process(method=True)
             self.stop()
         else:
             self.attack.add(user)
-            self.embed.set_footer(
-                text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}"
-            )
-            await interaction.edit_original_message(embed=self.embed)
+            self.embed.set_footer(text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}")
+            await resp.edit_message(embed=self.embed)
 
     @button(label="Disagreed")
-    async def disagreement(self, _: Button, interaction: Interaction):
+    async def disagreement(self, interaction: Interaction, _: Button):
         user: Member = interaction.user
         resp: InteractionResponse = interaction.response
         if interaction.user.guild_permissions.manage_messages:
             self.moderator = interaction.user
             await self.process(method=False)
-            await resp.send_message(
-                "Please warn the user that did this.", ephemeral=True
-            )
+            await resp.send_message("Please warn the user that did this.", ephemeral=True)
             self.stop()
         else:
             self.defend.add(user)
-            self.embed.set_footer(
-                text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}"
-            )
-            await interaction.edit_original_message(embed=self.embed)
+            self.embed.set_footer(text=f"Agreed: {len(self.attack):02d} | Disagreed: {len(self.defend):02d}")
+            await resp.edit_message(embed=self.embed)
 
     async def on_timeout(self):
         await self.process()
@@ -152,13 +134,8 @@ class Meeting(View):
             description="\n".join(i.mention for i in self.attack),
         )
         embed.set_image(url=WHITE_BAR)
-        embed.set_author(
-            name=hero.display_name,
-            icon_url=hero.display_avatar.url,
-        )
-        embed.set_thumbnail(
-            url=sus.display_avatar.url,
-        )
+        embed.set_author(name=hero.display_name, icon_url=hero.display_avatar.url)
+        embed.set_thumbnail(url=sus.display_avatar.url)
         embed2 = embed.copy()
         embed2.title = f"Users that Disagreed with {sus}'s Votation"
         embed2.description = "\n".join(i.mention for i in self.defend)
@@ -188,78 +165,91 @@ class Meeting(View):
         await self.message.edit(embed=self.embed, view=None)
 
 
-class Moderation(Cog):
+class Moderation(commands.Cog):
+    """This is a standard moderation Cog"""
+
     def __init__(self, bot: CustomBot):
+        """Default init Method
+
+        Parameters
+        ----------
+        bot : CustomBot
+            Bot instance
+        """
         self.bot = bot
         self.loaded: bool = False
 
-    async def scam_changes(self, seconds: str = 300):
-        url = f"https://phish.sinking.yachts/v2/recent/{seconds}"
-        async with self.bot.session.get(
-            url,
-            params={"X-Identity": "V-Bot"},
-        ) as data:
-            items: list[dict[str, str]] = await data.json()
-            for item in items:
-                handler = item.get("type")
-                domains: list[str] = set(item.get("domains", []))
-                if handler == "add":
-                    self.bot.scam_urls |= domains
-                elif handler == "delete":
-                    self.bot.scam_urls -= domains
-
-    @Cog.listener()
-    async def on_ready(self):
-        if not self.bot.scam_urls:
+    async def scam_all(self):
+        """Function to load all API data"""
+        try:
             async with self.bot.session.get(
-                "https://phish.sinking.yachts/v2/all",
-                params={"X-Identity": "V-Bot"},
+                f"{API}/all",
+                params=API_PARAM,
             ) as data:
                 entries = await data.json()
                 self.bot.scam_urls = set(entries)
+        except ClientResponseError:
+            self.bot.logger.error("Scam API is down.")
 
+    async def scam_changes(self, seconds: str = 300):
+        """Function to load API Changes
+
+        Parameters
+        ----------
+        seconds : str, optional
+            Seconds to retrieve, by default 300
+        """
+        try:
+            async with self.bot.session.get(f"{API}/recent/{seconds}", params=API_PARAM) as data:
+                items: list[dict[str, str]] = await data.json()
+                for item in items:
+                    handler = item.get("type")
+                    domains: list[str] = set(item.get("domains", []))
+                    if handler == "add":
+                        self.bot.scam_urls |= domains
+                    elif handler == "delete":
+                        self.bot.scam_urls -= domains
+        except ClientResponseError:
+            self.bot.logger.error("Scam API is down.")
+
+    async def scam_load(self):
+        if not self.bot.scam_urls:
+            await self.scam_all()
+        else:
+            await self.scam_changes()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Initialize the scam urls and schedule each 5 minutes"""
+        await self.scam_all()
         await self.bot.scheduler.add_schedule(
-            self.scam_changes,
+            self.scam_load,
             id="Nitro Scam List",
-            trigger=CronTrigger(
-                minute="0,5,10,15,20,25,30,35,40,45,50,55",
-                second=0,
-            ),
+            trigger=CronTrigger(minute="0,5,10,15,20,25,30,35,40,45,50,55", second=0),
         )
 
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Starts a meeting to report a raider",
-    )
-    @has_role("Registered")
-    async def vote(
-        self,
-        ctx: ApplicationContext,
-        member: Member,
-        reason: str = None,
-    ):
-        interaction: Interaction = ctx.interaction
-        resp: InteractionResponse = ctx.response
-        if member == ctx.author:
-            await resp.send_message(
-                content="You can't report yourself. Tool isn't a joke",
-                ephemeral=True,
-            )
+    @app_commands.command(description="Starts a meeting to report a raider")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.checks.has_role("Registered")
+    async def vote(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
+        resp: InteractionResponse = interaction.response
+        if not isinstance(member, Member):
+            member = interaction.guild.get_member(member)
+
+        if not member:
+            await resp.send_message(content="Command failed as member was not found", ephemeral=True)
+            return
+        if member == interaction.user:
+            await resp.send_message(content="You can't report yourself. Tool isn't a joke", ephemeral=True)
             return
         if member.bot:
-            await resp.send_message(
-                content="That's a bot, if it's here was added by staff.",
-                ephemeral=True,
-            )
+            await resp.send_message(content="That's a bot, if it's here was added by staff.", ephemeral=True)
             return
-        moderation: Role = get(ctx.guild.roles, name="Moderation")
-        if member.top_role >= ctx.author.top_role:
-            await resp.send_message(
-                content="Member has a higher or same role than yours.",
-                ephemeral=True,
-            )
+        moderation: Role = get(interaction.guild.roles, name="Moderation")
+        if member.top_role >= interaction.user.top_role:
+            await resp.send_message(content="Member has a higher or same role than yours.", ephemeral=True)
             return
-        view = Meeting(reporter=ctx.user, imposter=member, reason=reason)
+        view = Meeting(reporter=interaction.user, imposter=member, reason=reason)
         time = format_dt(utcnow() + timedelta(seconds=60), style="R")
         await resp.send_message(
             content=f"{moderation.mention}  -  {time}",
@@ -268,70 +258,23 @@ class Moderation(Cog):
         )
         msg = await interaction.original_message()
         thread = await msg.create_thread(name=f"Discuss {member.id}")
-        await thread.add_user(ctx.user)
+        await thread.add_user(interaction.user)
         view.message = msg
         await msg.edit(view=view)
         await view.wait()
 
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Reports a situation to staff.",
-    )
-    async def report(
-        self,
-        ctx: ApplicationContext,
-        text: Option(
-            str, description="Message to be sent to staff", required=True
-        ),
-        anonymous: Option(
-            bool,
-            description="If you want staff to know you reported it.",
-            required=False,
-        ),
-    ):
-        await ctx.defer(ephemeral=True)
-
-        embed = Embed(title="New Report", description=text, timestamp=utcnow())
-
-        embed.set_image(url=WHITE_BAR)
-
-        if not anonymous:
-            embed.set_author(
-                name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url
-            )
-        else:
-            embed.set_author(name="Anonymous Source")
-
-        channel = self.bot.get_channel(877376320093425685)
-        if guild := channel.guild:
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-
-        await channel.send(embed=embed)
-
-        await ctx.send_followup(
-            "Report has been sent successfully!. This is how it looks.",
-            embed=embed,
-            ephemeral=True,
-        )
-
-    @slash_command(
-        guild_ids=[719343092963999804],
-        description="Sets yourself as AFK",
-    )
-    async def afk(
-        self,
-        ctx: ApplicationContext,
-        reason: Option(
-            str,
-            description="The reason why you are going AFK.",
-            required=False,
-        ),
-    ):
-        member: Member = ctx.author
+    @app_commands.command(description="Sets yourself as AFK")
+    @app_commands.guilds(719343092963999804)
+    @app_commands.describe(reason="The reason why you are going AFK.")
+    async def afk(self, ctx: Interaction, reason: Optional[str]):
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
         afk_role: Role = member.guild.get_role(932324221168795668)
-        await ctx.defer(ephemeral=True)
+        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
+            await ctx.channel.edit(archived=True)
+        await resp.defer(ephemeral=True, thinking=True)
         if afk_role in member.roles:
-            await ctx.send_followup(
+            await ctx.followup.send(
                 "You are already AFK. If you wanna remove the Role, simply send a message in the server.",
                 ephemeral=True,
             )
@@ -341,12 +284,12 @@ class Moderation(Cog):
             reason = "No reason provided."
 
         await member.add_roles(afk_role, reason=reason)
-        await ctx.send_followup(
+        await ctx.followup.send(
             "You are now AFK, the next time you send a message in the server, the role will be removed.",
             ephemeral=True,
         )
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, message: Message):
 
         guild: Guild = message.guild
@@ -360,35 +303,28 @@ class Moderation(Cog):
             return
 
         if message.author in afk_role.members:
-            await message.author.remove_roles(
-                afk_role,
-                reason=f"Removed AFK as user replied at {message.channel}",
-            )
+            await message.author.remove_roles(afk_role, reason=f"Removed AFK as user replied at {message.channel}")
 
         mentioned_users = message.mentions.copy()
-        if reference := message.reference:
-            with suppress(DiscordException):
+        try:
+            if reference := message.reference:
                 if not (msg := message.reference.resolved):
-                    msg = await message.channel.fetch_message(
-                        reference.message_id
-                    )
+                    msg = await message.channel.fetch_message(reference.message_id)
                 mentioned_users.append(msg.author)
+        except DiscordException:
+            pass
 
         mentioned = set(afk_role.members) & set(mentioned_users)
-
         if mentions := ", ".join(x.mention for x in mentioned):
             await message.reply(
                 f"The users {mentions} are AFK. Check our Audit log for more information.",
                 delete_after=10,
-                allowed_mentions=AllowedMentions(
-                    replied_user=True,
-                    users=False,
-                ),
+                allowed_mentions=AllowedMentions(replied_user=True, users=False),
             )
 
-    @command(name="cooldown", aliases=["sleep"])
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True)
+    @commands.command(name="cooldown", aliases=["sleep"])
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
     async def cooldown(self, ctx: Context, time: int = 21600) -> None:
         """Makes the channel have cool down
 
@@ -399,9 +335,9 @@ class Moderation(Cog):
         await ctx.channel.edit(slowmode_delay=time)
         await ctx.reply(content=f"Cool down set to {time} seconds")
 
-    @group(name="clean", aliases=["purge"], invoke_without_command=True)
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True)
+    @commands.group(name="clean", aliases=["purge"], invoke_without_command=True)
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
     async def clean(self, ctx: Context, amount: int = 5) -> None:
         """Cleans a channel's messages by a given amount, 5 as default
 
@@ -412,13 +348,11 @@ class Moderation(Cog):
         async with ctx.typing():
             await ctx.message.delete()
             deleted = await ctx.channel.purge(limit=amount)
-        await ctx.channel.send(
-            f"Deleted {len(deleted)} message(s)", delete_after=3
-        )
+        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="bot")
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True)
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
     async def clean_bot(self, ctx: Context, amount: int = 5):
         """Cleans a channel's bot messages by a given amount
 
@@ -428,29 +362,20 @@ class Moderation(Cog):
         """
         async with ctx.typing():
             await ctx.message.delete()
-            deleted = await ctx.channel.purge(
-                limit=amount, check=lambda m: m.author.bot
-            )
-        await ctx.channel.send(
-            f"Deleted {len(deleted)} message(s)", delete_after=3
-        )
+            deleted = await ctx.channel.purge(limit=amount, check=lambda m: m.author.bot)
+        await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="user")
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True)
-    async def clean_user(
-        self,
-        ctx: Context,
-        user: Union[Member, User],
-        amount: int = None,
-    ) -> None:
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
+    async def clean_user(self, ctx: Context, user: Member | User, amount: int = None) -> None:
         """Cleans a channel's user messages by a given amount
 
         Parameters
         ----------
         ctx: Context
             Context
-        user: Union[Member, User]
+        user: Member | User
             Target User
         amount: int, optional
             Amount to clean. Defaults to None
@@ -462,14 +387,12 @@ class Moderation(Cog):
         channel: TextChannel = ctx.channel
         async with ctx.typing():
             await ctx.message.delete()
-            deleted = await channel.purge(
-                limit=amount, check=lambda m: m.author.id == user.id
-            )
+            deleted = await channel.purge(limit=amount, check=lambda m: m.author.id == user.id)
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="regex")
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True)
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
     async def clean_regex(
         self,
         ctx: Context,
@@ -497,15 +420,9 @@ class Moderation(Cog):
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
     @clean.command(name="after")
-    @has_guild_permissions(manage_messages=True)
-    @bot_has_guild_permissions(manage_messages=True)
-    async def clean_after(
-        self,
-        ctx: Context,
-        amount: int = None,
-        *,
-        message: Message = None,
-    ) -> None:
+    @commands.has_guild_permissions(manage_messages=True)
+    @commands.bot_has_guild_permissions(manage_messages=True)
+    async def clean_after(self, ctx: Context, amount: int = None, *, message: Message = None) -> None:
         """Cleans a channel's user messages after a message.
 
         :param ctx: Context
@@ -515,24 +432,17 @@ class Moderation(Cog):
         """
         message = message or ctx.message
         channel: TextChannel = ctx.channel
-        if ref := message.reference:
-            if isinstance(ref.resolved, Message):
-                message = ref.resolved
+        if (ref := message.reference) and isinstance(ref.resolved, Message):
+            message = ref.resolved
         async with ctx.typing():
             await ctx.message.delete()
             deleted = await channel.purge(limit=amount, after=message)
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
-    @command(name="kick")
-    @has_guild_permissions(kick_members=True)
-    @bot_has_guild_permissions(kick_members=True)
-    async def kick(
-        self,
-        ctx: Context,
-        member: Member,
-        *,
-        reason: str = None,
-    ) -> None:
+    @commands.command(name="kick")
+    @commands.has_guild_permissions(kick_members=True)
+    @commands.bot_has_guild_permissions(kick_members=True)
+    async def kick(self, ctx: Context, member: Member, *, reason: str = None) -> None:
         """Kicks a member from the server.
 
         :param ctx: Context
@@ -541,29 +451,19 @@ class Moderation(Cog):
         :return:
         """
         if member.top_role >= ctx.author.top_role:
-            await ctx.reply(
-                "You can't kick someone with same or higher role than yours."
-            )
+            await ctx.reply("You can't kick someone with same or higher role than yours.")
             return
-        with suppress(DiscordException):
-            await member.send(
-                f"Kicked from {ctx.guild} by the reason: {reason}"
-            )
+        try:
+            await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
+        except DiscordException:
+            pass
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
-        await member.kick(
-            reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}"
-        )
+        await member.kick(reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}")
 
-    @command(name="ban")
-    @has_guild_permissions(ban_members=True)
-    @bot_has_guild_permissions(ban_members=True)
-    async def ban(
-        self,
-        ctx: Context,
-        user: Union[Member, User],
-        *,
-        reason: str = None,
-    ) -> None:
+    @commands.command(name="ban")
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.bot_has_guild_permissions(ban_members=True)
+    async def ban(self, ctx: Context, user: Member | User, *, reason: str = None) -> None:
         """Bans an user from the guild
 
         :param ctx: Context
@@ -583,10 +483,10 @@ class Moderation(Cog):
                     delete_after=3,
                 )
             else:
-                with suppress(DiscordException):
-                    await user.send(
-                        content=f"You've been banned from {ctx.guild} by: {reason}"
-                    )
+                try:
+                    await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
+                except DiscordException:
+                    pass
                 await user.ban(
                     reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                     delete_message_days=0,
@@ -599,15 +499,10 @@ class Moderation(Cog):
             )
         await ctx.message.delete()
 
-    @command(name="massban")
-    @has_guild_permissions(ban_members=True)
-    @bot_has_guild_permissions(ban_members=True)
-    async def mass_ban(
-        self,
-        ctx: Context,
-        reason: str,
-        *users: Union[User, Member],
-    ) -> None:
+    @commands.command(name="massban")
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.bot_has_guild_permissions(ban_members=True)
+    async def mass_ban(self, ctx: Context, reason: str, *users: User | Member) -> None:
         """Bans many users from the guild
 
         :param ctx: Context
@@ -629,11 +524,10 @@ class Moderation(Cog):
                             delete_after=3,
                         )
                     else:
-                        with suppress(DiscordException):
-                            await user.send(
-                                content=f"You've been banned from {ctx.guild} by: {reason}"
-                            )
-                        # noinspection PyTypeChecker
+                        try:
+                            await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
+                        except DiscordException:
+                            pass
                         await user.ban(
                             reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                             delete_message_days=0,
@@ -647,16 +541,10 @@ class Moderation(Cog):
 
         await ctx.message.delete()
 
-    @command(name="unban")
-    @bot_has_guild_permissions(ban_members=True)
-    @has_guild_permissions(ban_members=True)
-    async def unban(
-        self,
-        ctx: Context,
-        user: User,
-        *,
-        reason: str = None,
-    ) -> None:
+    @commands.command(name="unban")
+    @commands.bot_has_guild_permissions(ban_members=True)
+    @commands.has_guild_permissions(ban_members=True)
+    async def unban(self, ctx: Context, user: User, *, reason: str = None) -> None:
         """Removes a ban to an a user from the server.
 
         :param ctx: Context
@@ -669,67 +557,18 @@ class Moderation(Cog):
                 user=user,
                 reason=f"{user.display_name} was unbanned by {ctx.author} ({ctx.author.id}). Reason: {reason}",
             )
-            await ctx.send(
-                f"Unbanned {user} for the reason: {reason}", delete_after=3
-            )
+            await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
         else:
             await ctx.reply("Unable to retrieve the user.")
         await ctx.message.delete()
 
-    @command(name="warn")
-    @bot_has_guild_permissions(manage_roles=True)
-    @has_guild_permissions(manage_roles=True)
-    async def warn(
-        self,
-        ctx: Context,
-        user: Member,
-        *,
-        reason: str = None,
-    ) -> None:
-        """Warn an user, providing warn roles
 
-        :param ctx: Context
-        :param user: User
-        :param reason: Reason
-        :return:
-        """
-        mod_channel: TextChannel = ctx.guild.get_channel(799091737875447808)
-        guild: Guild = mod_channel.guild
-        roles: list[Role] = [
-            guild.get_role(732328576615055393),
-            guild.get_role(732412511118164048),
-            guild.get_role(732412547520659528),
-        ]
-        embed = Embed(
-            title=f"Warned by {ctx.author.display_name}",
-            description=reason or Embed.Empty,
-            color=user.color,
-            timestamp=datetime.utcnow(),
-        )
-        if roles[1] in user.roles:  # 2 -> 3
-            embed.add_field(name="Note", value=roles[2].mention)
-            await user.add_roles(roles[2], reason=reason)
-        elif roles[0] in user.roles:  # 1 -> 2
-            embed.add_field(name="Note", value=roles[1].mention)
-            await user.add_roles(roles[1], reason=reason)
-        elif roles[0] not in user.roles:  # 0 -> 1
-            embed.add_field(name="Note", value=roles[0].mention)
-            await user.add_roles(roles[0], reason=reason)
-        embed.set_author(
-            name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url
-        )
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon.url)
-        if isinstance(mod_channel, TextChannel):
-            files, embed = await self.bot.embed_raw(embed)
-            await mod_channel.send(ctx.author.mention, files=files, embed=embed)
+async def setup(bot: CustomBot) -> None:
+    """Default Cog loader
 
-        await ctx.message.delete()
-
-
-def setup(bot: CustomBot):
-    """Default Cog Loader
-
-    :param bot: Bot
-    :return:
+    Parameters
+    ----------
+    bot: CustomBot
+        Bot
     """
-    bot.add_cog(Moderation(bot))
+    await bot.add_cog(Moderation(bot))

@@ -14,31 +14,54 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    NamedTuple,
+    Optional,
+    Sized,
+    TypeVar,
+    Union,
+)
 
 from discord import (
+    AllowedMentions,
+    ButtonStyle,
     DiscordException,
     Embed,
+    File,
+    GuildSticker,
     Interaction,
     InteractionResponse,
     Member,
+    Message,
+    MessageReference,
+    PartialEmoji,
+    PartialMessage,
+    StickerItem,
     User,
 )
-from discord.abc import Messageable
+from discord.abc import Messageable, Snowflake
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
 
 _T = TypeVar("_T", bound=Sized)
-_M = TypeVar("_M", bound=Messageable)
 
 __all__ = ("Simple",)
 
 
-def default_parser(
-    item: _T,
-) -> tuple[str, str]:
+class ArrowEmotes(NamedTuple):
+    START = PartialEmoji(name="DoubleArrowLeft", id=972196330808160296)
+    BACK = PartialEmoji(name="ArrowLeft", id=972196330837528606)
+    FORWARD = PartialEmoji(name="ArrowRight", id=972196330892058684)
+    END = PartialEmoji(name="DoubleArrowRight", id=972196330942390372)
+    CLOSE = PartialEmoji(name="Stop", id=972196330795585567)
+
+
+def default_parser(item: _T) -> tuple[str, str]:
     """Standard parser for elements
 
     Parameters
@@ -54,35 +77,37 @@ def default_parser(
 
     if isinstance(item, tuple):
         return item
-    return str(item), repr(item)
+    if not (name := getattr(item, "name", None)):
+        name = str(item)
+    if not (description := getattr(item, "description", None)):
+        description = repr(item)
+    return name, description
 
 
-class Simple(Basic):
+class Simple(Generic[_T], Basic):
     """A Paginator for View-only purposes"""
 
     def __init__(
         self,
         *,
-        bot: CustomBot,
         member: Union[Member, User],
         values: Iterable[_T],
-        target: _M = None,
+        target: Optional[Messageable] = None,
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         inline: bool = False,
         entries_per_page: int = 25,
-        parser: Callable[[_T], tuple[str, str]] = default_parser,
+        parser: Callable[[_T], tuple[str, str]] = None,
         sort_key: Callable[[_T], Any] = None,
+        modifying_embed: bool = True,
     ):
         """Init Method
 
         Parameters
         ----------
-        bot : CustomBot
-            Bot
         member : Union[Member, User]
             Member
-        target : _M
+        target : Optional[Messageable]
             Destination
         values : Iterable[T], optional
             Provided Values, defaults to frozenset()
@@ -99,32 +124,22 @@ class Simple(Basic):
         sort_key : Callable[[_T], Any], optional
             key used for sorting
         """
-        super().__init__(
-            bot=bot,
-            member=member,
-            target=target,
-            timeout=timeout,
-            embed=embed,
-        )
+        super(Simple, self).__init__(member=member, target=target, timeout=timeout, embed=embed)
+        self.modifying_embed = modifying_embed
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
         items: list[_T] = list(values)
         self._sort_key = sort_key
         self._values = items
-        self._inline = inline
+        self.inline = inline
         self._pos = 0
-        self._parser = parser or default_parser
+        self._parser = parser
         self._entries_per_page = entries_per_page
         if not isinstance(values, list) or sort_key:
             self.sort(sort_key=sort_key)
-        self.menu_format()
 
-    def sort(
-        self,
-        sort_key: Callable[[_T], Any] = None,
-        reverse: bool = False,
-    ) -> None:
+    def sort(self, sort_key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
         """Sort method used for the view's values
 
         Attributes
@@ -141,58 +156,44 @@ class Simple(Basic):
             self._sort_key = str
             self.values.sort(key=str, reverse=reverse)
 
-    def set_parser(
-        self,
-        item: Callable[[_T], tuple[str, str]] = None,
-    ) -> None:
-        """Function used for setting a parser
+    @property
+    def pos(self):
+        return self._pos
 
-        Parameters
-        ----------
-        item : Callable[[_T], tuple[str, str]], optional
-            Function to add, defaults to None
-        """
-        if item:
-            self._parser = item
-        else:
-            self._parser = default_parser
-        self.menu_format()
+    @pos.setter
+    def pos(self, pos: int):
+        self._pos = pos
 
-    def parser(
-        self,
-        item: _T,
-    ) -> tuple[str, str]:
-        """This method parses an item and returns a tuple which will set
-        values and description for the select choices
+    @pos.deleter
+    def pos(self):
+        self._pos = 0
 
-        Parameters
-        ----------
-        item : _T
-            Independant element
+    @property
+    def parser(self):
+        if self._parser:
+            return self._parser
+        return default_parser
 
-        Returns
-        -------
-        tuple[str, str]
-            generated name and description for the item
-        """
-        return self._parser(item)
+    @parser.setter
+    def parser(self, parser: Callable[[_T], tuple[str, str]]):
+        self._parser = parser
+
+    @parser.deleter
+    def parser(self):
+        self._parser = None
 
     @property
     def values(self) -> list[_T]:
         return self._values
 
     @values.setter
-    def values(
-        self,
-        values: Iterable[_T],
-    ):
+    def values(self, values: Iterable[_T]):
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
         items: list[_T] = list(values)
         self._values = items
         self.sort()
-        self.menu_format()
 
     @property
     def entries_per_page(self) -> int:
@@ -202,7 +203,15 @@ class Simple(Basic):
     def entries_per_page(self, entries_per_page: int):
         self._entries_per_page = entries_per_page
         self._pos = 0
+
+    @entries_per_page.deleter
+    def entries_per_page(self):
+        self._entries_per_page = 25
+        self._pos = 0
+
+    def to_components(self) -> list[dict[str, Any]]:
         self.menu_format()
+        return super(Simple, self).to_components()
 
     def buttons_format(self) -> None:
         """This method formats the first buttons based on the
@@ -218,30 +227,104 @@ class Simple(Basic):
             self.last.disabled = True
 
     def menu_format(self):
-        """Default Formatter
-
-        Returns
-        -------
-
-        """
+        """Default Formatter"""
         self.buttons_format()
-        self.embed.clear_fields()
-        if chunks := len(self.values[:: self._entries_per_page]):
-            self.embed.set_footer(
-                text=f"Page {self._pos + 1} / {chunks}",
-                icon_url=self.embed.footer.icon_url,
-            )
-            amount = self._entries_per_page * self._pos
-            for item in self.values[amount : amount + self._entries_per_page]:
-                name, value = self.parser(item)
-                self.embed.add_field(
-                    name=name, value=value, inline=self._inline
-                )
+        if self.entries_per_page != 1:
+            self.embed.clear_fields()
+        chunks = len(self.values[:: self.entries_per_page]) or (self.pos + 1)
+        self.embed.set_footer(text=f"Page {self.pos + 1} / {chunks}", icon_url=self.embed.footer.icon_url)
+        amount = self.entries_per_page * self.pos
+        for item in map(self.parser, self.values[amount : amount + self.entries_per_page]):
+            name, value = map(str, item)
+            if self.entries_per_page == 1:
+                self.embed.title = name[:256]
+                self.embed.description = value[:4096]
+            else:
+                self.embed.add_field(name=name[:256], value=value[:1024], inline=self.inline)
 
-    async def edit(
+    async def send(
         self,
-        page: Optional[int] = None,
+        content: str = None,
+        *,
+        tts: bool = False,
+        embed: Embed = None,
+        embeds: list[Embed] = None,
+        file: File = None,
+        files: list[File] = None,
+        stickers: list[Union[GuildSticker, StickerItem]] = None,
+        delete_after: float = None,
+        nonce: int = None,
+        allowed_mentions: AllowedMentions = None,
+        reference: Union[Message, MessageReference, PartialMessage] = None,
+        mention_author: bool = False,
+        username: str = None,
+        avatar_url: str = None,
+        ephemeral: bool = False,
+        thread: Snowflake = None,
+        editing_original: bool = False,
+        **kwargs,
     ) -> None:
+        """Sends the paginator towards the defined destination
+
+        Attributes
+        ----------
+        content : str, optional
+            message's content
+        tts : bool, optional
+            message's tts, defaults to False
+        embed : Embed, optional
+            message's embed, defaults to None
+            if set as None, no embed is generated.
+        embeds : list[Embed], optional
+            message's embeds, defaults to None
+        file : File, optional
+            message's file, defaults to None'
+        files : list[File], optional
+            message's file, defaults to None
+        stickers : list[Union[GuildSticker, StickerItem]], optional
+            message's stickers, defaults to None
+        delete_after : float, optional
+            defaults to None
+        nonce : int, optional
+            message's nonce, defaults to None
+        allowed_mentions : AllowedMentions, optional
+            message's allowed mentions, defaults MISSING
+        reference : Union[Message, MessageReference, PartialMessage], optional
+            message's reference, defaults to None
+        mention_author : bool, optional
+            if mentions the author of the message, defaults to MISSING
+        username : str, Optional
+            webhook username to send as, defaults to None
+        avatar_url: str, optional
+            webhook avatar_url to send as, defaults to None
+        ephemeral: bool, optional
+            if message is ephemeral, defaults to False
+        thread: Snowflake, optional
+            if message is sent to a thread, defaults to None
+        """
+        self.menu_format()
+        return await super(Simple, self).send(
+            content=content,
+            tts=tts,
+            embed=embed,
+            embeds=embeds,
+            file=file,
+            files=files,
+            stickers=stickers,
+            delete_after=delete_after,
+            nonce=nonce,
+            allowed_mentions=allowed_mentions,
+            reference=reference,
+            mention_author=mention_author,
+            username=username,
+            avatar_url=avatar_url,
+            ephemeral=ephemeral,
+            thread=thread,
+            editing_original=editing_original,
+            **kwargs,
+        )
+
+    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
         """This method edits the pagination's page given an index.
 
         Parameters
@@ -249,223 +332,99 @@ class Simple(Basic):
         page : int, optional
             page's index, defaults to None
         """
+        data = {}
+
+        if self.modifying_embed:
+            data["embed"] = self.embed
+
+        if isinstance(page, int):
+            self.pos = page
+            self.menu_format()
+            data["view"] = self
+
+        resp: InteractionResponse = interaction.response
+
+        if not resp.is_done():
+            return await resp.edit_message(**data)
         try:
-            if isinstance(page, int):
-                self._pos = page
-                self.menu_format()
-                view = self
+            if message := self.message or interaction.message:
+                await message.edit(**data)
             else:
-                view = None
+                self.message = await interaction.edit_original_message(**data)
+        except DiscordException:
+            self.stop()
 
-            if message := self.message:
-                await message.edit(embed=self._embed, view=view)
-            elif isinstance(target := self.target, Interaction):
-                await target.edit_original_message(embed=self._embed, view=view)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Exception while editing view %s",
-                repr(self.message),
-                exc_info=e,
-            )
-
-    @button(
-        emoji=":lasttrack:861938354609717258",
-        row=0,
-        custom_id="first",
-    )
-    async def first(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ) -> None:
+    @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)
+    async def first(self, interaction: Interaction, _: Button) -> None:
         """
         Method used to reach next first of the pagination
 
         Parameters
         ----------
-        btn: Button
-            Button which interacts with the User
         interaction: Interaction
             Current interaction of the user
+        _: Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_first(btn, interaction)
-        if not resp.is_done():
-            return await self.edit(page=0)
+        return await self.edit(interaction=interaction, page=0)
 
-    @button(
-        emoji=":fastreverse:861938354136416277",
-        row=0,
-        custom_id="previous",
-    )
-    async def previous(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ) -> None:
+    @button(emoji=ArrowEmotes.BACK, row=0, custom_id="previous", style=ButtonStyle.blurple)
+    async def previous(self, interaction: Interaction, _: Button) -> None:
         """
         Method used to reach previous page of the pagination
 
         Parameters
         ----------
-        btn: Button
-            Button which interacts with the User
         interaction: Interaction
             Current interaction of the user
+        _: Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_previous(btn, interaction)
-        if not resp.is_done():
-            return await self.edit(page=self._pos - 1)
+        return await self.edit(interaction=interaction, page=self._pos - 1)
 
-    @button(
-        emoji=":stop:861938354244943913",
-        row=0,
-        custom_id="finish",
-    )
-    async def finish(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ) -> None:
+    @button(emoji=ArrowEmotes.CLOSE, row=0, custom_id="finish", style=ButtonStyle.blurple)
+    async def finish(self, interaction: Interaction, _: Button) -> None:
         """
         Method used to conclude the pagination
 
         Parameters
         ----------
-        btn: discord.ui.Button
-            Button which interacts with the User
         interaction: discord.Interaction
             Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
         """
         resp: InteractionResponse = interaction.response
-        await self.custom_finish(btn, interaction)
-        if not resp.is_done():
-            await self.delete(force=True)
+        if interaction.message.flags.ephemeral:
+            await resp.edit_message(view=None)
+        else:
+            await interaction.message.delete(delay=0)
+        self.stop()
 
-    @button(
-        emoji=":fastforward:861938354085953557",
-        row=0,
-        custom_id="next",
-    )
-    async def next(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ) -> None:
+    @button(emoji=ArrowEmotes.FORWARD, row=0, custom_id="next", style=ButtonStyle.blurple)
+    async def next(self, interaction: Interaction, _: Button) -> None:
         """
         Method used to reach next page of the pagination
 
         Parameters
         ----------
-        btn: discord.ui.Button
-            Button which interacts with the User
         interaction: discord.Interaction
             Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_next(btn, interaction)
-        if not resp.is_done():
-            return await self.edit(page=self._pos + 1)
+        await self.edit(interaction=interaction, page=self._pos + 1)
 
-    @button(
-        emoji=":nexttrack:861938354210603028",
-        row=0,
-        custom_id="last",
-    )
-    async def last(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ) -> None:
+    @button(emoji=ArrowEmotes.END, row=0, custom_id="last", style=ButtonStyle.blurple)
+    async def last(self, interaction: Interaction, _: Button) -> None:
         """
         Method used to reach last page of the pagination
 
         Parameters
         ----------
-        btn: discord.ui.Button
-            Button which interacts with the User
         interaction: discord.Interaction
             Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
-        await self.custom_last(btn, interaction)
-        if not resp.is_done():
-            return await self.edit(
-                page=len(self.values[:: self._entries_per_page]) - 1
-            )
-
-    async def custom_previous(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_first(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_finish(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_next(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
-
-    async def custom_last(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        """Placeholder for custom defined operations
-
-        Parameters
-        ----------
-        btn : Button
-            button which interact with the User
-        interaction : Interaction
-            interaction that triggered the button
-        """
+        await self.edit(interaction=interaction, page=len(self.values[:: self._entries_per_page]) - 1)

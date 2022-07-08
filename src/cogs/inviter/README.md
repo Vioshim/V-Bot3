@@ -5,6 +5,6 @@
 
 > A RegEx powered Discord Invites handler, which easies the partnering process while also making sure that all invites posted get deleted.
 
-|   File   |        Description          |
-|----------|-----------------------------|
-| `cog.py` | Standard Cog Implementation |
+| File            | Description       |
+| --------------- | ----------------- |
+| `classifier.py` | InviterView class |

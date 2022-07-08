@@ -5,7 +5,6 @@
 
 > A standard temporizer which norifies to users when to bump, based on popular discord bump bots.
 
-|    File    |           Description           |
-|------------|---------------------------------|
-| `cog.py`   | Standard Cog Implementation     |
+| File       | Description                     |
+| ---------- | ------------------------------- |
 | `bumps.py` | Enumeration of common Bump bots |

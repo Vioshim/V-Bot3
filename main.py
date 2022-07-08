@@ -13,28 +13,21 @@
 # limitations under the License.
 
 from asyncio import run
-from contextlib import suppress
-from functools import wraps
+from json import dumps
 from logging import getLogger, setLoggerClass
 from os import getenv
-from pathlib import Path
 
+from aiogoogle import Aiogoogle
+from aiogoogle.auth.creds import ServiceAccountCreds
 from apscheduler.schedulers.async_ import AsyncScheduler
-from asyncpg import Pool, create_pool
+from asyncpg import Connection, create_pool
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
+from orjson import loads
 
 from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
-
-with suppress(ModuleNotFoundError):
-    from asyncio import set_event_loop_policy
-
-    from uvloop import EventLoopPolicy  # type: ignore
-
-    set_event_loop_policy(EventLoopPolicy())
-
 
 setLoggerClass(ColoredLogger)
 
@@ -42,73 +35,47 @@ logger = getLogger(__name__)
 
 load_dotenv()
 
+try:
+    from uvloop import EventLoopPolicy  # type: ignore
+except ModuleNotFoundError:
+    logger.error("Not using uvloop")
+else:
+    from asyncio import set_event_loop_policy
 
-def wrap_session(func):
-    """Bot wrapper, this allows the bot to start up
-    its asynchronous methods
-
-    Parameters
-    ----------
-    func : Callable[ [Pool, ClientSession, AsyncScheduler], Coroutine[Any, Any, None] ]
-        Main function with the following parameters
-
-    Returns
-    -------
-    Callable[[], Coroutine[Any, Any, None]]
-        Bot instance caller
-    """
-
-    @wraps(func)
-    async def wrapper() -> None:
-        """Function Wrapper"""
-        async with AsyncScheduler() as scheduler:
-            async with create_pool(getenv("POSTGRES_POOL_URI")) as pool:
-                await func(pool=pool, scheduler=scheduler)
-
-    return wrapper
+    set_event_loop_policy(EventLoopPolicy())
 
 
-@wrap_session
-async def main(pool: Pool, scheduler: AsyncScheduler) -> None:
-    """Main Execution function
+async def init_connection(conn: Connection):
+    await conn.set_type_codec("json", encoder=dumps, decoder=loads, schema="pg_catalog")
+    await conn.set_type_codec("jsonb", encoder=dumps, decoder=loads, schema="pg_catalog")
 
-    Parameters
-    ----------
-    pool : Pool
-        asyncpg's database pool
-    scheduler : AsyncScheduler
-        scheduler
-    """
+
+async def main() -> None:
+    """Main Execution function"""
     try:
-        bot = CustomBot(
-            scheduler=scheduler,
-            pool=pool,
-            logger=logger,
-            command_prefix=when_mentioned_or("?"),
-            description="This is Vioshim's bot",
-            command_attrs=dict(hidden=True),
-            case_insensitive=True,
-            help_command=CustomHelp(),
-            owner_ids={678374009045254198},
-        )
-        bot.load_extension("jishaku")
-        path = Path("src/cogs")
-        path.resolve()
-        for cog in path.glob("*/cog.py"):
-            item = (
-                str(cog)
-                .removesuffix(".py")
-                .replace("\\", ".")
-                .replace("/", ".")
-            )
-            bot.load_extension(item)
-            logger.info("Successfully loaded %s", item)
-        await bot.login(getenv("DISCORD_TOKEN"))
-        await bot.connect()
+        google_kwargs = loads(getenv("GOOGLE_API", "{}"))
+        creds = ServiceAccountCreds(**google_kwargs)
+        async with (
+            Aiogoogle(service_account_creds=creds) as aiogoogle,
+            AsyncScheduler() as scheduler,
+            create_pool(getenv("POSTGRES_POOL_URI"), init=init_connection) as pool,
+            CustomBot(
+                scheduler=scheduler,
+                pool=pool,
+                logger=logger,
+                owner_id=678374009045254198,
+                command_prefix=when_mentioned_or("?"),
+                description="This is Vioshim's bot",
+                command_attrs=dict(hidden=True),
+                case_insensitive=True,
+                help_command=CustomHelp(),
+                aiogoogle=aiogoogle,
+            ) as bot,
+        ):
+            await bot.login(getenv("DISCORD_TOKEN"))
+            await bot.connect(reconnect=True)
     except Exception as e:
-        logger.critical(
-            "An exception occurred while trying to connect", exc_info=e
-        )
+        logger.critical("An exception occurred while trying to connect.", exc_info=e)
 
 
 if __name__ == "__main__":

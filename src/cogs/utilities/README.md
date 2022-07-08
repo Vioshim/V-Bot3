@@ -5,6 +5,6 @@
 
 > General purpose normal / slash commands implemented outside of the other categories
 
-|         File         |           Description           |
-|----------------------|---------------------------------|
-| `cog.py`             | Standard Cog Implementation     |
+| File               | Description                       |
+| ------------------ | --------------------------------- |
+| `sphinx_reader.py` | Sphinx reader method for commands |

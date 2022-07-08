@@ -12,29 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from itertools import groupby
+from threading import Thread
+
 from discord import (
-    ButtonStyle,
     CategoryChannel,
+    Embed,
     Interaction,
     InteractionResponse,
     Member,
-    PermissionOverwrite,
     SelectOption,
     TextChannel,
     User,
 )
-from discord.ui import Button, Select, View, button, select
+from discord.ui import Button, Select, View, select
 from discord.utils import utcnow
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import MAP_BUTTONS
+from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR
 from src.views.characters_view import CharactersView
+
+__all__ = ("RegionView",)
 
 
 class AreaSelection(View):
-
-    # noinspection PyTypeChecker
     def __init__(self, bot: CustomBot, cat: CategoryChannel, member: Member):
         super(AreaSelection, self).__init__(timeout=None)
         self.bot = bot
@@ -47,9 +49,6 @@ class AreaSelection(View):
         self.member = member
         registered = guild.get_role(719642423327719434)
         if registered not in member.roles:
-            self.remove_item(self.read_one)
-            self.remove_item(self.read_all)
-            self.remove_item(self.disable_all)
             btn = Button(
                 label="Go to OC-Submission in order to get access to the RP.",
                 url="https://discord.com/channels/719343092963999804/852180971985043466/903437849154711552",
@@ -57,21 +56,22 @@ class AreaSelection(View):
                 row=1,
             )
             self.add_item(btn)
-        perms = cat.overwrites.get(member, PermissionOverwrite())
-        if perms.read_messages:
-            self.read_one.label = "Toggle OFF"
-            self.read_one.style = ButtonStyle.red
-        else:
-            self.read_one.label = "Toggle ON"
-            self.read_one.style = ButtonStyle.green
         cog = bot.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
-        self.total: int = 0
-        for location, ocs in cog.located.items():
-            if ch := guild.get_channel(location):
-                if cat == ch.category:
-                    self.entries[str(ch.id)] = ocs
-                    self.total += len(ocs)
+
+        def foo(oc: Character):
+            ch = guild.get_channel_or_thread(oc.location)
+            return bool(ch and cat == ch.category)
+
+        def foo2(oc: Character):
+            ch = guild.get_channel_or_thread(oc.location)
+            if isinstance(ch, Thread):
+                ch = ch.parent
+            return ch
+
+        entries = groupby(filter(foo, cog.ocs.values()), key=foo2)
+        self.entries = {str(k.id): set(v) for k, v in entries if k}
+        self.total = sum(len(item) for item in self.entries.values())
 
         def handle(item: TextChannel) -> str:
             text = f"{len(self.entries.get(str(item.id), [])):02d}"
@@ -82,100 +82,64 @@ class AreaSelection(View):
             SelectOption(
                 label=handle(item),
                 value=str(item.id),
-                description=topic[:50]
-                if (topic := item.topic)
-                else "No description yet.",
+                description=(item.topic or "No description yet.")[:50],
                 emoji=item.name[0],
             )
             for item in cat.channels
-            if not item.is_news()
+            if not item.name.endswith("-ooc")
         ]
 
     @select(placeholder="Select a location to check", row=0)
-    async def selection(self, _: Select, ctx: Interaction):
+    async def selection(self, ctx: Interaction, sct: Select):
+        channel: TextChannel = self.bot.get_channel(int(sct.values[0]))
+        self.bot.logger.info("%s is reading Channel Information of %s", str(ctx.user), channel.name)
+        ocs = self.entries.get(sct.values[0], set())
+        view = CharactersView(target=ctx, member=ctx.user, ocs=ocs, keep_working=True)
+        embed = view.embed
+        embed.title = channel.name[2:].replace("-", " ").title()
+        embed.description = channel.topic or "No description yet"
+        embed.color = ctx.user.color
+        embed.timestamp = utcnow()
+        embed.set_author(name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url)
+        embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
+        async with view.send(ephemeral=True, embed=embed):
+            self.bot.logger.info("%s user is checking ocs at %s", str(ctx.user), channel.name)
+
+
+class RegionView(View):
+    @select(
+        placeholder="Select Regions",
+        custom_id="region",
+        row=0,
+        options=[
+            SelectOption(
+                label=item.name,
+                description=(item.short_desc or item.desc)[:100],
+                value=item.category,
+                emoji=item.emoji,
+            )
+            for item in MAP_ELEMENTS
+        ],
+    )
+    async def choice(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        if data := ctx.data.get("values", []):
-
-            channel: TextChannel = self.bot.get_channel(int(idx := data[0]))
-            self.bot.logger.info(
-                "%s is reading Channel Information of %s",
-                str(ctx.user),
-                channel.name,
-            )
-
-            ocs = self.entries.get(idx, set())
-            view = CharactersView(
-                target=ctx,
-                member=ctx.user,
-                ocs=ocs,
-                bot=self.bot,
-                keep_working=True,
-            )
-
-            embed = view.embed
-
-            embed.title = channel.name[2:].replace("-", " ").title()
-            embed.description = channel.topic or "No description yet"
-            embed.color = ctx.user.color
-            embed.timestamp = utcnow()
-            embed.set_author(
-                name=ctx.user.display_name,
-                icon_url=ctx.user.display_avatar.url,
-            )
-            embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
-            await resp.send_message(embed=embed, view=view, ephemeral=True)
-
-    # noinspection PyTypeChecker
-    @button(label="Toggle view ON/OFF", row=1)
-    async def read_one(self, btn: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-        permissions = self.cat.overwrites
-        perms = permissions.get(ctx.user, PermissionOverwrite())
-        perms.read_messages = btn.label == "Toggle ON"
-        await self.cat.set_permissions(target=ctx.user, overwrite=perms)
-        await ctx.followup.send(
-            "Permissions have been changed.", ephemeral=True
+        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
+            await ctx.channel.edit(archived=True)
+        await resp.defer(ephemeral=True, thinking=True)
+        info = MAP_ELEMENTS2[int(sct.values[0])]
+        cat = ctx.guild.get_channel(info.category)
+        embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=ctx.user.color)
+        embed.set_image(url=info.image or WHITE_BAR)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
+        view = AreaSelection(bot=ctx.client, cat=cat, member=ctx.user)
+        ctx.client.logger.info(
+            "%s is reading Map Information of %s",
+            str(ctx.user),
+            cat.name,
         )
-
-    # noinspection PyTypeChecker
-    @button(label="Enable all", row=1)
-    async def read_all(self, _: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-        for item in MAP_BUTTONS:
-            if isinstance(member := ctx.user, User):
-                guild = member.mutual_guilds[0]
-            else:
-                guild = member.guild
-            category: CategoryChannel = guild.get_channel(int(item.value))
-            permissions = category.overwrites
-            perms = permissions.get(ctx.user, PermissionOverwrite())
-            if not perms.read_messages:
-                perms.read_messages = True
-                await category.set_permissions(
-                    member, overwrite=perms, reason="Region Selection"
-                )
-        await ctx.followup.send("Now you can see all the areas", ephemeral=True)
-
-    # noinspection PyTypeChecker
-    @button(label="Disable all", row=1)
-    async def disable_all(self, _: Button, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True)
-        for item in MAP_BUTTONS:
-            if isinstance(member := ctx.user, User):
-                guild = member.mutual_guilds[0]
-            else:
-                guild = member.guild
-            category: CategoryChannel = guild.get_channel(int(item.value))
-            permissions = category.overwrites
-            perms = permissions.get(member, PermissionOverwrite())
-            if perms.read_messages is not False:
-                perms.read_messages = False
-                await category.set_permissions(
-                    member, overwrite=perms, reason="Region Selection"
-                )
         await ctx.followup.send(
-            "Now you can't see all the areas", ephemeral=True
+            content=f"There's a total of {view.total:02d} OCs in {cat.name}.",
+            view=view,
+            embed=embed,
+            ephemeral=True,
         )

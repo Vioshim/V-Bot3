@@ -16,11 +16,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Mapping
 
-from discord import SlashCommand
+from discord import Color, Embed
+from discord.ext.commands import Command
+
+from src.utils.etc import WHITE_BAR
 
 if TYPE_CHECKING:
-    from discord.ext.commands import Command, Group, Cog
-    from src.context.context import Context
+    from discord.ext.commands import Group, Cog, Context
 
 from discord.ext.commands import HelpCommand
 
@@ -30,8 +32,6 @@ __all__ = ("CustomHelp",)
 
 
 class CustomHelp(HelpCommand):
-    context: Context
-
     async def send_bot_help(self, mapping: Mapping[Cog, list[Command]]) -> None:
         """Bot Help
 
@@ -43,17 +43,6 @@ class CustomHelp(HelpCommand):
 
         target = self.get_destination()
 
-        view = Simple(
-            bot=self.context.bot,
-            timeout=None,
-            member=self.context.author,
-            target=target,
-            values=mapping.items(),
-            entries_per_page=10,
-        )
-        view.embed.title = "Help Command - Bot Options"
-
-        @view.set_parser
         def mapping_parser(item: tuple[Cog, list[Command]]) -> tuple[str, str]:
             """Parsing Method
 
@@ -68,15 +57,21 @@ class CustomHelp(HelpCommand):
                 title, description values
             """
             cog, commands = item
-            cog_name = getattr(cog, "qualified_name", "No category")
-            signatures = []
-            for item in commands:
-                if not isinstance(item, SlashCommand):
-                    signatures.append(self.get_command_signature(item))
-            text_signatures = "n".join(signatures) or "No Commands"
+            cog_name = getattr(cog, "qualified_name", "No Category")
+            commands = filter(lambda x: isinstance(x, Command), commands)
+            commands = map(self.get_command_signature, commands)
+            text_signatures = "\n".join(commands) or "No Commands"
             return cog_name, text_signatures
 
-        await view.send()
+        view = Simple(
+            timeout=None,
+            member=self.context.author,
+            target=target,
+            values=mapping.items(),
+            entries_per_page=10,
+            parser=mapping_parser,
+        )
+        await view.send(title="Help Command - Bot Options")
 
     async def send_command_help(self, cmd: Command) -> None:
         """Command Help
@@ -89,15 +84,16 @@ class CustomHelp(HelpCommand):
 
         values = {
             "Short document": cmd.short_doc or "None",
-            "Aliases": "\n".join(f"> • {item}" for item in cmd.aliases) or "None",
             "Cog": getattr(cmd.cog, "qualified_name", None) or "None",
             "Usage": self.get_command_signature(cmd) or "None",
         }
 
+        if aliases := getattr(cmd, "aliases", []):
+            values["Aliases"] = "\n".join(f"> • {item}" for item in aliases)
+
         target = self.get_destination()
 
         view = Simple(
-            bot=self.context.bot,
             timeout=None,
             target=target,
             member=self.context.author,
@@ -105,10 +101,7 @@ class CustomHelp(HelpCommand):
             inline=False,
             entries_per_page=10,
         )
-        view.embed.title = f"Command {cmd.qualified_name!r}"
-        view.embed.description = cmd.description
-
-        await view.send()
+        await view.send(title=f"Command {cmd.qualified_name!r}", desciption=cmd.description)
 
     async def send_group_help(self, group: Group) -> None:
         """Group help
@@ -119,30 +112,23 @@ class CustomHelp(HelpCommand):
             Group
         """
         aliases = "\n".join(f"> • {item}" for item in group.aliases) or "None"
-        text = (
-            f"__**Short Document**__\n> {group.short_doc}\n\n"
-            f"__**Aliases**__\n{aliases}"
-        )
+        text = f"__**Short Document**__\n> {group.short_doc}\n\n" f"__**Aliases**__\n{aliases}"
 
         target = self.get_destination()
 
+        def group_parser(cmd: Command):
+            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
+
         view = Simple(
-            bot=self.context.bot,
             timeout=None,
             target=target,
             member=self.context.author,
             values=group.commands,
             inline=False,
+            entries_per_page=10,
+            parser=group_parser,
         )
-
-        view.embed.title = f"Group {group.qualified_name!r}"
-        view.embed.description = text
-
-        @view.set_parser
-        def group_parser(cmd: Command):
-            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
-
-        await view.send()
+        await view.send(title=f"Group {group.qualified_name!r}", desciption=text)
 
     async def send_cog_help(self, cog: Cog) -> None:
         """Cog help
@@ -152,28 +138,10 @@ class CustomHelp(HelpCommand):
         cog: Cog
             Cog
         """
-
-        # noinspection PyUnresolvedReferences
-        commands = [f"> • {item.name}" for item in cog.get_commands()]
-
-        commands.sort()
+        commands = sorted(f"> • {item.name}" for item in cog.get_commands())
 
         target = self.get_destination()
 
-        view = Simple(
-            bot=self.context.bot,
-            timeout=None,
-            target=target,
-            member=self.context.author,
-            values=cog.get_listeners(),
-            inline=False,
-            entries_per_page=10,
-        )
-
-        view.embed.title = (f"Cog {cog.qualified_name} - Commands",)
-        view.embed.description = "\n".join(commands) or "> No Commands"
-
-        @view.set_parser
         def cog_parser(item: tuple[str, Callable[[Any], Any]]) -> tuple[str, str]:
             """Parser for cogs
 
@@ -195,7 +163,16 @@ class CustomHelp(HelpCommand):
                 return name, "\n".join(split)
             return name, "> Not Documented"
 
-        await view.send()
+        view = Simple(
+            timeout=None,
+            target=target,
+            member=self.context.author,
+            values=cog.get_listeners(),
+            inline=False,
+            entries_per_page=10,
+            parser=cog_parser,
+        )
+        await view.send(title=f"Cog {cog.qualified_name} - Commands", desciption="\n".join(commands) or "> No Commands")
 
     async def send_error_message(self, error: str):
         """Error sending function
@@ -206,20 +183,9 @@ class CustomHelp(HelpCommand):
             Error in the message
         """
         context = self.context
-        guild = context.bot.get_guild(719343092963999804)
-        member = guild.get_member(context.author.id)
-        target = self.get_destination()
-
-        view = Simple(
-            bot=self.context.bot,
-            timeout=None,
-            target=target,
-            member=member,
-            entries_per_page=10,
-        )
-        view.embed.title = "Help Error"
-        view.embed.description = f"> {error}"
-        await view.send()
+        embed = Embed(title="Help Error", description=error, color=Color.red())
+        embed.set_image(url=WHITE_BAR)
+        await context.reply(embed=embed)
 
     async def on_help_command_error(self, ctx: Context, error: Exception):
         """Error detection
@@ -231,6 +197,4 @@ class CustomHelp(HelpCommand):
         error: Exception
             Exception that occurred
         """
-        ctx.bot.logger.exception(
-            "Help Command > %s > %s", str(ctx.author), error, exc_info=error
-        )
+        ctx.bot.logger.exception("Help Command > %s > %s", str(ctx.author), error, exc_info=error)

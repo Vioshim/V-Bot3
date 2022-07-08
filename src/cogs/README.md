@@ -12,6 +12,7 @@ This is the folder which contains all the Cogs that V-bot uses, these are done i
 In this project, the cogs are Cog instances which implement a setup method and they all have a `cog.py` which has the class and add method. Each cog is in a folder which may contain sources which are only used by the cog.
 
 ## **List of Cogs**
+
 ---
 
 </details>
@@ -21,6 +22,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 <p>
 
 > A standard temporizer which norifies to users when to bump, based on popular discord bump bots.
+
 </p>
 </details>
 
@@ -34,12 +36,12 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-
 <details closed> <summary> Information </summary>
 
 <p>
 
 > A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules and common daily activities.
+
 </p>
 
 </details>
@@ -64,7 +66,17 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Proxy</summary>
+<details closed> <summary> Pokedex </summary>
+
+<p>
+
+> Implementation of commands that allow to obtain information given search parameters.
+
+</p>
+
+</details>
+
+<details closed> <summary> Proxy </summary>
 
 <p>
 
@@ -74,7 +86,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Roles</summary>
+<details closed> <summary> Roles </summary>
 
 <p>
 
@@ -84,7 +96,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Submission</summary>
+<details closed> <summary> Submission </summary>
 
 <p>
 
@@ -94,7 +106,7 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
-<details closed> <summary>Utilities</summary>
+<details closed> <summary> Utilities </summary>
 
 <p>
 

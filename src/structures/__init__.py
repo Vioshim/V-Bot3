@@ -11,24 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    ASSOCIATIONS,
-    Character,
-    CustomMegaCharacter,
-    FakemonCharacter,
-    FusionCharacter,
-    LegendaryCharacter,
-    MegaCharacter,
-    PokemonCharacter,
-    VariantCharacter,
-    fetch_all,
-)
+from src.structures.character import Character
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
-from src.structures.mission import Mission
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -48,19 +35,9 @@ __all__ = (
     "Ability",
     "SpAbility",
     "CustomBot",
-    "ASSOCIATIONS",
     "Character",
-    "CustomMegaCharacter",
-    "FakemonCharacter",
-    "FusionCharacter",
-    "LegendaryCharacter",
-    "MegaCharacter",
-    "PokemonCharacter",
-    "VariantCharacter",
-    "fetch_all",
     "CustomHelp",
     "ColoredLogger",
-    "Mission",
     "Typing",
     "Move",
     "Movepool",

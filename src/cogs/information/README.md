@@ -5,8 +5,6 @@
 
 > A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules and common daily activities.
 
-|        File           |           Description           |
-|-----------------------|---------------------------------|
-| `cog.py`              | Standard Cog Implementation     |
-| `area_selection.py`   | AreaView Class Implementation   |
-| `information_view.py` | Rules & Info class to display.  |
+| File                | Description                   |
+| ------------------- | ----------------------------- |
+| `area_selection.py` | AreaView Class Implementation |

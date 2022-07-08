@@ -70,7 +70,7 @@ class ColoredFormatter(Formatter):
         use_color: bool = True
             If using color or not
         """
-        super().__init__(fmt=msg, datefmt=r"%Y-%m-%d,%H:%M:%S.%f")
+        super(ColoredFormatter, self).__init__(fmt=msg, datefmt=r"%Y-%m-%d,%H:%M:%S.%f")
         self.use_color = use_color
 
     def converter(self, timestamp):
@@ -105,17 +105,16 @@ class ColoredFormatter(Formatter):
         """
         level_name: str = record.levelname
         if self.use_color and level_name in COLORS:
-            level_name_color: str = (
-                COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
-            )
+            level_name_color: str = COLOR_SEQ % (30 + COLORS[level_name]) + level_name + RESET_SEQ
             record.levelname = level_name_color
-            pathname = record.pathname.replace("/root/V-Bot3/src/", "")
-            record.pathname = pathname.replace("/root/V-Bot3/", "")
+            pathname = record.pathname.removesuffix(".py")
+            pathname = pathname.removesuffix("/__init__")
+            record.pathname = pathname.removeprefix("/app")
         return super(ColoredFormatter, self).format(record)
 
 
 class ColoredLogger(Logger):
-    FORMAT = "$BOLD[%(levelname)s]$RESET%(pathname)s|%(funcName)s %(message)s"
+    FORMAT = "$BOLD[%(levelname)s]$RESET%(pathname)s/$BOLD%(funcName)s$RESET〕%(message)s"
     COLOR_FORMAT = formatter_message(FORMAT, True)
 
     def __init__(self, name: str):
@@ -126,7 +125,7 @@ class ColoredLogger(Logger):
         name: str
             Logger's Name
         """
-        super().__init__(name, INFO)
+        super().__init__(name, level=INFO)
         color_formatter = ColoredFormatter(self.COLOR_FORMAT)
         console = StreamHandler()
         console.setFormatter(color_formatter)

@@ -11,22 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from src.views.ability_view import AbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
-from src.views.mission_view import MissionView
+from src.views.message_view import MessagePaginator, MessageView
 from src.views.move_view import MoveView
+from src.views.movepool_view import MovepoolModal, MovepoolView, MovepoolViewSelector
+from src.views.oc_modification import Modification, ModificationComplex
 from src.views.rp_view import RPView
-from src.views.stats_view import StatsView
-from src.views.submission_view import SubmissionView
 
 __all__ = (
+    "AbilityView",
     "CharactersView",
     "PingView",
     "ImageView",
-    "MissionView",
+    "MessagePaginator",
+    "MessageView",
     "MoveView",
+    "MovepoolModal",
+    "MovepoolView",
+    "MovepoolViewSelector",
+    "Modification",
+    "ModificationComplex",
     "RPView",
-    "StatsView",
-    "SubmissionView",
 )

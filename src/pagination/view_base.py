@@ -16,15 +16,15 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime
-from typing import Generic, Optional, TypeVar, Union
+from typing import Optional, Union
 
 from discord import (
     AllowedMentions,
-    ApplicationContext,
     DiscordException,
     Embed,
     File,
     GuildSticker,
+    HTTPException,
     Interaction,
     InteractionResponse,
     Member,
@@ -32,6 +32,7 @@ from discord import (
     MessageReference,
     PartialMessage,
     StickerItem,
+    Thread,
     User,
     Webhook,
 )
@@ -39,80 +40,61 @@ from discord.abc import Messageable, Snowflake
 from discord.ext.commands import Context
 from discord.ui import View
 
-from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
-
-_M = TypeVar("_M", bound=Messageable)
+from src.utils.functions import embed_modifier
 
 __all__ = ("Basic",)
 
 
-class Basic(Generic[_M], View):
+class Basic(View):
     """A Paginator for View-only purposes"""
 
     def __init__(
         self,
         *,
-        bot: CustomBot,
-        target: _M = None,
+        target: Optional[Messageable] = None,
         member: Union[Member, User] = None,
         timeout: Optional[float] = 180.0,
-        embed: Embed = None,
+        embed: Optional[Embed] = None,
     ):
         """Init Method
 
         Parameters
         ----------
-        bot : CustomBot
-            Bot
         member : Union[Member, User]
             Member
-        target : _M
+        target : Messageable
             Destination
         timeout : Float, optional
             Provided timeout, defaults to 180.0
         embed : Embed. optional
             Embed to display, defaults to None
         """
-        super().__init__(timeout=timeout)
+        super(Basic, self).__init__(timeout=timeout)
         if not embed:
-            embed = Embed(
-                colour=member.colour,
-                timestamp=datetime.now(),
-            )
+            embed = Embed(colour=member.colour, timestamp=datetime.now())
 
         if not member:
-            if isinstance(target, (Message, Context, ApplicationContext)):
+            if isinstance(target, (Message, Context)):
                 member = target.author
             elif isinstance(target, Interaction):
                 member = target.user
 
-        if isinstance(member, User):
-            if guilds := member.mutual_guilds:
-                guild = guilds[0]
-                member = guild.get_member(member.id)
+        if isinstance(member, User) and (guilds := member.mutual_guilds):
+            guild = guilds[0]
+            member = guild.get_member(member.id)
 
         embed.set_image(url=WHITE_BAR)
-        embed.set_author(
-            name=member.display_name,
-            icon_url=member.display_avatar.url,
-        )
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         if isinstance(member, Member):
             guild = member.guild
-            embed.set_footer(
-                text=guild.name,
-                icon_url=guild.icon.url,
-            )
-        self.bot = bot
-        self._embed = embed
-        self._member = member
-        self._target = target
-        self._message: Optional[Message] = None
+            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        self.embed = embed
+        self.member = member
+        self.target = target
+        self.message: Optional[Message] = None
 
-    async def interaction_check(
-        self,
-        interaction: Interaction,
-    ) -> bool:
+    async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         """Verification for the interaction user
 
@@ -121,7 +103,7 @@ class Basic(Generic[_M], View):
         bool
             If validation is successful
         """
-        if self._member != interaction.user:
+        if self.member != interaction.user:
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
             return False
@@ -145,9 +127,12 @@ class Basic(Generic[_M], View):
         username: str = None,
         avatar_url: str = None,
         ephemeral: bool = False,
+        thinking: bool = False,
         thread: Snowflake = None,
         editing_original: bool = False,
-    ) -> None:
+        reply_to: Optional[Message] = None,
+        **kwargs,
+    ):
         """Sends the paginator towards the defined destination
 
         Attributes
@@ -183,10 +168,17 @@ class Basic(Generic[_M], View):
             webhook avatar_url to send as, defaults to None
         ephemeral: bool, optional
             if message is ephemeral, defaults to False
+        thinking: bool, optional
+            if message is thinking, defaults to False
         thread: Snowflake, optional
             if message is sent to a thread, defaults to None
         """
-        target = self._target
+        target = self.target
+
+        if not embeds:
+            embed = embed or self.embed
+            self.embed = embed_modifier(embed, **kwargs)
+            embeds = [self.embed]
 
         if not target:
             target = await self.member.create_dm()
@@ -194,7 +186,6 @@ class Basic(Generic[_M], View):
         data = dict(
             content=content,
             tts=tts,
-            embed=embed,
             embeds=embeds,
             file=file,
             files=files,
@@ -209,12 +200,17 @@ class Basic(Generic[_M], View):
             avatar_url=avatar_url,
             thread=thread,
             ephemeral=ephemeral,
+            thinking=thinking,
         )
 
         if not embeds and not embed:
-            data["embed"] = self._embed
+            data["embed"] = self.embed
 
         data = {k: v for k, v in data.items() if v}
+
+        if reply_to:
+            self.message = await reply_to.reply(**data)
+            return self.message
 
         if isinstance(target, Message):
             target = target.channel
@@ -222,87 +218,46 @@ class Basic(Generic[_M], View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if editing_original:
-                if message := await target.edit_original_message(**data):
-                    self.message = message
-            elif resp.is_done():
-                if message := await target.followup.send(**data, wait=True):
-                    self.message = message
-            else:
-                ctx = await resp.send_message(**data)
-                if message := await ctx.original_message():
-                    self.message = message
+                self.message = await target.edit_original_message(**data)
+                return
+
+            if not resp.is_done():
+                if isinstance(target, Thread) and target.archived:
+                    await target.edit(archived=True)
+                await resp.defer(ephemeral=ephemeral, thinking=thinking)
+
+            try:
+                self.message = await target.followup.send(**data, wait=True)
+            except DiscordException as e:
+                target.client.logger.exception("Exception", exc_info=e)
+                self.message = await target.channel.send(**data)
+            if message := self.message:
+                target.client.msg_cache.add(message.id)
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:
             self.message = await target.send(**data)
 
-        if message := self.message:
-            self.bot.msg_cache.add(message.id)
+        return self.message
 
-    @property
-    def target(self):
-        return self._target
-
-    @target.setter
-    def target(self, target: _M):
-        self._target = target
-
-    @property
-    def message(self):
-        return self._message
-
-    @message.setter
-    def message(self, message: Optional[Message]):
-        self._message = message
-
-    @message.deleter
-    def message(self):
-        self._message = None
-
-    @property
-    def member(self) -> Union[Member, User]:
-        return self._member
-
-    @member.setter
-    def member(self, member: Union[Member, User]):
-        self._member = member
-
-    @property
-    def embed(self):
-        return self._embed
-
-    @embed.setter
-    def embed(self, embed: Embed):
-        self._embed = embed
-
-    async def delete(
-        self,
-        force: bool = False,
-    ) -> None:
+    async def delete(self) -> None:
         """This method deletes the view, and stops it."""
         try:
-            if message := self.message:
-                await message.delete()
-            self.message = None
-        except DiscordException:
-            with suppress(DiscordException):
-                if message := self.message:
-                    view = self.from_message(message)
-                    if force or view.children == self.children:
-                        await message.edit(view=None)
-                self.message = None
+            if self.message:
+                if self.message.flags.ephemeral:
+                    await self.message.edit(view=None)
+                else:
+                    await self.message.delete()
+        except HTTPException:
+            try:
+                if isinstance(self.target, Interaction):
+                    message = await self.target.original_message()
+                    await message.edit(view=None)
+            except HTTPException:
+                pass
         finally:
-            if (
-                isinstance(target := self.target, Interaction)
-                and not self.message
-            ):
-                with suppress(DiscordException):
-                    message = await target.original_message()
-                    view = self.from_message(message)
-                    if force or view.children == self.children:
-                        await target.edit_original_message(view=None)
             self.message = None
-            return self.stop()
+            self.stop()
 
     async def on_timeout(self) -> None:
         with suppress(DiscordException):

@@ -5,6 +5,6 @@
 
 > This cog is pretty much as the name says, an embed builder, it works through the power of databases and webhooks in order to be able to keep editing embeds within discord itself.
 
-|   File   |        Description          |
-|----------|-----------------------------|
-| `cog.py` | Standard Cog Implementation |
+| File                | Description                   |
+| ------------------- | ----------------------------- |
+| `builder_modals.py` | Conceptual modification views |

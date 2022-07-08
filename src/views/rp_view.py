@@ -23,28 +23,24 @@ from discord import (
 from discord.ui import Button, View, button
 from discord.utils import utcnow
 
-from src.structures.bot import CustomBot
-
 __all__ = ("RPView",)
 
 
 class RPView(View):
-    def __init__(
-        self,
-        bot: CustomBot,
-        member_id: int,
-        oc_list: dict[int, int],
-        server: int = 719343092963999804,
-    ):
+    def __init__(self, member_id: int, oc_list: dict[int, int], server: int = 719343092963999804):
         super(RPView, self).__init__(timeout=None)
-        self.bot = bot
         self.member_id = member_id
         self.last_ping = None
         self.oc_list = oc_list
         self.server = server
-        self.url = f"https://discord.com/channels/{server}/{oc_list[member_id]}/"
         btn = Button(label="Check User's OCs", url=self.url)
         self.add_item(btn)
+
+    @property
+    def url(self):
+        if msg_id := self.oc_list.get(self.member_id):
+            return f"https://discord.com/channels/{self.server}/{msg_id}/"
+        return "https://discord.com/channels/{self.server}/919277769735680050/"
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -65,25 +61,18 @@ class RPView(View):
         return True
 
     @button(label="Mention the User", style=ButtonStyle.green, custom_id="ping")
-    async def ping(self, _: Button, interaction: Interaction):
+    async def ping(self, interaction: Interaction, _: Button):
         member: Member = interaction.user
         guild = interaction.guild
-        webhook = await self.bot.webhook(740568087820238919, reason="Ping")
-        embed = Embed(
-            title="User has pinged you.", timestamp=utcnow(), color=member.color
-        )
+        webhook = await interaction.client.webhook(740568087820238919, reason="Ping")
+        embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=member.color)
         embed.set_author(name=member.display_name)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         embed.set_thumbnail(url=member.display_avatar.url)
         view = View()
         view.add_item(Button(label="Your OCs", url=self.url))
         if thread_id := self.oc_list.get(member.id):
-            view.add_item(
-                Button(
-                    label="User's OCs",
-                    url=f"https://discord.com/channels/{self.server}/{thread_id}/",
-                )
-            )
+            view.add_item(Button(label="User's OCs", url=f"https://discord.com/channels/{self.server}/{thread_id}/"))
         author = interaction.guild.get_member(self.member_id)
         await webhook.send(
             f"Hello {author.mention}\n\n{member.mention} is interested on Rping with your characters.",

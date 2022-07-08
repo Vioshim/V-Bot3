@@ -5,6 +5,5 @@
 
 > Implementation of basic commands for moderation which are designed upon the server's needs, from regex cleaning to even proper ways to report.
 
-|   File   |        Description          |
-|----------|-----------------------------|
-| `cog.py` | Standard Cog Implementation |
+| File | Description |
+| ---- | ----------- |

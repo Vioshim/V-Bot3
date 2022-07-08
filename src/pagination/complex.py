@@ -12,14 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import asynccontextmanager, suppress
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
 from difflib import get_close_matches
+from inspect import isfunction
+from logging import getLogger, setLoggerClass
 from types import TracebackType
-from typing import Any, Callable, Iterable, Optional, Sized, TypeVar, Union
+from typing import Any, Callable, Iterable, Optional, Sized, TypeVar
 
 from discord import (
     AllowedMentions,
-    DiscordException,
+    ButtonStyle,
+    Color,
     Embed,
     Emoji,
     File,
@@ -32,69 +37,71 @@ from discord import (
     PartialEmoji,
     PartialMessage,
     StickerItem,
+    Thread,
     User,
 )
 from discord.abc import Messageable, Snowflake
-from discord.ui import Button, Select, button, select
+from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.simple import Simple
-from src.structures.bot import CustomBot
-from src.utils.functions import embed_modifier, text_check
+from src.structures.logger import ColoredLogger
+from src.utils.etc import WHITE_BAR
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 _T = TypeVar("_T", bound=Sized)
-_M = TypeVar("_M", bound=Messageable)
 
-__all__ = ("Complex", "ComplexInput")
-
-
-def default_emoji_parser(item: _T) -> tuple[str, str]:
-    """Standard parser for emoji out of elements
-
-    Parameters
-    ----------
-    item : _T
-        Element to parse as
-
-    Returns
-    -------
-    str | PartialEmoji | EMoji
-        Resulting emoji
-    """
-    if isinstance(item, (PartialEmoji, Emoji)):
-        return item
-    return getattr(item, "emoji", "\N{DIAMOND SHAPE WITH A DOT INSIDE}")
+__all__ = ("Complex",)
 
 
-class Complex(Simple):
+class DefaultModal(Modal):
+    def __init__(self, view: Complex, title: str = "Fill the information") -> None:
+        super().__init__(title=title)
+        self.text: Optional[str] = None
+        self.view = view
+        if item := view.text_component:
+            self.item = item
+            self.add_item(self.item)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        text = self.item.value or ""
+        aux = dict(map(lambda x: (self.view.parser(x)[0], x), self.view.values))
+        current = set()
+        for elem in map(lambda x: x.strip(), text.split(",")):
+            choices = self.view.choices
+            entries = get_close_matches(word=elem, possibilities=aux, n=1)
+            if entries and len(choices) < self.view.max_values - len(current):
+                item = aux[entries[0]]
+                current.add(item)
+
+        if current:
+            self.view.choices |= current
+
+        await self.view.update(interaction=interaction)
+        self.stop()
+
+
+class Complex(Simple[_T]):
     def __init__(
         self,
         *,
-        bot: CustomBot,
-        member: Union[Member, User],
+        member: Member | User,
         values: Iterable[_T],
-        target: _M = None,
+        target: Optional[Messageable] = None,
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         max_values: int = 1,
         entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = None,
-        emoji_parser: Union[
-            str, Callable[[_T], Union[str, PartialEmoji, Emoji]]
-        ] = None,
+        emoji_parser: str | PartialEmoji | Emoji | Callable[[_T], str | PartialEmoji | Emoji] = None,
         silent_mode: bool = False,
         keep_working: bool = False,
-        sort_key: Callable[[_T], Any] = None,
+        sort_key: Optional[Callable[[_T], Any]] = None,
+        text_component: Optional[TextInput | Modal] = None,
     ):
-        self._silent_mode = silent_mode
-        self._keep_working = keep_working
-        self._choices: set[_T] = None
-        self._max_values = max_values
-        if isinstance(emoji_parser, str):
-            self._emoji_parser = lambda x: emoji_parser
-        else:
-            self._emoji_parser = emoji_parser or default_emoji_parser
-        super().__init__(
-            bot=bot,
+        super(Complex, self).__init__(
             timeout=timeout,
             member=member,
             target=target,
@@ -103,116 +110,69 @@ class Complex(Simple):
             entries_per_page=entries_per_page,
             parser=parser,
             sort_key=sort_key,
+            modifying_embed=False,
         )
-
-    @property
-    def silent_mode(self) -> bool:
-        return self._silent_mode
-
-    @silent_mode.setter
-    def silent_mode(self, silent_mode: bool):
-        self._silent_mode = silent_mode
-
-    @property
-    def keep_working(self):
-        return self._keep_working
-
-    @keep_working.setter
-    def keep_working(self, keep_working: bool):
-        self._keep_working = keep_working
-
-    @property
-    def current_chunk(self) -> list[_T]:
-        amount = self.entries_per_page * self._pos
-        return self.values[amount : amount + self.entries_per_page]
-
-    def emoji_parser(self, item: _T) -> str:
-        return self._emoji_parser(item)
-
-    def set_emoji_parser(
-        self,
-        item: Callable[[_T], Union[str, PartialEmoji, Emoji]] = None,
-    ) -> None:
-        """Function used for setting a parser
-
-        Parameters
-        ----------
-        item : Callable[[_T], Union[str, PartialEmoji, Emoji]], optional
-            Function to add, defaults to None
-        """
-        if item:
-            self._emoji_parser = item
-        else:
-            self._emoji_parser = default_emoji_parser
-        self.menu_format()
+        self.silent_mode = silent_mode
+        self.keep_working = keep_working
+        self.choices: set[_T] = set()
+        self.max_values = max_values
+        self._emoji_parser = emoji_parser
+        self.text_component = text_component
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
         await self.wait()
-        return self._choices
+        return self.choices
 
-    async def __aexit__(
-        self,
-        exc_type: type,
-        exc_val: Exception,
-        exc_tb: TracebackType,
-    ) -> None:
+    async def __aexit__(self, exc_type: type, exc_val: Exception, exc_tb: TracebackType) -> None:
         if exc_type:
-            self.bot.logger.exception(
+            logger.exception(
                 "Exception occurred, target: %s, user: %s",
                 str(self.target),
                 str(self.member),
                 exc_info=exc_val,
             )
-        await self.delete(force=True)
+        await self.delete()
 
     @property
-    def choices(self) -> set[_T]:
-        return self._choices
+    def current_chunk(self) -> list[_T]:
+        amount = self.entries_per_page * self.pos
+        return self.values[amount : amount + self.entries_per_page]
+
+    def emoji_parser(self, item: _T) -> Optional[PartialEmoji | Emoji | str]:
+        if isinstance(self._emoji_parser, (PartialEmoji, Emoji, str)):
+            return self._emoji_parser
+        if isfunction(self._emoji_parser):
+            return self._emoji_parser(item)
+        return getattr(item, "emoji", PartialEmoji(name="StatusRichPresence", id=842328614883295232))
 
     @property
     def choice(self) -> Optional[_T]:
-        if choices := self._choices:
-            return choices.pop()
-
-    @property
-    def max_values(self):
-        return self._max_values
+        return next(iter(self.choices), None)
 
     def menu_format(self) -> None:
         """Default Formatter"""
         self.buttons_format()
         # First, the current stored values in each option get cleared.
         # aside of changing the placeholder text
+        if not self.text_component:
+            self.remove_item(self.message_handler)
+        elif self.message_handler not in self.children:
+            self.add_item(self.message_handler)
 
         foo: Select = self.select_choice
         pages: Select = self.navigate
-
-        if not (choices := self.choices):
-            choices = set()
-
-        foo.placeholder = f"Picked:{len(choices)}, Max:{self.max_values}"
-
+        choices = self.choices
+        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
         foo.options.clear()
         pages.options.clear()
-
         # Then gets defined the amount of entries an user can pick
-
-        foo.max_values = min(
-            self.max_values - len(choices),
-            self.entries_per_page,
-        )
-
+        foo.max_values = min(max(self.max_values - len(choices), 1), self.entries_per_page)
         # Now we get the indexes that each page should start with
-
-        indexes = self.values[:: self._entries_per_page]
-
+        indexes = self.values[:: self.entries_per_page]
         if total_pages := len(indexes):
-
             # We start to split the information in chunks
-
             elements: dict[int, list[_T]] = {}
-
             for index, _ in enumerate(indexes):
                 # The chunks start to get loaded keeping in mind the length of the pages
                 # the basis is pretty much the amount of elements multiplied by the page index.
@@ -226,9 +186,8 @@ class Complex(Simple):
             # Example: assuming there's 4 entries per page, 100 values and user is at the page 12 in this case,
             # the range of pages would be from page 10 to page 14
 
-            amount = int(self.entries_per_page / 2)
-            min_range = max(self._pos - amount, 0)
-            max_range = min(self._pos + amount, len(elements))
+            min_range = max(self._pos - 5, 0)
+            max_range = min(self._pos + 5, len(elements))
 
             for index in range(min_range, max_range):
                 item = elements[index]
@@ -241,87 +200,86 @@ class Complex(Simple):
 
                 # If the page is the same, as the current, it will be default after editing.
 
-                default = index == self._pos
+                default = index == self.pos
 
                 # The amount of digits required get determined for formatting purpose
-
-                digits = max(len(f"{index + 1}"), len(f"{total_pages}"))
-                page_text = (
-                    f"Page {index + 1:0{digits}d}/{total_pages:0{digits}d}"
-                )
+                page_text = f"Page {index + 1}/{total_pages}"
+                if len(page_text) > 100:
+                    page_text = f"Page {index + 1}"
                 pages.add_option(
-                    label=page_text[:100],
-                    value=f"{index}"[:100],
+                    label=page_text,
+                    value=f"{index}",
                     description=f"From {firstname} to {lastname}"[:100],
-                    emoji="\N{PAGE FACING UP}",
+                    emoji=PartialEmoji(name="list", id=432986579007569922),
                     default=default,
                 )
 
             # Now we start to add the information of the current page in the paginator.
-
-            for index, item in enumerate(elements[self._pos]):
+            for index, item in enumerate(elements.get(self.pos, [])):
                 # In each cycle, we proceed to convert the name and value (as we use its index)
                 # and determine the emoji, based on the current implementation of emoji_parser
-
-                name, value = self.parser(item)
+                name, value = map(lambda x: str(x).replace("\n", " ")[:100] if x else None, self.parser(item))
                 emoji = self.emoji_parser(item)
-                foo.add_option(
-                    label=f"{name}"[:100],
-                    value=f"{index}"[:100],
-                    description=str(value).replace("\n", " ")[:100],
-                    emoji=emoji,
-                )
-
+                foo.add_option(label=name, value=str(index), description=value, emoji=emoji)
             pages.disabled = len(pages.options) == 1
-        else:
 
-            # This is the outcome for no provided values.
-            pages.disabled = True
-            pages.add_option(
-                label="Page 01/01",
-                emoji="\N{PAGE FACING UP}",
-                default=True,
-            )
-            foo.disabled = True
-            foo.add_option(
-                label="Empty List",
-                default=True,
-            )
+        # This is the outcome for provided values.
+        if len(pages.options) <= 1:
+            self.remove_item(pages)
+        elif pages.options and pages not in self.children:
+            self.add_item(pages)
 
-    async def edit(self, page: Optional[int] = None) -> None:
+        if not foo.options:
+            self.remove_item(foo)
+        elif foo.options and foo not in self.children:
+            self.add_item(foo)
+
+    async def update(self, interaction: Interaction) -> None:
+        """Method used to edit the pagination
+
+        Parameters
+        ----------
+        interaction : Interaction
+            Interaction to use
         """
-        Method used to edit the pagination
+        await self.edit(interaction=interaction)
+
+    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
+        """Method used to edit the pagination
 
         Parameters
         ----------
         page: int, optional
             Page to be accessed, defaults to None
         """
-        amount = len(self._choices or set())
-        if amount < self._max_values:
-            return await super(Complex, self).edit(page=page)
-        await self.delete(force=not self.keep_working)
+        resp: InteractionResponse = interaction.response
+        if self.keep_working or len(self.choices) < self.max_values:
+            await super(Complex, self).edit(interaction=interaction, page=page)
+        else:
+            if not resp.is_done():
+                await resp.pong()
+            await self.delete()
 
     @asynccontextmanager
     async def send(
         self,
-        content: str = None,
+        content: Optional[str] = None,
         *,
         tts: bool = False,
-        embed: Embed = None,
-        embeds: list[Embed] = None,
-        file: File = None,
-        files: list[File] = None,
-        stickers: list[Union[GuildSticker, StickerItem]] = None,
-        delete_after: float = None,
-        nonce: int = None,
-        allowed_mentions: AllowedMentions = None,
-        reference: Union[Message, MessageReference, PartialMessage] = None,
+        embed: Optional[Embed] = None,
+        embeds: Optional[list[Embed]] = None,
+        file: Optional[File] = None,
+        files: Optional[list[File]] = None,
+        stickers: Optional[list[GuildSticker | StickerItem]] = None,
+        delete_after: Optional[float] = None,
+        nonce: Optional[int] = None,
+        allowed_mentions: Optional[AllowedMentions] = None,
+        reference: Optional[Message | MessageReference | PartialMessage] = None,
         mention_author: bool = False,
-        username: str = None,
-        avatar_url: str = None,
+        username: Optional[str] = None,
+        avatar_url: Optional[str] = None,
         ephemeral: bool = False,
-        thread: Snowflake = None,
+        thread: Optional[Snowflake] = None,
         single: bool = False,
         editing_original: bool = False,
         **kwargs,
@@ -369,12 +327,10 @@ class Complex(Simple):
             If the message is gonna be edited, defaults to False
         """
         try:
-            embed = embed or self.embed
-            self.embed = embed_modifier(embed, **kwargs)
             await super(Complex, self).send(
                 content=content,
                 tts=tts,
-                embed=self.embed,
+                embed=embed,
                 embeds=embeds,
                 file=file,
                 files=files,
@@ -389,23 +345,29 @@ class Complex(Simple):
                 ephemeral=ephemeral,
                 thread=thread,
                 editing_original=editing_original,
+                **kwargs,
             )
             await self.wait()
-            yield self.choice if single else self.choices
+            if single:
+                yield self.choice
+            else:
+                yield self.choices
         finally:
             await self.delete()
 
-    # noinspection PyTypeChecker
-    @select(
-        row=1,
-        placeholder="Select the elements",
-        custom_id="selector",
-    )
-    async def select_choice(
-        self,
-        sct: Select,
-        interaction: Interaction,
-    ) -> None:
+    @property
+    def current_choices(self) -> set[_T]:
+        sct = self.select_choice
+        chunk = self.current_chunk
+        return {chunk[int(index)] for index in sct.values}
+
+    @property
+    def current_choice(self) -> Optional[_T]:
+        if self.current_choices:
+            return self.current_choices.pop()
+
+    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         """Method used to select values from the pagination
 
         Parameters
@@ -416,47 +378,42 @@ class Complex(Simple):
             Current interaction of the user
         """
         response: InteractionResponse = interaction.response
-        if self._choices is None:
-            self._choices = set()
-        entries = []
-        amount = self.entries_per_page * self._pos
-        chunk = self.values[amount : amount + self.entries_per_page]
-
-        if not self.keep_working:
-            for index in sct.values:
-                item: _T = chunk[int(index)]
-                name, _ = self.parser(item)
-                entries.append(str(name))
-                self._choices.add(item)
-
-        await self.custom_choice(sct, interaction)
-
-        if not (self.silent_mode or response.is_done()):
-            if text := ", ".join(entries):
-                await response.send_message(
-                    content=f"Great! you have selected **{text}**.",
-                    ephemeral=True,
-                )
 
         if not response.is_done():
-            await response.pong()
 
-        self.values = set(self.values) - self.choices
-        if len(sct.values) == self.entries_per_page:
-            if self._pos > 1:
-                self._pos -= 1
-        await self.edit(page=self._pos)
+            if self.silent_mode:
+                await response.pong()
+            else:
+                member: Member | User = interaction.user
+                if isinstance(interaction.channel, Thread) and interaction.channel.archived:
+                    await interaction.channel.edit(archived=True)
+                await response.defer(ephemeral=True, thinking=True)
 
-    @select(
-        placeholder="Press to scroll pages",
-        row=2,
-        custom_id="navigate",
-    )
-    async def navigate(
-        self,
-        sct: Select,
-        interaction: Interaction,
-    ) -> None:
+                if text := "\n".join(f"> **•** {x}" for x, _ in map(self.parser, self.current_choices)):
+                    embed = Embed(title="Great! you have selected", description=text)
+                else:
+                    embed = Embed(title="Nothing has been selected.")
+
+                embed.color = Color.blurple()
+                embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+                embed.set_image(url=WHITE_BAR)
+                if guild := interaction.guild:
+                    embed.set_footer(text=guild.name, icon_url=guild.icon)
+
+                await interaction.followup.send(embed=embed, ephemeral=True)
+
+        if self.keep_working:
+            self.choices = self.current_choices
+        else:
+            self.choices |= self.current_choices
+            self.values = set(self.values) - self.choices
+            if len(sct.values) == self.entries_per_page:
+                self.pos = max(self._pos - 1, 0)
+
+        await self.edit(interaction=interaction, page=self.pos)
+
+    @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
+    async def navigate(self, interaction: Interaction, sct: Select) -> None:
         """Method used to select values from the pagination
 
         Parameters
@@ -466,122 +423,19 @@ class Complex(Simple):
         interaction: Interaction
             Current interaction of the user
         """
-        response: InteractionResponse = interaction.response
-        await self.custom_navigate(sct, interaction)
-        if not response.is_done():
-            items: list[str] = interaction.data.get("values", [])
-            if items[0].isdigit():
-                return await self.edit(page=int(items[0]))
+        return await self.edit(interaction=interaction, page=int(sct.values[0]))
 
-    async def custom_choice(
-        self,
-        sct: Select,
-        interaction: Interaction,
-    ) -> None:
-        """
-        Method used to reach next first of the pagination
-
-        Parameters
-        ----------
-        sct: Select
-            Button which interacts with the User
-        interaction: Interaction
-            Current interaction of the user
-        """
-
-    async def custom_navigate(
-        self,
-        sct: Select,
-        interaction: Interaction,
-    ) -> None:
-        """
-        Method used to reach next first of the pagination
-
-        Parameters
-        ----------
-        sct: Select
-            Button which interacts with the User
-        interaction: Interaction
-            Current interaction of the user
-        """
-
-
-class ComplexInput(Complex):
-    """This class allows written input."""
-
-    # noinspection PyTypeChecker
     @button(
-        label="Click here to write down the choice instead.",
-        emoji="\N{PENCIL}",
+        label="Write down the choice instead.",
+        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
         custom_id="writer",
+        style=ButtonStyle.blurple,
         disabled=False,
     )
-    async def message_handler(
-        self,
-        btn: Button,
-        ctx: Interaction,
-    ):
-        response: InteractionResponse = ctx.response
-        await self.custom_message_handler(btn, ctx)
-        if response.is_done():
-            return
-        btn.disabled = True
-        if message := self.message:
-            await message.edit(view=self)
-        elif isinstance(target := self.target, Interaction):
-            if message := await target.original_message():
-                await message.edit(view=self)
-        await response.send_message(
-            content="Write down the choice in that case.", ephemeral=True
-        )
-        message: Message = await self.bot.wait_for(
-            event="message",
-            check=text_check(ctx),
-        )
-        aux = {}
-        for item in self.values:
-            key, _ = self.parser(item)
-            aux[key] = item
-
-        current = set()
-        for elem in message.content.split(","):
-            if len(self._choices or set()) < self.max_values - len(current):
-                if entries := get_close_matches(
-                    word=elem.strip(),
-                    possibilities=aux,
-                    n=1,
-                ):
-                    if self._choices is None:
-                        self._choices = set()
-                    item = aux[entries[0]]
-                    current.add(item)
-
-        with suppress(DiscordException):
-            if current:
-                self.choices.update(current)
-                self.values = set(self.values) - self.choices
-                await message.delete()
-            else:
-                await message.reply(
-                    content="No close matches were found",
-                    delete_after=5,
-                )
-                await message.delete(delay=5)
-
-        return await self.edit(page=self._pos)
-
-    async def custom_message_handler(
-        self,
-        btn: Button,
-        interaction: Interaction,
-    ):
-        """
-        Method used to reach next first of the pagination
-
-        Parameters
-        ----------
-        btn: Button
-            Button which interacts with the User
-        interaction: Interaction
-            Current interaction of the user
-        """
+    async def message_handler(self, interaction: Interaction, _: Button):
+        response: InteractionResponse = interaction.response
+        component = self.text_component
+        if isinstance(component, TextInput):
+            component = DefaultModal(view=self)
+        await response.send_modal(component)
+        await component.wait()

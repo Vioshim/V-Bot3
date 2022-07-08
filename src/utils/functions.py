@@ -12,27 +12,118 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from re import Match, sub
 from typing import Callable, Optional, TypeVar
 
 from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
+from discord.utils import escape_mentions, get, remove_markdown
+
+from src.utils.matches import (
+    DISCORD_MSG_URL,
+    DISCORD_MSG_URL2,
+    ESCAPE_SEQ,
+    YAML_HANDLER1,
+    YAML_HANDLER2,
+)
 
 _T = TypeVar("_T")
 
 __all__ = (
     "fix",
+    "discord_url_msg",
     "common_get",
     "multiple_pop",
     "common_pop_get",
     "embed_modifier",
     "int_check",
+    "float_check",
     "stats_check",
     "check_valid",
     "text_check",
     "image_check",
+    "unescape",
     "message_line",
     "embed_handler",
+    "yaml_handler",
 )
+
+
+def unescape(text: str):
+    return ESCAPE_SEQ.sub(r"\1", text)
+
+
+def message_html_parse(message: Message, text: Optional[str] = None):
+    guild = message.guild
+
+    def resolve_member(id: int) -> str:
+        if not (m := guild.get_member(id) if guild else None):
+            m = get(message.mentions, id=id)
+        if m is None:
+            return "@deleted-user"
+        item = f'<span class="chatlog__markdown-mention" title="{m}">@{m.display_name}</span>'
+        return f'<span class="chatlog__markdown-preserve">{item}</span>'
+
+    def resolve_role(id: int) -> str:
+        if not (role := guild.get_role(id) if guild else None):
+            role = get(message.role_mentions, id=id)
+        if not role:
+            return "@deleted-role"
+        r, g, b = role.color.to_rgb()
+        return f'<span class="chatlog__markdown-mention" style="color: rgb({r}, {g}, {b}); background-color: rgba({r}, {g}, {b}, 0.1);">@{role.name}</span>'
+
+    def resolve_channel(id: int) -> str:
+        if not (c := guild._resolve_channel(id) if guild else None):
+            return "#deleted-channel"
+        return f'<span class="chatlog__markdown-mention">#{c.name}</span>'
+
+    transforms = {
+        "@": resolve_member,
+        "@!": resolve_member,
+        "#": resolve_channel,
+        "@&": resolve_role,
+    }
+
+    def repl(match: Match) -> str:
+        type = match[1]
+        id = int(match[2])
+        transformed = transforms[type](id)
+        return transformed
+
+    result = sub(r"<(@[!&]?|#)([0-9]{15,20})>", repl, text or message.content)
+    return escape_mentions(result)
+
+
+def embed_html_parse(message: Message, embed: Embed):
+    embed = embed.copy()
+    if description := embed.description:
+        embed.description = message_html_parse(message, description)
+    for index, field in enumerate(embed.fields):
+        text = message_html_parse(message, field.value)
+        embed.set_field_at(index=index, name=field.name, value=text)
+    return embed
+
+
+def discord_url_msg(message: Message):
+
+    content: str = message.content or ""
+
+    if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(content):
+        data = match.groupdict()
+        channel_id = data.get("channel_id")
+        if channel_id is None:
+            channel_id = message.channel and message.channel.id
+        else:
+            channel_id = int(channel_id)
+        message_id = int(data["message_id"])
+        guild_id = data.get("guild_id")
+        if guild_id is None:
+            guild_id = message.guild and message.guild.id
+        elif guild_id == "@me":
+            guild_id = None
+        else:
+            guild_id = int(guild_id)
+        return guild_id, message_id, channel_id
 
 
 def fix(text: str) -> str:
@@ -53,6 +144,13 @@ def fix(text: str) -> str:
     return "".join(x for e in text if (x := values.get(e, e)).isalnum())
 
 
+def yaml_handler(text: str) -> str:
+    text = "\n".join(x.strip() for x in text.split("\n"))
+    text = YAML_HANDLER1.sub(": ", text)
+    text = YAML_HANDLER2.sub("\n", text)
+    return remove_markdown(text)
+
+
 def common_get(item: dict[str, _T], *args: str) -> Optional[_T]:
     """Dict whose values to obtain from
 
@@ -66,7 +164,7 @@ def common_get(item: dict[str, _T], *args: str) -> Optional[_T]:
     Returns
     -------
     Optional[_T]
-        The possibly removed data
+        The possibly obtained data
     """
     for arg in args:
         if data := item.get(arg):
@@ -89,7 +187,7 @@ def multiple_pop(item: dict[str, _T], *args: str) -> dict[str, _T]:
         The possibly removed data
     """
 
-    return {x: elem for x in args if (elem := item.pop(x, None))}
+    return {x: item.pop(x) for x in args if x in item}
 
 
 def common_pop_get(item: dict[str, _T], *args: str) -> Optional[_T]:
@@ -136,52 +234,54 @@ def embed_modifier(embed: Embed = None, **kwargs):
     embed.url = kwargs.get("url", embed.url)
     embed.color = kwargs.get("color", embed.color)
     embed.timestamp = kwargs.get("timestamp", embed.timestamp)
-    if "author" in kwargs:
-        if author := kwargs.get("author", {}):
-            embed.set_author(**author)
-        else:
-            embed.remove_author()
-    if "footer" in kwargs:
-        if footer := kwargs.get("footer"):
-            embed.set_footer(**footer)
-        else:
-            embed.remove_footer()
-    if "image" in kwargs:
-        if image := kwargs.get("image"):
-            embed.set_image(url=image)
-        else:
-            embed.remove_image()
-    if "thumbnail" in kwargs:
-        if thumbnail := kwargs.get("thumbnail"):
-            embed.set_thumbnail(url=thumbnail)
-        else:
-            embed.remove_thumbnail
+
+    if author := kwargs.get("author", {}):
+        embed.set_author(**author)
+    elif "author" in kwargs:
+        embed.remove_author()
+
+    if footer := kwargs.get("footer", {}):
+        embed.set_footer(**footer)
+    elif "footer" in kwargs:
+        embed.remove_footer()
+
+    if image := kwargs.get("image", ""):
+        embed.set_image(url=image)
+    elif "image" in kwargs:
+        embed.set_image(url=None)
+
+    if thumbnail := kwargs.get("thumbnail", ""):
+        embed.set_thumbnail(url=thumbnail)
+    elif "thumbnail" in kwargs:
+        embed.set_thumbnail(url=None)
+
     if "fields" in kwargs:
         embed.clear_fields()
         if fields := kwargs.get("fields", []):
             for field in fields:
-                if isinstance(field, tuple):
-                    try:
-                        name, value = field
-                        embed.add_field(name=name, value=value)
-                    except ValueError:
-                        name, value, inline = field
-                        embed.add_field(name=name, value=value, inline=inline)
                 if isinstance(field, dict):
                     embed.add_field(**field)
+                elif isinstance(field, tuple):
+                    if len(field) == 2:
+                        name, value = field
+                        embed.add_field(name=name, value=value)
+                    elif len(field) == 3:
+                        name, value, inline = field
+                        embed.add_field(name=name, value=value, inline=inline)
+
     return embed
 
 
-def int_check(data: str, a: int, b: int) -> Optional[int]:
+def int_check(data: str, a: int = None, b: int = None) -> Optional[int]:
     """This is a method that checks the integer out of a string given a range
 
     Parameters
     ----------
     data : str
         string to scan
-    a : int
+    a : int, optional
         min range value (inclusive)
-    b : int
+    b : int, optional
         max range value (inclusive)
 
     Returns
@@ -189,9 +289,54 @@ def int_check(data: str, a: int, b: int) -> Optional[int]:
     Optional[int]
         Determined value
     """
-    if val := "".join(char for char in str(data) if char.isdigit()):
-        if a <= (value := int(val)) <= b:
-            return value
+    value: Optional[int] = None
+    try:
+        value = int(data)
+    except ValueError:
+        if text := "".join(char for char in str(data) if char.isdigit()):
+            value = int(text)
+    finally:
+        if not isinstance(a, int):
+            a = value
+        if not isinstance(b, int):
+            b = value
+
+    if isinstance(value, int) and a <= value <= b:
+        return value
+
+
+def float_check(data: str, a: float = None, b: float = None) -> Optional[float]:
+    """This is a method that checks the float out of a string given a range
+
+    Parameters
+    ----------
+    data : str
+        string to scan
+    a : int, optional
+        min range value (inclusive)
+    b : int, optional
+        max range value (inclusive)
+
+    Returns
+    -------
+    Optional[float]
+        Determined value
+    """
+    value: Optional[float] = None
+    try:
+        value = float(data)
+    except ValueError:
+        text: str = "".join(char for char in str(data) if char.isdigit() or char == ".")
+        if text.count(".") <= 1:
+            value = float(text)
+    finally:
+        if not isinstance(a, float):
+            a = value
+        if not isinstance(b, float):
+            b = value
+
+    if isinstance(value, float) and a <= value <= b:
+        return value
 
 
 def stats_check(*args: str) -> int:
@@ -266,7 +411,7 @@ def text_check(ctx: Interaction):
     return inner
 
 
-def image_check(ctx: Interaction, channel: TextChannel = None):
+def image_check(ctx: Interaction, channel: Optional[TextChannel] = None):
     """Image checker
 
     Parameters
@@ -286,7 +431,8 @@ def image_check(ctx: Interaction, channel: TextChannel = None):
             Message to scan
         """
         if ctx.user == message.author and channel == message.channel:
-            return bool(message.attachments or message.content)
+            items = any(x.content_type.startswith("image/") for x in message.attachments)
+            return bool(items or message.content)
         return False
 
     return inner
@@ -307,7 +453,7 @@ def message_line(message: Message):
     """
     channel = message.channel
     user = message.author
-    return dict(
+    data = dict(
         channel=f"{channel.name} - {channel.mention}",
         user=f"{user.display_name} - {user.mention}",
         created_at=message.created_at,
@@ -324,28 +470,19 @@ def message_line(message: Message):
         embeds=[item.to_dict() for item in message.embeds],
         content=message.content,
     )
+    return {k: v for k, v in data.items() if v}
 
 
 def embed_handler(message: Message, embed: Embed) -> Embed:
     for item in message.attachments:
-        if image := embed.image:
-            if item.url == image.url:
-                embed.set_image(url=f"attachment://{item.filename}")
-        if thumbnail := embed.thumbnail:
-            if item.url == thumbnail.url:
-                embed.set_thumbnail(url=f"attachment://{item.filename}")
-        if author := embed.author:
-            if item.url == author.icon_url:
-                embed.set_author(
-                    name=author.name,
-                    icon_url=f"attachment://{item.filename}",
-                    url=author.url,
-                )
-        if footer := embed.footer:
-            if item.url == footer.icon_url:
-                embed.set_footer(
-                    text=footer.text,
-                    icon_url=f"attachment://{item.filename}",
-                )
+        URL = f"attachment://{item.filename}"
+        if item.url == embed.image.url:
+            embed.set_image(url=URL)
+        if item.url == embed.thumbnail.url:
+            embed.set_thumbnail(url=URL)
+        if item.url == embed.author.icon_url:
+            embed.set_author(name=embed.author.name, icon_url=URL, url=embed.author.url)
+        if item.url == embed.footer.icon_url:
+            embed.set_footer(text=embed.footer.text, icon_url=URL)
 
     return embed

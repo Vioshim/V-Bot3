@@ -22,6 +22,16 @@ from re import split
 from typing import Any, Optional
 
 from asyncpg import Connection, Record
+from discord import (
+    ButtonStyle,
+    Embed,
+    Interaction,
+    InteractionResponse,
+    Member,
+    PartialEmoji,
+    TextStyle,
+)
+from discord.ui import Button, Modal, TextInput, View, button
 from frozendict import frozendict
 
 from src.utils.functions import fix
@@ -31,6 +41,8 @@ __all__ = (
     "AbilityDecoder",
     "AbilityEncoder",
     "SpAbility",
+    "SPAbilityModal",
+    "SPAbilityView",
     "ALL_ABILITIES",
 )
 
@@ -60,27 +72,38 @@ class Ability:
         """
         return f"Ability(name={self.name!r})"
 
+    @property
+    def embed(self) -> Embed:
+        """Generated Embed
+
+        Returns
+        -------
+        Embed
+            Embed
+        """
+        embed = Embed(title=self.name, description=self.description)
+        if battle := self.battle:
+            embed.add_field(name="In Battle", value=battle, inline=False)
+        if outside := self.outside:
+            embed.add_field(name="Out of Battle", value=outside, inline=False)
+        if random_fact := self.random_fact:
+            embed.add_field(name="Random Fact", value=random_fact, inline=False)
+        return embed
+
     @classmethod
     def all(cls) -> frozenset[Ability]:
         return frozenset(ALL_ABILITIES.values())
 
     @classmethod
-    def deduce_many(
-        cls,
-        *elems: str,
-        limit_range: Optional[int] = None,
-    ) -> frozenset[Ability]:
+    def deduce_many(cls, *elems: str, limit_range: Optional[int] = None) -> frozenset[Ability]:
         """This is a method that determines the abilities out of
         the existing entries, it has a 85% of precision.
-
         Parameters
         ----------
         item : str
             String to search
-
         limit_range : int, optional
             max amount to deduce, defaults to None
-
         Returns
         -------
         frozenset[Ability]
@@ -113,12 +136,10 @@ class Ability:
     def deduce(cls, item: str) -> Optional[Ability]:
         """This is a method that determines the ability out of
         the existing entries, it has a 85% of precision.
-
         Parameters
         ----------
         item : str
             String to search
-
         Returns
         -------
         Optional[Ability]
@@ -171,6 +192,33 @@ class SpAbility:
     def __repr__(self) -> str:
         return f"SPAbility(name={self.name})"
 
+    def clear(self):
+        self.name = ""
+        self.description = ""
+        self.origin = ""
+        self.pros = ""
+        self.cons = ""
+
+    @property
+    def embed(self) -> Embed:
+        """Generated Embed
+
+        Returns
+        -------
+        Embed
+            Embed
+        """
+        embed = Embed(title=self.name, description=self.description)
+        if origin := self.origin:
+            embed.add_field(name="Origin", value=origin[:1024], inline=False)
+        if pros := self.pros:
+            embed.add_field(name="Pros", value=pros[:1024], inline=False)
+        if cons := self.cons:
+            embed.add_field(name="Cons", value=cons[:1024], inline=False)
+        if len(embed) >= 6000 and embed.description:
+            embed.description = embed.description[:2000]
+        return embed
+
     @classmethod
     def convert(cls, record: Record) -> SpAbility:
         """Method that converts a record into a SpAbility instance
@@ -190,11 +238,7 @@ class SpAbility:
         return SpAbility(**items)
 
     @classmethod
-    async def fetch(
-        cls,
-        connection: Connection,
-        idx: int,
-    ) -> Optional[SpAbility]:
+    async def fetch(cls, connection: Connection, idx: int) -> Optional[SpAbility]:
         """This method calls database to obtain information
 
         Parameters
@@ -219,11 +263,7 @@ class SpAbility:
         ):
             return cls.convert(entry)
 
-    async def upsert(
-        self,
-        connection: Connection,
-        idx: int,
-    ) -> str:
+    async def upsert(self, connection: Connection, idx: int) -> str:
         """This method calls database to set information
 
         Parameters
@@ -238,6 +278,14 @@ class SpAbility:
         str
             Result of the query
         """
+        if not self or self == SpAbility():
+            return await connection.execute(
+                """--sql
+                DELETE FROM SPECIAL_ABILITIES
+                WHERE ID = $1;
+                """,
+                idx,
+            )
         return await connection.execute(
             """--sql
             INSERT INTO SPECIAL_ABILITIES(ID, NAME, DESCRIPTION, ORIGIN, PROS, CONS)
@@ -291,6 +339,105 @@ class AbilityDecoder(JSONDecoder):
         if all(x in dct for x in Ability.__slots__):
             return Ability(**dct)
         return dct
+
+
+class SPAbilityModal(Modal):
+    def __init__(self, sp_ability: SpAbility = None) -> None:
+        super(SPAbilityModal, self).__init__(title="Special Ability", timeout=None)
+        if not sp_ability:
+            sp_ability = SpAbility()
+        self.sp_ability = sp_ability
+        self.name = TextInput(
+            label="Name",
+            placeholder="How your OC refers to it?",
+            max_length=100,
+            default=sp_ability.name,
+        )
+        self.description = TextInput(
+            label="Description",
+            placeholder="Describe how it works",
+            style=TextStyle.paragraph,
+            default=sp_ability.description,
+        )
+        self.origin = TextInput(
+            label="Origin",
+            placeholder="Explain the story of how your oc obtained this",
+            style=TextStyle.paragraph,
+            default=sp_ability.origin,
+        )
+        self.pros = TextInput(
+            label="Pros",
+            placeholder="How it makes your oc's life easier?",
+            style=TextStyle.paragraph,
+            default=sp_ability.pros,
+        )
+        self.cons = TextInput(
+            label="Cons",
+            placeholder="How it makes your oc's life harder?",
+            style=TextStyle.paragraph,
+            default=sp_ability.cons,
+        )
+        self.add_item(self.name)
+        self.add_item(self.description)
+        self.add_item(self.origin)
+        self.add_item(self.pros)
+        self.add_item(self.cons)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        self.sp_ability = SpAbility(
+            name=self.name.value,
+            description=self.description.value,
+            origin=self.origin.value,
+            pros=self.pros.value,
+            cons=self.cons.value,
+        )
+        await resp.send_message("Special ability added/modified", ephemeral=True)
+        self.stop()
+
+
+class SPAbilityView(View):
+    def __init__(self, member: Member):
+        super(SPAbilityView, self).__init__(timeout=None)
+        self.sp_ability: Optional[SpAbility] = None
+        self.member = member
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return interaction.user == self.member
+
+    @button(
+        label="Add Sp. Ability",
+        style=ButtonStyle.blurple,
+        emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
+    )
+    async def confirm(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        modal = SPAbilityModal(self.sp_ability)
+        await resp.send_modal(modal)
+        await modal.wait()
+        self.sp_ability = modal.sp_ability
+        self.stop()
+
+    @button(
+        label="No Sp. Abilty",
+        style=ButtonStyle.blurple,
+        emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
+    )
+    async def deny(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.send_message("Alright, no Sp Ability", ephemeral=True)
+        self.sp_ability = SpAbility()
+        self.stop()
+
+    @button(
+        label="Cancel",
+        style=ButtonStyle.red,
+        emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
+    )
+    async def cancel(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.send_message("Process concluded", ephemeral=True)
+        self.stop()
 
 
 with open("resources/abilities.json", mode="r") as f:

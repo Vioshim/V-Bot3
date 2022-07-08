@@ -19,7 +19,6 @@ __all__ = ("SphinxObjectFileReader",)
 
 
 class SphinxObjectFileReader:
-
     BUFSIZE = 16 * 1024
 
     def __init__(self, buffer):

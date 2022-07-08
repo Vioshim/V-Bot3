@@ -41,17 +41,8 @@ class PronounItem:
     role_id: Optional[int] = None
 
 
-class Pronoun(Enum):
+class Pronoun(PronounItem, Enum):
     """This is an enum class representing Pronouns
-
-    Attributes
-    -----------
-    image: Optional[str]
-        image stored at Imagekit, defaults to None
-    emoji: Optional[str]
-        emoji that represents the pronoun, defaults to None
-    role_id: Optional[int]
-        discord role that represents the pronoun, defaults to None
 
     Methods
     -------
@@ -59,20 +50,9 @@ class Pronoun(Enum):
         deduces the Pronoun based on the given string.
     """
 
-    He = PronounItem(
-        image="male_n8DIlBU0M.png",
-        emoji="\N{MALE SIGN}",
-        role_id=738230651840626708,
-    )
-    She = PronounItem(
-        image="female_bdjGCkuKH.png",
-        emoji="\N{FEMALE SIGN}",
-        role_id=738230653916807199,
-    )
-    Them = PronounItem(
-        emoji="\N{BLACK SQUARE BUTTON}",
-        role_id=874721683381030973,
-    )
+    He = ("male_n8DIlBU0M.png", "\N{MALE SIGN}", 738230651840626708)
+    She = ("female_bdjGCkuKH.png", "\N{FEMALE SIGN}", 738230653916807199)
+    Them = (None, "\N{BLACK SQUARE BUTTON}", 874721683381030973)
 
     @classmethod
     def deduce(cls, item: str) -> Pronoun:
@@ -102,10 +82,10 @@ class Pronoun(Enum):
                 name = item.__class__.__name__
                 raise TypeError(f"Expected str but received {name!r} instead.")
 
-            name = "/".join(map(str, item))
+            item = "/".join(map(str, item))
 
         match fix(item):
-            case x if "THEM" in x or "HELICOPTER" in x:
+            case x if "THEM" in x or "THEIR" in x or "HELICOPTER" in x:
                 return Pronoun.Them
             case x if "FEMALE" in x or "SHE" in x or "HER" in x or "HERS" in x:
                 return Pronoun.She
@@ -113,15 +93,3 @@ class Pronoun(Enum):
                 return Pronoun.He
             case _:
                 return Pronoun.Them
-
-    @property
-    def emoji(self) -> Optional[str]:
-        return self.value.emoji
-
-    @property
-    def image(self) -> Optional[str]:
-        return self.value.image
-
-    @property
-    def role_id(self) -> Optional[int]:
-        return self.value.role_id

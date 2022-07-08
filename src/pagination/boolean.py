@@ -13,23 +13,28 @@
 # limitations under the License.
 
 from contextlib import asynccontextmanager
+from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
 from discord import (
     ButtonStyle,
-    DiscordException,
     Embed,
     Interaction,
     InteractionResponse,
     Member,
+    Message,
     User,
 )
 from discord.abc import Messageable
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
-from src.structures.bot import CustomBot
+from src.structures.logger import ColoredLogger
 from src.utils.functions import embed_modifier
+
+setLoggerClass(ColoredLogger)
+
+logger = getLogger(__name__)
 
 __all__ = ("BooleanView",)
 
@@ -40,25 +45,17 @@ class BooleanView(Basic):
     def __init__(
         self,
         *,
-        bot: CustomBot,
         member: Union[Member, User],
         target: _M = None,
         timeout: Optional[float] = None,
-        embed: Embed = None,
+        embed: Optional[Embed] = None,
     ):
-        super(BooleanView, self).__init__(
-            bot=bot,
-            member=member,
-            target=target,
-            timeout=timeout,
-            embed=embed,
-        )
+        super(BooleanView, self).__init__(member=member, target=target, timeout=timeout, embed=embed)
         self.value: Optional[bool] = None
 
     @asynccontextmanager
     async def handle(self, **kwargs):
         data = dict(
-            bot=self.bot,
             member=kwargs.get("member", self.member),
             target=kwargs.get("target", self.target),
             embed=kwargs.get("embed", self.embed),
@@ -69,104 +66,36 @@ class BooleanView(Basic):
 
         aux = BooleanView(**data)
         try:
-            if origin := kwargs.get("origin"):
-                await origin.edit(
-                    content=None,
-                    embed=aux.embed,
-                    view=aux,
-                )
+            if isinstance(origin := kwargs.get("origin"), Message):
+                await origin.edit(content=None, embed=aux.embed, view=aux)
                 await aux.wait()
-                await origin.edit(
-                    content="Process concluded with success.",
-                    embed=None,
-                    view=None,
-                )
+                await origin.edit(content="Process concluded with success.", embed=None, view=None)
             else:
                 await aux.send()
                 await aux.wait()
             yield aux.value
         except Exception as e:
-            self.bot.logger.exception(
-                "Exception occurred, target: %s, user: %s",
-                str(self.target),
-                str(self.member),
-                exc_info=e,
-            )
+            logger.exception("Exception occurred, target: %s, user: %s", str(self.target), str(self.member), exc_info=e)
         finally:
             await aux.delete()
 
-    @button(
-        label="Yes",
-        row=0,
-    )
-    async def confirm(
-        self,
-        _: Button,
-        interaction: Interaction,
-    ):
+    @button(label="Yes", row=0)
+    async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        try:
-            self.value = True
-            await resp.edit_message(
-                content=f"{self.embed.title}\nAnswer: Yes",
-                view=None,
-            )
-            await self.message.delete(delay=1)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error deleting message",
-                exc_info=e,
-            )
-        finally:
-            self.stop()
+        self.value = True
+        await resp.edit_message(content=f"{self.embed.title}\nAnswer: Yes", view=None)
+        await self.delete()
 
-    @button(
-        label="No",
-        row=0,
-    )
-    async def deny(
-        self,
-        _: Button,
-        interaction: Interaction,
-    ):
+    @button(label="No", row=0)
+    async def deny(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        try:
-            self.value = False
-            await resp.edit_message(
-                content=f"{self.embed.title}\nAnswer: No",
-                view=None,
-            )
-            await self.message.delete(delay=1)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error deleting message",
-                exc_info=e,
-            )
-        finally:
-            self.stop()
+        self.value = False
+        await resp.edit_message(content=f"{self.embed.title}\nAnswer: No", view=None)
+        await self.delete()
 
-    @button(
-        label="Cancel Process",
-        style=ButtonStyle.red,
-        row=0,
-    )
-    async def cancel(
-        self,
-        _: Button,
-        interaction: Interaction,
-    ):
+    @button(label="Cancel Process", style=ButtonStyle.red, row=0)
+    async def cancel(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        try:
-            self.value = None
-            await resp.edit_message(
-                content="Process has been cancelled",
-                view=None,
-            )
-            await self.message.delete(delay=1)
-        except DiscordException as e:
-            self.bot.logger.exception(
-                "Error deleting message",
-                exc_info=e,
-            )
-        finally:
-            self.stop()
+        self.value = None
+        await resp.edit_message(content="Process has been cancelled", view=None)
+        await self.delete()

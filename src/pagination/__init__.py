@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from src.pagination.boolean import BooleanView
-from src.pagination.complex import Complex, ComplexInput
+from src.pagination.complex import Complex
 from src.pagination.simple import Simple
 from src.pagination.view_base import Basic
 
@@ -21,6 +20,5 @@ __all__ = (
     "Basic",
     "BooleanView",
     "Complex",
-    "ComplexInput",
     "Simple",
 )

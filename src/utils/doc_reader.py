@@ -13,89 +13,45 @@
 # limitations under the License.
 
 from io import BytesIO
-from os.path import exists
-from typing import Optional
 
+from aiogoogle import Aiogoogle
 from docx.api import Document as DocumentParser
 from docx.document import Document
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.http import HttpRequest, MediaIoBaseDownload
 
-SCOPES = [
-    "https://www.googleapis.com/auth/documents",
-    "https://www.googleapis.com/auth/drive",
-]
-DOCX_FORMAT = (
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-)
+__all__ = ("DOCX_FORMAT", "GOOGLE_FORMAT", "docs_aioreader", "BytesAIO")
+
+DOCX_FORMAT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 GOOGLE_FORMAT = "application/vnd.google-apps.document"
 
 
-def docs_reader(document_id: str) -> Document:
-    """Google Document reader
+class BytesAIO(BytesIO):
+    def __init__(self, initial_bytes: bytes = None) -> None:
+        super(BytesAIO, self).__init__(initial_bytes)
 
-    Parameters
-    ----------
-    document_id: str
-        Google document's unique ID
+    async def write(self, __buffer: bytes) -> int:
+        return super(BytesAIO, self).write(__buffer)
 
-    Raises
-    ------
-    HttpError
-        If bad request
-    ValueError
-        If invalid format
 
-    Returns
-    -------
-    Document
-        Document
-    """
-    credentials = None
-    if exists("token.json"):
-        credentials = Credentials.from_authorized_user_file(
-            "token.json", SCOPES
+async def docs_aioreader(document_id: str, aio: Aiogoogle) -> Document:
+    file = BytesAIO()
+    storage = await aio.discover("drive", "v3")
+    info: dict[str, str] = await aio.as_service_account(storage.files.get(fileId=document_id))
+    value = info.get("mimeType")
+    if value == DOCX_FORMAT:
+        query = storage.files.get(
+            fileId=document_id,
+            pipe_to=file,
+            alt="media",
         )
-    if not credentials or not credentials.valid:
-        if credentials and credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials.json", SCOPES
-            )
-            credentials = flow.run_local_server(port=0)
-        with open("token.json", "w") as file:
-            file.write(credentials.to_json())
-
-    service = build(
-        "drive",
-        "v3",
-        credentials=credentials,
-        cache_discovery=False,
-    )
-
-    with service.files() as data:
-        request: HttpRequest = data.get(fileId=document_id)
-        info: dict[str, str] = request.execute()
-        value: Optional[str] = info.get("mimeType")
-        if value == DOCX_FORMAT:
-            request = data.get_media(
-                fileId=document_id,
-            )
-        elif value == GOOGLE_FORMAT:
-            request = data.export_media(
-                fileId=document_id,
-                mimeType=DOCX_FORMAT,
-            )
-        else:
-            raise ValueError(f"{value} format is not supported.")
-
-        fh = BytesIO()
-        downloader = MediaIoBaseDownload(fh, request)
-        done: bool = False
-        while done is False:
-            _, done = downloader.next_chunk()
-        return DocumentParser(fh)
+    elif value == GOOGLE_FORMAT:
+        query = storage.files.export(
+            fileId=document_id,
+            pipe_to=file,
+            mimeType=DOCX_FORMAT,
+            alt="media",
+        )
+    else:
+        raise ValueError(f"{value} format is not supported.")
+    await aio.as_service_account(query)
+    file.seek(0)
+    return DocumentParser(file)

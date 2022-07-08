@@ -93,23 +93,20 @@ class Bump(metaclass=ABCMeta):
                 value=f"> If you like the server, "
                 f"feel free to let us know your opinion by rating/reviewing the server in {self.name}.",
             )
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar.url)
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         if guild := ctx.guild:
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         return embed
 
 
 class PingBump(View):
-    def __init__(
-        self,
-        *,
-        before: Message = None,
-        after: Message = None,
-        data: Bump = None,
-    ):
+    def __init__(self, *, before: Message = None, after: Message = None, data: Bump = None):
         super(PingBump, self).__init__(timeout=data.hours * 3600.0)
         self.mentions: set[Member] = set()
         self.embed = data.adapt_embed(after)
+        if url := self.embed.url:
+            btn = Button(label="Click Here to Review us!", url=url)
+            self.add_item(btn)
         self.before = before
         self.after = after
         self.data = data
@@ -122,35 +119,27 @@ class PingBump(View):
         return self.data.on_message(self.after)
 
     @property
+    def timedelta(self):
+        if date := self.date:
+            return date.replace(tzinfo=None) - utcnow().replace(tzinfo=None)
+
+    @property
     def date(self) -> datetime:
-        if embeds := self.after.embeds:
-            if data := self.data.format_date.search(embeds[0].description):
-                return parse(
-                    data.group(1),
-                    settings=dict(
-                        PREFER_DATES_FROM="future",
-                        TIMEZONE="utc",
-                    ),
-                )
+        if (embeds := self.after.embeds) and (data := self.data.format_date.search(embeds[0].description)):
+            return parse(
+                data.group(1),
+                settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"),
+            )
 
     async def send(self):
-        if url := self.embed.url:
-            btn = Button(label="Click Here to Review us!", url=url)
-            self.add_item(btn)
-
-        self.message = await self.after.channel.send(
-            embed=self.embed,
-            view=self,
-        )
+        self.message = await self.after.channel.send(embed=self.embed, view=self)
 
     @button(emoji="a:SZD_desk_bell:769116713639215124")
-    async def reminder(self, _: Button, inter: Interaction) -> None:
+    async def reminder(self, inter: Interaction, _: Button) -> None:
         resp: InteractionResponse = inter.response
         if inter.user in self.mentions:
             self.mentions.remove(inter.user)
-            return await resp.send_message(
-                "Alright, you won't get notified", ephemeral=True
-            )
+            return await resp.send_message("Alright, you won't get notified", ephemeral=True)
         self.mentions.add(inter.user)
         return await resp.send_message("Alright, you will get notified", ephemeral=True)
 
@@ -163,10 +152,7 @@ class PingBump(View):
         self.reminder.disabled = True
         if message := self.message:
             await message.edit(view=self)
-        await channel.send(
-            content=text,
-            allowed_mentions=AllowedMentions(users=True),
-        )
+        await channel.send(content=text, allowed_mentions=AllowedMentions(users=True))
         self.stop()
 
 
@@ -181,7 +167,7 @@ class Disboard(Bump):
 
     def on_message(self, message: Message) -> bool:
         if embeds := message.embeds:
-            return ":thumbsup:" in embeds[0].description
+            return "Bump done!" in embeds[0].description
         return False
 
     def on_message_edit(self, _before: Message, _now: Message) -> bool:

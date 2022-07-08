@@ -12,35 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Union
+from typing import Optional
 
-from discord import (
-    Interaction,
-    InteractionResponse,
-    Member,
-    TextChannel,
-    Webhook,
-)
-from discord.ui import Button, Select, View
+from discord import Interaction, InteractionResponse, Member
+from discord.abc import Messageable
+from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
 from src.structures.move import Move
 
 __all__ = ("MoveView",)
 
 
-class MoveView(Complex):
+class MoveView(Complex[Move]):
     def __init__(
         self,
-        bot: CustomBot,
         member: Member,
-        target: Union[Interaction, Webhook, TextChannel],
         moves: set[Move],
+        target: Optional[Messageable] = None,
         keep_working: bool = False,
     ):
         super(MoveView, self).__init__(
-            bot=bot,
             member=member,
             target=target,
             values=moves,
@@ -51,43 +43,13 @@ class MoveView(Complex):
         )
         self.embed.title = "Select a Move"
 
-    async def custom_choice(self, sct: Select, ctx: Interaction):
-        response: InteractionResponse = ctx.response
-        for index in sct.values:
-            try:
-                amount = self.entries_per_page * self._pos
-                chunk = self.values[amount : amount + self.entries_per_page]
-                item: Move = chunk[int(index)]
-                embed = item.embed
-                view = View()
-                view.add_item(
-                    Button(
-                        label="Click here to check more information at Bulbapedia.",
-                        url=item.url,
-                    )
-                )
-                await response.send_message(
-                    embed=embed,
-                    view=view,
-                    ephemeral=True,
-                )
-            except IndexError:
-                pass
-            except Exception as e:
-                self.bot.logger.exception(
-                    "Chunk: %s",
-                    str(chunk),
-                    exc_info=e,
-                )
-
-    @property
-    def choice(self) -> Optional[Move]:
-        """Method Override
-
-        Returns
-        -------
-        set[Move]
-            Desired Moves
-        """
-        if value := super(MoveView, self).choice:
-            return value
+    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        response: InteractionResponse = interaction.response
+        if item := self.current_choice:
+            embed = item.embed
+            view = View()
+            if url := getattr(item, "url", None):
+                view.add_item(Button(label="Click here to check more information at Bulbapedia.", url=url))
+            await response.send_message(embed=embed, view=view, ephemeral=True)
+        await super(MoveView, self).select_choice(interaction=interaction, sct=sct)

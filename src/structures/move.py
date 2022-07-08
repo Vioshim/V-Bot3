@@ -94,7 +94,7 @@ class Move:
     type: Typing
     url: str
     image: str
-    contest: str = None
+    contest: Optional[str] = None
     desc: Optional[str] = None
     shortDesc: Optional[str] = None
     accuracy: Optional[int] = None
@@ -105,15 +105,20 @@ class Move:
     metronome: bool = True
 
     @property
+    def color(self):
+        return self.type.color
+
+    @property
+    def emoji(self):
+        return self.type.emoji
+
+    @property
     def embed(self):
+        title = self.name
+        if self.banned:
+            title += " - Banned Move"
         description = self.desc or self.shortDesc
-        embed = Embed(
-            url=self.url,
-            title=self.name,
-            description=description,
-            color=self.type.color,
-            timestamp=utcnow(),
-        )
+        embed = Embed(url=self.url, title=title, description=description, color=self.type.color, timestamp=utcnow())
         embed.add_field(name="Power", value=f"{self.base}")
         embed.add_field(name="Accuracy", value=f"{self.accuracy}")
         embed.set_footer(text=self.category.title())
@@ -207,30 +212,19 @@ class Move:
         """
         if data := cls.from_ID(item):
             return data
-        for elem in get_close_matches(
-            item,
-            possibilities=ALL_MOVES,
-            n=1,
-            cutoff=0.85,
-        ):
+        for elem in get_close_matches(item, possibilities=ALL_MOVES, n=1, cutoff=0.85):
             return ALL_MOVES[elem]
 
     @classmethod
-    def deduce_many(
-        cls,
-        *elems: str,
-        limit: Optional[int] = None,
-    ) -> frozenset[Move]:
+    def deduce_many(cls, *elems: str, limit: Optional[int] = None) -> frozenset[Move]:
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
-
         Parameters
         ----------
         elems : str
             Strings to search
         limit : int
             If there's a limit of moves to get
-
         Returns
         -------
         frozenset[Move]
@@ -249,18 +243,13 @@ class Move:
             if data := ALL_MOVES.get(elem := fix(elem)):
                 items.add(data)
             else:
-                for data in get_close_matches(
-                    word=elem,
-                    possibilities=ALL_MOVES,
-                    n=1,
-                    cutoff=0.85,
-                ):
+                for data in get_close_matches(word=elem, possibilities=ALL_MOVES, n=1, cutoff=0.85):
                     items.add(ALL_MOVES[data])
 
         return frozenset(list(items)[:limit])
 
     @classmethod
-    def getMetronome(cls):
+    def getMetronome(cls) -> Move:
         """This is a method that returns a Move given Metronome's behaviour
 
         Returns
@@ -286,9 +275,7 @@ class MoveDecoder(JSONDecoder):
     """Move decoder"""
 
     def __init__(self):
-        super(MoveDecoder, self).__init__(
-            object_hook=self.object_hook,
-        )
+        super(MoveDecoder, self).__init__(object_hook=self.object_hook)
 
     def object_hook(self, dct: dict[str, Any]):
         """Decoder method for dicts

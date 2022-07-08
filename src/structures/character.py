@@ -14,17 +14,19 @@
 
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from enum import Enum
+from io import BytesIO
 from random import sample
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
-from discord import Color, Embed
-from discord.utils import utcnow
+from discord import Color, Embed, File, Interaction
+from discord.app_commands import Choice
+from discord.app_commands.transformers import Transform, Transformer
+from discord.utils import snowflake_time, utcnow
 from docx.document import Document
-from frozendict import frozendict
+from rapidfuzz import process
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import Typing
@@ -43,32 +45,86 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import (
-    common_pop_get,
-    fix,
-    int_check,
-    multiple_pop,
-    stats_check,
-)
+from src.utils.functions import common_pop_get, int_check, stats_check
 from src.utils.imagekit import ImageKit
 from src.utils.matches import DATA_FINDER
 
 __all__ = (
-    "ASSOCIATIONS",
     "Character",
-    "FakemonCharacter",
-    "LegendaryCharacter",
-    "FusionCharacter",
-    "MegaCharacter",
-    "PokemonCharacter",
-    "fetch_all",
+    "CharacterArg",
     "oc_process",
 )
 
 
+class Kind(Enum):
+    Common = Pokemon
+    Legendary = Legendary
+    Mythical = Mythical
+    UltraBeast = UltraBeast
+    Fakemon = Fakemon
+    Variant = Variant
+    Mega = Mega
+    Fusion = Fusion
+    CustomMega = CustomMega
+
+    @property
+    def to_db(self) -> str:
+        match self:
+            case self.Common:
+                return "COMMON"
+            case self.Legendary:
+                return "LEGENDARY"
+            case self.Mythical:
+                return "MYTHICAL"
+            case self.UltraBeast:
+                return "ULTRA BEAST"
+            case self.Fakemon:
+                return "FAKEMON"
+            case self.Variant:
+                return "VARIANT"
+            case self.Mega:
+                return "MEGA"
+            case self.Fusion:
+                return "FUSION"
+            case self.CustomMega:
+                return "CUSTOM MEGA"
+
+    @classmethod
+    def associated(cls, name: str) -> Optional[Kind]:
+        match name:
+            case "COMMON":
+                return cls.Common
+            case "LEGENDARY":
+                return cls.Legendary
+            case "MYTHICAL":
+                return cls.Mythical
+            case "ULTRA BEAST":
+                return cls.UltraBeast
+            case "FAKEMON":
+                return cls.Fakemon
+            case "VARIANT":
+                return cls.Variant
+            case "MEGA":
+                return cls.Mega
+            case "FUSION":
+                return cls.Fusion
+            case "CUSTOM MEGA":
+                return cls.CustomMega
+
+    def all(self) -> frozenset[Species]:
+        return self.value.all()
+
+    @classmethod
+    def from_class(cls, item: Type[Species]):
+        for element in cls:
+            if isinstance(item, element.value):
+                return element
+        return cls.Fakemon
+
+
 @dataclass(unsafe_hash=True, slots=True)
-class Character(metaclass=ABCMeta):
-    species: Species = None
+class Character:
+    species: Optional[Species] = None
     id: Optional[int] = None
     author: Optional[int] = None
     thread: Optional[int] = None
@@ -82,91 +138,142 @@ class Character(metaclass=ABCMeta):
     moveset: frozenset[Move] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
     url: Optional[str] = None
-    image: Optional[str] = None
+    image: Optional[int] = None
     location: Optional[int] = None
-    created_at: datetime = None
+
+    @classmethod
+    def from_dict(cls, kwargs: dict[str, Any]) -> Character:
+        kwargs = {k.lower(): v for k, v in kwargs.items() if k.lower() in cls.__slots__}
+        return Character(**kwargs)
 
     def __post_init__(self):
         if not self.server:
             self.server = 719343092963999804
-        if not self.created_at:
-            self.created_at = utcnow()
-        if isinstance(self.sp_ability, dict):
+        if not self.can_have_special_abilities:
+            self.sp_ability = None
+        elif isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
+        if isinstance(self.abilities, str):
+            self.abilities = [self.abilities]
+        self.abilities = Ability.deduce_many(*self.abilities)
+        if isinstance(self.moveset, str):
+            self.moveset = [self.moveset]
+        self.moveset = Move.deduce_many(*self.moveset)
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun[self.pronoun]
         if isinstance(self.age, int):
-            if self.age >= 100:
-                self.age = None
             if self.age < 13:
                 self.age = 13
+            if self.age >= 100:
+                self.age = None
         if not self.can_have_special_abilities:
             self.sp_ability = None
 
     def __eq__(self, other: Character):
         return self.id == other.id
 
-    def randomize_abilities(self):
-        if abilities := list(self.species.abilities):
+    @property
+    def types(self):
+        return frozenset(self.species.types)
+
+    @property
+    def possible_types(self):
+        if isinstance(self.species, Fusion):
+            return frozenset([frozenset(x) for x in self.species.possible_types])
+        return frozenset({self.species.types})
+
+    @property
+    def kind(self):
+        return Kind.from_class(self.species)
+
+    @property
+    def image_url(self):
+        return f"https://cdn.discordapp.com/attachments/{self.thread}/{self.image}/image.png"
+
+    @image_url.setter
+    def image_url(self, url: str):
+        self.image = int(url.split("/")[:-1][-1])
+
+    @image_url.deleter
+    def image_url(self):
+        self.image = None
+
+    @property
+    def created_at(self):
+        if self.id:
+            return snowflake_time(self.id)
+        return utcnow()
+
+    @property
+    def document_url(self):
+        if self.url:
+            return f"https://docs.google.com/document/d/{self.url}/edit?usp=sharing"
+
+    @document_url.setter
+    def document_url(self, url: str):
+        url = url.removeprefix("https://docs.google.com/document/d/")
+        url = url.removesuffix("/edit?usp=sharing")
+        self.url = url
+
+    @document_url.deleter
+    def document_url(self):
+        self.url = None
+
+    @property
+    def usable_abilities(self) -> frozenset[Ability]:
+        if self.any_ability_at_first:
+            return Ability.all()
+        return self.species.abilities
+
+    @property
+    def randomize_abilities(self) -> frozenset[Ability]:
+        if abilities := list(self.usable_abilities):
             amount = min(self.max_amount_abilities, len(abilities))
             items = sample(abilities, k=amount)
-            self.abilities = frozenset(items)
+            return frozenset(items)
+        return frozenset(self.abilities)
 
-    def randomize_moveset(self):
+    @property
+    def randomize_moveset(self) -> frozenset[Move]:
         if movepool := self.movepool:
             moves = list(movepool())
             amount = min(6, len(moves))
-            items = sample(moves, k=amount)
-            self.moveset = frozenset(items)
+            return frozenset(sample(moves, k=amount))
+        return self.moveset
 
     @property
     def evolves_from(self) -> Optional[Type[Species]]:
-        return self.species.species_evolves_from
+        if self.species:
+            return self.species.species_evolves_from
 
     @property
     def evolves_to(self) -> list[Type[Species]]:
-        return self.species.species_evolves_to
+        if self.species:
+            return self.species.species_evolves_to
 
     @property
     def emoji(self):
         return self.pronoun.emoji
 
     @property
-    @abstractmethod
-    def kind(self) -> str:
-        """Kind in database
-
-        Returns
-        -------
-        str
-            kind
-        """
-
-    @property
-    def types(self) -> frozenset[Typing]:
-        return self.species.types
-
-    @property
     def movepool(self) -> Movepool:
-        return self.species.movepool
+        if self.species:
+            return self.species.movepool
+        return Movepool()
+
+    @property
+    def total_movepool(self) -> Movepool:
+        if self.species:
+            return self.species.total_movepool
+        return Movepool()
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return self.species.can_have_special_abilities
+        if self.species:
+            return self.species.can_have_special_abilities
+        return True
 
     @property
-    @abstractmethod
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-
-    @property
-    @abstractmethod
     def any_move_at_first(self) -> bool:
         """Wether if the species can start with any move at first
 
@@ -175,9 +282,9 @@ class Character(metaclass=ABCMeta):
         bool
             answer
         """
+        return isinstance(self.species, (Variant, Fakemon))
 
     @property
-    @abstractmethod
     def any_ability_at_first(self) -> bool:
         """Wether if the species can start with any ability at first
 
@@ -186,6 +293,7 @@ class Character(metaclass=ABCMeta):
         bool
             answer
         """
+        return isinstance(self.species, (Variant, Fakemon, CustomMega))
 
     @property
     def max_amount_abilities(self) -> int:
@@ -232,65 +340,50 @@ class Character(metaclass=ABCMeta):
         Embed
             Embed with the character's information
         """
-        c_embed = Embed(
-            title=self.name.title(),
-            color=Color.blurple(),
-            timestamp=self.created_at,
-        )
-        c_embed.url = self.url or c_embed.Empty
+        c_embed = Embed(title=self.name.title(), color=Color.blurple(), timestamp=self.created_at)
+        if url := self.document_url:
+            c_embed.url = url
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]
         c_embed.add_field(name="Pronoun", value=self.pronoun.name)
         c_embed.add_field(name="Age", value=self.age or "Unknown")
-        c_embed.add_field(name="Species", value=self.species.name)
+        if self.kind == Kind.Fusion:
+            name1, name2 = self.species.name.split("/")
+            c_embed.add_field(
+                name="Fusion Species",
+                value=f"> **•** {name1}\n> **•** {name2}".title(),
+            )
+        elif self.kind == Kind.Fakemon:
+            if evolves_from := self.evolves_from:
+                name = f"Fakemon Evolution - {evolves_from.name}"
+            else:
+                name = "Fakemon Species"
+            c_embed.add_field(name=name, value=self.species.name)
+        elif self.kind in [Kind.CustomMega, Kind.Variant]:
+            name = f"{self.kind.name} Species"
+            c_embed.add_field(name=name, value=self.species.name)
+        else:
+            c_embed.add_field(name="Species", value=self.species.name)
         for index, ability in enumerate(self.abilities, start=1):
-            c_embed.add_field(
-                name=f"Ability {index} - {ability.name}",
-                value=f"> {ability.description}",
-                inline=False,
-            )
+            c_embed.add_field(name=f"Ability {index} - {ability.name}", value=f"> {ability.description}", inline=False)
         if sp_ability := self.sp_ability:
-            c_embed.add_field(
-                name=f'Sp.Ability - "{sp_ability.name[:100]}"',
-                value=sp_ability.description[:200],
-                inline=False,
-            )
-            c_embed.add_field(
-                name="Sp.Ability - Origin",
-                value=sp_ability.origin[:200],
-                inline=False,
-            )
-            c_embed.add_field(
-                name="Sp.Ability - Pros",
-                value=sp_ability.pros[:200],
-                inline=False,
-            )
-            c_embed.add_field(
-                name="Sp.Ability - Cons",
-                value=sp_ability.cons[:200],
-                inline=False,
-            )
+            name = sp_ability.name[:100]
+            c_embed.add_field(name=f'Sp.Ability - "{name}"', value=sp_ability.description[:200], inline=False)
+            c_embed.add_field(name="Sp.Ability - Origin", value=sp_ability.origin[:200], inline=False)
+            c_embed.add_field(name="Sp.Ability - Pros", value=sp_ability.pros[:200], inline=False)
+            c_embed.add_field(name="Sp.Ability - Cons", value=sp_ability.cons[:200], inline=False)
         if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
-        if image := self.image:
+        if image := self.image_url:
             c_embed.set_image(url=image)
         if entry := "/".join(i.name.title() for i in self.types):
             c_embed.set_footer(text=entry)
 
         if location := self.place_mention:
-            c_embed.add_field(
-                name="Last Location",
-                value=location,
-                inline=False,
-            )
-
-        if isinstance(self.extra, str):
-            if extra := self.extra[: min(1000, len(c_embed) - 100)]:
-                c_embed.add_field(
-                    name="Extra Information",
-                    value=extra,
-                    inline=False,
-                )
+            c_embed.add_field(name="Last Location", value=location, inline=False)
+        extra = self.extra or ""
+        if extra := extra[: min(1000, len(c_embed) - 100)]:
+            c_embed.add_field(name="Extra Information", value=extra, inline=False)
 
         return c_embed
 
@@ -300,30 +393,20 @@ class Character(metaclass=ABCMeta):
 
         Returns
         -------
-        Optional[str]
+        str
             URL
         """
-        if image := self.image or self.default_image:
-            if image.startswith(
-                f"https://cdn.discordapp.com/attachments/{self.thread}/"
-            ):
-                return image
+        if isinstance(image := self.image, int):
+            return self.image_url
+        kit = ImageKit(base="background_Y8q8PAtEV.png", width=900)
+        kit.add_image(image=image, height=400)
+        if icon := self.pronoun.image:
+            kit.add_image(image=icon, x=-10, y=-10)
+        for index, item in enumerate(self.types):
+            kit.add_image(image=item.icon, width=200, height=44, x=-10, y=44 * index + 10)
+        return kit.url
 
-            kit = ImageKit(base="background_Y8q8PAtEV.png", weight=900)
-            kit.add_image(image=image, height=400)
-            if icon := self.pronoun.image:
-                kit.add_image(image=icon, x=-10, y=-10)
-            for index, item in enumerate(self.types):
-                kit.add_image(
-                    image=item.icon,
-                    weight=200,
-                    height=44,
-                    x=-10,
-                    y=44 * index + 10,
-                )
-            return kit.url
-
-    async def update(self, connection: Connection, idx: int = None) -> None:
+    async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:
         """Method for updating data in database
 
         Parameters
@@ -332,37 +415,27 @@ class Character(metaclass=ABCMeta):
             asyncpg connection object
         idx : int, optional
             Index if it will be modified, by default None
+        thread_id : int, Optional
+            Thread to move if needed
         """
         new_index = idx or self.id
-        if self.id:
+        if self.id != new_index:
             await connection.execute(
                 """--sql
                 UPDATE CHARACTER
-                SET ID = $2
+                SET ID = $2, THREAD = $4
                 WHERE ID = $1 AND SERVER = $3;
                 """,
                 self.id,
                 new_index,
                 self.server,
+                thread_id or self.thread,
             )
         self.id = new_index
         await self.upsert(connection)
 
-    def update_from_dict(self, data: dict[str, Any]):
-        """Update the class' values given a dict
-
-        Parameters
-        ----------
-        data : dict[str, Any]
-            information to update
-        """
-        for k, v in data.items():
-            if hasattr(self, item := k.lower()) and item != "kind":
-                setattr(self, item, v)
-
     @classmethod
-    @abstractmethod
-    async def fetch_all(cls, connection: Connection) -> list[Character]:
+    async def fetch_all(cls, connection: Connection):
         """This should return a list of Characters
 
         Parameters
@@ -370,67 +443,61 @@ class Character(metaclass=ABCMeta):
         connection : Connection
             asyncpg connection
 
-        Returns
+        Yields
         -------
-        list[Character]
-            characters
+        Character
         """
-
-    async def retrieve(self, connection: Connection):
-        """Updates the character's abilities and moves with the provided in database.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        if info := await connection.fetchrow(
+        async for item in connection.cursor(
             """--sql
-            SELECT *
-            FROM CHARACTER
-            WHERE ID = $1;
-            """,
-            self.id,
+            SELECT
+                C.*,
+                TO_JSONB(F.*) AS FAKEMON,
+                TO_JSONB(S.*) AS SP_ABILITY,
+                TO_JSON(M.*) AS MOVEPOOL
+            FROM CHARACTER C
+            LEFT JOIN FAKEMON F ON C.ID = F.ID
+            LEFT JOIN SPECIAL_ABILITIES S ON C.ID = S.ID
+            LEFT JOIN MOVEPOOL M ON C.ID = M.ID;
+            """
         ):
-            data = dict(info)
-            if pronoun := data.get("pronoun"):
-                data["pronoun"] = Pronoun[pronoun]
-            self.update_from_dict(data)
-            if abilities := await connection.fetchval(
-                """--sql
-                SELECT ARRAY_AGG(ABILITY)
-                FROM CHARACTER_ABILITIES
-                WHERE ID = $1;
-                """,
-                self.id,
-            ):
-                self.abilities = Ability.deduce_many(*abilities)
+            data = dict(item)
+            kind = Kind.associated(data.pop("kind", "COMMON"))
 
-            if not self.has_default_types:
-                if mon_types := await connection.fetchval(
-                    """--sql
-                    SELECT ARRAY_AGG(TYPE)
-                    FROM CHARACTER_TYPES
-                    WHERE character = $1;
-                    """,
-                    self.id,
-                ):
-                    self.species.types = Typing.deduce_many(*mon_types)
+            species = Species.from_ID(data.pop("species", None))
+            mon_type = Typing.deduce_many(*data.pop("types"))
+            if fakemon_data := Fakemon.from_record(data.pop("fakemon")):
+                if kind == Kind.Variant:
+                    species = Variant(base=species, name=fakemon_data.name)
+                elif kind == Kind.Fakemon:
+                    species = fakemon_data
+            if mon_type and isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+                species.types = mon_type
+            movepool = data.pop("movepool")
 
-            if self.kind in ["FAKEMON", "CUSTOM MEGA"]:
-                self.species.abilities = self.abilities
-            if moveset := await connection.fetchval(
-                """--sql
-                SELECT ARRAY_AGG(MOVE)
-                FROM MOVESET
-                WHERE CHARACTER = $1;
-                """,
-                self.id,
-            ):
-                self.moveset = Move.deduce_many(*moveset)
-            self.sp_ability = await SpAbility.fetch(connection, idx=self.id)
+            if species:
+                if kind == Kind.CustomMega:
+                    species = CustomMega(species)
+                elif movepool := Movepool.from_record(movepool):
+                    if species.movepool != movepool and kind in [Kind.Variant, Kind.Fakemon]:
+                        species.movepool = movepool
+                    else:
+                        await connection.execute("DELETE FROM MOVEPOOL WHERE ID = $1", data["id"])
+                data["species"] = species
+            else:
+                await connection.execute("DELETE FROM FAKEMON WHERE ID = $1", data["id"])
 
-    @abstractmethod
+            sp_data = data.pop("sp_ability", {})
+            mon = Character(**data)
+            if sp_data:
+                sp_data.pop("id", None)
+                sp_ability = SpAbility(**sp_data)
+                if mon.can_have_special_abilities:
+                    mon.sp_ability = sp_ability
+                else:
+                    sp_ability.clear()
+                    await sp_ability.upsert(connection, mon.id)
+            yield mon
+
     async def upsert(self, connection: Connection) -> None:
         """This is the standard upsert method which must be added
         in all character classes.
@@ -444,14 +511,18 @@ class Character(metaclass=ABCMeta):
             """--sql
             INSERT INTO CHARACTER(
                 ID, NAME, AGE, PRONOUN, BACKSTORY, EXTRA,
-                KIND, AUTHOR, SERVER, URL, IMAGE, CREATED_AT, LOCATION, THREAD)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                KIND, AUTHOR, SERVER, URL, IMAGE, LOCATION,
+                THREAD, MOVESET, TYPES, ABILITIES, SPECIES
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+            )
             ON CONFLICT (ID) DO UPDATE
             SET
                 ID = $1, NAME = $2, AGE = $3, PRONOUN = $4,
                 BACKSTORY = $5, EXTRA = $6, KIND = $7, AUTHOR = $8,
-                SERVER = $9, URL = $10, IMAGE = $11, CREATED_AT = $12,
-                LOCATION = $13, THREAD = $14;
+                SERVER = $9, URL = $10, IMAGE = $11, LOCATION = $12,
+                THREAD = $13, MOVESET = $14, TYPES = $15, ABILITIES = $16, SPECIES = $17;
             """,
             self.id,
             self.name,
@@ -459,79 +530,76 @@ class Character(metaclass=ABCMeta):
             self.pronoun.name,
             self.backstory,
             self.extra,
-            self.kind,
+            self.kind.to_db,
             self.author,
             self.server,
             self.url,
             self.image,
-            self.created_at,
             self.location,
             self.thread,
+            [x.id for x in self.moveset],
+            [str(x) for x in self.types],
+            [x.id for x in self.abilities],
+            None if isinstance(self.species.id, int) else self.species.id,
         )
-        await connection.execute(
-            """--sql
-            DELETE FROM CHARACTER_TYPES
-            WHERE CHARACTER = $1;
-            """,
-            self.id,
-        )
-        if entries := [
-            (self.id, fix(item.name), not main)
-            for main, item in enumerate(self.types)
-        ]:
-            await connection.executemany(
-                """--sql
-                INSERT INTO CHARACTER_TYPES(CHARACTER, TYPE, MAIN)
-                VALUES ($1, $2, $3);
-                """,
-                entries,
-            )
-        await connection.execute(
-            """--sql
-            DELETE FROM CHARACTER_ABILITIES
-            WHERE ID = $1;
-            """,
-            self.id,
-        )
-        if entries := [
-            (self.id, item.name, bool(main))
-            for main, item in enumerate(self.abilities)
-        ]:
-            await connection.executemany(
-                """--sql
-                INSERT INTO CHARACTER_ABILITIES(ID, ABILITY, SLOT)
-                VALUES ($1, $2, $3)
-                ON CONFLICT (ID, SLOT) DO UPDATE SET ABILITY = $2;
-                """,
-                entries,
-            )
-        await connection.execute(
-            """--sql
-            DELETE FROM MOVESET
-            WHERE CHARACTER = $1;
-            """,
-            self.id,
-        )
-        if entries := [
-            (self.id, value.name, key)
-            for key, value in enumerate(self.moveset, start=1)
-        ]:
-            await connection.executemany(
-                """--sql
-                INSERT INTO MOVESET(CHARACTER, MOVE, SLOT)
-                VALUES ($1, $2, $3);
-                """,
-                entries,
-            )
-        await connection.execute(
-            """--sql
-            DELETE FROM SPECIAL_ABILITIES
-            WHERE ID = $1;
-            """,
-            self.id,
-        )
-        if sp_ability := self.sp_ability:
-            await sp_ability.upsert(connection, idx=self.id)
+        if (sp_ability := self.sp_ability) is None:
+            sp_ability = SpAbility()
+        await sp_ability.upsert(connection, idx=self.id)
+        movepool = self.movepool.db_dict
+        match self.kind:
+            case Kind.Fakemon:
+                await connection.execute(
+                    """--sql
+                    INSERT INTO FAKEMON(ID, NAME, EVOLVES_FROM)
+                    VALUES ($1, $2, $3) ON CONFLICT (ID) DO UPDATE SET
+                    NAME = $2, EVOLVES_FROM = $3;
+                    """,
+                    self.id,
+                    self.species.name,
+                    getattr(self.evolves_from, "id", None),
+                )
+                await connection.execute(
+                    """--sql
+                    INSERT INTO MOVEPOOL(ID, LEVEL, TM, EVENT, TUTOR, EGG, LEVELUP, OTHER)
+                    VALUES ($1, $2::JSONB, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
+                    LEVEL = $2::JSONB, TM = $3, EVENT = $4, TUTOR = $5, EGG = $6, LEVELUP = $7, OTHER = $8;
+                    """,
+                    self.id,
+                    movepool["level"],
+                    movepool["tm"],
+                    movepool["event"],
+                    movepool["tutor"],
+                    movepool["egg"],
+                    movepool["levelup"],
+                    movepool["other"],
+                )
+            case Kind.Variant:
+                if self.movepool == self.species.base.movepool:
+                    await connection.execute("DELETE FROM MOVEPOOL WHERE ID = $1", self.id)
+                else:
+                    await connection.execute(
+                        """--sql
+                        INSERT INTO MOVEPOOL(ID, LEVEL, TM, EVENT, TUTOR, EGG, LEVELUP, OTHER)
+                        VALUES ($1, $2::JSONB, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
+                        LEVEL = $2::JSONB, TM = $3, EVENT = $4, TUTOR = $5, EGG = $6, LEVELUP = $7, OTHER = $8;
+                        """,
+                        self.id,
+                        movepool["level"],
+                        movepool["tm"],
+                        movepool["event"],
+                        movepool["tutor"],
+                        movepool["egg"],
+                        movepool["levelup"],
+                        movepool["other"],
+                    )
+                await connection.execute(
+                    """--sql
+                    INSERT INTO FAKEMON(ID, NAME) VALUES ($1, $2)
+                    ON CONFLICT (ID) DO UPDATE SET NAME = $2;
+                    """,
+                    self.id,
+                    self.species.name,
+                )
 
     async def delete(self, connection: Connection) -> None:
         """Delete in database
@@ -551,1036 +619,10 @@ class Character(metaclass=ABCMeta):
                 self.server,
             )
 
-
-@dataclass(unsafe_hash=True, slots=True)
-class PokemonCharacter(Character):
-    species: Pokemon = None
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         types = "/".join(i.name for i in self.types)
-        return f"Pokemon: {self.species.name}, Age: {self.age}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "COMMON"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[PokemonCharacter]
-            characters
-        """
-        characters: list[PokemonCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "COMMON",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            species_id = data.pop("species", None)
-            if species := Pokemon.from_ID(species_id):
-                data["species"] = species
-                mon = PokemonCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for PokemonCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        await super(PokemonCharacter, self).upsert(connection)
-        await connection.execute(
-            """--sql
-            INSERT INTO POKEMON_CHARACTER(ID, SPECIES)
-            VALUES ($1, $2) ON CONFLICT (ID)
-            DO UPDATE SET SPECIES = $2;
-            """,
-            self.id,
-            self.species.id,
-        )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class LegendaryCharacter(Character):
-    species: Legendary = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Legendary: {self.species.name}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "LEGENDARY"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[LegendaryCharacter]
-            characters
-        """
-        characters: list[LegendaryCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "LEGENDARY",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            if species := Legendary.from_ID(data.pop("species", None)):
-                data["species"] = species
-                mon = LegendaryCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for LegendaryCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        if oc_id := self.id:
-            await super(LegendaryCharacter, self).upsert(connection)
-            await connection.execute(
-                """--sql
-                INSERT INTO POKEMON_CHARACTER(ID, SPECIES)
-                VALUES ($1, $2) ON CONFLICT (ID) DO UPDATE SET SPECIES = $2;
-                """,
-                oc_id,
-                self.species.id,
-            )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class MythicalCharacter(Character):
-    species: Mythical = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Mythical: {self.species.name}, Types: {types}".title()
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def kind(self) -> str:
-        return "MYTHICAL"
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[MythicalCharacter]
-            characters
-        """
-        characters: list[MythicalCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "MYTHICAL",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            if species := Mythical.from_ID(data.pop("species", None)):
-                data["species"] = species
-                mon = MythicalCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for MythicalCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        if oc_id := self.id:
-            await super(MythicalCharacter, self).upsert(connection)
-            await connection.execute(
-                "INSERT INTO POKEMON_CHARACTER(ID, SPECIES) "
-                "VALUES ($1, $2) ON CONFLICT (ID) DO UPDATE SET SPECIES = $2;",
-                oc_id,
-                self.species.id,
-            )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class UltraBeastCharacter(Character):
-    species: UltraBeast = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"UltraBeast: {self.species.name}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "ULTRA BEAST"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[MythicalCharacter]
-            characters
-        """
-        characters: list[UltraBeastCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "ULTRA BEAST",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            if species := UltraBeast.from_ID(data.pop("species", None)):
-                data["species"] = species
-                mon = UltraBeastCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for UltraBeastCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        if oc_id := self.id:
-            await super(UltraBeastCharacter, self).upsert(connection)
-            await connection.execute(
-                """--sql
-                INSERT INTO POKEMON_CHARACTER(ID, SPECIES)
-                VALUES ($1, $2) ON CONFLICT (ID) DO
-                UPDATE SET SPECIES = $2;
-                """,
-                oc_id,
-                self.species.id,
-            )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class FakemonCharacter(Character):
-    species: Fakemon = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Fakemon: {self.species.name}, Types: {types}".title()
-
-    def __post_init__(self):
-        super(FakemonCharacter, self).__post_init__()
-        self.species.id = self.id
-        if not self.abilities:
-            self.abilities = self.species.abilities
-        if evolves_from := self.evolves_from:
-            self.species.movepool += evolves_from.movepool
-
-    @property
-    def kind(self) -> str:
-        return "FAKEMON"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def embed(self) -> Embed:
-        c_embed = super(FakemonCharacter, self).embed
-        if evolves_from := self.evolves_from:
-            name = f"Fakemon Evolution - {evolves_from.name}"
-        else:
-            name = "Fakemon Species"
-        c_embed.set_field_at(
-            index=2,
-            name=name,
-            value=self.species.name,
-        )
-        c_embed.insert_field_at(
-            index=3,
-            name="HP ",
-            value=("🔳" * self.species.HP).ljust(5, "⬜"),
-        )
-        c_embed.insert_field_at(
-            index=4,
-            name="ATK",
-            value=("🔳" * self.species.ATK).ljust(5, "⬜"),
-        )
-        c_embed.insert_field_at(
-            index=5,
-            name="DEF",
-            value=("🔳" * self.species.DEF).ljust(5, "⬜"),
-        )
-        c_embed.insert_field_at(
-            index=6,
-            name="SPA",
-            value=("🔳" * self.species.SPA).ljust(5, "⬜"),
-        )
-        c_embed.insert_field_at(
-            index=7,
-            name="SPD",
-            value=("🔳" * self.species.SPD).ljust(5, "⬜"),
-        )
-        c_embed.insert_field_at(
-            index=8,
-            name="SPE",
-            value=("🔳" * self.species.SPE).ljust(5, "⬜"),
-        )
-        return c_embed
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[FakemonCharacter]
-            characters
-        """
-        characters: list[FakemonCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, F.NAME AS SPECIES, F.EVOLVES_FROM,
-            F.HP, F.ATK, F.DEF, F.SPA, F.SPD, F.SPE
-            FROM FAKEMON F, CHARACTER C
-            WHERE C.ID = F.ID and C.kind = $1;
-            """,
-            "FAKEMON",
-        ):
-            data: dict[str, str | int] = dict(item)
-            data.pop("kind", None)
-            evolves_from: Optional[str] = data.pop("evolves_from", None)
-            fakemon_id = data["id"]
-            stats = multiple_pop(data, "hp", "atk", "def", "spa", "spd", "spe")
-            stats = {k.upper(): v for k, v in stats.items()}
-            if species := data.get("species", ""):
-                movepool = await Movepool.fakemon_fetch(connection, fakemon_id)
-                data["species"] = Fakemon(
-                    id=fakemon_id,
-                    name=str(species),
-                    movepool=movepool,
-                    evolves_from=evolves_from,
-                    **stats,
-                )
-                mon = FakemonCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for FakemonCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        if oc_id := self.id:
-            await super(FakemonCharacter, self).upsert(connection)
-            await connection.execute(
-                """--sql
-                INSERT INTO FAKEMON(ID, NAME, HP, ATK, DEF, SPA, SPD, SPE, EVOLVES_FROM)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (ID) DO UPDATE SET
-                NAME = $2, HP = $3, ATK = $4, DEF = $5, SPA = $6, SPD = $7, SPE = $8, EVOLVES_FROM = $9;
-                """,
-                oc_id,
-                self.species.name,
-                self.species.HP,
-                self.species.ATK,
-                self.species.DEF,
-                self.species.SPA,
-                self.species.SPD,
-                self.species.SPE,
-                getattr(self.evolves_from, "id", None),
-            )
-            movepool = self.movepool
-
-            if evolves_from := self.evolves_from:
-                movepool = movepool.without_moves(evolves_from.movepool)
-
-            await movepool.upsert(connection, oc_id)
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomMegaCharacter(Character):
-    species: CustomMega = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Custom: {self.species.name}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "CUSTOM MEGA"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def embed(self) -> Embed:
-        c_embed = super(CustomMegaCharacter, self).embed
-        c_embed.set_field_at(
-            index=2,
-            name="Fakemon Species",
-            value=f"> {self.species.name}".title(),
-        )
-        return c_embed
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[CustomMegaCharacter]
-            characters
-        """
-        characters: list[CustomMegaCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, F.SPECIES AS SPECIES
-            FROM CUSTOM_MEGA_CHARACTER F, CHARACTER C
-            WHERE C.ID = F.ID and C.kind = $1;
-            """,
-            "CUSTOM MEGA",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            if species := CustomMega.from_ID(data.pop("species", None)):
-                data["species"] = species
-                mon = CustomMegaCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for CustomMegaCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        await super(CustomMegaCharacter, self).upsert(connection)
-        await connection.execute(
-            """--sql
-            INSERT INTO CUSTOM_MEGA_CHARACTER(ID, SPECIES)
-            VALUES ($1, $2) ON CONFLICT (ID) DO
-            UPDATE SET SPECIES = $2;
-            """,
-            self.id,
-            self.species.id,
-        )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class VariantCharacter(Character):
-    species: Variant = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Variant: {self.species.name}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "VARIANT"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def embed(self) -> Embed:
-        c_embed = super(VariantCharacter, self).embed
-        c_embed.set_field_at(
-            index=2,
-            name="Variant Species",
-            value=f"> {self.species.name}".title(),
-        )
-        return c_embed
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for PokemonCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        await super(VariantCharacter, self).upsert(connection)
-        await connection.execute(
-            """--sql
-            INSERT INTO VARIANT_CHARACTER(ID, SPECIES, NAME)
-            VALUES ($1, $2, $3) ON CONFLICT (ID)
-            DO UPDATE SET SPECIES = $2, NAME = $3;
-            """,
-            self.id,
-            self.species.id,
-            self.species.name,
-        )
-        await connection.execute(
-            """--sql
-            DELETE FROM FAKEMON_MOVEPOOL
-            WHERE FAKEMON = $1;
-            """,
-            self.id,
-        )
-        reference = set(self.species.movepool()) | set(self.moveset)
-        if moves := reference - set(self.species.base.movepool()):
-            await connection.executemany(
-                """--sql
-                INSERT INTO FAKEMON_MOVEPOOL(FAKEMON, MOVE, METHOD)
-                VALUES ($1, $2, $3);
-                """,
-                [(self.id, item.name, "EVENT") for item in moves],
-            )
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[VariantCharacter]
-            characters
-        """
-        characters: list[VariantCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, F.SPECIES AS SPECIES, F.NAME AS VARIANT
-            FROM VARIANT_CHARACTER F, CHARACTER C
-            WHERE C.ID = F.ID and C.kind = $1;
-            """,
-            "VARIANT",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            variant = data.pop("variant", None)
-            if species := Variant.from_ID(data.pop("species", None)):
-                species.name = variant
-                data["species"] = species
-                mon = VariantCharacter(**data)
-                if moves := await connection.fetchval(
-                    """--sql
-                    SELECT array_agg(move)
-                    FROM FAKEMON_MOVEPOOL
-                    WHERE FAKEMON = $1;
-                    """,
-                    mon.id,
-                ):
-                    moves = Move.deduce_many(*moves)
-                    species.movepool += Movepool(
-                        event=frozenset(
-                            item for item in moves if not item.banned
-                        )
-                    )
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class FusionCharacter(Character):
-    species: Fusion = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Fusion: {self.species.name}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "FUSION"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def possible_types(self) -> list[set[Typing]]:
-        return self.species.possible_types
-
-    @property
-    def embed(self) -> Embed:
-        c_embed = super(FusionCharacter, self).embed
-        name1, name2 = self.species.name.split("/")
-        c_embed.set_field_at(
-            index=2,
-            name="Fusion Species",
-            value=f"> **•** {name1}\n> **•** {name2}".title(),
-        )
-        return c_embed
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[FakemonCharacter]
-            characters
-        """
-        characters: list[FusionCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, SPECIES1, SPECIES2
-            FROM FUSION_CHARACTER F, CHARACTER C
-            WHERE C.ID = F.ID and C.kind = $1;
-            """,
-            "FUSION",
-        ):
-            data: dict[str, int] = dict(item)
-            data.pop("kind", None)
-            mon1: str = data.pop("species1", None)
-            mon2: str = data.pop("species2", None)
-            if species := Fusion.from_ID(f"{mon1}_{mon2}"):
-                data["species"] = species
-                mon = FusionCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for FusionCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        await super(FusionCharacter, self).upsert(connection)
-        mon1, mon2 = self.species.id.split("_")
-        await connection.execute(
-            """--sql
-            INSERT INTO FUSION_CHARACTER(ID, species1, species2)
-            VALUES ($1, $2, $3) ON CONFLICT (ID) DO UPDATE SET
-            SPECIES1 = $2, SPECIES2 = $3;
-            """,
-            self.id,
-            mon1,
-            mon2,
-        )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class MegaCharacter(Character):
-    species: Mega = None
-
-    def __repr__(self):
-        types = "/".join(i.name for i in self.types)
-        return f"Mega: {self.species.name[5:]}, Types: {types}".title()
-
-    @property
-    def kind(self) -> str:
-        return "MEGA"
-
-    @property
-    def has_default_types(self) -> bool:
-        """If the species have a default type
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return True
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return False
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """Obtains all Pokemon characters.
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Returns
-        -------
-        list[MegaCharacter]
-            characters
-        """
-        characters: list[MegaCharacter] = []
-        async for item in connection.cursor(
-            """--sql
-            SELECT C.*, PC.SPECIES
-            FROM POKEMON_CHARACTER PC, CHARACTER C
-            WHERE C.ID = PC.ID and C.kind = $1;
-            """,
-            "MEGA",
-        ):
-            data = dict(item)
-            data.pop("kind", None)
-            if species := Mega.from_ID(data.pop("species", None)):
-                data["species"] = species
-                mon = MegaCharacter(**data)
-                await mon.retrieve(connection)
-                characters.append(mon)
-
-        return characters
-
-    async def upsert(self, connection: Connection):
-        """Upsert method for MegaCharacter
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        await super(MegaCharacter, self).upsert(connection)
-        await connection.execute(
-            """--sql
-            INSERT INTO POKEMON_CHARACTER(ID, SPECIES)
-            VALUES ($1, $2) ON CONFLICT (ID) DO UPDATE SET SPECIES = $2;
-            """,
-            self.id,
-            self.species.id,
-        )
+        name = self.kind.name if self.kind else "Error"
+        return f"{name}: {self.species.name}, Age: {self.age}, Types: {types}"
 
 
 PLACEHOLDER_NAMES = {
@@ -1630,69 +672,12 @@ PLACEHOLDER_STATS = {
     "Speed": "SPE",
 }
 
-ASSOCIATIONS: frozendict[Type[Species], Type[Character]] = frozendict(
-    {
-        Pokemon: PokemonCharacter,
-        Mega: MegaCharacter,
-        Legendary: LegendaryCharacter,
-        Mythical: MythicalCharacter,
-        UltraBeast: UltraBeastCharacter,
-        Fakemon: FakemonCharacter,
-        Fusion: FusionCharacter,
-        CustomMega: CustomMegaCharacter,
-        Variant: VariantCharacter,
-    }
-)
 
-
-async def fetch_all(connection: Connection):
-    """This method fetches all characters
-
-    Parameters
-    ----------
-    connection : Connection
-        asyncpg connection
-
-    Returns
-    -------
-    list[Type[Character]]
-        Characters
-    """
-    data: list[Type[Character]] = []
-
-    for kind in ASSOCIATIONS.values():
-        data.extend(await kind.fetch_all(connection))
-
-    return data
-
-
-def kind_deduce(item: Optional[Species], *args, **kwargs):
-    """This class returns the character class based on the given species
-
-    Attributes
-    ----------
-    item : Optional[Species]
-        Species
-    args : Any
-        Args of the Character class
-    kwargs : Any
-        kwargs of the Character class
-
-    Returns
-    -------
-    Optional[Character]
-        Character instance
-    """
-    if instance := ASSOCIATIONS.get(type(item)):
-        return instance(*args, **kwargs)
-
-
-def oc_process(**kwargs):
+def oc_process(**kwargs) -> Character:
     """Function used for processing a dict, to a character
-
     Returns
     -------
-    Type[Character]
+    Character
         Character given the paraneters
     """
     data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
@@ -1702,7 +687,7 @@ def oc_process(**kwargs):
         name: str = fakemon.title()
 
         if name.startswith("Mega "):
-            species = CustomMega.deduce(name)
+            species = CustomMega.deduce(name.removeprefix("Mega "))
         elif species := Fakemon.deduce(
             common_pop_get(
                 data,
@@ -1712,26 +697,16 @@ def oc_process(**kwargs):
                 "pre_evo",
             )
         ):
-            species.name = name.title()
+            species.name = name
         else:
-            species = Fakemon(name=name.title())
+            species = Fakemon(name=name)
 
         if species is None:
-            raise Exception("Fakemon was not deduced by the bot.")
+            raise ValueError("Fakemon was not deduced by the bot.")
 
         data["species"] = species
-
     elif variant := data.pop("variant", ""):
-
-        if species := Variant.deduce(
-            common_pop_get(
-                data,
-                "base",
-                "preevo",
-                "pre evo",
-                "pre_evo",
-            )
-        ):
+        if species := Variant.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
             name = variant.title().replace(species.name, "").strip()
             species.name = f"{name} {species.name}".title()
         else:
@@ -1740,46 +715,41 @@ def oc_process(**kwargs):
                     species.name = variant.title()
                     break
             else:
-                raise Exception("Unable to determine the variant' species")
+                raise ValueError("Unable to determine the variant' species")
 
         data["species"] = species
     elif species := Fusion.deduce(data.pop("fusion", "")):
         data["species"] = species
-    elif species := Species.deduce(common_pop_get(data, "species", "pokemon")):
-        data["species"] = species
     else:
-        raise Exception("Unable to determine the species")
+        aux = common_pop_get(data, "species", "pokemon") or ""
+        method = Species.any_deduce if "," in aux else Species.single_deduce
+        if species := method(aux):
+            data["species"] = species
+        else:
+            print(data)
+            raise ValueError(
+                f"Unable to determine the species, value: {species}, make sure you're using a recent template."
+            )
 
     if species.banned:
-        raise Exception(f"The Species {species.name!r} is banned currently.")
+        raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if type_info := common_pop_get(data, "types", "type"):
-        if types := Typing.deduce_many(type_info):
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
-                species.types = types
-            elif species.types != types:
-                types_txt = "/".join(i.name for i in types)
-                species = Variant(
-                    base=species,
-                    name=f"{types_txt}-Typed {species.name}",
-                )
-                species.types = types
+    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
+        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            species.types = types
+        elif species.types != types:
+            types_txt = "/".join(i.name for i in types)
+            species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
+            species.types = types
 
     if ability_info := common_pop_get(data, "abilities", "ability"):
-        if isinstance(ability_info, str):
-            ability_info = [ability_info]
-        if abilities := Ability.deduce_many(*ability_info):
+        if abilities := Ability.deduce_many(ability_info):
             data["abilities"] = abilities
 
         if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
             species.abilities = abilities
-        elif abilities_txt := "/".join(
-            x.name for x in abilities if x not in species.abilities
-        ):
-            species = Variant(
-                base=species,
-                name=f"{abilities_txt}-Granted {species.name}",
-            )
+        elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
+            species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
             species.abilities = abilities
             data["species"] = species
 
@@ -1796,19 +766,21 @@ def oc_process(**kwargs):
     if age := common_pop_get(data, "age", "years"):
         data["age"] = int_check(age, 13, 99)
 
-    if isinstance(species, Fakemon):
-        if stats := data.pop("stats", {}):
-            species.set_stats(**stats)
+    data.pop("stats", {})
 
-        if movepool := data.pop(
-            "movepool", dict(event=data.get("moveset", set()))
-        ):
+    if isinstance(species, Fakemon):
+        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
             species.movepool = Movepool.from_dict(**movepool)
 
     data = {k: v for k, v in data.items() if v}
     data["species"] = species
 
-    return kind_deduce(species, **data)
+    if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
+        data["sp_ability"] = value
+    elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
+        data["sp_ability"] = SpAbility()
+
+    return Character.from_dict(data)
 
 
 def check(value: Optional[str]) -> bool:
@@ -1831,57 +803,30 @@ def check(value: Optional[str]) -> bool:
     return data
 
 
-def doc_convert(doc: Document, url: str = None) -> dict[str, Any]:
+def doc_convert(doc: Document) -> dict[str, Any]:
     """Google Convereter
 
     Parameters
     ----------
     doc : Document
         docx Document
-    url : str, optional
-        If this was fetched from a Google Document
 
     Returns
     -------
     dict[str, Any]
         Info
     """
-
-    content_values = [
-        cell.text
-        for table in doc.tables
-        for row in table.rows
-        for cell in row.cells
-    ]
-
-    text = [
-        strip.replace("\u2019", "'")
-        for item in content_values
-        if (strip := item.strip())
-    ]
-
-    movepool_typing = dict[str, set[str] | dict[int, set[str]]]
-    if url:
-        url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
-    raw_kwargs: dict[str, str | set[str] | movepool_typing] = dict(
-        url=url,
-        moveset=set(),
-        movepool={},
-        abilities=set(),
-        fusion=set(),
-        types=set(),
-        stats={
-            stat: stats_check(*value)
-            for index, item in enumerate(content_values)
-            if all(
-                (
-                    stat := PLACEHOLDER_STATS.get(item.strip()),
-                    len(content_values) > index,
-                    len(value := content_values[index + 1 :][:1]) == 1,
-                )
-            )
-        },
-    )
+    content_values: list[str] = [cell.text for table in doc.tables for row in table.rows for cell in row.cells]
+    text = [x for item in content_values if (x := item.replace("\u2019", "'").strip())]
+    raw_kwargs = dict(url=getattr(doc, "url", None))
+    if stats := {
+        PLACEHOLDER_STATS[item.strip()]: stats_check(*content_values[index + 1 :][:1])
+        for index, item in enumerate(content_values)
+        if item.strip() in PLACEHOLDER_STATS
+        and len(content_values) > index
+        and len(content_values[index + 1 :][:1]) == 1
+    }:
+        raw_kwargs["stats"] = stats
 
     for index, item in enumerate(text[:-1], start=1):
         if not check(next_value := text[index]):
@@ -1896,22 +841,71 @@ def doc_convert(doc: Document, url: str = None) -> dict[str, Any]:
             match element.groups():
                 case ["Level", y]:
                     idx = int(y)
+                    raw_kwargs.setdefault("movepool", {})
                     raw_kwargs["movepool"].setdefault("level", {})
                     raw_kwargs["movepool"]["level"].setdefault(idx, set())
                     raw_kwargs["movepool"]["level"][idx].add(argument)
                 case ["Move", _]:
+                    raw_kwargs.setdefault("moveset", set())
                     raw_kwargs["moveset"].add(argument)
                 case ["Ability", _]:
+                    raw_kwargs.setdefault("abilities", set())
                     raw_kwargs["abilities"].add(next_value)
                 case ["Species", _]:
+                    raw_kwargs.setdefault("fusion", set())
                     raw_kwargs["fusion"].add(next_value)
                 case ["Type", _]:
+                    raw_kwargs.setdefault("types", set())
                     raw_kwargs["types"].add(next_value.upper())
                 case [x, _]:
+                    raw_kwargs.setdefault("movepool", {})
                     raw_kwargs["movepool"].setdefault(x.lower(), set())
                     raw_kwargs["movepool"][x.lower()].add(argument)
+
+    try:
+        if data := list(doc.inline_shapes):
+            item = data[0]
+            pic = item._inline.graphic.graphicData.pic
+            blip = pic.blipFill.blip
+            rid = blip.embed
+            doc_part = doc.part
+            image_part = doc_part.related_parts[rid]
+            fp = BytesIO(image_part._blob)
+            raw_kwargs["image"] = File(fp=fp, filename="image.png")
+    except Exception:
+        pass
 
     raw_kwargs.pop("artist", None)
     raw_kwargs.pop("website", None)
 
     return raw_kwargs
+
+
+class CharacterTransform(Transformer):
+    @classmethod
+    async def transform(cls, interaction: Interaction, value: str):
+        cog = interaction.client.get_cog("Submission")
+        if isinstance(value, str) and value.isdigit():
+            value = int(value)
+        return cog.ocs[value]
+
+    @classmethod
+    async def autocomplete(cls, interaction: Interaction, value: str) -> list[Choice[str]]:
+        if not (member := interaction.namespace.member):
+            member = interaction.user
+        cog = interaction.client.get_cog("Submission")
+        ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == member.id]
+        if options := process.extract(
+            value,
+            choices=ocs,
+            limit=25,
+            score_cutoff=60,
+            processor=lambda x: getattr(x, "name", x),
+        ):
+            options = [x for x, _, _ in options]
+        elif not value:
+            options = ocs[:25]
+        return [Choice(name=x.name, value=str(x.id)) for x in options]
+
+
+CharacterArg = Transform[Character, CharacterTransform]

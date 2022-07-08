@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from io import BytesIO
 from logging import Logger
 from os import getenv
-from typing import Literal, Optional, Union
+from pathlib import Path, PurePath
+from typing import Literal, Optional
 
+from aiogoogle import Aiogoogle
 from aiohttp import ClientSession
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncdagpi import Client as DagpiClient
@@ -27,20 +29,25 @@ from discord import (
     DiscordException,
     Embed,
     File,
+    ForumChannel,
+    HTTPException,
     Intents,
     Message,
+    NotFound,
     PartialMessage,
     TextChannel,
     Thread,
+    VoiceChannel,
     Webhook,
 )
 from discord.abc import Messageable
 from discord.ext.commands import Bot
 from discord.utils import format_dt, utcnow
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from mystbin import Client as MystBinClient
 from orjson import dumps
 
-from src.utils.matches import URL_DOMAIN_MATCH
+from src.utils.matches import REGEX_URL
 
 __all__ = ("CustomBot",)
 
@@ -68,19 +75,15 @@ class CustomBot(Bot):
         Dagpi client
     """
 
-    async def sync_commands(self) -> None:
-        """
-        Soon to be patched
-        """
-
     def __init__(
         self,
         scheduler: AsyncScheduler,
         pool: Pool,
         logger: Logger,
+        aiogoogle: Aiogoogle,
         **options,
     ):
-        super().__init__(
+        super(CustomBot, self).__init__(
             **options,
             intents=Intents.all(),
             allowed_mentions=AllowedMentions(
@@ -93,38 +96,97 @@ class CustomBot(Bot):
         self.scheduler = scheduler
         self.pool = pool
         self.logger = logger
-        self.session = ClientSession(
-            json_serialize=dumps,
-            raise_for_status=True,
-        )
+        self.aiogoogle = aiogoogle
+        self.session = ClientSession(json_serialize=dumps, raise_for_status=True)
         self.m_bin = MystBinClient(session=self.session)
+        self.mongodb = AsyncIOMotorClient(getenv("MONGO_URI"))
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
         self.scam_urls: set[str] = set()
+        self.webhook_cache: dict[int, Webhook] = {}
 
-    async def on_message(self, message: Message):
-        for url in URL_DOMAIN_MATCH.findall(message.content or ""):
-            if url in self.scam_urls:
-                if message.guild:
-                    await message.delete()
-                    with suppress(DiscordException):
-                        await message.author.ban(
-                            delete_message_days=1,
-                            reason="Nitro Scam victim",
-                        )
-                else:
-                    await message.reply("That's a Nitro Scam")
-                break
-        else:
-            await self.process_commands(message)
+    def mongo_db(self, db: str) -> AsyncIOMotorCollection:
+        return self.mongodb.discord[db]
 
-    def msg_cache_add(self, message: Union[Message, PartialMessage, int], /):
+    async def setup_hook(self) -> None:
+        await self.load_extension("jishaku")
+        path = Path("src/cogs")
+        for cog in map(PurePath, path.glob("*/__init__.py")):
+            route = ".".join(cog.parts[:-1])
+            try:
+                await self.load_extension(route)
+            except Exception as e:
+                self.logger.exception("Exception while loading %s", route, exc_info=e)
+            else:
+                self.logger.info("Successfully loaded %s", route)
+
+    async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
+        """|coro|
+
+        Retrieves a :class:`.Webhook` with the specified ID.
+
+        Raises
+        --------
+        :exc:`.HTTPException`
+            Retrieving the webhook failed.
+        :exc:`.NotFound`
+            Invalid webhook ID.
+        :exc:`.Forbidden`
+            You do not have permission to fetch this webhook.
+
+        Returns
+        ---------
+        :class:`.Webhook`
+            The webhook you requested.
+        """
+        webhook: Webhook = await super(CustomBot, self).fetch_webhook(webhook_id)
+        if webhook.user == self.user:
+            self.webhook_cache[webhook.channel.id] = webhook
+        return webhook
+
+    async def on_webhooks_update(self, channel: TextChannel):
+        """Bot's on_webhooks_update for caching
+
+        Parameters
+        ----------
+        Channel : TextChannel
+            Channel that got changes in its webhooks
+        """
+        try:
+            if webhook := self.webhook_cache.get(channel.id):
+                self.webhook_cache[channel.id] = await webhook.fetch()
+        except (HTTPException, NotFound, ValueError):
+            del self.webhook_cache[channel.id]
+
+    async def on_message(self, message: Message) -> None:
+        """Bot's on_message with nitro scam handler
+
+        Parameters
+        ----------
+        message : Message
+            message to process
+        """
+        if message.content and (not await self.is_owner(self.user)) and message.author != self.user:
+            elements = REGEX_URL.findall(message.content)
+            if self.scam_urls.intersection(elements):
+                try:
+                    if not message.guild:
+                        await message.reply("That's a Nitro Scam")
+                    else:
+                        await message.delete()
+                        await message.author.ban(delete_message_days=1, reason="Nitro Scam victim")
+                    return
+                except DiscordException:
+                    return
+        await self.process_commands(message)
+
+    def msg_cache_add(self, message: Message | PartialMessage | int, /):
         """Method to add a message to the message cache
 
         Parameters
         ----------
-        message : Union[Message, PartialMessage, int]
+        message : Message | PartialMessage | int
             Message to ignore in the logs
         """
         if isinstance(message, int):
@@ -186,20 +248,13 @@ class CustomBot(Bot):
         methods = dict(
             image=wrapper(embed.set_image),
             thumbnail=wrapper(embed.set_thumbnail),
-            author=wrapper(
-                func=embed.set_author,
-                arg="icon_url",
-                name=embed.author.name,
-                url=embed.author.url,
-            ),
-            footer=wrapper(
-                func=embed.set_footer,
-                arg="icon_url",
-                text=embed.footer.text,
-            ),
+            author=wrapper(func=embed.set_author, arg="icon_url", name=embed.author.name, url=embed.author.url),
+            footer=wrapper(func=embed.set_footer, arg="icon_url", text=embed.footer.text),
         )
         for item in set(properties) - set(exclude):
             if image := properties[item]:
+                if image.startswith("attachment://"):
+                    continue
                 file = await self.get_file(image, filename=item)
                 if isinstance(file, File):
                     files.append(file)
@@ -209,12 +264,7 @@ class CustomBot(Bot):
 
         return files, embed
 
-    async def get_file(
-        self,
-        url: str,
-        filename: str = None,
-        spoiler: bool = False,
-    ) -> Optional[File]:
+    async def get_file(self, url: str, filename: str = None, spoiler: bool = False) -> Optional[File]:
         """Early Implementation of an image downloader with size specified
 
         Parameters
@@ -231,31 +281,26 @@ class CustomBot(Bot):
         Optional[File]
             File for discord usage
         """
-        async with self.session.get(str(url)) as resp:
-            if resp.status == 200:
-                data = await resp.read()
-                fp = BytesIO(data)
-                text = resp.content_type.split("/")
-                if filename:
-                    return File(
-                        fp=fp,
-                        filename=f"{filename}.{text[-1]}",
-                        spoiler=spoiler,
-                    )
-                return File(
-                    fp=fp, filename=f"image.{text[-1]}", spoiler=spoiler
-                )
+        try:
+            async with self.session.get(str(url)) as resp:
+                if resp.status == 200:
+                    data = await resp.read()
+                    fp = BytesIO(data)
+                    text = resp.content_type.split("/")
+                    if not filename:
+                        filename = ".".join(text)
+                    else:
+                        filename = f"{filename}.{text[-1]}"
+                    return File(fp=fp, filename=filename, spoiler=spoiler)
+        except Exception:
+            return None
 
     @asynccontextmanager
     async def database(
         self,
         *,
         timeout: float = None,
-        isolation: Literal[
-            "read_committed",
-            "serializable",
-            "repeatable_read",
-        ] = None,
+        isolation: Literal["read_committed", "serializable", "repeatable_read"] = None,
         readonly: bool = False,
         deferrable: bool = False,
         raise_on_error: bool = True,
@@ -281,16 +326,12 @@ class CustomBot(Bot):
             Connection
         """
         connection: Connection = await self.pool.acquire(timeout=timeout)
-        transaction = connection.transaction(
-            isolation=isolation, readonly=readonly, deferrable=deferrable
-        )
+        transaction = connection.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable)
         await transaction.start()
         try:
             yield connection
         except Exception as e:
-            self.logger.exception(
-                "An exception occurred in the transaction", exc_info=e
-            )
+            self.logger.exception("An exception occurred in the transaction", exc_info=e)
             if not connection.is_closed():
                 await transaction.rollback()
             if raise_on_error:
@@ -301,16 +342,46 @@ class CustomBot(Bot):
         finally:
             await self.pool.release(connection)
 
-    # noinspection PyTypeChecker
-    async def webhook(
-        self, channel: Union[Messageable, int], *, reason: str = None
-    ) -> Webhook:
+    def webhook_lazy(self, channel: Messageable | int) -> Optional[Webhook]:
+        """Function which returns first webhook if cached
+
+        Parameters
+        ----------
+        channel : Messageable | int
+            Channel or its ID
+        reason : str, optional
+            Webhook creation reason, by default None
+
+        Returns
+        -------
+        Optional[Webhook]
+            Webhook if channel is valid.
+        """
+        if isinstance(channel, Thread):
+            channel = channel.parent
+
+        channel_id: int = getattr(channel, "id", channel)
+
+        if webhook := self.webhook_cache.get(channel_id):
+            return webhook
+
+        if isinstance(channel, int):
+            channel: TextChannel = self.get_channel(channel)
+            if isinstance(channel, Thread):
+                channel = channel.parent
+
+        channel_id: int = getattr(channel, "id", channel)
+
+        if webhook := self.webhook_cache.get(channel_id):
+            return webhook
+
+    async def webhook(self, channel: Messageable | int, *, reason: str = None) -> Webhook:
         """Function which returns first webhook of a
         channel creates one if there's no webhook
 
         Parameters
         ----------
-        channel : Union[Thread, TextChannel, int]
+        channel : Messageable | int
             Channel or its ID
         reason : str, optional
             Webhook creation reason, by default None
@@ -320,18 +391,31 @@ class CustomBot(Bot):
         Webhook
             Webhook if channel is valid.
         """
-        if isinstance(channel, int):
-            channel: TextChannel = self.get_channel(channel)
-        if isinstance(channel, Thread):
-            channel: TextChannel = channel.parent
+        if webhook := self.webhook_lazy(channel):
+            return webhook
 
-        for item in await channel.webhooks():
-            if item.user == self.user:
-                return item
-        image = await self.user.display_avatar.read()
-        return await channel.create_webhook(
-            name=self.user.display_name, avatar=image, reason=reason
-        )
+        if isinstance(channel, int):
+            aux = self.get_channel(channel)
+            if aux is None:
+                channel = await self.fetch_channel(channel)
+            else:
+                channel = aux
+
+        channel = getattr(channel, "parent", channel)
+
+        if isinstance(channel, (TextChannel, ForumChannel, VoiceChannel)):
+            for item in await channel.webhooks():
+                if item.user == self.user:
+                    self.webhook_cache[channel.id] = item
+                    return item
+            image = await self.user.display_avatar.read()
+            item = await channel.create_webhook(
+                name=self.user.display_name,
+                avatar=image,
+                reason=reason,
+            )
+            self.webhook_cache[channel.id] = item
+            return item
 
     def __repr__(self) -> str:
         """Representation of V-Bot

@@ -1,0 +1,350 @@
+# Copyright 2022 Vioshim
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+from dataclasses import astuple
+from re import IGNORECASE, compile
+from typing import Callable, Optional
+
+from discord import (
+    Color,
+    Embed,
+    Guild,
+    Interaction,
+    InteractionResponse,
+    Member,
+    TextChannel,
+    Thread,
+    app_commands,
+)
+from discord.ext import commands
+from discord.utils import utcnow
+
+from src.cogs.pokedex.search import (
+    AbilityArg,
+    DefaultSpeciesArg,
+    FakemonArg,
+    GroupByArg,
+    MoveArg,
+    SpeciesArg,
+    TypingArg,
+    age_parser,
+)
+from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
+from src.structures.character import Character, Kind
+from src.structures.movepool import Movepool
+from src.structures.pronouns import Pronoun
+from src.structures.species import Fusion, Species
+from src.utils.etc import WHITE_BAR
+from src.views import CharactersView, MovepoolViewSelector
+
+__all__ = ("Pokedex", "setup")
+
+PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
+
+
+class Pokedex(commands.Cog):
+    """This is a standard Pokedex Cog"""
+
+    def __init__(self, bot: CustomBot):
+        """Default init Method
+
+        Parameters
+        ----------
+        bot : CustomBot
+            Bot instance
+        """
+        self.bot = bot
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    async def movepool(
+        self,
+        ctx: Interaction,
+        species: Optional[DefaultSpeciesArg],
+        fused: Optional[DefaultSpeciesArg],
+        fakemon: Optional[FakemonArg],
+        move_id: Optional[MoveArg],
+    ):
+        """Check for Movepool information
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        species : Optional[DefaultSpeciesArg]
+            Species to look up info about
+        fused : Optional[DefaultSpeciesArg]
+            To check when fused
+        fakemon : Optional[FakemonArg]
+            Search fakemon species
+        move_id : Optional[MoveArg]
+            Move to lookup
+        """
+        resp: InteractionResponse = ctx.response
+        embed = Embed(title="See Movepool", color=ctx.user.color, timestamp=utcnow())
+        embed.set_image(url=WHITE_BAR)
+        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
+            await ctx.channel.edit(archived=True)
+        await resp.defer(ephemeral=True, thinking=True)
+        if not species:
+            species = fused
+
+        if species:
+            if fused and species != fused:
+                mon = Fusion(species, fused)
+                mon_types = mon.possible_types
+            else:
+                mon = species
+                mon_types = [species.types]
+
+            embed.title = f"See {mon.name}'s movepool"
+            movepool = mon.total_movepool
+            if info := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon_types):
+                embed.add_field(name="Possible Types", value=info)
+        elif fakemon:
+            species = fakemon
+            movepool = fakemon.movepool
+            embed.title = f"See {fakemon.species.name}'s movepool"
+        else:
+            movepool = Movepool()
+
+        if move_id:
+            if species:
+                if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                    await ctx.followup.send(
+                        f"{species.name} can learn {move_id.name} through:\n{methods}.", ephemeral=True
+                    )
+                else:
+                    await ctx.followup.send(f"{species.name} can not learn {move_id.name}.", ephemeral=True)
+                return
+            else:
+                mons = {x for x in Species.all() if move_id in x.movepool}
+                view: Complex[Species] = Complex(
+                    member=ctx.user,
+                    values=mons,
+                    target=ctx,
+                    parser=lambda x: (x.name, type(x).__name__),
+                    keep_working=True,
+                )
+                embed = view.embed
+                embed.description = (
+                    f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
+                )
+                embed.title = move_id.name
+                embed.color = move_id.type.color
+                embed.set_image(url=move_id.image or WHITE_BAR)
+                embed.set_thumbnail(url=move_id.emoji.url)
+        else:
+            view = MovepoolViewSelector(movepool=movepool, member=ctx.user, target=ctx)
+
+        async with view.send(embed=embed, ephemeral=True):
+            self.bot.logger.info(
+                "%s is reading %s's movepool", str(ctx.user), getattr(species or move_id, "name", "None")
+            )
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @app_commands.rename(_type="type")
+    async def find(
+        self,
+        ctx: Interaction,
+        name: Optional[str],
+        kind: Optional[Kind],
+        _type: Optional[TypingArg],
+        ability: Optional[AbilityArg],
+        move: Optional[MoveArg],
+        species: Optional[SpeciesArg],
+        fused: Optional[DefaultSpeciesArg],
+        member: Optional[Member],
+        location: Optional[TextChannel],
+        backstory: Optional[str],
+        extra: Optional[str],
+        sp_ability: Optional[str],
+        pronoun: Optional[Pronoun],
+        age: Optional[str],
+        group_by: Optional[GroupByArg],
+        amount: Optional[str],
+    ):
+        """Command to obtain Pokemon entries and its ocs
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Context
+        name : Optional[str]
+            Any name that matches(regex works).
+        kind : Optional[Kind]
+            Filter by kind
+        _type : Optional[TypingArg]
+            Type to filter
+        ability : Optional[AbilityArg]
+            Ability to filter
+        move : Optional[MoveArg]
+            Move to filter
+        species : Optional[SpeciesArg]
+            Species to look up info about.
+        fused : Optional[DefaultSpeciesArg]
+            Search Fusions that contain the species
+        member : Optional[Member]
+            Member to filter
+        location : Optional[TextChannel  |  Thread]
+            Location to filter
+        backstory : Optional[str]
+            Any words to look for in backstories
+        extra : Optional[str]
+            Any words to look for in the extra info
+        sp_ability : Optional[str]
+            Any words to look for in Sp Abilities
+        pronoun : Optional[Pronoun]
+            Pronoun to Look for
+        age : Optional[str]
+            OC's age. e.g. 18-24, 13, >20
+        group_by : Optional[GroupByArg]
+            Group by method
+        amount : amount
+            Groupby limit search
+        """
+        resp: InteractionResponse = ctx.response
+        text: str = ""
+        guild: Guild = ctx.guild
+        cog = ctx.client.get_cog("Submission")
+        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
+            await ctx.channel.edit(archived=True)
+        await resp.defer(ephemeral=True, thinking=True)
+        embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=utcnow())
+        embed.set_image(url=WHITE_BAR)
+        embeds = [embed]
+        total: list[Character] = list(cog.ocs.values())
+        filters: list[Callable[[Character], bool]] = [lambda x: guild.get_member(x.author)]
+        ocs = [species] if isinstance(species, Character) else total
+        if name:
+            pattern = compile(name, IGNORECASE)
+            filters.append(lambda oc: pattern.search(oc.name))
+        if age:
+            filters.append(lambda oc: age_parser(age, oc))
+        if isinstance(location, Thread):
+            location = location.parent
+        if isinstance(location, TextChannel):
+            filters.append(
+                lambda oc: (ch := guild.get_channel_or_thread(oc.location))
+                and (ch.parent if isinstance(ch, Thread) else ch) == location
+            )
+        if member:
+            filters.append(lambda oc: oc.author == getattr(member, "id", member))
+
+        mon = None
+        if isinstance(species, Species):
+            if fused and species != fused and not isinstance(fused, Fusion) and not isinstance(species, Fusion):
+                species = Fusion(species, fused)
+            filters.append(lambda oc: getattr(oc.species, "base", oc.species) == species)
+            mon = species
+        elif fused and not isinstance(fused, Fusion):
+            filters.append(lambda oc: isinstance(oc.species, Fusion) and fused in oc.species.bases)
+            mon = fused
+
+        if isinstance(mon, Species):
+            embed.title = mon.name
+            if mon.banned:
+                embed.title += " - Banned Species"
+            if mon_types := ", ".join(i.name for i in species.types):
+                embed.set_footer(text=f"Types: {mon_types}")
+            elif isinstance(species, Fusion):
+                mon_types = "\n".join(f"• {'/'.join(i.name for i in item)}" for item in species.possible_types)
+                embed.set_footer(text=f"Possible Types:\n{mon_types}")
+
+            if ab_text := "\n".join(f"• {ab.name}" for ab in species.abilities):
+                embed.add_field(name=f"Abilities (Max {species.max_amount_abilities})", value=ab_text)
+
+            if isinstance(species, Fusion):
+                image1, image2 = species.mon1.image(gender=pronoun), species.mon2.image(gender=pronoun)
+            else:
+                image1, image2 = species.image(gender=pronoun), species.image(gender=pronoun, shiny=True)
+
+            embeds = [embed.set_image(url=image1), Embed(url=PLACEHOLDER).set_image(url=image2)]
+        if pronoun:
+            filters.append(lambda oc: oc.pronoun == pronoun)
+        if backstory:
+            filters.append(lambda oc: oc.backstory and backstory.lower() in oc.backstory.lower())
+        if extra:
+            filters.append(lambda oc: oc.extra and extra.lower() in oc.extra.lower())
+        if sp_ability:
+            filters.append(
+                lambda oc: oc.sp_ability
+                and any(sp_ability.lower() in y.lower() for y in astuple(oc.sp_ability) if isinstance(y, str))
+            )
+        if _type:
+            filters.append(lambda oc: _type in oc.types)
+            if embed.color == ctx.user.color:
+                embed.color = _type.color
+            embed.set_thumbnail(url=_type.emoji.url)
+        if ability:
+            filters.append(lambda oc: ability in oc.abilities)
+            if embed.description:
+                embed.add_field(name=f"Ability - {ability.name}", value=ability.description, inline=False)
+            else:
+                embed.title = ability.name
+                embed.description = ability.description
+            if battle := ability.battle:
+                embed.add_field(name="Battle effect", value=battle, inline=False)
+            if outside := ability.outside:
+                embed.add_field(name="Usage", value=outside, inline=False)
+            if random_fact := ability.random_fact:
+                embed.add_field(name="Random Fact", value=random_fact, inline=False)
+        if move:
+            filters.append(lambda oc: move in oc.moveset)
+            title = repr(move)
+            if move.banned:
+                title += " - Banned Move"
+            description = move.desc or move.shortDesc
+            if embed.color == ctx.user.color:
+                embed.color = move.color
+            embed.set_thumbnail(url=move.type.emoji.url)
+            embed.set_image(url=move.image)
+            power = move.base or "-"
+            acc = move.accuracy or "-"
+            pp = move.pp or "-"
+
+            if embed.description:
+                embed.add_field(name=f"{title} - Power:{power}|Acc:{acc}|PP:{pp}", value=description, inline=False)
+            else:
+                embed.title = title
+                embed.description = description
+                embed.add_field(name="Power", value=power)
+                embed.add_field(name="Accuracy", value=acc)
+                embed.add_field(name="PP", value=pp)
+            for e in embeds:
+                e.url = move.url
+        if kind:
+            filters.append(lambda oc: oc.kind == kind)
+        ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
+        if group_by:
+            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount)
+            embed.title = f"{embed.title} - Group by {group_by.name}"
+        else:
+            ocs.sort(key=lambda x: x.name)
+            view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+
+        async with view.send(ephemeral=True, embeds=embeds, content=text):
+            self.bot.logger.info("%s is reading /find %s", str(ctx.user), repr(ctx.namespace))
+
+
+async def setup(bot: CustomBot) -> None:
+    """Default Cog loader
+
+    Parameters
+    ----------
+    bot: CustomBot
+        Bot
+    """
+    await bot.add_cog(Pokedex(bot))

@@ -25,7 +25,7 @@ class NoMoveFound(UserInputError):
             Invalid String
         """
         self.argument = argument
-        super().__init__(f"No Moves with the name {argument!r} were found.")
+        super(NoMoveFound, self).__init__(f"No Moves with the name {argument!r} were found.")
 
 
 class NoSpeciesFound(UserInputError):
@@ -38,7 +38,7 @@ class NoSpeciesFound(UserInputError):
             Invalid String
         """
         self.argument = argument
-        super().__init__(f"No Species with the name {argument!r} were found.")
+        super(NoSpeciesFound, self).__init__(f"No Species with the name {argument!r} were found.")
 
 
 class NoImageFound(UserInputError):
@@ -51,7 +51,7 @@ class NoImageFound(UserInputError):
             Invalid String
         """
         self.argument = argument
-        super().__init__(f"No file with the url {argument!r} was found.")
+        super(NoImageFound, self).__init__(f"No file with the url {argument!r} was found.")
 
 
 class NoDateFound(UserInputError):
@@ -64,7 +64,7 @@ class NoDateFound(UserInputError):
             Invalid String
         """
         self.argument = argument
-        super().__init__(f"No date {argument!r} was found.")
+        super(NoDateFound, self).__init__(f"No date {argument!r} was found.")
 
 
 class SubmissionConcluded(Exception):
