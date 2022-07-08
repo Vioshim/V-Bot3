@@ -33,6 +33,7 @@ from discord import (
 )
 from discord.ui import Button, Modal, TextInput, View, button
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.utils.functions import fix
 

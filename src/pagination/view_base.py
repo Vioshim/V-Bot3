@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import datetime
 from typing import Optional, Union
 
@@ -242,6 +241,7 @@ class Basic(View):
 
     async def delete(self) -> None:
         """This method deletes the view, and stops it."""
+
         try:
             if self.message:
                 if self.message.flags.ephemeral:
@@ -260,5 +260,4 @@ class Basic(View):
             self.stop()
 
     async def on_timeout(self) -> None:
-        with suppress(DiscordException):
-            await self.delete()
+        await self.delete()

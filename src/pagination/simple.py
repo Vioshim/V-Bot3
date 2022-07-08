@@ -213,6 +213,12 @@ class Simple(Generic[_T], Basic):
         self.menu_format()
         return super(Simple, self).to_components()
 
+    @entries_per_page.deleter
+    def entries_per_page(self):
+        self._entries_per_page = 25
+        self._pos = 0
+        self.menu_format()
+
     def buttons_format(self) -> None:
         """This method formats the first buttons based on the
         current page that is being viewed..

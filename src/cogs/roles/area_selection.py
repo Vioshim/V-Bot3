@@ -1,4 +1,4 @@
-# Copyright 2021 Vioshim
+# Copyright 2022 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@ from threading import Thread
 
 from discord import (
     CategoryChannel,
-    Embed,
     Interaction,
-    InteractionResponse,
     Member,
     SelectOption,
     TextChannel,
@@ -28,25 +26,24 @@ from discord import (
 from discord.ui import Button, Select, View, select
 from discord.utils import utcnow
 
-from src.cogs.submission.cog import Submission
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR
 from src.views.characters_view import CharactersView
-
-__all__ = ("RegionView",)
 
 
 class AreaSelection(View):
+
+    # noinspection PyTypeChecker
     def __init__(self, bot: CustomBot, cat: CategoryChannel, member: Member):
         super(AreaSelection, self).__init__(timeout=None)
         self.bot = bot
         self.cat = cat
-        self.member = member
         if isinstance(member, User):
             guild = member.mutual_guilds[0]
         else:
             guild = member.guild
+            member = guild.get_member(member.id)
+        self.member = member
         registered = guild.get_role(719642423327719434)
         if registered not in member.roles:
             btn = Button(
@@ -61,7 +58,8 @@ class AreaSelection(View):
 
         def foo(oc: Character):
             ch = guild.get_channel_or_thread(oc.location)
-            return bool(ch and cat == ch.category)
+            if ch and cat == ch.category:
+                return True
 
         def foo2(oc: Character):
             ch = guild.get_channel_or_thread(oc.location)
@@ -73,9 +71,14 @@ class AreaSelection(View):
         self.entries = {str(k.id): set(v) for k, v in entries if k}
         self.total = sum(len(item) for item in self.entries.values())
 
+        def handle(item: TextChannel) -> str:
+            text = f"{len(self.entries.get(str(item.id), [])):02d}"
+            text += item.name[1:]
+            return text.replace("-", " ").title()
+
         self.selection.options = [
             SelectOption(
-                label=f"{len(self.entries.get(str(item.id), [])):02d}{item.name[1:]}".replace("-", " ").title(),
+                label=handle(item),
                 value=str(item.id),
                 description=(item.topic or "No description yet.")[:50],
                 emoji=item.name[0],
@@ -87,54 +90,30 @@ class AreaSelection(View):
     @select(placeholder="Select a location to check", row=0)
     async def selection(self, ctx: Interaction, sct: Select):
         channel: TextChannel = self.bot.get_channel(int(sct.values[0]))
-        self.bot.logger.info("%s is reading Channel Information of %s", str(ctx.user), channel.name)
+        self.bot.logger.info(
+            "%s is reading Channel Information of %s",
+            str(ctx.user),
+            channel.name,
+        )
+
         ocs = self.entries.get(sct.values[0], set())
-        view = CharactersView(target=ctx, member=ctx.user, ocs=ocs, keep_working=True)
+        view = CharactersView(
+            target=ctx,
+            member=ctx.user,
+            ocs=ocs,
+            keep_working=True,
+        )
+
         embed = view.embed
+
         embed.title = channel.name[2:].replace("-", " ").title()
         embed.description = channel.topic or "No description yet"
         embed.color = ctx.user.color
         embed.timestamp = utcnow()
-        embed.set_author(name=ctx.user.display_name, icon_url=ctx.user.display_avatar.url)
+        embed.set_author(
+            name=ctx.user.display_name,
+            icon_url=ctx.user.display_avatar.url,
+        )
         embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
         async with view.send(ephemeral=True, embed=embed):
             self.bot.logger.info("%s user is checking ocs at %s", str(ctx.user), channel.name)
-
-
-class RegionView(View):
-    @select(
-        placeholder="Select Regions",
-        custom_id="region",
-        row=0,
-        options=[
-            SelectOption(
-                label=item.name,
-                description=(item.short_desc or item.desc)[:100],
-                value=item.category,
-                emoji=item.emoji,
-            )
-            for item in MAP_ELEMENTS
-        ],
-    )
-    async def choice(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
-        await resp.defer(ephemeral=True, thinking=True)
-        info = MAP_ELEMENTS2[int(sct.values[0])]
-        cat = ctx.guild.get_channel(info.category)
-        embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=ctx.user.color)
-        embed.set_image(url=info.image or WHITE_BAR)
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        view = AreaSelection(bot=ctx.client, cat=cat, member=ctx.user)
-        ctx.client.logger.info(
-            "%s is reading Map Information of %s",
-            str(ctx.user),
-            cat.name,
-        )
-        await ctx.followup.send(
-            content=f"There's a total of {view.total:02d} OCs in {cat.name}.",
-            view=view,
-            embed=embed,
-            ephemeral=True,
-        )
