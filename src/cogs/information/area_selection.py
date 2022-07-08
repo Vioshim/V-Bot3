@@ -28,7 +28,6 @@ from discord import (
 from discord.ui import Button, Select, View, select
 from discord.utils import utcnow
 
-from src.cogs.submission.cog import Submission
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR
