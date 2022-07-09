@@ -32,7 +32,7 @@ from discord import (
 from discord.ext import commands
 from discord.ext.tasks import loop
 from discord.ui import Modal, TextInput
-from discord.utils import MISSING
+from discord.utils import MISSING, format_dt
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
@@ -61,7 +61,8 @@ class ReminderModal(Modal, title="Reminder"):
             if date <= interaction.created_at:
                 msg = "Only future dates can be used."
             else:
-                msg = "Reminder has been created successfully.!"
+                msg = "Reminder has been created successfully.!\n\n"
+                msg += f"Notifying you: {format_dt(date, 'R')}"
                 channel, thread = interaction.channel, None
                 if isinstance(channel, Thread):
                     thread = channel.id
