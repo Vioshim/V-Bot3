@@ -55,6 +55,8 @@ from src.utils.etc import (
     MAP_URL,
     SETTING_EMOJI,
     STICKER_EMOJI,
+    THUMBS_DOWN_EMOJI,
+    THUMBS_UP_EMOJI,
     WHITE_BAR,
 )
 from src.utils.functions import message_line
@@ -127,15 +129,16 @@ class AnnouncementModal(Modal):
             await interaction.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         webhook: Webhook = await interaction.client.webhook(interaction.channel)
-        if embeds := self.kwargs.get("embeds"):
+        embeds: list[Embed] = self.kwargs.get("embeds")
+        if embeds:
             embeds[0].title = self.thread_name.value
         msg = await webhook.send(**self.kwargs, wait=True)
         thread = await msg.create_thread(name=self.thread_name.value)
         await thread.add_user(interaction.user)
         match self.word:
             case "Poll":
-                await msg.add_reaction("\N{THUMBS UP SIGN}")
-                await msg.add_reaction("\N{THUMBS DOWN SIGN}")
+                await msg.add_reaction(THUMBS_UP_EMOJI)
+                await msg.add_reaction(THUMBS_DOWN_EMOJI)
             case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
                 if tupper := interaction.guild.get_member(431544605209788416):
                     await thread.add_user(tupper)
