@@ -56,30 +56,29 @@ class ReminderModal(Modal, title="Reminder"):
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True)
         date = parse(self.due.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
-        if date:
-            if date <= datetime.utcnow():
-                msg = "Only future dates can be used."
-            else:
-                msg = "Reminder has been created successfully.!\n\n"
-                msg += f"Notifying you: {format_dt(date, 'R')}"
-                channel, thread = interaction.channel, None
-                if isinstance(channel, Thread):
-                    thread = channel.id
-                    channel = channel.parent
-                remind = bot.mongo_db("Reminder")
-                await remind.insert_one(
-                    {
-                        "author": interaction.user.id,
-                        "channel": channel.id,
-                        "thread": thread,
-                        "message": self.message.value,
-                        "due": date,
-                    }
-                )
+        embed = Embed(title="Reminder Command", timestamp=date, color=Color.blurple())
+        embed.set_image(url=WHITE_BAR)
+        embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
+        if not date:
+            embed.description = f"Invalid date, unable to identify: {self.message.value!r}"
+        elif date <= datetime.utcnow():
+            embed.description = "Only future dates can be used."
         else:
-            msg = f"Invalid date, unable to identify: {self.message.value!r}"
-
-        await interaction.followup.send(msg, ephemeral=True)
+            embed.description = "Reminder has been created successfully.!"
+            channel, thread = interaction.channel, None
+            if isinstance(channel, Thread):
+                thread = channel.id
+                channel = channel.parent
+            await bot.mongo_db("Reminder").insert_one(
+                {
+                    "author": interaction.user.id,
+                    "channel": channel.id,
+                    "thread": thread,
+                    "message": self.message.value,
+                    "due": date,
+                }
+            )
+        await interaction.followup.send(embed=embed, ephemeral=True)
         self.stop()
 
 
