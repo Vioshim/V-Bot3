@@ -53,7 +53,7 @@ class ReminderModal(Modal, title="Reminder"):
     async def on_submit(self, interaction: Interaction) -> None:
         bot: CustomBot = interaction.client
         resp: InteractionResponse = interaction.response
-        date = parse(self.message.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+        date = parse(self.due.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
         if not date:
             msg = f"Invalid date, unable to identify: {self.message.value!r}"
         elif date < interaction.created_at:
@@ -132,6 +132,13 @@ class Reminder(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     async def remind(self, ctx: Interaction):
+        """Fennekin Reminder System
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        """
         resp: InteractionResponse = ctx.response
         await resp.send_modal(ReminderModal(timeout=None))
 
