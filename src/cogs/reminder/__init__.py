@@ -57,8 +57,7 @@ class ReminderModal(Modal, title="Reminder"):
         await resp.defer(ephemeral=True)
         date = parse(self.due.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
         if date:
-            date = date.astimezone(interaction.created_at.tzinfo)
-            if date <= interaction.created_at:
+            if date <= datetime.utcnow():
                 msg = "Only future dates can be used."
             else:
                 msg = "Reminder has been created successfully.!\n\n"
