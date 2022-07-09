@@ -130,6 +130,7 @@ class Reminder(commands.Cog):
                     allowed_mentions=AllowedMentions(users=True),
                     wait=True,
                 )
+                await msg.add_reaction("\N{CROSS MARK}")
                 await tupper_log.insert_one({"channel": msg.channel.id, "id": msg.id, "author": author_id})
 
         await remind.delete_many(condition)
