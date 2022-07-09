@@ -14,6 +14,7 @@
 
 from contextlib import suppress
 from datetime import datetime
+from typing import Optional
 
 from dateparser import parse
 from discord import (
@@ -74,7 +75,6 @@ class ReminderModal(Modal, title="Reminder"):
                     "due": date,
                 }
             )
-
         await resp.send_message(msg, ephemeral=True)
         self.stop()
 
@@ -131,16 +131,28 @@ class Reminder(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def remind(self, ctx: Interaction):
+    async def remind(self, ctx: Interaction, message: Optional[str], due: Optional[str]):
         """Fennekin Reminder System
 
         Parameters
         ----------
         ctx : Interaction
             Interaction
+        message : str
+            Message to remind
+        due : str
+            Time until notification
         """
         resp: InteractionResponse = ctx.response
-        await resp.send_modal(ReminderModal(timeout=None))
+        modal = ReminderModal(timeout=None)
+        modal.message.default = message
+        modal.due.default = due
+        if message and due:
+            modal.message.value = message
+            modal.due.value = due
+            await modal.on_submit(ctx)
+        else:
+            await resp.send_modal(modal)
 
 
 async def setup(bot: CustomBot):
