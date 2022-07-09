@@ -55,28 +55,29 @@ class ReminderModal(Modal, title="Reminder"):
         bot: CustomBot = interaction.client
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True)
-
         date = parse(self.due.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
-        if not date:
-            msg = f"Invalid date, unable to identify: {self.message.value!r}"
-        elif date <= interaction.created_at:
-            msg = "Only future dates can be used."
+        if date:
+            date = date.astimezone(interaction.created_at.tzinfo)
+            if date <= interaction.created_at:
+                msg = "Only future dates can be used."
+            else:
+                msg = "Reminder has been created successfully.!"
+                channel, thread = interaction.channel, None
+                if isinstance(channel, Thread):
+                    thread = channel.id
+                    channel = channel.parent
+                remind = bot.mongo_db("Reminder")
+                await remind.insert_one(
+                    {
+                        "author": interaction.user.id,
+                        "channel": channel.id,
+                        "thread": thread,
+                        "message": self.message.value,
+                        "due": date,
+                    }
+                )
         else:
-            msg = "Reminder has been created successfully.!"
-            channel, thread = interaction.channel, None
-            if isinstance(channel, Thread):
-                thread = channel.id
-                channel = channel.parent
-            remind = bot.mongo_db("Reminder")
-            await remind.insert_one(
-                {
-                    "author": interaction.user.id,
-                    "channel": channel.id,
-                    "thread": thread,
-                    "message": self.message.value,
-                    "due": date,
-                }
-            )
+            msg = f"Invalid date, unable to identify: {self.message.value!r}"
 
         await interaction.followup.send(msg, ephemeral=True)
         self.stop()
