@@ -54,10 +54,12 @@ class ReminderModal(Modal, title="Reminder"):
     async def on_submit(self, interaction: Interaction) -> None:
         bot: CustomBot = interaction.client
         resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True)
+
         date = parse(self.due.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
         if not date:
             msg = f"Invalid date, unable to identify: {self.message.value!r}"
-        elif date < interaction.created_at:
+        elif date <= interaction.created_at:
             msg = "Only future dates can be used."
         else:
             msg = "Reminder has been created successfully.!"
@@ -75,7 +77,8 @@ class ReminderModal(Modal, title="Reminder"):
                     "due": date,
                 }
             )
-        await resp.send_message(msg, ephemeral=True)
+
+        await interaction.followup.send(msg, ephemeral=True)
         self.stop()
 
 
@@ -148,8 +151,8 @@ class Reminder(commands.Cog):
         modal.message.default = message
         modal.due.default = due
         if message and due:
-            modal.message.value = message
-            modal.due.value = due
+            modal.message._value = message
+            modal.due._value = due
             await modal.on_submit(ctx)
         else:
             await resp.send_modal(modal)
