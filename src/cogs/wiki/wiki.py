@@ -206,7 +206,7 @@ class WikiTreeTransformer(WikiTransformer):
         value = value.removeprefix(aux_tree.route)
         items.extend(x for x in aux_tree.children.values() if x.children)
         return [
-            Choice(name=name, value=x.route)
+            Choice(name=name, value=x.route or "/")
             for x in items
             if (name := f"{x.route.removeprefix(aux_tree.route)}/") and value in name
         ]
@@ -217,14 +217,14 @@ class WikiNodeTransformer(WikiTransformer):
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         cog = ctx.client.get_cog("Wiki")
         tree: WikiEntry = cog.tree
-        item = tree.lookup(ctx.namespace.group or "")
-        items = [Choice(name=item.path, value=item.route)]
-        items.extend(
-            Choice(name=name, value=v.route)
-            for k, v in item.children.items()
-            if (name := v.route.removeprefix(item.route)) and value.lower() in k.lower()
-        )
-        return items
+        aux_tree = tree.lookup(ctx.namespace.group or "")
+        items: list[WikiEntry] = [aux_tree]
+        items.extend(x for x in aux_tree.children.values() if not x.children)
+        return [
+            Choice(name=name, value=x.route or "/")
+            for x in items
+            if (name := f"{x.route.removeprefix(aux_tree.route)}/") and value in name
+        ]
 
 
 WikiTreeArg = Transform[WikiEntry, WikiTreeTransformer]
