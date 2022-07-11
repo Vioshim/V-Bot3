@@ -218,7 +218,7 @@ class WikiNodeTransformer(WikiTransformer):
         cog = ctx.client.get_cog("Wiki")
         tree: WikiEntry = cog.tree
         item = tree.lookup(ctx.namespace.group or "")
-        items = [item]
+        items = [Choice(name=item.path, value=item.route)]
         items.extend(
             Choice(name=name, value=v.route)
             for k, v in item.children.items()
