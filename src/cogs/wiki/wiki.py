@@ -126,6 +126,7 @@ class WikiEntry:
         if isinstance(node, str):
             node = WikiEntry(path=node)
         if isinstance(node, dict):
+            node.pop("_id", None)
             node = WikiEntry(**node)
 
         aux = self
