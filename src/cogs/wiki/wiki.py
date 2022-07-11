@@ -189,6 +189,7 @@ class WikiEntry:
 
 
 class WikiTransformer(Transformer):
+    @classmethod
     async def transform(cls, ctx: Interaction, value: Optional[str]):
         value = (value or "").removesuffix("/")
         cog = ctx.client.get_cog("Wiki")
@@ -211,7 +212,7 @@ class WikiTreeTransformer(WikiTransformer):
         if not value.endswith("/"):
             ref = ref.parent or ref
         items.extend(aux_tree.children.values())
-        return [Choice(name=f"./{x.route.removeprefix(aux_tree.route)}", value=x.route) for x in items]
+        return [Choice(name=x.route.removeprefix(aux_tree.route), value=x.route) for x in items]
 
 
 class WikiNodeTransformer(WikiTransformer):
