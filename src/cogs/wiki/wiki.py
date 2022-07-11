@@ -191,10 +191,9 @@ class WikiEntry:
 class WikiTransformer(Transformer):
     @classmethod
     async def transform(cls, ctx: Interaction, value: Optional[str]):
-        value = (value or "").removesuffix("/")
         cog = ctx.client.get_cog("Wiki")
         tree: WikiEntry = cog.tree
-        return tree.lookup(value)
+        return tree.lookup(value or "")
 
 
 class WikiTreeTransformer(WikiTransformer):
@@ -204,18 +203,12 @@ class WikiTreeTransformer(WikiTransformer):
         tree: WikiEntry = cog.tree
         aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]
-
         value = value.removeprefix(aux_tree.route)
-        ref = aux_tree
-        if not value.endswith("/"):
-            ref = ref.parent or ref
-        items.extend(aux_tree.children.values())
+        items.extend(x for x in aux_tree.children.values() if x.children)
         return [
-            Choice(
-                name=x.route.removeprefix(aux_tree.route) or "/",
-                value=x.route,
-            )
+            Choice(name=name, value=x.route)
             for x in items
+            if (name := f"{x.route.removeprefix(aux_tree.route)}/") and value in name
         ]
 
 
@@ -224,16 +217,14 @@ class WikiNodeTransformer(WikiTransformer):
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         cog = ctx.client.get_cog("Wiki")
         tree: WikiEntry = cog.tree
-        if item := tree.lookup(ctx.namespace.group or "", strict=True):
-            items = [v for k, v in item.children.items() if value.lower() in k.lower()]
-            return [
-                Choice(
-                    name=x.route.removeprefix(item.route) or "/",
-                    value=x.route,
-                )
-                for x in items
-            ]
-        return []
+        item = tree.lookup(ctx.namespace.group or "")
+        items = [item]
+        items.extend(
+            Choice(name=name, value=v.route)
+            for k, v in item.children.items()
+            if (name := v.route.removeprefix(item.route)) and value.lower() in k.lower()
+        )
+        return items
 
 
 WikiTreeArg = Transform[WikiEntry, WikiTreeTransformer]
