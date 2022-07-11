@@ -213,7 +213,7 @@ class WikiTreeTransformer(WikiTransformer):
         return [
             Choice(
                 name=x.route.removeprefix(aux_tree.route) or "/",
-                value=f"/{x.route}",
+                value=x.route,
             )
             for x in items
         ]
@@ -229,7 +229,7 @@ class WikiNodeTransformer(WikiTransformer):
             return [
                 Choice(
                     name=x.route.removeprefix(item.route) or "/",
-                    value=f"/{x.route}",
+                    value=x.route,
                 )
                 for x in items
             ]
