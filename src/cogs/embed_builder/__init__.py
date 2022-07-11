@@ -35,10 +35,8 @@ from discord import (
     User,
     Webhook,
     WebhookMessage,
-    app_commands,
 )
 from discord.ext import commands
-from discord.ext.commands.converter import ColorConverter
 from discord.ui import Button, View
 from discord.utils import MISSING, utcnow
 
@@ -256,10 +254,8 @@ class EmbedBuilder(commands.Cog):
             else:
                 await ctx.message.delete(delay=0)
 
-    @commands.hybrid_group(fallback="info", aliases=["e"], invoke_without_command=True)
-    @app_commands.guilds(719343092963999804)
-    @app_commands.default_permissions(manage_messages=True, send_messages=True, embed_links=True)
-    @app_commands.checks.has_permissions(manage_messages=True, send_messages=True, embed_links=True)
+    @commands.group(aliases=["e"], invoke_without_command=True)
+    @commands.has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
     async def embed(self, ctx: commands.Context):
         """Shows stored embed's location
 
@@ -874,7 +870,8 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx) as embed:
             embed.set_image(url=WHITE_BAR)
 
-    @commands.hybrid_group(name="fields", fallback="info", aliases=["field", "f"], invoke_without_command=True)
+    @commands.group(aliases=["field", "f"], invoke_without_command=True)
+    @commands.has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
     async def fields(self, ctx: commands.Context):
         """Outputs the fields that the current embed has
 
