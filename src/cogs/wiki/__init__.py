@@ -31,8 +31,8 @@ class Wiki(commands.Cog):
         items = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
         self.tree = WikiEntry.from_list(items)
 
-    @app_commands.command()
-    async def wiki(self, ctx: Interaction, group: WikiTreeArg, word: Optional[WikiNodeArg]):
+    @app_commands.command(name="wiki")
+    async def wiki_search(self, ctx: Interaction, group: WikiTreeArg, word: Optional[WikiNodeArg]):
         """Built-in server Wiki
 
         Parameters

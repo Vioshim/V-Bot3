@@ -14,12 +14,21 @@
 
 from os import path
 from re import IGNORECASE, compile, escape
-from typing import Optional
+from typing import Literal, Optional
 from unicodedata import name as u_name
 
 from d20 import roll
 from d20.utils import simplify_expr
-from discord import Color, Embed, Interaction, InteractionResponse, Thread, app_commands
+from discord import (
+    Color,
+    Embed,
+    HTTPException,
+    Interaction,
+    InteractionResponse,
+    Object,
+    Thread,
+    app_commands,
+)
 from discord.ext import commands
 from discord.utils import utcnow
 
@@ -140,6 +149,41 @@ class Utilities(commands.Cog):
             await ctx.followup.send(text, ephemeral=True)
         else:
             await ctx.followup.send("Could not find anything. Sorry.", ephemeral=True)
+
+    @commands.command()
+    @commands.guild_only()
+    async def sync(
+        self,
+        ctx: commands.Context,
+        guilds: commands.Greedy[Object],
+        spec: Optional[Literal["~", "*", "^"]] = None,
+    ) -> None:
+        if not guilds:
+            if spec == "~":
+                synced = await self.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
+                self.bot.tree.copy_global_to(guild=ctx.guild)
+                synced = await self.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                self.bot.tree.clear_commands(guild=ctx.guild)
+                await self.bot.tree.sync(guild=ctx.guild)
+                synced = []
+            else:
+                synced = await self.bot.tree.sync()
+
+            await ctx.send(f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}")
+            return
+
+        ret = 0
+        for guild in guilds:
+            try:
+                await self.bot.tree.sync(guild=guild)
+            except HTTPException:
+                pass
+            else:
+                ret += 1
+
+        await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
     @commands.command()
     async def charinfo(self, ctx: commands.Context, *, characters: str):
