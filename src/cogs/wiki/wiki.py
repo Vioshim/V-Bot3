@@ -210,7 +210,7 @@ class WikiTreeTransformer(WikiTransformer):
         ref = aux_tree
         if not value.endswith("/"):
             ref = ref.parent or ref
-        items.extend(aux_tree.children)
+        items.extend(aux_tree.children.values())
         return [Choice(name=f"./{x.route.removeprefix(aux_tree.route)}", value=x.route) for x in items]
 
 
