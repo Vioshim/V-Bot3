@@ -212,7 +212,7 @@ class WikiTreeTransformer(WikiTransformer):
         if not value.endswith("/"):
             ref = ref.parent or ref
         items.extend(aux_tree.children.values())
-        return [Choice(name=x.route.removeprefix(aux_tree.route), value=x.route) for x in items]
+        return [Choice(name=x.route.removeprefix(aux_tree.route) or "/", value=x.route) for x in items]
 
 
 class WikiNodeTransformer(WikiTransformer):
@@ -222,7 +222,7 @@ class WikiNodeTransformer(WikiTransformer):
         tree: WikiEntry = cog.tree
         if item := tree.lookup(ctx.namespace.group or "", strict=True):
             items = [v for k, v in item.children.items() if value.lower() in k.lower()]
-            return [Choice(name=x.route.removeprefix(item.route), value=x.route) for x in items]
+            return [Choice(name=x.route.removeprefix(item.route) or "/", value=x.route) for x in items]
         return []
 
 
