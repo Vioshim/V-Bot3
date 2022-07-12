@@ -76,7 +76,7 @@ class Wiki(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def wiki(self, ctx: Interaction, group: Optional[WikiTreeArg], word: Optional[WikiNodeArg]):
+    async def wiki(self, ctx: Interaction, group: Optional[WikiTreeArg], page: Optional[WikiNodeArg]):
         """Built-in server Wiki
 
         Parameters
@@ -85,10 +85,10 @@ class Wiki(commands.Cog):
             Context
         group : WikiTreeArg
             Group
-        word : WikiNodeArg
+        page : WikiNodeArg
             Parameter
         """
-        page: WikiEntry = group or word
+        page: Optional[WikiEntry] = page or group
 
         if not page:
             entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)

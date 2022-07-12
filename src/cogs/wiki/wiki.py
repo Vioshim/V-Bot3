@@ -281,4 +281,5 @@ class WikiComplex(Complex[WikiEntry]):
         tree = self.current_choice
         view = WikiComplex(tree=tree, target=interaction)
         async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
+            interaction.client.logger.info("%s is reading /wiki%s", tree.route)
             await super(WikiComplex, self).select_choice(interaction, sct)
