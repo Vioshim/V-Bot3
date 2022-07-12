@@ -15,11 +15,42 @@
 
 from typing import Optional
 
-from discord import Interaction, InteractionResponse, Message, app_commands
+from discord import (
+    Embed,
+    Interaction,
+    InteractionResponse,
+    Message,
+    TextStyle,
+    app_commands,
+)
 from discord.ext import commands
+from discord.ui import Modal, TextInput
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.wiki.wiki import WikiComplex, WikiEntry, WikiNodeArg, WikiTreeArg
 from src.structures.bot import CustomBot
+from src.utils.etc import WHITE_BAR
+
+
+class WikiPathModal(Modal, title="Wiki Path"):
+    def __init__(self, message: Message) -> None:
+        super(WikiPathModal, self).__init__(timeout=None)
+        self.message = message
+        self.folder = TextInput(label="Path", style=TextStyle.paragraph, required=True, default="/")
+        self.redirect = TextInput(label="Change", style=TextStyle.paragraph, required=False)
+        self.add_item(self.folder)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        path = self.folder.value
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
+        redirect_path = self.redirect.value or path
+        entry = WikiEntry(path=redirect_path, content=self.message.content, embeds=self.message.embeds)
+        await db.replace_one({"path": path}, entry.simplified, upsert=True)
+        embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
+        embed.set_image(url=WHITE_BAR)
+        await resp.send_message(embed=embed, ephemeral=True)
+        self.stop()
 
 
 class Wiki(commands.Cog):
@@ -41,10 +72,7 @@ class Wiki(commands.Cog):
         resp: InteractionResponse = ctx.response
         if ctx.user.id != 678374009045254198:
             return await resp.send_message("User hasn't been authorized for adding wiki entries", ephemeral=True)
-        path = msg.embeds[-1].footer.text
-        entry = WikiEntry(path=path, content=msg.content, embeds=msg.embeds)
-        await self.bot.mongo_db("Wiki").replace_one({"path": path}, entry.simplified, upsert=True)
-        await resp.send_message(f"{path!r} added/modified.!", ephemeral=True)
+        await resp.send_modal(WikiPathModal(msg))
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -72,6 +100,15 @@ class Wiki(commands.Cog):
 
     @commands.command()
     async def wiki_remove(self, ctx: commands.Context, *, path: str):
+        class WikiModal(Modal, title="Wiki Route"):
+            def __init__(self, tree: WikiEntry) -> None:
+                super(WikiModal, self).__init__(timeout=None)
+                self.tree = tree
+                self.folder = TextInput(
+                    label="Wiki Folder", style=TextStyle.paragraph, required=True, default=tree.route
+                )
+                self.add_item(self.folder)
+
         item = await self.bot.mongo_db("Wiki").delete_one({"path": path})
         if item.deleted_count:
             await ctx.reply("Path has been deleted!", delete_after=3)
