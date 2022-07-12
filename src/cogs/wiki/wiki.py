@@ -16,11 +16,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from discord import Embed, Interaction
+from discord import Embed, Interaction, TextStyle
 from discord.app_commands import Choice, Transform, Transformer
-from discord.ui import Button
+from discord.ui import Button, Select, TextInput, select
 
-__all__ = ("WikiEntry",)
+from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
+
+__all__ = ("WikiEntry", "WikiTreeArg", "WikiNodeArg", "WikiComplex")
 
 
 class WikiEntry:
@@ -29,19 +32,14 @@ class WikiEntry:
         path: str = None,
         content: Optional[str] = None,
         embeds: list[Embed] = None,
-        buttons: list[Button] = None,
     ) -> None:
 
         if not embeds:
             embeds = []
 
-        if not buttons:
-            buttons = []
-
         self.path = path or ""
         self.content = content
         self.embeds = [Embed.from_dict(x) if isinstance(x, dict) else x for x in embeds]
-        self.buttons = [Button(**x) if isinstance(x, dict) else x for x in buttons]
         self.children: dict[str, WikiEntry] = {}
         self.parent: Optional[WikiEntry] = None
 
@@ -70,15 +68,6 @@ class WikiEntry:
             "path": self.path,
             "content": self.content,
             "embeds": [x.to_dict() for x in self.embeds],
-            "buttons": [
-                dict(
-                    label=x.label,
-                    emoji=str(x.emoji) if x.emoji else None,
-                    url=x.url,
-                    row=x.row,
-                )
-                for x in self.buttons
-            ],
         }
 
     def printTree(
@@ -149,7 +138,7 @@ class WikiEntry:
                 ref.parent = aux
                 aux.children[elements[index]] = aux = ref
         else:
-            aux.embeds, aux.buttons = node.embeds, node.buttons
+            aux.embeds = node.embeds
 
     def remove_node_params(self, path: str):
         aux = self
@@ -191,16 +180,18 @@ class WikiEntry:
 class WikiTransformer(Transformer):
     @classmethod
     async def transform(cls, ctx: Interaction, value: str):
-        cog = ctx.client.get_cog("Wiki")
-        tree: WikiEntry = cog.tree
+        bot: CustomBot = ctx.client
+        entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
+        tree = WikiEntry.from_list(entries)
         return tree.lookup(value.removeprefix("/"))
 
 
 class WikiTreeTransformer(WikiTransformer):
     @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
-        cog = ctx.client.get_cog("Wiki")
-        tree: WikiEntry = cog.tree
+        bot: CustomBot = ctx.client
+        entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
+        tree = WikiEntry.from_list(entries)
         aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]
         value = value.removeprefix(aux_tree.route.removeprefix("/"))
@@ -215,8 +206,9 @@ class WikiTreeTransformer(WikiTransformer):
 class WikiNodeTransformer(WikiTransformer):
     @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
-        cog = ctx.client.get_cog("Wiki")
-        tree: WikiEntry = cog.tree
+        bot: CustomBot = ctx.client
+        entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
+        tree = WikiEntry.from_list(entries)
         value = (ctx.namespace.group or "").removeprefix("/")
         aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]
@@ -231,3 +223,43 @@ class WikiNodeTransformer(WikiTransformer):
 
 WikiTreeArg = Transform[WikiEntry, WikiTreeTransformer]
 WikiNodeArg = Transform[WikiEntry, WikiNodeTransformer]
+
+
+def wiki_parser(item: WikiEntry):
+    key = f"Entry has {len(item.children)} pages." if item.children else None
+    if not key and item.embeds:
+        key = item.embeds[0].title or None
+    return (f"/{item.path}", key)
+
+
+class WikiComplex(Complex[WikiEntry]):
+    def __init__(
+        self,
+        *,
+        tree: WikiEntry,
+        target: Interaction,
+    ):
+        super(WikiComplex, self).__init__(
+            member=target.user,
+            values=tree.children,
+            target=target,
+            timeout=None,
+            parser=wiki_parser,
+            emoji_parser=lambda x: "\N{BLUE BOOK}" if x.children else "\N{PAGE FACING UP}",
+            silent_mode=True,
+            keep_working=True,
+            sort_key=lambda x: x.path,
+            text_component=TextInput(
+                label="Wiki Folder",
+                style=TextStyle.paragraph,
+                placeholder=tree.children[0].path if tree.children else None,
+                required=True,
+            ),
+        )
+
+    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        tree = self.current_choice
+        view = WikiComplex(tree=tree, target=interaction)
+        async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
+            await super(WikiComplex, self).select_choice(interaction, sct)

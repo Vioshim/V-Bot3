@@ -58,7 +58,7 @@ def check(ctx: Interaction):
 
 class ImageView(Basic):
     def __init__(self, member: Member | User, target: _M, default_img: File | str = None):
-        super(ImageView, self).__init__(member=member, target=target)
+        super(ImageView, self).__init__(member=member, target=target, timeout=None)
         if isinstance(default_img, str):
             self.embed.set_image(url=default_img)
         elif isinstance(default_img, File):
