@@ -16,14 +16,12 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from discord import Embed, Interaction, InteractionResponse, TextStyle
+from discord import Embed, Interaction
 from discord.app_commands import Choice, Transform, Transformer
-from discord.ui import Button, Modal, Select, TextInput, select
 
-from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 
-__all__ = ("WikiEntry", "WikiTreeArg", "WikiNodeArg", "WikiComplex")
+__all__ = ("WikiEntry", "WikiTreeArg", "WikiNodeArg")
 
 
 class WikiEntry:
@@ -107,9 +105,8 @@ class WikiEntry:
         path: str = None,
         content: Optional[str] = None,
         embeds: list[Embed] = None,
-        buttons: list[Button] = None,
     ):
-        self.add_node(WikiEntry(path, content, embeds, buttons))
+        self.add_node(WikiEntry(path, content, embeds))
 
     def add_node(self, node: WikiEntry | list[str] | str | dict[str, Any]):
         if isinstance(node, list):
@@ -123,7 +120,7 @@ class WikiEntry:
         aux = self
         path = node.path
 
-        route = node.path.split("/")
+        route = [x for x in node.path.split("/") if x]
 
         for item in route:
             if item in aux.children:
@@ -225,61 +222,3 @@ class WikiNodeTransformer(WikiTransformer):
 
 WikiTreeArg = Transform[WikiEntry, WikiTreeTransformer]
 WikiNodeArg = Transform[WikiEntry, WikiNodeTransformer]
-
-
-def wiki_parser(item: WikiEntry):
-    key = f"Entry has {len(item.children)} pages." if item.children else None
-    if not key and item.embeds:
-        key = item.embeds[0].title or None
-    return (f"/{item.path}", key)
-
-
-class WikiModal(Modal, title="Wiki Route"):
-    def __init__(self, tree: WikiEntry) -> None:
-        super(WikiModal, self).__init__(timeout=None)
-        self.tree = tree
-        self.folder = TextInput(label="Wiki Folder", style=TextStyle.paragraph, required=True, default=tree.route)
-        self.add_item(self.folder)
-
-    async def on_submit(self, interaction: Interaction) -> None:
-        try:
-            resp: InteractionResponse = interaction.response
-            await resp.defer(ephemeral=True, thinking=True)
-            tree = self.tree.lookup(self.folder.value) or self.tree
-            view = WikiComplex(tree=tree, interaction=interaction)
-            async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
-                self.stop()
-        except Exception as e:
-            interaction.client.logger.exception("Detected exception", exc_info=e)
-
-
-class WikiComplex(Complex[WikiEntry]):
-    def __init__(
-        self,
-        *,
-        tree: WikiEntry,
-        target: Interaction,
-    ):
-        super(WikiComplex, self).__init__(
-            member=target.user,
-            values=tree.children.values(),
-            target=target,
-            timeout=None,
-            parser=wiki_parser,
-            emoji_parser=lambda x: "\N{BLUE BOOK}" if x.children else "\N{PAGE FACING UP}",
-            silent_mode=True,
-            keep_working=True,
-            sort_key=lambda x: x.path,
-            text_component=WikiModal(tree),
-        )
-        self.tree = tree
-        self.embed.title = "This page has no information yet"
-        self.embed.description = "Feel free to make suggestions to fill this page!"
-
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        tree = self.current_choice
-        view = WikiComplex(tree=tree, target=interaction)
-        async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
-            interaction.client.logger.info("%s is reading /wiki%s", tree.route)
-            await super(WikiComplex, self).select_choice(interaction, sct)

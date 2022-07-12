@@ -16,6 +16,7 @@
 from typing import Optional
 
 from discord import (
+    Color,
     Embed,
     Interaction,
     InteractionResponse,
@@ -27,7 +28,8 @@ from discord.ext import commands
 from discord.ui import Modal, TextInput
 from motor.motor_asyncio import AsyncIOMotorCollection
 
-from src.cogs.wiki.wiki import WikiComplex, WikiEntry, WikiNodeArg, WikiTreeArg
+from src.cogs.wiki.wiki import WikiEntry, WikiNodeArg, WikiTreeArg
+from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
@@ -45,8 +47,38 @@ class WikiPathModal(Modal, title="Wiki Path"):
         path = self.folder.value
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
         redirect_path = self.redirect.value or path
-        entry = WikiEntry(path=redirect_path, content=self.message.content, embeds=self.message.embeds)
+        content, embeds = self.message.content, self.message.embeds
+
+        if not self.message.author.bot:
+            embeds = []
+
+        embed = Embed(color=Color.blurple())
+        embed.set_image(url=WHITE_BAR)
+        if content and not embeds:
+            split = content.split("\n")
+            if len(split) < 2:
+                split = ["", content]
+            embed.title = split[0]
+            embed.description = "\n".join(split[1:])
+            embed.set_image(url=WHITE_BAR)
+            embeds = [embed]
+            content = ""
+        elif stickers := self.message.stickers:
+            embed.title = stickers[0].name
+            embed.set_image(url=stickers[0].url)
+
+        if attachments := [x for x in self.message.attachments if x.content_type.startswith("image/")]:
+            if len(embeds) == len(attachments) == 1:
+                embed.set_image(url=attachments[0].url)
+            else:
+                aux_embed = embed.copy()
+                aux_embed.title = ""
+                aux_embed.description = ""
+                embeds.extend(aux_embed.copy().set_image(url=x.url) for x in attachments)
+
+        entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
         await db.replace_one({"path": path}, entry.simplified, upsert=True)
+        interaction.client.logger.info("Wiki(%s) modified by %s", path, interaction.user.display_name)
         embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
         embed.set_image(url=WHITE_BAR)
         await resp.send_message(embed=embed, ephemeral=True)
@@ -70,9 +102,11 @@ class Wiki(commands.Cog):
 
     async def wiki_add(self, ctx: Interaction, msg: Message):
         resp: InteractionResponse = ctx.response
-        if ctx.user.id != 678374009045254198:
+        role = ctx.guild.get_role(996542547155497082)
+        if role and role in ctx.user.roles:
+            await resp.send_modal(WikiPathModal(msg))
+        else:
             return await resp.send_message("User hasn't been authorized for adding wiki entries", ephemeral=True)
-        await resp.send_modal(WikiPathModal(msg))
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -105,7 +139,10 @@ class Wiki(commands.Cog):
                 super(WikiModal, self).__init__(timeout=None)
                 self.tree = tree
                 self.folder = TextInput(
-                    label="Wiki Folder", style=TextStyle.paragraph, required=True, default=tree.route
+                    label="Wiki Folder",
+                    style=TextStyle.paragraph,
+                    required=True,
+                    default=tree.route,
                 )
                 self.add_item(self.folder)
 
