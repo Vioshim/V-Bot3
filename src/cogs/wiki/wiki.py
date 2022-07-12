@@ -190,10 +190,10 @@ class WikiEntry:
 
 class WikiTransformer(Transformer):
     @classmethod
-    async def transform(cls, ctx: Interaction, value: Optional[str]):
+    async def transform(cls, ctx: Interaction, value: str):
         cog = ctx.client.get_cog("Wiki")
         tree: WikiEntry = cog.tree
-        return tree.lookup(value or "")
+        return tree.lookup(value.removeprefix("/"))
 
 
 class WikiTreeTransformer(WikiTransformer):
@@ -203,12 +203,12 @@ class WikiTreeTransformer(WikiTransformer):
         tree: WikiEntry = cog.tree
         aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]
-        value = value.removeprefix(aux_tree.route)
+        value = value.removeprefix(aux_tree.route.removeprefix("/"))
         items.extend(x for x in aux_tree.children.values() if x.children)
         return [
-            Choice(name=name, value=x.route or "/")
+            Choice(name=name, value=x.route)
             for x in items
-            if (name := f"{x.route.removeprefix(aux_tree.route)}/") and value in name
+            if (name := f"{x.route.removeprefix('/')}/") and value in name
         ]
 
 
@@ -219,11 +219,12 @@ class WikiNodeTransformer(WikiTransformer):
         tree: WikiEntry = cog.tree
         aux_tree = tree.lookup(ctx.namespace.group or "")
         items: list[WikiEntry] = [aux_tree]
-        items.extend(x for x in aux_tree.children.values() if not x.children)
+        value = value.removeprefix(aux_tree.route.removeprefix("/"))
+        items.extend(aux_tree.children.values())
         return [
-            Choice(name=name, value=x.route or "/")
+            Choice(name=name, value=x.route)
             for x in items
-            if (name := f"{x.route.removeprefix(aux_tree.route)}/") and value in name
+            if (name := f"{x.route.removeprefix('/')}/") and value in name
         ]
 
 
