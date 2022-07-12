@@ -16,9 +16,16 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from discord import Embed, Interaction, TextStyle
+from discord import (
+    ButtonStyle,
+    Embed,
+    Interaction,
+    InteractionResponse,
+    PartialEmoji,
+    TextStyle,
+)
 from discord.app_commands import Choice, Transform, Transformer
-from discord.ui import Button, Modal, Select, TextInput, select
+from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
@@ -267,6 +274,7 @@ class WikiComplex(Complex[WikiEntry]):
             sort_key=lambda x: x.path,
             text_component=WikiModal(tree),
         )
+        self.tree = tree
         self.embed.title = "This page has no information yet"
         self.embed.description = "Feel free to make suggestions to fill this page!"
 
@@ -276,3 +284,15 @@ class WikiComplex(Complex[WikiEntry]):
         view = WikiComplex(tree=tree, target=interaction)
         async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
             await super(WikiComplex, self).select_choice(interaction, sct)
+
+    @button(
+        label="Write down the choice instead.",
+        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+        custom_id="writer",
+        style=ButtonStyle.blurple,
+        disabled=False,
+    )
+    async def message_handler(self, interaction: Interaction, _: Button):
+        response: InteractionResponse = interaction.response
+        component = WikiModal(self.tree)
+        await response.send_modal(component)
