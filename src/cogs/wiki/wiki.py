@@ -16,16 +16,9 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from discord import (
-    ButtonStyle,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    PartialEmoji,
-    TextStyle,
-)
+from discord import Embed, Interaction, InteractionResponse, TextStyle
 from discord.app_commands import Choice, Transform, Transformer
-from discord.ui import Button, Modal, Select, TextInput, button, select
+from discord.ui import Button, Modal, Select, TextInput, select
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
@@ -249,7 +242,9 @@ class WikiModal(Modal, title="Wiki Route"):
         self.add_item(self.folder)
 
     async def on_submit(self, interaction: Interaction) -> None:
-        tree = self.tree.lookup(self.folder.value)
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
+        tree = self.tree.lookup(self.folder.value) or self.tree
         view = WikiComplex(tree=tree, interaction=interaction)
         async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
             self.stop()
@@ -284,15 +279,3 @@ class WikiComplex(Complex[WikiEntry]):
         view = WikiComplex(tree=tree, target=interaction)
         async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
             await super(WikiComplex, self).select_choice(interaction, sct)
-
-    @button(
-        label="Write down the choice instead.",
-        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
-        custom_id="writer",
-        style=ButtonStyle.blurple,
-        disabled=False,
-    )
-    async def message_handler(self, interaction: Interaction, _: Button):
-        response: InteractionResponse = interaction.response
-        component = WikiModal(self.tree)
-        await response.send_modal(component)
