@@ -18,7 +18,7 @@ from typing import Any, Optional
 
 from discord import Embed, Interaction, TextStyle
 from discord.app_commands import Choice, Transform, Transformer
-from discord.ui import Button, Select, TextInput, select
+from discord.ui import Button, Modal, Select, TextInput, select
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
@@ -92,13 +92,15 @@ class WikiEntry:
     def lookup(self, foo: str, strict: bool = False) -> Optional[WikiEntry]:
         current = self
         for item in foo.split("/"):
-            if value := current.children.get(item):
+            if item == "..":
+                current = current.parent
+            elif current and (value := current.children.get(item)):
                 current = value
             elif strict:
                 return None
             else:
                 break
-        return current
+        return current or self
 
     def add_node_params(
         self,
@@ -232,6 +234,20 @@ def wiki_parser(item: WikiEntry):
     return (f"/{item.path}", key)
 
 
+class WikiModal(Modal, title="Wiki Route"):
+    def __init__(self, tree: WikiEntry) -> None:
+        super(WikiModal, self).__init__(timeout=None)
+        self.tree = tree
+        self.folder = TextInput(label="Wiki Folder", style=TextStyle.paragraph, required=True, default=tree.route)
+        self.add_item(self.folder)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        tree = self.tree.lookup(self.folder.value)
+        view = WikiComplex(tree=tree, interaction=interaction)
+        async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
+            self.stop()
+
+
 class WikiComplex(Complex[WikiEntry]):
     def __init__(
         self,
@@ -249,16 +265,14 @@ class WikiComplex(Complex[WikiEntry]):
             silent_mode=True,
             keep_working=True,
             sort_key=lambda x: x.path,
-            text_component=TextInput(label="Wiki Folder", style=TextStyle.paragraph, required=True),
+            text_component=WikiModal(tree),
         )
+        self.embed.title = "This page has no information yet"
+        self.embed.description = "Feel free to make suggestions to fill this page!"
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         tree = self.current_choice
         view = WikiComplex(tree=tree, target=interaction)
-        if not (tree.embeds or tree.content):
-            embed = view.embed
-            embed.title = "This page has no information yet"
-            embed.description = "Feel free to make suggestions to fill this page!"
         async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
             await super(WikiComplex, self).select_choice(interaction, sct)
