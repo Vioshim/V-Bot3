@@ -256,5 +256,9 @@ class WikiComplex(Complex[WikiEntry]):
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         tree = self.current_choice
         view = WikiComplex(tree=tree, target=interaction)
+        if not (tree.embeds or tree.content):
+            embed = view.embed
+            embed.title = "This page has no information yet"
+            embed.description = "Feel free to make suggestions to fill this page!"
         async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
             await super(WikiComplex, self).select_choice(interaction, sct)
