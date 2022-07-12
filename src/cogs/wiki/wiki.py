@@ -208,7 +208,7 @@ class WikiTreeTransformer(WikiTransformer):
         return [
             Choice(name=name, value=x.route)
             for x in items
-            if (name := f"{x.route}/".removeprefix('/')) and value in name
+            if (name := f"{x.route}/".removeprefix("/")) and value in name
         ]
 
 
@@ -225,7 +225,7 @@ class WikiNodeTransformer(WikiTransformer):
         return [
             Choice(name=name, value=x.route)
             for x in items
-            if (name := f"{x.route}/".removeprefix(aux_tree.route)) and value in name
+            if (name := x.route.removeprefix(aux_tree.route) or "/") and value in name
         ]
 
 
