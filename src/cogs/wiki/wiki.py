@@ -249,12 +249,7 @@ class WikiComplex(Complex[WikiEntry]):
             silent_mode=True,
             keep_working=True,
             sort_key=lambda x: x.path,
-            text_component=TextInput(
-                label="Wiki Folder",
-                style=TextStyle.paragraph,
-                placeholder=tree.children[0].path if tree.children else None,
-                required=True,
-            ),
+            text_component=TextInput(label="Wiki Folder", style=TextStyle.paragraph, required=True),
         )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")

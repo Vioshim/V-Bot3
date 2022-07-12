@@ -65,7 +65,7 @@ class Wiki(commands.Cog):
             self.bot.logger.info("%s is reading wiki's page: %s", ctx.user.display_name, page.path)
 
     @commands.command()
-    async def wiki_remove(self, ctx: commands.Context, path: str):
+    async def wiki_remove(self, ctx: commands.Context, *, path: str):
         item = await self.bot.mongo_db("Wiki").delete_one({"path": path})
         if item.deleted_count:
             await ctx.reply("Path has been deleted!", delete_after=3)
