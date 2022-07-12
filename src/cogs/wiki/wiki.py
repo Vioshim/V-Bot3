@@ -246,8 +246,11 @@ class WikiModal(Modal, title="Wiki Route"):
         await resp.defer(ephemeral=True, thinking=True)
         tree = self.tree.lookup(self.folder.value) or self.tree
         view = WikiComplex(tree=tree, interaction=interaction)
-        async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
-            self.stop()
+        embeds, content = tree.content, tree.embeds
+        if not (content or embeds):
+            embeds = [view.embed]
+        await interaction.followup.send(embeds=embeds, content=content, view=view)
+        self.stop()
 
 
 class WikiComplex(Complex[WikiEntry]):
