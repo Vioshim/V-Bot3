@@ -241,7 +241,7 @@ class WikiComplex(Complex[WikiEntry]):
     ):
         super(WikiComplex, self).__init__(
             member=target.user,
-            values=tree.children,
+            values=tree.children.values(),
             target=target,
             timeout=None,
             parser=wiki_parser,

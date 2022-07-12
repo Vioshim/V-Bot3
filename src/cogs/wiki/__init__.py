@@ -47,7 +47,8 @@ class Wiki(commands.Cog):
         await resp.send_message(f"{path!r} added/modified.!", ephemeral=True)
 
     @app_commands.command()
-    async def wiki(self, ctx: Interaction, group: WikiTreeArg, word: Optional[WikiNodeArg]):
+    @app_commands.guilds(719343092963999804)
+    async def wiki(self, ctx: Interaction, group: Optional[WikiTreeArg], word: Optional[WikiNodeArg]):
         """Built-in server Wiki
 
         Parameters
@@ -60,6 +61,11 @@ class Wiki(commands.Cog):
             Parameter
         """
         page: WikiEntry = group or word
+
+        if not page:
+            entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
+            page = WikiEntry.from_list(entries)
+
         view = WikiComplex(tree=page, target=ctx)
         async with view.send(ephemeral=True, embeds=page.embeds, content=page.content):
             self.bot.logger.info("%s is reading wiki's page: %s", ctx.user.display_name, page.path)
