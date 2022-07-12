@@ -217,7 +217,8 @@ class WikiNodeTransformer(WikiTransformer):
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         cog = ctx.client.get_cog("Wiki")
         tree: WikiEntry = cog.tree
-        aux_tree = tree.lookup(ctx.namespace.group or "")
+        value = (ctx.namespace.group or "").removeprefix("/")
+        aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]
         value = value.removeprefix(aux_tree.route.removeprefix("/"))
         items.extend(aux_tree.children.values())
