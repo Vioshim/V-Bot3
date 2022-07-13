@@ -14,7 +14,6 @@
 
 from contextlib import suppress
 from logging import getLogger, setLoggerClass
-from typing import Optional, Union
 
 from discord import (
     AllowedMentions,
@@ -37,6 +36,7 @@ from discord import (
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import MISSING
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
@@ -61,11 +61,10 @@ class PingModal(Modal):
         required=True,
     )
 
-    def __init__(self, oc: Character, reference: Interaction, thread_id: Optional[int] = None) -> None:
+    def __init__(self, oc: Character, reference: Interaction) -> None:
         super(PingModal, self).__init__(title=f"Pinging {oc.name}", timeout=None)
         self.oc = oc
         self.reference = reference
-        self.thread_id = thread_id
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
@@ -75,8 +74,25 @@ class PingModal(Modal):
         if isinstance(origin, Thread):
             origin = origin.parent
         await resp.defer(ephemeral=True, thinking=True)
-        if origin.id == 958122815171756042 and self.thread_id:
-            thread = Object(id=self.thread_id)
+
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
+        entry = await db.find_one(
+            {
+                "$and": [
+                    {"member": receiver.id},
+                    {
+                        "$or": [
+                            {"id": origin.id},
+                            {"message": origin.id},
+                            {"id": self.reference.id},
+                            {"message": self.reference.id},
+                        ]
+                    },
+                ],
+            }
+        )
+        if entry:
+            thread = Object(id=entry["id"])
         else:
             thread = MISSING
             channel: TextChannel = interaction.guild.get_channel(740568087820238919)
@@ -159,7 +175,7 @@ class PingView(View):
         member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         if ctx.user != member:
-            modal = PingModal(oc=self.oc, reference=self.reference, thread_id=self.thread_id)
+            modal = PingModal(oc=self.oc, reference=self.reference)
             await resp.send_modal(modal)
         else:
             await resp.send_message("You can't ping yourself.", ephemeral=True)
@@ -191,7 +207,7 @@ class CharactersView(Complex[Character]):
     def __init__(
         self,
         member: Member,
-        target: Union[Interaction, Webhook, TextChannel],
+        target: Interaction | Webhook | TextChannel,
         ocs: set[Character],
         keep_working: bool = False,
     ):

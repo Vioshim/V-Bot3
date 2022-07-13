@@ -60,25 +60,25 @@ class Roles(Cog):
 
     async def load_rp_searches(self):
         self.bot.logger.info("Loading existing RP Searches")
-        async with self.bot.database() as db:
-            async for item in db.cursor("SELECT * FROM RP_SEARCH;"):
-                msg_id, member_id, role_id, aux, ocs = (
-                    item["id"],
-                    item["member"],
-                    item["role"],
-                    item["message"],
-                    item["ocs"],
-                )
-                created_at = snowflake_time(msg_id)
-                self.role_cool_down.setdefault(role_id, created_at)
-                self.cool_down.setdefault(member_id, created_at)
-                if self.role_cool_down[role_id] < created_at:
-                    self.role_cool_down[role_id] = created_at
-                if self.cool_down[member_id] < created_at:
-                    self.cool_down[member_id] = created_at
-                view = RPSearchManage(member_id=member_id, ocs=ocs)
-                self.bot.add_view(view=view, message_id=msg_id)
-                self.bot.add_view(view=view, message_id=aux)
+        db = self.bot.mongo_db("RP Search")
+        async for item in db.find({}):
+            msg_id, member_id, role_id, aux, ocs = (
+                item["id"],
+                item["member"],
+                item["role"],
+                item["message"],
+                item["ocs"],
+            )
+            created_at = snowflake_time(msg_id)
+            self.role_cool_down.setdefault(role_id, created_at)
+            self.cool_down.setdefault(member_id, created_at)
+            if self.role_cool_down[role_id] < created_at:
+                self.role_cool_down[role_id] = created_at
+            if self.cool_down[member_id] < created_at:
+                self.cool_down[member_id] = created_at
+            view = RPSearchManage(member_id=member_id, ocs=ocs)
+            self.bot.add_view(view=view, message_id=msg_id)
+            self.bot.add_view(view=view, message_id=aux)
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @Cog.listener()

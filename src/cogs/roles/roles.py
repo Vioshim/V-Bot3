@@ -36,6 +36,7 @@ from discord import (
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import get, utcnow
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
@@ -426,20 +427,19 @@ class RPModal(Modal):
         ocs = [oc.id for oc in cog0.ocs.values() if oc.author == self.user.id]
         if set(ocs) == {x.id if isinstance(x, Character) else x for x in self.ocs}:
             ocs = []
-        async with interaction.client.database() as db:
-            await db.execute(
-                """--sql
-                INSERT INTO RP_SEARCH(ID, MEMBER, ROLE, SERVER, MESSAGE, OCS)
-                VALUES ($1, $2, $3, $4, $5, $6);
-                """,
-                msg1.id,
-                self.user.id,
-                reference.id,
-                self.user.guild.id,
-                msg2.id,
-                ocs,
-            )
-            await interaction.followup.send(content="Ping has been done successfully.", ephemeral=True)
+
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
+        await db.insert_one(
+            {
+                "id": msg1.id,
+                "member": self.user.id,
+                "role": reference.id,
+                "server": self.user.guild.id,
+                "message": msg2.id,
+                "ocs": ocs,
+            }
+        )
+        await interaction.followup.send(content="Ping has been done successfully.", ephemeral=True)
         self.stop()
 
 
@@ -499,26 +499,17 @@ class RPRolesView(View):
         guild: Guild = interaction.guild
         role: Role = interaction.guild.get_role(int(sct.values[0]))
         cog = interaction.client.get_cog("Submission")
-        async with interaction.client.database() as db:
-            entries = await db.fetch(
-                """--sql
-                SELECT ID, MEMBER
-                FROM RP_SEARCH
-                WHERE ROLE = $1 AND ID > $2
-                ORDER BY ID DESC
-                LIMIT 25;
-                """,
-                role.id,
-                interaction.id - 181193932800000,
-            )
-            entries: dict[Member, int] = {m: x["id"] for x in entries if (m := guild.get_member(x["member"]))}
-            member: Member = cog.supporting.get(interaction.user, interaction.user)
-            view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
-            async with view.send(ephemeral=True, single=True) as choice:
-                if thread_id := entries.get(choice):
-                    if not (thread := guild.get_channel_or_thread(thread_id)):
-                        thread = await guild.fetch_channel(thread)
-                    if thread.archived:
-                        await thread.edit(archived=False)
-                    await thread.add_user(member)
-                    await thread.add_user(choice)
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
+        key = {"id": {"$gte": interaction.id - 181193932800000}, "role": role.id}
+        data: list[dict[str, int]] = await db.find(key).to_list(length=25)
+        entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
+        member: Member = cog.supporting.get(interaction.user, interaction.user)
+        view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
+        async with view.send(ephemeral=True, single=True) as choice:
+            if thread_id := entries.get(choice):
+                if not (thread := guild.get_channel_or_thread(thread_id)):
+                    thread = await guild.fetch_channel(thread)
+                if thread.archived:
+                    await thread.edit(archived=False)
+                await thread.add_user(member)
+                await thread.add_user(choice)
