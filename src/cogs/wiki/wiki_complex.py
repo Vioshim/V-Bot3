@@ -71,7 +71,6 @@ class WikiComplex(Complex[WikiEntry]):
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         view = WikiComplex(tree=tree, target=interaction)
-        self.choices.add(tree)
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
@@ -89,7 +88,6 @@ class WikiComplex(Complex[WikiEntry]):
         emoji=PartialEmoji(name="IconReply", id=816772114639487057),
         custom_id="parent",
     )
-    async def parent_folder(self, interaction: Interaction, _: Select) -> None:
+    async def parent_folder(self, interaction: Interaction, sct: Select) -> None:
         await self.selection(interaction, self.tree.parent)
-        await self.edit(interaction=interaction)
-        self.stop()
+        await self.finish.callback(interaction, sct)
