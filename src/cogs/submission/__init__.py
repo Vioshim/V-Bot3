@@ -607,7 +607,7 @@ class Submission(commands.Cog):
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
         thread: Thread = await self.bot.fetch_channel(961345742222536744)
-        webhook = await self.bot.webhook(thread)
+        webhook = await self.bot.webhook(852180971985043466)
         view = SubmissionView(ocs=self.ocs, supporting=self.supporting)
         async for msg in thread.history(limit=None, oldest_first=True):
             if (embeds := msg.embeds) and msg.webhook_id:
