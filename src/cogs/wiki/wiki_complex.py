@@ -73,7 +73,7 @@ class WikiComplex(Complex[WikiEntry]):
         tree = self.current_choice
         view = WikiComplex(tree=tree, target=interaction)
         interaction.client.logger.info("%s is reading /%s", interaction.user.display_name, tree.route)
-        content, embeds = tree.embeds, tree.content
+        content, embeds = tree.content, tree.embeds
         if not (content or embeds):
             embeds = [view.embed]
         await interaction.followup.send(ephemeral=True, embeds=embeds, content=content, view=view)

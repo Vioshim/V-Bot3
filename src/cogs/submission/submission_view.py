@@ -165,7 +165,7 @@ class SubmissionView(View):
         super(SubmissionView, self).__init__(timeout=None)
         self.ocs = ocs
         self.supporting = supporting
-        self.templates = {}
+        self.templates: dict[str, Message] = {}
 
     @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
     async def show_template(self, ctx: Interaction, sct: Select) -> None:

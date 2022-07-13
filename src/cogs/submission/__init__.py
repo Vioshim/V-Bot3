@@ -32,6 +32,7 @@ from discord import (
     Object,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
+    SelectOption,
     Status,
     TextStyle,
     Thread,
@@ -605,8 +606,18 @@ class Submission(commands.Cog):
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
+        thread: Thread = await self.bot.fetch_channel(961345742222536744)
+        webhook = await self.bot.webhook(thread)
         view = SubmissionView(ocs=self.ocs, supporting=self.supporting)
-        self.bot.add_view(view=view, message_id=961345742222536744)
+        async for msg in thread.history(limit=None, oldest_first=True):
+            if (embeds := msg.embeds) and msg.webhook_id:
+                view.show_template.add_option(
+                    label=msg,
+                    value=str(msg.id),
+                    description=embeds[0].footer.text[:100],
+                )
+                view.templates[str(msg.id)] = msg
+        await webhook.edit_message(961345742222536744, view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
     @commands.Cog.listener()
