@@ -92,7 +92,7 @@ class PingModal(Modal):
             origin = origin.parent
         await resp.defer(ephemeral=True, thinking=True)
 
-        if "0" in self.ping_mode.values:
+        if not self.ping_mode.values or "0" in self.ping_mode.values:
             thread = MISSING
             channel: TextChannel = interaction.guild.get_channel(740568087820238919)
         else:
@@ -169,16 +169,13 @@ class PingView(View):
             return False
         return True
 
-    @button(
-        label="Ping to RP with the OC",
-        style=ButtonStyle.blurple,
-        emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
-    )
-    async def ping(self, ctx: Interaction, _: Button) -> None:
+    async def ping_method(self, ctx: Interaction, mobile: bool = False):
         member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         if ctx.user != member:
             modal = PingModal(oc=self.oc, reference=self.reference)
+            if mobile:
+                modal.remove_item(modal.ping_mode)
             db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
             items: dict[Role, str] = {
                 role.name: str(item["id"])
@@ -195,7 +192,18 @@ class PingView(View):
             await resp.send_modal(modal)
         else:
             await resp.send_message("You can't ping yourself.", ephemeral=True)
-        self.stop()
+
+    @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263))
+    async def ping1(self, ctx: Interaction, _: Button) -> None:
+        await self.ping_method(ctx, mobile=True)
+
+    @button(
+        label="Ping to RP with the OC",
+        style=ButtonStyle.blurple,
+        emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
+    )
+    async def ping2(self, ctx: Interaction, _: Button) -> None:
+        await self.ping_method(ctx)
 
     @button(
         label="Delete Character",
