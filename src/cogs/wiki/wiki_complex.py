@@ -88,6 +88,6 @@ class WikiComplex(Complex[WikiEntry]):
         emoji=PartialEmoji(name="IconReply", id=816772114639487057),
         custom_id="parent",
     )
-    async def parent_folder(self, interaction: Interaction, sct: Select) -> None:
+    async def parent_folder(self, interaction: Interaction, _: Select) -> None:
         await self.selection(interaction, self.tree.parent)
-        await self.finish.callback(interaction, sct)
+        await self.finish.callback(interaction)
