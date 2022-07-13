@@ -108,10 +108,15 @@ class Wiki(commands.Cog):
     async def wiki_add(self, ctx: Interaction, msg: Message):
         resp: InteractionResponse = ctx.response
         role = ctx.guild.get_role(996542547155497082)
-        if role and role in ctx.user.roles:
-            await resp.send_modal(WikiPathModal(msg))
-        else:
+        if not (role and role in ctx.user.roles):
             return await resp.send_message("User hasn't been authorized for adding wiki entries", ephemeral=True)
+
+        try:
+            modal = WikiPathModal(msg)
+            await resp.send_modal(modal)
+            await modal.wait()
+        except Exception as e:
+            self.bot.logger.exception("Exception while sending modal.", exc_info=e)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
