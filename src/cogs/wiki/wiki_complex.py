@@ -42,9 +42,17 @@ class WikiModal(Modal, title="Wiki Route"):
             resp: InteractionResponse = interaction.response
             await resp.defer(ephemeral=True, thinking=True)
             tree = self.tree.lookup(self.folder.value) or self.tree
-            view = WikiComplex(tree=tree, interaction=interaction)
-            async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
-                self.stop()
+            view = WikiComplex(tree=tree, target=interaction)
+            content, embeds = tree.content, tree.embeds
+            if not (content or embeds):
+                embeds = [view.embed]
+            view.message = await interaction.followup.send(
+                ephemeral=True,
+                embeds=embeds,
+                content=content,
+                wait=True,
+            )
+            self.stop()
         except Exception as e:
             interaction.client.logger.exception("Detected exception", exc_info=e)
 
