@@ -53,14 +53,13 @@ class WikiComplex(Complex[WikiEntry]):
     def __init__(self, *, tree: WikiEntry, target: Interaction):
         super(WikiComplex, self).__init__(
             member=target.user,
-            values=tree.children.values(),
+            values=list(tree.children.values()),
             target=target,
             timeout=None,
             parser=wiki_parser,
             emoji_parser=lambda x: "\N{BLUE BOOK}" if x.children else "\N{PAGE FACING UP}",
             silent_mode=True,
             keep_working=True,
-            sort_key=lambda x: x.path,
             text_component=WikiModal(tree),
         )
         self.tree = tree
@@ -69,8 +68,13 @@ class WikiComplex(Complex[WikiEntry]):
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
         tree = self.current_choice
         view = WikiComplex(tree=tree, target=interaction)
         interaction.client.logger.info("%s is reading /%s", interaction.user.display_name, tree.route)
-        async with view.send(ephemeral=True, embeds=tree.embeds, content=tree.content):
-            await super(WikiComplex, self).select_choice(interaction, sct)
+        content, embeds = tree.embeds, tree.content
+        if not (content or embeds):
+            embeds = [view.embed]
+        await interaction.followup.send(ephemeral=True, embeds=embeds, content=content, view=view)
+        await super(WikiComplex, self).select_choice(interaction, sct)
