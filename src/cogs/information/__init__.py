@@ -46,9 +46,12 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import find, format_dt, get, utcnow
+from motor.motor_asyncio import AsyncIOMotorCollection
 from yaml import dump
 
 from src.cogs.information.area_selection import RegionView
+from src.cogs.wiki.wiki import WikiEntry
+from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
@@ -257,15 +260,33 @@ class InformationView(View):
     def __init__(self):
         super(InformationView, self).__init__(timeout=None)
 
-    @button(label="See Map", style=ButtonStyle.blurple, emoji="\N{WORLD MAP}")
+    @button(label="See Map", emoji="\N{WORLD MAP}")
     async def see_map(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_message(MAP_URL, ephemeral=True, view=RegionView(timeout=None))
 
-    @button(label="Make a Ticket", style=ButtonStyle.blurple, emoji=STICKER_EMOJI)
+    @button(label="Make a Ticket", emoji=STICKER_EMOJI)
     async def create_ticket(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_modal(TicketModal(timeout=None))
+
+    @button(label="Read /Wiki", emoji=SETTING_EMOJI)
+    async def read_wiki(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True, thinking=True)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Wiki")
+        entries = await db.find({}).to_list(length=None)
+        tree = WikiEntry.from_list(entries)
+        view = WikiComplex(tree=tree, target=ctx)
+        content, embeds = tree.content, tree.embeds
+        if not (content or embeds):
+            embeds = [view.embed]
+        view.message = await ctx.followup.send(
+            ephemeral=True,
+            content=content,
+            embeds=embeds,
+            wait=True,
+        )
 
 
 class Information(commands.Cog):
