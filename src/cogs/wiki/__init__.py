@@ -45,6 +45,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
         path = self.folder.value
+        await resp.defer(ephemeral=True, thinking=True)
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
         redirect_path = self.redirect.value or path
         content, embeds = self.message.content, self.message.embeds
@@ -81,7 +82,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
         interaction.client.logger.info("Wiki(%s) modified by %s", path, interaction.user.display_name)
         embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
         embed.set_image(url=WHITE_BAR)
-        await resp.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
         self.stop()
 
 
