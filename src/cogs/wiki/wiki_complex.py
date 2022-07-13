@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from discord import Interaction, InteractionResponse, PartialEmoji, TextStyle
 from discord.ui import Modal, Select, TextInput, button, select
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.wiki.wiki import WikiEntry
 from src.pagination.complex import Complex
@@ -38,23 +39,23 @@ class WikiModal(Modal, title="Wiki Route"):
         self.add_item(self.folder)
 
     async def on_submit(self, interaction: Interaction) -> None:
-        try:
-            resp: InteractionResponse = interaction.response
-            await resp.defer(ephemeral=True, thinking=True)
-            tree = self.tree.lookup(self.folder.value) or self.tree
-            view = WikiComplex(tree=tree, target=interaction)
-            content, embeds = tree.content, tree.embeds
-            if not (content or embeds):
-                embeds = [view.embed]
-            view.message = await interaction.followup.send(
-                ephemeral=True,
-                embeds=embeds,
-                content=content,
-                wait=True,
-            )
-            self.stop()
-        except Exception as e:
-            interaction.client.logger.exception("Detected exception", exc_info=e)
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
+        entries = await db.find({}).to_list(length=None)
+        tree = WikiEntry.from_list(entries)
+        view = WikiComplex(tree=tree, target=interaction)
+        content, embeds = tree.content, tree.embeds
+        if not (content or embeds):
+            embeds = [view.embed]
+        view.message = await interaction.followup.send(
+            ephemeral=True,
+            embeds=embeds,
+            content=content,
+            wait=True,
+            view=view,
+        )
+        self.stop()
 
 
 class WikiComplex(Complex[WikiEntry]):
