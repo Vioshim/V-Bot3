@@ -14,8 +14,8 @@
 
 from __future__ import annotations
 
-from discord import Interaction, InteractionResponse, TextStyle
-from discord.ui import Modal, Select, TextInput, select
+from discord import Interaction, InteractionResponse, PartialEmoji, TextStyle
+from discord.ui import Modal, Select, TextInput, button, select
 
 from src.cogs.wiki.wiki import WikiEntry
 from src.pagination.complex import Complex
@@ -59,22 +59,33 @@ class WikiComplex(Complex[WikiEntry]):
             parser=wiki_parser,
             emoji_parser=lambda x: "\N{BLUE BOOK}" if x.children else "\N{PAGE FACING UP}",
             silent_mode=True,
-            keep_working=True,
             text_component=WikiModal(tree),
         )
         self.tree = tree
         self.embed.title = "This page has no information yet"
         self.embed.description = "Feel free to make suggestions to fill this page!"
+        if not tree.parent:
+            self.remove_item(self.parent_folder)
 
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def selection(self, interaction: Interaction, tree: WikiEntry):
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
-        tree = self.current_choice
         view = WikiComplex(tree=tree, target=interaction)
-        interaction.client.logger.info("%s is reading /%s", interaction.user.display_name, tree.route)
+        interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
             embeds = [view.embed]
         await interaction.followup.send(ephemeral=True, embeds=embeds, content=content, view=view)
+
+    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        await self.selection(interaction, self.current_choice)
         await super(WikiComplex, self).select_choice(interaction, sct)
+
+    @button(
+        label="Parent Folder",
+        emoji=PartialEmoji(name="IconReply", id=816772114639487057),
+        custom_id="parent",
+    )
+    async def parent_folder(self, interaction: Interaction, _: Select) -> None:
+        await self.selection(interaction, self.tree.parent)
