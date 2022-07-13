@@ -118,7 +118,7 @@ class WikiEntry:
             node = WikiEntry(**node)
 
         aux = self
-        path = node.path
+        path = node.path.removeprefix("/")
 
         route = [x for x in node.path.split("/") if x]
 
