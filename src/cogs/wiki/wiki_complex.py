@@ -75,7 +75,13 @@ class WikiComplex(Complex[WikiEntry]):
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
             embeds = [view.embed]
-        await interaction.followup.send(ephemeral=True, embeds=embeds, content=content, view=view)
+        view.message = await interaction.followup.send(
+            ephemeral=True,
+            embeds=embeds,
+            content=content,
+            view=view,
+            wait=True,
+        )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
