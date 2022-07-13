@@ -130,8 +130,9 @@ class TemplateView(View):
     def __init__(self, message: Message):
         super(TemplateView, self).__init__(timeout=None)
         self.message = message
-        self.info = message.embeds[0].description
-        self.urls = {x.label: x.url for x in View.from_message(message).children if isinstance(x, Button)}
+        embed = message.embeds[0]
+        self.info = embed.description
+        self.urls = {x.name: x.value[:-1].removeprefix("[Google Docs URL](") for x in embed.fields}
 
     @button(label="Form", row=0, style=ButtonStyle.blurple)
     async def mode1(self, interaction: Interaction, _: Button):

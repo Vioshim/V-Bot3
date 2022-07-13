@@ -30,6 +30,7 @@ from discord import (
     Message,
     NotFound,
     Object,
+    PartialEmoji,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     SelectOption,
@@ -615,7 +616,9 @@ class Submission(commands.Cog):
                     label=embeds[0].title,
                     value=str(msg.id),
                     description=embeds[0].footer.text[:100],
+                    emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
                 )
+                msg = await webhook.edit_message(msg.id, thread=thread, view=None)
                 view.templates[str(msg.id)] = msg
 
         await webhook.edit_message(961345742222536744, view=view)
