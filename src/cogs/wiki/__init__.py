@@ -74,11 +74,6 @@ class WikiPathModal(Modal, title="Wiki Path"):
 
             entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
             await db.replace_one({"path": path}, entry.simplified, upsert=True)
-            interaction.client.logger.info("Wiki(%s) modified by %s", path, interaction.user.display_name)
-            embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
-            embed.set_image(url=WHITE_BAR)
-            await interaction.followup.send(embed=embed, ephemeral=True)
-            self.stop()
         except Exception as e:
             interaction.client.logger.exception(
                 "Wiki(%s) had exception: %s",
@@ -86,6 +81,13 @@ class WikiPathModal(Modal, title="Wiki Path"):
                 interaction.user.display_name,
                 exc_info=e,
             )
+        else:
+            interaction.client.logger.info("Wiki(%s) modified by %s", path, interaction.user.display_name)
+            embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
+            embed.set_image(url=WHITE_BAR)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+        finally:
+            self.stop()
 
 
 class Wiki(commands.Cog):
