@@ -44,41 +44,48 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.add_item(self.redirect)
 
     async def on_submit(self, interaction: Interaction) -> None:
-        resp: InteractionResponse = interaction.response
-        path = self.folder.value
-        await resp.defer(ephemeral=True, thinking=True)
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
-        redirect_path = self.redirect.value or path
-        content, embeds = self.message.content, self.message.embeds
+        try:
+            resp: InteractionResponse = interaction.response
+            path = self.folder.value
+            await resp.defer(ephemeral=True, thinking=True)
+            db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
+            redirect_path = self.redirect.value or path
+            content, embeds = self.message.content, self.message.embeds
 
-        if not self.message.author.bot:
-            embed = Embed(color=Color.blurple())
-            embed.set_image(url=WHITE_BAR)
-            split = content.split("\n")
-            if len(split) < 2:
-                split = ["", content]
-            embed.title = split[0]
-            embed.description = "\n".join(split[1:])
-            embed.set_image(url=WHITE_BAR)
-            embeds = [embed]
-            content = ""
-
-            if attachments := [x for x in self.message.attachments if x.content_type.startswith("image/")]:
+            if not self.message.author.bot:
+                embed = Embed(color=Color.blurple())
+                embed.set_image(url=WHITE_BAR)
+                split = content.split("\n")
+                if len(split) < 2:
+                    split = ["", content]
+                embed.title = split[0]
+                embed.description = "\n".join(split[1:])
+                embed.set_image(url=WHITE_BAR)
+                embeds = [embed]
+                content = ""
+                attachments = [x for x in self.message.attachments if x.content_type.startswith("image/")]
                 if len(embeds) == len(attachments) == 1:
                     embed.set_image(url=attachments[0].url)
-                else:
+                elif attachments:
                     aux_embed = embed.copy()
                     aux_embed.title = ""
                     aux_embed.description = ""
                     embeds.extend(aux_embed.copy().set_image(url=x.url) for x in attachments)
 
-        entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
-        await db.replace_one({"path": path}, entry.simplified, upsert=True)
-        interaction.client.logger.info("Wiki(%s) modified by %s", path, interaction.user.display_name)
-        embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
-        embed.set_image(url=WHITE_BAR)
-        await interaction.followup.send(embed=embed, ephemeral=True)
-        self.stop()
+            entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
+            await db.replace_one({"path": path}, entry.simplified, upsert=True)
+            interaction.client.logger.info("Wiki(%s) modified by %s", path, interaction.user.display_name)
+            embed = Embed(title=redirect_path, description="Modified successfully!", color=interaction.user.color)
+            embed.set_image(url=WHITE_BAR)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+            self.stop()
+        except Exception as e:
+            interaction.client.logger.exception(
+                "Wiki(%s) had exception: %s",
+                path,
+                interaction.user.display_name,
+                exc_info=e,
+            )
 
 
 class Wiki(commands.Cog):
