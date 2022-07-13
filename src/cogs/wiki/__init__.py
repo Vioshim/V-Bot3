@@ -44,12 +44,12 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.add_item(self.redirect)
 
     async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        path = self.folder.value
         try:
-            resp: InteractionResponse = interaction.response
-            path = self.folder.value
             await resp.defer(ephemeral=True, thinking=True)
             db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
-            redirect_path = self.redirect.value or path
+            redirect_path = (self.redirect.value or path).removesuffix("/")
             content, embeds = self.message.content, self.message.embeds
 
             if not self.message.author.bot:
@@ -73,7 +73,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
                     embeds.extend(aux_embed.copy().set_image(url=x.url) for x in attachments)
 
             entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
-            await db.replace_one({"path": path}, entry.simplified, upsert=True)
+            await db.replace_one({"path": path.removesuffix("/")}, entry.simplified, upsert=True)
         except Exception as e:
             interaction.client.logger.exception(
                 "Wiki(%s) had exception: %s",
