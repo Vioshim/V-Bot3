@@ -95,10 +95,7 @@ class WikiComplex(Complex[WikiEntry]):
         custom_id="parent",
     )
     async def parent_folder(self, interaction: Interaction, _: Select) -> None:
+        self.choices.add(self.tree.parent)
         await self.selection(interaction, self.tree.parent)
-        resp: InteractionResponse = interaction.response
-        if interaction.message.flags.ephemeral:
-            await resp.edit_message(view=None)
-        else:
-            await interaction.message.delete(delay=0)
+        await self.edit(interaction, page=self.pos)
         self.stop()
