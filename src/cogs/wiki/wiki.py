@@ -121,12 +121,15 @@ class WikiEntry:
         path = node.path.removeprefix("/")
 
         route = [x for x in node.path.split("/") if x]
+        ref_route = dict(enumerate(route))
 
-        for item in route:
+        for idx, item in enumerate(route):
             if item in aux.children:
+                ref_route.pop(idx, None)
                 aux = aux.children[item]
                 path = path.removeprefix(item).removeprefix("/")
 
+        route = list(ref_route.values())
         if elements := [x for x in path.removeprefix(aux.path).split("/") if x]:
             for index in range(len(elements)):
                 if elements[: index + 1] == route:
