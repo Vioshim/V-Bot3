@@ -285,6 +285,7 @@ class InformationView(View):
             ephemeral=True,
             content=content,
             embeds=embeds,
+            view=view,
             wait=True,
         )
 
