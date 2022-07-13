@@ -28,6 +28,8 @@ from discord import (
     Member,
     Object,
     PartialEmoji,
+    Role,
+    SelectOption,
     TextChannel,
     TextStyle,
     Thread,
@@ -51,18 +53,33 @@ logger = getLogger(__name__)
 
 __all__ = ("CharactersView", "PingView")
 
+PING_EMOJI = PartialEmoji(name="IconInsights", id=751160378800472186)
+
 
 class PingModal(Modal):
-    message = TextInput(
-        label="Message",
-        style=TextStyle.paragraph,
-        placeholder="Explain how you'd like to RP with the OC.",
-        default="Hello\n\n I'm interested on RPing with your OC.",
-        required=True,
-    )
-
     def __init__(self, oc: Character, reference: Interaction) -> None:
-        super(PingModal, self).__init__(title=f"Pinging {oc.name}", timeout=None)
+        super(PingModal, self).__init__(title=f"Pinging {oc.name}"[:45], timeout=None)
+        self.message = TextInput(
+            label="Message",
+            style=TextStyle.paragraph,
+            placeholder="Explain how you'd like to RP with the OC.",
+            default=f"Hello\n\n I'm interested on RPing with your {oc.species.name}.",
+            required=True,
+        )
+        self.add_item(self.message)
+        self.ping_mode = Select(
+            placeholder="Thread pinging?",
+            options=[
+                SelectOption(
+                    label="Normal Ping",
+                    value="0",
+                    description="To ping at #rp-pings",
+                    emoji=PING_EMOJI,
+                    default=True,
+                ),
+            ],
+        )
+        self.add_item(self.ping_mode)
         self.oc = oc
         self.reference = reference
 
@@ -75,27 +92,13 @@ class PingModal(Modal):
             origin = origin.parent
         await resp.defer(ephemeral=True, thinking=True)
 
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
-        entry = await db.find_one(
-            {
-                "$and": [
-                    {"member": receiver.id},
-                    {
-                        "$or": [
-                            {"id": origin.id},
-                            {"message": origin.id},
-                            {"id": self.reference.id},
-                            {"message": self.reference.id},
-                        ]
-                    },
-                ],
-            }
-        )
-        if entry:
-            thread = Object(id=entry["id"])
-        else:
+        if "0" in self.ping_mode.values:
             thread = MISSING
             channel: TextChannel = interaction.guild.get_channel(740568087820238919)
+        else:
+            thread = Object(id=int(self.ping_mode.values[0]))
+            channel: TextChannel = interaction.guild.get_channel(958122815171756042)
+
         embed = Embed(title=self.oc.name, description=self.message.value, color=user.color)
         embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
         embed.set_footer(text=repr(self.oc))
@@ -176,6 +179,19 @@ class PingView(View):
         resp: InteractionResponse = ctx.response
         if ctx.user != member:
             modal = PingModal(oc=self.oc, reference=self.reference)
+            db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+            items: dict[Role, str] = {
+                role.name: str(item["id"])
+                async for item in db.find({"member": self.oc.author})
+                if (role := ctx.guild.get_role(item["role"]))
+            }
+            for k, v in items.items():
+                modal.ping_mode.add_option(
+                    label=k,
+                    value=v,
+                    description=f"Pinging in {k} thread"[:100],
+                    emoji=PING_EMOJI,
+                )
             await resp.send_modal(modal)
         else:
             await resp.send_message("You can't ping yourself.", ephemeral=True)
