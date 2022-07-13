@@ -41,6 +41,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.folder = TextInput(label="Path", style=TextStyle.paragraph, required=True, default="/")
         self.redirect = TextInput(label="Change", style=TextStyle.paragraph, required=False)
         self.add_item(self.folder)
+        self.add_item(self.redirect)
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
@@ -51,11 +52,8 @@ class WikiPathModal(Modal, title="Wiki Path"):
         content, embeds = self.message.content, self.message.embeds
 
         if not self.message.author.bot:
-            embeds = []
-
-        embed = Embed(color=Color.blurple())
-        embed.set_image(url=WHITE_BAR)
-        if content and not embeds:
+            embed = Embed(color=Color.blurple())
+            embed.set_image(url=WHITE_BAR)
             split = content.split("\n")
             if len(split) < 2:
                 split = ["", content]
@@ -64,18 +62,15 @@ class WikiPathModal(Modal, title="Wiki Path"):
             embed.set_image(url=WHITE_BAR)
             embeds = [embed]
             content = ""
-        elif stickers := self.message.stickers:
-            embed.title = stickers[0].name
-            embed.set_image(url=stickers[0].url)
 
-        if attachments := [x for x in self.message.attachments if x.content_type.startswith("image/")]:
-            if len(embeds) == len(attachments) == 1:
-                embed.set_image(url=attachments[0].url)
-            else:
-                aux_embed = embed.copy()
-                aux_embed.title = ""
-                aux_embed.description = ""
-                embeds.extend(aux_embed.copy().set_image(url=x.url) for x in attachments)
+            if attachments := [x for x in self.message.attachments if x.content_type.startswith("image/")]:
+                if len(embeds) == len(attachments) == 1:
+                    embed.set_image(url=attachments[0].url)
+                else:
+                    aux_embed = embed.copy()
+                    aux_embed.title = ""
+                    aux_embed.description = ""
+                    embeds.extend(aux_embed.copy().set_image(url=x.url) for x in attachments)
 
         entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
         await db.replace_one({"path": path}, entry.simplified, upsert=True)
