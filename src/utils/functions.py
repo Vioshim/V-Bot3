@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from re import Match, sub
-from typing import Callable, Optional, TypeVar
+from typing import Callable, Iterable, Optional, TypeVar
 
 from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
@@ -35,6 +35,7 @@ __all__ = (
     "common_get",
     "multiple_pop",
     "common_pop_get",
+    "chunks_split",
     "embed_modifier",
     "int_check",
     "float_check",
@@ -47,6 +48,12 @@ __all__ = (
     "embed_handler",
     "yaml_handler",
 )
+
+
+def chunks_split(items: Iterable[_T], chunk_size: int):
+    if not isinstance(items, list):
+        items = list(items)
+    return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
 def unescape(text: str):

@@ -28,6 +28,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    PartialEmoji,
     Role,
     SelectOption,
     TextStyle,
@@ -42,6 +43,7 @@ from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import SETTING_EMOJI, WHITE_BAR
+from src.utils.functions import chunks_split
 from src.utils.imagekit import Fonts, ImageKit
 from src.views.characters_view import CharactersView
 
@@ -66,6 +68,12 @@ RP_SEARCH_EMBED = (
     .add_field(
         name="Recommendations",
         value="In order to get the most out of this, when you make a ping, try to write in the message what you're looking for. From defining the OCs you'd like to use, to simply stating the kind of RP that you're looking for.\n\nKeep in mind as well that the idea of this channel is to help you find a RP, but you can try to find RPs naturally by interacting with people within the RP itself.",
+        inline=False,
+    )
+    .add_field(
+        name="Note",
+        value="If you're experiencing bugs, use the Mobile version.",
+        inline=False,
     )
     .set_image(url=WHITE_BAR)
 )
@@ -307,21 +315,20 @@ def time_message(msg: str, s: int):
 
 
 class RPModal(Modal):
-    def __init__(self, user: Member, role: Role, ocs: set[Character], to_user: Optional[Member] = None) -> None:
+    def __init__(
+        self, user: Member, role: Role, ocs: set[Character], to_user: Optional[Member] = None, mobile: bool = False
+    ) -> None:
         super(RPModal, self).__init__(title=f"Pinging {role.name}")
         self.user = user
         self.role = role
         self.ocs = ocs
         self.to_user = to_user
-        text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
-        if len(text) > 4000:
-            text = "\n".join(f"- {x.name}" for x in ocs)
+
         self.names = TextInput(
             style=TextStyle.paragraph,
             label="Characters you have free (Will show in order)",
             placeholder="Character names go here separated by commas, if empty, all ocs will be used.",
             required=False,
-            default=text,
         )
         self.message = TextInput(
             style=TextStyle.paragraph,
@@ -332,8 +339,35 @@ class RPModal(Modal):
         )
         if isinstance(to_user, Member):
             self.message.default = self.message.default.replace("their", f"{to_user.display_name}'s ")
-        self.add_item(self.names)
         self.add_item(self.message)
+
+        self.select_ocs1 = Select(placeholder="Select Characters", min_values=0)
+        self.select_ocs2 = Select(placeholder="Select Characters", min_values=0)
+        self.select_ocs3 = Select(placeholder="Select Characters", min_values=0)
+        self.select_ocs4 = Select(placeholder="Select Characters", min_values=0)
+        self.select_ocs_group = self.select_ocs1, self.select_ocs2, self.select_ocs3, self.select_ocs4
+
+        if mobile:
+            text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
+            if len(text) > 4000:
+                text = "\n".join(f"- {x.name}" for x in ocs)
+            self.names.default = text
+            self.add_item(self.names)
+        else:
+            oc_chunks = iter(chunks_split(ocs, 25))
+            for item in self.select_ocs_group:
+                if characters := next(oc_chunks, []):
+                    item.options = [
+                        SelectOption(
+                            label=oc.name[:100],
+                            value=str(oc.id),
+                            description=f"{oc!r}"[:100],
+                            emoji=oc.pronoun.emoji,
+                        )
+                        for oc in characters
+                    ]
+                    item.max_values = len(characters)
+                    self.add_item(item)
 
     async def check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -355,15 +389,24 @@ class RPModal(Modal):
             await interaction.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         info = {x.name.title(): x for x in self.ocs}
-        data = self.names.value or ""
+        info_ids = {str(x.id): x for x in self.ocs}
+        interaction.client.get_cog("Submission")
+
         items: list[Character] = []
-        for item in data.split("\n"):
-            item = item.removeprefix("-").strip().title()
-            item = item.split("|")[-1].strip()
-            if oc := info.get(item):
-                items.append(oc)
-            elif elements := get_close_matches(item, info, n=1, cutoff=0.85):
-                items.append(info[elements[0]])
+
+        if data := self.names.value:
+
+            for item in data.split("\n"):
+                item = item.removeprefix("-").strip().title()
+                item = item.split("|")[-1].strip()
+                if oc := info.get(item):
+                    items.append(oc)
+                elif elements := get_close_matches(item, info, n=1, cutoff=0.85):
+                    items.append(info[elements[0]])
+
+        for item in self.select_ocs_group:
+            items.extend(map(lambda x: info_ids[x], item.values))
+
         embed = Embed(title=self.role.name, color=self.user.color, description=self.message.value)
         guild: Guild = self.user.guild
         embed.set_image(url=WHITE_BAR)
@@ -463,22 +506,24 @@ class RPSearchComplex(Complex[Member]):
         self.embed.title = role.name
         self.role = role
 
-    @button(
-        label="I just wanna ping the role instead",
-        style=ButtonStyle.blurple,
-        emoji=SETTING_EMOJI,
-        row=4,
-    )
-    async def pinging(self, ctx: Interaction, _: Button):
+    async def method(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         cog = ctx.client.get_cog("Submission")
         member: Member = cog.supporting.get(ctx.user, ctx.user)
         ocs = [oc for oc in cog.ocs.values() if oc.author == member.id]
-        modal = RPModal(user=member, role=self.role, ocs=ocs)
+        modal = RPModal(user=member, role=self.role, ocs=ocs, mobile=not btn.label)
         if await modal.check(ctx):
             await resp.send_modal(modal)
             await modal.wait()
             self.stop()
+
+    @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
+    async def mobile_pinging(self, ctx: Interaction, btn: Button):
+        await self.method(ctx, btn)
+
+    @button(label="I just wanna ping the role instead", style=ButtonStyle.blurple, emoji=SETTING_EMOJI, row=4)
+    async def pinging(self, ctx: Interaction, btn: Button):
+        await self.method(ctx, btn)
 
 
 class RPRolesView(View):
