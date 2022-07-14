@@ -48,7 +48,7 @@ OPERATORS = {
 }
 
 
-def item_name(mon: Character | Species):
+def item_name(mon: Character | Species) -> str:
     if isinstance(mon, Character):
         mon = mon.species
     return getattr(mon, "name", mon)
@@ -198,7 +198,8 @@ class SpeciesTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = list(values)[:25]
-        return [Choice(name=item_name(x), value=item_value(x)) for x in set(options)]
+        entries = {item_name(x): item_value(x) for x in options}
+        return [Choice(name=k, value=v) for k, v in entries.items()]
 
 
 class DefaultSpeciesTransformer(Transformer):
