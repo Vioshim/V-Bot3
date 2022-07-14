@@ -140,7 +140,7 @@ class MoveTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = items[:25]
-        return [Choice(name=x.name, value=x.id) for x in options]
+        return [Choice(name=x.name, value=x.id) for x in set(options)]
 
 
 MoveArg = Transform[Move, MoveTransformer]
@@ -198,7 +198,7 @@ class SpeciesTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = list(values)[:25]
-        return [Choice(name=item_name(x), value=item_value(x)) for x in options]
+        return [Choice(name=item_name(x), value=item_value(x)) for x in set(options)]
 
 
 class DefaultSpeciesTransformer(Transformer):
@@ -225,7 +225,7 @@ class DefaultSpeciesTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = items
-        return [Choice(name=x.name, value=x.id) for x in options[:25]]
+        return [Choice(name=x.name, value=x.id) for x in set(options[:25])]
 
 
 SpeciesArg = Transform[Species, SpeciesTransformer]
@@ -247,7 +247,7 @@ class AbilityTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = items[:25]
-        return [Choice(name=x.name, value=x.id) for x in options]
+        return [Choice(name=x.name, value=x.id) for x in set(options)]
 
 
 AbilityArg = Transform[Ability, AbilityTransformer]
@@ -268,7 +268,7 @@ class TypingTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = items[:25]
-        return [Choice(name=x.name, value=str(x)) for x in options]
+        return [Choice(name=x.name, value=str(x)) for x in set(options)]
 
 
 TypingArg = Transform[Typing, TypingTransformer]
@@ -296,19 +296,14 @@ class FakemonTransformer(Transformer):
             options = [x for x, _, _ in options]
         elif not value:
             options = mons[:25]
-        return [Choice(name=x.species.name, value=str(x.id)) for x in options]
+        return [Choice(name=x.species.name, value=str(x.id)) for x in set(options)]
 
 
 FakemonArg = Transform[Character, FakemonTransformer]
 
 
 class GroupByComplex(Complex[str]):
-    def __init__(
-        self,
-        member: Member,
-        target: Interaction,
-        data: dict[str, list[Character]],
-    ):
+    def __init__(self, member: Member, target: Interaction, data: dict[str, list[Character]]):
         self.data = data
 
         def inner_parser(item: str):
@@ -323,35 +318,18 @@ class GroupByComplex(Complex[str]):
             keep_working=True,
         )
 
-    @select(
-        row=1,
-        placeholder="Select the elements",
-        custom_id="selector",
-    )
-    async def select_choice(
-        self,
-        interaction: Interaction,
-        sct: Select,
-    ) -> None:
+    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         key = self.current_choice
         ocs = self.data.get(key, [])
-        view = CharactersView(
-            member=interaction.user,
-            target=interaction,
-            ocs=ocs,
-            keep_working=True,
-        )
+        view = CharactersView(member=interaction.user, target=interaction, ocs=ocs, keep_working=True)
         async with view.send(ephemeral=True):
             await super(GroupByComplex, self).select_choice(interaction, sct)
 
 
 class OCGroupBy(ABC):
     @abstractclassmethod
-    def method(
-        cls,
-        ctx: Interaction,
-        ocs: Iterable[Character],
-    ) -> dict[str, frozenset[Character]]:
+    def method(cls, ctx: Interaction, ocs: Iterable[Character]) -> dict[str, frozenset[Character]]:
         """Abstract method for grouping
 
         Parameters
@@ -368,19 +346,10 @@ class OCGroupBy(ABC):
         """
 
     @classmethod
-    def generate(
-        cls,
-        ctx: Interaction,
-        ocs: Iterable[Character],
-        amount: Optional[str] = None,
-    ):
+    def generate(cls, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
         items = {
             k: sorted(v, key=lambda x: x.name)
-            for k, v in sorted(
-                cls.method(ctx, ocs).items(),
-                reverse=True,
-                key=lambda x: (len(x[1]), x[0]),
-            )
+            for k, v in sorted(cls.method(ctx, ocs).items(), reverse=True, key=lambda x: (len(x[1]), x[0]))
             if amount_parser(amount, v)
         }
         return GroupByComplex(member=ctx.user, target=ctx, data=items)
@@ -488,12 +457,7 @@ class GroupByArg(Enum):
     Location = OCGroupByLocation
     Member = OCGroupByMember
 
-    def generate(
-        self,
-        ctx: Interaction,
-        ocs: Iterable[Character],
-        amount: Optional[str] = None,
-    ):
+    def generate(self, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
         """Short cut generate
 
         Parameters
