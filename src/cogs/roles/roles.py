@@ -207,7 +207,7 @@ class RoleSelect(View):
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=3,
+        max_values=4,
         options=[
             SelectOption(
                 label="Radio",
@@ -226,6 +226,12 @@ class RoleSelect(View):
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
                 value="974410022845038673",
                 description="Gives access to PMDiscord's category.",
+            ),
+            SelectOption(
+                label="Art Fight",
+                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
+                value="998937033068253309",
+                description="Enables PVP ON (Art Fight wise)",
             ),
         ],
     )
@@ -316,7 +322,12 @@ def time_message(msg: str, s: int):
 
 class RPModal(Modal):
     def __init__(
-        self, user: Member, role: Role, ocs: set[Character], to_user: Optional[Member] = None, mobile: bool = False
+        self,
+        user: Member,
+        role: Role,
+        ocs: set[Character],
+        to_user: Optional[Member] = None,
+        mobile: bool = False,
     ) -> None:
         super(RPModal, self).__init__(title=f"Pinging {role.name}")
         self.user = user
@@ -353,7 +364,7 @@ class RPModal(Modal):
                 text = "\n".join(f"- {x.name}" for x in ocs)
             self.names.default = text
             self.add_item(self.names)
-        else:
+        elif ocs:
             oc_chunks = iter(chunks_split(ocs, 25))
             for item in self.select_ocs_group:
                 if characters := next(oc_chunks, []):
@@ -417,7 +428,7 @@ class RPModal(Modal):
         kit = ImageKit(base="OC_list_9a1DZPDet.png", width=1500, height=1000)
         for index, oc in enumerate(items[:6]):
             x = 500 * (index % 3) + 25
-            y = 500 * int(index / 3) + 25
+            y = 500 * (index // 3) + 25
             kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
             for index, item in enumerate(oc.types):
                 kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * index)

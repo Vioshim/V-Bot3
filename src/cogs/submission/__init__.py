@@ -58,6 +58,7 @@ from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
+from src.utils.imagekit import Fonts, ImageKit
 from src.views import (
     CharactersView,
     ImageView,
@@ -736,6 +737,34 @@ class Submission(commands.Cog):
                 self.ocs.pop(oc.id, None)
                 self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
                 await oc.delete(db)
+
+    @commands.command()
+    @commands.guild_only()
+    async def oc_image(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
+        async with ctx.typing():
+            ocs = [self.ocs[x] for x in oc_ids if x in self.ocs]
+            kit = ImageKit(base="OC_list_9a1DZPDet.png", width=1500, height=1000)
+            for index, oc in enumerate(ocs[:6]):
+                x = 500 * (index % 3) + 25
+                y = 500 * (index // 3) + 25
+                kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
+                for index, item in enumerate(oc.types):
+                    kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * index)
+                if font:
+                    kit.add_text(
+                        text=oc.name,
+                        width=330,
+                        x=x,
+                        y=y + 400,
+                        background=0xFFFFFF,
+                        background_transparency=70,
+                        font=Fonts.Whitney_Black,
+                        font_size=36,
+                    )
+                if oc.pronoun.image:
+                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
+            file = await self.bot.get_file(kit.url)
+            await ctx.reply(file=file)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)

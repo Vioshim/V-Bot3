@@ -54,8 +54,8 @@ class Roles(Cog):
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
-        view = RoleSelect(timeout=None)
-        self.bot.add_view(view=view, message_id=992522335808671854)
+        self.view = RoleSelect(timeout=None)
+        self.bot.add_view(view=self.view, message_id=992522335808671854)
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
