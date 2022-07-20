@@ -220,7 +220,8 @@ class Inviter(commands.Cog):
         link_view = View()
         link_view.add_item(Button(label="Click Here to Join", url=invite.url))
         data = self.view.data
-        if author.guild_permissions.administrator and ctx.channel.id == 957602085753458708:
+        pm_manager_role = guild.get_role(788215077336514570)
+        if pm_manager_role and pm_manager_role in author.roles and ctx.channel.id == 957602085753458708:
             w = await self.bot.webhook(ctx.channel, reason="Partnership")
             view: Complex[str] = Complex(
                 member=author,
@@ -231,6 +232,7 @@ class Inviter(commands.Cog):
                 timeout=None,
                 emoji_parser=PartialEmoji(name="MessageLink", id=778925231506587668),
             )
+            await ctx.delete(delay=0)
             async with view.send(title="Select Category") as choices:
                 if choices:
                     generator.set_footer(text=", ".join(choices))
@@ -270,7 +272,7 @@ class Inviter(commands.Cog):
             files_embed, embed = await self.bot.embed_raw(embed=embed)
             view = InviteView(invite, generator, ctx.author, data, view=link_view, files=files)
             await mod_ch.send(content=invite.url, embed=embed, files=files_embed, view=view)
-        await ctx.delete(delay=0)
+            await ctx.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
