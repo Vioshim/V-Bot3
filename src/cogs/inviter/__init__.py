@@ -204,7 +204,7 @@ class Inviter(commands.Cog):
         if (
             (icon := invite_guild.icon)
             and (icon_url := icon.with_size(4096).url)
-            and (file := await self.bot.get_file(icon_url, "server_icon"))
+            and (file := await self.bot.get_file(icon_url, str(invite_guild.id)))
         ):
             generator.set_thumbnail(url=f"attachment://{file.filename}")
             files.append(file)
