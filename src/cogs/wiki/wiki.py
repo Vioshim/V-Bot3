@@ -23,6 +23,11 @@ from src.structures.bot import CustomBot
 
 __all__ = ("WikiEntry", "WikiTreeArg", "WikiNodeArg")
 
+TREE_ICON, LEVEL_ICON = (
+    "\N{BOX DRAWINGS DOUBLE UP AND RIGHT}",
+    "\N{BOX DRAWINGS DOUBLE HORIZONTAL}",
+)
+
 
 class WikiEntry:
     def __init__(
@@ -42,14 +47,11 @@ class WikiEntry:
         self.parent: Optional[WikiEntry] = None
 
     def __str__(self, level: int = 0) -> str:
-        path = "/" + self.path
-        ret = f"Wiki({path!r}, embeds={len(self.embeds)})\n"
-        if level:
-            ret = f"{'--' * level} {ret}"
+        ret = f"{TREE_ICON}{LEVEL_ICON * (level * 2)} /{self.path}\n"
         return ret + "".join(child.__str__(level + 1) for child in self.children.values())
 
     def __repr__(self) -> str:
-        return f"WikiEntry(nodes={len(self.children)})"
+        return f"WikiEntry({len(self.children)})"
 
     @property
     def route(self) -> str:
