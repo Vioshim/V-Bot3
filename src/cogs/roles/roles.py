@@ -561,7 +561,7 @@ class RPSearchComplex(Complex[Member]):
         else:
             btn.style, btn.emoji = ButtonStyle.green, "\N{BELL}"
         self.ping = condition
-        self.message.edit(view=self)
+        await self.message.edit(view=self)
         await resp.pong()
 
     @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
