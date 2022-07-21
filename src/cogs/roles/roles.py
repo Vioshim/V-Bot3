@@ -556,11 +556,12 @@ class RPSearchComplex(Complex[Member]):
     @button(emoji="\N{BELL}", style=ButtonStyle.green, row=4)
     async def ping_mode(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        if btn.style == ButtonStyle.green:
+        if condition := btn.style == ButtonStyle.green:
             btn.style, btn.emoji = ButtonStyle.red, "\N{BELL WITH CANCELLATION STROKE}"
         else:
             btn.style, btn.emoji = ButtonStyle.green, "\N{BELL}"
-        await ctx.message.edit(view=self)
+        self.ping = condition
+        self.message.edit(view=self)
         await resp.pong()
 
     @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
