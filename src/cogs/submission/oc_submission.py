@@ -441,7 +441,7 @@ class ImageField(TemplateField):
                 oc.image = text
                 progress[self.name] = True
 
-        if file := await ctx.bot.get_file(text):
+        if file := await ctx.client.get_file(text):
             embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg = await ctx.message.edit(embed=embed, file=file)
@@ -511,14 +511,18 @@ class CreationOCView(Basic):
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        self.oc.species = None
-        multiple_pop(self.progress, "Species", "Types", "Abilities")
-        self.ref_template = sct.values[0]
-        if not TEMPLATES[self.ref_template].sp_ability:
-            self.progress.pop("Special Ability", None)
-            self.oc.sp_ability = None
-        self.setup()
-        await resp.edit_message(embed=self.oc.embed, view=self)
+        try:
+            self.oc.species = None
+            multiple_pop(self.progress, "Species", "Types", "Abilities")
+            self.ref_template = sct.values[0]
+            if not TEMPLATES[self.ref_template].sp_ability:
+                self.progress.pop("Special Ability", None)
+                self.oc.sp_ability = None
+            self.setup()
+            await resp.edit_message(embed=self.oc.embed, view=self)
+        except Exception as e:
+            ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
+            await resp.send_message(str(e), ephemeral=True)
 
     @select(placeholder="Fill the Fields", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
