@@ -738,13 +738,6 @@ class Submission(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.is_owner()
-    async def oc_make(self, ctx: commands.Context):
-        view = CreationOCView(user=ctx.author)
-        await ctx.reply("Test", view=view)
-
-    @commands.command()
-    @commands.guild_only()
     async def oc_image(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with ctx.typing():
             ocs = [self.ocs[x] for x in oc_ids if x in self.ocs]

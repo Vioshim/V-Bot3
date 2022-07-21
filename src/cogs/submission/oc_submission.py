@@ -24,10 +24,10 @@ from discord import (
     PartialEmoji,
     SelectOption,
 )
-from discord.ui import Button, Select, TextInput, View, button, select
+from discord.ui import Button, Select, TextInput, button, select
 
-from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
+from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability, SPAbilityView
 from src.structures.character import Character
 from src.structures.mon_typing import Typing
@@ -462,9 +462,10 @@ FIELDS: dict[str, TemplateField] = {
 }
 
 
-class CreationOCView(View):
-    def __init__(self, user: Member):
-        super(CreationOCView, self).__init__(timeout=None)
+class CreationOCView(Basic):
+    def __init__(self, ctx: Interaction, user: Member):
+        super(CreationOCView).__init__(target=ctx, member=user, timeout=None)
+        self.embed.title = "Character Creation"
         self.oc = Character(author=user.id)
         self.user = user
         self.ref_template = Templates.Pokemon
@@ -506,10 +507,7 @@ class CreationOCView(View):
         ]
         self.submit.disabled = any(x.emoji == "\N{CROSS MARK}" for x in self.fields.options)
 
-    @select(
-        placeholder="Select Kind",
-        row=0,
-    )
+    @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
         self.oc.species = None
         multiple_pop(self.progress, "Species", "Types", "Abilities")
@@ -518,19 +516,16 @@ class CreationOCView(View):
             self.progress.pop("Special Ability", None)
             self.oc.sp_ability = None
         self.setup()
-        await ctx.edit_original_message(view=self)
+        await self.message.edit(embed=self.oc.embed, view=self)
 
-    @select(
-        placeholder="Fill the Fields",
-        row=1,
-    )
+    @select(placeholder="Fill the Fields", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         item = FIELDS[sct.values[0]]
         await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
         self.setup()
-        await ctx.edit_original_message(view=self)
+        await self.message.edit(embed=self.oc.embed, view=self)
 
     @button(
         emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}",
@@ -538,8 +533,7 @@ class CreationOCView(View):
         row=2,
     )
     async def cancel(self, ctx: Interaction, btn: Button):
-        await ctx.delete_original_message()
-        self.stop()
+        await self.delete()
 
     @button(
         emoji=PartialEmoji(name="Google", id=999567989592555580),

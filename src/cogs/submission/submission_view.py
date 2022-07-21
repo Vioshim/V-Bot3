@@ -30,6 +30,7 @@ from jishaku.codeblocks import codeblock_converter
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.submission.oc_parsers import ParserMethods
+from src.cogs.submission.oc_submission import CreationOCView
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
@@ -186,6 +187,13 @@ class SubmissionView(View):
         embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(embed=embed, view=TemplateView(msg), ephemeral=True)
+
+    @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
+    async def oc_add(self, ctx: Interaction, _: Button):
+        view = CreationOCView(ctx, ctx.user)
+        await view.send()
+        await view.wait()
+        await view.message.delete(delay=0)
 
     @button(label="Character Modification", emoji="\N{PENCIL}", row=1, custom_id="modify-oc")
     async def oc_update(self, ctx: Interaction, _: Button):
