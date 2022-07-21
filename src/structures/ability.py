@@ -33,7 +33,6 @@ from discord import (
 )
 from discord.ui import Button, Modal, TextInput, View, button
 from frozendict import frozendict
-from rapidfuzz import process
 
 from src.utils.functions import fix
 
@@ -393,6 +392,8 @@ class SPAbilityModal(Modal):
             pros=self.pros.value,
             cons=self.cons.value,
         )
+        if self.sp_ability == SpAbility():
+            self.sp_ability = None
         await resp.send_message("Special ability added/modified", ephemeral=True)
         self.stop()
 

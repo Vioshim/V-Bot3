@@ -14,17 +14,57 @@
 
 from typing import Optional
 
-from discord import Interaction, InteractionResponse, Member
+from discord import Interaction, InteractionResponse, Member, SelectOption
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
+from src.structures.mon_typing import Typing
 from src.structures.move import Move
 
-__all__ = ("MoveView",)
+__all__ = ("MoveView", "MoveComplex")
+
+SELECT_TYPINGS = [SelectOption(label="Remove Filter")]
+SELECT_TYPINGS.extend(SelectOption(label=x.name, value=str(x), emoji=x.emoji) for x in Typing.all())
 
 
-class MoveView(Complex[Move]):
+class MoveComplex(Complex[Move]):
+    def __init__(
+        self,
+        member: Member,
+        moves: set[Move],
+        target: Optional[Messageable] = None,
+        keep_working: bool = False,
+        max_values: int = 6,
+    ):
+        super(MoveComplex, self).__init__(
+            member=member,
+            target=target,
+            values=moves,
+            timeout=None,
+            parser=lambda x: (x.name, repr(x)),
+            keep_working=keep_working,
+            sort_key=lambda x: x.name,
+            max_values=max_values,
+        )
+        self.moves_total = list(moves)
+        self.embed.title = "Select Moves"
+
+    @select(
+        placeholder="Filter by Typings",
+        custom_id="filter",
+        options=SELECT_TYPINGS,
+        max_values=1,
+    )
+    async def select_types(self, interaction: Interaction, sct: Select) -> None:
+        total = self.moves_total
+        mon_type = Typing.from_ID(sct.values[0])
+        total = [x for x in total if x.type == mon_type]
+        self.values = total
+        await self.edit(interaction=interaction, page=0)
+
+
+class MoveView(MoveComplex):
     def __init__(
         self,
         member: Member,
@@ -34,12 +74,10 @@ class MoveView(Complex[Move]):
     ):
         super(MoveView, self).__init__(
             member=member,
+            moves=moves,
             target=target,
-            values=moves,
-            timeout=None,
-            parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
-            sort_key=lambda x: x.name,
+            max_values=1,
         )
         self.embed.title = "Select a Move"
 

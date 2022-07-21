@@ -77,6 +77,7 @@ class SPView(Basic):
         self.add.disabled = oc.sp_ability is not None
         self.modify.disabled = oc.sp_ability is None
         self.remove.disabled = oc.sp_ability is None
+        self.embed.title = "Special Ability Management"
 
     @button(label="Add", custom_id="add")
     async def add(self, ctx: Interaction, _: Button) -> None:
@@ -1182,7 +1183,6 @@ class SpAbilityMod(Mod):
             Bool If Updatable, None if cancelled
         """
         view = SPView(oc=oc, member=member, target=target)
-        view.embed.title = "Special Ability Management"
         await view.send(editing_original=True)
         await view.wait()
         return False

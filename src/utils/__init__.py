@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from src.utils.doc_reader import DOCX_FORMAT, GOOGLE_FORMAT, BytesAIO, docs_aioreader
+from src.utils.doc_reader import BytesAIO, DriveFormat, docs_aioreader
 from src.utils.etc import (
     DICE_NUMBERS,
     MAP_ELEMENTS,
@@ -49,8 +49,7 @@ from src.utils.matches import (
 )
 
 __all__ = (
-    "DOCX_FORMAT",
-    "GOOGLE_FORMAT",
+    "DriveFormat",
     "BytesAIO",
     "docs_aioreader",
     "DICE_NUMBERS",

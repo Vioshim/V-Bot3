@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
 from io import BytesIO
 
 from aiogoogle import Aiogoogle
 from docx.api import Document as DocumentParser
 from docx.document import Document
 
-__all__ = ("DOCX_FORMAT", "GOOGLE_FORMAT", "docs_aioreader", "BytesAIO")
+__all__ = ("DriveFormat", "docs_aioreader", "BytesAIO")
 
-DOCX_FORMAT = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-GOOGLE_FORMAT = "application/vnd.google-apps.document"
+
+class DriveFormat(Enum):
+    DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    GOOGLE = "application/vnd.google-apps.document"
 
 
 class BytesAIO(BytesIO):
@@ -36,22 +39,22 @@ async def docs_aioreader(document_id: str, aio: Aiogoogle) -> Document:
     file = BytesAIO()
     storage = await aio.discover("drive", "v3")
     info: dict[str, str] = await aio.as_service_account(storage.files.get(fileId=document_id))
-    value = info.get("mimeType")
-    if value == DOCX_FORMAT:
-        query = storage.files.get(
-            fileId=document_id,
-            pipe_to=file,
-            alt="media",
-        )
-    elif value == GOOGLE_FORMAT:
-        query = storage.files.export(
-            fileId=document_id,
-            pipe_to=file,
-            mimeType=DOCX_FORMAT,
-            alt="media",
-        )
-    else:
-        raise ValueError(f"{value} format is not supported.")
+
+    match DriveFormat(info.get("mimeType")):
+        case DriveFormat.DOCX:
+            query = storage.files.get(
+                fileId=document_id,
+                pipe_to=file,
+                alt="media",
+            )
+        case DriveFormat.GOOGLE:
+            query = storage.files.export(
+                fileId=document_id,
+                pipe_to=file,
+                mimeType=DriveFormat.DOCX.value,
+                alt="media",
+            )
+
     await aio.as_service_account(query)
     file.seek(0)
     return DocumentParser(file)

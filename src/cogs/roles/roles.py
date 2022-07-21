@@ -328,12 +328,14 @@ class RPModal(Modal):
         ocs: set[Character],
         to_user: Optional[Member] = None,
         mobile: bool = False,
+        role_mode: bool = True,
     ) -> None:
         super(RPModal, self).__init__(title=f"Pinging {role.name}")
         self.user = user
         self.role = role
         self.ocs = ocs
         self.to_user = to_user
+        self.role_mode = role_mode
 
         self.names = TextInput(
             style=TextStyle.paragraph,
@@ -493,7 +495,21 @@ class RPModal(Modal):
                 "ocs": ocs,
             }
         )
-        await interaction.followup.send(content="Ping has been done successfully.", ephemeral=True)
+
+        embed = RP_SEARCH_EMBED.copy()
+        embed.clear_fields()
+        embed.title = "Ping has been done successfully!"
+        view = View()
+        if not self.role_mode:
+            embed.description = "Alright, if you change your mind you can find the role at <#719709333369258015>"
+            view.add_item(
+                Button(
+                    label="Self Roles",
+                    emoji="\N{CHEERING MEGAPHONE}",
+                    url="https://canary.discord.com/channels/719343092963999804/719709333369258015/992522335808671854",
+                )
+            )
+        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
         self.stop()
 
 
@@ -516,23 +532,53 @@ class RPSearchComplex(Complex[Member]):
         self.embed = RP_SEARCH_EMBED.copy()
         self.embed.title = role.name
         self.role = role
+        self.ping = True
 
     async def method(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         cog = ctx.client.get_cog("Submission")
         member: Member = cog.supporting.get(ctx.user, ctx.user)
         ocs = [oc for oc in cog.ocs.values() if oc.author == member.id]
-        modal = RPModal(user=member, role=self.role, ocs=ocs, mobile=not btn.label)
+        modal = RPModal(
+            user=member,
+            role=self.role,
+            ocs=ocs,
+            mobile=bool(btn.emoji),
+            role_mode=self.ping,
+        )
         if await modal.check(ctx):
             await resp.send_modal(modal)
             await modal.wait()
             self.stop()
 
+    @select(
+        placeholder="Role assignment",
+        options=[
+            SelectOption(
+                label="Ping & Give me the Role",
+                value="add",
+                description="You'll get ping notifications afterwards.",
+                default=True,
+                emoji="\N{BELL}",
+            ),
+            SelectOption(
+                label="Only Ping",
+                value="ping",
+                description="No roles will get added",
+                emoji="\N{BELL WITH CANCELLATION STROKE}",
+            ),
+        ],
+    )
+    async def ping_mode(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        await resp.pong()
+        self.ping = "add" in sct.values
+
     @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
     async def mobile_pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
-    @button(label="I just wanna ping the role instead", style=ButtonStyle.blurple, emoji=SETTING_EMOJI, row=4)
+    @button(label="Uninterested in previous pings, I'll make a new one", style=ButtonStyle.blurple, row=4)
     async def pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 

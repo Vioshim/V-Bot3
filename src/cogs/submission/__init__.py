@@ -392,10 +392,7 @@ class Submission(commands.Cog):
             if sp_view.sp_ability is None:
                 return
 
-            if sp_view.sp_ability != SpAbility():
-                oc.sp_ability = sp_view.sp_ability
-            else:
-                oc.sp_ability = None
+            oc.sp_ability = sp_view.sp_ability
 
         if not (oc.url or oc.backstory):
             async with text_view.handle(

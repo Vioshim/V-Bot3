@@ -5827,7 +5827,7 @@
 		"image": "https://archives.bulbagarden.net/media/upload/4/4a/Judgment_VII_2.png",
 		"desc": "This move's type depends on the user's held Plate.",
 		"shortDesc": "Type varys based on the held Plate.",
-		"banned": false,
+		"banned": true,
 		"metronome": true
 	},
 	{
@@ -10961,7 +10961,7 @@
 		"image": "https://archives.bulbagarden.net/media/upload/4/4d/Struggle_VIII.png",
 		"desc": "Deals typeless damage to a random opposing Pokemon. If this move was successful, the user loses 1/4 of its maximum HP, rounded half up, and the Rock Head Ability does not prevent this. This move is automatically used if none of the user's known moves can be selected.",
 		"shortDesc": "User loses 1/4 of its max HP.",
-		"banned": false,
+		"banned": true,
 		"metronome": false
 	},
 	{

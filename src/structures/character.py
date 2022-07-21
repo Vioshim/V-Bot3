@@ -188,7 +188,8 @@ class Character:
 
     @property
     def image_url(self):
-        return f"https://cdn.discordapp.com/attachments/{self.thread}/{self.image}/image.png"
+        if isinstance(self.image, int) and self.thread:
+            return f"https://cdn.discordapp.com/attachments/{self.thread}/{self.image}/image.png"
 
     @image_url.setter
     def image_url(self, url: str):
@@ -347,41 +348,51 @@ class Character:
             c_embed.description = backstory[:2000]
         c_embed.add_field(name="Pronoun", value=self.pronoun.name)
         c_embed.add_field(name="Age", value=self.age or "Unknown")
-        if self.kind == Kind.Fusion:
-            name1, name2 = self.species.name.split("/")
-            c_embed.add_field(
-                name="Fusion Species",
-                value=f"> **•** {name1}\n> **•** {name2}".title(),
-            )
-        elif self.kind == Kind.Fakemon:
-            if evolves_from := self.evolves_from:
-                name = f"Fakemon Evolution - {evolves_from.name}"
-            else:
-                name = "Fakemon Species"
-            c_embed.add_field(name=name, value=self.species.name)
-        elif self.kind in [Kind.CustomMega, Kind.Variant]:
-            name = f"{self.kind.name} Species"
-            c_embed.add_field(name=name, value=self.species.name)
-        else:
-            c_embed.add_field(name="Species", value=self.species.name)
+
+        if self.species:
+            match self.kind:
+                case Kind.Fusion:
+                    name1, name2 = self.species.name.split("/")
+                    c_embed.add_field(
+                        name="Fusion Species",
+                        value=f"> **•** {name1}\n> **•** {name2}".title(),
+                    )
+                case Kind.Fakemon:
+                    if evolves_from := self.evolves_from:
+                        name = f"Fakemon Evolution - {evolves_from.name}"
+                    else:
+                        name = "Fakemon Species"
+                    c_embed.add_field(name=name, value=self.species.name)
+                case Kind.CustomMega | Kind.Variant:
+                    name = f"{self.kind.name} Species"
+                    c_embed.add_field(name=name, value=self.species.name)
+                case _:
+                    c_embed.add_field(name="Species", value=self.species.name)
+
         for index, ability in enumerate(self.abilities, start=1):
             c_embed.add_field(name=f"Ability {index} - {ability.name}", value=f"> {ability.description}", inline=False)
+
         if sp_ability := self.sp_ability:
             name = sp_ability.name[:100]
             c_embed.add_field(name=f'Sp.Ability - "{name}"', value=sp_ability.description[:200], inline=False)
             c_embed.add_field(name="Sp.Ability - Origin", value=sp_ability.origin[:200], inline=False)
             c_embed.add_field(name="Sp.Ability - Pros", value=sp_ability.pros[:200], inline=False)
             c_embed.add_field(name="Sp.Ability - Cons", value=sp_ability.cons[:200], inline=False)
+
         if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
+
         if image := self.image_url:
             c_embed.set_image(url=image)
+
         if entry := "/".join(i.name.title() for i in self.types):
             c_embed.set_footer(text=entry)
 
         if location := self.place_mention:
             c_embed.add_field(name="Last Location", value=location, inline=False)
+
         extra = self.extra or ""
+
         if extra := extra[: min(1000, len(c_embed) - 100)]:
             c_embed.add_field(name="Extra Information", value=extra, inline=False)
 

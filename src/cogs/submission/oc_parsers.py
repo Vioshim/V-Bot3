@@ -25,7 +25,7 @@ from yaml import safe_load
 
 from src.structures.bot import CustomBot
 from src.structures.character import doc_convert
-from src.utils.doc_reader import DOCX_FORMAT, docs_aioreader
+from src.utils.doc_reader import DriveFormat, docs_aioreader
 from src.utils.functions import yaml_handler
 from src.utils.matches import G_DOCUMENT, REGEX_URL
 
@@ -70,15 +70,15 @@ class GoogleDocsOCParser(OCParser):
 class WordOCParser(OCParser):
     @classmethod
     async def parse(cls, text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
-        if isinstance(text, Message) and (
-            attachments := [x for x in text.attachments if x.content_type == DOCX_FORMAT]
-        ):
-            file = await attachments[0].to_file(use_cached=True)
-            doc: DocumentType = Document(file.fp)
-            if doc.tables:
-                return doc_convert(doc)
-            text = yaml_handler("\n".join(element for p in doc.paragraphs if (element := p.text.strip())))
-            return safe_load(text)
+        if isinstance(text, Message):
+            for attachment in text.attachments:
+                if attachment.content_type == DriveFormat.DOCX.value:
+                    file = await attachment.to_file(use_cached=True)
+                    doc: DocumentType = Document(file.fp)
+                    if doc.tables:
+                        return doc_convert(doc)
+                    text = yaml_handler("\n".join(element for p in doc.paragraphs if (element := p.text.strip())))
+                    return safe_load(text)
 
 
 class DiscordOCParser(OCParser):
