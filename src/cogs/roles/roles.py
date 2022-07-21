@@ -533,6 +533,8 @@ class RPSearchComplex(Complex[Member]):
         self.embed.title = role.name
         self.role = role
         self.ping = True
+        if role in member.roles:
+            self.remove_item(self.ping_mode)
 
     async def method(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
@@ -551,28 +553,16 @@ class RPSearchComplex(Complex[Member]):
             await modal.wait()
             self.stop()
 
-    @select(
-        placeholder="Role assignment",
-        options=[
-            SelectOption(
-                label="Ping & Give me the Role",
-                value="add",
-                description="You'll get ping notifications afterwards.",
-                default=True,
-                emoji="\N{BELL}",
-            ),
-            SelectOption(
-                label="Only Ping",
-                value="ping",
-                description="No roles will get added",
-                emoji="\N{BELL WITH CANCELLATION STROKE}",
-            ),
-        ],
-    )
-    async def ping_mode(self, ctx: Interaction, sct: Select):
+    @button(emoji="\N{BELL}", style=ButtonStyle.green)
+    async def ping_mode(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        await resp.pong()
-        self.ping = "add" in sct.values
+        if btn.style == ButtonStyle.green:
+            btn.style, btn.emoji = ButtonStyle.red, "\N{BELL WITH CANCELLATION STROKE}"
+        else:
+            btn.style, btn.emoji = ButtonStyle.green, "\N{BELL}"
+        await ctx.edit_original_message(view=self)
+        if not resp.is_done():
+            await resp.pong()
 
     @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
     async def mobile_pinging(self, ctx: Interaction, btn: Button):
