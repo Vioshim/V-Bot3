@@ -369,8 +369,15 @@ class Character:
                 case _:
                     c_embed.add_field(name="Species", value=self.species.name)
 
-        for index, ability in enumerate(self.abilities, start=1):
-            c_embed.add_field(name=f"Ability {index} - {ability.name}", value=f"> {ability.description}", inline=False)
+            for index, ability in enumerate(self.abilities, start=1):
+                c_embed.add_field(
+                    name=f"Ability {index} - {ability.name}",
+                    value=f"> {ability.description}",
+                    inline=False,
+                )
+
+            if entry := "/".join(i.name.title() for i in self.types):
+                c_embed.set_footer(text=entry)
 
         if sp_ability := self.sp_ability:
             name = sp_ability.name[:100]
@@ -382,11 +389,10 @@ class Character:
         if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
-        if image := self.image_url:
+        if isinstance(self.image, str):
+            c_embed.set_image(url=self.image)
+        elif image := self.image_url:
             c_embed.set_image(url=image)
-
-        if entry := "/".join(i.name.title() for i in self.types):
-            c_embed.set_footer(text=entry)
 
         if location := self.place_mention:
             c_embed.add_field(name="Last Location", value=location, inline=False)

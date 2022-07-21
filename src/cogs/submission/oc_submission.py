@@ -523,18 +523,18 @@ class CreationOCView(Basic):
     @select(placeholder="Fill the Fields", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
         try:
             item = FIELDS[sct.values[0]]
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
             self.setup()
+        except Exception as e:
+            ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
+            await ctx.followup.send(str(e), ephemeral=True)
+        finally:
             if not resp.is_done():
                 await resp.edit_message(embed=self.oc.embed, view=self)
             else:
                 await self.message.edit(embed=self.oc.embed, view=self)
-        except Exception as e:
-            ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
-            await ctx.followup.send(str(e), ephemeral=True)
 
     @button(
         emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}",
