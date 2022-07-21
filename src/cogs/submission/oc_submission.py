@@ -45,7 +45,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import int_check, multiple_pop
+from src.utils.functions import int_check
 from src.views.image_view import ImageView
 from src.views.move_view import MoveComplex
 from src.views.species_view import SpeciesComplex
@@ -475,7 +475,7 @@ class CreationOCView(Basic):
     async def interaction_check(self, interaction: Interaction) -> bool:
         cog = interaction.client.get_cog("Submission")
         aux = cog.supporting.get(interaction.user, interaction.user)
-        condition = interaction.user in [self.user, aux]
+        condition = aux == self.user
         if not condition:
             resp: InteractionResponse = interaction.response
             await resp.send_message("This OC isn't yours", ephemeral=True)
