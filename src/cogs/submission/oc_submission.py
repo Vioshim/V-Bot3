@@ -92,7 +92,8 @@ class TemplateField(ABC):
     name: str = ""
     description: str = ""
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return True
 
     @classmethod
@@ -262,7 +263,8 @@ class TypesField(TemplateField):
     name = "Types"
     escription = "Fill the OC's Types"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return oc.species and isinstance(oc.species, (Fusion, Fakemon, Variant))
 
     @classmethod
@@ -308,7 +310,8 @@ class MovesetField(TemplateField):
     name = "Moveset"
     description = "Fill the OC's fav. moves"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
     @classmethod
@@ -347,7 +350,8 @@ class AbilitiesField(TemplateField):
     name = "Abilities"
     description = "Fill the OC's Abilities"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
     @classmethod
@@ -386,7 +390,8 @@ class SpAbilityField(TemplateField):
     name = "Special Ability"
     description = "Optional. Fill the OC's Special Ability"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return oc.species and oc.can_have_special_abilities
 
     @classmethod
@@ -401,7 +406,8 @@ class BackstoryField(TemplateField):
     name = "Backstory"
     description = "Optional. Fill the OC's Backstory"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
     @classmethod
@@ -421,7 +427,8 @@ class ExtraField(TemplateField):
     name = "Extra Information"
     description = "Optional. Fill the OC's Extra Information"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
     @classmethod
