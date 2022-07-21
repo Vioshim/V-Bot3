@@ -562,7 +562,8 @@ class RPSearchComplex(Complex[Member]):
             btn.style, btn.emoji = ButtonStyle.green, "\N{BELL}"
         self.ping = condition
         await self.message.edit(view=self)
-        await resp.pong()
+        msg = "Role will get " + "added" if condition else "removed"
+        await resp.send_message(msg, ephemeral=True)
 
     @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
     async def mobile_pinging(self, ctx: Interaction, btn: Button):
