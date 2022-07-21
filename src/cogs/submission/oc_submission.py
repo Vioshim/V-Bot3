@@ -164,6 +164,7 @@ class PronounField(TemplateField):
                 min_length=2,
                 max_length=4,
             ),
+            silent_mode=True,
         )
         async with view.send(
             title="Write the character's Pronoun. Current below",
@@ -275,6 +276,7 @@ class TypesField(TemplateField):
                     label="Fusion Typing",
                     placeholder=" | ".join("/".join(i.name for i in x).title() for x in values),
                 ),
+                silent_mode=True,
             )
             single = True
         else:
@@ -290,6 +292,7 @@ class TypesField(TemplateField):
                     placeholder="Type, Type",
                     required=True,
                 ),
+                silent_mode=True,
             )
             single = False
 
@@ -360,6 +363,7 @@ class AbilitiesField(TemplateField):
                 placeholder=placeholder,
                 default=", ".join(x.name for x in oc.abilities),
             ),
+            silent_mode=True,
         )
         view.embed.title = "Select the abilities. Current ones below"
         for index, item in enumerate(oc.abilities, start=1):

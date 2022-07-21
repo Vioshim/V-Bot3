@@ -59,6 +59,7 @@ class SpeciesComplex(Complex[Species]):
             keep_working=False,
             sort_key=lambda x: x.name,
             max_values=max_values,
+            silent_mode=True,
         )
         self.embed.title = "Select Species"
 

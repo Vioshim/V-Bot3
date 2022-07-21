@@ -46,6 +46,7 @@ class MoveComplex(Complex[Move]):
             keep_working=keep_working,
             sort_key=lambda x: x.name,
             max_values=max_values,
+            silent_mode=True,
         )
         self.moves_total = list(moves)
         self.embed.title = "Select Moves"
