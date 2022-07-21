@@ -89,8 +89,8 @@ class Templates(Enum):
 
 
 class TemplateField(ABC):
-    def __init_subclass__(cls, *, name: str, description: str) -> None:
-        cls.name, cls.description = name, description
+    name: str = ""
+    description: str = ""
 
     def check(self, oc: Character) -> bool:
         return True
@@ -107,7 +107,10 @@ class TemplateField(ABC):
         """Abstract method which affects progress and the character"""
 
 
-class NameField(TemplateField, name="Name", description="Fill the OC's Name"):
+class NameField(TemplateField):
+    name = "Name"
+    description = "Fill the OC's Name"
+
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Templates, progress: dict, oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
@@ -123,7 +126,10 @@ class NameField(TemplateField, name="Name", description="Fill the OC's Name"):
                 progress[cls.name] = True
 
 
-class AgeField(TemplateField, name="Age", description="Fill the OC's Age"):
+class AgeField(TemplateField):
+    name = "Age"
+    description = "Fill the OC's Age"
+
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Templates, progress: dict, oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
@@ -140,7 +146,10 @@ class AgeField(TemplateField, name="Age", description="Fill the OC's Age"):
                 progress[cls.name] = True
 
 
-class PronounField(TemplateField, name="Pronoun", description="Fill the OC's Pronoun"):
+class PronounField(TemplateField):
+    name = "Pronoun"
+    description = "Fill the OC's Pronoun"
+
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Templates, progress: dict, oc: Character):
         default = getattr(oc.pronoun, "name", "Them")
@@ -170,7 +179,10 @@ class PronounField(TemplateField, name="Pronoun", description="Fill the OC's Pro
                 progress[cls.name] = True
 
 
-class SpeciesField(TemplateField, name="Species", description="Fill the OC's Species"):
+class SpeciesField(TemplateField):
+    name = "Species"
+    description = "Fill the OC's Species"
+
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Templates, progress: dict, oc: Character):
 
@@ -246,7 +258,10 @@ class SpeciesField(TemplateField, name="Species", description="Fill the OC's Spe
                     progress[cls.name] = True
 
 
-class TypesField(TemplateField, name="Types", description="Fill the OC's Types"):
+class TypesField(TemplateField):
+    name = "Types"
+    escription = "Fill the OC's Types"
+
     def check(self, oc: Character) -> bool:
         return oc.species and isinstance(oc.species, (Fusion, Fakemon, Variant))
 
@@ -289,7 +304,10 @@ class TypesField(TemplateField, name="Types", description="Fill the OC's Types")
                 progress[cls.name] = True
 
 
-class MovesetField(TemplateField, name="Moveset", description="Fill the OC's fav. moves"):
+class MovesetField(TemplateField):
+    name = "Moveset"
+    description = "Fill the OC's fav. moves"
+
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
 
@@ -324,7 +342,11 @@ class MovesetField(TemplateField, name="Moveset", description="Fill the OC's fav
             progress[cls.name] = True
 
 
-class AbilitiesField(TemplateField, name="Abilities", description="Fill the OC's Abilities"):
+class AbilitiesField(TemplateField):
+
+    name = "Abilities"
+    description = "Fill the OC's Abilities"
+
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
 
@@ -360,7 +382,10 @@ class AbilitiesField(TemplateField, name="Abilities", description="Fill the OC's
                 progress[cls.name] = True
 
 
-class SpAbilityField(TemplateField, name="Special Ability", description="Optional. Fill the OC's Special Ability"):
+class SpAbilityField(TemplateField):
+    name = "Special Ability"
+    description = "Optional. Fill the OC's Special Ability"
+
     def check(self, oc: Character) -> bool:
         return oc.species and oc.can_have_special_abilities
 
@@ -372,7 +397,10 @@ class SpAbilityField(TemplateField, name="Special Ability", description="Optiona
         oc.sp_ability = view.sp_ability
 
 
-class BackstoryField(TemplateField, name="Backstory", description="Optional. Fill the OC's Backstory"):
+class BackstoryField(TemplateField):
+    name = "Backstory"
+    description = "Optional. Fill the OC's Backstory"
+
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
 
@@ -389,7 +417,10 @@ class BackstoryField(TemplateField, name="Backstory", description="Optional. Fil
                 oc.backstory = answer
 
 
-class ExtraField(TemplateField, name="Extra Information", description="Optional. Fill the OC's Extra Information"):
+class ExtraField(TemplateField):
+    name = "Extra Information"
+    description = "Optional. Fill the OC's Extra Information"
+
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
 
@@ -406,7 +437,10 @@ class ExtraField(TemplateField, name="Extra Information", description="Optional.
                 oc.extra = answer
 
 
-class ImageField(TemplateField, name="Image", description="Fill the OC's Image"):
+class ImageField(TemplateField):
+    name = "Image"
+    description = "Fill the OC's Image"
+
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Templates, progress: dict, oc: Character):
         view = ImageView(
