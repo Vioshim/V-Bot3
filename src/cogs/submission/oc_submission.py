@@ -73,7 +73,7 @@ class Template:
         self.moveset: bool = False
 
 
-TEMPLATES = dict(
+TEMPLATES: dict[str, Template] = dict(
     Pokemon=Template(sp_ability=True, types=False),
     Legendary=Template(age=False, abilities=False, types=False),
     Mythical=Template(age=False, abilities=False, types=False),
@@ -513,8 +513,8 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         self.oc.species = None
         multiple_pop(self.progress, "Species", "Types", "Abilities")
-        self.ref_template = TEMPLATES[sct.values[0]]
-        if not self.ref_template.value.sp_ability:
+        self.ref_template = sct.values[0]
+        if not TEMPLATES[self.ref_template].sp_ability:
             self.progress.pop("Special Ability", None)
             self.oc.sp_ability = None
         self.setup()
@@ -530,6 +530,8 @@ class CreationOCView(Basic):
             self.setup()
             if not resp.is_done():
                 await resp.edit_message(embed=self.oc.embed, view=self)
+            else:
+                await self.message.edit(embed=self.oc.embed, view=self)
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
