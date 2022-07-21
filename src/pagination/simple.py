@@ -357,7 +357,8 @@ class Simple(Generic[_T], Basic):
                 await message.edit(**data)
             else:
                 self.message = await interaction.edit_original_message(**data)
-        except DiscordException:
+        except DiscordException as e:
+            interaction.client.logger.exception("View Error", exc_info=e)
             self.stop()
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)

@@ -327,7 +327,7 @@ class Character:
         Optional[str]
             Image it defaults to
         """
-        if not self.species.requires_image:
+        if self.species and not self.species.requires_image:
             if self.pronoun == Pronoun.She:
                 return self.species.female_image
             return self.species.base_image
