@@ -190,10 +190,13 @@ class SubmissionView(View):
 
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
-        view = CreationOCView(ctx, ctx.user)
-        await view.send()
-        await view.wait()
-        await view.message.delete(delay=0)
+        try:
+            view = CreationOCView(ctx, ctx.user)
+            await view.send()
+            await view.wait()
+            await view.message.delete(delay=0)
+        except Exception as e:
+            await ctx.response.send_message(str(e), ephemeral=True)
 
     @button(label="Character Modification", emoji="\N{PENCIL}", row=1, custom_id="modify-oc")
     async def oc_update(self, ctx: Interaction, _: Button):
