@@ -47,6 +47,7 @@ from discord.utils import MISSING, utcnow
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
+from src.cogs.submission.oc_submission import CreationOCView
 from src.cogs.submission.submission_view import SubmissionView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
@@ -734,6 +735,13 @@ class Submission(commands.Cog):
                 self.ocs.pop(oc.id, None)
                 self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
                 await oc.delete(db)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.is_owner()
+    async def oc_make(self, ctx: commands.Context):
+        view = CreationOCView(user=ctx.author)
+        await ctx.reply("Test", view=view)
 
     @commands.command()
     @commands.guild_only()
