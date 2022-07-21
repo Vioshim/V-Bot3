@@ -448,7 +448,7 @@ class ImageField(TemplateField):
         if file := await ctx.client.get_file(text):
             embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
-            msg = await ctx.message.edit(embed=embed, file=file)
+            msg = await ctx.message.edit(embed=embed, attachments=[file])
             oc.image = msg.embeds[0].image.url
 
 

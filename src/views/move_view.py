@@ -14,7 +14,7 @@
 
 from typing import Optional
 
-from discord import Interaction, InteractionResponse, Member, SelectOption
+from discord import Interaction, InteractionResponse, Member
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
@@ -23,9 +23,6 @@ from src.structures.mon_typing import Typing
 from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
-
-SELECT_TYPINGS = [SelectOption(label="Remove Filter")]
-SELECT_TYPINGS.extend(SelectOption(label=x.name, value=str(x), emoji=x.emoji) for x in Typing.all())
 
 
 class MoveComplex(Complex[Move]):
@@ -50,11 +47,21 @@ class MoveComplex(Complex[Move]):
         )
         self.moves_total = list(moves)
         self.embed.title = "Select Moves"
+        self.select_types.options.clear()
+        self.select_types.add_option(label="Remove Filter")
+        items = sorted({x.type for x in self.moves_total}, key=lambda x: x.id or 0)
+        for item in items:
+            self.select_types.add_option(
+                label=item.name,
+                value=str(item),
+                emoji=item.emoji,
+            )
+        if not items:
+            self.remove_item(self.select_types)
 
     @select(
         placeholder="Filter by Typings",
         custom_id="filter",
-        options=SELECT_TYPINGS,
         max_values=1,
     )
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
