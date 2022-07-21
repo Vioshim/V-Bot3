@@ -235,11 +235,11 @@ class SpeciesField(TemplateField, name="Species", description="Fill the OC's Spe
         if oc.species.name:
             progress[cls.name] = True
         else:
+            species = getattr(oc.species, "name", "Species")
             text_view = ModernInput(member=ctx.user, target=ctx)
             handler = text_view.handle(
                 label="Write the character's Species.",
-                default="Species",
-                default=oc.name,
+                default=species,
                 required=True,
                 origin=view.message,
             )
