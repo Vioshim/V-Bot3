@@ -464,7 +464,7 @@ FIELDS: dict[str, TemplateField] = {
 
 class CreationOCView(Basic):
     def __init__(self, ctx: Interaction, user: Member):
-        super(CreationOCView).__init__(target=ctx, member=user, timeout=None)
+        super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
         self.embed.title = "Character Creation"
         self.oc = Character(author=user.id)
         self.user = user
