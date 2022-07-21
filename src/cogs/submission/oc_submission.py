@@ -89,9 +89,6 @@ class Templates(Enum):
 
 
 class TemplateField(ABC):
-    name: str
-    description: str
-
     def __init_subclass__(cls, *, name: str, description: str) -> None:
         cls.name, cls.description = name, description
 
