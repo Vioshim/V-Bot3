@@ -510,6 +510,7 @@ class CreationOCView(Basic):
 
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
         self.oc.species = None
         multiple_pop(self.progress, "Species", "Types", "Abilities")
         self.ref_template = TEMPLATES[sct.values[0]]
@@ -517,16 +518,21 @@ class CreationOCView(Basic):
             self.progress.pop("Special Ability", None)
             self.oc.sp_ability = None
         self.setup()
-        await self.message.edit(embed=self.oc.embed, view=self)
+        await resp.edit_message(embed=self.oc.embed, view=self)
 
     @select(placeholder="Fill the Fields", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
-        item = FIELDS[sct.values[0]]
-        await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
-        self.setup()
-        await self.message.edit(embed=self.oc.embed, view=self)
+        try:
+            item = FIELDS[sct.values[0]]
+            await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
+            self.setup()
+            if not resp.is_done():
+                await resp.edit_message(embed=self.oc.embed, view=self)
+        except Exception as e:
+            ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
+            await ctx.followup.send(str(e), ephemeral=True)
 
     @button(
         emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}",
