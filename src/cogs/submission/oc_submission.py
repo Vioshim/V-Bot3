@@ -205,7 +205,7 @@ class SpeciesField(TemplateField):
             fusion=template == "Fusion",
         )
 
-        if template.name.startswith("Custom"):
+        if template.startswith("Custom"):
             view.embed.title = "Select if it has a canon Pre-Evo (Skip if not needed)"
         elif template == "Variant":
             view.embed.title = "Select Base Species"
@@ -220,7 +220,7 @@ class SpeciesField(TemplateField):
                     oc.species = Variant(base=choices[0], name="")
                 elif template == "Fusion":
                     oc.species = Fusion(*choices)
-                elif template.name.startswith("Custom"):
+                elif template.startswith("Custom"):
                     oc.species = Fakemon(
                         abilities=oc.abilities,
                         base_image=oc.image_url,
@@ -231,7 +231,7 @@ class SpeciesField(TemplateField):
                     oc.species = choices[0]
                     oc.image = choices[0].base_image
 
-            elif not template.name.startswith("Custom"):
+            elif not template.startswith("Custom"):
                 return
 
         if not oc.species:
