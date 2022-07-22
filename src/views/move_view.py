@@ -48,20 +48,27 @@ class MoveComplex(Complex[Move]):
         )
         self.embed.title = "Select Moves"
         self.total = list(moves)
-        self.data = {str(k): x for k, v in groupby(moves, key=lambda x: x.type) if (x := set(v))}
+        self.data = {}
+        self.select_types.options.clear()
+        self.select_types.add_option(
+            label="No Type Filter",
+            description=f"Has {len(self.total)} moves.",
+            default=True,
+        )
+        for k, v in groupby(moves, key=lambda x: x.type):
+            items = set(v)
+            self.data[str(k)] = items
+            self.select_types.add_option(
+                label=k.name,
+                value=str(k),
+                emoji=k.emoji,
+                description=f"Has {len(items)} moves.",
+            )
 
     @select(
         placeholder="Filter by Typings",
         custom_id="filter",
         max_values=1,
-        options=[
-            SelectOption(
-                label=x.name,
-                value=str(x),
-                emoji=x.emoji,
-            )
-            for x in Typing.all()
-        ],
     )
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         items = self.data.get(sct.values[0], self.total)
