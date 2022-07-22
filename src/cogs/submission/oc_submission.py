@@ -523,7 +523,7 @@ class CreationOCView(Basic):
             for k, v in FIELDS.items()
             if v.check(self.oc)
         ]
-        self.submit.disabled = all(str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}" for x in self.fields.options)
+        self.submit.disabled = not all(str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}" for x in self.fields.options)
 
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
