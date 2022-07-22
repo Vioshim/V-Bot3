@@ -47,7 +47,6 @@ from discord.utils import MISSING, utcnow
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
-from src.cogs.submission.oc_submission import CreationOCView
 from src.cogs.submission.submission_view import SubmissionView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
