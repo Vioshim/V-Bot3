@@ -50,8 +50,6 @@ class MoveComplex(Complex[Move]):
             silent_mode=True,
         )
         self.embed.title = "Select Moves"
-        self.select_types.options.clear()
-        self.select_types.add_option(label="Remove Filter")
         self.data = {k: set(v) for k, v in groupby(moves, key=lambda x: x.type)}
 
     @select(
@@ -70,8 +68,6 @@ class MoveComplex(Complex[Move]):
             self.values = set.intersection(*self.data.values())
             if mon_type:
                 await resp.send_message(f"No {mon_type.name} moves.", ephemeral=True)
-            else:
-                await resp.pong()
         await self.edit(interaction=interaction, page=0)
 
 

@@ -559,6 +559,8 @@ class CreationOCView(Basic):
 
             files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
             embed = embed_handler(self.message, embed)
+            if files or self.message.attachments:
+                embed.set_image(url="attachment://image.png")
 
             m = await self.message.edit(embed=embed, view=self, attachments=files)
             self.oc.image = m.embeds[0].image.proxy_url
