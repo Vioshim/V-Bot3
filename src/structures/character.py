@@ -389,7 +389,9 @@ class Character:
         if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
-        if isinstance(self.image, str):
+        if isinstance(self.image, File):
+            c_embed.set_image(url=f"attachment://{self.image}")
+        elif isinstance(self.image, str):
             c_embed.set_image(url=self.image)
         elif image := self.image_url:
             c_embed.set_image(url=image)

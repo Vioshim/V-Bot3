@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from copy import copy
 from dataclasses import dataclass
 
 from discord import (
@@ -26,6 +25,7 @@ from discord import (
     SelectOption,
 )
 from discord.ui import Button, Select, TextInput, button, select
+from discord.utils import MISSING
 
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
@@ -236,8 +236,8 @@ class SpeciesField(TemplateField):
                     oc.species = choices[0]
                     oc.image = choices[0].base_image
 
-                oc.abilities &= oc.species.abilities
-                oc.moveset &= oc.total_movepool()
+                oc.abilities &= frozenset(oc.species.abilities)
+                oc.moveset &= frozenset(oc.total_movepool())
 
             elif not template.startswith("Custom"):
                 return
@@ -461,11 +461,7 @@ class ImageField(TemplateField):
                 oc.image = text
                 progress.add(self.name)
 
-        if isinstance(file := await ctx.client.get_file(oc.generated_image), File):
-            embed = oc.embed
-            embed.set_image(url=f"attachment://{file.filename}")
-            msg = await ctx.message.edit(embed=embed, attachments=[file])
-            oc.image = msg.embeds[0].image.url
+        oc.image = await ctx.client.get_file(oc.generated_image)
 
 
 FIELDS: dict[str, TemplateField] = {
@@ -556,10 +552,16 @@ class CreationOCView(Basic):
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
         finally:
+            embed = self.oc.embed
+
             if not resp.is_done():
-                await resp.edit_message(embed=self.oc.embed, view=self)
-            else:
-                await self.message.edit(embed=self.oc.embed, view=self)
+                await resp.pong()
+
+            files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
+
+            m = await self.message.edit(embed=embed, view=self, attachments=files)
+            self.oc.image = m.embeds[0].image.proxy_url
+            self.message = m
 
     @button(
         emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}",

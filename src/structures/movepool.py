@@ -63,20 +63,6 @@ class Movepool:
             other=item["other"],
         )
 
-    @classmethod
-    def from_record(cls, item) -> Optional[Movepool]:
-        if not item:
-            return
-        return cls.from_dict(
-            level=item["level"],
-            tm=item["tm"],
-            event=item["event"],
-            tutor=item["tutor"],
-            egg=item["egg"],
-            levelup=item["levelup"],
-            other=item["other"],
-        )
-
     def __repr__(self) -> str:
         """Repr Method
 

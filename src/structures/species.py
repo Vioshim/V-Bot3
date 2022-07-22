@@ -682,18 +682,6 @@ class Fusion(Species):
             return self.bases == other.bases
         return super(Fusion, self).__eq__(other)
 
-        for mon in self.mon1.species_evolves_to:
-            if mon != self.mon2:
-                mon = Fusion(mon1=mon, mon2=self.mon2)
-            items.append(mon)
-
-        for mon in self.mon2.species_evolves_to:
-            if mon != self.mon1:
-                mon = Fusion(mon1=self.mon1, mon2=mon)
-            items.append(mon)
-
-        return items
-
     @property
     def bases(self) -> frozenset[Species]:
         return frozenset((self.mon1, self.mon2))
