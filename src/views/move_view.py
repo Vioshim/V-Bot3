@@ -34,6 +34,7 @@ class MoveComplex(Complex[Move]):
         keep_working: bool = False,
         max_values: int = 6,
     ):
+        total = sorted(moves, key=lambda x: x.type.id or 0)
         super(MoveComplex, self).__init__(
             member=member,
             target=target,
@@ -42,19 +43,18 @@ class MoveComplex(Complex[Move]):
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
             sort_key=lambda x: x.name,
-            max_values=max_values,
+            max_values=min(max_values, len(total)),
             silent_mode=True,
         )
         self.embed.title = "Select Moves"
-        self.total = sorted(moves, key=lambda x: x.type.id or 0)
+        self.total = total
         self.data = {}
         self.select_types.options.clear()
         self.select_types.add_option(
             label="No Type Filter",
-            description=f"Has {len(self.total)} moves.",
-            default=True,
+            description=f"Has {len(total)} moves.",
         )
-        for k, v in groupby(self.total, key=lambda x: x.type):
+        for k, v in groupby(total, key=lambda x: x.type):
             items = set(v)
             self.data[str(k)] = items
             self.select_types.add_option(
@@ -63,6 +63,13 @@ class MoveComplex(Complex[Move]):
                 emoji=k.emoji,
                 description=f"Has {len(items)} moves.",
             )
+
+    @select(row=1, placeholder="Select the moves", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        if not (set(self.values) - self.current_choices):
+            self.values = self.total
+            self.max_values = min(6, len(self.total))
+        await super(MoveComplex, self).select_choice(interaction=interaction, sct=sct)
 
     @select(
         placeholder="Filter by Typings",
@@ -93,7 +100,7 @@ class MoveView(MoveComplex):
         )
         self.embed.title = "Select a Move"
 
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    @select(row=1, placeholder="Select the moves", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         response: InteractionResponse = interaction.response
         if item := self.current_choice:

@@ -182,7 +182,7 @@ class Submission(commands.Cog):
             await message.edit(view=RPView(member.id, self.oc_list))
         return oc_list
 
-    async def register_oc(self, oc: Type[Character]):
+    async def register_oc(self, oc: Type[Character], image_as_is: bool = False):
         member = Object(id=oc.author)
         webhook = await self.bot.webhook(919277769735680050)
         try:
@@ -200,7 +200,11 @@ class Submission(commands.Cog):
             thread=Object(id=oc.thread),
             allowed_mentions=AllowedMentions(users=True),
         )
-        if file := await self.bot.get_file(url=oc.generated_image, filename="image"):
+        if not image_as_is:
+            image = oc.generated_image
+        else:
+            image = oc.image
+        if file := await self.bot.get_file(url=image, filename="image"):
             kwargs["file"] = file
             try:
                 msg_oc = await webhook.send(**kwargs, wait=True)

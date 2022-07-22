@@ -523,7 +523,7 @@ class CreationOCView(Basic):
             for k, v in FIELDS.items()
             if v.check(self.oc)
         ]
-        self.submit.disabled = any(x.emoji == "\N{CROSS MARK}" for x in self.fields.options)
+        self.submit.disabled = all(str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}" for x in self.fields.options)
 
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
@@ -590,6 +590,9 @@ class CreationOCView(Basic):
     )
     async def submit(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        await resp.send_message("This is a test", ephemeral=True)
+        await resp.defer(ephemeral=True, thinking=True)
+        cog = ctx.client.get_cog("Submission")
+        await cog.register_oc(self.oc, image_as_is=True)
+        await ctx.followup.send("Character Registered without Issues!", ephemeral=True)
         await ctx.message.edit(view=None)
         self.stop()
