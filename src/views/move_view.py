@@ -25,9 +25,6 @@ from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
 
-SELECT_TYPINGS = [SelectOption(label="Remove Filter")]
-SELECT_TYPINGS.extend(SelectOption(label=x.name, value=str(x), emoji=x.emoji) for x in Typing.all())
-
 
 class MoveComplex(Complex[Move]):
     def __init__(
@@ -50,24 +47,26 @@ class MoveComplex(Complex[Move]):
             silent_mode=True,
         )
         self.embed.title = "Select Moves"
-        self.total = moves
-        self.data = {k: set(v) for k, v in groupby(moves, key=lambda x: x.type)}
+        self.total = list(moves)
+        self.data = {str(k): x for k, v in groupby(moves, key=lambda x: x.type) if (x := set(v))}
 
     @select(
         placeholder="Filter by Typings",
         custom_id="filter",
         max_values=1,
-        options=SELECT_TYPINGS,
+        options=[
+            SelectOption(
+                label=x.name,
+                value=str(x),
+                emoji=x.emoji,
+            )
+            for x in Typing.all()
+        ],
     )
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        resp: InteractionResponse = interaction.response
-        mon_type = Typing.from_ID(sct.values[0])
-        if moves := self.data.get(mon_type):
-            self.values = moves
-        else:
-            self.values = self.total
-            if mon_type:
-                await resp.send_message(f"No {mon_type.name} moves.", ephemeral=True)
+        items = self.data.get(sct.values[0], self.total)
+        self.max_values = min(6, len(items))
+        self.values = items
         await self.edit(interaction=interaction, page=0)
 
 
