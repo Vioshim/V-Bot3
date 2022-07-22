@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from itertools import groupby
 from typing import Optional
 
-from discord import Interaction, InteractionResponse, Member
+from discord import Interaction, InteractionResponse, Member, SelectOption
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
@@ -23,6 +24,9 @@ from src.structures.mon_typing import Typing
 from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
+
+SELECT_TYPINGS = [SelectOption(label="Remove Filter")]
+SELECT_TYPINGS.extend(SelectOption(label=x.name, value=str(x), emoji=x.emoji) for x in Typing.all())
 
 
 class MoveComplex(Complex[Move]):
@@ -45,30 +49,29 @@ class MoveComplex(Complex[Move]):
             max_values=max_values,
             silent_mode=True,
         )
-        self.moves_total = list(moves)
         self.embed.title = "Select Moves"
         self.select_types.options.clear()
         self.select_types.add_option(label="Remove Filter")
-        items = sorted({x.type for x in self.moves_total}, key=lambda x: x.id or 0)
-        for item in items:
-            self.select_types.add_option(
-                label=item.name,
-                value=str(item),
-                emoji=item.emoji,
-            )
-        if not items:
-            self.remove_item(self.select_types)
+        self.data = {k: set(v) for k, v in groupby(moves, key=lambda x: x.type)}
 
     @select(
         placeholder="Filter by Typings",
         custom_id="filter",
         max_values=1,
+        options=SELECT_TYPINGS,
     )
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        total = self.moves_total
+        resp: InteractionResponse = interaction.response
         mon_type = Typing.from_ID(sct.values[0])
-        total = [x for x in total if x.type == mon_type]
-        self.values = total
+        if moves := self.data.get(mon_type):
+            self.values = moves
+            await self.edit(interaction=interaction, page=0)
+        else:
+            self.values = set.intersection(*self.data.values())
+            if mon_type:
+                await resp.send_message(f"No {mon_type.name} moves.", ephemeral=True)
+            else:
+                await resp.pong()
         await self.edit(interaction=interaction, page=0)
 
 
