@@ -50,6 +50,7 @@ class MoveComplex(Complex[Move]):
             silent_mode=True,
         )
         self.embed.title = "Select Moves"
+        self.total = moves
         self.data = {k: set(v) for k, v in groupby(moves, key=lambda x: x.type)}
 
     @select(
@@ -63,9 +64,8 @@ class MoveComplex(Complex[Move]):
         mon_type = Typing.from_ID(sct.values[0])
         if moves := self.data.get(mon_type):
             self.values = moves
-            await self.edit(interaction=interaction, page=0)
         else:
-            self.values = set.intersection(*self.data.values())
+            self.values = self.total
             if mon_type:
                 await resp.send_message(f"No {mon_type.name} moves.", ephemeral=True)
         await self.edit(interaction=interaction, page=0)

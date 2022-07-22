@@ -214,7 +214,7 @@ class SpeciesField(TemplateField):
         elif template == "Variant":
             view.embed.title = "Select Base Species"
 
-        async with view.send(ephemeral=True) as choices:
+        async with view.send() as choices:
             choices: list[Species] = list(choices)
             if choices:
                 if len(choices) != view.max_values:
