@@ -47,7 +47,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import int_check
+from src.utils.functions import embed_handler, int_check
 from src.views.image_view import ImageView
 from src.views.move_view import MoveComplex
 from src.views.movepool_view import MovepoolView
@@ -558,6 +558,7 @@ class CreationOCView(Basic):
                 await resp.pong()
 
             files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
+            embed = embed_handler(self.message, embed)
 
             m = await self.message.edit(embed=embed, view=self, attachments=files)
             self.oc.image = m.embeds[0].image.proxy_url
