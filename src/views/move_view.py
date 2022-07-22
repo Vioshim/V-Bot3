@@ -15,12 +15,11 @@
 from itertools import groupby
 from typing import Optional
 
-from discord import Interaction, InteractionResponse, Member, SelectOption
+from discord import Interaction, InteractionResponse, Member
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
-from src.structures.mon_typing import Typing
 from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
@@ -47,7 +46,7 @@ class MoveComplex(Complex[Move]):
             silent_mode=True,
         )
         self.embed.title = "Select Moves"
-        self.total = list(moves)
+        self.total = sorted(moves, key=lambda x: x.type.id or 0)
         self.data = {}
         self.select_types.options.clear()
         self.select_types.add_option(
@@ -55,7 +54,7 @@ class MoveComplex(Complex[Move]):
             description=f"Has {len(self.total)} moves.",
             default=True,
         )
-        for k, v in groupby(moves, key=lambda x: x.type):
+        for k, v in groupby(self.total, key=lambda x: x.type):
             items = set(v)
             self.data[str(k)] = items
             self.select_types.add_option(
