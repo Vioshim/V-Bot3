@@ -13,10 +13,12 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
+from copy import copy
 from dataclasses import dataclass
 
 from discord import (
     ButtonStyle,
+    File,
     Interaction,
     InteractionResponse,
     Member,
@@ -48,6 +50,7 @@ from src.structures.species import (
 from src.utils.functions import int_check
 from src.views.image_view import ImageView
 from src.views.move_view import MoveComplex
+from src.views.movepool_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
 
@@ -127,7 +130,7 @@ class NameField(TemplateField):
 
 class AgeField(TemplateField):
     name = "Age"
-    description = "Fill the OC's Age"
+    description = "Optional. Fill the OC's Age"
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
@@ -146,7 +149,7 @@ class AgeField(TemplateField):
 
 class PronounField(TemplateField):
     name = "Pronoun"
-    description = "Fill the OC's Pronoun"
+    description = "Optional. Fill the OC's Pronoun"
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         default = getattr(oc.pronoun, "name", "Them")
@@ -221,6 +224,7 @@ class SpeciesField(TemplateField):
                     oc.species = Variant(base=choices[0], name="")
                 elif template == "Fusion":
                     oc.species = Fusion(*choices)
+                    oc.abilities = frozenset()
                 elif template.startswith("Custom"):
                     oc.species = Fakemon(
                         abilities=oc.abilities,
@@ -231,6 +235,9 @@ class SpeciesField(TemplateField):
                 else:
                     oc.species = choices[0]
                     oc.image = choices[0].base_image
+
+                oc.abilities &= oc.species.abilities
+                oc.moveset &= oc.total_movepool()
 
             elif not template.startswith("Custom"):
                 return
@@ -304,7 +311,7 @@ class TypesField(TemplateField):
 
 class MovesetField(TemplateField):
     name = "Moveset"
-    description = "Fill the OC's fav. moves"
+    description = "Optional. Fill the OC's fav. moves"
 
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
@@ -334,6 +341,20 @@ class MovesetField(TemplateField):
         ) as choices:
             oc.moveset = choices
             progress.add(self.name)
+
+
+class MovepoolField(TemplateField):
+    name = "Movepool"
+    description = "Optional. Fill the OC's movepool"
+
+    def check(self, oc: Character) -> bool:
+        return isinstance(oc.species, (Fakemon, Variant))
+
+    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+        view = MovepoolView(ctx, ctx.user, oc)
+        await view.send()
+        await view.wait()
+        progress.add(self.name)
 
 
 class AbilitiesField(TemplateField):
@@ -440,7 +461,7 @@ class ImageField(TemplateField):
                 oc.image = text
                 progress.add(self.name)
 
-        if file := await ctx.client.get_file(text):
+        if isinstance(file := await ctx.client.get_file(oc.generated_image), File):
             embed = oc.embed
             embed.set_image(url=f"attachment://{file.filename}")
             msg = await ctx.message.edit(embed=embed, attachments=[file])
@@ -454,6 +475,7 @@ FIELDS: dict[str, TemplateField] = {
     "Species": SpeciesField(),
     "Types": TypesField(),
     "Moveset": MovesetField(),
+    "Movepool": MovepoolField(),
     "Abilities": AbilitiesField(),
     "Special Ability": SpAbilityField(),
     "Backstory": BackstoryField(),
