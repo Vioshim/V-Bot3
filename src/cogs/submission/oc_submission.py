@@ -333,11 +333,7 @@ class MovesetField(TemplateField):
         moves = {x for x in moves if not x.banned}
 
         view = MoveComplex(member=ctx.user, moves=moves, target=ctx)
-        description = "\n".join(repr(move) for move in oc.moveset) or "No Moves"
-        async with view.send(
-            title="Write the character's moveset. Current below",
-            description=description,
-        ) as choices:
+        async with view.send(title="Write the character's moveset. Current below") as choices:
             oc.moveset = frozenset(choices)
             progress.add(self.name)
 

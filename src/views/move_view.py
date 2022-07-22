@@ -65,6 +65,26 @@ class MoveComplex(Complex[Move]):
                 description=f"Has {len(items)} moves.",
             )
 
+    def menu_format(self) -> None:
+        aux = sorted(set(self.total) - self.current_choices, key=lambda x: x.type.id or 0)
+        self.select_types.options.clear()
+        self.select_types.add_option(
+            label="No Type Filter",
+            description=f"Has {len(self.total)} moves.",
+        )
+
+        for k, v in groupby(aux, key=lambda x: x.type):
+            items = set(v)
+            self.data[str(k)] = items
+            self.select_types.add_option(
+                label=k.name,
+                value=str(k),
+                emoji=k.emoji,
+                description=f"Has {len(items)} moves.",
+            )
+
+        return super(MoveComplex, self).menu_format()
+
     async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
         """Method used to edit the pagination
 
@@ -75,13 +95,11 @@ class MoveComplex(Complex[Move]):
         """
         resp: InteractionResponse = interaction.response
         if self.keep_working or len(self.choices) < self.real_max:
-            data = {}
+            data = dict(embed=self.embed)
 
             self.values = [x for x in self.values if x not in self.current_choices] or self.total
             self.max_values = min(self.real_max, len(self.values))
-
-            if self.modifying_embed:
-                data["embed"] = self.embed
+            self.embed.description = "\n".join(f"> {x!r}" for x in self.current_choices) or "No Moves"
 
             if isinstance(page, int):
                 self.pos = page
