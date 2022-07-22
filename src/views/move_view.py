@@ -66,7 +66,7 @@ class MoveComplex(Complex[Move]):
             )
 
     def menu_format(self) -> None:
-        aux = sorted(set(self.total) - self.current_choices, key=lambda x: x.type.id or 0)
+        aux = sorted(set(self.total) - self.choices, key=lambda x: x.type.id or 0)
         self.select_types.options.clear()
         self.select_types.add_option(
             label="No Type Filter",
@@ -97,9 +97,9 @@ class MoveComplex(Complex[Move]):
         if self.keep_working or len(self.choices) < self.real_max:
             data = dict(embed=self.embed)
 
-            self.values = [x for x in self.values if x not in self.current_choices] or self.total
+            self.values = [x for x in self.values if x not in self.choices] or self.total
             self.max_values = min(self.real_max, len(self.values))
-            self.embed.description = "\n".join(f"> {x!r}" for x in self.current_choices) or "No Moves"
+            self.embed.description = "\n".join(f"> {x!r}" for x in self.choices) or "No Moves"
 
             if isinstance(page, int):
                 self.pos = page
