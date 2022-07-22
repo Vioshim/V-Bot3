@@ -339,7 +339,7 @@ class MovesetField(TemplateField):
             title="Write the character's moveset. Current below",
             description=description,
         ) as choices:
-            oc.moveset = choices
+            oc.moveset = frozenset(choices)
             progress.add(self.name)
 
 
