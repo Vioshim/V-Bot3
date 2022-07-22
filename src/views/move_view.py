@@ -43,7 +43,7 @@ class MoveComplex(Complex[Move]):
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
             sort_key=lambda x: x.name,
-            max_values=min(max_values, len(total)),
+            max_values=max_values,
             silent_mode=True,
         )
         self.embed.title = "Select Moves"
@@ -68,7 +68,6 @@ class MoveComplex(Complex[Move]):
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         if not (set(self.values) - self.current_choices):
             self.values = self.total
-            self.max_values = min(6, len(self.total))
         await super(MoveComplex, self).select_choice(interaction=interaction, sct=sct)
 
     @select(
@@ -78,7 +77,6 @@ class MoveComplex(Complex[Move]):
     )
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         items = self.data.get(sct.values[0], self.total)
-        self.max_values = min(6, len(items))
         self.values = items
         await self.edit(interaction=interaction, page=0)
 
