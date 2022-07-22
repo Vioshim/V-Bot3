@@ -21,7 +21,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    PartialEmoji,
     SelectOption,
 )
 from discord.ui import Button, Select, TextInput, button, select
@@ -571,16 +570,6 @@ class CreationOCView(Basic):
     )
     async def cancel(self, ctx: Interaction, btn: Button):
         await self.delete()
-
-    @button(
-        emoji=PartialEmoji(name="Google", id=999567989592555580),
-        style=ButtonStyle.blurple,
-        disabled=True,
-        row=2,
-    )
-    async def url(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.send_message("This is a test", ephemeral=True)
 
     @button(
         disabled=True,

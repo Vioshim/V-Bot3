@@ -15,7 +15,7 @@
 from itertools import groupby
 from typing import Optional
 
-from discord import Interaction, InteractionResponse, Member
+from discord import DiscordException, Interaction, InteractionResponse, Member
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
@@ -46,6 +46,7 @@ class MoveComplex(Complex[Move]):
             max_values=max_values,
             silent_mode=True,
         )
+        self.real_max = min(max_values, len(total))
         self.embed.title = "Select Moves"
         self.total = total
         self.data = {}
@@ -64,11 +65,43 @@ class MoveComplex(Complex[Move]):
                 description=f"Has {len(items)} moves.",
             )
 
-    @select(row=1, placeholder="Select the moves", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        if not (set(self.values) - self.current_choices):
-            self.values = self.total
-        await super(MoveComplex, self).select_choice(interaction=interaction, sct=sct)
+    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
+        """Method used to edit the pagination
+
+        Parameters
+        ----------
+        page: int, optional
+            Page to be accessed, defaults to None
+        """
+        resp: InteractionResponse = interaction.response
+        if self.keep_working or len(self.choices) < self.real_max:
+            data = {}
+
+            self.values = [x for x in self.values if x not in self.current_choices] or self.total
+            self.max_values = min(self.real_max, len(self.values))
+
+            if self.modifying_embed:
+                data["embed"] = self.embed
+
+            if isinstance(page, int):
+                self.pos = page
+                self.menu_format()
+                data["view"] = self
+
+            if not resp.is_done():
+                return await resp.edit_message(**data)
+            try:
+                if message := self.message or interaction.message:
+                    await message.edit(**data)
+                else:
+                    self.message = await interaction.edit_original_message(**data)
+            except DiscordException as e:
+                interaction.client.logger.exception("View Error", exc_info=e)
+                self.stop()
+        else:
+            if not resp.is_done():
+                await resp.pong()
+            await self.delete()
 
     @select(
         placeholder="Filter by Typings",
