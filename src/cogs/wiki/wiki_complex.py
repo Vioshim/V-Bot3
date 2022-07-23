@@ -29,7 +29,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.wiki.wiki import WikiEntry
 from src.pagination.complex import Complex
-from utils import WHITE_BAR
+from src.utils.etc import WHITE_BAR
 
 __all__ = ("WikiModal", "WikiComplex")
 
