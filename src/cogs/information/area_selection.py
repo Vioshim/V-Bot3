@@ -106,23 +106,27 @@ class RegionViewComplex(Complex[MapPair]):
 
     @select(row=1, placeholder="Select region to read about", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        resp: InteractionResponse = interaction.response
-        if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-            await interaction.channel.edit(archived=True)
-        await resp.defer(ephemeral=True, thinking=True)
-        info = self.current_choice
-        cat = interaction.guild.get_channel(info.category)
-        embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=interaction.user.color)
-        embed.set_image(url=info.image or WHITE_BAR)
-        view = AreaSelection(target=interaction, cat=cat)
-        interaction.client.logger.info(
-            "%s is reading Map Information of %s",
-            str(interaction.user),
-            cat.name,
-        )
-        registered = interaction.guild.get_role(719642423327719434)
-        if registered not in interaction.user.roles:
-            embed.add_field(name="Note", value="Go to <#852180971985043466> in order to get access to the RP.")
-        embed.set_footer(text=f"There's a total of {view.total:02d} OCs in {cat.name}.")
-        await view.simple_send(ephemeral=True, embed=embed)
-        await super(RegionViewComplex, self).select_choice(interaction=interaction, sct=sct)
+        try:
+            resp: InteractionResponse = interaction.response
+            if isinstance(interaction.channel, Thread) and interaction.channel.archived:
+                await interaction.channel.edit(archived=True)
+            await resp.defer(ephemeral=True, thinking=True)
+            info = self.current_choice
+            cat = interaction.guild.get_channel(info.category)
+            embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=interaction.user.color)
+            embed.set_image(url=info.image or WHITE_BAR)
+            view = AreaSelection(target=interaction, cat=cat)
+            interaction.client.logger.info(
+                "%s is reading Map Information of %s",
+                str(interaction.user),
+                cat.name,
+            )
+            registered = interaction.guild.get_role(719642423327719434)
+            if registered not in interaction.user.roles:
+                embed.add_field(name="Note", value="Go to <#852180971985043466> in order to get access to the RP.")
+            embed.set_footer(text=f"There's a total of {view.total:02d} OCs in {cat.name}.")
+            await view.simple_send(ephemeral=True, embed=embed)
+        except Exception as e:
+            interaction.client.logger.exception("Error in region view.", exc_info=e)
+        finally:
+            await super(RegionViewComplex, self).select_choice(interaction=interaction, sct=sct)
