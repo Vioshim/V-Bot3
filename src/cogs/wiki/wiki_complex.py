@@ -131,7 +131,7 @@ class WikiComplex(Complex[WikiEntry]):
         if not (content or embeds):
             embeds = [self.embed]
         self.tree = tree
-        self.values = list(tree.children.values())
+        self._values = list(tree.children.values())
         await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
