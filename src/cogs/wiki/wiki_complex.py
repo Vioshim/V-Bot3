@@ -78,25 +78,17 @@ class WikiComplex(Complex[WikiEntry]):
 
     async def selection(self, interaction: Interaction, tree: WikiEntry):
         resp: InteractionResponse = interaction.response
-        await resp.defer(ephemeral=True, thinking=True)
         view = WikiComplex(tree=tree, target=interaction)
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
             embeds = [view.embed]
-        view.message = await interaction.followup.send(
-            ephemeral=True,
-            embeds=embeds,
-            content=content,
-            view=view,
-            wait=True,
-        )
+        await resp.edit_message(embeds=embeds, view=view, content=content)
+        self.stop()
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         await self.selection(interaction, self.current_choice)
-        await super(WikiComplex, self).select_choice(interaction, sct)
-        self.stop()
 
     @button(
         label="Parent Folder",
@@ -106,5 +98,3 @@ class WikiComplex(Complex[WikiEntry]):
     async def parent_folder(self, interaction: Interaction, _: Select) -> None:
         self.choices.add(self.tree.parent)
         await self.selection(interaction, self.tree.parent)
-        await self.edit(interaction, page=self.pos)
-        self.stop()
