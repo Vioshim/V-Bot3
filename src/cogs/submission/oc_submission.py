@@ -219,27 +219,31 @@ class SpeciesField(TemplateField):
             if choices:
                 if len(choices) != view.max_values:
                     return
-
-                if template == "Variant":
-                    oc.species = Variant(base=choices[0], name="")
-                elif template == "Fusion":
-                    oc.species = Fusion(*choices)
-                    oc.abilities = frozenset()
-                elif template.startswith("Custom"):
+                if template.startswith("Custom"):
                     oc.species = Fakemon(
                         abilities=oc.abilities,
                         base_image=oc.image_url,
                         movepool=Movepool(other=oc.moveset),
                         evolves_from=choices[0],
                     )
+                elif template == "Variant":
+                    oc.species = Variant(base=choices[0], name="")
+                elif template == "Fusion":
+                    oc.species = Fusion(*choices)
+                    oc.abilities = frozenset()
                 else:
                     oc.species = choices[0]
                     oc.image = choices[0].base_image
 
                 oc.abilities &= frozenset(oc.species.abilities)
                 oc.moveset &= frozenset(oc.total_movepool())
-
-            elif not template.startswith("Custom"):
+            elif template.startswith("Custom"):
+                oc.species = Fakemon(
+                    abilities=oc.abilities,
+                    base_image=oc.image_url,
+                    movepool=Movepool(other=oc.moveset),
+                )
+            else:
                 return
 
         if not oc.species:
