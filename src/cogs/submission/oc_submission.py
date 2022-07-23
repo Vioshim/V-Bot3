@@ -583,8 +583,7 @@ class CreationOCView(Basic):
         cog = ctx.client.get_cog("Submission")
         await cog.register_oc(self.oc, image_as_is=True)
         registered = ctx.guild.get_role(719642423327719434)
-        if registered and registered not in ctx.user.roles:
-            await ctx.user.add_roles(registered)
+        if registered and registered not in self.user.roles:
+            await self.user.add_roles(registered)
         await ctx.followup.send("Character Registered without Issues!", ephemeral=True)
-        await ctx.message.edit(view=None)
         self.stop()
