@@ -73,19 +73,17 @@ class WikiComplex(Complex[WikiEntry]):
         self.tree = tree
         self.embed.title = "This page has no information yet"
         self.embed.description = "Feel free to make suggestions to fill this page!"
-        if not tree.parent:
-            self.remove_item(self.parent_folder)
+        self.parent_folder.disabled = not tree.parent
 
     async def selection(self, interaction: Interaction, tree: WikiEntry):
-        resp: InteractionResponse = interaction.response
-        view = WikiComplex(tree=tree, target=interaction)
-        view.message = self.message
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
-            embeds = [view.embed]
-        await resp.edit_message(embeds=embeds, view=view, content=content)
-        self.stop()
+            embeds = [self.embed]
+        self.tree = tree
+        self.values = list(tree.children.values())
+        self.parent_folder.disabled = not tree.parent
+        await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
