@@ -191,7 +191,8 @@ class SubmissionView(View):
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         try:
-            view = CreationOCView(ctx, ctx.user)
+            user = self.supporting.get(ctx.user, ctx.user)
+            view = CreationOCView(ctx, user)
             await view.send()
             await view.wait()
             await view.message.delete(delay=0)
