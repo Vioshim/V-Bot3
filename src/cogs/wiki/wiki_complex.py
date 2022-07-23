@@ -77,13 +77,12 @@ class WikiComplex(Complex[WikiEntry]):
             self.remove_item(self.parent_folder)
 
     async def selection(self, interaction: Interaction, tree: WikiEntry):
-        resp: InteractionResponse = interaction.response
         view = WikiComplex(tree=tree, target=interaction)
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
             embeds = [view.embed]
-        await resp.edit_message(embeds=embeds, view=view, content=content)
+        await view.simple_send(editing_original=True, embeds=embeds, content=content)
         self.stop()
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
