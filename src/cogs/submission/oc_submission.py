@@ -490,7 +490,7 @@ class CreationOCView(Basic):
         cog = interaction.client.get_cog("Submission")
 
         try:
-            condition = interaction.user in [self.user, cog.supperting[interaction.user]]
+            condition = interaction.user in [self.user, cog.supporting[interaction.user]]
         except KeyError:
             condition = interaction.user == self.user
 
