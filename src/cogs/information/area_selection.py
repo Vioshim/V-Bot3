@@ -73,20 +73,24 @@ class AreaSelection(Complex[TextChannel]):
 
     @select(row=1, placeholder="Select a location to check", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        channel: TextChannel = self.current_choice
-        self.bot.logger.info("%s is reading Channel Information of %s", str(interaction.user), channel.name)
-        ocs = self.entries.get(channel.id, set())
-        view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
-        embed = view.embed
-        embed.title = channel.name[2:].replace("-", " ").title()
-        embed.description = channel.topic or "No description yet"
-        embed.color = interaction.user.color
-        embed.timestamp = utcnow()
-        embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
-        embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
-        await view.simple_send(ephemeral=True, embed=embed)
-        self.bot.logger.info("%s user is checking ocs at %s", str(interaction.user), channel.name)
-        await super(AreaSelection, self).select_choice(interaction=interaction, sct=sct)
+        try:
+            channel: TextChannel = self.current_choice
+            self.bot.logger.info("%s is reading Channel Information of %s", str(interaction.user), channel.name)
+            ocs = self.entries.get(channel.id, set())
+            view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
+            embed = view.embed
+            embed.title = channel.name[2:].replace("-", " ").title()
+            embed.description = channel.topic or "No description yet"
+            embed.color = interaction.user.color
+            embed.timestamp = utcnow()
+            embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
+            embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
+            await view.simple_send(ephemeral=True, embed=embed)
+            self.bot.logger.info("%s user is checking ocs at %s", str(interaction.user), channel.name)
+        except Exception as e:
+            self.bot.logger.exception("Error in location view", exc_info=e)
+        finally:
+            await super(AreaSelection, self).select_choice(interaction=interaction, sct=sct)
 
 
 class RegionViewComplex(Complex[MapPair]):
