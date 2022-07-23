@@ -28,12 +28,13 @@ from discord import (
 from discord.ui import Button, Select, View, select
 from discord.utils import utcnow
 
+from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS, WHITE_BAR, MapPair
 from src.views.characters_view import CharactersView
 
-__all__ = ("RegionView",)
+__all__ = ("RegionViewComplex",)
 
 
 class AreaSelection(View):
@@ -100,40 +101,41 @@ class AreaSelection(View):
             self.bot.logger.info("%s user is checking ocs at %s", str(ctx.user), channel.name)
 
 
-class RegionView(View):
-    @select(
-        placeholder="Select Regions",
-        custom_id="region",
-        row=0,
-        options=[
-            SelectOption(
-                label=item.name,
-                description=(item.short_desc or item.desc)[:100],
-                value=item.category,
-                emoji=item.emoji,
-            )
-            for item in MAP_ELEMENTS
-        ],
-    )
-    async def choice(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
+class RegionViewComplex(Complex[MapPair]):
+    def __init__(self, *, member: Member | User, target: Interaction):
+        super(RegionViewComplex, self).__init__(
+            member=member,
+            values=MAP_ELEMENTS,
+            target=target,
+            timeout=None,
+            parser=lambda x: (x.name, x.short_desc or x.desc),
+            silent_mode=True,
+            keep_working=True,
+        )
+        self.embed.title = "Select Territory"
+        self.embed.description = "Tool will also show you how many characters have been in certain areas."
+
+    @select(row=1, placeholder="Select the moves", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        resp: InteractionResponse = interaction.response
+        if isinstance(interaction.channel, Thread) and interaction.channel.archived:
+            await interaction.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
-        info = MAP_ELEMENTS2[int(sct.values[0])]
-        cat = ctx.guild.get_channel(info.category)
-        embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=ctx.user.color)
+        info = self.current_choice
+        cat = interaction.guild.get_channel(info.category)
+        embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=interaction.user.color)
         embed.set_image(url=info.image or WHITE_BAR)
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        view = AreaSelection(bot=ctx.client, cat=cat, member=ctx.user)
-        ctx.client.logger.info(
+        embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
+        view = AreaSelection(bot=interaction.client, cat=cat, member=interaction.user)
+        interaction.client.logger.info(
             "%s is reading Map Information of %s",
-            str(ctx.user),
+            str(interaction.user),
             cat.name,
         )
-        await ctx.followup.send(
+        await interaction.followup.send(
             content=f"There's a total of {view.total:02d} OCs in {cat.name}.",
             view=view,
             embed=embed,
             ephemeral=True,
         )
+        await super(RegionViewComplex, self).select_choice(interaction=interaction, sct=sct)

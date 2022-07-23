@@ -49,7 +49,7 @@ from discord.utils import find, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from yaml import dump
 
-from src.cogs.information.area_selection import RegionView
+from src.cogs.information.area_selection import RegionViewComplex
 from src.cogs.wiki.wiki import WikiEntry
 from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
@@ -261,8 +261,8 @@ class InformationView(View):
 
     @button(label="See Map", emoji="\N{WORLD MAP}")
     async def see_map(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.send_message(MAP_URL, ephemeral=True, view=RegionView(timeout=None))
+        view = RegionViewComplex(member=ctx.user, target=ctx)
+        await view.simple_send(content=MAP_URL, ephemeral=True)
 
     @button(label="Make a Ticket", emoji=STICKER_EMOJI)
     async def create_ticket(self, ctx: Interaction, _: Button):

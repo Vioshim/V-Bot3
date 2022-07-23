@@ -355,6 +355,93 @@ class Complex(Simple[_T]):
         finally:
             await self.delete()
 
+    async def simple_send(
+        self,
+        content: Optional[str] = None,
+        *,
+        tts: bool = False,
+        embed: Optional[Embed] = None,
+        embeds: Optional[list[Embed]] = None,
+        file: Optional[File] = None,
+        files: Optional[list[File]] = None,
+        stickers: Optional[list[GuildSticker | StickerItem]] = None,
+        delete_after: Optional[float] = None,
+        nonce: Optional[int] = None,
+        allowed_mentions: Optional[AllowedMentions] = None,
+        reference: Optional[Message | MessageReference | PartialMessage] = None,
+        mention_author: bool = False,
+        username: Optional[str] = None,
+        avatar_url: Optional[str] = None,
+        ephemeral: bool = False,
+        thread: Optional[Snowflake] = None,
+        editing_original: bool = False,
+        **kwargs,
+    ):
+        """Sends the paginator towards the defined destination
+
+        Attributes
+        ----------
+        content : str, optional
+            message's content
+        tts : bool, optional
+            message's tts, defaults to False
+        embed : Embed, optional
+            message's embed, defaults to None
+            if set as None, no embed is generated.
+        embeds : list[Embed], optional
+            message's embeds, defaults to None
+        file : File, optional
+            message's file, defaults to None'
+        files : list[File], optional
+            message's file, defaults to None
+        stickers : list[Union[GuildSticker, StickerItem]], optional
+            message's stickers, defaults to None
+        delete_after : float, optional
+            defaults to None
+        nonce : int, optional
+            message's nonce, defaults to None
+        allowed_mentions : AllowedMentions, optional
+            message's allowed mentions, defaults MISSING
+        reference : Union[Message, MessageReference, PartialMessage], optional
+            message's reference, defaults to None
+        mention_author : bool, optional
+            if mentions the author of the message, defaults to MISSING
+        username : str, Optional
+            webhook username to send as, defaults to None
+        avatar_url: str, optional
+            webhook avatar_url to send as, defaults to None
+        ephemeral: bool, optional
+            if message is ephemeral, defaults to False
+        thread: Snowflake, optional
+            if message is sent to a thread, defaults to None
+        editing_original: bool, optional
+            If the message is gonna be edited, defaults to False
+        """
+        try:
+            await super(Complex, self).send(
+                content=content,
+                tts=tts,
+                embed=embed,
+                embeds=embeds,
+                file=file,
+                files=files,
+                stickers=stickers,
+                delete_after=delete_after,
+                nonce=nonce,
+                allowed_mentions=allowed_mentions,
+                reference=reference,
+                mention_author=mention_author,
+                username=username,
+                avatar_url=avatar_url,
+                ephemeral=ephemeral,
+                thread=thread,
+                editing_original=editing_original,
+                **kwargs,
+            )
+            await self.wait()
+        finally:
+            await self.delete()
+
     @property
     def current_choices(self) -> set[_T]:
         sct = self.select_choice
