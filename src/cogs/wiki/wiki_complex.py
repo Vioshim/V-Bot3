@@ -14,12 +14,22 @@
 
 from __future__ import annotations
 
-from discord import Interaction, InteractionResponse, PartialEmoji, TextStyle
+from typing import Optional
+
+from discord import (
+    DiscordException,
+    Embed,
+    Interaction,
+    InteractionResponse,
+    PartialEmoji,
+    TextStyle,
+)
 from discord.ui import Modal, Select, TextInput, button, select
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.wiki.wiki import WikiEntry
 from src.pagination.complex import Complex
+from utils import WHITE_BAR
 
 __all__ = ("WikiModal", "WikiComplex")
 
@@ -71,9 +81,49 @@ class WikiComplex(Complex[WikiEntry]):
             text_component=WikiModal(tree),
         )
         self.tree = tree
-        self.embed.title = "This page has no information yet"
-        self.embed.description = "Feel free to make suggestions to fill this page!"
         self.parent_folder.disabled = not tree.parent
+
+    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
+        resp: InteractionResponse = interaction.response
+        if self.keep_working or len(self.choices) < self.max_values:
+            content, embeds = self.tree.content, self.tree.embeds
+            if not (content or embeds):
+                embed = Embed(
+                    title="This page has no information yet",
+                    description="Feel free to make suggestions to fill this page!",
+                    color=self.member.color,
+                )
+                embed.set_image(url=WHITE_BAR)
+                embed.set_footer(
+                    text=self.member.guild.name,
+                    icon_url=self.member.guild.icon,
+                )
+                embeds = [embed]
+
+            self.parent_folder.disabled = not self.tree.parent
+            data = dict(content=content, embeds=embeds)
+
+            if isinstance(page, int):
+                self.pos = page
+                self.menu_format()
+                data["view"] = self
+
+            resp: InteractionResponse = interaction.response
+
+            if not resp.is_done():
+                return await resp.edit_message(**data)
+            try:
+                if message := self.message or interaction.message:
+                    await message.edit(**data)
+                else:
+                    self.message = await interaction.edit_original_message(**data)
+            except DiscordException as e:
+                interaction.client.logger.exception("View Error", exc_info=e)
+                self.stop()
+        else:
+            if not resp.is_done():
+                await resp.pong()
+            await self.delete()
 
     async def selection(self, interaction: Interaction, tree: WikiEntry):
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
@@ -82,7 +132,6 @@ class WikiComplex(Complex[WikiEntry]):
             embeds = [self.embed]
         self.tree = tree
         self.values = list(tree.children.values())
-        self.parent_folder.disabled = not tree.parent
         await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
