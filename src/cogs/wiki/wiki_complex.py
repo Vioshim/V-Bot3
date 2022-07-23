@@ -144,5 +144,4 @@ class WikiComplex(Complex[WikiEntry]):
         custom_id="parent",
     )
     async def parent_folder(self, interaction: Interaction, _: Select) -> None:
-        self.choices.add(self.tree.parent)
         await self.selection(interaction, self.tree.parent)
