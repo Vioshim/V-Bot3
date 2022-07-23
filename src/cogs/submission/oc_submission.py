@@ -14,6 +14,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Optional
 
 from discord import (
     ButtonStyle,
@@ -416,7 +417,6 @@ class BackstoryField(TemplateField):
             label="Write the character's Backstory.",
             placeholder=oc.backstory,
             default=oc.backstory,
-            required=True,
         ) as answer:
             if isinstance(answer, str):
                 oc.backstory = answer
@@ -432,8 +432,7 @@ class ExtraField(TemplateField):
         async with text_view.handle(
             label="Write the character's Extra Information.",
             placeholder=oc.extra,
-            default=oc.backstory,
-            required=True,
+            default=oc.extra,
         ) as answer:
             if isinstance(answer, str):
                 oc.extra = answer
@@ -446,17 +445,17 @@ class ImageField(TemplateField):
     description = "Fill the OC's Image"
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
-        view = ImageView(
-            member=ctx.user,
-            default_img=oc.image or oc.default_image,
-            target=ctx,
-        )
+        default_image = oc.image or oc.default_image
+        view = ImageView(member=ctx.user, default_img=default_image, target=ctx)
         async with view.send() as text:
             if text and isinstance(text, str):
                 oc.image = text
                 progress.add(self.name)
 
-        oc.image = await ctx.client.get_file(oc.generated_image)
+        if isinstance(oc.image, str):
+            oc.image = await ctx.client.get_file(oc.generated_image)
+        if not oc.image:
+            oc.image = default_image
 
 
 FIELDS: dict[str, TemplateField] = {
@@ -483,15 +482,19 @@ class CreationOCView(Basic):
         self.user = user
         self.ref_template = "Pokemon"
         self.progress: set[str] = set()
+        self.current: Optional[str] = None
         self.setup()
 
     async def interaction_check(self, interaction: Interaction) -> bool:
+        resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
         aux = cog.supporting.get(interaction.user, interaction.user)
         condition = aux == self.user
         if not condition:
-            resp: InteractionResponse = interaction.response
             await resp.send_message("This OC isn't yours", ephemeral=True)
+        elif self.current and self.user == interaction.user:
+            condition = False
+            await resp.send_message(f"You're currently filling the OC's {self.current}", ephemeral=True)
         return condition
 
     def setup(self):
@@ -541,6 +544,7 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         try:
             item = FIELDS[sct.values[0]]
+            self.current = item.name
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
             self.setup()
         except Exception as e:
@@ -558,6 +562,7 @@ class CreationOCView(Basic):
             m = await self.message.edit(embed=embed, view=self, attachments=files)
             self.oc.image = m.embeds[0].image.proxy_url
             self.message = m
+            self.current = None
 
     @button(
         emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}",
