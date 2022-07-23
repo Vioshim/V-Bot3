@@ -262,7 +262,7 @@ class InformationView(View):
     @button(label="See Map", emoji="\N{WORLD MAP}")
     async def see_map(self, ctx: Interaction, _: Button):
         view = RegionViewComplex(member=ctx.user, target=ctx)
-        await view.simple_send(content=MAP_URL, ephemeral=True)
+        await view.simple_send(ephemeral=True)
 
     @button(label="Make a Ticket", emoji=STICKER_EMOJI)
     async def create_ticket(self, ctx: Interaction, _: Button):

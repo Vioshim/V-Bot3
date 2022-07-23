@@ -417,30 +417,26 @@ class Complex(Simple[_T]):
         editing_original: bool, optional
             If the message is gonna be edited, defaults to False
         """
-        try:
-            await super(Complex, self).send(
-                content=content,
-                tts=tts,
-                embed=embed,
-                embeds=embeds,
-                file=file,
-                files=files,
-                stickers=stickers,
-                delete_after=delete_after,
-                nonce=nonce,
-                allowed_mentions=allowed_mentions,
-                reference=reference,
-                mention_author=mention_author,
-                username=username,
-                avatar_url=avatar_url,
-                ephemeral=ephemeral,
-                thread=thread,
-                editing_original=editing_original,
-                **kwargs,
-            )
-            await self.wait()
-        finally:
-            await self.delete()
+        await super(Complex, self).send(
+            content=content,
+            tts=tts,
+            embed=embed,
+            embeds=embeds,
+            file=file,
+            files=files,
+            stickers=stickers,
+            delete_after=delete_after,
+            nonce=nonce,
+            allowed_mentions=allowed_mentions,
+            reference=reference,
+            mention_author=mention_author,
+            username=username,
+            avatar_url=avatar_url,
+            ephemeral=ephemeral,
+            thread=thread,
+            editing_original=editing_original,
+            **kwargs,
+        )
 
     @property
     def current_choices(self) -> set[_T]:
