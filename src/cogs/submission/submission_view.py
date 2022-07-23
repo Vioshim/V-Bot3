@@ -24,6 +24,7 @@ from discord import (
     Message,
     TextStyle,
     Thread,
+    Webhook,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from jishaku.codeblocks import codeblock_converter
@@ -191,11 +192,19 @@ class SubmissionView(View):
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         try:
+            webhook: Webhook = await ctx.client.webhook(ctx.channel)
             user = self.supporting.get(ctx.user, ctx.user)
             view = CreationOCView(ctx, user)
-            await view.send()
+            view.message = await webhook.send(
+                embed=view.embed,
+                view=view,
+                username=f"User〛{user.display_name}",
+                avatar_url=user.display_avatar.url,
+                wait=True,
+            )
+            ctx.client.msg_cache_add(view.message)
             await view.wait()
-            await view.message.delete(delay=0)
+            await view.delete()
         except Exception as e:
             await ctx.response.send_message(str(e), ephemeral=True)
 
