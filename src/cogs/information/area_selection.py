@@ -52,7 +52,7 @@ class AreaSelection(Complex[TextChannel]):
                 ch = ch.parent
             return ch
 
-        entries = groupby(sorted(filter(foo, cog.ocs.values()), key=foo2), key=foo2)
+        entries = groupby(sorted(filter(foo, cog.ocs.values()), key=lambda x: foo2(x).id), key=foo2)
         self.entries = {k.id: set(v) for k, v in entries if k}
         self.total = sum(map(len, self.entries.values()))
 
