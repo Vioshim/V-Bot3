@@ -488,8 +488,12 @@ class CreationOCView(Basic):
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
-        aux = cog.supporting.get(interaction.user, interaction.user)
-        condition = aux == self.user
+
+        try:
+            condition = interaction.user in [self.user, cog.supperting[interaction.user]]
+        except KeyError:
+            condition = interaction.user == self.user
+
         if not condition:
             await resp.send_message("This OC isn't yours", ephemeral=True)
         elif self.current and self.user == interaction.user:
