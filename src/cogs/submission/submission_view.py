@@ -191,6 +191,8 @@ class SubmissionView(View):
 
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.pong()
         try:
             webhook: Webhook = await ctx.client.webhook(ctx.channel)
             user = self.supporting.get(ctx.user, ctx.user)
@@ -206,7 +208,7 @@ class SubmissionView(View):
             await view.wait()
             await view.delete()
         except Exception as e:
-            await ctx.response.send_message(str(e), ephemeral=True)
+            ctx.client.logger.exception("Exception in Character Creation", exc_info=e)
 
     @button(label="Character Modification", emoji="\N{PENCIL}", row=1, custom_id="modify-oc")
     async def oc_update(self, ctx: Interaction, _: Button):
