@@ -24,6 +24,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    PartialEmoji,
     User,
 )
 from discord.abc import Messageable
@@ -90,7 +91,12 @@ class ModernInput(Basic):
         finally:
             await aux.delete()
 
-    @button(label="Proceed with Message", style=ButtonStyle.blurple, row=0)
+    @button(
+        emoji=PartialEmoji(name="ChannelThread", id=816771501596344341),
+        label="Message",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
@@ -108,7 +114,12 @@ class ModernInput(Basic):
         finally:
             self.stop()
 
-    @button(label="Proceed with Modal", style=ButtonStyle.blurple, row=0)
+    @button(
+        emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
+        label="Modal",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
     async def confirm2(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         modal = TextModal(self.input_text)
@@ -117,18 +128,11 @@ class ModernInput(Basic):
         self.text = modal.text
         self.stop()
 
-    @button(label="Cancel the Process", style=ButtonStyle.red, row=0)
-    async def cancel(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        await resp.edit_message(
-            content="Process Concluded",
-            view=None,
-            embed=None,
-        )
-        self.text = None
-        self.stop()
-
-    @button(label="Continue without Message", row=0)
+    @button(
+        emoji=PartialEmoji(name="blank", id=993894870328557639),
+        label="Empty",
+        row=0,
+    )
     async def empty(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         self.text = ""
@@ -146,6 +150,17 @@ class ModernInput(Basic):
             )
         finally:
             self.stop()
+
+    @button(label="Cancel the Process", style=ButtonStyle.red, row=0)
+    async def cancel(self, interaction: Interaction, _: Button):
+        resp: InteractionResponse = interaction.response
+        await resp.edit_message(
+            content="Process Concluded",
+            view=None,
+            embed=None,
+        )
+        self.text = None
+        self.stop()
 
 
 class TextModal(Modal):

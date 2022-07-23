@@ -421,10 +421,10 @@ class BackstoryField(TemplateField):
             label="Write the character's Backstory.",
             placeholder=oc.backstory,
             default=oc.backstory,
+            required=False,
         ) as answer:
-            if isinstance(answer, str):
-                oc.backstory = answer
-                progress.add(self.name)
+            oc.backstory = answer or None
+            progress.add(self.name)
 
 
 class ExtraField(TemplateField):
@@ -437,11 +437,10 @@ class ExtraField(TemplateField):
             label="Write the character's Extra Information.",
             placeholder=oc.extra,
             default=oc.extra,
+            required=False,
         ) as answer:
-            if isinstance(answer, str):
-                oc.extra = answer
-
-                progress.add(self.name)
+            oc.extra = answer or None
+            progress.add(self.name)
 
 
 class ImageField(TemplateField):
