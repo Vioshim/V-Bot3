@@ -484,6 +484,7 @@ class CreationOCView(Basic):
         self.embed.title = "Character Creation"
         self.oc = Character(author=user.id)
         self.user = user
+        self.embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
         self.ref_template = "Pokemon"
         self.progress: set[str] = set()
         self.current: Optional[str] = None
@@ -558,6 +559,11 @@ class CreationOCView(Basic):
 
             if not resp.is_done():
                 await resp.pong()
+
+            embed.set_author(
+                name=self.user.display_name,
+                icon_url=self.user.display_avatar.url,
+            )
 
             files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
             embed.set_image(url="attachment://image.png")
