@@ -59,10 +59,10 @@ class MoveComplex(Complex[Move]):
 
         aux = sorted(set(self.total) - self.choices, key=lambda x: x.type.id or 0)
         data = {k: set(v) for k, v in groupby(aux, key=lambda x: x.type)}
-        data = dict[Typing, set[Typing]](
+        data = dict(
             sorted(
                 data.items(),
-                lambda x: len(x[1]),
+                key=lambda x: len(x[1]),
                 reverse=True,
             )
         )
