@@ -642,6 +642,30 @@ class Character:
                 self.server,
             )
 
+    def copy(self):
+        if self.sp_ability:
+            sp_ability = self.sp_ability.copy()
+        else:
+            sp_ability = None
+        return Character(
+            species=self.species,
+            id=self.id,
+            author=self.author,
+            thread=self.thread,
+            server=self.server,
+            name=self.name,
+            age=self.age,
+            pronoun=self.pronoun,
+            backstory=self.backstory,
+            extra=self.extra,
+            abilities=self.abilities.copy(),
+            moveset=self.moveset.copy(),
+            sp_ability=sp_ability,
+            url=self.url,
+            image=self.image,
+            location=self.location,
+        )
+
     def __repr__(self) -> str:
         types = "/".join(i.name for i in self.types)
         name = self.kind.name if self.kind else "Error"

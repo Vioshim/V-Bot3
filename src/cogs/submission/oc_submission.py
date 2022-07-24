@@ -249,7 +249,8 @@ class SpeciesField(TemplateField):
                     oc.abilities = frozenset()
                 else:
                     oc.species = choices[0]
-                    oc.image = choices[0].base_image
+                    if not oc.image:
+                        oc.image = choices[0].base_image
 
                 oc.abilities &= frozenset(oc.species.abilities)
                 oc.moveset &= frozenset(oc.total_movepool())
@@ -527,8 +528,7 @@ class CreationOCView(Basic):
     def __init__(self, ctx: Interaction, user: Member, oc: Optional[Character] = None):
         super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
         self.embed.title = "Character Creation"
-        if not oc:
-            oc = Character(author=user.id, server=ctx.guild.id)
+        oc = oc.copy() if oc else Character(author=user.id, server=ctx.guild.id)
         self.oc = oc
         self.user = user
         self.embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)

@@ -237,6 +237,15 @@ class SpAbility:
         items.pop("id", None)
         return SpAbility(**items)
 
+    def copy(self):
+        return SpAbility(
+            name=self.name,
+            description=self.description,
+            origin=self.origin,
+            pros=self.pros,
+            cons=self.cons,
+        )
+
     @classmethod
     async def fetch(cls, connection: Connection, idx: int) -> Optional[SpAbility]:
         """This method calls database to obtain information
