@@ -23,8 +23,15 @@ from src.structures.species import Fusion, Species, Variant
 __all__ = ("SpeciesComplex",)
 
 
-SELECT_TYPINGS = [SelectOption(label="Remove Filter")]
-SELECT_TYPINGS.extend(SelectOption(label=x.name, value=str(x), emoji=x.emoji) for x in Typing.all())
+SELECT_TYPINGS = [SelectOption(label="None")]
+SELECT_TYPINGS.extend(
+    SelectOption(
+        label=x.name,
+        value=str(x),
+        emoji=x.emoji,
+    )
+    for x in sorted(Typing.all(), key=lambda x: x.name)
+)
 
 
 class SpeciesComplex(Complex[Species]):
@@ -67,12 +74,17 @@ class SpeciesComplex(Complex[Species]):
         placeholder="Filter by Typings",
         custom_id="filter",
         options=SELECT_TYPINGS,
-        min_values=0,
+        min_values=1,
         max_values=2,
     )
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         mon_total = self.mon_total
-        if mon_types := {o for x in sct.values if (o := Typing.from_ID(x))}:
-            mon_total = [x for x in mon_total if x.types == mon_types]
-        self.values = mon_total
+        mon_types = {o for x in sct.values if (o := Typing.from_ID(x))}
+
+        def check(x: Species) -> bool:
+            if len(mon_types) == 2 or "None" in sct.values:
+                return mon_types == x.types
+            return any(o in mon_types for o in x.types)
+
+        self.values = filter(check, mon_total)
         await self.edit(interaction=interaction, page=0)

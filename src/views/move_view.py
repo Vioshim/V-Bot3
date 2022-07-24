@@ -20,6 +20,7 @@ from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
+from src.structures.mon_typing import Typing
 from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
@@ -50,31 +51,23 @@ class MoveComplex(Complex[Move]):
         self.embed.title = "Select Moves"
         self.total = total
         self.data = {}
-        self.select_types.options.clear()
-        self.select_types.add_option(
-            label="No Type Filter",
-            description=f"Has {len(total)} moves.",
-        )
-        for k, v in groupby(total, key=lambda x: x.type):
-            items = set(v)
-            self.data[str(k)] = items
-            self.select_types.add_option(
-                label=k.name,
-                value=str(k),
-                emoji=k.emoji,
-                description=f"Has {len(items)} moves.",
-            )
 
     def menu_format(self) -> None:
-        aux = sorted(set(self.total) - self.choices, key=lambda x: x.type.id or 0)
+
         self.select_types.options.clear()
-        self.select_types.add_option(
-            label="No Type Filter",
-            description=f"Has {len(self.total)} moves.",
+        self.select_types.add_option(label="No Type Filter", description=f"Has {len(self.total)} moves.")
+
+        aux = sorted(set(self.total) - self.choices, key=lambda x: x.type.id or 0)
+        data = {k: set(v) for k, v in groupby(aux, key=lambda x: x.type)}
+        data = dict[Typing, set[Typing]](
+            sorted(
+                data.items(),
+                lambda x: len(x[1]),
+                reverse=True,
+            )
         )
 
-        for k, v in groupby(aux, key=lambda x: x.type):
-            items = set(v)
+        for k, items in data.items():
             self.data[str(k)] = items
             self.select_types.add_option(
                 label=k.name,

@@ -14,7 +14,6 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from itertools import groupby
 from typing import Optional
 
 from discord import (
@@ -297,7 +296,7 @@ class TypesField(TemplateField):
         species = oc.species
         if isinstance(species, Fusion):  # type: ignore
             values = species.possible_types
-            view: Complex[set[Typing]] = Complex(
+            view = Complex[set[Typing]](
                 member=ctx.user,
                 target=ctx,
                 values=values,
@@ -311,13 +310,13 @@ class TypesField(TemplateField):
             )
             single = True
         else:
-            view: Complex[Typing] = Complex(
+            view = Complex[Typing](
                 member=ctx.user,
                 target=ctx,
                 values=Typing.all(),
                 max_values=2,
                 timeout=None,
-                parser=lambda x: (str(x), f"Adds the typing {x}"),
+                parser=lambda x: (x.name, f"Adds the typing {x.name}"),
                 text_component=TextInput(
                     label="Character's Types",
                     placeholder="Type, Type",
