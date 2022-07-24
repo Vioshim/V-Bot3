@@ -532,6 +532,8 @@ class CreationOCView(Basic):
         self.ref_template = convert_template(oc)
         self.progress: set[str] = set()
         self.current: Optional[str] = None
+        if not oc.id:
+            self.remove_item(self.finish_oc)
         self.setup()
 
     async def interaction_check(self, interaction: Interaction) -> bool:
