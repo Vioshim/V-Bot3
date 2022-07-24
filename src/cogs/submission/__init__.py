@@ -119,7 +119,6 @@ class Submission(commands.Cog):
                     text.title(),
                     choices=items,
                     processor=lambda x: getattr(x, "name", x),
-                    score_cutoff=85,
                 )
             ]
         if len(moves) == 1:

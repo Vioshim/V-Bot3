@@ -918,7 +918,6 @@ class CharacterTransform(Transformer):
             value,
             choices=ocs,
             limit=25,
-            score_cutoff=60,
             processor=lambda x: getattr(x, "name", x),
         ):
             options = [x[0] for x in options]
