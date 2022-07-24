@@ -195,39 +195,35 @@ class Submission(commands.Cog):
             thread=Object(id=oc.thread),
             allowed_mentions=AllowedMentions(users=True),
         )
-        if not image_as_is:
-            image = oc.generated_image
+
+        if not oc.image_url:
+            if not image_as_is:
+                image = oc.generated_image
+            else:
+                image = oc.image
+            if file := await self.bot.get_file(url=image, filename="image"):
+                word = "attachments" if oc.id else "files"
+                kwargs[word] = [file]
+
+        if oc.id:
+            msg_oc = await webhook.edit_message(oc.id, **kwargs)
+            word = "modified"
         else:
-            image = oc.image
+            msg_oc = await webhook.send(**kwargs, wait=True)
+            word = "registered"
 
-        if file := await self.bot.get_file(url=image, filename="image"):
-            kwargs["file"] = file
-            try:
-                if oc.id:
-                    msg_oc = await webhook.edit_message(oc.id, **kwargs)
-                else:
-                    msg_oc = await webhook.send(**kwargs, wait=True)
-            except HTTPException:
-                await self.list_update(member)
-                kwargs["thread"] = Object(id=self.oc_list[member.id])
-                if oc.id:
-                    msg_oc = await webhook.edit_message(oc.id, **kwargs)
-                else:
-                    msg_oc = await webhook.send(**kwargs, wait=True)
-
-            word = "modified" if oc.id else "registered"
-            oc.id = msg_oc.id
-            oc.image_url = msg_oc.embeds[0].image.url
-            self.ocs[oc.id] = oc
-            self.bot.logger.info(
-                "New character has been %s! > %s > %s > %s",
-                word,
-                str(user),
-                repr(oc),
-                oc.document_url or "Manual",
-            )
-            async with self.bot.database() as conn:
-                await oc.update(connection=conn, idx=msg_oc.id)
+        oc.id = msg_oc.id
+        oc.image_url = msg_oc.embeds[0].image.url
+        self.ocs[oc.id] = oc
+        self.bot.logger.info(
+            "New character has been %s! > %s > %s > %s",
+            word,
+            str(user),
+            repr(oc),
+            oc.document_url or "Manual",
+        )
+        async with self.bot.database() as conn:
+            await oc.update(connection=conn, idx=msg_oc.id)
 
     async def registration(self, ctx: Interaction | Message, oc: Type[Character], worker: Member):
         """This is the function which handles the registration process,
