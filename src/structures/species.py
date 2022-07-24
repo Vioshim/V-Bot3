@@ -22,7 +22,7 @@ from typing import Any, Iterable, Optional
 
 from asyncpg import Record
 from frozendict import frozendict
-from thefuzz import process
+from rapidfuzz import process
 
 from src.structures.ability import Ability
 from src.structures.mon_typing import Typing

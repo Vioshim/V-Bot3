@@ -26,7 +26,7 @@ from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
 from docx.document import Document
-from thefuzz import process
+from rapidfuzz import process
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import Typing
@@ -947,6 +947,7 @@ class CharacterTransform(Transformer):
             choices=ocs,
             limit=25,
             processor=lambda x: getattr(x, "name", x),
+            score_cutoff=60,
         ):
             options = [x[0] for x in options]
         elif not value:

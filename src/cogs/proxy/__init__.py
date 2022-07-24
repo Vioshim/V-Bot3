@@ -28,7 +28,7 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 from discord.utils import MISSING
-from thefuzz import process
+from rapidfuzz import process
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
 from src.cogs.proxy.proxy import NameGenerator

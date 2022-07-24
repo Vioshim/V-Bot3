@@ -43,7 +43,7 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, TextInput, View
 from discord.utils import MISSING, utcnow
-from thefuzz import process
+from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
@@ -116,6 +116,7 @@ class Submission(commands.Cog):
                     text.title(),
                     choices=items,
                     processor=lambda x: getattr(x, "name", x),
+                    score_cutoff=60,
                 )
             ]
         if len(moves) == 1:
