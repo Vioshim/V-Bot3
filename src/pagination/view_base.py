@@ -247,7 +247,7 @@ class Basic(View):
                 if self.message.flags.ephemeral:
                     await self.message.edit(view=None)
                 else:
-                    await self.message.delete()
+                    await self.message.delete(delay=0)
         except HTTPException:
             try:
                 if isinstance(self.target, Interaction):

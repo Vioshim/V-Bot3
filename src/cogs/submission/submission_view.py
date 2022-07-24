@@ -175,7 +175,7 @@ class SubmissionView(View):
             view = CreationOCView(ctx, user)
             await view.send()
             await view.wait()
-            await view.message.delete(delay=0)
+            await view.delete()
         except Exception as e:
             await ctx.response.send_message(str(e), ephemeral=True)
         finally:
