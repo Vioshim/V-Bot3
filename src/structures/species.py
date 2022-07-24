@@ -22,7 +22,7 @@ from typing import Any, Iterable, Optional
 
 from asyncpg import Record
 from frozendict import frozendict
-from rapidfuzz import process
+from thefuzz import process
 
 from src.structures.ability import Ability
 from src.structures.mon_typing import Typing
@@ -222,7 +222,7 @@ class Species(metaclass=ABCMeta):
             if data := SPECIES_BY_NAME.get(word) or ALL_SPECIES.get(fix(word)):
                 items.append(data)
             elif elements := process.extractOne(
-                word,
+                query=word,
                 choices=entries,
                 processor=lambda x: getattr(x, "name", x),
                 score_cutoff=85,
@@ -275,7 +275,7 @@ class Species(metaclass=ABCMeta):
             if data := SPECIES_BY_NAME.get(word) or ALL_SPECIES.get(fix(word)):
                 return data
             if elements := process.extractOne(
-                word,
+                query=word,
                 choices=entries,
                 processor=lambda x: getattr(x, "name", x),
                 score_cutoff=85,

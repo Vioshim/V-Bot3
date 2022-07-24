@@ -35,12 +35,12 @@ python-docx = "^0.8.11"
 colour = "^0.1.5"
 humanize = "^4.0.0"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git", extras = ["speed", "voice"]}
-rapidfuzz = "^2.0.10"
 asyncpg-stubs = {git = "https://github.com/bryanforbes/asyncpg-stubs"}
 aiogoogle = "^4.1.0"
 motor = {version = "^3.0.0", extras = ["srv"]}
 motor-stubs = "^1.7.1"
 pymongo = {version = "^4.1.1", extras = ["srv"]}
+thefuzz = {version = "^0.19.0", extras = ["speedup"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

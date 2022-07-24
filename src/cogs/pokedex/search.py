@@ -21,7 +21,7 @@ from discord import Guild, Interaction, Member, TextChannel, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
-from rapidfuzz import process
+from thefuzz import process
 
 from src.cogs.submission import Submission
 from src.pagination.complex import Complex
@@ -137,7 +137,7 @@ class MoveTransformer(Transformer):
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Move.all())
         if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
-            options = [x for x, _, _ in options]
+            options = [x[0] for x in options]
         elif not value:
             options = items[:25]
         return [Choice(name=x.name, value=x.id) for x in set(options)]
@@ -195,7 +195,7 @@ class SpeciesTransformer(Transformer):
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
         if options := process.extract(value, choices=values, limit=25, score_cutoff=60, processor=item_name):
-            options = [x for x, _, _ in options]
+            options = [x[0] for x in options]
         elif not value:
             options = list(values)[:25]
         entries = {item_name(x): item_value(x) for x in options}
@@ -223,7 +223,7 @@ class DefaultSpeciesTransformer(Transformer):
                 }
             )
         if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
-            options = [x for x, _, _ in options]
+            options = [x[0] for x in options]
         elif not value:
             options = items
         return [Choice(name=x.name, value=x.id) for x in set(options[:25])]
@@ -245,7 +245,7 @@ class AbilityTransformer(Transformer):
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Ability.all())
         if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=item_name):
-            options = [x for x, _, _ in options]
+            options = [x[0] for x in options]
         elif not value:
             options = items[:25]
         return [Choice(name=x.name, value=x.id) for x in set(options)]
@@ -266,7 +266,7 @@ class TypingTransformer(Transformer):
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Typing.all())
         if options := process.extract(value, choices=items, limit=25, score_cutoff=60, processor=str):
-            options = [x for x, _, _ in options]
+            options = [x[0] for x in options]
         elif not value:
             options = items[:25]
         return [Choice(name=x.name, value=str(x)) for x in set(options)]
@@ -283,7 +283,7 @@ class FakemonTransformer(Transformer):
         if value.isdigit():
             oc = cog.ocs.get(int(value))
         elif ocs := process.extractOne(value, choices=cog.ocs.values(), score_cutoff=60, processor=item_name):
-            oc, _, _ = ocs
+            oc = ocs[0]
         if not oc:
             raise ValueError(f"Fakemon {value!r} not found.")
         return oc
@@ -294,7 +294,7 @@ class FakemonTransformer(Transformer):
         cog: Submission = ctx.client.get_cog("Submission")
         mons = [oc for oc in cog.ocs.values() if oc.kind == Kind.Fakemon and guild.get_member(oc.author)]
         if options := process.extract(value, choices=mons, limit=25, score_cutoff=60, processor=item_name):
-            options = [x for x, _, _ in options]
+            options = [x[0] for x in options]
         elif not value:
             options = mons[:25]
         return [Choice(name=x.species.name, value=str(x.id)) for x in set(options)]

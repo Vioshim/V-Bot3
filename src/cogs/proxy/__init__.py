@@ -28,7 +28,7 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 from discord.utils import MISSING
-from rapidfuzz import process
+from thefuzz import process
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
 from src.cogs.proxy.proxy import NameGenerator
@@ -192,11 +192,11 @@ class Proxy(commands.Cog):
         member = cog.supporting.get(ctx.author, ctx.author)
         entries1 = {x.name: x.base_image for x in Species.all()}
         entries2 = {x.name: x.image_url for x in cog.ocs.values() if x.author == member.id}
-        if options := process.extract(pokemon, choices=entries1, limit=1, score_cutoff=60):
-            key = options[0][0]
+        if options := process.extractOne(pokemon, choices=entries1, limit=1, score_cutoff=60):
+            key = options[0]
             npc = NPC(name=f"NPC〕{key}", avatar=entries1[key])
-        elif options := process.extract(pokemon, choices=entries2, limit=1, score_cutoff=60):
-            key = options[0][0]
+        elif options := process.extractOne(pokemon, choices=entries2, limit=1, score_cutoff=60):
+            key = options[0]
             npc = NPC(name=key, avatar=entries2[key])
         else:
             npc = NPC(name=pokemon)

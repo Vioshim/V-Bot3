@@ -33,7 +33,6 @@ from discord import (
     PartialEmoji,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
-    SelectOption,
     Status,
     TextStyle,
     Thread,
@@ -44,7 +43,7 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, TextInput, View
 from discord.utils import MISSING, utcnow
-from rapidfuzz import process
+from thefuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.submission_view import SubmissionView
@@ -115,8 +114,8 @@ class Submission(commands.Cog):
         elif text := message.content:
             items = Move.all() | Ability.all()
             moves = [
-                move
-                for move, _, _ in process.extract(
+                x[0]
+                for x in process.extract(
                     text.title(),
                     choices=items,
                     processor=lambda x: getattr(x, "name", x),

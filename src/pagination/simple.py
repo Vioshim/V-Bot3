@@ -352,13 +352,32 @@ class Simple(Generic[_T], Basic):
 
         if not resp.is_done():
             return await resp.edit_message(**data)
+        message = self.message or interaction.message
         try:
-            if message := self.message or interaction.message:
+            if message:
                 await message.edit(**data)
             else:
                 self.message = await interaction.edit_original_message(**data)
         except DiscordException as e:
-            interaction.client.logger.exception("View Error", exc_info=e)
+            interaction.client.logger.exception(
+                "View Error, params: %s | %s | %s | %s",
+                f"{self.message!r} - {self.message}",
+                f"{interaction.message!r} - {interaction.message}",
+                str(data),
+                str(self.target),
+                exc_info=e,
+            )
+            try:
+                self.message = await interaction.edit_original_message(**data)
+            except DiscordException as e:
+                interaction.client.logger.exception(
+                    "View Error2, params: %s | %s | %s | %s",
+                    f"{self.message!r} - {self.message}",
+                    f"{interaction.message!r} - {interaction.message}",
+                    str(data),
+                    str(self.target),
+                    exc_info=e,
+                )
             self.stop()
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)
