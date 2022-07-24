@@ -14,10 +14,13 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from itertools import groupby
 from typing import Optional
 
 from discord import (
     ButtonStyle,
+    Color,
+    Embed,
     File,
     Interaction,
     InteractionResponse,
@@ -49,6 +52,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
+from src.utils.etc import WHITE_BAR
 from src.utils.functions import int_check
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
@@ -540,11 +544,29 @@ class CreationOCView(Basic):
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
         condition = self.user == cog.supporting.get(interaction.user, interaction.user)
+
+        embed = Embed(
+            color=Color.red(),
+            timestamp=interaction.created_at,
+        )
+        embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
+        embed.set_image(url=WHITE_BAR)
+
         if not condition:
-            await resp.send_message("This OC isn't yours", ephemeral=True)
+            embed.title = "This OC isn't yours"
         elif self.current and self.user == interaction.user:
-            condition = False
-            await resp.send_message(f"You're currently filling the OC's {self.current}", ephemeral=True)
+            embed.title = f"You're currently filling the OC's {self.current}"
+
+        if embed.title:
+            items: list[SelectOption] = sorted(self.fields.options, key=lambda x: x.emoji)
+            for k, v in groupby(items, key=lambda x: x.emoji):
+                embed.add_field(
+                    name="Completed" if str(k) == "\N{WHITE HEAVY CHECK MARK}" else "Missing",
+                    value="\n".join(f"• {x.label}" for x in v),
+                    inline=False,
+                )
+            await resp.send_message(embed=embed, ephemeral=True)
+
         return condition
 
     def setup(self):
