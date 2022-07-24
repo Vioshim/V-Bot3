@@ -545,10 +545,7 @@ class CreationOCView(Basic):
         cog = interaction.client.get_cog("Submission")
         condition = self.user == cog.supporting.get(interaction.user, interaction.user)
 
-        embed = Embed(
-            color=Color.red(),
-            timestamp=interaction.created_at,
-        )
+        embed = Embed(color=Color.red(), timestamp=interaction.created_at)
         embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
 
@@ -558,13 +555,14 @@ class CreationOCView(Basic):
             embed.title = f"You're currently filling the OC's {self.current}"
 
         if embed.title:
-            items: list[SelectOption] = sorted(self.fields.options, key=lambda x: x.emoji)
-            for k, v in groupby(items, key=lambda x: x.emoji):
-                embed.add_field(
-                    name="Completed" if str(k) == "\N{WHITE HEAVY CHECK MARK}" else "Missing",
-                    value="\n".join(f"• {x.label}" for x in v),
-                    inline=False,
-                )
+            data = dict(
+                Completed="\n".join(
+                    f"• {x.label}" for x in self.fields.options if str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}"
+                ),
+                Missing="\n".join(f"• {x.label}" for x in self.fields.options if str(x.emoji) == "\N{CROSS MARK}"),
+            )
+            for key, value in filter(all, data.items()):
+                embed.add_field(name=key, value=value, inline=False)
             await resp.send_message(embed=embed, ephemeral=True)
 
         return condition
