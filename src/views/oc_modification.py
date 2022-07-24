@@ -1241,7 +1241,7 @@ class ModificationComplex(Complex[str]):
                 async with ctx.client.database() as db:
                     await self.oc.update(db)
             await ctx.edit_original_message(view=None, embed=self.oc.embed)
-        await super(ModificationComplex, self).select_choice(ctx, sct)
+            self.stop()
 
     @button(
         label="Don't make any changes",
