@@ -23,7 +23,6 @@ from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
 from thefuzz import process
 
-from src.cogs.submission import Submission
 from src.pagination.complex import Complex
 from src.structures.ability import Ability
 from src.structures.character import Character, Kind
@@ -150,7 +149,7 @@ class SpeciesTransformer(Transformer):
     @classmethod
     async def transform(cls, ctx: Interaction, value: Optional[str]):
         value = value or ""
-        cog: Submission = ctx.client.get_cog("Submission")
+        cog = ctx.client.get_cog("Submission")
         if value.isdigit() and (oc := cog.ocs.get(int(value))):
             return oc
         mon = Species.from_ID(value)
@@ -160,7 +159,7 @@ class SpeciesTransformer(Transformer):
 
     @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
-        cog: Submission = ctx.client.get_cog("Submission")
+        cog = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
         mons = cog.ocs.values()
         filters: list[Callable[[Character | Species], bool]] = [
@@ -214,7 +213,7 @@ class DefaultSpeciesTransformer(Transformer):
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         items = list(Species.all())
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
-            cog: Submission = ctx.client.get_cog("Submission")
+            cog = ctx.client.get_cog("Submission")
             items = list(
                 {
                     (set(x.species.bases) - {fused}).pop()
@@ -278,7 +277,7 @@ TypingArg = Transform[Typing, TypingTransformer]
 class FakemonTransformer(Transformer):
     @classmethod
     async def transform(cls, ctx: Interaction, value: Optional[str]):
-        cog: Submission = ctx.client.get_cog("Submission")
+        cog = ctx.client.get_cog("Submission")
         oc: Optional[Character] = None
         if value.isdigit():
             oc = cog.ocs.get(int(value))
@@ -291,7 +290,7 @@ class FakemonTransformer(Transformer):
     @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         guild: Guild = ctx.guild
-        cog: Submission = ctx.client.get_cog("Submission")
+        cog = ctx.client.get_cog("Submission")
         mons = [oc for oc in cog.ocs.values() if oc.kind == Kind.Fakemon and guild.get_member(oc.author)]
         if options := process.extract(value, choices=mons, limit=25, processor=item_name):
             options = [x[0] for x in options]
