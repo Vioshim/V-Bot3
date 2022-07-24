@@ -607,11 +607,15 @@ class CreationOCView(Basic):
                 icon_url=self.user.display_avatar.url,
             )
 
-            files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
-            embed.set_image(url="attachment://image.png")
+            if isinstance(self.oc.image, File):
+                files = [self.oc.image]
+                embed.set_image(url=f"attachment://{self.oc.image.filename}")
+            else:
+                files = MISSING
 
             m = await self.message.edit(embed=embed, view=self, attachments=files)
-            self.oc.image = m.embeds[0].image.proxy_url
+            if files and m.embeds[0].image.proxy_url:
+                self.oc.image = m.embeds[0].image.proxy_url
             self.message = m
             self.current = None
 
@@ -678,4 +682,4 @@ class ModCharactersView(CharactersView):
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
         finally:
-            await super(ModCharactersView, self).select_choice(interaction, sct)
+            await super(CharactersView, self).select_choice(interaction, sct)

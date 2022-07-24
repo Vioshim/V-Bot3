@@ -30,7 +30,7 @@ from jishaku.codeblocks import codeblock_converter
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.submission.oc_parsers import ParserMethods
-from src.cogs.submission.oc_submission import CreationOCView
+from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
@@ -43,28 +43,6 @@ logger = getLogger(__name__)
 class NPC(NamedTuple):
     name: str = "Narrator"
     avatar: str = "https://cdn.discordapp.com/attachments/748384705098940426/986339510646370344/unknown.png"
-
-
-class CharacterHandlerView(Complex[Character]):
-    def __init__(self, member: Member, target: Interaction, values: set[Character]):
-        super(CharacterHandlerView, self).__init__(
-            member=member,
-            target=target,
-            values=values,
-            parser=lambda x: (x.name, repr(x)),
-            timeout=None,
-            sort_key=lambda x: x.name,
-        )
-
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, ctx: Interaction, sct: Select) -> None:
-        if oc := self.current_choice:
-            cog = ctx.client.get_cog("Submission")
-            user = cog.supporting.get(ctx.user, ctx.user)
-            view = CreationOCView(ctx=ctx, user=user, oc=oc)
-            await view.send(editing_original=True, embed=oc.embed)
-            await view.wait()
-        await super(CharacterHandlerView, self).select_choice(interaction=ctx, sct=sct)
 
 
 class SubmissionModal(Modal):
@@ -216,18 +194,9 @@ class SubmissionView(View):
         if not values:
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
         values.sort(key=lambda x: x.name)
-        if len(values) == 1:
-            user = self.supporting.get(ctx.user, ctx.user)
-            view = CreationOCView(ctx=ctx, user=user, oc=values[0])
-            await view.send(
-                content="User only has one character",
-                embed=values[0].embed,
-                ephemeral=True,
-            )
-        else:
-            view = CharacterHandlerView(member=ctx.user, target=ctx, values=values)
-            view.embed.title = "Select Character to modify"
-            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            async with view.send(single=True, ephemeral=True) as oc:
-                if isinstance(oc, Character):
-                    logger.info("%s is modifying a Character(%s) aka %s", str(ctx.user), repr(oc), oc.name)
+        view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+        view.embed.title = "Select Character to modify"
+        view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        async with view.send(single=True, ephemeral=True) as oc:
+            if isinstance(oc, Character):
+                logger.info("%s is modifying a Character(%s) aka %s", str(ctx.user), repr(oc), oc.name)

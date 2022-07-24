@@ -393,12 +393,12 @@ class Character:
         if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
-        if isinstance(self.image, File):
-            c_embed.set_image(url=f"attachment://{self.image}")
+        if image := self.image_url:
+            c_embed.set_image(url=image)
+        elif isinstance(self.image, File):
+            c_embed.set_image(url=f"attachment://{self.image.filename}")
         elif isinstance(self.image, str):
             c_embed.set_image(url=self.image)
-        elif image := self.image_url:
-            c_embed.set_image(url=image)
 
         if location := self.place_mention:
             c_embed.add_field(name="Last Location", value=location, inline=False)
