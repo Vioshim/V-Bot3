@@ -46,7 +46,7 @@ from discord.utils import MISSING, utcnow
 from thefuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
-from src.cogs.submission.oc_submission import CreationOCView
+from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
 from src.cogs.submission.submission_view import SubmissionView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
@@ -59,7 +59,7 @@ from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
-from src.views.characters_view import CharactersView, PingView
+from src.views.characters_view import PingView
 from src.views.image_view import ImageView
 from src.views.move_view import MoveView
 from src.views.movepool_view import MovepoolView
@@ -137,7 +137,7 @@ class Submission(commands.Cog):
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         ocs = [oc for oc in self.ocs.values() if oc.author == member.id]
-        view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+        view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
         embed = view.embed
         embed.color = member.color
         embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
@@ -804,7 +804,7 @@ class Submission(commands.Cog):
 
         if ocs := [oc for oc in self.ocs.values() if oc.author == member.id]:
             ocs.sort(key=lambda x: x.name)
-            view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
             embed = view.embed
             embed.color = member.color
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)

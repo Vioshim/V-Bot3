@@ -48,6 +48,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.functions import int_check
+from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
 from src.views.move_view import MoveComplex
 from src.views.movepool_view import MovepoolView
@@ -638,3 +639,40 @@ class CreationOCView(Basic):
             await self.user.add_roles(registered)
         await ctx.followup.send("Character Registered without Issues!", ephemeral=True)
         self.stop()
+
+
+class ModCharactersView(CharactersView):
+    def __init__(
+        self,
+        member: Member,
+        target: Interaction,
+        ocs: set[Character],
+        keep_working: bool = False,
+    ):
+        super(ModCharactersView, self).__init__(member, target, ocs, keep_working)
+
+    @select(row=1, placeholder="Select the Characters", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
+        if item := self.current_choice:
+            embed = item.embed
+            guild = self.member.guild
+            if author := guild.get_member(item.author):
+                embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
+
+            cog = interaction.client.get_cog("Submission")
+            user: Member = cog.supporting.get(interaction.user, interaction.user)
+            if item.author in [user.id, interaction.user.id]:
+                view = CreationOCView(ctx=interaction, user=user, oc=item)
+                await view.send(embed=embed, ephemeral=True)
+            else:
+                if isinstance(self.target, Interaction):
+                    target = self.target
+                else:
+                    target = interaction
+                view = PingView(oc=item, reference=target)
+                await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+
+            await view.wait()
+        await super(ModCharactersView, self).select_choice(interaction, sct)

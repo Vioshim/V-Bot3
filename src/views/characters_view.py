@@ -40,7 +40,6 @@ from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import MISSING
 from motor.motor_asyncio import AsyncIOMotorCollection
 
-from src.cogs.submission.oc_submission import CreationOCView
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
@@ -254,17 +253,11 @@ class CharactersView(Complex[Character]):
             guild: Guild = self.member.guild
             if author := guild.get_member(item.author):
                 embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
-            cog = interaction.client.get_cog("Submission")
-            user: Member = cog.supporting.get(interaction.user, interaction.user)
-            if item.author in [user.id, interaction.user.id]:
-                view = CreationOCView(ctx=interaction, user=user, oc=item)
-                await view.send(embed=embed, ephemeral=True)
+            if isinstance(self.target, Interaction):
+                target = self.target
             else:
-                if isinstance(self.target, Interaction):
-                    target = self.target
-                else:
-                    target = interaction
-                view = PingView(oc=item, reference=target)
-                await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+                target = interaction
+            view = PingView(oc=item, reference=target)
+            await interaction.followup.send(embed=embed, view=view, ephemeral=True)
             await view.wait()
         await super(CharactersView, self).select_choice(interaction, sct)
