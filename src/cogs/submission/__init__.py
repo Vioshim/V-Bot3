@@ -46,6 +46,7 @@ from discord.utils import MISSING, utcnow
 from thefuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
+from src.cogs.submission.oc_submission import CreationOCView
 from src.cogs.submission.submission_view import SubmissionView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
@@ -61,7 +62,6 @@ from src.utils.imagekit import Fonts, ImageKit
 from src.views import (
     CharactersView,
     ImageView,
-    ModificationComplex,
     MovepoolView,
     MoveView,
     PingView,
@@ -202,20 +202,29 @@ class Submission(commands.Cog):
             image = oc.generated_image
         else:
             image = oc.image
+
         if file := await self.bot.get_file(url=image, filename="image"):
             kwargs["file"] = file
             try:
-                msg_oc = await webhook.send(**kwargs, wait=True)
+                if oc.id:
+                    msg_oc = await webhook.edit_message(oc.id, **kwargs)
+                else:
+                    msg_oc = await webhook.send(**kwargs, wait=True)
             except HTTPException:
                 await self.list_update(member)
                 kwargs["thread"] = Object(id=self.oc_list[member.id])
-                msg_oc = await webhook.send(**kwargs, wait=True)
+                if oc.id:
+                    msg_oc = await webhook.edit_message(oc.id, **kwargs)
+                else:
+                    msg_oc = await webhook.send(**kwargs, wait=True)
 
+            word = "modified" if oc.id else "registered"
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
             self.ocs[oc.id] = oc
             self.bot.logger.info(
-                "New character has been registered! > %s > %s > %s",
+                "New character has been %s! > %s > %s > %s",
+                word,
                 str(user),
                 repr(oc),
                 oc.document_url or "Manual",
@@ -785,18 +794,17 @@ class Submission(commands.Cog):
         await resp.defer(ephemeral=True, thinking=True)
         if member is None:
             member = ctx.user
+        user = self.supporting.get(ctx.user, ctx.user)
+
         if character:
-            user = self.supporting.get(ctx.user, ctx.user)
             if character.author in [ctx.user.id, user.id]:
-                view = ModificationComplex(oc=character, member=ctx.user)
+                view = CreationOCView(ctx=ctx, user=user, oc=character)
             else:
                 view = PingView(oc=character, reference=ctx)
             return await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
+
         if ocs := [oc for oc in self.ocs.values() if oc.author == member.id]:
             ocs.sort(key=lambda x: x.name)
-            if len(ocs) == 1:
-                await ctx.followup.send(f"{member.mention} has only one character.", embed=ocs[0].embed, ephemeral=True)
-                return
             view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
             embed = view.embed
             embed.color = member.color

@@ -173,14 +173,18 @@ class Character:
         return self.id == other.id
 
     @property
-    def types(self):
-        return frozenset(self.species.types)
+    def types(self) -> frozenset[Typing]:
+        if self.species:
+            return frozenset(self.species.types)
+        return frozenset()
 
     @property
-    def possible_types(self):
+    def possible_types(self) -> frozenset[frozenset[Typing]]:
         if isinstance(self.species, Fusion):
             return frozenset([frozenset(x) for x in self.species.possible_types])
-        return frozenset({self.species.types})
+        if self.types:
+            return frozenset({self.types})
+        return frozenset()
 
     @property
     def kind(self):

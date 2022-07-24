@@ -40,12 +40,12 @@ from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import MISSING
 from motor.motor_asyncio import AsyncIOMotorCollection
 
+from src.cogs.submission.oc_submission import CreationOCView
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
-from src.views.oc_modification import ModificationComplex
 
 setLoggerClass(ColoredLogger)
 
@@ -256,7 +256,7 @@ class CharactersView(Complex[Character]):
             cog = interaction.client.get_cog("Submission")
             user: Member = cog.supporting.get(interaction.user, interaction.user)
             if item.author in [user.id, interaction.user.id]:
-                view = ModificationComplex(oc=item, member=interaction.user, target=interaction)
+                view = CreationOCView(ctx=interaction, user=user, oc=item)
             else:
                 if isinstance(self.target, Interaction):
                     target = self.target

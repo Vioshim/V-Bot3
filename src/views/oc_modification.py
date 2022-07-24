@@ -1179,7 +1179,6 @@ class ModificationComplex(Complex[str]):
         super(ModificationComplex, self).__init__(
             member=member,
             values=list(values.keys()),
-            max_values=len(values),
             parser=lambda x: values[x],
             target=target,
             timeout=None,
@@ -1240,8 +1239,9 @@ class ModificationComplex(Complex[str]):
                 self.oc.image_url = msg.embeds[0].image.url
                 async with ctx.client.database() as db:
                     await self.oc.update(db)
-            await ctx.edit_original_message(view=None, embed=self.oc.embed)
-            self.stop()
+            self.embed = self.oc.embed
+            self.modifying_embed = True
+        super(ModificationComplex, self).select_choice(ctx, sct)
 
     @button(
         label="Don't make any changes",

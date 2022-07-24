@@ -34,7 +34,6 @@ from src.cogs.submission.oc_submission import CreationOCView
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.views.oc_modification import ModificationComplex
 
 setLoggerClass(ColoredLogger)
 
@@ -58,13 +57,15 @@ class CharacterHandlerView(Complex[Character]):
         )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        resp: InteractionResponse = interaction.response
+    async def select_choice(self, ctx: Interaction, sct: Select) -> None:
+        resp: InteractionResponse = ctx.response
         if oc := self.current_choice:
-            view = ModificationComplex(member=interaction.user, oc=self.current_choice)
+            cog = ctx.client.get_cog("Submission")
+            user = cog.supporting.get(ctx.user, ctx.user)
+            view = CreationOCView(ctx=ctx, user=user, oc=oc)
             await resp.edit_message(embed=oc.embed, view=view)
             await view.wait()
-        await super(CharacterHandlerView, self).select_choice(interaction=interaction, sct=sct)
+        await super(CharacterHandlerView, self).select_choice(interaction=ctx, sct=sct)
 
 
 class SubmissionModal(Modal):
@@ -217,7 +218,8 @@ class SubmissionView(View):
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
         values.sort(key=lambda x: x.name)
         if len(values) == 1:
-            view = ModificationComplex(member=ctx.user, oc=values[0])
+            user = self.supporting.get(ctx.user, ctx.user)
+            view = CreationOCView(ctx=ctx, user=user, oc=values[0])
             await ctx.followup.send(
                 content="User only has one character",
                 embed=values[0].embed,

@@ -17,7 +17,6 @@ from src.views.image_view import ImageView
 from src.views.message_view import MessagePaginator, MessageView
 from src.views.move_view import MoveComplex, MoveView
 from src.views.movepool_view import MovepoolModal, MovepoolView, MovepoolViewSelector
-from src.views.oc_modification import Modification, ModificationComplex
 from src.views.rp_view import RPView
 from src.views.species_view import SpeciesComplex
 
@@ -33,8 +32,6 @@ __all__ = (
     "MovepoolModal",
     "MovepoolView",
     "MovepoolViewSelector",
-    "Modification",
-    "ModificationComplex",
     "RPView",
     "SpeciesComplex",
 )
