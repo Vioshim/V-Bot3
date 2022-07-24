@@ -247,7 +247,8 @@ class CharactersView(Complex[Character]):
 
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        response: InteractionResponse = interaction.response
+        resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
         if item := self.current_choice:
             embed = item.embed
             guild: Guild = self.member.guild
@@ -257,12 +258,13 @@ class CharactersView(Complex[Character]):
             user: Member = cog.supporting.get(interaction.user, interaction.user)
             if item.author in [user.id, interaction.user.id]:
                 view = CreationOCView(ctx=interaction, user=user, oc=item)
+                await view.send(embed=embed, ephemeral=True)
             else:
                 if isinstance(self.target, Interaction):
                     target = self.target
                 else:
                     target = interaction
                 view = PingView(oc=item, reference=target)
-            await response.send_message(embed=embed, view=view, ephemeral=True)
+                await interaction.followup.send(embed=embed, view=view, ephemeral=True)
             await view.wait()
         await super(CharactersView, self).select_choice(interaction, sct)

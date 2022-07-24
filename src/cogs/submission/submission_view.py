@@ -58,12 +58,11 @@ class CharacterHandlerView(Complex[Character]):
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, ctx: Interaction, sct: Select) -> None:
-        resp: InteractionResponse = ctx.response
         if oc := self.current_choice:
             cog = ctx.client.get_cog("Submission")
             user = cog.supporting.get(ctx.user, ctx.user)
             view = CreationOCView(ctx=ctx, user=user, oc=oc)
-            await resp.edit_message(embed=oc.embed, view=view)
+            await view.send(editing_original=True, embed=oc.embed)
             await view.wait()
         await super(CharacterHandlerView, self).select_choice(interaction=ctx, sct=sct)
 
@@ -220,10 +219,9 @@ class SubmissionView(View):
         if len(values) == 1:
             user = self.supporting.get(ctx.user, ctx.user)
             view = CreationOCView(ctx=ctx, user=user, oc=values[0])
-            await ctx.followup.send(
+            await view.send(
                 content="User only has one character",
                 embed=values[0].embed,
-                view=view,
                 ephemeral=True,
             )
         else:

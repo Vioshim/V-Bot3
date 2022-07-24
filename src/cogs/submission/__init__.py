@@ -799,9 +799,11 @@ class Submission(commands.Cog):
         if character:
             if character.author in [ctx.user.id, user.id]:
                 view = CreationOCView(ctx=ctx, user=user, oc=character)
+                view.message = await ctx.followup.send(embed=character.embed, view=view, ephemeral=True, wait=True)
             else:
                 view = PingView(oc=character, reference=ctx)
-            return await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
+                await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
+            return
 
         if ocs := [oc for oc in self.ocs.values() if oc.author == member.id]:
             ocs.sort(key=lambda x: x.name)
