@@ -46,7 +46,8 @@ from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion, Species
 from src.utils.etc import WHITE_BAR
-from src.views import CharactersView, MovepoolViewSelector
+from src.views.characters_view import CharactersView
+from src.views.movepool_view import MovepoolViewSelector
 
 __all__ = ("Pokedex", "setup")
 
