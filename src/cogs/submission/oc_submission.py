@@ -22,7 +22,9 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    Object,
     SelectOption,
+    Webhook,
 )
 from discord.ui import Button, Select, TextInput, button, select
 from discord.utils import MISSING
@@ -619,11 +621,15 @@ class CreationOCView(Basic):
             self.message = m
             self.current = None
 
-    @button(
-        emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}",
-        style=ButtonStyle.red,
-        row=2,
-    )
+    @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
+    async def finish_oc(self, ctx: Interaction, btn: Button):
+        if self.oc.id and self.oc.thread:
+            webhook: Webhook = await ctx.client.webhook(919277769735680050)
+            thread = Object(id=self.oc.thread)
+            await webhook.delete_message(self.oc.id, thread=thread)
+        await self.delete()
+
+    @button(label="Close this Menu", row=2)
     async def cancel(self, ctx: Interaction, btn: Button):
         await self.delete()
 
@@ -637,12 +643,13 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         cog = ctx.client.get_cog("Submission")
+        word = "modified" if self.oc.id else "registered"
         await cog.register_oc(self.oc, image_as_is=True)
         registered = ctx.guild.get_role(719642423327719434)
         if registered and registered not in self.user.roles:
             await self.user.add_roles(registered)
-        await ctx.followup.send("Character Registered without Issues!", ephemeral=True)
-        self.stop()
+        await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
+        await self.delete()
 
 
 class ModCharactersView(CharactersView):
