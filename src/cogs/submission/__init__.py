@@ -59,14 +59,11 @@ from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
-from src.views import (
-    CharactersView,
-    ImageView,
-    MovepoolView,
-    MoveView,
-    PingView,
-    RPView,
-)
+from src.views.characters_view import CharactersView, PingView
+from src.views.image_view import ImageView
+from src.views.move_view import MoveView
+from src.views.movepool_view import MovepoolView
+from src.views.rp_view import RPView
 
 __all__ = ("Submission", "setup")
 
