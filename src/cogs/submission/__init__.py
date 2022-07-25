@@ -77,7 +77,7 @@ def comparison_handler(oc1: Character, oc2: Character):
     e1 = (
         Embed(
             title=oc1.name,
-            description=oc1.backstory,
+            description=aux1.description,
             color=Color.red(),
         )
         .set_image(url=WHITE_BAR)
@@ -86,7 +86,7 @@ def comparison_handler(oc1: Character, oc2: Character):
     e2 = (
         Embed(
             title=oc2.name,
-            description=oc2.backstory,
+            description=aux2.description,
             color=Color.brand_green(),
         )
         .set_image(url=WHITE_BAR)
