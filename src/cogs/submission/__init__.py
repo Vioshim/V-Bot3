@@ -272,35 +272,38 @@ class Submission(commands.Cog):
         async with self.bot.database() as conn:
             await oc.update(connection=conn, idx=msg_oc.id)
 
-        if former:
-            embed1, embed2 = comparison_handler(oc, former)
-            embeds = [embed1, embed2]
-            files1, embed1 = await self.bot.embed_raw(embed1)
-            files2, embed2 = await self.bot.embed_raw(embed2)
+        try:
+            if former:
+                embed1, embed2 = comparison_handler(oc, former)
+                embeds = [embed1, embed2]
+                files1, embed1 = await self.bot.embed_raw(embed1)
+                files2, embed2 = await self.bot.embed_raw(embed2)
 
-            files = files1 + files2
-            for index, (e, f) in enumerate(zip(embeds, files)):
-                f.filename = f"image{index}.png"
-                e.set_thumbnail(url=f"attachment://{f.filename}")
+                files = files1 + files2
+                for index, (e, f) in enumerate(zip(embeds, files)):
+                    f.filename = f"image{index}.png"
+                    e.set_thumbnail(url=f"attachment://{f.filename}")
 
-            log = await self.bot.webhook(1001125143071965204, reason="Logging")
-            if isinstance(user, (User, Member)):
-                username, avatar_url = user.display_name, user.display_avatar.url
-            else:
-                username, avatar_url = MISSING, MISSING
+                log = await self.bot.webhook(1001125143071965204, reason="Logging")
+                if isinstance(user, (User, Member)):
+                    username, avatar_url = user.display_name, user.display_avatar.url
+                else:
+                    username, avatar_url = MISSING, MISSING
 
-            view = View()
-            view.add_item(Button(label="Jump URL", url=former.jump_url))
+                view = View()
+                view.add_item(Button(label="Jump URL", url=former.jump_url))
 
-            await log.send(
-                content=f"<@{user.id}>",
-                embed=[embed1, embed2],
-                files=files,
-                thread=Object(id=1001125684476915852),
-                username=username,
-                avatar_url=avatar_url,
-                view=view,
-            )
+                await log.send(
+                    content=f"<@{user.id}>",
+                    embed=[embed1, embed2],
+                    files=files,
+                    thread=Object(id=1001125684476915852),
+                    username=username,
+                    avatar_url=avatar_url,
+                    view=view,
+                )
+        except Exception as e:
+            self.bot.logger.exception("Error when logging oc modification", exc_info=e)
 
     async def registration(self, ctx: Interaction | Message, oc: Type[Character], worker: Member):
         """This is the function which handles the registration process,
