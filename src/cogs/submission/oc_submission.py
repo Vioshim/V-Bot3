@@ -606,6 +606,7 @@ class CreationOCView(Basic):
             if not TEMPLATES[self.ref_template].sp_ability:
                 self.progress -= {"Special Ability"}
                 self.oc.sp_ability = None
+            self.setup()
             await resp.edit_message(embed=self.oc.embed, view=self)
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
@@ -620,6 +621,7 @@ class CreationOCView(Basic):
             item = FIELDS[sct.values[0]]
             self.current = item.name
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
+            self.setup()
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
