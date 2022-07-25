@@ -37,7 +37,7 @@ __all__ = (
 DEFAULT_TIMEZONE = timezone(name="GMT-5", offset=timedelta(hours=-5))
 REGISTERED_IMG = "https://cdn.discordapp.com/attachments/797618220382027839/867427444579106856/registered_1.png"
 RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/863415224626184192/image.gif"
-WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/880837466007949362/image.gif"
+WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/1001229327188365423/line.png"
 MAP_URL = "https://cdn.discordapp.com/attachments/748384705098940426/980675600664653844/unknown.png"
 STICKER_EMOJI = PartialEmoji(name="MessageSticker", id=753338258963824801)
 SETTING_EMOJI = PartialEmoji(name="setting", id=962380600902320148, animated=True)

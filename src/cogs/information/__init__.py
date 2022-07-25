@@ -580,7 +580,6 @@ class Information(commands.Cog):
         log = await self.bot.webhook(1001125143071965204, reason="Logging")
 
         embed = Embed(color=Colour.blurple(), timestamp=utcnow())
-        embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
 
         embeds: list[Embed] = []
@@ -589,36 +588,34 @@ class Information(commands.Cog):
         if past.display_avatar != now.display_avatar:
 
             if avatar := past.display_avatar:
-                past.avatar.is_animated()
                 file = await avatar.to_file()
                 aux = embed.copy()
                 aux.url = "https://robohash.org/pfp"
-                embeds.append(aux.set_thumbnail(url=f"attachment://{file.filename}"))
+                embeds.append(aux.set_image(url=f"attachment://{file.filename}"))
                 files.append(file)
 
             if avatar := now.display_avatar:
                 file = await avatar.to_file()
                 aux = embed.copy()
                 aux.url = "https://robohash.org/pfp"
-                embeds.append(aux.set_thumbnail(url=f"attachment://{file.filename}"))
+                embeds.append(aux.set_image(url=f"attachment://{file.filename}"))
                 files.append(file)
 
-        if past.display_name != now.display_name:
-            aux = embed.copy()
-            aux.title = "Nickname Change"
-            aux.add_field(name="Former", value=past.display_name)
-            aux.add_field(name="Current", value=now.display_name)
-            embeds.append(aux)
+        if not embeds:
+            embeds = [embed]
 
-        if embeds or files:
-            await log.send(
-                content=now.mention,
-                embeds=embeds,
-                files=files,
-                thread=Object(id=1001125686230126643),
-                username=now.display_name,
-                avatar_url=now.display_avatar.url,
-            )
+        if past.display_name != now.display_name:
+            embed.add_field(name="Former", value=past.display_name)
+            embed.add_field(name="Current", value=now.display_name)
+
+        await log.send(
+            content=now.mention,
+            embeds=embeds,
+            files=files,
+            thread=Object(id=1001125686230126643),
+            username=now.display_name,
+            avatar_url=now.display_avatar.url,
+        )
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
