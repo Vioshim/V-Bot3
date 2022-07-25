@@ -159,25 +159,6 @@ docs = ["Sphinx (>=4.1.2,<4.2.0)", "sphinxcontrib-asyncio (>=0.3.0,<0.4.0)", "sp
 test = ["pycodestyle (>=2.7.0,<2.8.0)", "flake8 (>=3.9.2,<3.10.0)", "uvloop (>=0.15.3)"]
 
 [[package]]
-name = "asyncpg-stubs"
-version = "0.25.5-alpha.0"
-description = "asyncpg stubs"
-category = "main"
-optional = false
-python-versions = "^3.7"
-develop = false
-
-[package.dependencies]
-asyncpg = "~0.25.0"
-typing-extensions = "^4.2.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/bryanforbes/asyncpg-stubs"
-reference = "master"
-resolved_reference = "532c2ed6c191e075f931d67b5610cef0ccdecabb"
-
-[[package]]
 name = "atomicwrites"
 version = "1.4.1"
 description = "Atomic file writes."
@@ -1428,7 +1409,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.5"
-content-hash = "4b452e2f9a46877fcc33f26b5870a46bf8601d07d731483ef01f623af59d14b9"
+content-hash = "c31e3696a3ec4de55c5a05ba41c65c9d4de3044f7c42ac8d04c1f4b350e885cc"
 
 [metadata.files]
 aiodns = [
@@ -1566,7 +1547,6 @@ asyncpg = [
     {file = "asyncpg-0.25.0-cp39-cp39-win_amd64.whl", hash = "sha256:649e2966d98cc48d0646d9a4e29abecd8b59d38d55c256d5c857f6b27b7407ac"},
     {file = "asyncpg-0.25.0.tar.gz", hash = "sha256:63f8e6a69733b285497c2855464a34de657f2cccd25aeaeeb5071872e9382540"},
 ]
-asyncpg-stubs = []
 atomicwrites = []
 attrs = [
     {file = "attrs-21.4.0-py2.py3-none-any.whl", hash = "sha256:2d27e3784d7a565d36ab851fe94887c5eccd6a463168875832a1be79c82828b4"},
