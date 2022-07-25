@@ -613,7 +613,7 @@ class Information(commands.Cog):
         if embeds or files:
             await log.send(
                 content=now.mention,
-                embed=embeds,
+                embeds=embeds,
                 files=files,
                 thread=Object(id=1001125686230126643),
                 username=now.display_name,
