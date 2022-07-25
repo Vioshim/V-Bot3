@@ -34,6 +34,7 @@ from discord import (
     Member,
     Message,
     NotFound,
+    Object,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     Role,
@@ -80,11 +81,6 @@ channels = {
     908498210211909642: "Mission",
     836726822166593598: "To-Do",
     860590339327918100: "Information",
-}
-
-LOGS = {
-    719343092963999804: 719663963297808436,
-    952517983786377287: 952588363263782962,
 }
 
 MSG_INFO = {
@@ -421,7 +417,7 @@ class Information(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: Member):
-        if not (log_id := LOGS.get(member.guild.id)):
+        if member.guild.id != 719343092963999804:
             return
 
         guild: Guild = member.guild
@@ -461,18 +457,19 @@ class Information(commands.Cog):
         asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(asset.url, filename=str(member.id)):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
-            log = await self.bot.webhook(log_id, reason="Join Logging")
+            log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
             await log.send(
                 file=file,
                 embed=embed,
                 view=view,
                 username=member.display_name,
+                thread=Object(id=1001125677061390477),
                 avatar_url=member.display_avatar.url,
             )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
-        if not (log_id := LOGS.get(member.guild.id)):
+        if member.guild.id != 719343092963999804:
             return
 
         embed = Embed(
@@ -484,7 +481,7 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {member.id}")
         asset = member.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(log_id, reason="Join Logging")
+        log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
         if file := await self.bot.get_file(asset.url, filename="image"):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(member.created_at, style="R"))
@@ -497,10 +494,19 @@ class Information(commands.Cog):
                         url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
                     )
                 )
-            await log.send(embed=embed, file=file, view=view)
+            await log.send(
+                embed=embed,
+                file=file,
+                view=view,
+                thread=Object(id=1001125675220074586),
+                username=member.display_name,
+                avatar_url=member.display_avatar.url,
+            )
 
-    @commands.Cog.listener()
-    async def on_member_update(self, past: Member, now: Member):
+    @commands.Cog.listener(name="on_member_update")
+    async def boosting(self, past: Member, now: Member):
+        if now.guild.id != 719343092963999804:
+            return
         if past.premium_since == now.premium_since:
             return
         if past.premium_since and not now.premium_since:
@@ -515,7 +521,7 @@ class Information(commands.Cog):
 
             if (AFK and BOOSTER) and (
                 role := find(
-                    lambda x: BOOSTER < x < AFK and now in x.members,
+                    lambda x: BOOSTER < x < AFK and now in x.members and len(x.members) == 1,
                     now.guild.roles,
                 )
             ):
@@ -532,14 +538,64 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         asset = now.display_avatar.replace(format="png", size=4096)
         embed.set_thumbnail(url=asset.url)
-        if icon := now.guild.icon:
-            embed.set_footer(text=now.guild.name, icon_url=icon.url)
-        else:
-            embed.set_footer(text=now.guild.name)
+        embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
 
-        if log_id := LOGS.get(now.guild.id):
-            log = await self.bot.webhook(log_id, reason="Logging")
-            await log.send(content=now.mention, embed=embed)
+        log = await self.bot.webhook(1001125143071965204, reason="Logging")
+        await log.send(
+            content=now.mention,
+            embed=embed,
+            thread=Object(id=1001125679405993985),
+            username=now.display_name,
+            avatar_url=now.display_avatar.url,
+        )
+
+    @commands.Cog.listener(name="on_member_update")
+    async def user_changes(self, past: Member, now: Member):
+        if now.guild.id != 719343092963999804:
+            return
+
+        log = await self.bot.webhook(1001125143071965204, reason="Logging")
+
+        embed = Embed(color=Colour.blurple(), timestamp=utcnow())
+        embed.set_image(url=WHITE_BAR)
+        embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
+
+        embeds: list[Embed] = []
+        files: list[File] = []
+
+        if past.display_avatar != now.display_avatar:
+
+            if avatar := past.display_avatar:
+                past.avatar.is_animated()
+                file = await avatar.to_file()
+                aux = embed.copy()
+                aux.url = "https://robohash.org/pfp"
+                embeds.append(aux.set_thumbnail(url=f"attachment://{file.filename}"))
+                files.append(file)
+
+            if avatar := now.display_avatar:
+                file = await avatar.to_file()
+                aux = embed.copy()
+                aux.url = "https://robohash.org/pfp"
+                embeds.append(aux.set_thumbnail(url=f"attachment://{file.filename}"))
+                files.append(file)
+
+        if past.display_name != now.display_name:
+            aux = embed.copy()
+            aux.title = "Nickname Change"
+            aux.add_field(name="Former", value=past.display_name)
+            aux.add_field(name="Current", value=now.display_name)
+            embeds.append(aux)
+
+        if embeds or files:
+            await log.send(
+                content=now.mention,
+                embed=embeds,
+                files=files,
+                thread=Object(id=1001125686230126643),
+                username=now.display_name,
+                avatar_url=now.display_avatar.url,
+            )
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
@@ -550,10 +606,10 @@ class Information(commands.Cog):
         messages: list[Message]
             Messages that were deleted.
         """
-        if not (payload.guild_id and (log_id := LOGS.get(payload.guild_id))):
+        if payload.guild_id != 719343092963999804:
             return
 
-        w = await self.bot.webhook(log_id, reason="Bulk delete logging")
+        w = await self.bot.webhook(1001125143071965204, reason="Bulk delete logging")
 
         if messages := [
             message
@@ -578,7 +634,12 @@ class Information(commands.Cog):
 
             view = View()
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
-            await w.send(embed=embed, file=file, view=view)
+            await w.send(
+                embed=embed,
+                file=file,
+                view=view,
+                thread=Object(id=1001125665128579142),
+            )
 
         self.bot.msg_cache -= payload.message_ids
 
@@ -732,10 +793,10 @@ class Information(commands.Cog):
             self.bot.msg_cache -= {payload.message_id}
             return
 
-        if not (payload.guild_id and (log_id := LOGS.get(payload.guild_id))):
+        if payload.guild_id != 719343092963999804:
             return
 
-        w = await self.bot.webhook(log_id, reason="Raw Message delete logging")
+        w = await self.bot.webhook(1001125143071965204, reason="Raw Message delete logging")
 
         user: Member = ctx.author
 
@@ -754,7 +815,7 @@ class Information(commands.Cog):
             if not ctx.webhook_id:
                 kwargs["content"] = ctx.author.mention
                 kwargs["allowed_mentions"] = AllowedMentions.none()
-            await w.send(**kwargs)
+            await w.send(**kwargs, thread=Object(id=1001125373372809216))
 
     @commands.Cog.listener()
     async def on_command(self, ctx: commands.Context) -> None:

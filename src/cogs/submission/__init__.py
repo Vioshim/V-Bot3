@@ -68,6 +68,51 @@ from src.views.rp_view import RPView
 __all__ = ("Submission", "setup")
 
 
+def comparison_handler(oc1: Character, oc2: Character):
+    aux1, aux2 = oc1.embed, oc2.embed
+
+    elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
+    elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
+
+    e1 = (
+        Embed(
+            title=oc1.name,
+            description=oc1.backstory,
+        )
+        .set_image(url=WHITE_BAR)
+        .set_footer(text=aux1.footer.text)
+    )
+    e2 = (
+        Embed(
+            title=oc2.name,
+            description=oc2.backstory,
+        )
+        .set_image(url=WHITE_BAR)
+        .set_footer(text=aux2.footer.text)
+    )
+
+    img1 = oc1.image_url or oc1.image
+    img2 = oc2.image_url or oc2.image
+
+    if img1 != img2 and isinstance(img1, str) and isinstance(img2, str):
+        e1.set_image(url=img1)
+        e2.set_image(url=img2)
+
+    if e1.description == e2.description:
+        e1.description = e2.description = ""
+
+    for key in set(elem1) | set(elem2):
+        if (v1 := elem1.get(key)) != (v2 := elem2.get(key)):
+            if v1:
+                v1, i1 = v1
+                e1.add_field(name=key, value=v1, inline=i1)
+            if v2:
+                v2, i2 = v2
+                e1.add_field(name=key, value=v2, inline=i2)
+
+    return e1, e2
+
+
 class Submission(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -215,6 +260,7 @@ class Submission(commands.Cog):
 
         oc.id = msg_oc.id
         oc.image_url = msg_oc.embeds[0].image.url
+        former = self.ocs.pop(oc.id, None)
         self.ocs[oc.id] = oc
         self.bot.logger.info(
             "New character has been %s! > %s > %s > %s",
@@ -225,6 +271,36 @@ class Submission(commands.Cog):
         )
         async with self.bot.database() as conn:
             await oc.update(connection=conn, idx=msg_oc.id)
+
+        if former:
+            embed1, embed2 = comparison_handler(oc, former)
+            embeds = [embed1, embed2]
+            files1, embed1 = await self.bot.embed_raw(embed1)
+            files2, embed2 = await self.bot.embed_raw(embed2)
+
+            files = files1 + files2
+            for index, (e, f) in enumerate(zip(embeds, files)):
+                f.filename = f"image{index}.png"
+                e.set_thumbnail(url=f"attachment://{f.filename}")
+
+            log = await self.bot.webhook(1001125143071965204, reason="Logging")
+            if isinstance(user, (User, Member)):
+                username, avatar_url = user.display_name, user.display_avatar.url
+            else:
+                username, avatar_url = MISSING, MISSING
+
+            view = View()
+            view.add_item(Button(label="Jump URL", url=former.jump_url))
+
+            await log.send(
+                content=f"<@{user.id}>",
+                embed=[embed1, embed2],
+                files=files,
+                thread=Object(id=1001125684476915852),
+                username=username,
+                avatar_url=avatar_url,
+                view=view,
+            )
 
     async def registration(self, ctx: Interaction | Message, oc: Type[Character], worker: Member):
         """This is the function which handles the registration process,
