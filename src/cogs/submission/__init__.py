@@ -112,7 +112,10 @@ def comparison_handler(oc1: Character, oc2: Character):
                 v2, i2 = v2
                 e2.add_field(name=key, value=v2, inline=i2)
 
-    return e2, e1
+    if not (
+        e1.description == e2.description and len(e1.fields) == len(e2.fields) == 0 and e1.footer.text == e2.footer.text
+    ):
+        return e2, e1
 
 
 class Submission(commands.Cog):
@@ -275,10 +278,8 @@ class Submission(commands.Cog):
             await oc.update(connection=conn, idx=msg_oc.id)
 
         try:
-            if former:
-                embed1, embed2 = comparison_handler(oc, former)
-                embeds = [embed1, embed2]
-
+            if former and (embeds := comparison_handler(oc, former)):
+                embed1, embed2 = embeds
                 files1, embed1 = await self.bot.embed_raw(embed1)
                 files2, embed2 = await self.bot.embed_raw(embed2)
 
