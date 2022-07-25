@@ -75,34 +75,29 @@ def comparison_handler(before: Character, now: Character):
     elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
     elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
 
-    e1 = (
-        Embed(
-            title=aux1.title,
-            description=aux1.description,
-            color=Color.red(),
-        )
-        .set_image(url=WHITE_BAR)
-        .set_footer(text=aux1.footer.text)
-    )
-    e2 = (
-        Embed(
-            title=aux2.title,
-            description=aux2.description,
-            color=Color.brand_green(),
-        )
-        .set_image(url=WHITE_BAR)
-        .set_footer(text=aux2.footer.text)
-    )
+    e1 = Embed(title=aux1.title, description=aux1.description, color=Color.red())
+    e2 = Embed(description=aux2.description, color=Color.brand_green())
+    e1.set_image(url=WHITE_BAR)
+    e2.set_image(url=WHITE_BAR)
 
     img1 = before.image_url or before.image
     img2 = now.image_url or now.image
 
-    if img1 != img2 and isinstance(img1, str) and isinstance(img2, str):
-        e1.set_image(url=img1)
-        e2.set_image(url=img2)
+    if img1 != img2:
+        if isinstance(img1, str):
+            e1.set_image(url=img1)
+        if isinstance(img2, str):
+            e2.set_image(url=img2)
+
+    if aux1.title != aux2.title:
+        e2.title = aux2.title
+
+    if aux1.footer.text != aux2.footer.text:
+        e1.set_footer(text=aux1.footer.text)
+        e2.set_footer(text=aux2.footer.text)
 
     if e1.description == e2.description:
-        e1.description = e2.description = ""
+        e1.description = e2.description = None
 
     for key in set(elem1) | set(elem2):
         if (v1 := elem1.get(key)) != (v2 := elem2.get(key)):
@@ -310,7 +305,6 @@ class Submission(commands.Cog):
                 )
 
                 await log.send(
-                    content=f"<@{user.id}>",
                     embeds=embeds,
                     files=files,
                     thread=Object(id=1001125684476915852),
