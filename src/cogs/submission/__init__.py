@@ -120,7 +120,7 @@ def comparison_handler(oc1: Character, oc2: Character):
         e1.footer.text == e2.footer.text,
     )
     if not all(conditions):
-        return e2, e1
+        return e1, e2
 
 
 class Submission(commands.Cog):
@@ -289,7 +289,7 @@ class Submission(commands.Cog):
                 files2, embed2 = await self.bot.embed_raw(embed2)
 
                 files = files1 + files2
-                for index, (e, f) in enumerate(zip(embeds[::-1], files)):
+                for index, (e, f) in enumerate(zip(embeds, files)):
                     f.filename = f"image{index}.png"
                     e.set_image(url=f"attachment://{f.filename}")
 
@@ -300,7 +300,13 @@ class Submission(commands.Cog):
                     username, avatar_url = MISSING, MISSING
 
                 view = View()
-                view.add_item(Button(label="Jump URL", url=former.jump_url))
+                view.add_item(
+                    Button(
+                        label="Jump URL",
+                        url=former.jump_url,
+                        emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
+                    )
+                )
 
                 await log.send(
                     content=f"<@{user.id}>",
