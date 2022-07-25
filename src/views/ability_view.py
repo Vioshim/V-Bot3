@@ -194,8 +194,8 @@ class SPAbilityView(View):
     )
     async def deny(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        await resp.send_message("Alright, no Sp Ability", ephemeral=True)
-        self.sp_ability = SpAbility()
+        await resp.edit_message("Alright, no Sp Ability", ephemeral=True, view=None)
+        self.sp_ability = None
         self.stop()
 
     @button(
@@ -205,5 +205,6 @@ class SPAbilityView(View):
     )
     async def cancel(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        await resp.send_message("Process concluded", ephemeral=True)
+        self.sp_ability = SpAbility()
+        await resp.edit_message("Process concluded", ephemeral=True, view=None)
         self.stop()

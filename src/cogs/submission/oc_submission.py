@@ -603,11 +603,12 @@ class CreationOCView(Basic):
             if not TEMPLATES[self.ref_template].sp_ability:
                 self.progress -= {"Special Ability"}
                 self.oc.sp_ability = None
-            self.setup()
             await resp.edit_message(embed=self.oc.embed, view=self)
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await resp.send_message(str(e), ephemeral=True)
+        finally:
+            self.stop()
 
     @select(placeholder="Fill the Fields", row=1)
     async def fields(self, ctx: Interaction, sct: Select):

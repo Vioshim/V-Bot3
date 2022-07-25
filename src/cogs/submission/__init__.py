@@ -490,7 +490,7 @@ class Submission(commands.Cog):
             message = await send("Continue with Submission", view=sp_view)
             await sp_view.wait()
             await message.delete(delay=0)
-            if sp_view.sp_ability is None:
+            if sp_view.sp_ability == SpAbility():
                 return
 
             oc.sp_ability = sp_view.sp_ability
