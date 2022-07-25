@@ -295,7 +295,7 @@ class Submission(commands.Cog):
 
                 await log.send(
                     content=f"<@{user.id}>",
-                    embed=[embed1, embed2],
+                    embeds=[embed1, embed2],
                     files=files,
                     thread=Object(id=1001125684476915852),
                     username=username,
