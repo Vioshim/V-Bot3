@@ -253,18 +253,42 @@ class TicketModal(Modal, title="Ticket"):
 class InformationView(View):
     def __init__(self):
         super(InformationView, self).__init__(timeout=None)
+        self.add_item(
+            Button(
+                label="Self Roles",
+                emoji="\N{CHEERING MEGAPHONE}",
+                url="https://canary.discord.com/channels/719343092963999804/719709333369258015/992522335808671854",
+                row=0,
+            )
+        )
+        self.add_item(
+            Button(
+                label="Lore",
+                emoji="\N{SCROLL}",
+                url="https://canary.discord.com/channels/719343092963999804/988419251176087582/993853262707048589",
+                row=0,
+            )
+        )
+        self.add_item(
+            Button(
+                label="OC Submission",
+                emoji="\N{OPEN BOOK}",
+                url="https://canary.discord.com/channels/719343092963999804/852180971985043466/961345742222536744",
+                row=0,
+            )
+        )
 
-    @button(label="See Map", emoji="\N{WORLD MAP}")
+    @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
     async def see_map(self, ctx: Interaction, _: Button):
         view = RegionViewComplex(member=ctx.user, target=ctx)
         await view.simple_send(ephemeral=True)
 
-    @button(label="Make a Ticket", emoji=STICKER_EMOJI)
+    @button(label="Make a Ticket", emoji=STICKER_EMOJI, row=1, style=ButtonStyle.blurple)
     async def create_ticket(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_modal(TicketModal(timeout=None))
 
-    @button(label="Read /Wiki", emoji=SETTING_EMOJI)
+    @button(label="Read /Wiki", emoji=SETTING_EMOJI, row=1, style=ButtonStyle.blurple)
     async def read_wiki(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
