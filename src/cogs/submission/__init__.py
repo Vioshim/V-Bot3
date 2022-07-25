@@ -109,7 +109,7 @@ def comparison_handler(before: Character, now: Character):
                 e2.add_field(name=key, value=v2, inline=i2)
 
     conditions = (
-        e1.title == e2.title,
+        aux1.title == aux2.title,
         e1.description == e2.description,
         before.image == now.image,
         len(e1.fields) == len(e2.fields) == 0,
