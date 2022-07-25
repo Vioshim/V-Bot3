@@ -610,7 +610,6 @@ class CreationOCView(Basic):
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await resp.send_message(str(e), ephemeral=True)
-        finally:
             self.stop()
 
     @select(placeholder="Fill the Fields", row=1)
@@ -621,7 +620,6 @@ class CreationOCView(Basic):
             item = FIELDS[sct.values[0]]
             self.current = item.name
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
-            self.setup()
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
