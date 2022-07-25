@@ -68,15 +68,15 @@ from src.views.rp_view import RPView
 __all__ = ("Submission", "setup")
 
 
-def comparison_handler(oc1: Character, oc2: Character):
-    aux1, aux2 = oc1.embed, oc2.embed
+def comparison_handler(before: Character, now: Character):
+    aux1, aux2 = before.embed, now.embed
 
     elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
     elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
 
     e1 = (
         Embed(
-            title=oc1.name,
+            title=before.name,
             description=aux1.description,
             color=Color.red(),
         )
@@ -85,7 +85,7 @@ def comparison_handler(oc1: Character, oc2: Character):
     )
     e2 = (
         Embed(
-            title=oc2.name,
+            title=now.name,
             description=aux2.description,
             color=Color.brand_green(),
         )
@@ -93,8 +93,8 @@ def comparison_handler(oc1: Character, oc2: Character):
         .set_footer(text=aux2.footer.text)
     )
 
-    img1 = oc1.image_url or oc1.image
-    img2 = oc2.image_url or oc2.image
+    img1 = before.image_url or before.image
+    img2 = now.image_url or now.image
 
     if img1 != img2 and isinstance(img1, str) and isinstance(img2, str):
         e1.set_image(url=img1)
@@ -115,7 +115,7 @@ def comparison_handler(oc1: Character, oc2: Character):
     conditions = (
         e1.title == e2.title,
         e1.description == e2.description,
-        oc1.image == oc2.image,
+        before.image == now.image,
         len(e1.fields) == len(e2.fields) == 0,
         e1.footer.text == e2.footer.text,
     )
@@ -283,7 +283,7 @@ class Submission(commands.Cog):
             await oc.update(connection=conn, idx=msg_oc.id)
 
         try:
-            if former and (embeds := comparison_handler(oc, former)):
+            if former and (embeds := comparison_handler(before=former, now=oc)):
                 embed1, embed2 = embeds
                 files1, embed1 = await self.bot.embed_raw(embed1)
                 files2, embed2 = await self.bot.embed_raw(embed2)
