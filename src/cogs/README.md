@@ -26,6 +26,16 @@ In this project, the cogs are Cog instances which implement a setup method and t
 </p>
 </details>
 
+<details closed> <summary> Debug </summary>
+
+<p>
+
+> This is a tool that allows owner messages to directly connect with the bot's interface, allowing as such editing python on the go.
+
+</p>
+
+</details>
+
 <details closed> <summary> Embed Builder </summary>
 
 <p>
@@ -86,6 +96,16 @@ In this project, the cogs are Cog instances which implement a setup method and t
 
 </details>
 
+<details closed> <summary> Reminder </summary>
+
+<p>
+
+> Reminder mechanism used in servers for keeping track of time
+
+</p>
+
+</details>
+
 <details closed> <summary> Roles </summary>
 
 <p>
@@ -111,6 +131,16 @@ In this project, the cogs are Cog instances which implement a setup method and t
 <p>
 
 > General purpose normal / slash commands implemented outside of the other categories
+
+</p>
+
+</details>
+
+<details closed> <summary> Wiki </summary>
+
+<p>
+
+> A dynamic tree search tool for wiki purposes
 
 </p>
 

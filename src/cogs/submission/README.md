@@ -8,4 +8,5 @@
 | File                 | Description                  |
 | -------------------- | ---------------------------- |
 | `submission_view.py` | Submission related views     |
-| `oc_parsers.py`      | Character Submission Methods |
+| `oc_parsers.py`      | Character SubmissionParsers  |
+| `oc_submission.py`   | Character Submission Methods |

@@ -52,8 +52,9 @@ def to_string(c: str) -> str:
         Parameters
     """
     digit = f"{ord(c):x}"
+    url = f"http://www.fileformat.info/info/unicode/char/{digit}"
     name = u_name(c, "Name not found.")
-    return f"[`\\U{digit:>08}`: {name} - {c}](<http://www.fileformat.info/info/unicode/char/{digit}>)"
+    return f"[`\\U{digit:>08}`](<{url}>): {name} - {c}"
 
 
 class Utilities(commands.Cog):

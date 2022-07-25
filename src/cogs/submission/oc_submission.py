@@ -611,6 +611,7 @@ class CreationOCView(Basic):
     @select(placeholder="Fill the Fields", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True, thinking=True)
         try:
             item = FIELDS[sct.values[0]]
             self.current = item.name
@@ -621,9 +622,6 @@ class CreationOCView(Basic):
             await ctx.followup.send(str(e), ephemeral=True)
         finally:
             embed = self.oc.embed
-
-            if not resp.is_done():
-                await resp.pong()
 
             embed.set_author(
                 name=self.user.display_name,
