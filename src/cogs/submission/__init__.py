@@ -112,9 +112,12 @@ def comparison_handler(oc1: Character, oc2: Character):
                 v2, i2 = v2
                 e2.add_field(name=key, value=v2, inline=i2)
 
-    if not (
-        e1.description == e2.description and len(e1.fields) == len(e2.fields) == 0 and e1.footer.text == e2.footer.text
-    ):
+    conditions = (
+        e1.description == e2.description,
+        len(e1.fields) == len(e2.fields) == 0,
+        e1.footer.text == e2.footer.text,
+    )
+    if (oc1.image != oc2.image) or not all(conditions):
         return e2, e1
 
 
