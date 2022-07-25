@@ -50,7 +50,7 @@ from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
 from src.cogs.submission.submission_view import SubmissionView
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
-from src.structures.ability import Ability, SpAbility, SPAbilityView
+from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg, oc_process
 from src.structures.mon_typing import Typing
@@ -59,6 +59,7 @@ from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
+from src.views.ability_view import SPAbilityView
 from src.views.characters_view import PingView
 from src.views.image_view import ImageView
 from src.views.move_view import MoveView
@@ -485,7 +486,7 @@ class Submission(commands.Cog):
             return
 
         if oc.sp_ability == SpAbility():
-            sp_view = SPAbilityView(worker)
+            sp_view = SPAbilityView(worker, oc)
             message = await send("Continue with Submission", view=sp_view)
             await sp_view.wait()
             await message.delete(delay=0)

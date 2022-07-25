@@ -34,7 +34,7 @@ from discord.utils import MISSING
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, Ability, SPAbilityView
+from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.character import Character
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -53,6 +53,7 @@ from src.structures.species import (
 )
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import int_check
+from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
 from src.views.move_view import MoveComplex
@@ -436,7 +437,7 @@ class SpAbilityField(TemplateField):
         return oc.species and oc.can_have_special_abilities
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
-        view = SPAbilityView(ctx.user)
+        view = SPAbilityView(ctx.user, oc)
         await ctx.followup.send("Continue with Submission", view=view)
         await view.wait()
         oc.sp_ability = view.sp_ability
