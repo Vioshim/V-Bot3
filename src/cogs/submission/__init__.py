@@ -76,7 +76,7 @@ def comparison_handler(before: Character, now: Character):
 
     e1 = (
         Embed(
-            title=before.name,
+            title=aux1.title,
             description=aux1.description,
             color=Color.red(),
         )
@@ -85,7 +85,7 @@ def comparison_handler(before: Character, now: Character):
     )
     e2 = (
         Embed(
-            title=now.name,
+            title=aux2.title,
             description=aux2.description,
             color=Color.brand_green(),
         )
