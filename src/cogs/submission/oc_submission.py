@@ -152,7 +152,7 @@ class AgeField(TemplateField):
             label="Write the character's Age.",
             placeholder=f"> {age}",
             default=age,
-            required=True,
+            required=False,
         )
         async with handler as answer:
             if isinstance(answer, str):
