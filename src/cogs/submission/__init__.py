@@ -78,7 +78,7 @@ def comparison_handler(oc1: Character, oc2: Character):
         Embed(
             title=oc1.name,
             description=oc1.backstory,
-            color=Color.blurple(),
+            color=Color.red(),
         )
         .set_image(url=WHITE_BAR)
         .set_footer(text=aux1.footer.text)
@@ -87,7 +87,7 @@ def comparison_handler(oc1: Character, oc2: Character):
         Embed(
             title=oc2.name,
             description=oc2.backstory,
-            color=Color.blurple(),
+            color=Color.brand_green(),
         )
         .set_image(url=WHITE_BAR)
         .set_footer(text=aux2.footer.text)
@@ -112,7 +112,7 @@ def comparison_handler(oc1: Character, oc2: Character):
                 v2, i2 = v2
                 e2.add_field(name=key, value=v2, inline=i2)
 
-    return e1, e2
+    return e2, e1
 
 
 class Submission(commands.Cog):
@@ -298,7 +298,7 @@ class Submission(commands.Cog):
 
                 await log.send(
                     content=f"<@{user.id}>",
-                    embeds=[embed1, embed2],
+                    embeds=embeds,
                     files=files,
                     thread=Object(id=1001125684476915852),
                     username=username,

@@ -56,7 +56,6 @@ from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
-    MAP_URL,
     SETTING_EMOJI,
     STICKER_EMOJI,
     THUMBS_DOWN_EMOJI,
