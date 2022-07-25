@@ -577,36 +577,33 @@ class Information(commands.Cog):
         if now.guild.id != 719343092963999804:
             return
 
+        if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
+            return
+
         log = await self.bot.webhook(1001125143071965204, reason="Logging")
 
         embed = Embed(color=Colour.blurple(), timestamp=utcnow())
         embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
+        embed.set_image(url=WHITE_BAR)
 
         embeds: list[Embed] = []
         files: list[File] = []
 
         if past.display_avatar != now.display_avatar:
 
-            if avatar := past.display_avatar:
-                file = await avatar.to_file()
-                aux = embed.copy()
-                aux.url = "https://robohash.org/pfp"
-                embeds.append(aux.set_image(url=f"attachment://{file.filename}"))
-                files.append(file)
-
-            if avatar := now.display_avatar:
-                file = await avatar.to_file()
-                aux = embed.copy()
-                aux.url = "https://robohash.org/pfp"
-                embeds.append(aux.set_image(url=f"attachment://{file.filename}"))
-                files.append(file)
+            file1 = await past.display_avatar.to_file()
+            file2 = await now.display_avatar.to_file()
+            embeds = [
+                embed.copy().set_image(url=f"attachment://{file1.filename}"),
+                embed.copy().set_image(url=f"attachment://{file2.filename}"),
+            ]
+            files = [file1, file2]
+        else:
+            embed.add_field(name="Former", value=past.display_name)
+            embed.add_field(name="Current", value=now.display_name)
 
         if not embeds:
             embeds = [embed]
-
-        if past.display_name != now.display_name:
-            embed.add_field(name="Former", value=past.display_name)
-            embed.add_field(name="Current", value=now.display_name)
 
         await log.send(
             content=now.mention,
