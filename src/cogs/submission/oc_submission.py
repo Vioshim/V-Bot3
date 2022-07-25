@@ -26,6 +26,7 @@ from discord import (
     Member,
     Object,
     SelectOption,
+    TextStyle,
     Webhook,
 )
 from discord.ui import Button, Select, TextInput, button, select
@@ -458,6 +459,7 @@ class BackstoryField(TemplateField):
             placeholder=oc.backstory,
             default=oc.backstory,
             required=False,
+            style=TextStyle.paragraph,
         ) as answer:
             oc.backstory = answer or None
             progress.add(self.name)
@@ -477,6 +479,7 @@ class ExtraField(TemplateField):
             placeholder=oc.extra,
             default=oc.extra,
             required=False,
+            style=TextStyle.paragraph,
         ) as answer:
             oc.extra = answer or None
             progress.add(self.name)
