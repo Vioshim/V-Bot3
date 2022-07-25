@@ -289,7 +289,7 @@ class Submission(commands.Cog):
                 files2, embed2 = await self.bot.embed_raw(embed2)
 
                 files = files1 + files2
-                for index, (e, f) in enumerate(zip(embeds, files)):
+                for index, (e, f) in enumerate(zip(embeds[::-1], files)):
                     f.filename = f"image{index}.png"
                     e.set_image(url=f"attachment://{f.filename}")
 
