@@ -78,6 +78,7 @@ def comparison_handler(oc1: Character, oc2: Character):
         Embed(
             title=oc1.name,
             description=oc1.backstory,
+            color=Color.blurple(),
         )
         .set_image(url=WHITE_BAR)
         .set_footer(text=aux1.footer.text)
@@ -86,6 +87,7 @@ def comparison_handler(oc1: Character, oc2: Character):
         Embed(
             title=oc2.name,
             description=oc2.backstory,
+            color=Color.blurple(),
         )
         .set_image(url=WHITE_BAR)
         .set_footer(text=aux2.footer.text)
@@ -108,7 +110,7 @@ def comparison_handler(oc1: Character, oc2: Character):
                 e1.add_field(name=key, value=v1, inline=i1)
             if v2:
                 v2, i2 = v2
-                e1.add_field(name=key, value=v2, inline=i2)
+                e2.add_field(name=key, value=v2, inline=i2)
 
     return e1, e2
 
@@ -276,13 +278,14 @@ class Submission(commands.Cog):
             if former:
                 embed1, embed2 = comparison_handler(oc, former)
                 embeds = [embed1, embed2]
+
                 files1, embed1 = await self.bot.embed_raw(embed1)
                 files2, embed2 = await self.bot.embed_raw(embed2)
 
                 files = files1 + files2
                 for index, (e, f) in enumerate(zip(embeds, files)):
                     f.filename = f"image{index}.png"
-                    e.set_thumbnail(url=f"attachment://{f.filename}")
+                    e.set_image(url=f"attachment://{f.filename}")
 
                 log = await self.bot.webhook(1001125143071965204, reason="Logging")
                 if isinstance(user, (User, Member)):
@@ -302,6 +305,7 @@ class Submission(commands.Cog):
                     avatar_url=avatar_url,
                     view=view,
                 )
+
         except Exception as e:
             self.bot.logger.exception("Error when logging oc modification", exc_info=e)
 
