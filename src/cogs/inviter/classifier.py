@@ -26,16 +26,18 @@ from discord import (
 )
 from discord.ui import Button, Select, View, button, select
 
-from src.utils.etc import SETTING_EMOJI
+from src.utils.etc import INVITE_EMOJI, SETTING_EMOJI
 from src.views.message_view import MessagePaginator, msg_parser
 
 __all__ = ("InviterView",)
 
-IMAGE_URL = "https://cdn.discordapp.com/attachments/748384705098940426/909988411199348767/unknown.png"
 
+DATA: dict[str, Embed] = {}
 
 with open("resources/hub_partners.json", mode="r") as f:
-    DATA: dict[str, str] = load(f)
+    data = load(f)
+    if isinstance(data, dict):
+        DATA = {k: Embed.from_dict(v) for k, v in data.items()}
 
 
 def inv_msg_parser(message: Message):
@@ -101,16 +103,24 @@ class InviterView(View):
         placeholder="Select RP Hub",
         custom_id="hubs",
         options=[
-            SelectOption(label=key, description="Click for more information", emoji="\N{HANDSHAKE}")
-            for key in DATA.keys()
-            if key != "Parallel"
+            SelectOption(
+                label=k,
+                description=v.description.replace("\n", " ")[:100],
+                emoji=INVITE_EMOJI,
+            )
+            for k, v in DATA.items()
+            if k != "Parallel"
         ],
     )
     async def hubs(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         key = sct.values[0]
-        info = DATA.get(key, f"Unknown info for {key}")
-        await resp.send_message(content=info, ephemeral=True)
+        info = DATA[key].copy()
+        info.timestamp = ctx.created_at
+        info.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
+        view = View()
+        view.add_item(Button(label="Join Hub!", url=info.url, emoji=INVITE_EMOJI))
+        await resp.send_message(content=info.url, embed=info, ephemeral=True, view=view)
 
     @button(
         label="Parallel Yonder's Ad",
@@ -121,16 +131,8 @@ class InviterView(View):
     )
     async def server_ad(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        text: str = DATA["Parallel"]
-        url = text.split("\n\n")[-1]
-        embed = Embed(
-            title=f"{ctx.guild.name}'s Ad",
-            color=ctx.user.color,
-            description=text,
-            url=url,
-            timestamp=ctx.created_at,
-        )
+        embed = DATA["Parallel"].copy()
+        embed.timestamp = ctx.created_at
+        embed.color = ctx.user.color
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        embed.add_field(name="Image", value=IMAGE_URL)
-        embed.set_image(url=IMAGE_URL)
-        await resp.send_message(content=url, embed=embed, ephemeral=True)
+        await resp.send_message(content=embed.url, embed=embed, ephemeral=True)

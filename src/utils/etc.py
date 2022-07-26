@@ -32,6 +32,7 @@ __all__ = (
     "THUMBS_UP_EMOJI",
     "THUMBS_DOWN_EMOJI",
     "DEFAULT_TIMEZONE",
+    "INVITE_EMOJI",
     "RTFMPages",
 )
 DEFAULT_TIMEZONE = timezone(name="GMT-5", offset=timedelta(hours=-5))
@@ -44,6 +45,7 @@ SETTING_EMOJI = PartialEmoji(name="setting", id=962380600902320148, animated=Tru
 LOADING_EMOJI = PartialEmoji(name="loading", id=969722876003512320, animated=True)
 THUMBS_UP_EMOJI = PartialEmoji(name="thumbs_up", id=995303508419026954)
 THUMBS_DOWN_EMOJI = PartialEmoji(name="thumbs_down", id=995303546503311380)
+INVITE_EMOJI = PartialEmoji(name="IconInvite", id=778931752835088426)
 DICE_NUMBERS = [
     PartialEmoji(name="one", id=952524707129868308),
     PartialEmoji(name="two", id=952524707176001546),
