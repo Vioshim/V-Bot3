@@ -586,33 +586,28 @@ class Information(commands.Cog):
         embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
         embed.set_image(url=WHITE_BAR)
 
-        embeds: list[Embed] = []
-        files: list[File] = []
+        kwargs = dict(
+            content=now.mention,
+            thread=Object(id=1001125686230126643),
+            username=now.display_name,
+            avatar_url=now.display_avatar.url,
+        )
 
         if past.display_avatar != now.display_avatar:
 
             file1 = await past.display_avatar.to_file()
             file2 = await now.display_avatar.to_file()
-            embeds = [
-                embed.copy().set_image(url=f"attachment://{file1.filename}"),
-                embed.copy().set_image(url=f"attachment://{file2.filename}"),
+            kwargs["embeds"] = [
+                embed.copy().set_thumbnail(url=f"attachment://{file1.filename}"),
+                embed.copy().set_thumbnail(url=f"attachment://{file2.filename}"),
             ]
-            files = [file1, file2]
+            kwargs["files"] = [file1, file2]
         else:
             embed.add_field(name="Former", value=past.display_name)
             embed.add_field(name="Current", value=now.display_name)
+            kwargs["embed"] = embed
 
-        if not embeds:
-            embeds = [embed]
-
-        await log.send(
-            content=now.mention,
-            embeds=embeds,
-            files=files,
-            thread=Object(id=1001125686230126643),
-            username=now.display_name,
-            avatar_url=now.display_avatar.url,
-        )
+        await log.send(**kwargs)
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:

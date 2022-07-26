@@ -594,6 +594,7 @@ class CreationOCView(Basic):
             for k, v in FIELDS.items()
             if v.check(self.oc)
         ]
+        self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.submit.disabled = not all(str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}" for x in self.fields.options)
 
     @select(placeholder="Select Kind", row=0)
