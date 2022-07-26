@@ -551,23 +551,22 @@ class CreationOCView(Basic):
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
 
-        embed = Embed(color=Color.red(), timestamp=interaction.created_at)
+        if self.user != cog.supporting.get(interaction.user, interaction.user):
+            title = "This OC isn't yours"
+        elif self.current and self.user == interaction.user:
+            title = f"You're currently filling the OC's {self.current}"
+        else:
+            return True
+
+        embed = Embed(title=title, color=Color.red(), timestamp=interaction.created_at)
         embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
 
-        if self.user != cog.supporting.get(interaction.user, interaction.user):
-            embed.title = "This OC isn't yours"
-        elif self.current and self.user == interaction.user:
-            embed.title = f"You're currently filling the OC's {self.current}"
-
-        if embed.title:
-            data = dict(Completed=self.field_parse(valid=True), Missing=self.field_parse(valid=False))
-            for key, value in filter(all, data.items()):
-                embed.add_field(name=key, value=value, inline=False)
-            await resp.send_message(embed=embed, ephemeral=True)
-            return False
-
-        return True
+        data = dict(Completed=self.field_parse(valid=True), Missing=self.field_parse(valid=False))
+        for key, value in filter(all, data.items()):
+            embed.add_field(name=key, value=value, inline=False)
+        await resp.send_message(embed=embed, ephemeral=True)
+        return False
 
     def setup(self):
         self.kind.options = [
