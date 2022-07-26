@@ -357,7 +357,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a4428+gfb8d5c15"
+version = "2.0.0a4432+g9f1c511b"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -382,7 +382,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "fb8d5c15d0ccdde369e4262fa5f9aad95e7989f2"
+resolved_reference = "9f1c511b474536c749869a2a80b74750cdafbdf3"
 
 [[package]]
 name = "distlib"
@@ -904,7 +904,7 @@ dev = ["pre-commit", "tox"]
 
 [[package]]
 name = "protobuf"
-version = "4.21.3"
+version = "4.21.4"
 description = ""
 category = "main"
 optional = false

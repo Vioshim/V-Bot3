@@ -543,32 +543,31 @@ class CreationOCView(Basic):
             self.remove_item(self.finish_oc)
         self.setup()
 
+    def field_parse(self, valid: bool = True):
+        emoji: str = "\N{WHITE HEAVY CHECK MARK}" if valid else "\N{CROSS MARK}"
+        return "\n".join(f"• {x.label}" for x in self.fields.options if str(x.emoji) == emoji)
+
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
-        condition = self.user == cog.supporting.get(interaction.user, interaction.user)
 
         embed = Embed(color=Color.red(), timestamp=interaction.created_at)
         embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
 
-        if not condition:
+        if self.user != cog.supporting.get(interaction.user, interaction.user):
             embed.title = "This OC isn't yours"
         elif self.current and self.user == interaction.user:
             embed.title = f"You're currently filling the OC's {self.current}"
 
         if embed.title:
-            data = dict(
-                Completed="\n".join(
-                    f"• {x.label}" for x in self.fields.options if str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}"
-                ),
-                Missing="\n".join(f"• {x.label}" for x in self.fields.options if str(x.emoji) == "\N{CROSS MARK}"),
-            )
+            data = dict(Completed=self.field_parse(valid=True), Missing=self.field_parse(valid=False))
             for key, value in filter(all, data.items()):
                 embed.add_field(name=key, value=value, inline=False)
             await resp.send_message(embed=embed, ephemeral=True)
+            return False
 
-        return condition
+        return True
 
     def setup(self):
         self.kind.options = [
@@ -608,7 +607,10 @@ class CreationOCView(Basic):
                 self.progress -= {"Special Ability"}
                 self.oc.sp_ability = None
             self.setup()
-            await resp.edit_message(embed=self.oc.embed, view=self)
+            if resp.is_done():
+                await ctx.edit_original_message(embed=self.oc.embed, view=self)
+            else:
+                await resp.edit_message(embed=self.oc.embed, view=self)
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await resp.send_message(str(e), ephemeral=True)
