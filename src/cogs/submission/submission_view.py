@@ -22,7 +22,6 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
-    PartialEmoji,
     TextStyle,
     Thread,
 )
@@ -32,7 +31,6 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
-from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 
