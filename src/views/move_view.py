@@ -46,7 +46,7 @@ class MoveComplex(Complex[Move]):
             max_values=min(max_values, len(total)),
             silent_mode=True,
         )
-        self.real_max = min(max_values, len(total))
+        self.real_max = self.max_values
         self.embed.title = "Select Moves"
         self.total = total
         self.data = {}
