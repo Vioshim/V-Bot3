@@ -16,12 +16,13 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from difflib import get_close_matches
+from enum import Enum
 from json import JSONDecoder, JSONEncoder, load
 from random import choice
 from re import split
 from typing import Any, Optional
 
-from discord import Embed
+from discord import Embed, PartialEmoji
 from discord.utils import utcnow
 from frozendict import frozendict
 
@@ -84,6 +85,20 @@ Z_MOVE_RANGE = frozendict(
 )
 
 
+class Category(Enum):
+    STATUS = PartialEmoji(name="Status", id=1001887872221200506)
+    PHYSICAL = PartialEmoji(name="Physical", id=1001887867796205598)
+    SPECIAL = PartialEmoji(name="Special", id=1001887870266658916)
+
+    @property
+    def title(self) -> str:
+        return self.name.title()
+
+    @property
+    def emoji(self) -> PartialEmoji:
+        return self.value
+
+
 @dataclass(unsafe_hash=True, slots=True)
 class Move:
     """Class that represents a Move"""
@@ -99,7 +114,7 @@ class Move:
     shortDesc: Optional[str] = None
     accuracy: Optional[int] = None
     base: Optional[int] = None
-    category: str = "STATUS"
+    category: Category = Category.STATUS
     pp: Optional[int] = None
     banned: bool = False
     metronome: bool = True
@@ -121,7 +136,8 @@ class Move:
         embed = Embed(url=self.url, title=title, description=description, color=self.type.color, timestamp=utcnow())
         embed.add_field(name="Power", value=f"{self.base}")
         embed.add_field(name="Accuracy", value=f"{self.accuracy}")
-        embed.set_footer(text=self.category.title())
+        cat = self.category
+        embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.add_field(name="PP", value=f"{self.pp}")
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=self.image)
@@ -138,7 +154,7 @@ class Move:
         str
             Representation of a move
         """
-        return f"[{self.name}] - {self.type} ({self.category})".title()
+        return f"[{self.name}] - {self.type} ({self.category.name})".title()
 
     @property
     def z_move_base(self) -> int:
@@ -267,6 +283,7 @@ class MoveEncoder(JSONEncoder):
         if isinstance(o, Move):
             data = asdict(o)
             data["type"] = o.type.name
+            data["category"] = o.category.name
             return data
         return super(MoveEncoder, self).default(o)
 
@@ -291,6 +308,10 @@ class MoveDecoder(JSONDecoder):
             Result
         """
         if mon_type := dct.get("type"):
+            try:
+                dct["category"] = Category[dct["category"]]
+            except KeyError:
+                dct["category"] = Category.STATUS
             dct["type"] = Typing.from_ID(mon_type)
             return Move(**dct)
         return dct

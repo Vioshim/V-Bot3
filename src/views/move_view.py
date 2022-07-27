@@ -20,7 +20,8 @@ from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
-from src.structures.move import Move
+from src.structures.mon_typing import Typing
+from src.structures.move import Category, Move
 
 __all__ = ("MoveView", "MoveComplex")
 
@@ -56,21 +57,17 @@ class MoveComplex(Complex[Move]):
         self.select_types.options.clear()
         self.select_types.add_option(label="No Type Filter", description=f"Has {len(self.total)} moves.")
 
-        aux = sorted(set(self.total) - self.choices, key=lambda x: x.type.id or 0)
-        data = {k: set(v) for k, v in groupby(aux, key=lambda x: x.type)}
-        data = dict(
-            sorted(
-                data.items(),
-                key=lambda x: len(x[1]),
-                reverse=True,
-            )
-        )
+        moves: set[Move] = set(self.total) - self.choices
+
+        data = {k: set(v) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)}
+        data.update({k: set(v) for k, v in groupby(sorted(moves, key=lambda x: x.type.id or 0), key=lambda x: x.type)})
+        data: dict[Typing | Category, set[Move]] = dict(sorted(data.items(), key=lambda x: len(x[1]), reverse=True))
 
         for k, items in data.items():
-            self.data[str(k)] = items
+            label = k.name.title()
+            self.data[label] = items
             self.select_types.add_option(
-                label=k.name,
-                value=str(k),
+                label=label,
                 emoji=k.emoji,
                 description=f"Has {len(items)} moves.",
             )
@@ -113,14 +110,9 @@ class MoveComplex(Complex[Move]):
                 await resp.pong()
             await self.delete()
 
-    @select(
-        placeholder="Filter by Typings",
-        custom_id="filter",
-        max_values=1,
-    )
+    @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        items = self.data.get(sct.values[0], self.total)
-        self.values = items
+        self.values = set.intersection(*[self.data[value] for value in sct.values])
         await self.edit(interaction=interaction, page=0)
 
 
