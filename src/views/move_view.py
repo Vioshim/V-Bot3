@@ -20,7 +20,6 @@ from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
-from src.structures.mon_typing import Typing
 from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
@@ -44,7 +43,7 @@ class MoveComplex(Complex[Move]):
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
             sort_key=lambda x: x.name,
-            max_values=max_values,
+            max_values=min(max_values, len(max_values)),
             silent_mode=True,
         )
         self.real_max = min(max_values, len(total))
