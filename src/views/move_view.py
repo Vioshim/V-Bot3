@@ -15,13 +15,18 @@
 from itertools import groupby
 from typing import Optional
 
-from discord import DiscordException, Interaction, InteractionResponse, Member
+from discord import (
+    DiscordException,
+    Interaction,
+    InteractionResponse,
+    Member,
+    PartialEmoji,
+)
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
-from src.structures.mon_typing import Typing
-from src.structures.move import Category, Move
+from src.structures.move import Move
 
 __all__ = ("MoveView", "MoveComplex")
 
@@ -55,20 +60,31 @@ class MoveComplex(Complex[Move]):
     def menu_format(self) -> None:
 
         self.select_types.options.clear()
-        self.select_types.add_option(label="No Type Filter", description=f"Has {len(self.total)} moves.")
 
         moves: set[Move] = set(self.total) - self.choices
 
-        data = {k: set(v) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)}
-        data.update({k: set(v) for k, v in groupby(sorted(moves, key=lambda x: x.type.id or 0), key=lambda x: x.type)})
-        data: dict[Typing | Category, set[Move]] = dict(sorted(data.items(), key=lambda x: len(x[1]), reverse=True))
+        elements = (
+            groupby(
+                sorted(moves, key=lambda x: x.category.name),
+                key=lambda x: x.category,
+            ),
+            groupby(
+                sorted(moves, key=lambda x: x.type.id or 0),
+                key=lambda x: x.type,
+            ),
+        )
 
-        for k, items in data.items():
-            label = k.name.title()
+        data = {"None": moves}
+
+        for items in elements:
+            data.update({k: set(v) for k, v in items})
+
+        for k, items in sorted(data.items(), key=lambda x: len(x[1]), reverse=True):
+            label = getattr(k, "name", k).title()
             self.data[label] = items
             self.select_types.add_option(
                 label=label,
-                emoji=k.emoji,
+                emoji=getattr(k, "emoji", PartialEmoji(name="list", id=432986579007569922)),
                 description=f"Has {len(items)} moves.",
             )
 
