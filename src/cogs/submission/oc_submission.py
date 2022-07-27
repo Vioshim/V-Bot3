@@ -284,6 +284,10 @@ class SpeciesField(TemplateField):
                     oc.species.name = answer.title()
                     progress.add(self.name)
 
+        moves = oc.species.movepool()
+        if len(moves) <= 6:
+            oc.moveset = frozenset(moves)
+
 
 class TypesField(TemplateField):
     name = "Types"

@@ -102,9 +102,7 @@ class Species(metaclass=ABCMeta):
         self.types = Typing.deduce_many(*self.types)
 
     def __eq__(self, other: Species):
-        if isinstance(other, Species):
-            return str(self.id) == str(other.id)
-        return NotImplemented
+        return isinstance(other, Species) and str(self.id) == str(other.id)
 
     def image(self, gender: Optional[Pronoun], shiny: bool = False):
         if shiny:

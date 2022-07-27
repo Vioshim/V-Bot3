@@ -231,21 +231,29 @@ class Movepool:
         """
         return self.operator(other, method=lambda x, y: x & y)
 
-    def __call__(self) -> list[Move]:
-        """Returns all moves that belong to this instance in alphabetical order.
+    def __call__(self, *, key: Optional[Callable[[Move]]] = None, reverse: bool = False) -> list[Move]:
+        """Returns all moves that belong to this instance sorted.
+
+        Parameters
+        ----------
+        key : Optional[Callable[[Move]]], optional
+            Sorting key, by default None
+        reverse : bool, optional
+            If Reversed, by default False
 
         Returns
         -------
         list[Move]
             List of moves that belong to this instance.
         """
+        key = key or (lambda x: x.name)
         moves: set[Move] = set()
         for item in astuple(self):
             if isinstance(item, frozenset):
                 moves.update(item)
             elif isinstance(item, frozendict):
                 moves.update(*item.values())
-        return sorted(moves, key=lambda x: x.name)
+        return sorted(moves, key=key, reverse=reverse)
 
     def __contains__(self, item: Move) -> bool:
         """Check if movepool contains a move.
