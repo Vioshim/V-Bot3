@@ -43,7 +43,7 @@ class MoveComplex(Complex[Move]):
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
             sort_key=lambda x: x.name,
-            max_values=min(max_values, len(max_values)),
+            max_values=min(max_values, len(total)),
             silent_mode=True,
         )
         self.real_max = min(max_values, len(total))
