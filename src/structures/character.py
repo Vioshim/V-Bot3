@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from io import BytesIO
 from random import sample
 from typing import Any, Optional, Type
 
@@ -25,7 +24,6 @@ from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
-from docx.document import Document
 from rapidfuzz import process
 
 from src.structures.ability import Ability, SpAbility
@@ -45,15 +43,10 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check, stats_check
+from src.utils.functions import common_pop_get, int_check
 from src.utils.imagekit import ImageKit
-from src.utils.matches import DATA_FINDER
 
-__all__ = (
-    "Character",
-    "CharacterArg",
-    "oc_process",
-)
+__all__ = ("Character", "CharacterArg", "Kind")
 
 
 class Kind(Enum):
@@ -122,10 +115,10 @@ class Kind(Enum):
         return cls.Fakemon
 
 
-@dataclass(unsafe_hash=True, slots=True)
+@dataclass(slots=True)
 class Character:
     species: Optional[Species] = None
-    id: Optional[int] = None
+    id: int = 0
     author: Optional[int] = None
     thread: Optional[int] = None
     server: int = 719343092963999804
@@ -170,7 +163,15 @@ class Character:
             self.sp_ability = None
 
     def __eq__(self, other: Character):
-        return self.id == other.id
+        return isinstance(other, Character) and self.id == other.id
+
+    def __ne__(self, other: Character) -> bool:
+        if isinstance(other, Character):
+            return other.id != self.id
+        return True
+
+    def __hash__(self) -> int:
+        return self.id >> 22
 
     @property
     def types(self) -> frozenset[Typing]:
@@ -181,7 +182,7 @@ class Character:
     @property
     def possible_types(self) -> frozenset[frozenset[Typing]]:
         if isinstance(self.species, Fusion):
-            return frozenset([frozenset(x) for x in self.species.possible_types])
+            return frozenset(map(frozenset, self.species.possible_types))
         if self.types:
             return frozenset({self.types})
         return frozenset()
@@ -671,261 +672,115 @@ class Character:
         name = self.kind.name if self.kind else "Error"
         return f"{name}: {self.species.name}, Age: {self.age}, Types: {types}"
 
+    @classmethod
+    def process(cls, **kwargs) -> Character:
+        """Function used for processing a dict, to a character
+        Returns
+        -------
+        Character
+            Character given the paraneters
+        """
+        data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
 
-PLACEHOLDER_NAMES = {
-    "Name": "name",
-    "Age": "age",
-    "Species": "species",
-    "Gender": "gender",
-    "Ability": "ability",
-    "Pronoun": "pronoun",
-    "Backstory": "backstory",
-    "Additional Information": "extra",
-    "F. Species": "fakemon",
-    "F. Base": "base",
-    "Variant": "variant",
-    "Artist": "artist",
-    "Website": "website",
-}
-PLACEHOLDER_DEFAULTS = {
-    "name": "OC's Name",
-    "age": "OC's Age",
-    "species": "OC's Species",
-    "gender": "OC's Gender",
-    "ability": "OC's Ability",
-    "pronoun": "OC's Preferred Pronoun",
-    "backstory": "Character's backstory",
-    "extra": "Character's extra information",
-    "fakemon": "OC's Fakemon Species",
-    "base": "OC's Base Species",
-    "variant": "OC's Variant Species",
-    "artist": "Artist's Name",
-    "website": "Art's Website",
-}
-PLACEHOLDER_SP = {
-    "What is it Called?": "name",
-    "How is it Called?": "name",
-    "How did they obtain it?": "origin",
-    "What does the Special Ability do?": "description",
-    "How does it make the character's life easier?": "pros",
-    "How does it make the character's life harder?": "cons",
-}
-PLACEHOLDER_STATS = {
-    "HP": "HP",
-    "Attack": "ATK",
-    "Defense": "DEF",
-    "Special Attack": "SPA",
-    "Special Defense": "SPD",
-    "Speed": "SPE",
-}
+        if fakemon := data.pop("fakemon", ""):
 
+            name: str = fakemon.title()
 
-def oc_process(**kwargs) -> Character:
-    """Function used for processing a dict, to a character
-    Returns
-    -------
-    Character
-        Character given the paraneters
-    """
-    data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
-
-    if fakemon := data.pop("fakemon", ""):
-
-        name: str = fakemon.title()
-
-        if name.startswith("Mega "):
-            species = CustomMega.deduce(name.removeprefix("Mega "))
-        elif species := Fakemon.deduce(
-            common_pop_get(
-                data,
-                "base",
-                "preevo",
-                "pre evo",
-                "pre_evo",
-            )
-        ):
-            species.name = name
-        else:
-            species = Fakemon(name=name)
-
-        if species is None:
-            raise ValueError("Fakemon was not deduced by the bot.")
-
-        data["species"] = species
-    elif variant := data.pop("variant", ""):
-        if species := Variant.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
-            name = variant.title().replace(species.name, "").strip()
-            species.name = f"{name} {species.name}".title()
-        else:
-            for item in variant.split(" "):
-                if species := Variant.deduce(item):
-                    species.name = variant.title()
-                    break
+            if name.startswith("Mega "):
+                species = CustomMega.deduce(name.removeprefix("Mega "))
+            elif species := Fakemon.deduce(
+                common_pop_get(
+                    data,
+                    "base",
+                    "preevo",
+                    "pre evo",
+                    "pre_evo",
+                )
+            ):
+                species.name = name
             else:
-                raise ValueError("Unable to determine the variant' species")
+                species = Fakemon(name=name)
 
-        data["species"] = species
-    elif species := Fusion.deduce(data.pop("fusion", "")):
-        data["species"] = species
-    else:
-        aux = common_pop_get(data, "species", "pokemon") or ""
-        method = Species.any_deduce if "," in aux else Species.single_deduce
-        if species := method(aux):
+            if species is None:
+                raise ValueError("Fakemon was not deduced by the bot.")
+
+            data["species"] = species
+        elif variant := data.pop("variant", ""):
+            if species := Variant.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
+                name = variant.title().replace(species.name, "").strip()
+                species.name = f"{name} {species.name}".title()
+            else:
+                for item in variant.split(" "):
+                    if species := Variant.deduce(item):
+                        species.name = variant.title()
+                        break
+                else:
+                    raise ValueError("Unable to determine the variant' species")
+
+            data["species"] = species
+        elif species := Fusion.deduce(data.pop("fusion", "")):
             data["species"] = species
         else:
-            print(data)
-            raise ValueError(
-                f"Unable to determine the species, value: {species}, make sure you're using a recent template."
-            )
+            aux = common_pop_get(data, "species", "pokemon") or ""
+            method = Species.any_deduce if "," in aux else Species.single_deduce
+            if species := method(aux):
+                data["species"] = species
+            else:
+                print(data)
+                raise ValueError(
+                    f"Unable to determine the species, value: {species}, make sure you're using a recent template."
+                )
 
-    if species.banned:
-        raise ValueError(f"The Species {species.name!r} is banned currently.")
+        if species.banned:
+            raise ValueError(f"The Species {species.name!r} is banned currently.")
 
-    if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
-        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
-            species.types = types
-        elif species.types != types:
-            types_txt = "/".join(i.name for i in types)
-            species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
-            species.types = types
+        if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
+            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+                species.types = types
+            elif species.types != types:
+                types_txt = "/".join(i.name for i in types)
+                species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
+                species.types = types
 
-    if ability_info := common_pop_get(data, "abilities", "ability"):
-        if abilities := Ability.deduce_many(ability_info):
-            data["abilities"] = abilities
+        if ability_info := common_pop_get(data, "abilities", "ability"):
+            if abilities := Ability.deduce_many(ability_info):
+                data["abilities"] = abilities
 
-        if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
-            species.abilities = abilities
-        elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
-            species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
-            species.abilities = abilities
-            data["species"] = species
+            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+                species.abilities = abilities
+            elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
+                species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
+                species.abilities = abilities
+                data["species"] = species
 
-    if move_info := common_pop_get(data, "moveset", "moves"):
-        if isinstance(move_info, str):
-            move_info = [move_info]
-        if moveset := Move.deduce_many(*move_info):
-            data["moveset"] = moveset
+        if move_info := common_pop_get(data, "moveset", "moves"):
+            if isinstance(move_info, str):
+                move_info = [move_info]
+            if moveset := Move.deduce_many(*move_info):
+                data["moveset"] = moveset
 
-    if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
-        if pronoun := Pronoun.deduce(pronoun_info):
-            data["pronoun"] = pronoun
+        if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
+            if pronoun := Pronoun.deduce(pronoun_info):
+                data["pronoun"] = pronoun
 
-    if age := common_pop_get(data, "age", "years"):
-        data["age"] = int_check(age, 13, 99)
+        if age := common_pop_get(data, "age", "years"):
+            data["age"] = int_check(age, 13, 99)
 
-    data.pop("stats", {})
+        data.pop("stats", {})
 
-    if isinstance(species, Fakemon):
-        if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
-            species.movepool = Movepool.from_dict(**movepool)
+        if isinstance(species, Fakemon):
+            if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
+                species.movepool = Movepool.from_dict(**movepool)
 
-    data = {k: v for k, v in data.items() if v}
-    data["species"] = species
+        data = {k: v for k, v in data.items() if v}
+        data["species"] = species
 
-    if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
-        data["sp_ability"] = value
-    elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
-        data["sp_ability"] = SpAbility()
+        if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
+            data["sp_ability"] = value
+        elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
+            data["sp_ability"] = SpAbility()
 
-    return Character.from_dict(data)
-
-
-def check(value: Optional[str]) -> bool:
-    """A checker function to determine what is useful
-    out of a character template
-
-    Parameters
-    ----------
-    value : Optional[str]
-        item to be inspected
-
-    Returns
-    -------
-    bool
-        If this item should be parsed or not
-    """
-    data = f"{value}".title().strip() not in ["None", "Move"]
-    data &= value not in PLACEHOLDER_NAMES
-    data &= value not in PLACEHOLDER_DEFAULTS.values()
-    return data
-
-
-def doc_convert(doc: Document) -> dict[str, Any]:
-    """Google Convereter
-
-    Parameters
-    ----------
-    doc : Document
-        docx Document
-
-    Returns
-    -------
-    dict[str, Any]
-        Info
-    """
-    content_values: list[str] = [cell.text for table in doc.tables for row in table.rows for cell in row.cells]
-    text = [x for item in content_values if (x := item.replace("\u2019", "'").strip())]
-    raw_kwargs = dict(url=getattr(doc, "url", None))
-    if stats := {
-        PLACEHOLDER_STATS[item.strip()]: stats_check(*content_values[index + 1 :][:1])
-        for index, item in enumerate(content_values)
-        if item.strip() in PLACEHOLDER_STATS
-        and len(content_values) > index
-        and len(content_values[index + 1 :][:1]) == 1
-    }:
-        raw_kwargs["stats"] = stats
-
-    for index, item in enumerate(text[:-1], start=1):
-        if not check(next_value := text[index]):
-            continue
-        if argument := PLACEHOLDER_NAMES.get(item):
-            raw_kwargs[argument] = next_value
-        elif element := PLACEHOLDER_SP.get(item):
-            raw_kwargs.setdefault("sp_ability", {})
-            raw_kwargs["sp_ability"][element] = next_value
-        elif element := DATA_FINDER.match(item):
-            argument = next_value.title()
-            match element.groups():
-                case ["Level", y]:
-                    idx = int(y)
-                    raw_kwargs.setdefault("movepool", {})
-                    raw_kwargs["movepool"].setdefault("level", {})
-                    raw_kwargs["movepool"]["level"].setdefault(idx, set())
-                    raw_kwargs["movepool"]["level"][idx].add(argument)
-                case ["Move", _]:
-                    raw_kwargs.setdefault("moveset", set())
-                    raw_kwargs["moveset"].add(argument)
-                case ["Ability", _]:
-                    raw_kwargs.setdefault("abilities", set())
-                    raw_kwargs["abilities"].add(next_value)
-                case ["Species", _]:
-                    raw_kwargs.setdefault("fusion", set())
-                    raw_kwargs["fusion"].add(next_value)
-                case ["Type", _]:
-                    raw_kwargs.setdefault("types", set())
-                    raw_kwargs["types"].add(next_value.upper())
-                case [x, _]:
-                    raw_kwargs.setdefault("movepool", {})
-                    raw_kwargs["movepool"].setdefault(x.lower(), set())
-                    raw_kwargs["movepool"][x.lower()].add(argument)
-
-    try:
-        if data := list(doc.inline_shapes):
-            item = data[0]
-            pic = item._inline.graphic.graphicData.pic
-            blip = pic.blipFill.blip
-            rid = blip.embed
-            doc_part = doc.part
-            image_part = doc_part.related_parts[rid]
-            fp = BytesIO(image_part._blob)
-            raw_kwargs["image"] = File(fp=fp, filename="image.png")
-    except Exception:
-        pass
-
-    raw_kwargs.pop("artist", None)
-    raw_kwargs.pop("website", None)
-
-    return raw_kwargs
+        return cls.from_dict(data)
 
 
 class CharacterTransform(Transformer):

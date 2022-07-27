@@ -52,7 +52,7 @@ from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character, CharacterArg, oc_process
+from src.structures.character import Character, CharacterArg
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -554,7 +554,7 @@ class Submission(commands.Cog):
             refer_author = message.author
         if msg_data:
             author = self.supporting.get(refer_author, refer_author)
-            if oc := oc_process(**msg_data):
+            if oc := Character.process(**msg_data):
                 oc.author = author.id
                 oc.server = message.guild.id
                 await self.registration(ctx=message, oc=oc, worker=refer_author)

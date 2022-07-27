@@ -22,6 +22,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    PartialEmoji,
     TextStyle,
     Thread,
 )
@@ -31,6 +32,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
+from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 
@@ -92,7 +94,9 @@ class NPCModal(Modal, title="NPC Modification - ?npc"):
             await ctx.response.send_message("Invalid URL", ephemeral=True)
         else:
             await db.replace_one(
-                {"author": ctx.user.id},
+                {
+                    "author": ctx.user.id,
+                },
                 {
                     "author": ctx.user.id,
                     "name": self.name.value,
@@ -109,6 +113,7 @@ class TemplateView(View):
         super(TemplateView, self).__init__(timeout=None)
         self.message = message
         embed = message.embeds[0]
+        self.title = embed.title
         self.info = embed.description
         self.urls = {x.name: x.value[:-1].removeprefix("[Google Docs URL](") for x in embed.fields}
 
@@ -126,16 +131,24 @@ class TemplateView(View):
 
     @button(label="Google Document", row=0, style=ButtonStyle.blurple)
     async def mode3(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        content = (
-            "**__Available Templates__**\n\n"
-            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.\n"
+        view = Complex(
+            member=interaction.user,
+            values=list(self.urls.keys()),
+            target=interaction,
+            parser=lambda x: (x, None),
+            emoji_parser=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
+            silent_mode=True,
         )
 
-        for key, item in self.urls.items():
-            content += f"\n• [{key}]({item})"
+        async with view.send(
+            title=f"Available Templates - {self.title}",
+            description="Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.",
+            editing_original=True,
+            single=True,
+        ) as choice:
+            if url := self.urls.get(choice):
+                await view.message.edit(content=url, embed=None, view=None)
 
-        await resp.edit_message(content=content, embed=None, view=None)
         self.stop()
 
 
