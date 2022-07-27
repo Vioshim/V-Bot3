@@ -109,46 +109,31 @@ class NPCModal(Modal, title="NPC Modification - ?npc"):
 
 
 class TemplateView(View):
-    def __init__(self, message: Message):
+    def __init__(self, embed: Embed):
         super(TemplateView, self).__init__(timeout=None)
-        self.message = message
-        embed = message.embeds[0]
-        self.title = embed.title
-        self.info = embed.description
-        self.urls = {x.name: x.value[:-1].removeprefix("[Google Docs URL](") for x in embed.fields}
+        self.embed = embed
 
     @button(label="Form", row=0, style=ButtonStyle.blurple)
     async def mode1(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        modal = SubmissionModal(codeblock_converter(self.info).content.strip())
+        modal = SubmissionModal(codeblock_converter(self.embed.description).content.strip())
         await resp.send_modal(modal)
 
     @button(label="Message", row=0, style=ButtonStyle.blurple)
     async def mode2(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        await resp.edit_message(content=self.info, embed=None, view=None)
+        await resp.edit_message(content=self.embed.description, embed=None, view=None)
         self.stop()
 
     @button(label="Google Document", row=0, style=ButtonStyle.blurple)
     async def mode3(self, interaction: Interaction, _: Button):
-        view = Complex(
-            member=interaction.user,
-            values=list(self.urls.keys()),
-            target=interaction,
-            parser=lambda x: (x, None),
-            emoji_parser=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
-            silent_mode=True,
+        resp: InteractionResponse = interaction.response
+        embed = self.embed.copy()
+        embed.title = f"Available Templates - {self.embed.title}"
+        embed.description = (
+            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel."
         )
-
-        async with view.send(
-            title=f"Available Templates - {self.title}",
-            description="Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.",
-            editing_original=True,
-            single=True,
-        ) as choice:
-            if url := self.urls.get(choice):
-                await view.message.edit(content=url, embed=None, view=None)
-
+        await resp.edit_message(embed=embed, view=None)
         self.stop()
 
 
@@ -176,7 +161,7 @@ class SubmissionView(View):
         embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
         embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
-        await ctx.followup.send(embed=embed, view=TemplateView(msg), ephemeral=True)
+        await ctx.followup.send(embed=embed, view=TemplateView(msg.embeds[0]), ephemeral=True)
 
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
