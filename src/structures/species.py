@@ -119,6 +119,10 @@ class Species(metaclass=ABCMeta):
         return frozenset(x for x in ALL_SPECIES.values() if isinstance(x, cls))
 
     @property
+    def possible_types(self):
+        return frozenset({self.types} if self.types else [])
+
+    @property
     def total_movepool(self):
         mon = self
         aux = self.movepool
@@ -734,17 +738,17 @@ class Fusion(Species):
         return items
 
     @property
-    def possible_types(self) -> list[set[Typing]]:
+    def possible_types(self):
         """This returns a list of valid types for the pokemon
 
         Returns
         -------
-        list[set[Types]]
+        frozenset[frozenset[Typing]]
             List of sets (valid types)
         """
         types1 = self.mon1.types
         types2 = self.mon2.types
-        elements: list[set[Typing]] = []
+        elements: list[frozenset[Typing]] = []
         if self.mon1 in self.mon2.evolves_to or self.mon2 in self.mon1.evolves_to:
             elements.append(types1)
             elements.append(types2)
@@ -756,7 +760,7 @@ class Fusion(Species):
                 elements.extend(frozenset({x, y}) for x in common for y in uncommon)
             else:
                 elements.extend(frozenset({x, y}) for x in types1 for y in types2)
-        return elements
+        return frozenset(elements)
 
     @property
     def requires_image(self) -> bool:

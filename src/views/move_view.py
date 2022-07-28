@@ -15,18 +15,13 @@
 from itertools import groupby
 from typing import Optional
 
-from discord import (
-    DiscordException,
-    Interaction,
-    InteractionResponse,
-    Member,
-    PartialEmoji,
-)
+from discord import DiscordException, Interaction, InteractionResponse, Member
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, select
 
 from src.pagination.complex import Complex
 from src.structures.move import Move
+from src.utils.etc import LIST_EMOJI
 
 __all__ = ("MoveView", "MoveComplex")
 
@@ -84,7 +79,7 @@ class MoveComplex(Complex[Move]):
             self.data[label] = items
             self.select_types.add_option(
                 label=label,
-                emoji=getattr(k, "emoji", PartialEmoji(name="list", id=432986579007569922)),
+                emoji=getattr(k, "emoji", LIST_EMOJI),
                 description=f"Has {len(items)} moves.",
             )
 

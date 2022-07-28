@@ -53,7 +53,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import int_check
+from src.utils.functions import embed_handler, int_check
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
@@ -108,7 +108,6 @@ class TemplateField(ABC):
         return True
 
     def evaluate(self, oc: Character) -> bool:
-        """Abstract method which evaluates a character"""
         return True
 
     @abstractmethod
@@ -147,6 +146,9 @@ class AgeField(TemplateField):
     name = "Age"
     description = "Optional. Fill the OC's Age"
 
+    def evaluate(self, oc: Character) -> bool:
+        return not oc.age or 13 <= oc.age <= 99
+
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         age = str(oc.age) if oc.age else "Unknown"
@@ -165,6 +167,9 @@ class AgeField(TemplateField):
 class PronounField(TemplateField):
     name = "Pronoun"
     description = "Optional. Fill the OC's Pronoun"
+
+    def evaluate(self, oc: Character) -> bool:
+        return isinstance(oc.pronoun, Pronoun)
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         default = getattr(oc.pronoun, "name", "Them")
@@ -248,14 +253,10 @@ class SpeciesField(TemplateField):
                     oc.species = Variant(base=choices[0], name="")
                 elif template == "Fusion":
                     oc.species = Fusion(*choices)
-                    oc.abilities = frozenset()
                 else:
                     oc.species = choices[0]
-                    if not oc.image:
-                        oc.image = choices[0].base_image
+                    oc.image = oc.image or oc.default_image
 
-                oc.abilities &= frozenset(oc.species.abilities)
-                oc.moveset &= frozenset(oc.total_movepool())
             elif template.startswith("Custom"):
                 oc.species = Fakemon(
                     abilities=oc.abilities,
@@ -285,7 +286,7 @@ class SpeciesField(TemplateField):
                     progress.add(self.name)
 
         moves = oc.species.movepool()
-        if len(moves) <= 6:
+        if not oc.moveset and len(moves) <= 6:
             oc.moveset = frozenset(moves)
 
 
@@ -294,10 +295,13 @@ class TypesField(TemplateField):
     escription = "Fill the OC's Types"
 
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.types)
+        species = oc.species
+        if isinstance(species, (Fakemon, Variant, Fusion)):
+            return oc.types in species.possible_types
+        return False
 
     def check(self, oc: Character) -> bool:
-        return oc.species and isinstance(oc.species, (Fusion, Fakemon, Variant))
+        return isinstance(oc.species, (Fusion, Fakemon, Variant))
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         species = oc.species
@@ -310,7 +314,7 @@ class TypesField(TemplateField):
                 timeout=None,
                 parser=lambda x: (y := "/".join(i.name for i in x), f"Adds the typing {y}"),
                 text_component=TextInput(
-                    label="Fusion Typing",
+                    label="Select Typing",
                     placeholder=" | ".join("/".join(i.name for i in x).title() for x in values),
                 ),
                 silent_mode=True,
@@ -344,7 +348,27 @@ class MovesetField(TemplateField):
     description = "Optional. Fill the OC's fav. moves"
 
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.moveset)
+        if species := oc.species:
+            mon = Pokemon.from_ID("SMEARGLE")
+
+            if isinstance(species, Fusion):
+                condition = mon in species.bases
+            elif isinstance(species, Variant):
+                condition = mon == species.base
+            elif isinstance(species, Fakemon):
+                condition = mon == species.evolves_from
+            else:
+                condition = mon == species
+
+            value = all(not x.banned for x in oc.moveset)
+
+            if not condition:
+                moves = oc.movepool()
+                value &= all(x in moves for x in oc.moveset)
+
+            return value
+
+        return False
 
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
@@ -380,7 +404,21 @@ class MovepoolField(TemplateField):
     description = "Optional. Fill the OC's movepool"
 
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.movepool)
+        species = oc.species
+        mon = Pokemon.from_ID("SMEARGLE")
+
+        if isinstance(species, Fusion):
+            condition = mon in species.bases
+        elif isinstance(species, Variant):
+            condition = mon == species.base
+        else:
+            condition = False
+
+        moves = oc.movepool()
+        value = all(not x.banned for x in moves)
+        if not condition:
+            value &= all(x in moves for x in oc.moveset)
+        return value
 
     def check(self, oc: Character) -> bool:
         return isinstance(oc.species, (Fakemon, Variant))
@@ -397,7 +435,10 @@ class AbilitiesField(TemplateField):
     description = "Fill the OC's Abilities"
 
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.abilities)
+        condition = 1 <= len(oc.abilities) <= oc.max_amount_abilities
+        if not isinstance(oc.species, (Fakemon, Variant)):
+            condition &= all(x in oc.species.abilities for x in oc.abilities)
+        return condition
 
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
@@ -439,7 +480,7 @@ class SpAbilityField(TemplateField):
     description = "Optional. Fill the OC's Special Ability"
 
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.sp_ability)
+        return oc.can_have_special_abilities or not oc.sp_ability
 
     def check(self, oc: Character) -> bool:
         return oc.species and oc.can_have_special_abilities
@@ -455,9 +496,6 @@ class SpAbilityField(TemplateField):
 class BackstoryField(TemplateField):
     name = "Backstory"
     description = "Optional. Fill the OC's Backstory"
-
-    def evaluate(self, oc: Character) -> bool:
-        return bool(oc.backstory)
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
@@ -476,9 +514,6 @@ class ExtraField(TemplateField):
     name = "Extra Information"
     description = "Optional. Fill the OC's Extra Information"
 
-    def evaluate(self, oc: Character) -> bool:
-        return bool(oc.extra)
-
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
@@ -496,8 +531,11 @@ class ImageField(TemplateField):
     name = "Image"
     description = "Fill the OC's Image"
 
+    def check(self, oc: Character) -> bool:
+        return bool(oc.species)
+
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.image)
+        return oc.image and oc.image != oc.default_image
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         default_image = oc.image_url or oc.image or oc.default_image
@@ -507,10 +545,8 @@ class ImageField(TemplateField):
                 oc.image = text
                 progress.add(self.name)
 
-        if isinstance(oc.image, str):
+        if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
             oc.image = await ctx.client.get_file(oc.generated_image)
-        if not oc.image:
-            oc.image = default_image
 
 
 FIELDS: dict[str, TemplateField] = {
@@ -545,14 +581,9 @@ class CreationOCView(Basic):
         self.embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
         self.ref_template = convert_template(oc)
         self.progress: set[str] = set()
-        self.current: Optional[str] = None
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
-
-    def field_parse(self, valid: bool = True):
-        emoji: str = "\N{WHITE HEAVY CHECK MARK}" if valid else "\N{CROSS MARK}"
-        return "\n".join(f"• {x.label}" for x in self.fields.options if str(x.emoji) == emoji)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -560,18 +591,15 @@ class CreationOCView(Basic):
 
         if self.user != cog.supporting.get(interaction.user, interaction.user):
             title = "This OC isn't yours"
-        elif self.current and self.user == interaction.user:
-            title = f"You're currently filling the OC's {self.current}"
+        elif missing := "\n".join(f"• {x.label}" for x in self.fields.options if str(x.emoji) == "\N{CROSS MARK}"):
+            title = "Missing / Has Errors"
         else:
             return True
 
-        embed = Embed(title=title, color=Color.red(), timestamp=interaction.created_at)
+        embed = Embed(title=title, description=missing, color=Color.red(), timestamp=interaction.created_at)
         embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
 
-        data = dict(Completed=self.field_parse(valid=True), Missing=self.field_parse(valid=False))
-        for key, value in filter(all, data.items()):
-            embed.add_field(name=key, value=value, inline=False)
         await resp.send_message(embed=embed, ephemeral=True)
         return False
 
@@ -591,8 +619,8 @@ class CreationOCView(Basic):
                 value=k,
                 description=v.description,
                 emoji=(
-                    "\N{WHITE HEAVY CHECK MARK}"
-                    if (v.description.startswith("Optional") or k in self.progress or v.evaluate(self.oc))
+                    ("\N{BLACK SQUARE BUTTON}" if (k in self.progress) else "\N{BLACK LARGE SQUARE}")
+                    if (v.evaluate(self.oc))
                     else "\N{CROSS MARK}"
                 ),
             )
@@ -600,7 +628,7 @@ class CreationOCView(Basic):
             if v.check(self.oc)
         ]
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
-        self.submit.disabled = not all(str(x.emoji) == "\N{WHITE HEAVY CHECK MARK}" for x in self.fields.options)
+        self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
 
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
@@ -628,7 +656,6 @@ class CreationOCView(Basic):
         await resp.defer(ephemeral=True, thinking=True)
         try:
             item = FIELDS[sct.values[0]]
-            self.current = item.name
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
             self.setup()
         except Exception as e:
@@ -648,11 +675,11 @@ class CreationOCView(Basic):
             else:
                 files = MISSING
 
+            embed = embed_handler(self.message, embed)
             m = await self.message.edit(embed=embed, view=self, attachments=files)
             if files and m.embeds[0].image.proxy_url:
                 self.oc.image = m.embeds[0].image.proxy_url
             self.message = m
-            self.current = None
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
     async def finish_oc(self, ctx: Interaction, btn: Button):

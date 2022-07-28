@@ -181,10 +181,8 @@ class Character:
 
     @property
     def possible_types(self) -> frozenset[frozenset[Typing]]:
-        if isinstance(self.species, Fusion):
-            return frozenset(map(frozenset, self.species.possible_types))
-        if self.types:
-            return frozenset({self.types})
+        if self.species:
+            return self.species.possible_types
         return frozenset()
 
     @property
@@ -422,13 +420,14 @@ class Character:
         """
         if isinstance(image := self.image, int):
             return self.image_url
-        kit = ImageKit(base="background_Y8q8PAtEV.png", width=900)
-        kit.add_image(image=image, height=400)
-        if icon := self.pronoun.image:
-            kit.add_image(image=icon, x=-10, y=-10)
-        for index, item in enumerate(self.types):
-            kit.add_image(image=item.icon, width=200, height=44, x=-10, y=44 * index + 10)
-        return kit.url
+        if image := image or self.default_image:
+            kit = ImageKit(base="background_Y8q8PAtEV.png", width=900)
+            kit.add_image(image=image, height=400)
+            if icon := self.pronoun.image:
+                kit.add_image(image=icon, x=-10, y=-10)
+            for index, item in enumerate(self.types):
+                kit.add_image(image=item.icon, width=200, height=44, x=-10, y=44 * index + 10)
+            return kit.url
 
     async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:
         """Method for updating data in database
