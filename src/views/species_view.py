@@ -21,6 +21,7 @@ from discord.ui import Select, select
 from src.pagination.complex import Complex
 from src.structures.mon_typing import Typing
 from src.structures.species import Fusion, Species, Variant
+from src.utils.etc import LIST_EMOJI
 
 __all__ = ("SpeciesComplex",)
 
@@ -103,9 +104,7 @@ class SpeciesComplex(Complex[Species]):
         self.select_types.options.clear()
         total: set[Species] = set(self.total) - self.choices
 
-        self.data = {"No Filter": total}
-
-        data: dict[Typing, set[Species]] = {}
+        data: dict[str | Typing, set[Species]] = {"No Filter": total}
         for item in total:
             for t in item.types:
                 data.setdefault(t, set())
@@ -113,11 +112,14 @@ class SpeciesComplex(Complex[Species]):
 
         for k, items in sorted(data.items(), key=lambda x: len(x[1]), reverse=True):
             if items:
-                label = k.name
+                if isinstance(k, str):
+                    label, emoji = k, LIST_EMOJI
+                else:
+                    label, emoji = k.name, k.emoji
                 self.data[label] = items
                 self.select_types.add_option(
                     label=label,
-                    emoji=k.emoji,
+                    emoji=emoji,
                     description=f"Has {len(items)} Species.",
                 )
 
