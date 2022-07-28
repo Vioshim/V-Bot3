@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, astuple, dataclass
 from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
@@ -187,6 +187,10 @@ class SpAbility:
         self.origin = ""
         self.pros = ""
         self.cons = ""
+
+    @property
+    def valid(self):
+        return all(astuple(self))
 
     @property
     def embed(self) -> Embed:

@@ -129,7 +129,7 @@ class SPAbilityModal(Modal):
             pros=self.pros.value,
             cons=self.cons.value,
         )
-        if self.sp_ability == SpAbility():
+        if not self.sp_ability.valid:
             self.sp_ability = None
         await resp.send_message("Special ability added/modified", ephemeral=True)
         self.stop()
@@ -184,7 +184,8 @@ class SPAbilityView(View):
                 else:
                     sp_ability = None
 
-        self.sp_ability = sp_ability
+        if sp_ability.valid:
+            self.sp_ability = sp_ability
         self.stop()
 
     @button(

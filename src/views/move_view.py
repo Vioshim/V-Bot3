@@ -58,30 +58,34 @@ class MoveComplex(Complex[Move]):
 
         moves: set[Move] = set(self.total) - self.choices
 
+        moves1 = [x for x in moves if isinstance(x, Move)]
+        moves2 = [x for x in moves if not isinstance(x, Move)]
+
         elements = (
             groupby(
-                sorted(moves, key=lambda x: x.category.name),
+                sorted(moves1, key=lambda x: x.category.name),
                 key=lambda x: x.category,
             ),
             groupby(
-                sorted(moves, key=lambda x: x.type.id or 0),
+                sorted(moves1, key=lambda x: x.type.id or 0),
                 key=lambda x: x.type,
             ),
         )
 
-        data = {"None": moves}
+        data = {"None": moves1, "Abilities": moves2}
 
         for items in elements:
             data.update({k: set(v) for k, v in items})
 
         for k, items in sorted(data.items(), key=lambda x: len(x[1]), reverse=True):
-            label = getattr(k, "name", k).title()
-            self.data[label] = items
-            self.select_types.add_option(
-                label=label,
-                emoji=getattr(k, "emoji", LIST_EMOJI),
-                description=f"Has {len(items)} moves.",
-            )
+            if items:
+                label = getattr(k, "name", k).title()
+                self.data[label] = items
+                self.select_types.add_option(
+                    label=label,
+                    emoji=getattr(k, "emoji", LIST_EMOJI),
+                    description=f"Has {len(items)} items.",
+                )
 
         return super(MoveComplex, self).menu_format()
 

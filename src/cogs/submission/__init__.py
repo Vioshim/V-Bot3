@@ -479,12 +479,12 @@ class Submission(commands.Cog):
             await send("Max amount of moves in a pokemon is 6.", error=True)
             return
 
-        if oc.sp_ability == SpAbility():
+        if isinstance(oc.sp_ability, SpAbility) and not oc.sp_ability.valid:
             sp_view = SPAbilityView(worker, oc)
             message = await send("Continue with Submission", view=sp_view)
             await sp_view.wait()
             await message.delete(delay=0)
-            if sp_view.sp_ability == SpAbility():
+            if sp_view.sp_ability and not sp_view.sp_ability.valid:
                 return
 
             oc.sp_ability = sp_view.sp_ability

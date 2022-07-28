@@ -53,7 +53,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import embed_handler, int_check
+from src.utils.functions import int_check
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
@@ -656,14 +656,12 @@ class CreationOCView(Basic):
                     name=self.user.display_name,
                     icon_url=self.user.display_avatar.url,
                 )
-
+                embed.set_image(url="attachment://image.png")
                 if isinstance(self.oc.image, File):
                     files = [self.oc.image]
-                    embed.set_image(url=f"attachment://{self.oc.image.filename}")
                 else:
                     files = MISSING
 
-                embed = embed_handler(self.message, embed)
                 m = await self.message.edit(embed=embed, view=self, attachments=files)
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
