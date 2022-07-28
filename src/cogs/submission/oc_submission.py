@@ -657,7 +657,7 @@ class CreationOCView(Basic):
                     icon_url=self.user.display_avatar.url,
                 )
 
-                if self.oc.image != self.oc.image_url:
+                if not self.oc.image_url:
                     embed.set_image(url="attachment://image.png")
                 if isinstance(self.oc.image, File):
                     files = [self.oc.image]
