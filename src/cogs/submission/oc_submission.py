@@ -589,14 +589,10 @@ class CreationOCView(Basic):
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Submission")
 
-        if self.user != cog.supporting.get(interaction.user, interaction.user):
-            title = "This OC isn't yours"
-        elif missing := "\n".join(f"• {x.label}" for x in self.fields.options if str(x.emoji) == "\N{CROSS MARK}"):
-            title = "Missing / Has Errors"
-        else:
+        if self.user == cog.supporting.get(interaction.user, interaction.user):
             return True
 
-        embed = Embed(title=title, description=missing, color=Color.red(), timestamp=interaction.created_at)
+        embed = Embed(title="This OC isn't yours", color=Color.red(), timestamp=interaction.created_at)
         embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
         embed.set_image(url=WHITE_BAR)
 
