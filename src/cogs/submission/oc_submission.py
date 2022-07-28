@@ -637,7 +637,7 @@ class CreationOCView(Basic):
             await resp.send_message(str(e), ephemeral=True)
             self.stop()
 
-    @select(placeholder="Fill the Fields", row=1)
+    @select(placeholder="Click here!", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
