@@ -116,11 +116,17 @@ class SpeciesComplex(Complex[Species]):
                     label, emoji = k, LIST_EMOJI
                 else:
                     label, emoji = k.name, k.emoji
+
+                aux1 = len({x for x in items if len(x.types) == 1})
+                aux2 = len({x for x in items if len(x.types) == 2})
+
+                description = f"Has {aux1} mono-types, {aux2} dual-types."
+
                 self.data[label] = items
                 self.select_types.add_option(
                     label=label,
                     emoji=emoji,
-                    description=f"Has {len(items)} Species.",
+                    description=description,
                 )
 
         return super(SpeciesComplex, self).menu_format()
