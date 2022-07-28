@@ -127,5 +127,8 @@ class SpeciesComplex(Complex[Species]):
 
     @select(placeholder="Filter by Typings", custom_id="filter", max_values=2)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        self.values = set.intersection(*[self.data[value] for value in sct.values])
+        if "No Filter" in sct.values:
+            self.values = set.intersection(*[self.data[value] for value in sct.values])
+        elif types := Typing.deduce_many(*sct.values):
+            self.values = {x for x in self.total if x.types == types}
         await self.edit(interaction=interaction, page=0)
