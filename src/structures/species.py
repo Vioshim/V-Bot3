@@ -667,7 +667,7 @@ class Fusion(Species):
             evolves_from=None,
             evolves_to=frozenset(),
         )
-        if len(items := self.possible_types) == 1:
+        if len(items := list(self.possible_types)) == 1:
             self.types = frozenset(items[0])
         item1 = self.mon1.evolves_to
         item2 = self.mon2.evolves_to
