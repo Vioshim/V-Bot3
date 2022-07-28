@@ -600,19 +600,10 @@ class CreationOCView(Basic):
         return False
 
     def setup(self):
-        self.kind.options = [
-            SelectOption(
-                label=x,
-                value=x,
-                emoji="\N{MEMO}",
-                default=x == self.ref_template,
-            )
-            for x in TEMPLATES
-        ]
+        self.kind.options = [SelectOption(label=x, emoji="\N{MEMO}", default=x == self.ref_template) for x in TEMPLATES]
         self.fields.options = [
             SelectOption(
                 label=k,
-                value=k,
                 description=v.description,
                 emoji=(
                     ("\N{BLACK SQUARE BUTTON}" if (k in self.progress) else "\N{BLACK LARGE SQUARE}")
@@ -658,24 +649,29 @@ class CreationOCView(Basic):
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
         finally:
-            embed = self.oc.embed
+            try:
+                embed = self.oc.embed
 
-            embed.set_author(
-                name=self.user.display_name,
-                icon_url=self.user.display_avatar.url,
-            )
+                embed.set_author(
+                    name=self.user.display_name,
+                    icon_url=self.user.display_avatar.url,
+                )
 
-            if isinstance(self.oc.image, File):
-                files = [self.oc.image]
-                embed.set_image(url=f"attachment://{self.oc.image.filename}")
-            else:
-                files = MISSING
+                if isinstance(self.oc.image, File):
+                    files = [self.oc.image]
+                    embed.set_image(url=f"attachment://{self.oc.image.filename}")
+                else:
+                    files = MISSING
 
-            embed = embed_handler(self.message, embed)
-            m = await self.message.edit(embed=embed, view=self, attachments=files)
-            if files and m.embeds[0].image.proxy_url:
-                self.oc.image = m.embeds[0].image.proxy_url
-            self.message = m
+                embed = embed_handler(self.message, embed)
+                m = await self.message.edit(embed=embed, view=self, attachments=files)
+                if files and m.embeds[0].image.proxy_url:
+                    self.oc.image = m.embeds[0].image.proxy_url
+                self.message = m
+            except Exception as e:
+                ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
+                await ctx.followup.send(str(e), ephemeral=True)
+                self.stop()
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
     async def finish_oc(self, ctx: Interaction, btn: Button):
