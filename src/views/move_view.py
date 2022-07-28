@@ -58,8 +58,8 @@ class MoveComplex(Complex[Move]):
 
         moves: set[Move] = set(self.total) - self.choices
 
-        moves1 = [x for x in moves if isinstance(x, Move)]
-        moves2 = [x for x in moves if not isinstance(x, Move)]
+        moves1 = {x for x in moves if isinstance(x, Move)}
+        moves2 = {x for x in moves if not isinstance(x, Move)}
 
         elements = (
             groupby(
