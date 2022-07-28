@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from discord import Interaction, Member, SelectOption
+from discord import Interaction, Member
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
@@ -23,21 +23,11 @@ from src.structures.species import Fusion, Species, Variant
 __all__ = ("SpeciesComplex",)
 
 
-SELECT_TYPINGS = [SelectOption(label="None")]
-SELECT_TYPINGS.extend(
-    SelectOption(
-        label=x.name,
-        value=str(x),
-        emoji=x.emoji,
-    )
-    for x in sorted(Typing.all(), key=lambda x: x.name)
-)
-
-
 class SpeciesComplex(Complex[Species]):
     def __init__(self, member: Member, target: Interaction, mon_total: set[Species], fusion: bool = False):
-        max_values = 2 if fusion else 1
-        self.mon_total = [x for x in mon_total if not x.banned]
+
+        self.total = {x for x in mon_total if not x.banned}
+        max_values = min(len(self.total), 2 if fusion else 1)
 
         self.reference: dict[Species, int] = {}
 
@@ -68,23 +58,35 @@ class SpeciesComplex(Complex[Species]):
             max_values=max_values,
             silent_mode=True,
         )
+        self.real_max = max_values
         self.embed.title = "Select Species"
+        self.data = {}
 
-    @select(
-        placeholder="Filter by Typings",
-        custom_id="filter",
-        options=SELECT_TYPINGS,
-        min_values=1,
-        max_values=2,
-    )
+    def menu_format(self) -> None:
+        self.select_types.options.clear()
+        total: set[Species] = set(self.total) - self.choices
+
+        self.data = {"No Filter": total}
+
+        data: dict[Typing, set[Species]] = {}
+        for item in total:
+            for t in item.types:
+                data.setdefault(t, set())
+                data[t].add(item)
+
+        for k, items in sorted(data.items(), key=lambda x: len(x[1]), reverse=True):
+            if items:
+                label = k.name
+                self.data[label] = items
+                self.select_types.add_option(
+                    label=label,
+                    emoji=k.emoji,
+                    description=f"Has {len(items)} Species.",
+                )
+
+        return super(SpeciesComplex, self).menu_format()
+
+    @select(placeholder="Filter by Typings", custom_id="filter", max_values=2)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        mon_total = self.mon_total
-        mon_types = {o for x in sct.values if (o := Typing.from_ID(x))}
-
-        def check(x: Species) -> bool:
-            if len(mon_types) == 2 or "None" in sct.values:
-                return mon_types == x.types
-            return any(o in mon_types for o in x.types)
-
-        self.values = filter(check, mon_total)
+        self.values = set.intersection(*[self.data[value] for value in sct.values])
         await self.edit(interaction=interaction, page=0)
