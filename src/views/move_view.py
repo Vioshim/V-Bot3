@@ -103,7 +103,7 @@ class MoveComplex(Complex[Move]):
 
             self.values = [x for x in self.values if x not in self.choices] or self.total
             self.max_values = min(self.real_max, len(self.values))
-            self.embed.description = "\n".join(f"> {x!r}" for x in self.choices) or "No Moves"
+            self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
 
             if isinstance(page, int):
                 self.pos = page

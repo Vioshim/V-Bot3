@@ -75,10 +75,11 @@ class SpeciesComplex(Complex[Species]):
         """
         resp: InteractionResponse = interaction.response
         if self.keep_working or len(self.choices) < self.real_max:
-            data = {}
+            data = dict(embed=self.embed)
 
             self.values = [x for x in self.values if x not in self.choices] or self.total
             self.max_values = min(self.real_max, len(self.values))
+            self.embed.description = "\n".join(f"> • {x.name}" for x in self.choices)
 
             if isinstance(page, int):
                 self.pos = page
