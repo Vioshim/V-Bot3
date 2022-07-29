@@ -594,7 +594,7 @@ class CreationOCView(Basic):
         else:
             file = None
 
-        if msg := await super(CreationOCView).send(
+        if msg := await super(CreationOCView, self).send(
             ephemeral=ephemeral,
             file=file,
             thinking=True,
