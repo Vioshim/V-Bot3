@@ -34,6 +34,7 @@ from discord import (
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     Status,
+    TextChannel,
     Thread,
     User,
     WebhookMessage,
@@ -449,6 +450,13 @@ class Submission(commands.Cog):
 
         await sleep(3)
         db = self.bot.mongo_db("OC Creation")
+
+        if not (guild := webhook.guild):
+            guild = await self.bot.fetch_guild(webhook.guild_id)
+
+        if not isinstance(channel := webhook.channel, TextChannel):
+            channel = await self.bot.fetch_channel(webhook.channel_id)
+
         async for data in db.find({}):
             msg_id, template, author, character = (
                 data["id"],
@@ -457,8 +465,6 @@ class Submission(commands.Cog):
                 data["character"],
             )
             character = Character.from_mongo_dict(character)
-            if not (guild := webhook.guild):
-                guild = await self.bot.fetch_guild(webhook.guild_id)
 
             member = guild.get_member(author)
             start = utcnow() - timedelta(hours=4)
@@ -467,7 +473,7 @@ class Submission(commands.Cog):
                 msg_id = 0
 
             try:
-                message = await webhook.fetch_message(msg_id)
+                message = await channel.fetch_message(msg_id)
             except NotFound:
                 await db.delete_one(data)
             else:
