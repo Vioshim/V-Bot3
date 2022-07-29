@@ -788,7 +788,7 @@ class ModCharactersView(CharactersView):
                 cog = interaction.client.get_cog("Submission")
                 user: Member = cog.supporting.get(interaction.user, interaction.user)
                 if item.author in [user.id, interaction.user.id]:
-                    view = CreationOCView(ctx=interaction, user=user, oc=item)
+                    view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
                     if author := guild.get_member(item.author):
                         view.embed.set_author(
                             name=author.display_name,

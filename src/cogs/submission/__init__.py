@@ -326,7 +326,7 @@ class Submission(commands.Cog):
         if msg_data:
             author = self.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
-                view = CreationOCView(ctx=message, user=author, oc=oc)
+                view = CreationOCView(bot=self.bot, ctx=message, user=author, oc=oc)
                 if isinstance(message, Message):
                     await message.delete(delay=0)
                 await view.send()
@@ -622,7 +622,7 @@ class Submission(commands.Cog):
 
         if character:
             if character.author in [ctx.user.id, user.id]:
-                view = CreationOCView(ctx=ctx, user=user, oc=character)
+                view = CreationOCView(bot=self.bot, ctx=ctx, user=user, oc=character)
                 view.embed = character.embed
                 await view.send(ephemeral=True)
                 # view.message = await ctx.followup.send(embed=character.embed, view=view, ephemeral=True, wait=True)

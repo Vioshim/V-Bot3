@@ -168,7 +168,7 @@ class SubmissionView(View):
         try:
             cog.ignore.add(ctx.user.id)
             cog.ignore.add(user.id)
-            view = CreationOCView(ctx, user)
+            view = CreationOCView(ctx.client, ctx, user)
             await view.send()
             await view.wait()
         except Exception as e:
