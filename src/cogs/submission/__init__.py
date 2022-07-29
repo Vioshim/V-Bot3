@@ -450,11 +450,12 @@ class Submission(commands.Cog):
         channel = self.bot.get_channel(852180971985043466)
 
         async for data in db.find({}):
-            msg_id, template, author, character = (
+            msg_id, template, author, character, progress = (
                 data["id"],
                 data["template"],
                 data["author"],
                 data["character"],
+                data["progress"],
             )
             character = Character.from_mongo_dict(character)
 
@@ -472,7 +473,13 @@ class Submission(commands.Cog):
                 if not character.image_url and (image := message.embeds[0].image):
                     character.image_url = image.url
 
-                view = CreationOCView(bot=self.bot, ctx=message, user=member, template=template)
+                view = CreationOCView(
+                    bot=self.bot,
+                    ctx=message,
+                    user=member,
+                    template=template,
+                    progress=progress,
+                )
                 view.message = await message.edit(view=view, embed=view.embed)
                 await message.reply(
                     f"Submission is still ready to use, {member.mention}",

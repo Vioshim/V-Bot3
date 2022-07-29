@@ -566,7 +566,7 @@ FIELDS: dict[str, TemplateField] = {
     "Abilities": AbilitiesField(),
     "Special Ability": SpAbilityField(),
     "Backstory": BackstoryField(),
-    "Extra": ExtraField(),
+    "Extra Information": ExtraField(),
     "Image": ImageField(),
 }
 
@@ -588,6 +588,7 @@ class CreationOCView(Basic):
         user: Member,
         oc: Optional[Character] = None,
         template: Optional[str] = None,
+        progress: set[str] = None,
     ):
         super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
         self.embed.title = "Character Creation"
@@ -602,6 +603,8 @@ class CreationOCView(Basic):
         )
         self.ref_template = template or convert_template(oc)
         self.progress: set[str] = set()
+        if progress:
+            self.progress.update(progress)
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
@@ -659,6 +662,7 @@ class CreationOCView(Basic):
                         "template": self.ref_template,
                         "author": self.user.id,
                         "character": self.oc.to_mongo_dict(),
+                        "progress": list(self.progress),
                     },
                     upsert=True,
                 )
@@ -716,6 +720,7 @@ class CreationOCView(Basic):
                             "template": self.ref_template,
                             "author": self.user.id,
                             "character": self.oc.to_mongo_dict(),
+                            "progress": list(self.progress),
                         },
                         upsert=True,
                     )
