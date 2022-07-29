@@ -444,18 +444,12 @@ class Submission(commands.Cog):
                 )
                 msg = await webhook.edit_message(msg.id, thread=thread, view=None)
                 view.templates[str(msg.id)] = msg
-
         await webhook.edit_message(961345742222536744, view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
-        await sleep(3)
+    async def load_saved_submssions(self):
         db = self.bot.mongo_db("OC Creation")
-
-        if not (guild := webhook.guild):
-            guild = await self.bot.fetch_guild(webhook.guild_id)
-
-        if not isinstance(channel := webhook.channel, TextChannel):
-            channel = await self.bot.fetch_channel(webhook.channel_id)
+        channel = self.bot.get_channel(852180971985043466)
 
         async for data in db.find({}):
             msg_id, template, author, character = (
@@ -466,7 +460,7 @@ class Submission(commands.Cog):
             )
             character = Character.from_mongo_dict(character)
 
-            member = guild.get_member(author)
+            member = channel.guild.get_member(author)
             start = utcnow() - timedelta(hours=4)
 
             if not (member and start >= snowflake_time(msg_id)):
@@ -477,10 +471,11 @@ class Submission(commands.Cog):
             except NotFound:
                 await db.delete_one(data)
             else:
-                if not character.image_url:
-                    character.image = message.embeds[0].image.proxy_url
+                if not character.image_url and (image := message.embeds[0].image):
+                    character.image_url = image.url
+
                 view = CreationOCView(bot=self.bot, ctx=message, user=member, template=template)
-                view.message = await message.edit(view=view)
+                view.message = await message.edit(view=view, embed=view.embed)
                 await message.reply(
                     f"Submission is still ready to use, {member.mention}",
                     allowed_mentions=AllowedMentions(users=True),
