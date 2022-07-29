@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from asyncio import TimeoutError as AsyncTimeoutError
-from asyncio import sleep
 from contextlib import suppress
 from datetime import timedelta
 from typing import Optional, Type
@@ -34,7 +33,6 @@ from discord import (
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     Status,
-    TextChannel,
     Thread,
     User,
     WebhookMessage,
