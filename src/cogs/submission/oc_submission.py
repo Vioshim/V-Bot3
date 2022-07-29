@@ -739,8 +739,9 @@ class CreationOCView(Basic):
                     m = await ctx.edit_original_message(embed=embed, view=self, attachments=files)
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
-                self.setup()
-                self.message = await m.edit(view=self)
+                    self.setup()
+                    m = await m.edit(view=self)
+                self.message = m
             except Exception as e:
                 ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
                 await ctx.followup.send(str(e), ephemeral=True)
