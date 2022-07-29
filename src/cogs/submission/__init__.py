@@ -14,6 +14,7 @@
 
 from asyncio import TimeoutError as AsyncTimeoutError
 from contextlib import suppress
+from datetime import timedelta
 from typing import Optional, Type
 
 from discord import (
@@ -39,7 +40,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.utils import MISSING
+from discord.utils import MISSING, snowflake_time, utcnow
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
@@ -444,6 +445,37 @@ class Submission(commands.Cog):
 
         await webhook.edit_message(961345742222536744, view=view)
         self.bot.logger.info("Finished loading Submission menu")
+
+        db = self.bot.mongo_db("OC Creation")
+        async for data in db.find({}):
+            msg_id, template, author, character = (
+                data["id"],
+                data["template"],
+                data["author"],
+                data["character"],
+            )
+            character = Character.from_mongo_dict(character)
+
+            member = webhook.guild.get_member(author)
+            start = utcnow() - timedelta(hours=4)
+
+            if not (member and start >= snowflake_time(msg_id)):
+                msg_id = 0
+
+            try:
+                message = await webhook.fetch_message(msg_id)
+            except NotFound:
+                await db.delete_one(data)
+            else:
+                if not character.image_url:
+                    character.image = message.embeds[0].image.proxy_url
+                view = CreationOCView(bot=self.bot, ctx=message, user=member, template=template)
+                view.message = await message.edit(view=view)
+                await message.reply(
+                    f"Submission is still ready to use, {member.mention}",
+                    allowed_mentions=AllowedMentions(users=True),
+                    delete_after=20,
+                )
 
     @commands.Cog.listener()
     async def on_ready(self):

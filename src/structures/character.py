@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from json import JSONDecoder, JSONEncoder
 from random import sample
+from re import match as re_match
 from typing import Any, Optional, Type
 
 from asyncpg import Connection
@@ -140,7 +140,40 @@ class Character:
         kwargs = {k.lower(): v for k, v in kwargs.items() if k.lower() in cls.__slots__}
         return Character(**kwargs)
 
+    def to_mongo_dict(self):
+        data = asdict(self)
+        data["abilities"] = [x.id for x in self.abilities]
+        if isinstance(self.species, (Fakemon, Variant)):
+            data["species"] = {
+                "f_name": self.species.name,
+                "f_types": [x.name for x in self.species.types],
+                "f_evolves_from": self.species.evolves_from,
+                "f_abilities": data["abilities"],
+                "f_movepool": self.species.movepool.as_dict,
+            }
+            if isinstance(self.species, Variant) and self.species.base:
+                data["f_base"] = self.species.base.id
+        elif self.species:
+            data["species"] = self.species.id
+
+        data["pronoun"] = self.pronoun.name
+        data["moveset"] = [x.id for x in self.moveset]
+        if isinstance(self.sp_ability, SpAbility):
+            data["sp_ability"] = asdict(self.sp_ability)
+        if isinstance(self.image, File):
+            data["image"] = None
+        return data
+
+    @classmethod
+    def from_mongo_dict(cls, dct: dict[str, Any]):
+        species: Optional[dict[str, str]] = dct.get("species")
+        if isinstance(species, dict):
+            data = {k.removeprefix("f_"): v for k, v in species.items()}
+            dct["species"] = Variant(**data) if "base" in data else Fakemon(**data)
+        return Character(**dct)
+
     def __post_init__(self):
+        self.image_url = self.image
         if isinstance(self.species, str):
             self.species = Species.from_ID(self.species)
         if not self.server:
@@ -199,7 +232,15 @@ class Character:
 
     @image_url.setter
     def image_url(self, url: str):
-        self.image = int(url.split("/")[:-1][-1])
+        if isinstance(url, str) and self.thread:
+
+            if find := re_match(
+                rf"https:\/\/cdn\.discordapp\.com\/attachments\/{self.thread}\/(\d+)\/image\.png",
+                string=url,
+            ):
+                url = int(find.group(1))
+
+        self.image = url
 
     @image_url.deleter
     def image_url(self):
@@ -813,72 +854,6 @@ class CharacterTransform(Transformer):
         elif not value:
             options = ocs[:25]
         return [Choice(name=x.name, value=str(x.id)) for x in options]
-
-
-class CharacterEncoder(JSONEncoder):
-    def default(self, o):
-        """[summary]
-
-        Parameters
-        ----------
-        o : [type]
-            [description]
-
-        Returns
-        -------
-        [type]
-            [description]
-        """
-        if isinstance(o, Character):
-            data = asdict(o)
-            data["abilities"] = [x.id for x in o.abilities]
-            if isinstance(o.species, (Fakemon, Variant)):
-                data["species"] = {
-                    "f_name": o.species.name,
-                    "f_types": [x.name for x in o.species.types],
-                    "f_evolves_from": o.species.evolves_from,
-                    "f_abilities": data["abilities"],
-                    "f_movepool": o.species.movepool.as_dict,
-                }
-                if isinstance(o.species, Variant) and o.species.base:
-                    data["f_base"] = o.species.base.id
-            elif o.species:
-                data["species"] = o.species.id
-
-            data["pronoun"] = o.pronoun.name
-            data["moveset"] = [x.id for x in o.moveset]
-            if isinstance(o.sp_ability, SpAbility):
-                data["sp_ability"] = asdict(o.sp_ability)
-            if isinstance(o.image, File):
-                data["image"] = None
-            return data
-        return super(CharacterEncoder, self).default(o)
-
-
-class CharacterDecoder(JSONDecoder):
-    def __init__(self, *args, **kwargs):
-        super(CharacterDecoder, self).__init__(object_hook=self.converter, *args, **kwargs)
-
-    def converter(self, dct: dict[str, Any]):
-        """Decoder method for dicts
-
-        Parameters
-        ----------
-        dct : dict[str, Any]
-            Input
-
-        Returns
-        -------
-        Any
-            Result
-        """
-        if set(dct).issubsset(Character.__slots__):
-            species: Optional[dict[str, str]] = dct.get("species")
-            if isinstance(species, dict):
-                data = {k.removeprefix("f_"): v for k, v in species.items()}
-                dct["species"] = Variant(**data) if "base" in data else Fakemon(**data)
-            return Character(**dct)
-        return dct
 
 
 CharacterArg = Transform[Character, CharacterTransform]

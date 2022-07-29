@@ -17,21 +17,15 @@ from dataclasses import dataclass
 from typing import Optional
 
 from discord import (
-    AllowedMentions,
     ButtonStyle,
     Color,
     Embed,
     File,
-    GuildSticker,
     Interaction,
     InteractionResponse,
     Member,
-    Message,
-    MessageReference,
     Object,
-    PartialMessage,
     SelectOption,
-    StickerItem,
     TextStyle,
     Webhook,
 )
@@ -587,7 +581,14 @@ def convert_template(oc: Character):
 
 
 class CreationOCView(Basic):
-    def __init__(self, bot: CustomBot, ctx: Interaction, user: Member, oc: Optional[Character] = None):
+    def __init__(
+        self,
+        bot: CustomBot,
+        ctx: Interaction,
+        user: Member,
+        oc: Optional[Character] = None,
+        template: Optional[str] = None,
+    ):
         super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
         self.embed.title = "Character Creation"
         self.bot = bot
@@ -599,63 +600,11 @@ class CreationOCView(Basic):
             name=user.display_name,
             icon_url=user.display_avatar.url,
         )
-        self.ref_template = convert_template(oc)
+        self.ref_template = template or convert_template(oc)
         self.progress: set[str] = set()
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
-
-    """
-    async def send(
-        self,
-        content: str = None,
-        *,
-        tts: bool = False,
-        embed: Embed = None,
-        embeds: list[Embed] = None,
-        file: File = None,
-        files: list[File] = None,
-        stickers: list[GuildSticker | StickerItem] = None,
-        delete_after: float = None,
-        nonce: int = None,
-        allowed_mentions: AllowedMentions = None,
-        reference: Message | MessageReference | PartialMessage = None,
-        mention_author: bool = False,
-        username: str = None,
-        avatar_url: str = None,
-        ephemeral: bool = False,
-        thinking: bool = False,
-        thread: Object = None,
-        editing_original: bool = False,
-        reply_to: Optional[Message] = None,
-        **kwargs,
-    ):
-        if message := await super(CreationOCView, self).send(
-            content,
-            tts,
-            embed,
-            embeds,
-            file,
-            files,
-            stickers,
-            delete_after,
-            nonce,
-            allowed_mentions,
-            reference,
-            mention_author,
-            username,
-            avatar_url,
-            ephemeral,
-            thinking,
-            thread,
-            editing_original,
-            reply_to,
-            **kwargs,
-        ):
-            db = self.bot.mongo_db("OC Creation")
-            db.insert_one({self.oc})
-            pass
-        """
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -699,6 +648,21 @@ class CreationOCView(Basic):
             if not TEMPLATES[self.ref_template].sp_ability:
                 self.progress -= {"Special Ability"}
                 self.oc.sp_ability = None
+
+            m = self.message
+            if m and not m.flags.ephemeral:
+                db = self.bot.mongo_db("OC Creation")
+                await db.replace_one(
+                    {"id": m.id},
+                    {
+                        "id": m.id,
+                        "template": self.ref_template,
+                        "author": self.user.id,
+                        "character": self.oc.to_mongo_dict(),
+                    },
+                    upsert=True,
+                )
+
             self.setup()
             if resp.is_done():
                 await ctx.edit_original_message(embed=self.oc.embed, view=self)
@@ -714,7 +678,6 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         try:
-            self.wait
             item = FIELDS[sct.values[0]]
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
         except Exception as e:
@@ -741,6 +704,20 @@ class CreationOCView(Basic):
                     self.oc.image = m.embeds[0].image.proxy_url
                     self.setup()
                     m = await m.edit(view=self)
+
+                if not m.flags.ephemeral:
+                    db = self.bot.mongo_db("OC Creation")
+                    await db.replace_one(
+                        {"id": m.id},
+                        {
+                            "id": m.id,
+                            "template": self.ref_template,
+                            "author": self.user.id,
+                            "character": self.oc.to_mongo_dict(),
+                        },
+                        upsert=True,
+                    )
+
                 self.message = m
             except Exception as e:
                 ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
@@ -753,7 +730,7 @@ class CreationOCView(Basic):
             webhook: Webhook = await ctx.client.webhook(919277769735680050)
             thread = Object(id=self.oc.thread)
             await webhook.delete_message(self.oc.id, thread=thread)
-        await self.delete()
+        await self.delete(ctx)
 
     @button(label="Close this Menu", row=2)
     async def cancel(self, ctx: Interaction, _: Button):
