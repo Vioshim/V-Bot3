@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from asyncio import TimeoutError as AsyncTimeoutError
+from asyncio import sleep
 from contextlib import suppress
 from datetime import timedelta
 from typing import Optional, Type
@@ -446,6 +447,7 @@ class Submission(commands.Cog):
         await webhook.edit_message(961345742222536744, view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
+        await sleep(3)
         db = self.bot.mongo_db("OC Creation")
         async for data in db.find({}):
             msg_id, template, author, character = (
@@ -455,8 +457,10 @@ class Submission(commands.Cog):
                 data["character"],
             )
             character = Character.from_mongo_dict(character)
+            if not (guild := webhook.guild):
+                guild = await self.bot.fetch_guild(webhook.guild_id)
 
-            member = webhook.guild.get_member(author)
+            member = guild.get_member(author)
             start = utcnow() - timedelta(hours=4)
 
             if not (member and start >= snowflake_time(msg_id)):
