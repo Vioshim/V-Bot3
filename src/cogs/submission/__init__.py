@@ -459,10 +459,7 @@ class Submission(commands.Cog):
             )
             character = Character.from_mongo_dict(character)
 
-            member = channel.guild.get_member(author)
-            start = utcnow() - timedelta(hours=4)
-
-            if not (member and start >= snowflake_time(msg_id)):
+            if not (member := channel.guild.get_member(author)):
                 msg_id = 0
 
             try:
@@ -490,6 +487,7 @@ class Submission(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.load_profiles()
+        await self.load_saved_submssions()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
