@@ -42,6 +42,7 @@ from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
+    _BEASTBOOST,
     Fakemon,
     Fusion,
     Legendary,
@@ -569,7 +570,10 @@ FIELDS: dict[str, TemplateField] = {
 
 def convert_template(oc: Character):
     if oc.species:
-        return type(oc.species).__name__.replace("Fakemon", "CustomPokemon")
+        name = type(oc.species).__name__.replace("Fakemon", "CustomPokemon")
+        if _BEASTBOOST in oc.abilities and name == "CustomPokemon":
+            return "CustomUltraBeast"
+        return name
     return "Pokemon"
 
 
