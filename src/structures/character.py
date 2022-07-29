@@ -864,7 +864,7 @@ class CharacterTransform(Transformer):
         ):
             options = [x[0] for x in options]
         elif not value:
-            options = ocs[:25]
+            options = list(ocs.values())[:25]
         return [Choice(name=x.name, value=str(x.id)) for x in options]
 
 
