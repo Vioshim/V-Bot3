@@ -556,55 +556,10 @@ class Submission(commands.Cog):
         if msg_data:
             author = self.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
-                # await self.registration(ctx=message, oc=oc, worker=refer_author)
                 view = CreationOCView(ctx=message, user=author, oc=oc)
-                await view.send(ephemeral=True)
-                """
-                role = message.guild.get_role(719642423327719434)
-                if role and role not in author.roles:
-                    await author.add_roles(role, reason=f"Registered by {refer_author}")
-                    embed = Embed(
-                        title="How to get access to the RP?",
-                        description="In order to have access, go to the Maps section and click on the roles.",
-                        colour=author.colour,
-                        timestamp=utcnow(),
-                    )
-                    embed.add_field(
-                        name="Note",
-                        value="You can try to use /ping `<role>` for finding a RP. "
-                        "(<#958122815171756042> also works)",
-                    )
-                    embed.set_image(url=WHITE_BAR)
-                    embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
-                    embed.set_footer(text=message.guild.name, icon_url=message.guild.icon.url)
-                    view = View()
-                    view.add_item(
-                        Button(
-                            label="Maps & Roles",
-                            url="https://discord.com/channels/719343092963999804/719709333369258015/962830944576864356",
-                        )
-                    )
-                    view.add_item(
-                        Button(
-                            label="Story-lines",
-                            url="https://discord.com/channels/719343092963999804/903627523911458816/",
-                        )
-                    )
-                    view.add_item(
-                        Button(
-                            label="RP Planning",
-                            url="https://discord.com/channels/719343092963999804/958122815171756042/",
-                        )
-                    )
-
-                    try:
-                        await author.send(embed=embed, view=view)
-                    except DiscordException:
-                        pass
-
-                """
-                if isinstance(message, Message):
+                if not (ephemeral := isinstance(message, Interaction)):
                     await message.delete(delay=0)
+                await view.send(ephemeral=ephemeral)
 
     async def on_message_submission(self, message: Message):
         """This method processes character submissions
