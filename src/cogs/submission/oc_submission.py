@@ -19,6 +19,7 @@ from typing import Optional
 from discord import (
     ButtonStyle,
     Color,
+    DiscordException,
     Embed,
     File,
     Interaction,
@@ -701,9 +702,11 @@ class CreationOCView(Basic):
                     files = [self.oc.image]
                 else:
                     files = MISSING
-                if self.message:
-                    m = await self.message.edit(embed=embed, view=self, attachments=files)
-                else:
+
+                try:
+                    message = self.message or ctx.message
+                    m = await message.edit(embed=embed, view=self, attachments=files)
+                except (DiscordException, AttributeError):
                     m = await ctx.edit_original_message(embed=embed, view=self, attachments=files)
 
                 if files and m.embeds[0].image.proxy_url:

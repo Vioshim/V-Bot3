@@ -14,8 +14,7 @@
 
 from asyncio import TimeoutError as AsyncTimeoutError
 from contextlib import suppress
-from datetime import timedelta
-from typing import Optional, Type
+from typing import Optional
 
 from discord import (
     AllowedMentions,
@@ -40,7 +39,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.utils import MISSING, snowflake_time, utcnow
+from discord.utils import MISSING
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
@@ -146,7 +145,7 @@ class Submission(commands.Cog):
         await resp.defer(ephemeral=True, thinking=True)
         moves: list[SpAbility | Ability | Move] = []
         if oc := self.ocs.get(message.id):
-            moves = list(oc.moveset.copy()) + list(oc.abilities.copy())
+            moves = list(oc.moveset) + list(oc.abilities)
             if sp_ability := oc.sp_ability:
                 moves.append(sp_ability)
         elif text := message.content:
@@ -216,7 +215,7 @@ class Submission(commands.Cog):
             await message.edit(view=RPView(member.id, self.oc_list))
         return oc_list
 
-    async def register_oc(self, oc: Type[Character], image_as_is: bool = False):
+    async def register_oc(self, oc: Character, image_as_is: bool = False):
         member = Object(id=oc.author)
         webhook = await self.bot.webhook(919277769735680050)
         try:
@@ -236,10 +235,7 @@ class Submission(commands.Cog):
         )
 
         if not oc.image_url:
-            if not image_as_is:
-                image = oc.generated_image
-            else:
-                image = oc.image
+            image = oc.image if image_as_is else oc.generated_image
             if file := await self.bot.get_file(url=image, filename="image"):
                 word = "attachments" if oc.id else "files"
                 kwargs[word] = [file]
@@ -303,7 +299,7 @@ class Submission(commands.Cog):
         except Exception as e:
             self.bot.logger.exception("Error when logging oc modification", exc_info=e)
 
-    async def oc_update(self, oc: Type[Character]):
+    async def oc_update(self, oc: Character):
         embed: Embed = oc.embed
         embed.set_image(url="attachment://image.png")
         webhook = await self.bot.webhook(919277769735680050)
@@ -478,11 +474,6 @@ class Submission(commands.Cog):
                     progress=progress,
                 )
                 view.message = await message.edit(view=view, embed=view.embed)
-                await message.reply(
-                    f"Submission is still ready to use, {member.mention}",
-                    allowed_mentions=AllowedMentions(users=True),
-                    delete_after=20,
-                )
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -665,7 +656,6 @@ class Submission(commands.Cog):
                 view = CreationOCView(bot=self.bot, ctx=ctx, user=user, oc=character)
                 view.embed = character.embed
                 await view.send(ephemeral=True)
-                # view.message = await ctx.followup.send(embed=character.embed, view=view, ephemeral=True, wait=True)
             else:
                 view = PingView(oc=character, reference=ctx)
                 await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
