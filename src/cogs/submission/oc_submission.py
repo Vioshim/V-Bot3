@@ -680,6 +680,7 @@ class CreationOCView(Basic):
         try:
             item = FIELDS[sct.values[0]]
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
+            self.setup()
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
@@ -700,6 +701,7 @@ class CreationOCView(Basic):
                     m = await self.message.edit(embed=embed, view=self, attachments=files)
                 else:
                     m = await ctx.edit_original_message(embed=embed, view=self, attachments=files)
+
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
                     self.setup()
@@ -723,6 +725,12 @@ class CreationOCView(Basic):
                 ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
                 await ctx.followup.send(str(e), ephemeral=True)
                 self.stop()
+
+    async def delete(self, ctx: Optional[Interaction] = None) -> None:
+        db = self.bot.mongo_db("OC Creation")
+        if (m := self.message) and not m.flags.ephemeral:
+            await db.delete_one({"id": m.id})
+        return await super(CreationOCView, self).delete(ctx)
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
     async def finish_oc(self, ctx: Interaction, _: Button):
