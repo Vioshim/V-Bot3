@@ -297,14 +297,14 @@ class Movepool:
 
         if key == "LEVEL" and isinstance(value := value or {}, dict):
             level: dict[int, set[Move]] = {}
-            for key, value in value.items():
-                key = str(key)
-                if not key.isdigit():
+            for k, v in value.items():
+                k = str(k)
+                if not k.isdigit():
                     continue
 
-                moves = frozenset({data for item in value if (data := Move.deduce(item))})
-                if (key := int(key)) != 0:
-                    level[key] = moves
+                moves = frozenset({data for item in v if (data := Move.deduce(item))})
+                if (k := int(k)) != 0:
+                    level[k] = moves
                 else:
                     self.levelup |= moves
             self.level = frozendict(level)
