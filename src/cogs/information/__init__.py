@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import suppress
 from io import StringIO
 from os import getenv
 from typing import Optional
@@ -636,13 +637,11 @@ class Information(commands.Cog):
             embed = Embed(title="Bulk Message Delete", timestamp=utcnow())
             embed.set_footer(text=f"Deleted {len(messages)} messages")
             embed.set_image(url=WHITE_BAR)
-            try:
+            emoji, name = SETTING_EMOJI, msg.channel.name
+            with suppress(ValueError):
                 emoji, name = msg.channel.name.split("〛")
                 emoji = emoji[0]
-            except ValueError:
-                emoji, name = SETTING_EMOJI, msg.channel.name
-            finally:
-                name = name.replace("-", " ").title()
+            name = name.replace("-", " ").title()
 
             view = View()
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))

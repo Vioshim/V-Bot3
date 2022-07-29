@@ -94,7 +94,7 @@ class EmbedModificationView(View):
         return True
 
     @button(label="Embed's Information".center(80, "\u2008"), style=ButtonStyle.blurple, emoji=SETTING_EMOJI, row=0)
-    async def info(self, interaction: Interaction, btn: Button):
+    async def info(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         modal = EmbedModal(self.embed)
         await resp.send_modal(modal)
@@ -102,7 +102,7 @@ class EmbedModificationView(View):
         self.embed = modal.embed
 
     @button(label="Conclude".center(80, "\u2008"), style=ButtonStyle.red, emoji=SETTING_EMOJI, row=2)
-    async def conclude(self, interaction: Interaction, btn: Button):
+    async def conclude(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(view=None)
         self.stop()

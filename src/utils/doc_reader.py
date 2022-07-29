@@ -28,9 +28,6 @@ class DriveFormat(Enum):
 
 
 class BytesAIO(BytesIO):
-    def __init__(self, initial_bytes: bytes = None) -> None:
-        super(BytesAIO, self).__init__(initial_bytes)
-
     async def write(self, __buffer: bytes) -> int:
         return super(BytesAIO, self).write(__buffer)
 

@@ -204,7 +204,7 @@ class SPAbilityView(View):
         style=ButtonStyle.red,
         emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
     )
-    async def cancel(self, ctx: Interaction, btn: Button):
+    async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         self.sp_ability = SpAbility()
         await resp.edit_message(content="Process concluded", view=None)

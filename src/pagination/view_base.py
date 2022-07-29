@@ -237,11 +237,17 @@ class Basic(View):
 
         return self.message
 
-    async def delete(self) -> None:
+    async def delete(self, ctx: Optional[Interaction] = None) -> None:
         """This method deletes the view, and stops it."""
-
         try:
-            if self.message:
+            if ctx and not ctx.response.is_done():
+                resp: InteractionResponse = ctx.response
+                if self.message and not self.message.flags.ephemeral:
+                    await resp.pong()
+                    await self.message.delete(delay=0)
+                else:
+                    await resp.edit_message(view=None)
+            elif self.message:
                 if self.message.flags.ephemeral:
                     await self.message.edit(view=None)
                 else:

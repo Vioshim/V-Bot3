@@ -105,14 +105,15 @@ class Species(metaclass=ABCMeta):
         return isinstance(other, Species) and str(self.id) == str(other.id)
 
     def image(self, gender: Optional[Pronoun], shiny: bool = False):
-        if shiny:
-            if gender == Pronoun.She:
+        match (gender, shiny):
+            case (Pronoun.She, True):
                 return self.female_image_shiny
-            else:
+            case (Pronoun.She, False):
+                return self.female_image
+            case (_, True):
                 return self.base_image_shiny
-        elif gender == Pronoun.She:
-            return self.female_image
-        return self.base_image
+            case _:
+                return self.base_image
 
     @classmethod
     def all(cls) -> frozenset[Species]:
@@ -859,6 +860,6 @@ class SpeciesDecoder(JSONDecoder):
 
 
 with open("resources/species.json", mode="r") as f:
-    entries: list[Species] = load(f, cls=SpeciesDecoder)
-    ALL_SPECIES: frozendict[str, Species] = frozendict({item.id: item for item in entries})
-    SPECIES_BY_NAME: frozendict[str, Species] = frozendict({item.name: item for item in entries})
+    DATA: list[Species] = load(f, cls=SpeciesDecoder)
+    ALL_SPECIES: frozendict[str, Species] = frozendict({item.id: item for item in DATA})
+    SPECIES_BY_NAME: frozendict[str, Species] = frozendict({item.name: item for item in DATA})

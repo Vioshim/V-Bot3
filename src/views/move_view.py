@@ -97,8 +97,8 @@ class MoveComplex(Complex[Move]):
         page: int, optional
             Page to be accessed, defaults to None
         """
-        resp: InteractionResponse = interaction.response
         if self.keep_working or len(self.choices) < self.real_max:
+            resp: InteractionResponse = interaction.response
             data = dict(embed=self.embed)
 
             self.values = [x for x in self.values if x not in self.choices] or self.total
@@ -121,9 +121,7 @@ class MoveComplex(Complex[Move]):
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()
         else:
-            if not resp.is_done():
-                await resp.pong()
-            await self.delete()
+            await self.delete(interaction)
 
     @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:

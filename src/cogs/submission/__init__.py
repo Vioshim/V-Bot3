@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from asyncio import TimeoutError
+from asyncio import TimeoutError as AsyncTimeoutError
 from contextlib import suppress
 from typing import Optional, Type
 
@@ -163,7 +163,11 @@ class Submission(commands.Cog):
         moves.sort(key=lambda x: x.name)
         view = MoveView(member=ctx.user, moves=moves, target=ctx, keep_working=True)
         async with view.send(ephemeral=True):
-            self.bot.logger.info("User %s is reading the abilities/moves at %s", str(ctx.user), message.jump_url)
+            self.bot.logger.info(
+                "User %s is reading the abilities/moves at %s",
+                str(ctx.user),
+                message.jump_url,
+            )
 
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
@@ -401,7 +405,7 @@ class Submission(commands.Cog):
                     return len(attachments) == len(m.attachments)
             return False
 
-        with suppress(TimeoutError):
+        with suppress(AsyncTimeoutError):
             msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
             await self.on_message_tupper(msg, message.author.id)
 
@@ -563,9 +567,21 @@ class Submission(commands.Cog):
             for index, oc in enumerate(ocs[:6]):
                 x = 500 * (index % 3) + 25
                 y = 500 * (index // 3) + 25
-                kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
-                for index, item in enumerate(oc.types):
-                    kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * index)
+                kit.add_image(
+                    image=oc.image_url,
+                    height=450,
+                    width=450,
+                    x=x,
+                    y=y,
+                )
+                for idx, item in enumerate(oc.types):
+                    kit.add_image(
+                        image=item.icon,
+                        width=200,
+                        height=44,
+                        x=250 + x,
+                        y=y + 44 * idx,
+                    )
                 if font:
                     kit.add_text(
                         text=oc.name,

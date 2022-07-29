@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from re import Match, sub
+
 from typing import Callable, Iterable, Optional, TypeVar
 
 from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
-from discord.utils import escape_mentions, get, remove_markdown
+from discord.utils import remove_markdown
 
 from src.utils.matches import (
     DISCORD_MSG_URL,
@@ -58,57 +58,6 @@ def chunks_split(items: Iterable[_T], chunk_size: int):
 
 def unescape(text: str):
     return ESCAPE_SEQ.sub(r"\1", text)
-
-
-def message_html_parse(message: Message, text: Optional[str] = None):
-    guild = message.guild
-
-    def resolve_member(id: int) -> str:
-        if not (m := guild.get_member(id) if guild else None):
-            m = get(message.mentions, id=id)
-        if m is None:
-            return "@deleted-user"
-        item = f'<span class="chatlog__markdown-mention" title="{m}">@{m.display_name}</span>'
-        return f'<span class="chatlog__markdown-preserve">{item}</span>'
-
-    def resolve_role(id: int) -> str:
-        if not (role := guild.get_role(id) if guild else None):
-            role = get(message.role_mentions, id=id)
-        if not role:
-            return "@deleted-role"
-        r, g, b = role.color.to_rgb()
-        return f'<span class="chatlog__markdown-mention" style="color: rgb({r}, {g}, {b}); background-color: rgba({r}, {g}, {b}, 0.1);">@{role.name}</span>'
-
-    def resolve_channel(id: int) -> str:
-        if not (c := guild._resolve_channel(id) if guild else None):
-            return "#deleted-channel"
-        return f'<span class="chatlog__markdown-mention">#{c.name}</span>'
-
-    transforms = {
-        "@": resolve_member,
-        "@!": resolve_member,
-        "#": resolve_channel,
-        "@&": resolve_role,
-    }
-
-    def repl(match: Match) -> str:
-        type = match[1]
-        id = int(match[2])
-        transformed = transforms[type](id)
-        return transformed
-
-    result = sub(r"<(@[!&]?|#)([0-9]{15,20})>", repl, text or message.content)
-    return escape_mentions(result)
-
-
-def embed_html_parse(message: Message, embed: Embed):
-    embed = embed.copy()
-    if description := embed.description:
-        embed.description = message_html_parse(message, description)
-    for index, field in enumerate(embed.fields):
-        text = message_html_parse(message, field.value)
-        embed.set_field_at(index=index, name=field.name, value=text)
-    return embed
 
 
 def discord_url_msg(message: Message):

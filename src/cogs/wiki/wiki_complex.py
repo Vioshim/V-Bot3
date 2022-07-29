@@ -84,8 +84,8 @@ class WikiComplex(Complex[WikiEntry]):
         self.parent_folder.disabled = not tree.parent
 
     async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
-        resp: InteractionResponse = interaction.response
         if self.keep_working or len(self.choices) < self.max_values:
+            resp: InteractionResponse = interaction.response
             content, embeds = self.tree.content, self.tree.embeds
             if not (content or embeds):
                 embed = Embed(
@@ -121,9 +121,7 @@ class WikiComplex(Complex[WikiEntry]):
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()
         else:
-            if not resp.is_done():
-                await resp.pong()
-            await self.delete()
+            await self.delete(interaction)
 
     async def selection(self, interaction: Interaction, tree: WikiEntry):
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)

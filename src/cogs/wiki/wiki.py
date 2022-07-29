@@ -133,7 +133,7 @@ class WikiEntry:
 
         route = list(ref_route.values())
         if elements := [x for x in path.removeprefix(aux.path).split("/") if x]:
-            for index in range(len(elements)):
+            for index, _ in enumerate(elements):
                 if elements[: index + 1] == route:
                     ref = node
                 else:

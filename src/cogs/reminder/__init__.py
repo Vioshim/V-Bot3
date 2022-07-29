@@ -32,7 +32,7 @@ from discord import (
 from discord.ext import commands
 from discord.ext.tasks import loop
 from discord.ui import Modal, TextInput
-from discord.utils import MISSING, format_dt
+from discord.utils import MISSING
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR

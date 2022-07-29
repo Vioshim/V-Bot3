@@ -173,7 +173,6 @@ class Typography(Enum):  # ott-foo
 
 @dataclass(unsafe_hash=True)
 class ImagePadResizeCropStrategy(ImageMethod):
-    # w-{},h-{},cm-pad_resize,bg-{}
     height: Optional[int] = None
     width: Optional[int] = None
     background: Optional[int] = None
@@ -255,7 +254,6 @@ class TextTransformation(ImageKitTransformation):
             "oa": self.transparency,
             "otia": self.alignment,
             "ott": self.typography,
-            "otp": self.padding,
         }
         if isinstance(self.color, int):
             elements["otc"] = hex(self.color)[2:].upper()
@@ -268,6 +266,10 @@ class TextTransformation(ImageKitTransformation):
             if isinstance(self.background_transparency, int):
                 background += f"{self.background_transparency:02d}"
             elements["otbg"] = background
+        if isinstance(self.padding, Iterable):
+            elements["otp"] = "_".join(self.padding)
+        elif isinstance(self.padding, int):
+            elements["otp"] = self.padding
         if isinstance(self.overlay, int):
             overlay = hex(self.overlay)[2:].upper()
             if isinstance(self.overlay_transparency, int):
@@ -366,7 +368,7 @@ class ImageKit:
         color: Optional[int] = None,
         transparency: Optional[int] = None,
         radius: Optional[int] = None,
-        padding: Iterable[int] = [],
+        padding: Iterable[int] = None,
         alignment: Optional[str] = None,
         background: Optional[int] = None,
         background_transparency: Optional[int] = None,

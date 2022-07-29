@@ -220,9 +220,8 @@ class DiscordOCParser(OCParser):
         content = yaml_handler(content)
         with suppress(ScannerError):
             if isinstance(msg_data := safe_load(content), dict):
-                if isinstance(text, Message) and (
-                    images := [x for x in text.attachments if x.content_type.startswith("image/")]
-                ):
+                images = [x for x in text.attachments if x.content_type.startswith("image/")]
+                if isinstance(text, Message) and images:
                     msg_data["image"] = await images[0].to_file(use_cached=True)
 
                 return msg_data

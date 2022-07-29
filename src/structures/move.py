@@ -318,6 +318,6 @@ class MoveDecoder(JSONDecoder):
 
 
 with open("resources/moves.json") as f:
-    items: list[Move] = load(f, cls=MoveDecoder)
-    ALL_MOVES = frozendict({item.id: item for item in items})
-    ALL_MOVES_BY_NAME = frozendict({item.name: item for item in items})
+    DATA: list[Move] = load(f, cls=MoveDecoder)
+    ALL_MOVES = frozendict({item.id: item for item in DATA})
+    ALL_MOVES_BY_NAME = frozendict({item.name: item for item in DATA})

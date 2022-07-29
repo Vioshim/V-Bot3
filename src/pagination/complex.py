@@ -252,13 +252,10 @@ class Complex(Simple[_T]):
         page: int, optional
             Page to be accessed, defaults to None
         """
-        resp: InteractionResponse = interaction.response
         if self.keep_working or len(self.choices) < self.max_values:
             await super(Complex, self).edit(interaction=interaction, page=page)
         else:
-            if not resp.is_done():
-                await resp.pong()
-            await self.delete()
+            await self.delete(interaction)
 
     @asynccontextmanager
     async def send(

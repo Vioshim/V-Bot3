@@ -431,9 +431,21 @@ class RPModal(Modal):
         for index, oc in enumerate(items[:6]):
             x = 500 * (index % 3) + 25
             y = 500 * (index // 3) + 25
-            kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
-            for index, item in enumerate(oc.types):
-                kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * index)
+            kit.add_image(
+                image=oc.image_url,
+                height=450,
+                width=450,
+                x=x,
+                y=y,
+            )
+            for idx, item in enumerate(oc.types):
+                kit.add_image(
+                    image=item.icon,
+                    width=200,
+                    height=44,
+                    x=250 + x,
+                    y=y + 44 * idx,
+                )
             kit.add_text(
                 text=oc.name,
                 width=330,

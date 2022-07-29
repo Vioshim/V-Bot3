@@ -366,5 +366,5 @@ class TypingDecoder(JSONDecoder):
 
 
 with open("resources/types.json") as f:
-    items: list[Typing] = load(f, cls=TypingDecoder)
-    ALL_TYPES = frozendict({str(item): item for item in items})
+    DATA: list[Typing] = load(f, cls=TypingDecoder)
+    ALL_TYPES = frozendict({str(item): item for item in DATA})

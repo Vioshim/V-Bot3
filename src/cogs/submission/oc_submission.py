@@ -105,10 +105,10 @@ class TemplateField(ABC):
     description: str = ""
 
     def check(self, oc: Character) -> bool:
-        return True
+        return isinstance(oc, Character)
 
     def evaluate(self, oc: Character) -> bool:
-        return True
+        return isinstance(oc, Character)
 
     @abstractmethod
     async def on_submit(
@@ -224,12 +224,12 @@ class SpeciesField(TemplateField):
                 mon_total = Species.all()
 
         mon_total = {x for x in mon_total if not x.banned}
-
+        max_values = 2 if template == "Fusion" else 1
         view = SpeciesComplex(
             member=ctx.user,
             target=ctx,
             mon_total=mon_total,
-            fusion=template == "Fusion",
+            max_values=max_values,
         )
 
         if template.startswith("Custom"):
@@ -535,7 +535,9 @@ class ImageField(TemplateField):
         return bool(oc.species)
 
     def evaluate(self, oc: Character) -> bool:
-        return oc.image and oc.image != oc.default_image and not isinstance(oc.image, File)
+        if oc.image and not isinstance(oc.image, File):
+            return oc.image != oc.default_image
+        return False
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         default_image = oc.image_url or oc.image or oc.default_image
@@ -677,7 +679,7 @@ class CreationOCView(Basic):
                 self.stop()
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
-    async def finish_oc(self, ctx: Interaction, btn: Button):
+    async def finish_oc(self, ctx: Interaction, _: Button):
         if self.oc.id and self.oc.thread:
             webhook: Webhook = await ctx.client.webhook(919277769735680050)
             thread = Object(id=self.oc.thread)
@@ -685,8 +687,8 @@ class CreationOCView(Basic):
         await self.delete()
 
     @button(label="Close this Menu", row=2)
-    async def cancel(self, ctx: Interaction, btn: Button):
-        await self.delete()
+    async def cancel(self, ctx: Interaction, _: Button):
+        await self.delete(ctx)
 
     @button(
         disabled=True,
@@ -694,7 +696,7 @@ class CreationOCView(Basic):
         style=ButtonStyle.green,
         row=2,
     )
-    async def submit(self, ctx: Interaction, btn: Button):
+    async def submit(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         cog = ctx.client.get_cog("Submission")
@@ -708,15 +710,6 @@ class CreationOCView(Basic):
 
 
 class ModCharactersView(CharactersView):
-    def __init__(
-        self,
-        member: Member,
-        target: Interaction,
-        ocs: set[Character],
-        keep_working: bool = False,
-    ):
-        super(ModCharactersView, self).__init__(member, target, ocs, keep_working)
-
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         resp: InteractionResponse = interaction.response

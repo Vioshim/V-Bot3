@@ -42,12 +42,12 @@ from src.utils.matches import REGEX_URL
 
 
 class MovesCall(Converter[Move]):
-    async def convert(self, ctx: Context, argument: str) -> str:
+    async def convert(self, _: Context, argument: str) -> str:
         """Function which converts to image url if possible
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Parsing str argument
@@ -173,12 +173,12 @@ class ImageFile(Converter[File]):
 
 
 class AnyDateCall(Converter[datetime]):
-    async def convert(self, ctx: Context, argument: str) -> datetime:
+    async def convert(self, _: Context, argument: str) -> datetime:
         """This method converts a string into a datetime
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Argument to be parsed by dataparser.parse
@@ -199,12 +199,12 @@ class AnyDateCall(Converter[datetime]):
 
 
 class CurrentDateCall(Converter[datetime]):
-    async def convert(self, ctx: Context, argument: str) -> datetime:
+    async def convert(self, _: Context, argument: str) -> datetime:
         """This method converts a string into a datetime
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Argument to be parsed by dataparser.parse
@@ -225,12 +225,12 @@ class CurrentDateCall(Converter[datetime]):
 
 
 class AfterDateCall(Converter[datetime]):
-    async def convert(self, ctx: Context, argument: str):
+    async def convert(self, _: Context, argument: str):
         """This method converts a string into a datetime
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Argument to be parsed by dataparser.parse
@@ -251,12 +251,12 @@ class AfterDateCall(Converter[datetime]):
 
 
 class BeforeDateCall(Converter[datetime]):
-    async def convert(self, ctx: Context, argument: str):
+    async def convert(self, _: Context, argument: str):
         """This method converts a string into a datetime
 
         Parameters
         ----------
-        ctx : Context
+        _ : Context
             Context
         argument : str
             Argument to be parsed by dataparser.parse

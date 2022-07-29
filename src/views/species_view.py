@@ -27,10 +27,16 @@ __all__ = ("SpeciesComplex",)
 
 
 class SpeciesComplex(Complex[Species]):
-    def __init__(self, member: Member, target: Interaction, mon_total: set[Species], fusion: bool = False):
+    def __init__(
+        self,
+        member: Member,
+        target: Interaction,
+        mon_total: set[Species],
+        max_values: int = 1,
+    ):
 
         self.total = {x for x in mon_total if not x.banned}
-        max_values = min(len(self.total), 2 if fusion else 1)
+        max_values = min(len(self.total), max_values)
 
         self.reference: dict[Species, int] = {}
 
@@ -73,8 +79,8 @@ class SpeciesComplex(Complex[Species]):
         page: int, optional
             Page to be accessed, defaults to None
         """
-        resp: InteractionResponse = interaction.response
         if self.keep_working or len(self.choices) < self.real_max:
+            resp: InteractionResponse = interaction.response
             data = dict(embed=self.embed)
 
             self.values = [x for x in self.values if x not in self.choices] or self.total
@@ -97,9 +103,7 @@ class SpeciesComplex(Complex[Species]):
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()
         else:
-            if not resp.is_done():
-                await resp.pong()
-            await self.delete()
+            await self.delete(interaction)
 
     def menu_format(self) -> None:
         self.select_types.options.clear()

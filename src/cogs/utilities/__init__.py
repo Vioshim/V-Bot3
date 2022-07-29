@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from os import path
-from re import IGNORECASE, compile, escape
+from re import IGNORECASE
+from re import compile as re_compile
+from re import escape
 from typing import Literal, Optional
 from unicodedata import name as u_name
 
@@ -66,7 +68,7 @@ class Utilities(commands.Cog):
         suggestions = []
         text = str(text)
         pat = ".*?".join(map(escape, text))
-        regex = compile(pat, flags=IGNORECASE)
+        regex = re_compile(pat, flags=IGNORECASE)
         for item in collection:
             to_search = key(item) if key else item
             r = regex.search(to_search)
@@ -98,13 +100,13 @@ class Utilities(commands.Cog):
         if "zlib" not in line:
             raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
-        entry_regex = compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
+        entry_regex = re_compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
             match = entry_regex.match(line.rstrip())
             if not match:
                 continue
 
-            name, directive, prio, location, dispname = match.groups()
+            name, directive, _, location, dispname = match.groups()
             domain, _, subdirective = directive.partition(":")
             if directive == "py:module" and name in result:
 

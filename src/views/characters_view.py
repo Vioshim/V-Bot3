@@ -163,7 +163,7 @@ class PingView(View):
         if registered not in interaction.user.roles:
             await resp.send_message("You don't have registered role", ephemeral=True)
             return False
-        elif not guild.get_member(self.oc.author):
+        if not guild.get_member(self.oc.author):
             await resp.send_message("Owner of the OC is no longer in the Server", ephemeral=True)
             return False
         return True

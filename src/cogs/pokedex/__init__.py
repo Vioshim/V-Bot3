@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import astuple
-from re import IGNORECASE, compile
+from re import IGNORECASE
+from re import compile as re_compile
 from typing import Callable, Optional
 
 from discord import (
-    Color,
     Embed,
     Guild,
     Interaction,
@@ -39,7 +39,6 @@ from src.cogs.pokedex.search import (
     TypingArg,
     age_parser,
 )
-from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.structures.character import Character, Kind
 from src.structures.movepool import Movepool
@@ -48,6 +47,7 @@ from src.structures.species import Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
 from src.views.movepool_view import MovepoolViewSelector
+from src.views.species_view import SpeciesComplex
 
 __all__ = ("Pokedex", "setup")
 
@@ -120,38 +120,33 @@ class Pokedex(commands.Cog):
         else:
             movepool = Movepool()
 
-        if move_id:
-            if species:
-                if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
-                    await ctx.followup.send(
-                        f"{species.name} can learn {move_id.name} through:\n{methods}.", ephemeral=True
-                    )
-                else:
-                    await ctx.followup.send(f"{species.name} can not learn {move_id.name}.", ephemeral=True)
-                return
-            else:
-                mons = {x for x in Species.all() if move_id in x.movepool}
-                view: Complex[Species] = Complex(
-                    member=ctx.user,
-                    values=mons,
-                    target=ctx,
-                    parser=lambda x: (x.name, type(x).__name__),
-                    keep_working=True,
-                )
-                embed = view.embed
-                embed.description = (
-                    f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
-                )
-                embed.title = move_id.name
-                embed.color = move_id.type.color
-                embed.set_image(url=move_id.image or WHITE_BAR)
-                embed.set_thumbnail(url=move_id.emoji.url)
-        else:
+        if not move_id:
             view = MovepoolViewSelector(movepool=movepool, member=ctx.user, target=ctx)
+        elif species:
+            if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                await ctx.followup.send(f"{species.name} can learn {move_id.name} through:\n{methods}.", ephemeral=True)
+            else:
+                await ctx.followup.send(f"{species.name} can not learn {move_id.name}.", ephemeral=True)
+            return
+        else:
+            mons = {x for x in Species.all() if move_id in x.movepool}
+            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons)
+            view.silent_mode = True
+            view.keep_working = True
+            embed = view.embed
+            embed.description = (
+                f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
+            )
+            embed.title = move_id.name
+            embed.color = move_id.type.color
+            embed.set_image(url=move_id.image or WHITE_BAR)
+            embed.set_thumbnail(url=move_id.emoji.url)
 
         async with view.send(embed=embed, ephemeral=True):
             self.bot.logger.info(
-                "%s is reading %s's movepool", str(ctx.user), getattr(species or move_id, "name", "None")
+                "%s is reading %s's movepool",
+                str(ctx.user),
+                getattr(species or move_id, "name", "None"),
             )
 
     @app_commands.command()
@@ -230,7 +225,7 @@ class Pokedex(commands.Cog):
         filters: list[Callable[[Character], bool]] = [lambda x: guild.get_member(x.author)]
         ocs = [species] if isinstance(species, Character) else total
         if name:
-            pattern = compile(name, IGNORECASE)
+            pattern = re_compile(name, IGNORECASE)
             filters.append(lambda oc: pattern.search(oc.name))
         if age:
             filters.append(lambda oc: age_parser(age, oc))

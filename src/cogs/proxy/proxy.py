@@ -58,7 +58,7 @@ class Proxy(Transformer):
             return value.title()
 
     @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(cls, ctx: Interaction, _: str) -> list[Choice[str]]:
         """This function returns a list of choices for the autocomplete.
 
         Parameters
