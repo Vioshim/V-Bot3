@@ -704,7 +704,7 @@ class CreationOCView(Basic):
             else:
                 await resp.edit_message(embed=self.oc.embed, view=self)
         except Exception as e:
-            ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
+            self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             await resp.send_message(str(e), ephemeral=True)
             self.stop()
 
@@ -739,7 +739,7 @@ class CreationOCView(Basic):
                 self.setup()
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
-                self.message = m = await m.edit(view=self)
+                self.message = await m.edit(view=self)
             except Exception as e:
                 ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
                 await ctx.followup.send(str(e), ephemeral=True)
@@ -763,17 +763,21 @@ class CreationOCView(Basic):
         style=ButtonStyle.green,
         row=2,
     )
-    async def submit(self, ctx: Interaction, _: Button):
+    async def submit(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
-        cog = ctx.client.get_cog("Submission")
-        word = "modified" if self.oc.id else "registered"
-        await cog.register_oc(self.oc, image_as_is=True)
-        registered = ctx.guild.get_role(719642423327719434)
-        if registered and registered not in self.user.roles:
-            await self.user.add_roles(registered)
-        await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
-        await self.delete()
+        try:
+            await resp.defer(ephemeral=True, thinking=True)
+            cog = ctx.client.get_cog("Submission")
+            word = "modified" if self.oc.id else "registered"
+            await cog.register_oc(self.oc, image_as_is=True)
+            registered = ctx.guild.get_role(719642423327719434)
+            if registered and registered not in self.user.roles:
+                await self.user.add_roles(registered)
+            await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
+        except Exception as e:
+            self.bot.logger.exception("Error in oc %s", btn.label, exc_info=e)
+        finally:
+            await self.delete(ctx)
 
 
 class ModCharactersView(CharactersView):
