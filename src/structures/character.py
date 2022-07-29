@@ -833,19 +833,31 @@ class CharacterTransform(Transformer):
     @classmethod
     async def transform(cls, interaction: Interaction, value: str):
         cog = interaction.client.get_cog("Submission")
-        if isinstance(value, str) and value.isdigit():
-            value = int(value)
-        return cog.ocs[value]
+        if not (member := interaction.namespace.member):
+            member = interaction.user
+        ocs = {x.id: x for x in cog.ocs.values() if x.author == member.id}
+        if isinstance(value, str):
+            if value.isdigit():
+                return ocs[int(value)]
+            elif options := process.extractOne(
+                value,
+                choices=ocs.values(),
+                processor=lambda x: getattr(x, "name", x),
+                score_cutoff=60,
+            ):
+                return options[0]
 
     @classmethod
     async def autocomplete(cls, interaction: Interaction, value: str) -> list[Choice[str]]:
         if not (member := interaction.namespace.member):
             member = interaction.user
         cog = interaction.client.get_cog("Submission")
-        ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == member.id]
-        if options := process.extract(
+        ocs: dict[int, Character] = {oc.id: oc for oc in cog.ocs.values() if oc.author == member.id}
+        if value.isdigit() and (oc := ocs.get(int(value))):
+            options = [oc]
+        elif options := process.extract(
             value,
-            choices=ocs,
+            choices=ocs.values(),
             limit=25,
             processor=lambda x: getattr(x, "name", x),
             score_cutoff=60,

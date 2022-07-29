@@ -470,6 +470,7 @@ class Submission(commands.Cog):
                     bot=self.bot,
                     ctx=message,
                     user=member,
+                    oc=character,
                     template=template,
                     progress=progress,
                 )
