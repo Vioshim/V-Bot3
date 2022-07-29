@@ -736,9 +736,6 @@ class Character:
                     f"Unable to determine the species, value: {species}, make sure you're using a recent template."
                 )
 
-        if species.banned:
-            raise ValueError(f"The Species {species.name!r} is banned currently.")
-
         if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
             if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
                 species.types = types

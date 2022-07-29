@@ -22,6 +22,7 @@ from discord import (
     Color,
     DiscordException,
     Embed,
+    File,
     Guild,
     HTTPException,
     Interaction,
@@ -555,9 +556,10 @@ class Submission(commands.Cog):
         if msg_data:
             author = self.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
-                oc.author = author.id
-                oc.server = message.guild.id
-                await self.registration(ctx=message, oc=oc, worker=refer_author)
+                # await self.registration(ctx=message, oc=oc, worker=refer_author)
+                view = CreationOCView(ctx=message, user=author, oc=oc)
+                await view.send(ephemeral=True)
+                """
                 role = message.guild.get_role(719642423327719434)
                 if role and role not in author.roles:
                     await author.add_roles(role, reason=f"Registered by {refer_author}")
@@ -600,6 +602,7 @@ class Submission(commands.Cog):
                     except DiscordException:
                         pass
 
+                """
                 if isinstance(message, Message):
                     await message.delete(delay=0)
 
@@ -636,25 +639,24 @@ class Submission(commands.Cog):
         if "Npc" in author or "Narrator" in author:
             return
 
-        ocs = [item for item in self.ocs.values() if item.author == member_id]
+        if ocs := [item for item in self.ocs.values() if item.author == member_id]:
+            if item := process.extractOne(
+                author,
+                choices=ocs,
+                score_cutoff=85,
+                processor=lambda x: getattr(x, "name", x),
+            ):
+                oc = item[0]
+            elif ocs := [oc for oc in ocs if oc.name in author or author in oc.name]:
+                oc = ocs[0]
+            else:
+                return
 
-        if item := process.extractOne(
-            author,
-            choices=ocs,
-            score_cutoff=85,
-            processor=lambda x: getattr(x, "name", x),
-        ):
-            oc = item[0]
-        elif ocs := [oc for oc in ocs if oc.name in author or author in oc.name]:
-            oc = ocs[0]
-        else:
-            return
-
-        if oc.location != channel.id:
-            async with self.bot.database() as db:
-                oc.location = channel.id
-                await db.execute("UPDATE CHARACTER SET LOCATION = $1 WHERE ID = $2", channel.id, oc.id)
-                await self.oc_update(oc)
+            if oc.location != channel.id:
+                async with self.bot.database() as db:
+                    oc.location = channel.id
+                    await db.execute("UPDATE CHARACTER SET LOCATION = $1 WHERE ID = $2", channel.id, oc.id)
+                    await self.oc_update(oc)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
@@ -883,7 +885,9 @@ class Submission(commands.Cog):
         if character:
             if character.author in [ctx.user.id, user.id]:
                 view = CreationOCView(ctx=ctx, user=user, oc=character)
-                view.message = await ctx.followup.send(embed=character.embed, view=view, ephemeral=True, wait=True)
+                view.embed = character.embed
+                await view.send(ephemeral=True)
+                # view.message = await ctx.followup.send(embed=character.embed, view=view, ephemeral=True, wait=True)
             else:
                 view = PingView(oc=character, reference=ctx)
                 await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)

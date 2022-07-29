@@ -205,7 +205,7 @@ class SpeciesField(TemplateField):
     description = "Fill the OC's Species"
 
     def evaluate(self, oc: Character) -> bool:
-        return bool(oc.species)
+        return oc.species and not oc.species.banned
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
 
@@ -578,12 +578,30 @@ class CreationOCView(Basic):
         oc = oc.copy() if oc else Character(author=user.id, server=ctx.guild.id)
         self.oc = oc
         self.user = user
-        self.embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
+        self.embed = oc.embed.set_author(
+            name=user.display_name,
+            icon_url=user.display_avatar.url,
+        )
         self.ref_template = convert_template(oc)
         self.progress: set[str] = set()
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
+
+    async def send(self, ephemeral: bool = False, **kwargs):
+        if isinstance(file := self.oc.image, File):
+            self.embed.set_image(url=f"attachment://{file.filename}")
+        else:
+            file = None
+
+        if msg := await super(CreationOCView).send(
+            ephemeral=ephemeral,
+            file=file,
+            thinking=True,
+            **kwargs,
+        ):
+            if not self.oc.image_url:
+                self.oc.image = msg.embeds[0].image.url
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -722,14 +740,16 @@ class ModCharactersView(CharactersView):
             if item := self.current_choice:
                 embed = item.embed
                 guild = self.member.guild
-                if author := guild.get_member(item.author):
-                    embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
-
                 cog = interaction.client.get_cog("Submission")
                 user: Member = cog.supporting.get(interaction.user, interaction.user)
                 if item.author in [user.id, interaction.user.id]:
                     view = CreationOCView(ctx=interaction, user=user, oc=item)
-                    await view.send(embed=embed, ephemeral=True)
+                    if author := guild.get_member(item.author):
+                        view.embed.set_author(
+                            name=author.display_name,
+                            icon_url=author.display_avatar.url,
+                        )
+                    await view.send(ephemeral=True)
                 else:
                     if isinstance(self.target, Interaction):
                         target = self.target
