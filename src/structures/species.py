@@ -551,7 +551,15 @@ class Variant(Species):
 
     base: Optional[Species] = None
 
-    def __init__(self, base: Species, name: str):
+    def __init__(
+        self,
+        base: Species,
+        name: str,
+        types: frozenset[Typing] = None,
+        evolves_from: Optional[str] = None,
+        abilities: frozenset[Ability] = None,
+        movepool: Optional[Movepool] = None,
+    ):
         super(Variant, self).__init__(
             id=base.id,
             name=name.title(),
@@ -564,14 +572,14 @@ class Variant(Species):
             SPA=base.SPA,
             SPD=base.SPD,
             SPE=base.SPE,
-            types=base.types,
-            movepool=copy(base.movepool),
-            abilities=copy(base.abilities),
+            types=types or base.types,
+            movepool=movepool or copy(base.movepool),
+            abilities=abilities or copy(base.abilities),
             base_image=base.base_image,
             base_image_shiny=base.base_image_shiny,
             female_image=base.female_image,
             female_image_shiny=base.female_image_shiny,
-            evolves_from=base.evolves_from,
+            evolves_from=evolves_from or base.evolves_from,
             evolves_to=base.evolves_to,
         )
         self.base = base

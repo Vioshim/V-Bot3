@@ -482,33 +482,7 @@ class Movepool:
         dict[str, list[str] | dict[int, list[str]]]
             generated values
         """
-
-        def foo(moves: frozenset[Move]) -> list[str]:
-            """Inner method for conversion
-
-            Parameters
-            ----------
-            moves : frozenset[Move]
-                moves to convert
-
-            Returns
-            -------
-            list[str]
-                List of move IDs
-            """
-            return sorted(move.id for move in moves)
-
-        elements = dict(
-            level={k: foo(v) for k, v in sorted(self.level.items()) if v},
-            egg=foo(self.egg),
-            event=foo(self.event),
-            tm=foo(self.tm),
-            tutor=foo(self.tutor),
-            levelup=foo(self.levelup),
-            other=foo(self.other),
-        )
-
-        return {k: v for k, v in elements.items() if v}
+        return {k: v for k, v in self.db_dict.items() if v}
 
     @property
     def as_display_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:

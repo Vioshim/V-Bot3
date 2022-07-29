@@ -17,15 +17,21 @@ from dataclasses import dataclass
 from typing import Optional
 
 from discord import (
+    AllowedMentions,
     ButtonStyle,
     Color,
     Embed,
     File,
+    GuildSticker,
     Interaction,
     InteractionResponse,
     Member,
+    Message,
+    MessageReference,
     Object,
+    PartialMessage,
     SelectOption,
+    StickerItem,
     TextStyle,
     Webhook,
 )
@@ -36,6 +42,7 @@ from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
+from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
@@ -551,6 +558,8 @@ class ImageField(TemplateField):
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
             oc.image = await ctx.client.get_file(oc.generated_image)
 
+        return None
+
 
 FIELDS: dict[str, TemplateField] = {
     "Name": NameField(),
@@ -578,9 +587,10 @@ def convert_template(oc: Character):
 
 
 class CreationOCView(Basic):
-    def __init__(self, ctx: Interaction, user: Member, oc: Optional[Character] = None):
+    def __init__(self, bot: CustomBot, ctx: Interaction, user: Member, oc: Optional[Character] = None):
         super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
         self.embed.title = "Character Creation"
+        self.bot = bot
         oc = oc.copy() if oc else Character(author=user.id, server=ctx.guild.id)
         self.oc = oc
         self.user = user
@@ -593,6 +603,58 @@ class CreationOCView(Basic):
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
+
+    """
+    async def send(
+        self,
+        content: str = None,
+        *,
+        tts: bool = False,
+        embed: Embed = None,
+        embeds: list[Embed] = None,
+        file: File = None,
+        files: list[File] = None,
+        stickers: list[GuildSticker | StickerItem] = None,
+        delete_after: float = None,
+        nonce: int = None,
+        allowed_mentions: AllowedMentions = None,
+        reference: Message | MessageReference | PartialMessage = None,
+        mention_author: bool = False,
+        username: str = None,
+        avatar_url: str = None,
+        ephemeral: bool = False,
+        thinking: bool = False,
+        thread: Object = None,
+        editing_original: bool = False,
+        reply_to: Optional[Message] = None,
+        **kwargs,
+    ):
+        if message := await super(CreationOCView, self).send(
+            content,
+            tts,
+            embed,
+            embeds,
+            file,
+            files,
+            stickers,
+            delete_after,
+            nonce,
+            allowed_mentions,
+            reference,
+            mention_author,
+            username,
+            avatar_url,
+            ephemeral,
+            thinking,
+            thread,
+            editing_original,
+            reply_to,
+            **kwargs,
+        ):
+            db = self.bot.mongo_db("OC Creation")
+            db.insert_one({self.oc})
+            pass
+        """
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -651,35 +713,33 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         try:
+            self.wait
             item = FIELDS[sct.values[0]]
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
-            self.setup()
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
         finally:
             try:
                 embed = self.oc.embed
-
                 embed.set_author(
                     name=self.user.display_name,
                     icon_url=self.user.display_avatar.url,
                 )
-
                 if not self.oc.image_url:
                     embed.set_image(url="attachment://image.png")
                 if isinstance(self.oc.image, File):
                     files = [self.oc.image]
                 else:
                     files = MISSING
-
                 if self.message:
                     m = await self.message.edit(embed=embed, view=self, attachments=files)
                 else:
                     m = await ctx.edit_original_message(embed=embed, view=self, attachments=files)
+                self.setup()
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
-                self.message = m
+                self.message = m = await m.edit(view=self)
             except Exception as e:
                 ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
                 await ctx.followup.send(str(e), ephemeral=True)

@@ -147,7 +147,7 @@ class MovepoolViewSelector(Complex[str]):
     ):
         super(MovepoolViewSelector, self).__init__(
             member=member,
-            values=[k for k, v in movepool.db_dict.items() if v],
+            values=list(movepool.as_dict.keys()),
             target=target,
             parser=movepool_parser(movepool),
             emoji_parser="\N{FLOPPY DISK}",
