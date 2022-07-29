@@ -560,6 +560,7 @@ class Submission(commands.Cog):
                 if not (ephemeral := isinstance(message, Interaction)):
                     await message.delete(delay=0)
                 await view.send(ephemeral=ephemeral)
+                await view.wait()
 
     async def on_message_submission(self, message: Message):
         """This method processes character submissions
