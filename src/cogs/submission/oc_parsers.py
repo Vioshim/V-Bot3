@@ -14,6 +14,7 @@
 
 from abc import ABCMeta, abstractmethod
 from asyncio import gather
+from contextlib import suppress
 from enum import Enum
 from io import BytesIO
 from typing import Any, Optional
@@ -23,6 +24,7 @@ from docx import Document
 from docx.document import Document as DocumentType
 from jishaku.codeblocks import codeblock_converter
 from yaml import safe_load
+from yaml.scanner import ScannerError
 
 from src.structures.bot import CustomBot
 from src.utils.doc_reader import DriveFormat, docs_aioreader
@@ -201,7 +203,8 @@ class WordOCParser(OCParser):
                     if doc.tables:
                         return doc_convert(doc)
                     text = yaml_handler("\n".join(element for p in doc.paragraphs if (element := p.text.strip())))
-                    return safe_load(text)
+                    with suppress(ScannerError):
+                        return safe_load(text)
 
 
 class DiscordOCParser(OCParser):
@@ -215,13 +218,14 @@ class DiscordOCParser(OCParser):
         if REGEX_URL.match(content) or G_DOCUMENT.match(content):
             return
         content = yaml_handler(content)
-        if isinstance(msg_data := safe_load(content), dict):
-            if isinstance(text, Message) and (
-                images := [x for x in text.attachments if x.content_type.startswith("image/")]
-            ):
-                msg_data["image"] = await images[0].to_file(use_cached=True)
+        with suppress(ScannerError):
+            if isinstance(msg_data := safe_load(content), dict):
+                if isinstance(text, Message) and (
+                    images := [x for x in text.attachments if x.content_type.startswith("image/")]
+                ):
+                    msg_data["image"] = await images[0].to_file(use_cached=True)
 
-            return msg_data
+                return msg_data
 
 
 class ParserMethods(Enum):

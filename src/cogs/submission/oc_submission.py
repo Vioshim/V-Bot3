@@ -535,7 +535,7 @@ class ImageField(TemplateField):
         return bool(oc.species)
 
     def evaluate(self, oc: Character) -> bool:
-        return oc.image and oc.image != oc.default_image
+        return oc.image and oc.image != oc.default_image and not isinstance(oc.image, File)
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         default_image = oc.image_url or oc.image or oc.default_image
@@ -587,21 +587,6 @@ class CreationOCView(Basic):
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
-
-    async def send(self, ephemeral: bool = False, **kwargs):
-        if isinstance(file := self.oc.image, File):
-            self.embed.set_image(url=f"attachment://{file.filename}")
-        else:
-            file = None
-
-        if msg := await super(CreationOCView, self).send(
-            ephemeral=ephemeral,
-            file=file,
-            thinking=True,
-            **kwargs,
-        ):
-            if not self.oc.image_url:
-                self.oc.image = msg.embeds[0].image.url
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response

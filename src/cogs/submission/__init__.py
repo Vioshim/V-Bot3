@@ -14,15 +14,12 @@
 
 from asyncio import TimeoutError
 from contextlib import suppress
-from random import choice as random_choice
 from typing import Optional, Type
 
 from discord import (
     AllowedMentions,
     Color,
-    DiscordException,
     Embed,
-    File,
     Guild,
     HTTPException,
     Interaction,
@@ -35,36 +32,27 @@ from discord import (
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     Status,
-    TextStyle,
     Thread,
     User,
     WebhookMessage,
     app_commands,
 )
 from discord.ext import commands
-from discord.ui import Button, TextInput, View
-from discord.utils import MISSING, utcnow
+from discord.ui import Button, View
+from discord.utils import MISSING
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
 from src.cogs.submission.submission_view import SubmissionView
-from src.pagination.complex import Complex
-from src.pagination.text_input import ModernInput
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
-from src.structures.mon_typing import Typing
 from src.structures.move import Move
-from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Variant
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
-from src.views.ability_view import SPAbilityView
 from src.views.characters_view import PingView
-from src.views.image_view import ImageView
 from src.views.move_view import MoveView
-from src.views.movepool_view import MovepoolView
 from src.views.rp_view import RPView
 
 __all__ = ("Submission", "setup")
@@ -171,18 +159,11 @@ class Submission(commands.Cog):
                     score_cutoff=60,
                 )
             ]
-        if len(moves) == 1:
-            view = View()
-            if url := getattr(moves[0], "url", None):
-                view.add_item(Button(label="Click here to check more information at Bulbapedia.", url=url))
-            await ctx.followup.send(embed=moves[0].embed, ephemeral=True, view=view)
-        elif moves:
-            moves.sort(key=lambda x: x.name)
-            view = MoveView(member=ctx.user, moves=moves, target=ctx, keep_working=True)
-            async with view.send(ephemeral=True):
-                self.bot.logger.info("User %s is reading the abilities/moves at %s", str(ctx.user), message.jump_url)
-        else:
-            await ctx.followup.send("This message does not include abilities or moves.", ephemeral=True)
+
+        moves.sort(key=lambda x: x.name)
+        view = MoveView(member=ctx.user, moves=moves, target=ctx, keep_working=True)
+        async with view.send(ephemeral=True):
+            self.bot.logger.info("User %s is reading the abilities/moves at %s", str(ctx.user), message.jump_url)
 
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
@@ -316,221 +297,6 @@ class Submission(commands.Cog):
 
         except Exception as e:
             self.bot.logger.exception("Error when logging oc modification", exc_info=e)
-
-    async def registration(self, ctx: Interaction | Message, oc: Type[Character], worker: Member):
-        """This is the function which handles the registration process,
-        it will try to autocomplete data it can deduce, or ask about what
-        can not be deduced.
-
-        Parameters
-        ----------
-        ctx : Interaction | Message
-            Message that is being interacted with
-        oc : Type[Character]
-            Character
-        worker : Member
-            User that interacts
-        """
-
-        async def send(text: Optional[str] = None, view: Optional[View] = MISSING, error: bool = False):
-            if error:
-                embed = Embed(title="Error", description=text, timestamp=utcnow(), color=Color.red())
-                embed.set_thumbnail(url="https://cdn.discordapp.com/emojis/498095663729344514.webp")
-            else:
-                embed = Embed(title=text, timestamp=utcnow(), color=Color.blurple())
-            embed.set_image(url=WHITE_BAR)
-            kwargs = dict(view=view, embed=embed)
-            if isinstance(ctx, Interaction):
-                resp: InteractionResponse = ctx.response
-                if not resp.is_done():
-                    if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-                        await ctx.channel.edit(archived=True)
-                    await resp.defer(ephemeral=True, thinking=True)
-                return await ctx.followup.send(**kwargs, wait=True, ephemeral=True)
-
-            if not view:
-                kwargs["delete_after"] = 5
-
-            try:
-                return await ctx.reply(**kwargs)
-            except DiscordException:
-                return await ctx.channel.send(**kwargs)
-
-        if isinstance(species := oc.species, Fakemon):  # type: ignore
-            if not 1 <= len(species.types) <= 2:
-                view = Complex(
-                    member=worker,
-                    target=ctx,
-                    values=Typing.all(),
-                    max_values=2,
-                    timeout=None,
-                    parser=lambda x: (str(x), f"Adds the typing {x}"),
-                    text_component=TextInput(label="Character's Types", placeholder="Type, Type", required=True),
-                )
-                async with view.send(
-                    title="Select Typing",
-                    description="Press the skip button in case you're going for single type.",
-                ) as types:
-                    if not types:
-                        return
-                    species.types = frozenset(types)
-        elif isinstance(species, Fusion):  # type: ignore
-            values = species.possible_types
-            if not species.types:
-                view = Complex(
-                    member=worker,
-                    target=ctx,
-                    values=values,
-                    max_values=1,
-                    timeout=None,
-                    parser=lambda x: (y := "/".join(i.name for i in x), f"Adds the typing {y}"),
-                    text_component=TextInput(
-                        label="Fusion Typing",
-                        placeholder=" | ".join("/".join(i.name for i in x).title() for x in values),
-                        default="/".join(i.name for i in random_choice(values)).title(),
-                    ),
-                )
-                async with view.send(single=True, title="Select Typing") as types:
-                    if not types:
-                        return
-                    species.types = frozenset(types)
-            elif oc.types not in values:
-                items = ", ".join("/".join(i.name for i in item) for item in values).title()
-                await send(f"Invalid typing for the fusion, valid types are {items}", error=True)
-                return
-
-        max_ab: int = oc.max_amount_abilities
-        oc.abilities = species.abilities
-        if not oc.abilities or len(oc.abilities) > max_ab:
-            placeholder = ("Ability, " * max_ab).removesuffix(", ")
-            default = ", ".join(x.name for x in oc.randomize_abilities)
-            ability_view = Complex(
-                member=worker,
-                values=oc.usable_abilities,
-                parser=lambda x: (x.name, x.description),
-                target=ctx,
-                max_values=max_ab,
-                text_component=TextInput(
-                    label="Ability",
-                    style=TextStyle.paragraph,
-                    placeholder=placeholder,
-                    default=default,
-                ),
-            )
-
-            async with ability_view.send(
-                title=f"Select the Abilities (Max {max_ab})",
-                description="If you press the write button, you can add multiple by adding commas.",
-            ) as abilities:
-                if not abilities:
-                    return
-                oc.abilities = frozenset(abilities)
-        if len(oc.abilities) > max_ab:
-            await send(f"Max Amount of Abilities for the current Species is {max_ab}", error=True)
-            return
-        if not oc.any_ability_at_first and (
-            ability_errors := ", ".join(ability.name for ability in oc.abilities if ability not in species.abilities)
-        ):
-            await send(f"the abilities [{ability_errors}] were not found in the species", error=True)
-            return
-
-        text_view = ModernInput(member=worker, target=ctx)
-
-        if isinstance(species := oc.species, (Variant, Fakemon)):
-            view = MovepoolView(target=ctx, member=worker, oc=oc)
-            await view.send()
-            await view.wait()
-
-        if not oc.moveset or len(oc.moveset) > 6:
-            if movepool := species.total_movepool:
-                movepool = movepool()
-            else:
-                movepool = Move.all()
-
-            moves_view = Complex(
-                member=worker,
-                values=movepool,
-                timeout=None,
-                target=ctx,
-                max_values=6,
-                text_component=TextInput(
-                    label="Moveset",
-                    placeholder="Move, Move, Move, Move, Move, Move",
-                    default=", ".join(x.name for x in oc.randomize_moveset),
-                ),
-            )
-
-            async with moves_view.send(
-                title="Select the Moves",
-                description="If you press the write button, you can add multiple by adding commas.",
-            ) as moves:
-                if not moves:
-                    return
-                oc.moveset = frozenset(moves)
-
-        if oc.url and isinstance(species, (Variant, Fakemon)):
-            species.movepool += Movepool(event=oc.moveset)
-
-        if not oc.any_move_at_first:
-            moves_movepool = species.total_movepool()
-            if move_errors := ", ".join(move.name for move in oc.moveset if move not in moves_movepool):
-                await send(f"the moves [{move_errors}] were not found in the movepool", error=True)
-                return
-        elif len(oc.moveset) > 6:
-            await send("Max amount of moves in a pokemon is 6.", error=True)
-            return
-
-        if isinstance(oc.sp_ability, SpAbility) and not oc.sp_ability.valid:
-            sp_view = SPAbilityView(worker, oc)
-            message = await send("Continue with Submission", view=sp_view)
-            await sp_view.wait()
-            await message.delete(delay=0)
-            if sp_view.sp_ability and not sp_view.sp_ability.valid:
-                return
-
-            oc.sp_ability = sp_view.sp_ability
-
-        if not (oc.url or oc.backstory):
-            async with text_view.handle(
-                label="Character's Backstory",
-                style=TextStyle.paragraph,
-                placeholder=(
-                    "Don't worry about having to write too much, this is just a summary of information "
-                    "that people can keep in mind when interacting with your character. You can provide "
-                    "information about how they are, information of their past, or anything you'd like to add."
-                ),
-                required=False,
-            ) as text:
-                if text is None:
-                    return
-                oc.backstory = text or None
-
-        if not (oc.url or oc.extra):
-            async with text_view.handle(
-                label="Character's Extra information",
-                style=TextStyle.paragraph,
-                placeholder=(
-                    "In this area, you can write down information you want people to consider when they are rping with them, "
-                    "the information can be from either the character's height, weight, if it uses clothes, if the character likes or dislikes "
-                    "or simply just writing down that your character has a goal in specific."
-                ),
-                required=False,
-            ) as text:
-                if text is None:
-                    return
-                oc.extra = text or None
-
-        image_view = ImageView(
-            member=worker,
-            target=ctx,
-            default_img=oc.image or oc.default_image,
-        )
-        async with image_view.send() as image:
-            if image is None:
-                return
-            oc.image = image
-
-        await self.register_oc(oc)
 
     async def oc_update(self, oc: Type[Character]):
         embed: Embed = oc.embed
