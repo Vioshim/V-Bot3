@@ -224,7 +224,7 @@ class Basic(View):
                 if isinstance(target, Thread) and target.archived:
                     await target.edit(archived=True)
                 await resp.defer(ephemeral=ephemeral, thinking=thinking)
-
+            kwargs.pop("thinking", None)
             try:
                 self.message = await target.followup.send(**data, wait=True)
             except DiscordException as e:
