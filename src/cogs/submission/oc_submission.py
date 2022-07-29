@@ -591,7 +591,8 @@ class CreationOCView(Basic):
         super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
         self.embed.title = "Character Creation"
         self.bot = bot
-        oc = oc.copy() if oc else Character(author=user.id, server=ctx.guild.id)
+        oc = oc.copy() if oc else Character()
+        oc.author, oc.server = user.id, ctx.guild.id
         self.oc = oc
         self.user = user
         self.embed = oc.embed.set_author(
