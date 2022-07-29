@@ -327,9 +327,9 @@ class Submission(commands.Cog):
             author = self.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
                 view = CreationOCView(ctx=message, user=author, oc=oc)
-                if not (ephemeral := isinstance(message, Interaction)):
+                if isinstance(message, Message):
                     await message.delete(delay=0)
-                await view.send(ephemeral=ephemeral)
+                await view.send()
                 await view.wait()
 
     async def on_message_submission(self, message: Message):

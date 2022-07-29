@@ -673,7 +673,10 @@ class CreationOCView(Basic):
                 else:
                     files = MISSING
 
-                m = await self.message.edit(embed=embed, view=self, attachments=files)
+                if self.message:
+                    m = await self.message.edit(embed=embed, view=self, attachments=files)
+                else:
+                    m = await ctx.edit_original_message(embed=embed, view=self, attachments=files)
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
                 self.message = m

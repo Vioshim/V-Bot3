@@ -45,7 +45,7 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.simple import Simple
 from src.structures.logger import ColoredLogger
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
 setLoggerClass(ColoredLogger)
 
@@ -206,11 +206,12 @@ class Complex(Simple[_T]):
                 page_text = f"Page {index + 1}/{total_pages}"
                 if len(page_text) > 100:
                     page_text = f"Page {index + 1}"
+
                 pages.add_option(
                     label=page_text,
                     value=f"{index}",
                     description=f"From {firstname} to {lastname}"[:100],
-                    emoji=PartialEmoji(name="list", id=432986579007569922),
+                    emoji=LIST_EMOJI,
                     default=default,
                 )
 
@@ -218,7 +219,7 @@ class Complex(Simple[_T]):
             for index, item in enumerate(elements.get(self.pos, [])):
                 # In each cycle, we proceed to convert the name and value (as we use its index)
                 # and determine the emoji, based on the current implementation of emoji_parser
-                name, value = map(lambda x: str(x).replace("\n", " ")[:100] if x else None, self.parser(item))
+                name, value = map(lambda x: str(x).replace("\n", " ").strip()[:100] if x else None, self.parser(item))
                 emoji = self.emoji_parser(item)
                 foo.add_option(label=name, value=str(index), description=value, emoji=emoji)
             pages.disabled = len(pages.options) == 1
