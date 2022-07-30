@@ -76979,7 +76979,7 @@
 		"SPA": 127,
 		"SPD": 89,
 		"SPE": 79,
-		"banned": true,
+		"banned": false,
 		"evolves_from": null,
 		"evolves_to": [],
 		"movepool": {
