@@ -35,7 +35,7 @@ class MoveComplex(Complex[Move]):
         keep_working: bool = False,
         max_values: int = 6,
     ):
-        total = sorted(moves, key=lambda x: x.type.id or 0)
+        total = sorted(moves, key=lambda x: (x.type.id or 0) if isinstance(x, Move) else 0)
         super(MoveComplex, self).__init__(
             member=member,
             target=target,
