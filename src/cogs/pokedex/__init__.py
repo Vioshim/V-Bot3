@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import astuple
+from random import random
 from re import IGNORECASE
 from re import compile as re_compile
 from typing import Callable, Optional
 
+from bs4 import BeautifulSoup
 from discord import (
     Embed,
     Guild,
@@ -66,6 +68,38 @@ class Pokedex(commands.Cog):
             Bot instance
         """
         self.bot = bot
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    async def random_oc(self, ctx: Interaction):
+        """Generate a Random OC
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        """
+        await ctx.response.defer(thinking=True)
+        URL = f"https://ash-pinto-frog.glitch.me/api?generator=3dm3a5la78&list=output&__cacheBust={random()}"
+        embed = Embed(
+            title="Pokémon Mystery Dungeon OC Generator",
+            color=ctx.user.color,
+        )
+        embed.set_author(
+            name="perchance",
+            icon_url="https://cdn.discordapp.com/emojis/952524707146637342.webp",
+            url="https://perchance.org/3dm3a5la78",
+        )
+        embed.set_image(url=WHITE_BAR)
+
+        async with self.bot.session.get(URL) as data:
+            if data.status == 200:
+                content = await data.text()
+                soup = BeautifulSoup(content, "html.parser")
+                items = soup.find_all("p", recursive=False)
+                embed.set_thumbnail(url=items[1].img.src)
+                embed.description = "\n\n".join(x.text for x in items if x.text)
+        await ctx.followup.send(embed=embed)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
