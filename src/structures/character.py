@@ -396,7 +396,7 @@ class Character:
         c_embed.add_field(name="Pronoun", value=self.pronoun.name)
         c_embed.add_field(name="Age", value=self.age or "Unknown")
 
-        if self.species:
+        if self.species and self.species.name:
             match self.kind:
                 case Kind.Fusion:
                     name1, name2 = self.species.name.split("/")
@@ -416,15 +416,15 @@ class Character:
                 case _:
                     c_embed.add_field(name="Species", value=self.species.name)
 
-            for index, ability in enumerate(self.abilities, start=1):
-                c_embed.add_field(
-                    name=f"Ability {index} - {ability.name}",
-                    value=f"> {ability.description}",
-                    inline=False,
-                )
+        for index, ability in enumerate(self.abilities, start=1):
+            c_embed.add_field(
+                name=f"Ability {index} - {ability.name}",
+                value=f"> {ability.description}",
+                inline=False,
+            )
 
-            if entry := "/".join(i.name.title() for i in self.types):
-                c_embed.set_footer(text=entry)
+        if entry := "/".join(i.name.title() for i in self.types):
+            c_embed.set_footer(text=entry)
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
             if (name := sp_ability.name[:100]) and (value := sp_ability.description[:200]):

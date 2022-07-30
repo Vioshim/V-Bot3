@@ -99,16 +99,25 @@ class ModernInput(Basic):
     )
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
-        await resp.edit_message(content=DEFAULT_MSG, view=None)
+        await resp.defer(thinking=True, ephemeral=True)
+        await self.message.edit(content=DEFAULT_MSG, view=None)
         try:
             message: Message = await interaction.client.wait_for("message", check=text_check(interaction))
             self.text = message.content
-            try:
-                await message.delete()
-            except DiscordException:
-                pass
-            msg = await interaction.original_message()
-            await msg.edit(content="Parameter has been added.", view=None, embed=None)
+
+            await message.delete(delay=0)
+
+            await self.message.edit(
+                content="Parameter has been added.",
+                view=None,
+                embed=None,
+            )
+
+            await interaction.followup.send(
+                self.text,
+                ephemeral=True,
+            )
+
         except DiscordException as e:
             logger.exception("Error editing message", exc_info=e)
         finally:

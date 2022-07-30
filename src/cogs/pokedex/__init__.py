@@ -97,7 +97,8 @@ class Pokedex(commands.Cog):
                 content = await data.text()
                 soup = BeautifulSoup(content, "html.parser")
                 items = soup.find_all("p", recursive=False)
-                embed.set_thumbnail(url=items[1].img.src)
+                for item in [x.img.src for x in items if x.img]:
+                    embed.set_thumbnail(url=item)
                 embed.description = "\n\n".join(x.text for x in items if x.text)
         await ctx.followup.send(embed=embed)
 

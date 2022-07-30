@@ -782,7 +782,6 @@ class ModCharactersView(CharactersView):
         await resp.defer(ephemeral=True, thinking=True)
         try:
             if item := self.current_choice:
-                embed = item.embed
                 guild = self.member.guild
                 cog = interaction.client.get_cog("Submission")
                 user: Member = cog.supporting.get(interaction.user, interaction.user)
@@ -800,6 +799,7 @@ class ModCharactersView(CharactersView):
                     else:
                         target = interaction
                     view = PingView(oc=item, reference=target)
+                    embed = item.embed
                     await interaction.followup.send(embed=embed, view=view, ephemeral=True)
                 await view.wait()
         except Exception as e:
