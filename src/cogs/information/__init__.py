@@ -666,7 +666,7 @@ class Information(commands.Cog):
         if str(payload.emoji) != "\N{WHITE MEDIUM STAR}":
             return
 
-        with suppress(DiscordException):
+        try:
             guild: Guild = self.bot.get_guild(payload.guild_id)
             if not (channel := guild.get_channel_or_thread(payload.channel_id)):
                 channel = await guild.fetch_channel(payload.channel_id)
@@ -696,6 +696,8 @@ class Information(commands.Cog):
                             await message.unpin()
             else:
                 await reaction.remove()
+        except DiscordException as e:
+            self.bot.logger.exception("Error on Star System", exc_info=e)
 
     async def tenor_fetch(self, image_id: str):
         try:
