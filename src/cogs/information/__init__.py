@@ -677,29 +677,23 @@ class Information(commands.Cog):
             reactions = [x for x in message.reactions if str(x.emoji) == str(payload.emoji)]
             reaction = reactions[0]
 
-            conditions = {
-                1: bool(message.pinned if payload.event_type == "REACTION_REMOVE" else not message.pinned),
-                2: not message.is_system(),
-                3: channel.category_id is not None,
-                4: message.author != self.bot.user,
-                5: channel.permissions_for(everyone).add_reactions,
-                6: channel.category_id not in DISABLED_CATEGORIES,
-                7: not (message.embeds if message.webhook_id else message.author.bot),
-                8: bool(count := len([x async for x in reaction.users(limit=None) if x != message.author])),
-            }
-
-            if all(conditions.values()):
-                condition = await self.bot.is_owner(payload.member)
+            if (
+                not message.is_system()
+                and channel.category_id is not None
+                and message.author != self.bot.user
+                and bool(channel.permissions_for(everyone).add_reactions)
+                and channel.category_id not in DISABLED_CATEGORIES
+                and not bool(message.embeds if message.webhook_id else message.author.bot)
+                and bool(count := len([x async for x in reaction.users(limit=None) if x != message.author]))
+            ):
                 match payload.event_type:
                     case "REACTION_ADD":
-                        if count >= STARS_AMOUNT or condition:
+                        if count >= STARS_AMOUNT and not message.pinned:
                             await message.pin()
                     case "REACTION_REMOVE":
-                        if count < STARS_AMOUNT or condition:
+                        if count < STARS_AMOUNT and message.pinned:
                             await message.unpin()
             else:
-                data = ", ".join(f"{k}: {v}" for k, v in conditions.items())
-                self.bot.logger.info("Conditions %s", data)
                 await reaction.remove(payload.member)
         except DiscordException as e:
             self.bot.logger.exception("Error on Star System", exc_info=e)
