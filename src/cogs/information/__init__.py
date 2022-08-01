@@ -674,7 +674,7 @@ class Information(commands.Cog):
             message = await channel.fetch_message(payload.message_id)
             everyone = guild.get_role(guild.id)
 
-            reactions = [x for x in message.reactions if x.emoji == payload.emoji]
+            reactions = [x for x in message.reactions if str(x.emoji) == str(payload.emoji)]
             reaction = reactions[0]
 
             if (
