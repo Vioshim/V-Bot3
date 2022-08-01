@@ -679,7 +679,7 @@ class Information(commands.Cog):
 
             conditions = {
                 1: bool(message.pinned if payload.event_type == "REACTION_REMOVE" else not message.pinned),
-                2: message.is_system(),
+                2: not message.is_system(),
                 3: channel.category_id is not None,
                 4: message.author != self.bot.user,
                 5: channel.permissions_for(everyone).add_reactions,
