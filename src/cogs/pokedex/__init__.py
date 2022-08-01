@@ -30,6 +30,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.utils import utcnow
+from yarl import URL
 
 from src.cogs.pokedex.search import (
     AbilityArg,
@@ -54,6 +55,7 @@ from src.views.species_view import SpeciesComplex
 __all__ = ("Pokedex", "setup")
 
 PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
+API = URL("https://ash-pinto-frog.glitch.me/api")
 
 
 class Pokedex(commands.Cog):
@@ -80,26 +82,23 @@ class Pokedex(commands.Cog):
             Interaction
         """
         await ctx.response.defer(thinking=True)
-        URL = f"https://ash-pinto-frog.glitch.me/api?generator=3dm3a5la78&list=output&__cacheBust={random()}"
-        embed = Embed(
-            title="Pokémon Mystery Dungeon OC Generator",
-            color=ctx.user.color,
-        )
+        embed = Embed(title="Pokémon Mystery Dungeon OC Generator", color=ctx.user.color)
         embed.set_author(
             name="perchance",
             icon_url="https://cdn.discordapp.com/emojis/952524707146637342.webp",
             url="https://perchance.org/3dm3a5la78",
         )
         embed.set_image(url=WHITE_BAR)
-
-        async with self.bot.session.get(URL) as data:
+        url = API.with_query(generator="3dm3a5la78", list="output", __cacheBust=random())
+        async with self.bot.session.get(url) as data:
             if data.status == 200:
                 content = await data.text()
                 soup = BeautifulSoup(content, "html.parser")
-                items = soup.find_all("p", recursive=False)
-                for item in [x.img.src for x in items if x.img]:
-                    embed.set_thumbnail(url=item)
-                embed.description = "\n\n".join(x.text for x in items if x.text)
+                items = soup.find_all("p")
+                for item in items:
+                    if item.img:
+                        embed.set_thumbnail(url=item.img.src)
+                embed.description = "\n\n".join({x.text for x in items if x.text})
         await ctx.followup.send(embed=embed)
 
     @app_commands.command()

@@ -598,10 +598,7 @@ class CreationOCView(Basic):
         oc.author, oc.server = user.id, ctx.guild.id
         self.oc = oc
         self.user = user
-        self.embed = oc.embed.set_author(
-            name=user.display_name,
-            icon_url=user.display_avatar.url,
-        )
+        self.embed = oc.embed.set_author(name=user.display_name, icon_url=user.display_avatar)
         self.ref_template = template or convert_template(oc)
         self.progress: set[str] = set()
         if progress:
@@ -618,7 +615,7 @@ class CreationOCView(Basic):
             return True
 
         embed = Embed(title="This OC isn't yours", color=Color.red(), timestamp=interaction.created_at)
-        embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar.url)
+        embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
         embed.set_image(url=WHITE_BAR)
 
         await resp.send_message(embed=embed, ephemeral=True)
@@ -692,10 +689,7 @@ class CreationOCView(Basic):
         finally:
             try:
                 embed = self.oc.embed
-                embed.set_author(
-                    name=self.user.display_name,
-                    icon_url=self.user.display_avatar.url,
-                )
+                embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
                 if not self.oc.image_url:
                     embed.set_image(url="attachment://image.png")
                 if isinstance(self.oc.image, File):
@@ -735,29 +729,33 @@ class CreationOCView(Basic):
                 self.stop()
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
-        db = self.bot.mongo_db("OC Creation")
-        if (m := self.message) and not m.flags.ephemeral:
-            await db.delete_one({"id": m.id})
-        return await super(CreationOCView, self).delete(ctx)
+        try:
+            db = self.bot.mongo_db("OC Creation")
+            if (m := self.message) and not m.flags.ephemeral:
+                await db.delete_one({"id": m.id})
+            return await super(CreationOCView, self).delete(ctx)
+        except Exception as e:
+            self.bot.logger.exception("Exception Deleting View", exc_info=e)
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
     async def finish_oc(self, ctx: Interaction, _: Button):
-        if self.oc.id and self.oc.thread:
-            webhook: Webhook = await ctx.client.webhook(919277769735680050)
-            thread = Object(id=self.oc.thread)
-            await webhook.delete_message(self.oc.id, thread=thread)
-        await self.delete(ctx)
+        try:
+            if self.oc.id and self.oc.thread:
+                webhook: Webhook = await ctx.client.webhook(919277769735680050)
+                thread = Object(id=self.oc.thread)
+                await webhook.delete_message(self.oc.id, thread=thread)
+            await self.delete(ctx)
+        except Exception as e:
+            self.bot.logger.exception("Exception Deleting Character", exc_info=e)
 
     @button(label="Close this Menu", row=2)
     async def cancel(self, ctx: Interaction, _: Button):
-        await self.delete(ctx)
+        try:
+            await self.delete(ctx)
+        except Exception as e:
+            self.bot.logger.exception("Exception Closing Menu", exc_info=e)
 
-    @button(
-        disabled=True,
-        label="Submit",
-        style=ButtonStyle.green,
-        row=2,
-    )
+    @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
     async def submit(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         try:
@@ -788,10 +786,7 @@ class ModCharactersView(CharactersView):
                 if item.author in [user.id, interaction.user.id]:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
                     if author := guild.get_member(item.author):
-                        view.embed.set_author(
-                            name=author.display_name,
-                            icon_url=author.display_avatar.url,
-                        )
+                        view.embed.set_author(name=author.display_name, icon_url=author.display_avatar)
                     await view.send(ephemeral=True)
                 else:
                     if isinstance(self.target, Interaction):

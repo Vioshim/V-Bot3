@@ -86,7 +86,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "3.6.1.post162"
+version = "3.6.1.post195"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -102,18 +102,18 @@ tzlocal = ">=3.0"
 [package.extras]
 asyncpg = ["asyncpg (>=0.20)"]
 cbor = ["cbor2 (>=5.0)"]
-doc = ["sphinx", "sphinx-rtd-theme"]
+doc = ["sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-tabs (>=3.3.1)"]
 mongodb = ["pymongo (>=4)"]
 mqtt = ["paho-mqtt (>=1.5)"]
 redis = ["redis (>=4.0)"]
 sqlalchemy = ["sqlalchemy (>=1.4.22)"]
-test = ["asyncpg (>=0.20)", "cbor2 (>=5.0)", "coverage", "freezegun", "paho-mqtt (>=1.5)", "psycopg2", "pymongo (>=4)", "pymysql", "pytest (>=5.0)", "pytest-cov", "pytest-freezegun", "pytest-lazy-fixture", "pytest-mock", "redis[hiredis] (>=4.0)", "sqlalchemy (>=1.4.22)", "trio"]
+test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "freezegun", "paho-mqtt (>=1.5)", "psycopg2", "pymongo (>=4)", "pymysql", "pytest (>=5.0)", "pytest-cov", "pytest-freezegun", "pytest-lazy-fixture", "pytest-mock", "redis[hiredis] (>=4.0)", "sqlalchemy (>=1.4.22)", "trio", "greenlet (>=2.0.0a2)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "e485db3f222d80cd0dd313740c6a08b849ce86e0"
+resolved_reference = "01ebd0e4a501e6d0e01225cbe81f88bf0626a448"
 
 [[package]]
 name = "astunparse"
@@ -357,7 +357,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a4434+g6d1069e7"
+version = "2.0.0a4446+g07ad6951"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -382,7 +382,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "6d1069e7896337f5abeabc6a99dd6a997ca57944"
+resolved_reference = "07ad6951fbb2151eb6b166484cf5bed5ee00f5b7"
 
 [[package]]
 name = "distlib"
@@ -825,6 +825,18 @@ python-versions = "*"
 
 [package.dependencies]
 tomli = {version = ">=1.1.0", markers = "python_version >= \"3.6\""}
+
+[[package]]
+name = "pillow"
+version = "9.2.0"
+description = "Python Imaging Library (Fork)"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-issues (>=3.0.1)", "sphinx-removed-in", "sphinxext-opengraph"]
+tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
 name = "pip-api"
@@ -1409,7 +1421,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.5"
-content-hash = "c31e3696a3ec4de55c5a05ba41c65c9d4de3044f7c42ac8d04c1f4b350e885cc"
+content-hash = "2066507e8d0619d23ffa704b59d94b7b7c03aa82232cd814cbb32ba7e02018d2"
 
 [metadata.files]
 aiodns = [
@@ -2055,6 +2067,7 @@ pep517 = [
     {file = "pep517-0.12.0-py2.py3-none-any.whl", hash = "sha256:dd884c326898e2c6e11f9e0b64940606a93eb10ea022a2e067959f3a110cf161"},
     {file = "pep517-0.12.0.tar.gz", hash = "sha256:931378d93d11b298cf511dd634cf5ea4cb249a28ef84160b3247ee9afb4e8ab0"},
 ]
+pillow = []
 pip-api = []
 pip-shims = []
 pipreqs = [

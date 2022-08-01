@@ -11,25 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from enum import Enum
-
-
-class Pronoun(Enum):
-    She = 0
-    He = 1
-    Them = 2
-
-
-gender, shiny = Pronoun.He, True
-
-
-match (gender, shiny):
-    case (Pronoun.She, True):
-        print("1")
-    case (Pronoun.She, False):
-        print("2")
-    case (_, True):
-        print("3")
-    case _:
-        print("4")
