@@ -38,6 +38,7 @@ from discord import (
     Object,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
+    RawReactionActionEvent,
     Role,
     SelectOption,
     TextStyle,
@@ -94,6 +95,7 @@ GIPHY_URL = "https://api.giphy.com/v1/gifs"
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
 WEATHER_API = getenv("WEATHER_API")
+STARS_AMOUNT = 5
 
 
 PING_ROLES = {
@@ -105,6 +107,11 @@ PING_ROLES = {
     "Registered": 719642423327719434,
     "No": 0,
 }
+
+DISABLED_CATEGORIES = [
+    740550068922220625,  # Server & News
+    740552350703550545,  # RP information
+]
 
 
 class AnnouncementModal(Modal):
@@ -653,6 +660,42 @@ class Information(commands.Cog):
             )
 
         self.bot.msg_cache -= payload.message_ids
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+        if str(payload.emoji) != "\N{WHITE MEDIUM STAR}":
+            return
+
+        with suppress(DiscordException):
+            guild: Guild = self.bot.get_guild(payload.guild_id)
+            if not (channel := guild.get_channel_or_thread(payload.channel_id)):
+                channel = await guild.fetch_channel(payload.channel_id)
+
+            message = await channel.fetch_message(payload.message_id)
+            everyone = guild.get_role(guild.id)
+
+            reactions = [x for x in message.reactions if x.emoji == payload.emoji]
+            reaction = reactions[0]
+
+            if (
+                (message.pinned if payload.event_type == "REACTION_REMOVE" else not message.pinned)
+                and message.is_system()
+                and channel.category_id is not None
+                and message.author != self.bot.user
+                and channel.permissions_for(everyone).add_reactions
+                and channel.category_id not in DISABLED_CATEGORIES
+                and not (message.embeds if message.webhook_id else message.author.bot)
+                and (count := len([x async for x in reaction.users(limit=None) if x != message.author]))
+            ):
+                match payload.event_type:
+                    case "REACTION_ADD":
+                        if count >= STARS_AMOUNT:
+                            await message.pin()
+                    case "REACTION_REMOVE":
+                        if count < STARS_AMOUNT:
+                            await message.unpin()
+            else:
+                await reaction.remove()
 
     async def tenor_fetch(self, image_id: str):
         try:
