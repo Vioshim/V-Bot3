@@ -687,12 +687,13 @@ class Information(commands.Cog):
                 and not (message.embeds if message.webhook_id else message.author.bot)
                 and (count := len([x async for x in reaction.users(limit=None) if x != message.author]))
             ):
+                condition = await self.bot.is_owner(payload.member)
                 match payload.event_type:
                     case "REACTION_ADD":
-                        if count >= STARS_AMOUNT:
+                        if count >= STARS_AMOUNT or condition:
                             await message.pin()
                     case "REACTION_REMOVE":
-                        if count < STARS_AMOUNT:
+                        if count < STARS_AMOUNT or condition:
                             await message.unpin()
             else:
                 await reaction.remove()
