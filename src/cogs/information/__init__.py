@@ -696,7 +696,7 @@ class Information(commands.Cog):
                         if count < STARS_AMOUNT or condition:
                             await message.unpin()
             else:
-                await reaction.remove()
+                await reaction.remove(payload.member)
         except DiscordException as e:
             self.bot.logger.exception("Error on Star System", exc_info=e)
 
