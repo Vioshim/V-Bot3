@@ -45,6 +45,7 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
+from discord.ext.commands.errors import MissingRole
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import find, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -848,25 +849,29 @@ class Information(commands.Cog):
                     await interaction.channel.edit(archived=True)
                 await resp.defer(thinking=True, ephemeral=True)
 
+        embed = Embed(color=Colour.red(), timestamp=interaction.created_at)
+        embed.set_image(url=WHITE_BAR)
+
         if isinstance(error, app_commands.AppCommandError):
-            await interaction.followup.send(
-                embed=Embed(
-                    color=Colour.red(),
-                    title=f"Error - {name}",
-                    description=str(error),
-                ),
-                ephemeral=True,
-            )
+            embed.title = f"Error - {name}"
+            embed.description = str(error)
+            if isinstance(error, MissingRole) and interaction.guild:
+                if isinstance(error.missing_role, int):
+                    role = get(interaction.guild.roles, id=error.missing_role)  # type: ignore
+                else:
+                    role = get(interaction.guild.roles, name=error.missing_role)  # type: ignore
+
+                if role:
+                    embed.title = f"Command requires {role} role"
+                    embed.description = None
+                    embed.set_thumbnail(url=role.icon)
+                    embed.color = role.color
         else:
             error_cause = error.__cause__ or error
-            await interaction.followup.send(
-                embed=Embed(
-                    color=Colour.red(),
-                    title=f"Unexpected error - {name}",
-                    description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
-                ),
-                ephemeral=True,
-            )
+            embed.title = f"Unexpected error - {name}"
+            embed.description = f"```py\n{type(error_cause).__name__}: {error_cause}\n```"
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
