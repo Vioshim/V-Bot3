@@ -172,7 +172,11 @@ class WikiEntry:
     @classmethod
     def from_list(cls, nodes: list[WikiEntry]):
         result = cls()
-        for item in sorted(nodes, key=lambda x: x.order):
+
+        if isinstance(nodes, list):
+            nodes = sorted(nodes, key=lambda x: x.order)
+
+        for item in nodes:
             result.add_node(item)
         return result
 
