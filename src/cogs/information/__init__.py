@@ -338,7 +338,7 @@ class Information(commands.Cog):
             Image File
         """
         resp: InteractionResponse = ctx.response
-        if not icon or icon.content_type == "image/png":
+        if not icon or icon.content_type.startswith("image"):
             await perk.method(ctx, icon)
         else:
             await resp.send_message("Valid File Format: image/png", ephemeral=True)

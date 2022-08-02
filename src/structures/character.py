@@ -473,7 +473,7 @@ class Character:
             if not background:
                 background = "background_Y8q8PAtEV.png"
             kit = ImageKit(base=background, width=900, height=450, format="png")
-            kit.add_image(image=image, height=400, width=400)
+            kit.add_image(image=image, height=450, width=450)
             if icon := self.pronoun.image:
                 kit.add_image(image=icon, x=-10, y=-10, height=120, width=120)
             for index, item in enumerate(self.types):
