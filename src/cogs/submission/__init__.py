@@ -216,88 +216,91 @@ class Submission(commands.Cog):
         return oc_list
 
     async def register_oc(self, oc: Character, image_as_is: bool = False):
-        member = Object(id=oc.author)
-        webhook = await self.bot.webhook(919277769735680050)
         try:
-            thread_id = self.oc_list[member.id]
-        except KeyError:
-            thread_id = await self.list_update(member)
-        oc.thread = thread_id
-        guild: Guild = self.bot.get_guild(oc.server)
-        user = guild.get_member(member.id) or member
-        embed: Embed = oc.embed
-        embed.set_image(url="attachment://image.png")
-        kwargs = dict(
-            content=f"<@{user.id}>",
-            embed=embed,
-            thread=Object(id=oc.thread),
-            allowed_mentions=AllowedMentions(users=True),
-        )
+            member = Object(id=oc.author)
+            webhook = await self.bot.webhook(919277769735680050)
+            try:
+                thread_id = self.oc_list[member.id]
+            except KeyError:
+                thread_id = await self.list_update(member)
+            oc.thread = thread_id
+            guild: Guild = self.bot.get_guild(oc.server)
+            user = guild.get_member(member.id) or member
+            embed: Embed = oc.embed
+            embed.set_image(url="attachment://image.png")
+            kwargs = dict(
+                content=f"<@{user.id}>",
+                embed=embed,
+                thread=Object(id=oc.thread),
+                allowed_mentions=AllowedMentions(users=True),
+            )
 
-        if not oc.image_url:
-            image = oc.image if image_as_is else oc.generated_image
-            if file := await self.bot.get_file(url=image, filename="image"):
-                word = "attachments" if oc.id else "files"
-                kwargs[word] = [file]
+            if not oc.image_url:
+                image = oc.image if image_as_is else oc.generated_image
+                if file := await self.bot.get_file(url=image, filename="image"):
+                    word = "attachments" if oc.id else "files"
+                    kwargs[word] = [file]
 
-        if oc.id:
-            msg_oc = await webhook.edit_message(oc.id, **kwargs)
-            word = "modified"
-        else:
-            msg_oc = await webhook.send(**kwargs, wait=True)
-            word = "registered"
+            if oc.id:
+                msg_oc = await webhook.edit_message(oc.id, **kwargs)
+                word = "modified"
+            else:
+                msg_oc = await webhook.send(**kwargs, wait=True)
+                word = "registered"
 
-        oc.id = msg_oc.id
-        oc.image_url = msg_oc.embeds[0].image.url
-        former = self.ocs.pop(oc.id, None)
-        self.ocs[oc.id] = oc
-        self.bot.logger.info(
-            "New character has been %s! > %s > %s > %s",
-            word,
-            str(user),
-            repr(oc),
-            oc.document_url or "Manual",
-        )
-        async with self.bot.database() as conn:
-            await oc.update(connection=conn, idx=msg_oc.id)
+            oc.id = msg_oc.id
+            oc.image_url = msg_oc.embeds[0].image.url
+            former = self.ocs.pop(oc.id, None)
+            self.ocs[oc.id] = oc
+            self.bot.logger.info(
+                "New character has been %s! > %s > %s > %s",
+                word,
+                str(user),
+                repr(oc),
+                oc.document_url or "Manual",
+            )
+            async with self.bot.database() as conn:
+                await oc.update(connection=conn, idx=msg_oc.id)
 
-        try:
-            if former and (embeds := comparison_handler(before=former, now=oc)):
-                embed1, embed2 = embeds
-                files1, embed1 = await self.bot.embed_raw(embed1)
-                files2, embed2 = await self.bot.embed_raw(embed2)
+            try:
+                if former and (embeds := comparison_handler(before=former, now=oc)):
+                    embed1, embed2 = embeds
+                    files1, embed1 = await self.bot.embed_raw(embed1)
+                    files2, embed2 = await self.bot.embed_raw(embed2)
 
-                files = files1 + files2
-                for index, (e, f) in enumerate(zip(embeds, files)):
-                    f.filename = f"image{index}.png"
-                    e.set_image(url=f"attachment://{f.filename}")
+                    files = files1 + files2
+                    for index, (e, f) in enumerate(zip(embeds, files)):
+                        f.filename = f"image{index}.png"
+                        e.set_image(url=f"attachment://{f.filename}")
 
-                log = await self.bot.webhook(1001125143071965204, reason="Logging")
-                if isinstance(user, (User, Member)):
-                    username, avatar_url = user.display_name, user.display_avatar.url
-                else:
-                    username, avatar_url = MISSING, MISSING
+                    log = await self.bot.webhook(1001125143071965204, reason="Logging")
+                    if isinstance(user, (User, Member)):
+                        username, avatar_url = user.display_name, user.display_avatar.url
+                    else:
+                        username, avatar_url = MISSING, MISSING
 
-                view = View()
-                view.add_item(
-                    Button(
-                        label="Jump URL",
-                        url=former.jump_url,
-                        emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
+                    view = View()
+                    view.add_item(
+                        Button(
+                            label="Jump URL",
+                            url=former.jump_url,
+                            emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
+                        )
                     )
-                )
 
-                await log.send(
-                    embeds=embeds,
-                    files=files,
-                    thread=Object(id=1001125684476915852),
-                    username=username,
-                    avatar_url=avatar_url,
-                    view=view,
-                )
+                    await log.send(
+                        embeds=embeds,
+                        files=files,
+                        thread=Object(id=1001125684476915852),
+                        username=username,
+                        avatar_url=avatar_url,
+                        view=view,
+                    )
 
-        except Exception as e:
-            self.bot.logger.exception("Error when logging oc modification", exc_info=e)
+            except Exception as e2:
+                self.bot.logger.exception("Error when logging oc modification", exc_info=e2)
+        except Exception as e1:
+            self.bot.logger.exception("Error when logging oc modification main", exc_info=e1)
 
     async def oc_update(self, oc: Character):
         embed: Embed = oc.embed

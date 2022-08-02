@@ -882,7 +882,7 @@ class Information(commands.Cog):
         ctx: Context
             Context
         """
-        name: str = getattr(ctx.guild, "name", "Private Message")
+        name: str = ctx.guild.name if ctx.guild else "Private Message"
         self.bot.logger.info("%s > %s > %s", name, ctx.author, ctx.command.qualified_name)
 
     async def on_error(self, interaction: Interaction, error: app_commands.AppCommandError):
@@ -968,14 +968,14 @@ class Information(commands.Cog):
         if (cog := ctx.cog) and cog._get_overridden_method(cog.cog_command_error):
             return
 
-        if error_cause := error.__cause__:
-            await ctx.send(
-                embed=Embed(
-                    color=Colour.red(),
-                    title=f"Unexpected error - {ctx.command.qualified_name}",
-                    description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
-                )
+        error_cause = error.__cause__ or error
+        await ctx.send(
+            embed=Embed(
+                color=Colour.red(),
+                title=f"Unexpected error - {ctx.command.qualified_name}",
+                description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
             )
+        )
 
         self.bot.logger.error(
             "Command Error(%s, %s)",

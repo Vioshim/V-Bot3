@@ -35,6 +35,7 @@ class WikiEntry:
         path: str = None,
         content: Optional[str] = None,
         embeds: list[Embed] = None,
+        order: int = 0,
     ) -> None:
 
         if not embeds:
@@ -45,10 +46,12 @@ class WikiEntry:
         self.embeds = [Embed.from_dict(x) if isinstance(x, dict) else x for x in embeds]
         self.children: dict[str, WikiEntry] = {}
         self.parent: Optional[WikiEntry] = None
+        self.order = order
 
     def __str__(self, level: int = 0) -> str:
         ret = f"{TREE_ICON}{LEVEL_ICON * (level * 2)} /{self.path}\n"
-        return ret + "".join(child.__str__(level + 1) for child in self.children.values())
+        items = sorted(self.children.values(), key=lambda x: x.order)
+        return ret + "".join(child.__str__(level + 1) for child in items)
 
     def __repr__(self) -> str:
         return f"WikiEntry({len(self.children)})"
@@ -68,6 +71,7 @@ class WikiEntry:
             "path": self.path,
             "content": self.content,
             "embeds": [x.to_dict() for x in self.embeds],
+            "order": self.order,
         }
 
     def printTree(
@@ -107,8 +111,9 @@ class WikiEntry:
         path: str = None,
         content: Optional[str] = None,
         embeds: list[Embed] = None,
+        order: int = 0,
     ):
-        self.add_node(WikiEntry(path, content, embeds))
+        self.add_node(WikiEntry(path, content, embeds, order))
 
     def add_node(self, node: WikiEntry | list[str] | str | dict[str, Any]):
         if isinstance(node, list):
@@ -167,7 +172,7 @@ class WikiEntry:
     @classmethod
     def from_list(cls, nodes: list[WikiEntry]):
         result = cls()
-        for item in nodes:
+        for item in sorted(nodes, key=lambda x: x.order):
             result.add_node(item)
         return result
 

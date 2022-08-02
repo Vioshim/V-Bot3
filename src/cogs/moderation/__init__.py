@@ -128,7 +128,7 @@ class Meeting(View):
     async def process(self, method: Optional[bool] = None):
         sus: Member = self.imposter
         hero: Member = self.reporter
-        channel = self.guild.get_channel(877376320093425685)
+        channel = self.guild.get_channel(982680174787178587)
         embed = Embed(
             title=f"Users that Agreed with {sus}'s Votation",
             description="\n".join(i.mention for i in self.attack),
