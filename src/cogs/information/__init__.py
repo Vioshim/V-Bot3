@@ -338,10 +338,10 @@ class Information(commands.Cog):
             Image File
         """
         resp: InteractionResponse = ctx.response
-        if not icon or icon.content_type.startswith("image"):
+        if not icon or icon.content_type == "image/png":
             await perk.method(ctx, icon)
         else:
-            await resp.send_message("Invalid Image", ephemeral=True)
+            await resp.send_message("Valid File Format: image/png", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
