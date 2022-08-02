@@ -894,13 +894,18 @@ class Information(commands.Cog):
 
         name = command.name if command else ""
 
-        if not resp.is_done():
-            try:
+        self.bot.logger.error(
+            "Interaction Error(%s, %s)",
+            command,
+            ", ".join(f"{k}={v!r}" for k, v in interaction.data.items()),
+            exc_info=error,
+        )
+
+        with suppress(NotFound):
+            if not resp.is_done():
                 if isinstance(interaction.channel, Thread) and interaction.channel.archived:
                     await interaction.channel.edit(archived=True)
                 await resp.defer(thinking=True, ephemeral=True)
-            except NotFound:
-                return
 
         if isinstance(error, app_commands.AppCommandError):
             await interaction.followup.send(
@@ -911,7 +916,8 @@ class Information(commands.Cog):
                 ),
                 ephemeral=True,
             )
-        elif error_cause := error.__cause__:
+        else:
+            error_cause = error.__cause__ or error
             await interaction.followup.send(
                 embed=Embed(
                     color=Colour.red(),
@@ -920,13 +926,6 @@ class Information(commands.Cog):
                 ),
                 ephemeral=True,
             )
-
-        self.bot.logger.error(
-            "Interaction Error(%s, %s)",
-            command,
-            ", ".join(f"{k}={v!r}" for k, v in interaction.data.items()),
-            exc_info=error,
-        )
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
