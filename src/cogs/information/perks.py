@@ -46,7 +46,7 @@ class CustomRoleModal(Modal, title="Custom Role"):
     color = TextInput(label="Color", max_length=7, min_length=7, placeholder="#000000")
 
     def __init__(self, role: Optional[Role] = None, icon: Optional[Attachment] = None) -> None:
-        super(Modal, self).__init__(timeout=None)
+        super(CustomRoleModal, self).__init__(timeout=None)
         self.role, self.icon = role, icon
         if role:
             self.name.default = role.name
