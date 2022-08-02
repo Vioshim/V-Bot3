@@ -45,7 +45,6 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.ext.commands.errors import MissingRole
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import find, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -855,17 +854,6 @@ class Information(commands.Cog):
         if isinstance(error, app_commands.AppCommandError):
             embed.title = f"Error - {name}"
             embed.description = str(error)
-            if isinstance(error, MissingRole) and interaction.guild:
-                if isinstance(error.missing_role, int):
-                    role = get(interaction.guild.roles, id=error.missing_role)  # type: ignore
-                else:
-                    role = get(interaction.guild.roles, name=error.missing_role)  # type: ignore
-
-                if role:
-                    embed.title = f"Command requires {role} role"
-                    embed.description = None
-                    embed.set_thumbnail(url=role.icon)
-                    embed.color = role.color
         else:
             error_cause = error.__cause__ or error
             embed.title = f"Unexpected error - {name}"
