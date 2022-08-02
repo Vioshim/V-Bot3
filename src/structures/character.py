@@ -472,7 +472,7 @@ class Character:
         if image := image or self.default_image:
             if not background:
                 background = "background_Y8q8PAtEV.png"
-            kit = ImageKit(base=background, width=900, height=450)
+            kit = ImageKit(base=background, width=900, height=450, format="png")
             kit.add_image(image=image, height=400, width=400)
             if icon := self.pronoun.image:
                 kit.add_image(image=icon, x=-10, y=-10, height=120, width=120)
@@ -483,7 +483,7 @@ class Character:
     @classmethod
     def collage(cls, ocs: Iterable[Character], background: Optional[str] = None, font: bool = True):
         items = list(ocs)
-        kit = ImageKit(base=background or "OC_list_9a1DZPDet.png", width=1500, height=1000)
+        kit = ImageKit(base=background or "OC_list_9a1DZPDet.png", width=1500, height=1000, format="png")
         for index, oc in enumerate(items[:6]):
             x = 500 * (index % 3) + 25
             y = 500 * (index // 3) + 25
@@ -757,7 +757,8 @@ class Character:
     def __repr__(self) -> str:
         types = "/".join(i.name for i in self.types)
         name = self.kind.name if self.kind else "Error"
-        return f"{name}: {self.species.name}, Age: {self.age}, Types: {types}"
+        species = self.species.name if self.species else "None"
+        return f"{name}: {species}, Age: {self.age}, Types: {types}"
 
     @classmethod
     def process(cls, **kwargs) -> Character:

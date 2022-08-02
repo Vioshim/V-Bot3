@@ -101,7 +101,7 @@ class PingModal(Modal):
         embed = Embed(title=self.oc.name, description=self.message.value, color=user.color)
         embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
         embed.set_footer(text=repr(self.oc))
-        kit = ImageKit(base=self.oc.image_url, width=450, height=450)
+        kit = ImageKit(base=self.oc.image_url, width=450, height=450, format="png")
         for index, item in enumerate(self.oc.types):
             kit.add_image(image=item.icon, width=200, height=44, x=250, y=44 * index)
         kit.add_text(

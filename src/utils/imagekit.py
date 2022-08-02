@@ -280,7 +280,13 @@ class TextTransformation(ImageKitTransformation):
 
 
 class ImageKit:
-    def __init__(self, base: str, height: int = None, width: int = None):
+    def __init__(
+        self,
+        base: str,
+        height: int = None,
+        width: int = None,
+        format: str = None,
+    ):
         """Init Method
 
         Parameters
@@ -291,10 +297,13 @@ class ImageKit:
             Height, by default None
         width : int, optional
             Width, by default None
+        format : str, optional
+            Format to export, default None
         """
         self._base = image_formatter(base)
         self.height = height
         self.width = width
+        self.format = format
         self.elements: list[ImageKitTransformation] = []
 
     def __str__(self):
@@ -309,7 +318,7 @@ class ImageKit:
         if content := ":".join(x.tokenize for x in self.elements):
             if "?tr=" not in text:
                 text += "?tr"
-            return f"{text}:{content}"
+            text = f"{text}:{content}"
         return text
 
     @property
@@ -327,6 +336,8 @@ class ImageKit:
             extra.append(f"w-{width}")
         if height := self.height:
             extra.append(f"h-{height}")
+        if format := self.format:
+            extra.append(f"f-{format}")
         if extra_text := ",".join(extra):
             return f"{base}?tr={extra_text}"
         return base

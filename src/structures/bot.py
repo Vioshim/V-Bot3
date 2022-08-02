@@ -287,10 +287,10 @@ class CustomBot(Bot):
                     data = await resp.read()
                     fp = BytesIO(data)
                     text = resp.content_type.split("/")
+                    if filename and "." not in filename:
+                        filename = f"{filename}.{text[-1]}"
                     if not filename:
                         filename = ".".join(text)
-                    else:
-                        filename = f"{filename}.{text[-1]}"
                     return File(fp=fp, filename=filename, spoiler=spoiler)
         except Exception:
             return None
