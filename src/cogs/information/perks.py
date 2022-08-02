@@ -31,6 +31,8 @@ from discord.ui import Modal, TextInput
 from discord.utils import MISSING, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 
+from src.utils.etc import WHITE_BAR
+
 __all__ = ("CustomPerks",)
 
 
@@ -68,9 +70,18 @@ class CustomRoleModal(Modal, title="Custom Role"):
     async def on_submit(self, ctx: Interaction) -> None:
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
+
+        embed = Embed(title="Custom Role", timestamp=ctx.created_at)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
+        embed.set_image(url=WHITE_BAR)
+
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Custom Role")
         if not self.name.value and self.role:
             await self.role.delete()
+            embed.title = "Custom Role - Removed"
+            embed.color = self.role.color
+            embed.description = self.role.name
+            embed.set_thumbnail(url=self.role.icon)
             await db.delete_one({"id": self.role.id})
         elif name := self.name.value:
             color = Colour.from_str(self.color.value) if self.color else Colour.default()
@@ -90,6 +101,10 @@ class CustomRoleModal(Modal, title="Custom Role"):
             else:
                 await role.edit(name=name, color=color, display_icon=icon_data)
 
+            embed.color = role.color
+            embed.description = role.name
+            embed.set_thumbnail(url=role.icon)
+
             if role not in ctx.user.roles:
                 await ctx.user.add_roles(role)
 
@@ -100,7 +115,16 @@ class CustomRoleModal(Modal, title="Custom Role"):
             )
             self.role = role
 
-        await ctx.followup.send("Changes were saved.", ephemeral=True)
+        w: Webhook = await ctx.client.webhook(1001125143071965204)
+
+        await w.send(
+            embed=embed,
+            thread=Object(id=1001125679405993985),
+            username=ctx.user.display_name,
+            avatar_url=ctx.user.display_avatar.url,
+        )
+
+        await ctx.followup.send(embed=embed, ephemeral=True)
         self.stop()
 
 
@@ -141,7 +165,14 @@ class RPSearchBannerPerk(Perk):
             file = MISSING
 
         embed.set_image(url=url)
-        m = await w.send(embed=embed, file=file, thread=Object(id=1001125679405993985), wait=True)
+        m = await w.send(
+            embed=embed,
+            file=file,
+            thread=Object(id=1001125679405993985),
+            wait=True,
+            username=ctx.user.display_name,
+            avatar_url=ctx.user.display_avatar.url,
+        )
         image = m.embeds[0].image.url
         embed.set_image(url=image)
         await db.replace_one(key, key | {"image": image}, upsert=True)
@@ -167,7 +198,14 @@ class OCBackgroundPerk(Perk):
             file = MISSING
 
         embed.set_image(url=url)
-        m = await w.send(embed=embed, file=file, thread=Object(id=1001125679405993985), wait=True)
+        m = await w.send(
+            embed=embed,
+            file=file,
+            thread=Object(id=1001125679405993985),
+            wait=True,
+            username=ctx.user.display_name,
+            avatar_url=ctx.user.display_avatar.url,
+        )
         image = m.embeds[0].image.url
         embed.set_image(url=image)
         await db.replace_one(key, key | {"image": image}, upsert=True)
