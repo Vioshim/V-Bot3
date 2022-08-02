@@ -400,6 +400,9 @@ class MovesetField(TemplateField):
             description=description,
         ) as choices:
             oc.moveset = frozenset(choices)
+            if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
+                oc.movepool = Movepool(tutor=oc.moveset.copy())
+                progress.add("Movepool")
             progress.add(self.name)
 
 
@@ -408,21 +411,7 @@ class MovepoolField(TemplateField):
     description = "Optional. Fill the OC's movepool"
 
     def evaluate(self, oc: Character) -> bool:
-        species = oc.species
-        mon = Pokemon.from_ID("SMEARGLE")
-
-        if isinstance(species, Fusion):
-            condition = mon in species.bases
-        elif isinstance(species, Variant):
-            condition = mon == species.base
-        else:
-            condition = False
-
-        moves = oc.movepool()
-        value = all(not x.banned for x in moves)
-        if not condition:
-            value &= all(x in moves for x in oc.moveset)
-        return value
+        return all(not x.banned for x in oc.movepool())
 
     def check(self, oc: Character) -> bool:
         return isinstance(oc.species, (Fakemon, Variant))
