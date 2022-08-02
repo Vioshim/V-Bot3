@@ -177,7 +177,7 @@ class PronounField(TemplateField):
 
     async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
         default = getattr(oc.pronoun, "name", "Them")
-        view: Complex[Pronoun] = Complex(
+        view = Complex[Pronoun](
             member=ctx.user,
             target=ctx,
             timeout=None,
