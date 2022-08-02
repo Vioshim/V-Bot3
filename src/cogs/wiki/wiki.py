@@ -115,7 +115,8 @@ class WikiEntry:
     ):
         self.add_node(WikiEntry(path, content, embeds, order))
 
-    def add_node(self, node: WikiEntry | list[str] | str | dict[str, Any]):
+    @classmethod
+    def from_data(cls, node: WikiEntry | list[str] | str | dict[str, Any]):
         if isinstance(node, list):
             node = "/".join(node)
         if isinstance(node, str):
@@ -123,7 +124,11 @@ class WikiEntry:
         if isinstance(node, dict):
             node.pop("_id", None)
             node = WikiEntry(**node)
+        return node
 
+    def add_node(self, node: WikiEntry | list[str] | str | dict[str, Any]):
+        if not isinstance(node, WikiEntry):
+            node = self.from_data(node)
         aux = self
         path = node.path.removeprefix("/")
 
@@ -173,9 +178,8 @@ class WikiEntry:
     def from_list(cls, nodes: list[WikiEntry]):
         result = cls()
 
-        if isinstance(nodes, list):
-            nodes = sorted(nodes, key=lambda x: x.order)
-
+        nodes = [cls.from_data(x) for x in nodes]
+        nodes.sort(key=lambda x: x.order)
         for item in nodes:
             result.add_node(item)
         return result
