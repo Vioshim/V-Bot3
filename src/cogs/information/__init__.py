@@ -325,7 +325,7 @@ class Information(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Booster")
-    async def perks(self, ctx: Interaction, perk: CustomPerks, icon: Attachment):
+    async def perks(self, ctx: Interaction, perk: CustomPerks, icon: Optional[Attachment] = None):
         """Custom Functions for Supporters!
 
         Parameters
