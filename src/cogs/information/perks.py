@@ -131,7 +131,7 @@ class RPSearchBannerPerk(Perk):
         key = {"author": ctx.user.id}
         embed = Embed(title="RP Search Banner", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        w: Webhook = await ctx.webhook(1001125143071965204)
+        w: Webhook = await ctx.client.webhook(1001125143071965204)
 
         if img:
             url = f"attachment://{img.filename}"
@@ -157,7 +157,7 @@ class OCBackgroundPerk(Perk):
         key = {"author": ctx.user.id}
         embed = Embed(title="OC Background", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        w: Webhook = await ctx.webhook(1001125143071965204)
+        w: Webhook = await ctx.client.webhook(1001125143071965204)
 
         if img:
             url = f"attachment://{img.filename}"
