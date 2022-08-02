@@ -167,10 +167,14 @@ class OCBackgroundPerk(Perk):
         await db.replace_one(key, key | {"image": image}, upsert=True)
 
 
+PERKS: dict[int, Perk] = {1: CustomRolePerk, 2: RPSearchBannerPerk, 3: OCBackgroundPerk}
+
+
 class CustomPerks(Enum):
-    Custom_Role = CustomRolePerk()
-    RP_Search_Banner = RPSearchBannerPerk()
-    OC_Background = OCBackgroundPerk()
+    Custom_Role = 1
+    RP_Search_Banner = 2
+    OC_Background = 3
 
     async def method(self, ctx: Interaction, img: Optional[Attachment] = None):
-        await self.value.method(ctx, img)
+        if perk := PERKS.get(self.value):
+            await perk.method(ctx, img)
