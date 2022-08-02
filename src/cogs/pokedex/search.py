@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import groupby
 from typing import Callable, Iterable, Optional
@@ -125,14 +125,12 @@ def age_parser(text: str, oc: Character):
 
 
 class MoveTransformer(Transformer):
-    @classmethod
     async def transform(cls, _: Interaction, value: Optional[str]):
-        move = Move.from_ID(value)
+        move = Move.deduce(value)
         if not move:
             raise ValueError(f"Move {value!r} Not found.")
         return move
 
-    @classmethod
     async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Move.all())
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
@@ -146,8 +144,7 @@ MoveArg = Transform[Move, MoveTransformer]
 
 
 class SpeciesTransformer(Transformer):
-    @classmethod
-    async def transform(cls, ctx: Interaction, value: Optional[str]):
+    async def transform(self, ctx: Interaction, value: Optional[str]):
         value = value or ""
         cog = ctx.client.get_cog("Submission")
         if value.isdigit() and (oc := cog.ocs.get(int(value))):
@@ -157,8 +154,7 @@ class SpeciesTransformer(Transformer):
             raise ValueError(f"Species {value!r} not found")
         return mon
 
-    @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         cog = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
         mons = cog.ocs.values()
@@ -202,15 +198,13 @@ class SpeciesTransformer(Transformer):
 
 
 class DefaultSpeciesTransformer(Transformer):
-    @classmethod
-    async def transform(cls, _: Interaction, value: Optional[str]):
+    async def transform(self, _: Interaction, value: Optional[str]):
         item = Species.single_deduce(value)
         if not item:
             raise ValueError(f"Species {value!r} not found")
         return item
 
-    @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         items = list(Species.all())
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
             cog = ctx.client.get_cog("Submission")
@@ -233,15 +227,13 @@ DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
 
 
 class AbilityTransformer(Transformer):
-    @classmethod
-    async def transform(cls, _: Interaction, value: Optional[str]):
+    async def transform(self, _: Interaction, value: Optional[str]):
         item = Ability.from_ID(value)
         if not item:
             raise ValueError(f"Ability {item!r} not found")
         return item
 
-    @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Ability.all())
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
@@ -254,15 +246,13 @@ AbilityArg = Transform[Ability, AbilityTransformer]
 
 
 class TypingTransformer(Transformer):
-    @classmethod
-    async def transform(cls, _: Interaction, value: Optional[str]):
-        item = Typing.from_ID(value)
+    async def transform(self, _: Interaction, value: Optional[str]):
+        item = Typing.deduce(value)
         if not item:
             raise ValueError(f"Typing {item!r} not found")
         return item
 
-    @classmethod
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Typing.all())
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
@@ -275,7 +265,6 @@ TypingArg = Transform[Typing, TypingTransformer]
 
 
 class FakemonTransformer(Transformer):
-    @classmethod
     async def transform(cls, ctx: Interaction, value: Optional[str]):
         cog = ctx.client.get_cog("Submission")
         oc: Optional[Character] = None
@@ -287,7 +276,6 @@ class FakemonTransformer(Transformer):
             raise ValueError(f"Fakemon {value!r} not found.")
         return oc
 
-    @classmethod
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         guild: Guild = ctx.guild
         cog = ctx.client.get_cog("Submission")
@@ -328,7 +316,8 @@ class GroupByComplex(Complex[str]):
 
 
 class OCGroupBy(ABC):
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]) -> dict[str, frozenset[Character]]:
         """Abstract method for grouping
 

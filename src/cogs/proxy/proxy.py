@@ -38,8 +38,7 @@ API = URL.build(scheme="https", host="randomuser.me", path="/api")
 
 
 class Proxy(Transformer):
-    @classmethod
-    async def transform(cls, _: Interaction, value: Optional[str]):
+    async def transform(self, _: Interaction, value: Optional[str]):
         """If a name is found, this function titlecases it and returns it.
 
         Parameters
@@ -57,8 +56,7 @@ class Proxy(Transformer):
         if value:
             return value.title()
 
-    @classmethod
-    async def autocomplete(cls, ctx: Interaction, _: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, _: str) -> list[Choice[str]]:
         """This function returns a list of choices for the autocomplete.
 
         Parameters

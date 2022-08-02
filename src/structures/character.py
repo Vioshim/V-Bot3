@@ -830,8 +830,7 @@ class Character:
 
 
 class CharacterTransform(Transformer):
-    @classmethod
-    async def transform(cls, interaction: Interaction, value: str):
+    async def transform(self, interaction: Interaction, value: str):
         cog = interaction.client.get_cog("Submission")
         if not (member := interaction.namespace.member):
             member = interaction.user
@@ -847,8 +846,7 @@ class CharacterTransform(Transformer):
             ):
                 return options[0]
 
-    @classmethod
-    async def autocomplete(cls, interaction: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, interaction: Interaction, value: str) -> list[Choice[str]]:
         if not (member := interaction.namespace.member):
             member = interaction.user
         cog = interaction.client.get_cog("Submission")

@@ -182,8 +182,7 @@ class WikiEntry:
 
 
 class WikiTransformer(Transformer):
-    @classmethod
-    async def transform(cls, ctx: Interaction, value: str):
+    async def transform(self, ctx: Interaction, value: str):
         bot: CustomBot = ctx.client
         entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
@@ -191,8 +190,7 @@ class WikiTransformer(Transformer):
 
 
 class WikiTreeTransformer(WikiTransformer):
-    @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         bot: CustomBot = ctx.client
         entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
@@ -208,8 +206,7 @@ class WikiTreeTransformer(WikiTransformer):
 
 
 class WikiNodeTransformer(WikiTransformer):
-    @classmethod
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         bot: CustomBot = ctx.client
         entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
