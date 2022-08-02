@@ -42,7 +42,7 @@ class Perk(ABC):
 
 
 class CustomRoleModal(Modal, title="Custom Role"):
-    name = TextInput(label="Name (Empty to Remove)", max_length=100)
+    name = TextInput(label="Name (Empty to Remove)", max_length=100, required=False)
     color = TextInput(label="Color", max_length=7, min_length=7, placeholder="#000000")
 
     def __init__(self, role: Optional[Role] = None, icon: Optional[Attachment] = None) -> None:
@@ -51,6 +51,8 @@ class CustomRoleModal(Modal, title="Custom Role"):
         if role:
             self.name.default = role.name
             self.color.default = str(role.color)
+        else:
+            self.color.default = str(Colour.random())
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -87,6 +89,9 @@ class CustomRoleModal(Modal, title="Custom Role"):
                 await role.edit(position=AFK.position - 1)
             else:
                 await role.edit(name=name, color=color, display_icon=icon_data)
+
+            if role not in ctx.user.roles:
+                await ctx.user.add_roles(role)
 
             await db.replace_one(
                 {"author": ctx.user.id},
