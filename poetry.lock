@@ -1408,7 +1408,7 @@ requests = "*"
 
 [[package]]
 name = "yarl"
-version = "1.8.0"
+version = "1.8.1"
 description = "Yet another URL library"
 category = "main"
 optional = false
