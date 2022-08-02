@@ -337,7 +337,11 @@ class Information(commands.Cog):
         icon : Attachment
             Image File
         """
-        await perk.method(ctx, icon)
+        resp: InteractionResponse = ctx.response
+        if not icon or icon.content_type.startswith("image"):
+            await perk.method(ctx, icon)
+        else:
+            await resp.send_message("Invalid Image", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):

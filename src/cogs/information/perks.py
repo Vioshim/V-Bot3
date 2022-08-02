@@ -130,7 +130,7 @@ class RPSearchBannerPerk(Perk):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search Banner")
         key = {"author": ctx.user.id}
         embed = Embed(title="RP Search Banner", color=ctx.user.color, timestamp=ctx.created_at)
-        embed.set_footer(name=ctx.guild.name, icon_url=ctx.guild.icon)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
         w: Webhook = await ctx.webhook(1001125143071965204)
 
         if img:
@@ -145,6 +145,7 @@ class RPSearchBannerPerk(Perk):
         image = m.embeds[0].image.url
         embed.set_image(url=image)
         await db.replace_one(key, key | {"image": image}, upsert=True)
+        await ctx.followup.send(embed=embed, ephemeral=True)
 
 
 class OCBackgroundPerk(Perk):
@@ -155,7 +156,7 @@ class OCBackgroundPerk(Perk):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Background")
         key = {"author": ctx.user.id}
         embed = Embed(title="OC Background", color=ctx.user.color, timestamp=ctx.created_at)
-        embed.set_footer(name=ctx.guild.name, icon_url=ctx.guild.icon)
+        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
         w: Webhook = await ctx.webhook(1001125143071965204)
 
         if img:
@@ -170,6 +171,7 @@ class OCBackgroundPerk(Perk):
         image = m.embeds[0].image.url
         embed.set_image(url=image)
         await db.replace_one(key, key | {"image": image}, upsert=True)
+        await ctx.followup.send(embed=embed, ephemeral=True)
 
 
 class CustomPerks(Enum):
