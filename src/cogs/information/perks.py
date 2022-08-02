@@ -37,7 +37,7 @@ __all__ = ("CustomPerks",)
 class Perk(ABC):
     @classmethod
     @abstractmethod
-    async def method(cls, ctx: Interaction):
+    async def method(cls, ctx: Interaction, msg: Optional[Attachment] = None):
         "Method that uses the interaction"
 
 
@@ -167,14 +167,10 @@ class OCBackgroundPerk(Perk):
         await db.replace_one(key, key | {"image": image}, upsert=True)
 
 
-PERKS: dict[int, Perk] = {1: CustomRolePerk, 2: RPSearchBannerPerk, 3: OCBackgroundPerk}
-
-
 class CustomPerks(Enum):
-    Custom_Role = 1
-    RP_Search_Banner = 2
-    OC_Background = 3
+    Custom_Role = CustomRolePerk
+    RP_Search_Banner = RPSearchBannerPerk
+    OC_Background = OCBackgroundPerk
 
     async def method(self, ctx: Interaction, img: Optional[Attachment] = None):
-        if perk := PERKS.get(self.value):
-            await perk.method(ctx, img)
+        await self.value.method(ctx, img)
