@@ -18,7 +18,7 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from random import sample
 from re import match as re_match
-from typing import Any, Optional, Type
+from typing import Any, Iterable, Optional, Type
 
 from asyncpg import Connection
 from discord import Color, Embed, File, Interaction
@@ -45,7 +45,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.functions import common_pop_get, int_check
-from src.utils.imagekit import ImageKit
+from src.utils.imagekit import Fonts, ImageKit
 
 __all__ = ("Character", "CharacterArg", "Kind")
 
@@ -459,8 +459,7 @@ class Character:
 
         return c_embed
 
-    @property
-    def generated_image(self) -> Optional[str]:
+    def generated_image(self, background: Optional[str] = None) -> Optional[str]:
         """Generated Image
 
         Returns
@@ -471,13 +470,50 @@ class Character:
         if isinstance(image := self.image, int):
             return self.image_url
         if image := image or self.default_image:
-            kit = ImageKit(base="background_Y8q8PAtEV.png", width=900)
-            kit.add_image(image=image, height=400)
+            kit = ImageKit(base=background or "background_Y8q8PAtEV.png", width=900, height=450)
+            kit.add_image(image=image, height=400, width=400)
             if icon := self.pronoun.image:
-                kit.add_image(image=icon, x=-10, y=-10)
+                kit.add_image(image=icon, x=-10, y=-10, height=120, width=120)
             for index, item in enumerate(self.types):
                 kit.add_image(image=item.icon, width=200, height=44, x=-10, y=44 * index + 10)
             return kit.url
+
+    @classmethod
+    def collage(cls, ocs: Iterable[Character], background: Optional[str] = None, font: bool = True):
+        items = list(ocs)
+        kit = ImageKit(base=background or "OC_list_9a1DZPDet.png", width=1500, height=1000)
+        for index, oc in enumerate(items[:6]):
+            x = 500 * (index % 3) + 25
+            y = 500 * (index // 3) + 25
+            kit.add_image(
+                image=oc.image_url,
+                height=450,
+                width=450,
+                x=x,
+                y=y,
+            )
+            for idx, item in enumerate(oc.types):
+                kit.add_image(
+                    image=item.icon,
+                    width=200,
+                    height=44,
+                    x=250 + x,
+                    y=y + 44 * idx,
+                )
+            if font:
+                kit.add_text(
+                    text=oc.name,
+                    width=330,
+                    x=x,
+                    y=y + 400,
+                    background=0xFFFFFF,
+                    background_transparency=70,
+                    font=Fonts.Whitney_Black,
+                    font_size=36,
+                )
+            if oc.pronoun.image:
+                kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
+        return kit.url
 
     async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:
         """Method for updating data in database

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from collections import OrderedDict
+
 from datetime import datetime
 from difflib import get_close_matches
 from logging import getLogger, setLoggerClass
@@ -44,7 +44,6 @@ from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
-from src.utils.imagekit import Fonts, ImageKit
 from src.views.characters_view import CharactersView
 
 setLoggerClass(ColoredLogger)
@@ -426,39 +425,12 @@ class RPModal(Modal):
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         if not items:
             items = sorted(self.ocs, key=lambda x: x.name)
-        items = list(OrderedDict.fromkeys(items))
-        kit = ImageKit(base="OC_list_9a1DZPDet.png", width=1500, height=1000)
-        for index, oc in enumerate(items[:6]):
-            x = 500 * (index % 3) + 25
-            y = 500 * (index // 3) + 25
-            kit.add_image(
-                image=oc.image_url,
-                height=450,
-                width=450,
-                x=x,
-                y=y,
-            )
-            for idx, item in enumerate(oc.types):
-                kit.add_image(
-                    image=item.icon,
-                    width=200,
-                    height=44,
-                    x=250 + x,
-                    y=y + 44 * idx,
-                )
-            kit.add_text(
-                text=oc.name,
-                width=330,
-                x=x,
-                y=y + 400,
-                background=0xFFFFFF,
-                background_transparency=70,
-                font=Fonts.Whitney_Black,
-                font_size=36,
-            )
-            if oc.pronoun.image:
-                kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
-        file: File = await interaction.client.get_file(kit.url)
+
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
+        if img := db.find_one({"author": self.user.id}):
+            img = img["image"]
+
+        file: File = await interaction.client.get_file(Character.collage(items, background=img))
         embed.set_image(url=f"attachment://{file.filename}")
         reference = self.role
         name = f"{self.role.name} - {self.user.display_name}"

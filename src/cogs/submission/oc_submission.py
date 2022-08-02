@@ -32,6 +32,7 @@ from discord import (
 )
 from discord.ui import Button, Select, TextInput, button, select
 from discord.utils import MISSING
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
@@ -551,7 +552,10 @@ class ImageField(TemplateField):
                 progress.add(self.name)
 
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
-            oc.image = await ctx.client.get_file(oc.generated_image)
+            db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Background")
+            if img := await db.find_one({"author": oc.author}):
+                img: str = img["image"]
+            oc.image = await ctx.client.get_file(oc.generated_image(img))
 
         return None
 

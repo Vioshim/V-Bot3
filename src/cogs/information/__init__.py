@@ -18,7 +18,6 @@ from os import getenv
 from typing import Optional
 
 from aiohttp import ClientResponseError
-from colour import Color
 from discord import (
     AllowedMentions,
     Attachment,
@@ -39,7 +38,6 @@ from discord import (
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     RawReactionActionEvent,
-    Role,
     SelectOption,
     TextStyle,
     Thread,
@@ -53,6 +51,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from yaml import dump
 
 from src.cogs.information.area_selection import RegionViewComplex
+from src.cogs.information.perks import CustomPerks
 from src.cogs.wiki.wiki import WikiEntry
 from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
@@ -326,79 +325,19 @@ class Information(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Booster")
-    async def custom_role(
-        self,
-        ctx: Interaction,
-        name: Optional[str],
-        color: Optional[str],
-        icon: Optional[Attachment],
-    ):
-        """Create custom roles (no info deletes them)
+    async def perks(self, ctx: Interaction, perk: CustomPerks, icon: Attachment):
+        """Custom Functions for Supporters!
 
         Parameters
         ----------
         ctx : Interaction
             Interaction
-        name : Option, optional
-            Role Name
-        color : Option, optional
-            Name or Hex color
-        icon : Option, optional
-            Valid Role Icon
+        perk : Perks
+            Perk to Use
+        icon : Attachment
+            Image File
         """
-        resp: InteractionResponse = ctx.response
-        guild: Guild = ctx.guild
-
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
-        await resp.defer(ephemeral=True, thinking=True)
-
-        AFK = get(guild.roles, name="AFK")
-        BOOSTER = guild.premium_subscriber_role
-
-        if not (AFK and BOOSTER):
-            await ctx.followup.send("No function set here", ephemeral=True)
-            return
-
-        role = find(lambda x: BOOSTER < x < AFK and ctx.user in x.members, guild.roles)
-
-        if role or name:
-            if not role:
-                guild: Guild = ctx.guild
-                try:
-                    role: Role = await guild.create_role(name=name)
-                    await role.edit(position=AFK.position - 1)
-                    await ctx.user.add_roles(role)
-                except DiscordException as e:
-                    await ctx.followup.send(str(e), ephemeral=True)
-                    return
-            elif not (name or color or icon):
-                try:
-                    await role.delete()
-                except DiscordException as e:
-                    await ctx.followup.send(str(e), ephemeral=True)
-                else:
-                    await ctx.followup.send("Role deleted", ephemeral=True)
-                return
-
-            if isinstance(color, str):
-                try:
-                    data = Color(color)
-                    await role.edit(colour=int(data.hex[1:], base=16))
-                except ValueError:
-                    await ctx.followup.send("Invalid color", ephemeral=True)
-                except DiscordException:
-                    await ctx.followup.send("Invalid color for discord", ephemeral=True)
-            if isinstance(icon, Attachment):
-                try:
-                    data = await icon.read()
-                    await role.edit(display_icon=data)
-                except DiscordException:
-                    await ctx.followup.send("Invalid icon for discord", ephemeral=True)
-            if not ctx.response.is_done():
-                await ctx.followup.send("Role added/modified.", ephemeral=True)
-        else:
-            await ctx.followup.send("You have to provide a name for the role", ephemeral=True)
+        await perk.method(ctx, icon)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
@@ -476,14 +415,15 @@ class Information(commands.Cog):
                 )
             )
 
-        AFK = get(roles, name="AFK")
-        BOOSTER = find(lambda x: x.is_premium_subscriber(), roles)
+        db = self.bot.mongo_db("Custom Role")
+        if data := await db.find_one({"author": member.id}):
+            if role := get(member.guild.roles, id=data["id"]):
+                try:
+                    await role.delete(reason="User left")
+                except DiscordException:
+                    pass
 
-        if (AFK and BOOSTER) and (role := find(lambda x: BOOSTER < x < AFK and member in x.members, roles)):
-            try:
-                await role.delete(reason="User Left")
-            except DiscordException:
-                pass
+            await db.delete_one(data)
 
         asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(asset.url, filename=str(member.id)):
@@ -547,25 +487,22 @@ class Information(commands.Cog):
                 timestamp=utcnow(),
             )
 
-            AFK = get(now.guild.roles, name="AFK")
-            BOOSTER = find(lambda x: x.is_premium_subscriber(), now.guild.roles)
+            db = self.bot.mongo_db("Custom Role")
+            if data := await db.find_one({"author": now.id}):
+                if role := get(now.guild.roles, id=data["id"]):
+                    try:
+                        await role.delete(reason="User unboosted")
+                    except DiscordException:
+                        pass
 
-            if (AFK and BOOSTER) and (
-                role := find(
-                    lambda x: BOOSTER < x < AFK and now in x.members and len(x.members) == 1,
-                    now.guild.roles,
-                )
-            ):
-                try:
-                    await role.delete(reason="User Left")
-                except DiscordException:
-                    pass
+                await db.delete_one(data)
         else:
             embed = Embed(
                 title="Has boosted the Server!",
                 colour=Colour.brand_green(),
                 timestamp=utcnow(),
             )
+
         embed.set_image(url=WHITE_BAR)
         asset = now.display_avatar.replace(format="png", size=4096)
         embed.set_thumbnail(url=asset.url)

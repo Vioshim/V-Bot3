@@ -19,8 +19,8 @@ from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar
 
 from discord import (
+    Asset,
     ButtonStyle,
-    DiscordException,
     File,
     HTTPException,
     Interaction,
@@ -57,12 +57,15 @@ def check(ctx: Interaction):
 
 
 class ImageView(Basic):
-    def __init__(self, member: Member | User, target: _M, default_img: File | str = None):
+    def __init__(self, member: Member | User, target: _M, default_img: File | str | Asset = None):
         super(ImageView, self).__init__(member=member, target=target, timeout=None)
         if isinstance(default_img, str):
             self.embed.set_image(url=default_img)
         elif isinstance(default_img, File):
             self.embed.set_image(url=f"attachment://{default_img.filename}")
+        elif isinstance(default_img, Asset):
+            self.embed.set_image(url=default_img.url)
+
         self.embed.title = "Image"
         self.received: Optional[Message] = None
         self.text: Optional[str] = default_img
@@ -110,24 +113,15 @@ class ImageView(Basic):
         if attachments := received.attachments:
             self.text = attachments[0].proxy_url
             self.received = received
-            try:
-                await received.delete()
-            except DiscordException:
-                pass
+            await received.delete(delay=0)
         elif file := await ctx.client.get_file(
             url=received.content,
             filename="image",
         ):
-            try:
-                await received.delete()
-            except DiscordException:
-                pass
+            await received.delete(delay=0)
             self.received = foo = await ctx.channel.send(file=file)
             self.text = self.received.attachments[0].proxy_url
-            try:
-                await foo.delete()
-            except DiscordException:
-                pass
+            await foo.delete(delay=0)
         elif image := self.message.embeds[0].image:
             self.text = image.url
         else:

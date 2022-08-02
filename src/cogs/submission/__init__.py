@@ -50,7 +50,6 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
-from src.utils.imagekit import Fonts, ImageKit
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 from src.views.rp_view import RPView
@@ -236,7 +235,13 @@ class Submission(commands.Cog):
             )
 
             if not oc.image_url:
-                image = oc.image if image_as_is else oc.generated_image
+                if image_as_is:
+                    image = oc.image
+                else:
+                    db = self.bot.mongo_db("OC Background")
+                    if img := await db.find_one({"author": oc.author}):
+                        img: str = img["image"]
+                    image = oc.generated_image(img)
                 if file := await self.bot.get_file(url=image, filename="image"):
                     word = "attachments" if oc.id else "files"
                     kwargs[word] = [file]
@@ -598,39 +603,7 @@ class Submission(commands.Cog):
     async def oc_image(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with ctx.typing():
             ocs = [self.ocs[x] for x in oc_ids if x in self.ocs]
-            kit = ImageKit(base="OC_list_9a1DZPDet.png", width=1500, height=1000)
-            for index, oc in enumerate(ocs[:6]):
-                x = 500 * (index % 3) + 25
-                y = 500 * (index // 3) + 25
-                kit.add_image(
-                    image=oc.image_url,
-                    height=450,
-                    width=450,
-                    x=x,
-                    y=y,
-                )
-                for idx, item in enumerate(oc.types):
-                    kit.add_image(
-                        image=item.icon,
-                        width=200,
-                        height=44,
-                        x=250 + x,
-                        y=y + 44 * idx,
-                    )
-                if font:
-                    kit.add_text(
-                        text=oc.name,
-                        width=330,
-                        x=x,
-                        y=y + 400,
-                        background=0xFFFFFF,
-                        background_transparency=70,
-                        font=Fonts.Whitney_Black,
-                        font_size=36,
-                    )
-                if oc.pronoun.image:
-                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
-            file = await self.bot.get_file(kit.url)
+            file = await self.bot.get_file(Character.collage(ocs, font=font))
             await ctx.reply(file=file)
 
     @app_commands.command(name="ocs")
