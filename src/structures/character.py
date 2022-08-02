@@ -470,7 +470,9 @@ class Character:
         if isinstance(image := self.image, int):
             return self.image_url
         if image := image or self.default_image:
-            kit = ImageKit(base=background or "background_Y8q8PAtEV.png", width=900, height=450)
+            if not background:
+                background = "background_Y8q8PAtEV.png"
+            kit = ImageKit(base=background, width=900, height=450)
             kit.add_image(image=image, height=400, width=400)
             if icon := self.pronoun.image:
                 kit.add_image(image=icon, x=-10, y=-10, height=120, width=120)
