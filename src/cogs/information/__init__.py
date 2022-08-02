@@ -684,7 +684,8 @@ class Information(commands.Cog):
                 and message.author != payload.member
                 and bool(channel.permissions_for(everyone).add_reactions)
                 and channel.category_id not in DISABLED_CATEGORIES
-                and not bool(message.embeds if message.webhook_id else message.author.bot)
+                and not any(x.type == "rich" for x in message.embeds)
+                and (not message.author.bot or message.webhook_id)
             ):
                 match payload.event_type:
                     case "REACTION_ADD":
