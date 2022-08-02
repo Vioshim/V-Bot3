@@ -95,7 +95,7 @@ GIPHY_URL = "https://api.giphy.com/v1/gifs"
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
 WEATHER_API = getenv("WEATHER_API")
-STARS_AMOUNT = 5
+STARS_AMOUNT = 3
 
 
 PING_ROLES = {
@@ -681,17 +681,17 @@ class Information(commands.Cog):
                 not message.is_system()
                 and channel.category_id is not None
                 and message.author != self.bot.user
+                and message.author != payload.member
                 and bool(channel.permissions_for(everyone).add_reactions)
                 and channel.category_id not in DISABLED_CATEGORIES
                 and not bool(message.embeds if message.webhook_id else message.author.bot)
-                and bool(count := len([x async for x in reaction.users(limit=None) if x != message.author]))
             ):
                 match payload.event_type:
                     case "REACTION_ADD":
-                        if count >= STARS_AMOUNT and not message.pinned:
+                        if reaction.count >= STARS_AMOUNT and not message.pinned:
                             await message.pin()
                     case "REACTION_REMOVE":
-                        if count < STARS_AMOUNT and message.pinned:
+                        if reaction.count < STARS_AMOUNT and message.pinned:
                             await message.unpin()
             else:
                 await reaction.remove(payload.member)
