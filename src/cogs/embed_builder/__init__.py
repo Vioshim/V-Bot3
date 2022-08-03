@@ -79,8 +79,7 @@ class EmbedBuilder(commands.Cog):
 
     async def webhook_send(self, message: Message, **kwargs):
         webhook = await self.bot.webhook(message.channel)
-        if not isinstance(thread := message.channel, Thread):
-            thread = MISSING
+        thread = message.channel if isinstance(message.channel, Thread) else MISSING
 
         await webhook.send(allowed_mentions=AllowedMentions.none(), thread=thread, **kwargs)
         await message.delete(delay=0)
@@ -260,8 +259,7 @@ class EmbedBuilder(commands.Cog):
                     if message.author == self.bot.user or isinstance(message, WebhookMessage):
                         await message.edit(**kwargs)
                     elif w := await self.bot.webhook(ctx.channel):
-                        if not isinstance(thread := ctx.channel, Thread):
-                            thread = MISSING
+                        thread = ctx.channel if isinstance(ctx.channel, Thread) else MISSING
                         message = await w.edit_message(message.id, thread=thread, **kwargs)
                         await self.write(message, ctx.author)
                 except DiscordException as e:
@@ -329,7 +327,7 @@ class EmbedBuilder(commands.Cog):
         webhook = await self.bot.webhook(ctx.channel, reason="Created by Embed Builder")
         author: Member = ctx.author
 
-        thread = ctx.channel if isinstance(ctx.channel) else MISSING
+        thread = ctx.channel if isinstance(ctx.channel, Thread) else MISSING
         attachments = [attachment] if attachment else ctx.message.attachments
         if len(images := [x for x in attachments if x.content_type.startswith("image/")]) == 1:
             embed.set_image(url=f"attachment://{images[0].filename}")
@@ -389,7 +387,7 @@ class EmbedBuilder(commands.Cog):
                         ephemeral=True,
                     )
                 else:
-                    thread = message.channel if isinstance(message.channel) else MISSING
+                    thread = message.channel if isinstance(message.channel, Thread) else MISSING
                     message: WebhookMessage = await webhook.fetch_message(message.id, thread=thread)
                     await self.write(message, ctx.author)
                     await ctx.reply(
@@ -423,7 +421,7 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx) as embed:
             webhook = await self.bot.webhook(ctx.channel)
 
-            thread = ctx.channel if isinstance(ctx.channel) else MISSING
+            thread = ctx.channel if isinstance(ctx.channel, Thread) else MISSING
             message: Optional[WebhookMessage | Message] = None
             if reference := ctx.message.reference:
                 if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
@@ -465,7 +463,7 @@ class EmbedBuilder(commands.Cog):
             files, embed_aux = await self.bot.embed_raw(embed)
             webhook = await self.bot.webhook(ctx.channel)
 
-            thread = ctx.channel if isinstance(ctx.channel) else MISSING
+            thread = ctx.channel if isinstance(ctx.channel, Thread) else MISSING
             message: Optional[WebhookMessage | Message] = None
             if reference := ctx.message.reference:
                 if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
