@@ -134,15 +134,10 @@ class Inviter(commands.Cog):
             guild = channel.guild
             self.view = InviterView()
             self.view.group_method(messages)
-            embed = Embed(
-                title="Partnership Rules",
-                description=channel.topic,
-                color=Color.blurple(),
-            )
+            embed = Embed(title="Partnership Rules", description=channel.topic, color=Color.blurple())
             embed.set_footer(text=guild.name, icon_url=guild.icon)
-            embed.set_image(
-                url="https://cdn.discordapp.com/attachments/748384705098940426/980649464622628915/partner.png"
-            )
+            embed.set_thumbnail(url=guild.icon)
+            embed.set_image(url="https://dummyimage.com/500x5/FFFFFF/000000&text=%20")
             msg = self.message
             if not msg or messages[-1].created_at > msg.created_at:
                 if msg:
@@ -151,7 +146,6 @@ class Inviter(commands.Cog):
             else:
                 msg = await self.message.edit(embed=embed, view=self.view)
             self.message = msg
-
             self.ready = True
 
     @commands.Cog.listener()

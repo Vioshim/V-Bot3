@@ -680,7 +680,6 @@ class Information(commands.Cog):
     async def embed_info(self, message: Message):
         embed = Embed(title="Message", description=message.content, color=Colour.blurple(), timestamp=utcnow())
         embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
         files = []
         embeds: list[Embed] = [embed]
 
@@ -769,8 +768,11 @@ class Information(commands.Cog):
         if message.author.bot and "〕" not in username:
             username = f"Bot〕{username}"
 
+        embeds = embeds[:10]
+        embeds[-1].set_footer(text=message.guild.name, icon_url=message.guild.icon)
+
         return dict(
-            embeds=embeds[:10],
+            embeds=embeds,
             files=files,
             view=view,
             username=username,
