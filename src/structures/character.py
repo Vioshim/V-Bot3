@@ -509,7 +509,7 @@ class Character:
                 if oc.pronoun.image:
                     kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
             else:
-                kit.add_image(image="gray-canvas_nE3fFFz9h.png", height=450, width=450, x=x, y=y)
+                kit.add_image(image="placeholder_uSDglnt-E.png", height=450, width=450, x=x, y=y)
         return kit.url
 
     async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:
