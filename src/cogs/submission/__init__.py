@@ -454,8 +454,7 @@ class Submission(commands.Cog):
     async def load_saved_submssions(self):
         db = self.bot.mongo_db("OC Creation")
         channel = self.bot.get_channel(852180971985043466)
-
-        async for data in db.find({}):
+        for data in await db.find({}).to_list(length=None):
             msg_id, template, author, character, progress = (
                 data["id"],
                 data["template"],
