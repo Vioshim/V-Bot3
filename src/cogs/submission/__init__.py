@@ -115,6 +115,7 @@ class Submission(commands.Cog):
         self.ocs: dict[int, Character] = {}
         self.oc_list: dict[int, int] = {}
         self.supporting: dict[Member, Member] = {}
+        self.backup: dict[Member, CreationOCView] = {}
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
@@ -332,6 +333,7 @@ class Submission(commands.Cog):
             author = self.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
                 view = CreationOCView(bot=self.bot, ctx=message, user=author, oc=oc)
+                self.backup[author] = view
                 if isinstance(message, Message):
                     await message.delete(delay=0)
                 await view.send()
@@ -469,20 +471,22 @@ class Submission(commands.Cog):
             try:
                 message = await channel.fetch_message(msg_id)
             except NotFound:
-                await db.delete_one(data)
+                message = await channel.send(member.mention, allowed_mentions=AllowedMentions(users=True))
+                await db.replace_one(data, data | {"id": message.id})
             else:
                 if not character.image_url and (image := message.embeds[0].image):
                     character.image_url = image.url
 
-                view = CreationOCView(
-                    bot=self.bot,
-                    ctx=message,
-                    user=member,
-                    oc=character,
-                    template=template,
-                    progress=progress,
-                )
-                view.message = await message.edit(view=view, embed=view.embed)
+            view = CreationOCView(
+                bot=self.bot,
+                ctx=message,
+                user=member,
+                oc=character,
+                template=template,
+                progress=progress,
+            )
+            self.backup[member] = view
+            view.message = await message.edit(view=view, embed=view.embed)
 
     @commands.Cog.listener()
     async def on_ready(self):
