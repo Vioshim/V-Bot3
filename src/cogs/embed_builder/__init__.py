@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from datetime import datetime
 from re import compile
 from typing import Optional
@@ -29,11 +29,12 @@ from discord import (
     Guild,
     Member,
     Message,
+    NotFound,
     PartialEmoji,
+    RawMessageDeleteEvent,
     TextChannel,
     Thread,
     User,
-    Webhook,
     WebhookMessage,
 )
 from discord.ext import commands
@@ -61,8 +62,7 @@ class EmbedBuilder(commands.Cog):
 
     def __init__(self, bot: CustomBot):
         self.bot = bot
-        self.cache: dict[tuple[int, int], WebhookMessage | Message] = {}
-        self.blame: dict[WebhookMessage, tuple[int, int]] = {}
+        self.db = self.bot.mongo_db("Embed Builder")
         self.loaded: bool = False
         self.converter = commands.MessageConverter()
 
@@ -75,8 +75,7 @@ class EmbedBuilder(commands.Cog):
         member: Member
             User who left
         """
-        if data := self.cache.pop((member.id, member.guild.id), None):
-            self.blame.pop(data, None)
+        await self.db.delete_one({"author": member.id, "server": member.guild.id})
 
     async def webhook_send(self, message: Message, **kwargs):
         webhook = await self.bot.webhook(message.channel)
@@ -84,7 +83,7 @@ class EmbedBuilder(commands.Cog):
             thread = MISSING
 
         await webhook.send(allowed_mentions=AllowedMentions.none(), thread=thread, **kwargs)
-        await message.delete()
+        await message.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
@@ -169,22 +168,17 @@ class EmbedBuilder(commands.Cog):
                     )
 
     @commands.Cog.listener()
-    async def on_message_delete(self, ctx: Message):
-        """Checks if a message got deleted in order to remove it from DB
+    async def on_raw_message_delete(self, ctx: RawMessageDeleteEvent):
+        if ctx.guild_id:
+            await self.db.delete_one(
+                {
+                    "id": ctx.message_id,
+                    "channel": ctx.channel_id,
+                    "server": ctx.guild_id,
+                }
+            )
 
-        Parameters
-        ----------
-        ctx: Message
-            Message that got deleted
-        """
-        if (
-            ctx.webhook_id
-            and (items := [item for item in self.blame if not (ctx.channel == item.channel and ctx.id == item.id)])
-            and (data := self.blame.pop(items[0], None))
-        ):
-            self.cache.pop(data, None)
-
-    def write(self, message: WebhookMessage | Message, author: Member):
+    async def write(self, message: WebhookMessage | Message, author: Member):
         """A method for adding webhook messages to the database
 
         Parameters
@@ -194,9 +188,33 @@ class EmbedBuilder(commands.Cog):
         author: Member
             Author who sent the message
         """
-        key = author.id, author.guild.id
-        self.cache[key] = message
-        self.blame[message] = key
+        await self.db.replace_one(
+            {
+                "server": message.guild.id,
+                "author": author.id,
+            },
+            {
+                "id": message.id,
+                "channel": message.channel.id,
+                "server": message.guild.id,
+                "author": author.id,
+            },
+            upsert=True,
+        )
+
+    async def read(self, guild_id: int, author_id: int) -> Optional[WebhookMessage | Message]:
+        with suppress(DiscordException):
+            if data := await self.db.find_one({"server": guild_id, "author": author_id}):
+                channel_id, guild_id, message_id = data["channel"], data["server"], data["id"]
+                if guild := self.bot.get_guild(guild_id):
+                    if not (channel := guild.get_channel_or_thread(channel_id)):
+                        channel = await guild.fetch_channel(channel_id)
+                    try:
+                        w = await self.bot.webhook(channel, reason="Embed Builder")
+                        thread = channel if isinstance(channel, Thread) else MISSING
+                        return await w.fetch_message(message_id, thread=thread)
+                    except NotFound:
+                        return await channel.fetch_message(message_id)
 
     @asynccontextmanager
     async def edit(self, ctx: commands.Context, editing_attachments: bool = False):
@@ -213,21 +231,25 @@ class EmbedBuilder(commands.Cog):
             if isinstance(ctx.channel, Thread) and ctx.channel.archived:
                 await ctx.channel.edit(archived=False)
             await ctx.defer(ephemeral=True)
-        item_cache = (ctx.author.id, ctx.guild.id)
 
-        if (ref := ctx.message.reference) and isinstance(msg := ref.resolved, Message):
-            if msg.author == self.bot.user:
-                self.write(msg, ctx.author)
-            elif msg.webhook_id:
+        message: Optional[Message] = None
+        if (ref := ctx.message.reference) and isinstance(aux := ref.resolved, Message):
+            if aux.author == self.bot.user:
+                message = aux
+            elif aux.webhook_id:
                 w = await self.bot.webhook(ctx.channel)
-                if w.id == msg.webhook_id:
-                    self.write(msg, ctx.author)
+                if w.id == aux.webhook_id:
+                    message = aux
 
-        message: Optional[Message | WebhookMessage] = self.cache.get(item_cache)
+        if message:
+            await self.write(message, ctx.author)
+        else:
+            message = await self.read(ctx.guild.id, ctx.author.id)
+
         try:
             embed = Embed()
-            if message and (embeds := message.embeds):
-                embed = embed_handler(message, embeds[0])
+            if message and message.embeds:
+                embed = embed_handler(message, message.embeds[0])
             yield embed
         finally:
             if message:
@@ -241,10 +263,9 @@ class EmbedBuilder(commands.Cog):
                         if not isinstance(thread := ctx.channel, Thread):
                             thread = MISSING
                         message = await w.edit_message(message.id, thread=thread, **kwargs)
-                        self.write(message, ctx.author)
+                        await self.write(message, ctx.author)
                 except DiscordException as e:
-                    if item := self.cache.pop(item_cache, None):
-                        del self.blame[item]
+                    await self.db.delete_one({"server": ctx.guild.id, "author": ctx.author.id})
                     await ctx.reply(str(e), delete_after=3, ephemeral=True)
             self.bot.msg_cache_add(ctx.message)
             if inter := ctx.interaction:
@@ -268,7 +289,7 @@ class EmbedBuilder(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        if data := self.cache.get((ctx.author.id, ctx.guild.id)):
+        if data := await self.read(ctx.guild.id, ctx.author.id):
             try:
                 emoji, name = data.channel.name.split("〛")
                 emoji = emoji[0]
@@ -308,9 +329,7 @@ class EmbedBuilder(commands.Cog):
         webhook = await self.bot.webhook(ctx.channel, reason="Created by Embed Builder")
         author: Member = ctx.author
 
-        if not isinstance(thread := ctx.channel, Thread):
-            thread = MISSING
-
+        thread = ctx.channel if isinstance(ctx.channel) else MISSING
         attachments = [attachment] if attachment else ctx.message.attachments
         if len(images := [x for x in attachments if x.content_type.startswith("image/")]) == 1:
             embed.set_image(url=f"attachment://{images[0].filename}")
@@ -324,7 +343,7 @@ class EmbedBuilder(commands.Cog):
             thread=thread,
         )
         message.channel = ctx.channel
-        self.write(message, author)
+        await self.write(message, author)
         await ctx.message.delete(delay=0)
 
     @embed.command(name="set")
@@ -355,7 +374,7 @@ class EmbedBuilder(commands.Cog):
 
         if isinstance(message, Message):
             if message.author == self.bot.user:
-                self.write(message, ctx.author)
+                await self.write(message, ctx.author)
                 await ctx.reply(
                     "Message has been set",
                     delete_after=2,
@@ -370,10 +389,9 @@ class EmbedBuilder(commands.Cog):
                         ephemeral=True,
                     )
                 else:
-                    if not isinstance(thread := message.channel, Thread):
-                        thread = MISSING
+                    thread = message.channel if isinstance(message.channel) else MISSING
                     message: WebhookMessage = await webhook.fetch_message(message.id, thread=thread)
-                    self.write(message, ctx.author)
+                    await self.write(message, ctx.author)
                     await ctx.reply(
                         "Message has been set",
                         delete_after=2,
@@ -403,11 +421,9 @@ class EmbedBuilder(commands.Cog):
             commands.Context
         """
         async with self.edit(ctx) as embed:
-            webhook: Webhook = await ctx.bot.webhook(ctx.channel)
+            webhook = await self.bot.webhook(ctx.channel)
 
-            if not isinstance(thread := ctx.channel, Thread):
-                thread = MISSING
-
+            thread = ctx.channel if isinstance(ctx.channel) else MISSING
             message: Optional[WebhookMessage | Message] = None
             if reference := ctx.message.reference:
                 if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
@@ -416,9 +432,7 @@ class EmbedBuilder(commands.Cog):
                     except DiscordException:
                         if not isinstance(msg, Message):
                             try:
-                                msg = await ctx.channel.fetch_message(
-                                    reference.message_id,
-                                )
+                                msg = await ctx.channel.fetch_message(reference.message_id)
                             except DiscordException:
                                 msg = None
 
@@ -436,7 +450,7 @@ class EmbedBuilder(commands.Cog):
                     thread=thread,
                     wait=True,
                 )
-            self.write(message, ctx.author)
+            await self.write(message, ctx.author)
 
     @embed_post.command(name="raw")
     async def embed_post_raw(self, ctx: commands.Context):
@@ -449,11 +463,9 @@ class EmbedBuilder(commands.Cog):
         """
         async with self.edit(ctx) as embed:
             files, embed_aux = await self.bot.embed_raw(embed)
-            webhook: Webhook = await ctx.bot.webhook(ctx.channel)
+            webhook = await self.bot.webhook(ctx.channel)
 
-            if not isinstance(thread := ctx.channel, Thread):
-                thread = MISSING
-
+            thread = ctx.channel if isinstance(ctx.channel) else MISSING
             message: Optional[WebhookMessage | Message] = None
             if reference := ctx.message.reference:
                 if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
@@ -486,7 +498,7 @@ class EmbedBuilder(commands.Cog):
                     thread=thread,
                     wait=True,
                 )
-            self.write(message, ctx.author)
+            await self.write(message, ctx.author)
 
     @embed.command(name="unset")
     async def embed_unset(self, ctx: commands.Context):
@@ -497,10 +509,14 @@ class EmbedBuilder(commands.Cog):
         ctx: commands.Context
             commands.Context
         """
-        if message := self.cache.pop((ctx.author.id, ctx.guild.id), None):
-            del self.blame[message]
+        if data := await self.db.find_one_and_delete({"server": ctx.guild.id, "author": ctx.author.id}):
+            guild_id, channel_id, message_id = data["server"], data["channel"], data["id"]
             view = View()
-            view.add_item(Button(label="Jump URL", url=message.jump_url))
+            btn = Button(
+                label="Jump URL",
+                url=f"https://discord.com/channels/{guild_id}/{channel_id}/{message_id}",
+            )
+            view.add_item(btn)
             await ctx.reply("Removed stored embed.", view=view)
         else:
             await ctx.reply("No stored embed to remove.")
@@ -620,7 +636,7 @@ class EmbedBuilder(commands.Cog):
             embed.set_author(name=author.display_name, url=embed.author.url, icon_url=author.display_avatar.url)
 
     @embed_author.command(name="guild", aliases=["server"])
-    async def embed_author_guild(self, ctx: commands.Context, *, guild: Optional[int] = None):
+    async def embed_author_guild(self, ctx: commands.Context, *, guild: Optional[Guild] = None):
         """Allows to set the specified guild as Author of the embed
 
         Parameters
@@ -631,8 +647,8 @@ class EmbedBuilder(commands.Cog):
             Guild. Defaults to Current
         """
         async with self.edit(ctx) as embed:
-            guild: Guild = self.bot.get_guild(guild) or ctx.guild
-            embed.set_author(name=guild.name, url=embed.author.url, icon_url=guild.icon.url)
+            guild: Guild = guild or ctx.guild
+            embed.set_author(name=guild.name, url=embed.author.url, icon_url=guild.icon)
 
     @embed_author.command(name="url", aliases=["link"])
     async def embed_author_url(self, ctx: commands.Context, *, url: str = ""):
@@ -650,7 +666,7 @@ class EmbedBuilder(commands.Cog):
                 embed.set_author(name=author.name, url=url or author.url, icon_url=author.icon_url)
 
     @embed_author.command(name="icon")
-    async def embed_author_icon(self, ctx: commands.Context, *, icon: Optional[str] = None):
+    async def embed_author_icon(self, ctx: commands.Context, *, icon: Optional[Emoji | PartialEmoji | str] = None):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -690,7 +706,7 @@ class EmbedBuilder(commands.Cog):
                 embed.remove_footer()
 
     @embed_footer.command(name="user")
-    async def embed_footer_user(self, ctx: commands.Context, *, user: Member | User = None):
+    async def embed_footer_user(self, ctx: commands.Context, *, user: Optional[Member | User] = None):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -705,7 +721,7 @@ class EmbedBuilder(commands.Cog):
             embed.set_footer(text=user.display_name, icon_url=user.display_avatar.url)
 
     @embed_footer.command(name="guild", aliases=["server"])
-    async def embed_footer_guild(self, ctx: commands.Context, *, guild: Optional[int] = None):
+    async def embed_footer_guild(self, ctx: commands.Context, *, guild: Optional[Guild] = None):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -716,11 +732,11 @@ class EmbedBuilder(commands.Cog):
             Guild as Footer. Defaults to Self
         """
         async with self.edit(ctx) as embed:
-            guild: Guild = self.bot.get_guild(guild) or ctx.guild
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+            guild: Guild = guild or ctx.guild
+            embed.set_footer(text=guild.name, icon_url=guild.icon)
 
     @embed_footer.command(name="icon")
-    async def embed_footer_icon(self, ctx: commands.Context, *, icon: Optional[str] = None):
+    async def embed_footer_icon(self, ctx: commands.Context, *, icon: Optional[Emoji | PartialEmoji | str] = None):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -743,7 +759,7 @@ class EmbedBuilder(commands.Cog):
                     embed.set_footer(text=footer.text)
 
     @embed.group(name="thumbnail", fallback="clear", invoke_without_command=True)
-    async def embed_thumbnail(self, ctx: commands.Context, *, thumbnail: Optional[str] = None):
+    async def embed_thumbnail(self, ctx: commands.Context, *, thumbnail: Optional[Emoji | PartialEmoji | str] = None):
         """Allows to edit an embed's author icon
 
         Parameters
@@ -765,7 +781,7 @@ class EmbedBuilder(commands.Cog):
                 embed.set_thumbnail(url=None)
 
     @embed_thumbnail.command(name="user", invoke_without_command=True)
-    async def embed_thumbnail_user(self, ctx: commands.Context, *, user: Member | User = None):
+    async def embed_thumbnail_user(self, ctx: commands.Context, *, user: Optional[Member | User] = None):
         """Allows to edit an embed's thumbnail by an user
 
         Parameters
@@ -780,7 +796,7 @@ class EmbedBuilder(commands.Cog):
             embed.set_thumbnail(url=user.display_avatar.url)
 
     @embed_thumbnail.command(name="guild", aliases=["server"], invoke_without_command=True)
-    async def embed_thumbnail_guild(self, ctx: commands.Context, *, guild: Optional[int] = None):
+    async def embed_thumbnail_guild(self, ctx: commands.Context, *, guild: Optional[Guild] = None):
         """Allows to edit an embed's thumbnail by an user
 
         Parameters
@@ -791,11 +807,11 @@ class EmbedBuilder(commands.Cog):
             Guild for embed. Defaults to self
         """
         async with self.edit(ctx) as embed:
-            guild: Guild = self.bot.get_guild(guild) or ctx.guild
+            guild: Guild = guild or ctx.guild
             embed.set_thumbnail(url=guild.icon.url)
 
     @embed.group(name="image", fallback="clear", invoke_without_command=True)
-    async def embed_image(self, ctx: commands.Context, *, image: Optional[str] = None):
+    async def embed_image(self, ctx: commands.Context, *, image: Optional[Emoji | PartialEmoji | str] = None):
         """Allows to edit an embed's image
 
         Parameters
@@ -817,7 +833,7 @@ class EmbedBuilder(commands.Cog):
                 embed.set_image(url=None)
 
     @embed_image.command(name="user")
-    async def embed_image_user(self, ctx: commands.Context, *, user: Member | User = None):
+    async def embed_image_user(self, ctx: commands.Context, *, user: Optional[Member | User] = None):
         """Allows to edit an embed's image based on an user
 
         Parameters
@@ -832,7 +848,7 @@ class EmbedBuilder(commands.Cog):
             embed.set_image(url=user.display_avatar.url)
 
     @embed_image.command(name="guild", aliases=["server"])
-    async def embed_image_guild(self, ctx: commands.Context, *, guild: Optional[int] = None):
+    async def embed_image_guild(self, ctx: commands.Context, *, guild: Optional[Guild] = None):
         """Allows to edit an embed's image based on an user
 
         Parameters
@@ -843,8 +859,8 @@ class EmbedBuilder(commands.Cog):
             Guild to take as reference. Defaults to current
         """
         async with self.edit(ctx) as embed:
-            guild: Guild = self.bot.get_guild(guild) or ctx.guild
-            embed.set_image(url=guild.icon.url)
+            guild: Guild = guild or ctx.guild
+            embed.set_image(url=guild.icon)
 
     @embed_image.command(name="rainbow")
     async def embed_image_rainbow(self, ctx: commands.Context):
@@ -859,7 +875,7 @@ class EmbedBuilder(commands.Cog):
             embed.set_image(url=RAINBOW)
 
     @embed_image.command(name="whitebar")
-    async def embed_image_whitebar(self, ctx: commands.Context):
+    async def embed_image_whitebar(self, ctx: commands.Context, x: int = 500, y: int = 5):
         """Allows to add a whitebar line as placeholder in embed images
 
         Parameters
@@ -867,8 +883,9 @@ class EmbedBuilder(commands.Cog):
         ctx: commands.Context
             commands.Context
         """
+        url = f"https://dummyimage.com/{x}x{y}/FFFFFF/000000&text=%20"
         async with self.edit(ctx) as embed:
-            embed.set_image(url=WHITE_BAR)
+            embed.set_image(url=url)
 
     @commands.group(aliases=["field", "f"], invoke_without_command=True)
     @commands.has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
@@ -881,8 +898,8 @@ class EmbedBuilder(commands.Cog):
             commands.Context
         """
         async with self.edit(ctx) as embed:
-            if content := "\n".join(f"• {i}){f.name} > {f.value}" for i, f in enumerate(embed.fields)):
-                await ctx.send(f"```yaml\n{content}\n```")
+            content = "\n".join(f"• {i}){f.name} > {f.value}" for i, f in enumerate(embed.fields))
+            await ctx.send(f"```yaml\n{content}\n```")
 
     @fields.command(name="add", aliases=["a"])
     async def fields_add(self, ctx: commands.Context, name: str, *, value: str):
@@ -1008,10 +1025,7 @@ class EmbedBuilder(commands.Cog):
             commands.Context
         """
         async with self.edit(ctx) as embed:
-            if fields := embed.fields:
-                await ctx.reply(f"There's {len(fields)} fields in the embed")
-            else:
-                await ctx.reply("There's no fields in the embed")
+            await ctx.reply(f"There's {len(embed.fields):02d} fields in the embed.")
 
     @fields_index.command(name="add", aliases=["a"])
     async def fields_index_add(self, ctx: commands.Context, index: int, name: str, *, value: str):
