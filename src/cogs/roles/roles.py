@@ -426,12 +426,6 @@ class RPModal(Modal):
         if not items:
             items = sorted(self.ocs, key=lambda x: x.name)
 
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
-        if img := await db.find_one({"author": self.user.id}):
-            img = img["image"]
-
-        file: File = await interaction.client.get_file(Character.collage(items, background=img))
-        embed.set_image(url=f"attachment://{file.filename}")
         reference = self.role
         name = f"{self.role.name} - {self.user.display_name}"
         if self.to_user:
@@ -440,7 +434,6 @@ class RPModal(Modal):
         elif self.role not in self.user.roles:
             await self.user.add_roles(self.role)
         webhook: Webhook = await interaction.client.webhook(958122815171756042, reason="RP Search")
-        embed.set_image(url=f"attachment://{file.filename}")
         kwargs = dict(
             content=reference.mention,
             allowed_mentions=AllowedMentions(roles=True),
@@ -448,13 +441,11 @@ class RPModal(Modal):
             view=RPSearchManage(self.user, items),
             username=self.user.display_name,
             avatar_url=self.user.display_avatar.url,
-            file=file,
         )
         msg1 = await webhook.send(wait=True, **kwargs)
         thread = await msg1.create_thread(name=name)
         kwargs["thread"] = thread
         del kwargs["content"]
-        del kwargs["file"]
         embed.set_image(url=WHITE_BAR)
         msg2 = await webhook.send(wait=True, **kwargs)
         await thread.add_user(self.user)
@@ -480,12 +471,12 @@ class RPModal(Modal):
             }
         )
 
-        embed = RP_SEARCH_EMBED.copy()
-        embed.clear_fields()
-        embed.title = "Ping has been done successfully!"
+        aux_embed = RP_SEARCH_EMBED.copy()
+        aux_embed.clear_fields()
+        aux_embed.title = "Ping has been done successfully!"
         view = View()
         if not self.role_mode:
-            embed.description = "Alright, if you change your mind you can find the role at <#719709333369258015>"
+            aux_embed.description = "Alright, if you change your mind you can find the role at <#719709333369258015>"
             view.add_item(
                 Button(
                     label="Self Roles",
@@ -493,7 +484,15 @@ class RPModal(Modal):
                     url="https://canary.discord.com/channels/719343092963999804/719709333369258015/992522335808671854",
                 )
             )
-        await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+        await interaction.followup.send(embed=aux_embed, view=view, ephemeral=True)
+
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
+        if img := await db.find_one({"author": self.user.id}):
+            img = img["image"]
+
+        file: File = await interaction.client.get_file(Character.collage(items, background=img))
+        embed.set_image(url=f"attachment://{file.filename}")
+        await msg1.edit(embed=embed, attachments=[file])
         self.stop()
 
 
