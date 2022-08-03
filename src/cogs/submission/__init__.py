@@ -605,8 +605,10 @@ class Submission(commands.Cog):
     @commands.guild_only()
     async def oc_image(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with ctx.typing():
+            data = [x for x in ctx.message.attachments if x.content_type.startswith("image/")]
+            image = data[0].proxy_url if data else None
             ocs = [self.ocs[x] for x in oc_ids if x in self.ocs]
-            file = await self.bot.get_file(Character.collage(ocs, font=font))
+            file = await self.bot.get_file(Character.collage(ocs, background=image, font=font))
             await ctx.reply(file=file)
 
     @app_commands.command(name="ocs")
