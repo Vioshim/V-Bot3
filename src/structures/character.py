@@ -482,39 +482,34 @@ class Character:
 
     @classmethod
     def collage(cls, ocs: Iterable[Character], background: Optional[str] = None, font: bool = True):
-        items = list(ocs)
+        items: list[Character | None] = list(ocs)[:6]
+
+        if background and (amount := 6 - len(items)):
+            items.extend([None] * amount)
+
         kit = ImageKit(base=background or "OC_list_9a1DZPDet.png", width=1500, height=1000, format="png")
-        for index, oc in enumerate(items[:6]):
+        for index, oc in enumerate(items):
             x = 500 * (index % 3) + 25
             y = 500 * (index // 3) + 25
-            kit.add_image(
-                image=oc.image_url,
-                height=450,
-                width=450,
-                x=x,
-                y=y,
-            )
-            for idx, item in enumerate(oc.types):
-                kit.add_image(
-                    image=item.icon,
-                    width=200,
-                    height=44,
-                    x=250 + x,
-                    y=y + 44 * idx,
-                )
-            if font:
-                kit.add_text(
-                    text=oc.name,
-                    width=330,
-                    x=x,
-                    y=y + 400,
-                    background=0xFFFFFF,
-                    background_transparency=70,
-                    font=Fonts.Whitney_Black,
-                    font_size=36,
-                )
-            if oc.pronoun.image:
-                kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
+            if isinstance(oc, Character):
+                kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
+                for idx, item in enumerate(oc.types):
+                    kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * idx)
+                if font:
+                    kit.add_text(
+                        text=oc.name,
+                        width=330,
+                        x=x,
+                        y=y + 400,
+                        background=0xFFFFFF,
+                        background_transparency=70,
+                        font=Fonts.Whitney_Black,
+                        font_size=36,
+                    )
+                if oc.pronoun.image:
+                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
+            else:
+                kit.add_image(image="gray-canvas_nE3fFFz9h.png", height=450, width=450, x=x, y=y)
         return kit.url
 
     async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:
