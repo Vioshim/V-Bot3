@@ -427,7 +427,7 @@ class RPModal(Modal):
             items = sorted(self.ocs, key=lambda x: x.name)
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
-        if img := db.find_one({"author": self.user.id}):
+        if img := await db.find_one({"author": self.user.id}):
             img = img["image"]
 
         file: File = await interaction.client.get_file(Character.collage(items, background=img))
