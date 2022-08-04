@@ -772,6 +772,7 @@ class Character:
             url=self.url,
             image=self.image,
             location=self.location,
+            hidden_power=self.hidden_power,
         )
 
     def __repr__(self) -> str:
