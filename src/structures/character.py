@@ -134,7 +134,7 @@ class Character:
     url: Optional[str] = None
     image: Optional[int] = None
     location: Optional[int] = None
-    hidden_power: Optional[Typing] = None
+    hidden_power: Optional[str] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -159,7 +159,6 @@ class Character:
 
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
-        data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
         if isinstance(self.sp_ability, SpAbility):
             data["sp_ability"] = asdict(self.sp_ability)
         if isinstance(self.image, File):
@@ -199,8 +198,6 @@ class Character:
                 self.age = None
         if not self.can_have_special_abilities:
             self.sp_ability = None
-        if self.hidden_power:
-            self.hidden_power = Typing.deduce(self.hidden_power)
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -435,10 +432,12 @@ class Character:
             )
 
         entry = "/".join(i.name.title() for i in self.types)
-        if hidden_power := self.hidden_power:
-            c_embed.color = hidden_power.color
-            sp_embed.color = hidden_power.color
-            c_embed.set_footer(text=f"Types: {entry}, Hidden: {hidden_power.name}", icon_url=hidden_power.emoji.url)
+        if hidden_power := Typing.from_ID(self.hidden_power):
+            sp_embed.color = c_embed.color = hidden_power.color
+            c_embed.set_footer(
+                text=f"Types: {entry}, Hidden: {hidden_power.name}",
+                icon_url=hidden_power.emoji.url,
+            )
         else:
             c_embed.set_footer(text=f"Types: {entry}")
 
@@ -672,7 +671,7 @@ class Character:
             [str(x) for x in self.types],
             [x.id for x in self.abilities],
             None if isinstance(self.species.id, int) else self.species.id,
-            str(self.hidden_power) if self.hidden_power else None,
+            self.hidden_power or None,
         )
         if (sp_ability := self.sp_ability) is None:
             sp_ability = SpAbility()
