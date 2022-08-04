@@ -468,6 +468,32 @@ class AbilitiesField(TemplateField):
                 progress.add(self.name)
 
 
+class HiddenPowerField(TemplateField):
+    name = "Hidden Power"
+    description = "Optional. Fill the OC's Hidden Power"
+
+    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+
+        view = Complex[Typing](
+            member=ctx.user,
+            target=ctx,
+            values=Typing.all(),
+            max_values=1,
+            timeout=None,
+            parser=lambda x: (x.name, f"Sets the typing {x.name}"),
+            text_component=TextInput(
+                label="Character's Hidden Power",
+                placeholder="Type",
+                required=True,
+            ),
+            silent_mode=True,
+        )
+
+        async with view.send(title="Select Hidden Power", single=True) as types:
+            oc.hidden_power = types
+            progress.add(self.name)
+
+
 class SpAbilityField(TemplateField):
     name = "Special Ability"
     description = "Optional. Fill the OC's Special Ability"
@@ -561,6 +587,7 @@ FIELDS: dict[str, TemplateField] = {
     "Moveset": MovesetField(),
     "Movepool": MovepoolField(),
     "Abilities": AbilitiesField(),
+    "Hidden Power": HiddenPowerField(),
     "Special Ability": SpAbilityField(),
     "Backstory": BackstoryField(),
     "Extra Information": ExtraField(),
@@ -594,7 +621,8 @@ class CreationOCView(Basic):
         oc.author, oc.server = user.id, ctx.guild.id
         self.oc = oc
         self.user = user
-        self.embed = oc.embed.set_author(name=user.display_name, icon_url=user.display_avatar)
+        self.embeds = oc.embeds
+        self.embeds[0].set_author(name=user.display_name, icon_url=user.display_avatar)
         self.ref_template = template or convert_template(oc)
         self.progress: set[str] = set()
         if progress:
@@ -663,9 +691,9 @@ class CreationOCView(Basic):
 
             self.setup()
             if resp.is_done():
-                await ctx.edit_original_message(embed=self.oc.embed, view=self)
+                await ctx.edit_original_message(embeds=self.oc.embeds, view=self)
             else:
-                await resp.edit_message(embed=self.oc.embed, view=self)
+                await resp.edit_message(embeds=self.oc.embeds, view=self)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             await resp.send_message(str(e), ephemeral=True)
@@ -684,10 +712,10 @@ class CreationOCView(Basic):
             await ctx.followup.send(str(e), ephemeral=True)
         finally:
             try:
-                embed = self.oc.embed
-                embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
+                embeds = self.oc.embeds
+                embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
                 if not self.oc.image_url:
-                    embed.set_image(url="attachment://image.png")
+                    embeds[0].set_image(url="attachment://image.png")
                 if isinstance(self.oc.image, File):
                     files = [self.oc.image]
                 else:
@@ -695,9 +723,9 @@ class CreationOCView(Basic):
 
                 try:
                     message = self.message or ctx.message
-                    m = await message.edit(embed=embed, view=self, attachments=files)
+                    m = await message.edit(embeds=embeds, view=self, attachments=files)
                 except (DiscordException, AttributeError):
-                    m = await ctx.edit_original_message(embed=embed, view=self, attachments=files)
+                    m = await ctx.edit_original_message(embeds=embeds, view=self, attachments=files)
 
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
@@ -782,16 +810,15 @@ class ModCharactersView(CharactersView):
                 if item.author in [user.id, interaction.user.id]:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
                     if author := guild.get_member(item.author):
-                        view.embed.set_author(name=author.display_name, icon_url=author.display_avatar)
-                    await view.send(ephemeral=True)
+                        view.embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
+                    await view.send(embeds=view.embeds, ephemeral=True)
                 else:
                     if isinstance(self.target, Interaction):
                         target = self.target
                     else:
                         target = interaction
                     view = PingView(oc=item, reference=target)
-                    embed = item.embed
-                    await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+                    await interaction.followup.send(embed=item.embeds, view=view, ephemeral=True)
                 await view.wait()
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)

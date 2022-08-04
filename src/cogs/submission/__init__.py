@@ -58,53 +58,66 @@ __all__ = ("Submission", "setup")
 
 
 def comparison_handler(before: Character, now: Character):
-    aux1, aux2 = before.embed, now.embed
+    aux1_new: list[Embed] = []
+    aux2_new: list[Embed] = []
 
-    elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
-    elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
+    before_embeds, now_embeds = before.embeds, now.embeds
 
-    e1 = Embed(title=aux1.title, description=aux1.description, color=Color.red())
-    e2 = Embed(description=aux2.description, color=Color.brand_green())
-    e1.set_image(url=WHITE_BAR)
-    e2.set_image(url=WHITE_BAR)
+    if len(before_embeds) != len(now_embeds):
+        if len(before_embeds) == 1:
+            before_embeds.append(Embed())
+        if len(now_embeds) == 1:
+            now_embeds.append(Embed())
 
-    img1 = before.image_url or before.image
-    img2 = now.image_url or now.image
+    for aux1, aux2 in zip(before_embeds, now_embeds):
+        elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
+        elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
 
-    if img1 != img2:
-        if isinstance(img1, str):
-            e1.set_image(url=img1)
-        if isinstance(img2, str):
-            e2.set_image(url=img2)
+        e1 = Embed(title=aux1.title, description=aux1.description, color=Color.red())
+        e2 = Embed(description=aux2.description, color=Color.brand_green())
+        e1.set_image(url=WHITE_BAR)
+        e2.set_image(url=WHITE_BAR)
 
-    if aux1.title != aux2.title:
-        e2.title = aux2.title
+        img1 = before.image_url or before.image
+        img2 = now.image_url or now.image
 
-    if aux1.footer.text != aux2.footer.text:
-        e1.set_footer(text=aux1.footer.text)
-        e2.set_footer(text=aux2.footer.text)
+        if img1 != img2:
+            if isinstance(img1, str):
+                e1.set_image(url=img1)
+            if isinstance(img2, str):
+                e2.set_image(url=img2)
 
-    if e1.description == e2.description:
-        e1.description = e2.description = None
+        if aux1.title != aux2.title:
+            e2.title = aux2.title
 
-    for key in set(elem1) | set(elem2):
-        if (v1 := elem1.get(key)) != (v2 := elem2.get(key)):
-            if v1:
-                v1, i1 = v1
-                e1.add_field(name=key, value=v1, inline=i1)
-            if v2:
-                v2, i2 = v2
-                e2.add_field(name=key, value=v2, inline=i2)
+        if aux1.footer.text != aux2.footer.text:
+            e1.set_footer(text=aux1.footer.text)
+            e2.set_footer(text=aux2.footer.text)
 
-    conditions = (
-        aux1.title == aux2.title,
-        e1.description == e2.description,
-        before.image == now.image,
-        len(e1.fields) == len(e2.fields) == 0,
-        e1.footer.text == e2.footer.text,
-    )
-    if not all(conditions):
-        return e1, e2
+        if e1.description == e2.description:
+            e1.description = e2.description = None
+
+        for key in set(elem1) | set(elem2):
+            if (v1 := elem1.get(key)) != (v2 := elem2.get(key)):
+                if v1:
+                    v1, i1 = v1
+                    e1.add_field(name=key, value=v1, inline=i1)
+                if v2:
+                    v2, i2 = v2
+                    e2.add_field(name=key, value=v2, inline=i2)
+
+        conditions = (
+            aux1.title == aux2.title,
+            e1.description == e2.description,
+            before.image == now.image,
+            len(e1.fields) == len(e2.fields) == 0,
+            e1.footer.text == e2.footer.text,
+        )
+        if not all(conditions):
+            aux1_new.append(e1)
+            aux2_new.append(e2)
+
+    return aux1_new, aux1_new
 
 
 class Submission(commands.Cog):
@@ -226,11 +239,11 @@ class Submission(commands.Cog):
             oc.thread = thread_id
             guild: Guild = self.bot.get_guild(oc.server)
             user = guild.get_member(member.id) or member
-            embed: Embed = oc.embed
-            embed.set_image(url="attachment://image.png")
+            embeds = oc.embeds
+            embeds[0].set_image(url="attachment://image.png")
             kwargs = dict(
                 content=f"<@{user.id}>",
-                embed=embed,
+                embeds=embeds,
                 thread=Object(id=oc.thread),
                 allowed_mentions=AllowedMentions(users=True),
             )
@@ -269,15 +282,19 @@ class Submission(commands.Cog):
                 await oc.update(connection=conn, idx=msg_oc.id)
 
             try:
-                if former and (embeds := comparison_handler(before=former, now=oc)):
-                    embed1, embed2 = embeds
-                    files1, embed1 = await self.bot.embed_raw(embed1)
-                    files2, embed2 = await self.bot.embed_raw(embed2)
-
-                    files = files1 + files2
-                    for index, (e, f) in enumerate(zip(embeds, files)):
-                        f.filename = f"image{index}.png"
-                        e.set_image(url=f"attachment://{f.filename}")
+                if former and any(embeds := comparison_handler(before=former, now=oc)):
+                    now_embeds = []
+                    now_files = []
+                    for embed1, embed2 in zip(*embeds):
+                        files1, embed1 = await self.bot.embed_raw(embed1)
+                        files2, embed2 = await self.bot.embed_raw(embed2)
+                        aux = embed1, embed2
+                        files = files1 + files2
+                        for index, (e, f) in enumerate(zip(aux, files)):
+                            f.filename = f"image{index}.png"
+                            e.set_image(url=f"attachment://{f.filename}")
+                        now_embeds.extend(aux)
+                        now_files.extend(files)
 
                     log = await self.bot.webhook(1001125143071965204, reason="Logging")
                     if isinstance(user, (User, Member)):
@@ -295,8 +312,8 @@ class Submission(commands.Cog):
                     )
 
                     await log.send(
-                        embeds=embeds,
-                        files=files,
+                        embeds=now_embeds,
+                        files=now_files,
                         thread=Object(id=1001125684476915852),
                         username=username,
                         avatar_url=avatar_url,
@@ -309,18 +326,18 @@ class Submission(commands.Cog):
             self.bot.logger.exception("Error when logging oc modification main", exc_info=e1)
 
     async def oc_update(self, oc: Character):
-        embed: Embed = oc.embed
-        embed.set_image(url="attachment://image.png")
+        embeds = oc.embeds
+        embeds[0].set_image(url="attachment://image.png")
         webhook = await self.bot.webhook(919277769735680050)
         try:
             try:
-                await webhook.edit_message(oc.id, embed=embed, thread=Object(id=oc.thread))
+                await webhook.edit_message(oc.id, embeds=embeds, thread=Object(id=oc.thread))
             except HTTPException:
                 guild = self.bot.get_guild(oc.server)
                 if not (thread := guild.get_thread(oc.thread)):
                     thread: Thread = await self.bot.fetch_channel(oc.thread)
                 await thread.edit(archived=False)
-                await webhook.edit_message(oc.id, embed=embed, thread=thread)
+                await webhook.edit_message(oc.id, embed=embeds, thread=thread)
         except NotFound:
             await self.register_oc(oc)
 
@@ -336,7 +353,7 @@ class Submission(commands.Cog):
                 self.backup[author] = view
                 if isinstance(message, Message):
                     await message.delete(delay=0)
-                await view.send()
+                await view.send(embeds=view.embeds)
                 await view.wait()
 
     async def on_message_submission(self, message: Message):
@@ -485,7 +502,7 @@ class Submission(commands.Cog):
                 progress=progress,
             )
             self.backup[member] = view
-            view.message = await message.edit(view=view, embed=view.embed)
+            view.message = await message.edit(view=view, embeds=view.embeds)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -636,11 +653,10 @@ class Submission(commands.Cog):
         if character:
             if character.author in [ctx.user.id, user.id]:
                 view = CreationOCView(bot=self.bot, ctx=ctx, user=user, oc=character)
-                view.embed = character.embed
-                await view.send(ephemeral=True)
+                await view.send(ephemeral=True, embeds=view.embeds)
             else:
                 view = PingView(oc=character, reference=ctx)
-                await ctx.followup.send(embed=character.embed, view=view, ephemeral=True)
+                await ctx.followup.send(embeds=character.embeds, view=view, ephemeral=True)
             return
 
         if ocs := [oc for oc in self.ocs.values() if oc.author == member.id]:

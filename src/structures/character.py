@@ -134,6 +134,7 @@ class Character:
     url: Optional[str] = None
     image: Optional[int] = None
     location: Optional[int] = None
+    hidden_power: Optional[Typing] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -197,6 +198,8 @@ class Character:
                 self.age = None
         if not self.can_have_special_abilities:
             self.sp_ability = None
+        if self.hidden_power:
+            self.hidden_power = Typing.deduce(self.hidden_power)
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -381,14 +384,21 @@ class Character:
 
     @property
     def embed(self) -> Embed:
+        return self.embeds[0]
+
+    @property
+    def embeds(self) -> list[Embed]:
         """Discord embed out of the character
 
         Returns
         -------
-        Embed
+        list[Embed]
             Embed with the character's information
         """
         c_embed = Embed(title=self.name.title(), color=Color.blurple(), timestamp=self.created_at)
+        sp_embed = c_embed.copy()
+        embeds = [c_embed]
+
         if url := self.document_url:
             c_embed.url = url
         if backstory := self.backstory:
@@ -423,23 +433,39 @@ class Character:
                 inline=False,
             )
 
+        entry = "/".join(i.name.title() for i in self.types)
+        if hidden_power := self.hidden_power:
+            c_embed.color = hidden_power.color
+            c_embed.set_footer(text=f"Types: {entry}, Hidden: {hidden_power.name}", icon_url=hidden_power.emoji.url)
+        else:
+            c_embed.set_footer(text=f"Types: {entry}")
+
         if entry := "/".join(i.name.title() for i in self.types):
             c_embed.set_footer(text=entry)
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
-            if (name := sp_ability.name[:100]) and (value := sp_ability.description[:200]):
-                c_embed.add_field(name=f'Sp.Ability - "{name}"', value=value, inline=False)
+            if name := sp_ability.name[:100]:
+                sp_embed.title = name
 
-            if origin := sp_ability.origin[:200]:
-                c_embed.add_field(name="Sp.Ability - Origin", value=origin, inline=False)
+            if value := sp_ability.description[:1024]:
+                sp_embed.description = value
 
-            if pros := sp_ability.pros[:200]:
-                c_embed.add_field(name="Sp.Ability - Pros", value=pros, inline=False)
+            if origin := sp_ability.origin[:600]:
+                sp_embed.add_field(name="Sp.Ability - Origin", value=origin, inline=False)
 
-            if cons := sp_ability.cons[:200]:
-                c_embed.add_field(name="Sp.Ability - Cons", value=cons, inline=False)
+            if pros := sp_ability.pros[:600]:
+                sp_embed.add_field(name="Sp.Ability - Pros", value=pros, inline=False)
+
+            if cons := sp_ability.cons[:600]:
+                sp_embed.add_field(name="Sp.Ability - Cons", value=cons, inline=False)
+            embeds.append(sp_embed)
 
         if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
+            if hidden_power := self.hidden_power:
+                moves_text = moves_text.replace(
+                    "[Hidden Power] - Normal (Special)",
+                    f"[Hidden Power] - {hidden_power.name} (Special)",
+                )
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
         if image := self.image_url:
@@ -454,10 +480,10 @@ class Character:
 
         extra = self.extra or ""
 
-        if extra := extra[: min(1000, len(c_embed) - 100)]:
+        if extra := extra[:256]:
             c_embed.add_field(name="Extra Information", value=extra, inline=False)
 
-        return c_embed
+        return embeds
 
     def generated_image(self, background: Optional[str] = None) -> Optional[str]:
         """Generated Image
@@ -618,17 +644,17 @@ class Character:
             INSERT INTO CHARACTER(
                 ID, NAME, AGE, PRONOUN, BACKSTORY, EXTRA,
                 KIND, AUTHOR, SERVER, URL, IMAGE, LOCATION,
-                THREAD, MOVESET, TYPES, ABILITIES, SPECIES
+                THREAD, MOVESET, TYPES, ABILITIES, SPECIES, HIDDEN_POWER
             )
             VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
             )
             ON CONFLICT (ID) DO UPDATE
             SET
-                ID = $1, NAME = $2, AGE = $3, PRONOUN = $4,
-                BACKSTORY = $5, EXTRA = $6, KIND = $7, AUTHOR = $8,
-                SERVER = $9, URL = $10, IMAGE = $11, LOCATION = $12,
-                THREAD = $13, MOVESET = $14, TYPES = $15, ABILITIES = $16, SPECIES = $17;
+                ID = $1, NAME = $2, AGE = $3, PRONOUN = $4, BACKSTORY = $5,
+                EXTRA = $6, KIND = $7, AUTHOR = $8, SERVER = $9, URL = $10,
+                IMAGE = $11, LOCATION = $12, THREAD = $13, MOVESET = $14,
+                TYPES = $15, ABILITIES = $16, SPECIES = $17, HIDDEN_POWER = $18;
             """,
             self.id,
             self.name,
@@ -647,6 +673,7 @@ class Character:
             [str(x) for x in self.types],
             [x.id for x in self.abilities],
             None if isinstance(self.species.id, int) else self.species.id,
+            str(self.hidden_power) if self.hidden_power else None,
         )
         if (sp_ability := self.sp_ability) is None:
             sp_ability = SpAbility()

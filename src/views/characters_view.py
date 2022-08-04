@@ -249,15 +249,15 @@ class CharactersView(Complex[Character]):
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         if item := self.current_choice:
-            embed = item.embed
+            embeds = item.embeds
             guild: Guild = self.member.guild
             if author := guild.get_member(item.author):
-                embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
+                embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar.url)
             if isinstance(self.target, Interaction):
                 target = self.target
             else:
                 target = interaction
             view = PingView(oc=item, reference=target)
-            await interaction.followup.send(embed=embed, view=view, ephemeral=True)
+            await interaction.followup.send(embeds=embeds, view=view, ephemeral=True)
             await view.wait()
         await super(CharactersView, self).select_choice(interaction, sct)
