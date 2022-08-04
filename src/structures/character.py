@@ -436,12 +436,10 @@ class Character:
         entry = "/".join(i.name.title() for i in self.types)
         if hidden_power := self.hidden_power:
             c_embed.color = hidden_power.color
+            sp_embed.color = hidden_power.color
             c_embed.set_footer(text=f"Types: {entry}, Hidden: {hidden_power.name}", icon_url=hidden_power.emoji.url)
         else:
             c_embed.set_footer(text=f"Types: {entry}")
-
-        if entry := "/".join(i.name.title() for i in self.types):
-            c_embed.set_footer(text=entry)
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
             if name := sp_ability.name[:100]:
