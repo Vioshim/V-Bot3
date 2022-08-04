@@ -232,7 +232,7 @@ class Roles(commands.Cog):
 
         if entry := await db2.find_one(key):
             message_id = entry["id"]
-            if any(item.id == message_id async for item in ctx.channel.history(limit=1, before=ctx.message)):
+            if any([item.id == message_id async for item in ctx.channel.history(limit=1, before=ctx.message)]):
                 return
 
             try:
