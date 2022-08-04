@@ -25,6 +25,7 @@ from discord import (
     Message,
     NotFound,
     Object,
+    RawMessageDeleteEvent,
     Role,
     Thread,
     app_commands,
@@ -101,6 +102,34 @@ class Roles(commands.Cog):
                     self.ref_msg = await channel.send(content=IMAGE, view=view)
 
     @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
+        guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
+            return
+        db2 = self.bot.mongo_db("RP Sessions")
+        if msg := payload.cached_message:
+            channel = msg.channel
+        elif not (channel := guild.get_channel_or_thread(payload.channel_id)):
+            channel = await guild.fetch_channel(payload.channel_id)
+
+        if channel.category_id not in MAP_ELEMENTS2:
+            return
+
+        if isinstance(channel, Thread):
+            channel_id, thread_id = channel.parent_id, channel.id
+        else:
+            channel_id, thread_id = channel.id, None
+
+        await db2.delete_one(
+            {
+                "category": channel.category_id,
+                "thread": thread_id,
+                "channel": channel_id,
+                "id": payload.message_id,
+            }
+        )
+
+    @commands.Cog.listener()
     async def on_message(self, msg: Message):
         if msg.flags.ephemeral or not msg.guild:
             return
@@ -109,7 +138,7 @@ class Roles(commands.Cog):
             if m := self.ref_msg:
                 await m.delete(delay=0)
             self.ref_msg = await msg.channel.send(content=IMAGE, view=view)
-        elif msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name:
+        elif msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name and not msg.author.bot:
             db2 = self.bot.mongo_db("RP Sessions")
             log_w = await self.bot.webhook(1001125143071965204)
             w = await self.bot.webhook(msg.channel)
@@ -207,7 +236,26 @@ class Roles(commands.Cog):
                 return
 
             try:
-                await w.delete_message(message_id, thread=thread)
+                m = await w.fetch_message(message_id, thread=thread)
+                e = m.embeds[0]
+
+                try:
+                    emoji = ctx.channel.name.split("〛")[0][0]
+                except ValueError:
+                    emoji = None
+
+                await db1.replace_one(
+                    key,
+                    key
+                    | {
+                        "name": e.title,
+                        "topic": e.description,
+                        "image": e.image.url,
+                        "emoji": emoji,
+                    },
+                    upsert=True,
+                )
+                await m.delete(delay=0)
             except NotFound:
                 pass
 
