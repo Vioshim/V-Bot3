@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from contextlib import suppress
+
 from datetime import datetime
 from typing import Optional
 
 from discord import (
     Color,
-    DiscordException,
     Embed,
     Interaction,
     InteractionResponse,
@@ -248,7 +247,7 @@ class Roles(commands.Cog):
         view = View()
         if ooc := find(lambda x: "»〛" in x.name, ctx.channel.category.channels):
             emoji, name = ooc.name.split("»〛")
-            view.add_item(Button(name=name, emoji=emoji[0], url=ooc.jump_url))
+            view.add_item(Button(label=name, emoji=emoji[0], url=ooc.jump_url))
 
         if data := await db1.find_one(key):
             if name := data["name"]:
