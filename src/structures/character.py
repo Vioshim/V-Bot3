@@ -491,7 +491,9 @@ class Character:
         for index, oc in enumerate(items):
             x = 500 * (index % 3) + 25
             y = 500 * (index // 3) + 25
-            if isinstance(oc, Character):
+            if oc is None:
+                kit.add_image(image="placeholder_uSDglnt-E.png", height=450, width=450, x=x, y=y)
+            elif isinstance(oc, Character):
                 kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
                 for idx, item in enumerate(oc.types):
                     kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * idx)
@@ -508,8 +510,6 @@ class Character:
                     )
                 if oc.pronoun.image:
                     kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
-            else:
-                kit.add_image(image="placeholder_uSDglnt-E.png", height=450, width=450, x=x, y=y)
         return kit.url
 
     async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:

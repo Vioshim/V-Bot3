@@ -395,7 +395,7 @@ class Mega(Species):
 
     @property
     def can_have_special_abilities(self):
-        return False
+        return True
 
     @property
     def max_amount_abilities(self) -> int:
@@ -511,7 +511,7 @@ class CustomMega(Species):
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return False
+        return True
 
     @classmethod
     def deduce(cls, item: str) -> Optional[CustomMega]:
@@ -777,7 +777,7 @@ class Fusion(Species):
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return False
+        return all(x.can_have_special_abilities for x in self.bases)
 
     @property
     def max_amount_abilities(self) -> int:
