@@ -286,8 +286,8 @@ class Submission(commands.Cog):
                     now_embeds = []
                     now_files = []
                     for embed1, embed2 in zip(*embeds):
-                        files1, embed1 = await self.bot.embed_raw(embed1)
-                        files2, embed2 = await self.bot.embed_raw(embed2)
+                        files1, embed1 = await self.bot.embed_raw(embed1, "footer")
+                        files2, embed2 = await self.bot.embed_raw(embed2, "footer")
                         aux = embed1, embed2
                         files = files1 + files2
                         for index, (e, f) in enumerate(zip(aux, files)):
