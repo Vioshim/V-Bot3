@@ -678,7 +678,7 @@ class Information(commands.Cog):
             return await self.giphy_fetch(image_id)
 
     async def embed_info(self, message: Message):
-        embed = Embed(title="Message", description=message.content, color=Colour.blurple(), timestamp=utcnow())
+        embed = Embed(title="Message", description=message.content, color=Colour.blurple())
         embed.set_image(url=WHITE_BAR)
         files = []
         embeds: list[Embed] = [embed]
@@ -769,7 +769,9 @@ class Information(commands.Cog):
             username = f"Bot〕{username}"
 
         embeds = embeds[:10]
-        embeds[-1].set_footer(text=message.guild.name, icon_url=message.guild.icon)
+        last_embed = embeds[-1]
+        last_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
+        last_embed.timestamp = utcnow()
 
         return dict(
             embeds=embeds,
