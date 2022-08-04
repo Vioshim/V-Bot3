@@ -12,20 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from contextlib import suppress
 from datetime import datetime
 from typing import Optional
 
 from discord import (
+    Color,
+    DiscordException,
+    Embed,
     Interaction,
     InteractionResponse,
     Member,
     Message,
+    NotFound,
+    Object,
     Role,
+    Thread,
     app_commands,
 )
 from discord.app_commands import Choice
-from discord.ext.commands import Cog
-from discord.utils import snowflake_time
+from discord.ext import commands
+from discord.ui import Button, View
+from discord.utils import MISSING, find, format_dt, snowflake_time
 
 from src.cogs.roles.roles import (
     RP_SEARCH_ROLES,
@@ -35,13 +43,14 @@ from src.cogs.roles.roles import (
     RPSearchManage,
 )
 from src.structures.bot import CustomBot
+from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
 
 __all__ = ("Roles", "setup")
 
 IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png"
 
 
-class Roles(Cog):
+class Roles(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
@@ -81,7 +90,7 @@ class Roles(Cog):
             self.bot.add_view(view=view, message_id=aux)
         self.bot.logger.info("Finished loading existing RP Searches")
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_ready(self):
         if not self.ref_msg:
             channel = self.bot.get_channel(958122815171756042)
@@ -92,15 +101,61 @@ class Roles(Cog):
                 else:
                     self.ref_msg = await channel.send(content=IMAGE, view=view)
 
-    @Cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, msg: Message):
-        if msg.flags.ephemeral:
+        if msg.flags.ephemeral or not msg.guild:
             return
         if msg.webhook_id and msg.channel.id == 958122815171756042:
             view = RPRolesView(timeout=None)
             if m := self.ref_msg:
                 await m.delete(delay=0)
             self.ref_msg = await msg.channel.send(content=IMAGE, view=view)
+        elif msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name:
+            db2 = self.bot.mongo_db("RP Sessions")
+            log_w = await self.bot.webhook(1001125143071965204)
+            w = await self.bot.webhook(msg.channel)
+
+            if isinstance(msg.channel, Thread):
+                channel_id, thread_id = msg.channel.parent_id, msg.channel.id
+                thread = msg.channel
+            else:
+                channel_id, thread_id = msg.channel.id, None
+                thread = MISSING
+
+            key = {"category": msg.channel.category_id, "thread": thread_id, "channel": channel_id}
+
+            if entry := await db2.find_one(key):
+                message_id = entry["id"]
+                try:
+                    await w.delete_message(message_id, thread=thread)
+                except NotFound:
+                    pass
+
+                date = snowflake_time(message_id)
+                embed = Embed(
+                    title="RP has started!",
+                    description=format_dt(date, "R"),
+                    color=Color.blurple(),
+                    timestamp=date,
+                )
+                embed.set_image(url=WHITE_BAR)
+                embed.set_footer(text=msg.guild.name, icon_url=msg.guild.icon)
+                username = avatar_url = MISSING
+                if member := msg.guild.get_member(entry["author"]):
+                    username, avatar_url = member.display_name, member.display_avatar.url
+
+                view = View()
+                view.add_item(Button(label="Jump URL", url=msg.channel.jump_url))
+
+                await log_w.send(
+                    embed=embed,
+                    username=username,
+                    avatar_url=avatar_url,
+                    view=view,
+                    thread=Object(id=1001949202621931680),
+                )
+
+                await db2.delete_one(entry)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -126,6 +181,96 @@ class Roles(Cog):
         modal = RPModal(user=user, role=role, ocs=ocs, to_user=member)
         if await modal.check(interaction):
             await resp.send_modal(modal)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.check(lambda x: x.message.channel.category_id in MAP_ELEMENTS2)
+    async def finish(self, ctx: commands.Context):
+        db1 = self.bot.mongo_db("RP Channels")
+        db2 = self.bot.mongo_db("RP Sessions")
+        log_w = await self.bot.webhook(1001125143071965204)
+        w = await self.bot.webhook(ctx.channel)
+
+        await ctx.message.delete(delay=0)
+
+        if isinstance(ctx.channel, Thread):
+            channel_id, thread_id = ctx.channel.parent_id, ctx.channel.id
+            thread = ctx.channel
+        else:
+            channel_id, thread_id = ctx.channel.id, None
+            thread = MISSING
+
+        key = {"category": ctx.channel.category_id, "thread": thread_id, "channel": channel_id}
+
+        if entry := await db2.find_one(key):
+            message_id = entry["id"]
+            if any(item.id == message_id async for item in ctx.channel.history(limit=1, before=ctx.message)):
+                return
+
+            try:
+                await w.delete_message(message_id, thread=thread)
+            except NotFound:
+                pass
+
+            date = snowflake_time(message_id)
+            embed = Embed(
+                title="RP has concluded!",
+                description=format_dt(date, "R"),
+                color=Color.blurple(),
+                timestamp=date,
+            )
+            embed.set_image(url=WHITE_BAR)
+            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
+            username = avatar_url = MISSING
+            if member := ctx.guild.get_member(entry["author"]):
+                username, avatar_url = member.display_name, member.display_avatar.url
+
+            view = View()
+            view.add_item(Button(label="Jump URL", url=ctx.channel.jump_url))
+
+            await log_w.send(
+                embed=embed,
+                username=username,
+                avatar_url=avatar_url,
+                view=view,
+                thread=Object(id=1001949202621931680),
+            )
+
+            await db2.delete_one(entry)
+
+        embed = Embed(
+            title=ctx.channel.name,
+            description=getattr(ctx.channel, "topic", ""),
+            timestamp=ctx.message.created_at,
+        )
+        embed.set_image(url=WHITE_BAR)
+        embed.set_footer(text="This channel is free to use.!")
+        view = View()
+        if ooc := find(lambda x: "»〛" in x.name, ctx.channel.category.channels):
+            emoji, name = ooc.name.split("»〛")
+            view.add_item(Button(name=name, emoji=emoji[0], url=ooc.jump_url))
+
+        if data := await db1.find_one(key):
+            if name := data["name"]:
+                embed.title = name
+            if topic := data["topic"]:
+                embed.description = topic
+            if image := data["image"]:
+                embed.set_image(url=image)
+
+        message = await w.send(
+            embed=embed,
+            view=view,
+            username=ctx.author.display_name,
+            avatar_url=ctx.author.display_avatar.url,
+            wait=True,
+        )
+
+        await db2.replace_one(
+            key,
+            key | {"id": message.id, "author": ctx.author.id},
+            upsert=True,
+        )
 
 
 async def setup(bot: CustomBot) -> None:
