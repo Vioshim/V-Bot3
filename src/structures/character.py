@@ -159,6 +159,7 @@ class Character:
 
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
+        data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
         if isinstance(self.sp_ability, SpAbility):
             data["sp_ability"] = asdict(self.sp_ability)
         if isinstance(self.image, File):

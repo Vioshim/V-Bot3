@@ -710,47 +710,47 @@ class CreationOCView(Basic):
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
-        finally:
+
+        try:
+            embeds = self.oc.embeds
+            embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
+            if not self.oc.image_url:
+                embeds[0].set_image(url="attachment://image.png")
+            if isinstance(self.oc.image, File):
+                files = [self.oc.image]
+            else:
+                files = MISSING
+
             try:
-                embeds = self.oc.embeds
-                embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
-                if not self.oc.image_url:
-                    embeds[0].set_image(url="attachment://image.png")
-                if isinstance(self.oc.image, File):
-                    files = [self.oc.image]
-                else:
-                    files = MISSING
+                message = self.message or ctx.message
+                m = await message.edit(embeds=embeds, view=self, attachments=files)
+            except (DiscordException, AttributeError):
+                m = await ctx.edit_original_message(embeds=embeds, view=self, attachments=files)
 
-                try:
-                    message = self.message or ctx.message
-                    m = await message.edit(embeds=embeds, view=self, attachments=files)
-                except (DiscordException, AttributeError):
-                    m = await ctx.edit_original_message(embeds=embeds, view=self, attachments=files)
+            if files and m.embeds[0].image.proxy_url:
+                self.oc.image = m.embeds[0].image.proxy_url
+                self.setup()
+                m = await m.edit(view=self)
 
-                if files and m.embeds[0].image.proxy_url:
-                    self.oc.image = m.embeds[0].image.proxy_url
-                    self.setup()
-                    m = await m.edit(view=self)
+            if not m.flags.ephemeral:
+                db = self.bot.mongo_db("OC Creation")
+                await db.replace_one(
+                    {"id": m.id},
+                    {
+                        "id": m.id,
+                        "template": self.ref_template,
+                        "author": self.user.id,
+                        "character": self.oc.to_mongo_dict(),
+                        "progress": list(self.progress),
+                    },
+                    upsert=True,
+                )
 
-                if not m.flags.ephemeral:
-                    db = self.bot.mongo_db("OC Creation")
-                    await db.replace_one(
-                        {"id": m.id},
-                        {
-                            "id": m.id,
-                            "template": self.ref_template,
-                            "author": self.user.id,
-                            "character": self.oc.to_mongo_dict(),
-                            "progress": list(self.progress),
-                        },
-                        upsert=True,
-                    )
-
-                self.message = m
-            except Exception as e:
-                ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
-                await ctx.followup.send(str(e), ephemeral=True)
-                self.stop()
+            self.message = m
+        except Exception as e:
+            ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
+            await ctx.followup.send(str(e), ephemeral=True)
+            self.stop()
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         try:

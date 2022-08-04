@@ -117,7 +117,7 @@ def comparison_handler(before: Character, now: Character):
             aux1_new.append(e1)
             aux2_new.append(e2)
 
-    return aux1_new, aux1_new
+    return aux1_new, aux2_new
 
 
 class Submission(commands.Cog):
