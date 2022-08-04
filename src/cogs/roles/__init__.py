@@ -311,6 +311,7 @@ class Roles(commands.Cog):
             username=ctx.author.display_name,
             avatar_url=ctx.author.display_avatar.url,
             wait=True,
+            thread=thread,
         )
 
         await db2.replace_one(
