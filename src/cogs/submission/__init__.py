@@ -289,8 +289,8 @@ class Submission(commands.Cog):
                     else:
                         username, avatar_url = MISSING, MISSING
 
-                    for embeds in comparison_handler(before=former, now=oc):
-                        embed1, embed2 = embeds
+                    for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
+                        embeds = [embed1, embed2]
                         files1, embed1 = await self.bot.embed_raw(embed1, "footer")
                         files2, embed2 = await self.bot.embed_raw(embed2, "footer")
 
