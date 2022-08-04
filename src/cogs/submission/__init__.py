@@ -282,43 +282,40 @@ class Submission(commands.Cog):
                 await oc.update(connection=conn, idx=msg_oc.id)
 
             try:
-                if former and any(embeds := comparison_handler(before=former, now=oc)):
-                    now_embeds = []
-                    now_files = []
-                    for embed1, embed2 in zip(*embeds):
-                        files1, embed1 = await self.bot.embed_raw(embed1, "footer")
-                        files2, embed2 = await self.bot.embed_raw(embed2, "footer")
-                        aux = embed1, embed2
-                        files = files1 + files2
-                        for index, (e, f) in enumerate(zip(aux, files)):
-                            f.filename = f"image{index}.png"
-                            e.set_image(url=f"attachment://{f.filename}")
-                        now_embeds.extend(aux)
-                        now_files.extend(files)
-
+                if former:
                     log = await self.bot.webhook(1001125143071965204, reason="Logging")
                     if isinstance(user, (User, Member)):
                         username, avatar_url = user.display_name, user.display_avatar.url
                     else:
                         username, avatar_url = MISSING, MISSING
 
-                    view = View()
-                    view.add_item(
-                        Button(
-                            label="Jump URL",
-                            url=former.jump_url,
-                            emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
-                        )
-                    )
+                    for embeds in comparison_handler(before=former, now=oc):
+                        embed1, embed2 = embeds
+                        files1, embed1 = await self.bot.embed_raw(embed1, "footer")
+                        files2, embed2 = await self.bot.embed_raw(embed2, "footer")
 
-                    await log.send(
-                        embeds=now_embeds,
-                        files=now_files,
-                        thread=Object(id=1001125684476915852),
-                        username=username,
-                        avatar_url=avatar_url,
-                        view=view,
-                    )
+                        files = files1 + files2
+                        for index, (e, f) in enumerate(zip(embeds, files)):
+                            f.filename = f"image{index}.png"
+                            e.set_image(url=f"attachment://{f.filename}")
+
+                        view = View()
+                        view.add_item(
+                            Button(
+                                label="Jump URL",
+                                url=former.jump_url,
+                                emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
+                            )
+                        )
+
+                        await log.send(
+                            embeds=embeds,
+                            files=files,
+                            thread=Object(id=1001125684476915852),
+                            username=username,
+                            avatar_url=avatar_url,
+                            view=view,
+                        )
 
             except Exception as e2:
                 self.bot.logger.exception("Error when logging oc modification", exc_info=e2)
