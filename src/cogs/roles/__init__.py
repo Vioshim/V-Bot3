@@ -212,7 +212,7 @@ class Roles(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.check(lambda x: x.message.channel.category_id in MAP_ELEMENTS2)
+    @commands.check(lambda x: x.message.channel.category_id in MAP_ELEMENTS2 and "»〛" not in x.message.channel.name)
     async def finish(self, ctx: commands.Context):
         db1 = self.bot.mongo_db("RP Channels")
         db2 = self.bot.mongo_db("RP Sessions")
