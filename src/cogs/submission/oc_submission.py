@@ -99,8 +99,12 @@ class TemplateField(ABC):
         return isinstance(oc, Character)
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return isinstance(oc, Character)
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        return None
+
+    @classmethod
+    def message(cls, _: Character) -> bool:
+        return cls.description
 
     @classmethod
     @abstractmethod
@@ -119,8 +123,15 @@ class NameField(TemplateField):
     description = "Fill the OC's Name"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return bool(oc.name)
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if not oc.name:
+            return "Missing Name"
+
+    @classmethod
+    def message(cls, oc: Character) -> bool:
+        if not oc.name:
+            return "No Name was Provided"
+        return cls.description
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -142,8 +153,9 @@ class AgeField(TemplateField):
     description = "Optional. Fill the OC's Age"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return not oc.age or 13 <= oc.age <= 99
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if oc.age and not (13 <= oc.age <= 99):
+            return "Invalid Age"
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -166,8 +178,9 @@ class PronounField(TemplateField):
     description = "Optional. Fill the OC's Pronoun"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return isinstance(oc.pronoun, Pronoun)
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if not isinstance(oc.pronoun, Pronoun):
+            return "Invalid Pronoun"
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -204,8 +217,9 @@ class SpeciesField(TemplateField):
     description = "Fill the OC's Species"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return oc.species and not oc.species.banned
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if not oc.species or oc.species.banned:
+            return "Invalid Species."
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -303,11 +317,11 @@ class PreEvoSpeciesField(TemplateField):
     description = "Optional. Fill the OC's Pre evo Species"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
+    def evaluate(cls, oc: Character) -> Optional[str]:
         if isinstance(species := oc.species, Fakemon):
             mon = species.species_evolves_from
-            return not mon or isinstance(mon, Pokemon)
-        return True
+            if mon and not isinstance(mon, Pokemon):
+                return "Invalid Pre-Evolution Species. Has to be a Common Pokemon"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -330,11 +344,13 @@ class TypesField(TemplateField):
     escription = "Fill the OC's Types"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
+    def evaluate(cls, oc: Character) -> Optional[str]:
         species = oc.species
         if isinstance(species, (Fakemon, Variant, Fusion)):
-            return oc.types in species.possible_types
-        return False
+            mon_types = species.possible_types
+            if oc.types not in mon_types:
+                name = ", ".join("/".join(y.name for y in x) for x in mon_types)
+                return f"Possible Typings: {name}"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -386,7 +402,7 @@ class MovesetField(TemplateField):
     description = "Optional. Fill the OC's fav. moves"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
+    def evaluate(cls, oc: Character) -> Optional[str]:
         if species := oc.species:
             mon = Pokemon.from_ID("SMEARGLE")
 
@@ -395,19 +411,19 @@ class MovesetField(TemplateField):
             elif isinstance(species, Variant):
                 condition = mon == species.base
             elif isinstance(species, Fakemon):
-                condition = mon == species.evolves_from
+                condition = mon == species.species_evolves_from
             else:
                 condition = mon == species
 
-            value = all(not x.banned for x in oc.moveset)
+            if value := ", ".join(x.name for x in oc.moveset if x.banned):
+                value = f"Banned Moves: {value}. "
 
             if not condition:
                 moves = oc.movepool()
-                value &= all(x in moves for x in oc.moveset)
+                if items := ", ".join(x.name for x in oc.moveset if x not in moves):
+                    value += f"Not in Movepool: {items}"
 
-            return value
-
-        return False
+            return value or None
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -448,8 +464,9 @@ class MovepoolField(TemplateField):
     description = "Optional. Fill the OC's movepool"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return all(not x.banned for x in oc.movepool())
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if items := ", ".join(x.banned for x in oc.movepool()):
+            return f"Banned Movepool: {items}"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -468,11 +485,15 @@ class AbilitiesField(TemplateField):
     description = "Fill the OC's Abilities"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        condition = 1 <= len(oc.abilities) <= oc.max_amount_abilities
-        if not isinstance(oc.species, (Fakemon, Variant)):
-            condition &= all(x in oc.species.abilities for x in oc.abilities)
-        return condition
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if not (1 <= len(oc.abilities) <= oc.max_amount_abilities):
+            return f"Abilities, Min: 1, Max: {oc.max_amount_abilities}"
+
+        if isinstance(oc.species, (Fakemon, Variant)):
+            return None
+
+        if items := ", ".join(x for x in oc.abilities if x not in oc.species.abilities):
+            return f"Invalid Abilities: {items}"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -543,8 +564,9 @@ class SpAbilityField(TemplateField):
     description = "Optional. Fill the OC's Special Ability"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
-        return oc.can_have_special_abilities or not oc.sp_ability
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if not oc.can_have_special_abilities and oc.sp_ability:
+            return "Can't have Special Abilities."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -606,10 +628,11 @@ class ImageField(TemplateField):
         return bool(oc.species)
 
     @classmethod
-    def evaluate(cls, oc: Character) -> bool:
+    def evaluate(cls, oc: Character) -> Optional[str]:
         if oc.image and not isinstance(oc.image, File):
-            return oc.image != oc.default_image
-        return False
+            if oc.image == oc.default_image:
+                return "Default Image in Memory"
+        return "No Image has been defined"
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -698,19 +721,17 @@ class CreationOCView(Basic):
             )
             for x in Template
         ]
-        self.fields.options = [
-            SelectOption(
-                label=item.name,
-                description=item.description,
-                emoji=(
-                    ("\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}")
-                    if (item.evaluate(self.oc))
-                    else "\N{CROSS MARK}"
-                ),
-            )
-            for item in TemplateField.all()
-            if item.check(self.oc)
-        ]
+        self.fields.options.clear()
+        for item in TemplateField.all():
+            if item.check(self.oc):
+                emoji = "\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}"
+                description = item.evaluate(self.oc)
+                if not description:
+                    description = item.description
+                else:
+                    emoji = "\N{CROSS MARK}"
+                self.fields.add_option(label=item.name, description=description[:100], emoji=emoji)
+
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
 
