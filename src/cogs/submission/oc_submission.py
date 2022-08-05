@@ -419,7 +419,7 @@ class MovesetField(TemplateField):
                 value = f"Banned Moves: {value}. "
 
             if not condition:
-                moves = oc.movepool()
+                moves = oc.total_movepool()
                 if items := ", ".join(x.name for x in oc.moveset if x not in moves):
                     value += f"Not in Movepool: {items}"
 
