@@ -465,7 +465,7 @@ class MovepoolField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if items := ", ".join(x.banned for x in oc.movepool()):
+        if items := ", ".join(x for x in oc.movepool() if x.banned):
             return f"Banned Movepool: {items}"
 
     @classmethod
