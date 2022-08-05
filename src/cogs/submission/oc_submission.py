@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from enum import IntEnum, auto
 from typing import Optional
 
 from discord import (
@@ -25,13 +25,14 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    NotFound,
     Object,
     SelectOption,
     TextStyle,
     Webhook,
 )
 from discord.ui import Button, Select, TextInput, button, select
-from discord.utils import MISSING
+from discord.utils import MISSING, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
@@ -66,47 +67,32 @@ from src.views.movepool_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
 
-@dataclass(unsafe_hash=True)
-class Template:
-    name: bool = True
-    species: bool = True
-    age: bool = True
-    pronoun: bool = True
-    types: bool = True
-    abilities: bool = True
-    sp_ability: bool = False
-    moveset: bool = True
-
-    def clear(self):
-        self.name: bool = False
-        self.species: bool = False
-        self.age: bool = False
-        self.pronoun: bool = False
-        self.types: bool = False
-        self.abilities: bool = False
-        self.sp_ability: bool = False
-        self.moveset: bool = False
-
-
-TEMPLATES: dict[str, Template] = dict(
-    Pokemon=Template(sp_ability=True, types=False),
-    Legendary=Template(age=False, abilities=False, types=False),
-    Mythical=Template(age=False, abilities=False, types=False),
-    UltraBeast=Template(age=False, abilities=False, types=False),
-    Mega=Template(abilities=False, types=False),
-    Fusion=Template(),
-    CustomPokemon=Template(sp_ability=True),
-    CustomLegendary=Template(age=False),
-    CustomMythical=Template(age=False),
-    CustomUltraBeast=Template(age=False),
-    CustomMega=Template(types=True),
-    Variant=Template(sp_ability=True),
-)
+class Template(IntEnum):
+    Pokemon = auto()
+    Legendary = auto()
+    Mythical = auto()
+    UltraBeast = auto()
+    Mega = auto()
+    Fusion = auto()
+    CustomPokemon = auto()
+    CustomLegendary = auto()
+    CustomMythical = auto()
+    CustomUltraBeast = auto()
+    CustomMega = auto()
+    Variant = auto()
 
 
 class TemplateField(ABC):
     name: str = ""
     description: str = ""
+
+    @classmethod
+    def all(cls):
+        return cls.__subclasses__()
+
+    @classmethod
+    def get(cls, **attrs):
+        return get(cls.__subclasses__(), **attrs)
 
     def check(self, oc: Character) -> bool:
         return isinstance(oc, Character)
@@ -118,7 +104,7 @@ class TemplateField(ABC):
     async def on_submit(
         self,
         ctx: Interaction,
-        template: str,
+        template: Template,
         progress: set[str],
         oc: Character,
     ):
@@ -132,7 +118,7 @@ class NameField(TemplateField):
     def evaluate(self, oc: Character) -> bool:
         return bool(oc.name)
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         handler = text_view.handle(
             label="Write the character's Name.",
@@ -153,7 +139,7 @@ class AgeField(TemplateField):
     def evaluate(self, oc: Character) -> bool:
         return not oc.age or 13 <= oc.age <= 99
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         age = str(oc.age) if oc.age else "Unknown"
         handler = text_view.handle(
@@ -175,7 +161,7 @@ class PronounField(TemplateField):
     def evaluate(self, oc: Character) -> bool:
         return isinstance(oc.pronoun, Pronoun)
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         default = getattr(oc.pronoun, "name", "Them")
         view = Complex[Pronoun](
             member=ctx.user,
@@ -211,87 +197,106 @@ class SpeciesField(TemplateField):
     def evaluate(self, oc: Character) -> bool:
         return oc.species and not oc.species.banned
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+        max_values: int = 1
 
         match template:
-            case "Pokemon":
+            case Template.Pokemon:
                 mon_total = Pokemon.all()
-            case "Legendary":
+            case Template.Legendary:
                 mon_total = Legendary.all()
-            case "Mythical":
+            case Template.Mythical:
                 mon_total = Mythical.all()
-            case "UltraBeast":
+            case Template.UltraBeast:
                 mon_total = UltraBeast.all()
-            case "Mega":
+            case Template.Mega:
                 mon_total = Mega.all()
+            case Template.Fusion:
+                mon_total = Species.all()
+                max_values = 2
+            case (
+                Template.CustomPokemon
+                | Template.CustomLegendary
+                | Template.CustomMythical
+                | Template.CustomUltraBeast
+                | Template.CustomMega
+            ):
+                mon_total = []
             case _:
                 mon_total = Species.all()
 
-        mon_total = {x for x in mon_total if not x.banned}
-        max_values = 2 if template == "Fusion" else 1
-        view = SpeciesComplex(
-            member=ctx.user,
-            target=ctx,
-            mon_total=mon_total,
-            max_values=max_values,
-        )
-
-        if template.startswith("Custom"):
-            view.embed.title = "Select if it has a canon Pre-Evo (Skip if not needed)"
-        elif template == "Variant":
-            view.embed.title = "Select Base Species"
-
-        async with view.send() as choices:
-            choices: list[Species] = list(choices)
-            if choices:
-                if len(choices) != view.max_values:
+        choices: list[Species] = []
+        if mon_total := {x for x in mon_total if not x.banned}:
+            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, max_values=max_values)
+            async with view.send() as data:
+                choices.extend(data)
+                if len(choices) != max_values:
                     return
-                if template.startswith("Custom"):
-                    oc.species = Fakemon(
-                        abilities=oc.abilities,
-                        base_image=oc.image_url,
-                        movepool=Movepool(other=oc.moveset),
-                        evolves_from=choices[0],
-                    )
-                elif template == "Variant":
-                    oc.species = Variant(base=choices[0], name="")
-                elif template == "Fusion":
-                    oc.species = Fusion(*choices)
-                else:
-                    oc.species = choices[0]
-                    oc.image = oc.image or oc.default_image
 
-            elif template.startswith("Custom"):
-                oc.species = Fakemon(
-                    abilities=oc.abilities,
-                    base_image=oc.image_url,
-                    movepool=Movepool(other=oc.moveset),
-                )
-            else:
-                return
+        match template:
+            case (
+                Template.CustomPokemon
+                | Template.CustomLegendary
+                | Template.CustomMythical
+                | Template.CustomUltraBeast
+                | Template.CustomMega
+            ):
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label="Write the character's Species.",
+                    required=True,
+                    origin=view.message,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        oc.species = Fakemon(
+                            name=answer,
+                            abilities=oc.abilities,
+                            base_image=oc.image_url,
+                            movepool=Movepool(other=oc.moveset),
+                        )
+            case Template.Variant:
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label=f"Write the name of the {choices[0].name} Variant's Species.",
+                    required=True,
+                    origin=view.message,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        oc.species = Variant(base=choices[0], name=answer)
+            case Template.Fusion:
+                oc.species = Fusion(*choices)
+            case Template.Legendary | Template.Mythical | Template.UltraBeast | Template.Mega:
+                oc.species = choices[0]
+                oc.abilities = choices[0].abilities.copy()
+            case _:
+                oc.species = choices[0]
+                oc.abilities &= oc.species.abilities
 
-        if not oc.species:
-            return
+        oc.image = oc.image or oc.default_image
 
-        if oc.species.name:
+        if species := oc.species:
             progress.add(self.name)
-        else:
-            species = getattr(oc.species, "name", "Species")
-            text_view = ModernInput(member=ctx.user, target=ctx)
-            handler = text_view.handle(
-                label="Write the character's Species.",
-                default=species,
-                required=True,
-                origin=view.message,
-            )
-            async with handler as answer:
-                if isinstance(answer, str):
-                    oc.species.name = answer.title()
-                    progress.add(self.name)
+            moves = species.movepool()
+            if not oc.moveset and len(moves) <= 6:
+                oc.moveset = frozenset(moves)
+            if not oc.abilities and len(species.abilities) == 1:
+                oc.abilities = species.abilities.copy()
 
-        moves = oc.species.movepool()
-        if not oc.moveset and len(moves) <= 6:
-            oc.moveset = frozenset(moves)
+
+class PreEvoSpeciesField(TemplateField):
+    name = "Pre Evo Species"
+    description = "Optional. Fill the OC's Pre evo Species"
+
+    def check(self, oc: Character) -> bool:
+        return isinstance(oc, Fakemon)
+
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+        mon_total = {x for x in Species.all() if not x.banned}
+        view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total)
+        async with view.send(title="Select if it has a canon Pre-Evo (Skip if not needed)", single=True) as choice:
+            oc.species.evolves_from = choice.id if choice else None
+            progress.add(self.name)
+            moves = oc.species.movepool()
+            if not oc.moveset and len(moves) <= 6:
+                oc.moveset = frozenset(moves)
 
 
 class TypesField(TemplateField):
@@ -307,7 +312,7 @@ class TypesField(TemplateField):
     def check(self, oc: Character) -> bool:
         return isinstance(oc.species, (Fusion, Fakemon, Variant))
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         species = oc.species
         if isinstance(species, Fusion):  # type: ignore
             values = species.possible_types
@@ -377,7 +382,7 @@ class MovesetField(TemplateField):
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         moves = oc.total_movepool()
         mon = Pokemon.from_ID("SMEARGLE")
         if isinstance(oc.species, Fusion):
@@ -416,7 +421,7 @@ class MovepoolField(TemplateField):
     def check(self, oc: Character) -> bool:
         return isinstance(oc.species, (Fakemon, Variant))
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         view = MovepoolView(ctx, ctx.user, oc)
         await view.send()
         await view.wait()
@@ -436,7 +441,7 @@ class AbilitiesField(TemplateField):
     def check(self, oc: Character) -> bool:
         return bool(oc.species)
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities = oc.species.abilities
         if isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
@@ -472,7 +477,7 @@ class HiddenPowerField(TemplateField):
     name = "Hidden Power"
     description = "Optional. Fill the OC's Hidden Power"
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
 
         view = Complex[Typing](
             member=ctx.user,
@@ -504,7 +509,7 @@ class SpAbilityField(TemplateField):
     def check(self, oc: Character) -> bool:
         return oc.species and oc.can_have_special_abilities
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         view = SPAbilityView(ctx.user, oc)
         await ctx.followup.send("Continue with Submission", view=view)
         await view.wait()
@@ -516,7 +521,7 @@ class BackstoryField(TemplateField):
     name = "Backstory"
     description = "Optional. Fill the OC's Backstory"
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Backstory.",
@@ -533,7 +538,7 @@ class ExtraField(TemplateField):
     name = "Extra Information"
     description = "Optional. Fill the OC's Extra Information"
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Extra Information.",
@@ -558,7 +563,7 @@ class ImageField(TemplateField):
             return oc.image != oc.default_image
         return False
 
-    async def on_submit(self, ctx: Interaction, template: str, progress: set[str], oc: Character):
+    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         default_image = oc.image_url or oc.image or oc.default_image
         view = ImageView(member=ctx.user, default_img=default_image, target=ctx)
         async with view.send() as text:
@@ -578,32 +583,6 @@ class ImageField(TemplateField):
         return None
 
 
-FIELDS: dict[str, TemplateField] = {
-    "Name": NameField(),
-    "Age": AgeField(),
-    "Pronoun": PronounField(),
-    "Species": SpeciesField(),
-    "Types": TypesField(),
-    "Moveset": MovesetField(),
-    "Movepool": MovepoolField(),
-    "Abilities": AbilitiesField(),
-    "Hidden Power": HiddenPowerField(),
-    "Special Ability": SpAbilityField(),
-    "Backstory": BackstoryField(),
-    "Extra Information": ExtraField(),
-    "Image": ImageField(),
-}
-
-
-def convert_template(oc: Character):
-    if oc.species:
-        name = type(oc.species).__name__.replace("Fakemon", "CustomPokemon")
-        if _BEASTBOOST in oc.abilities and name == "CustomPokemon":
-            return "CustomUltraBeast"
-        return name
-    return "Pokemon"
-
-
 class CreationOCView(Basic):
     def __init__(
         self,
@@ -611,7 +590,7 @@ class CreationOCView(Basic):
         ctx: Interaction,
         user: Member,
         oc: Optional[Character] = None,
-        template: Optional[str] = None,
+        template: Optional[Template] = None,
         progress: set[str] = None,
     ):
         super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
@@ -623,7 +602,23 @@ class CreationOCView(Basic):
         self.user = user
         self.embeds = oc.embeds
         self.embeds[0].set_author(name=user.display_name, icon_url=user.display_avatar)
-        self.ref_template = template or convert_template(oc)
+
+        if not isinstance(template, Template):
+            if isinstance(template, str):
+                name = template
+            else:
+                name = type(oc.species).__name__
+
+            name = name.replace("Fakemon", "CustomPokemon")
+            if _BEASTBOOST in oc.abilities and name == "CustomPokemon":
+                name = "CustomUltraBeast"
+
+            try:
+                template = Template[name]
+            except KeyError:
+                template = Template.Pokemon
+
+        self.ref_template = template
         self.progress: set[str] = set()
         if progress:
             self.progress.update(progress)
@@ -646,19 +641,26 @@ class CreationOCView(Basic):
         return False
 
     def setup(self):
-        self.kind.options = [SelectOption(label=x, emoji="\N{MEMO}", default=x == self.ref_template) for x in TEMPLATES]
+        self.kind.options = [
+            SelectOption(
+                label=x.name,
+                emoji="\N{MEMO}",
+                default=x == self.ref_template,
+            )
+            for x in Template
+        ]
         self.fields.options = [
             SelectOption(
-                label=k,
-                description=v.description,
+                label=item.name,
+                description=item.description,
                 emoji=(
-                    ("\N{BLACK SQUARE BUTTON}" if (k in self.progress) else "\N{BLACK LARGE SQUARE}")
-                    if (v.evaluate(self.oc))
+                    ("\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}")
+                    if (item.evaluate(self.oc))
                     else "\N{CROSS MARK}"
                 ),
             )
-            for k, v in FIELDS.items()
-            if v.check(self.oc)
+            for item in TemplateField.all()
+            if item.check(self.oc)
         ]
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
@@ -669,10 +671,21 @@ class CreationOCView(Basic):
         try:
             self.oc.species = None
             self.progress -= {"Species", "Types", "Abilities", "Moveset"}
-            self.ref_template = sct.values[0]
-            if not TEMPLATES[self.ref_template].sp_ability:
-                self.progress -= {"Special Ability"}
-                self.oc.sp_ability = None
+            self.ref_template = Template[sct.values[0]]
+
+            match self.ref_template:
+                case (
+                    Template.Legendary
+                    | Template.Mythical
+                    | Template.UltraBeast
+                    | Template.CustomLegendary
+                    | Template.CustomMythical
+                    | Template.CustomUltraBeast
+                ):
+                    self.progress -= {"Special Ability"}
+                    self.oc.sp_ability = None
+                    if self.ref_template == Template.CustomUltraBeast:
+                        self.oc.abilities = frozenset({_BEASTBOOST})
 
             m = self.message
             if m and not m.flags.ephemeral:
@@ -681,7 +694,7 @@ class CreationOCView(Basic):
                     {"id": m.id},
                     {
                         "id": m.id,
-                        "template": self.ref_template,
+                        "template": self.ref_template.name,
                         "author": self.user.id,
                         "character": self.oc.to_mongo_dict(),
                         "progress": list(self.progress),
@@ -704,26 +717,33 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         try:
-            item = FIELDS[sct.values[0]]
-            await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
-            self.setup()
+            if item := TemplateField.get(name=sct.values[0]):
+                method = item()
+                await method.on_submit(ctx, self.ref_template, self.progress, self.oc)
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
+        finally:
+            self.setup()
 
         try:
             embeds = self.oc.embeds
             embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
             if not self.oc.image_url:
                 embeds[0].set_image(url="attachment://image.png")
-            if isinstance(self.oc.image, File):
-                files = [self.oc.image]
-            else:
-                files = MISSING
-
+            files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
             try:
                 message = self.message or ctx.message
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
+            except NotFound as e:
+                ctx.client.logger.exception(
+                    "NotFound Exception Message\n\nctx: %s\nself: %s",
+                    repr(ctx.message),
+                    repr(self.message),
+                    exc_info=e,
+                )
+                await ctx.followup.send(str(e), ephemeral=True)
+                return self.stop()
             except (DiscordException, AttributeError):
                 m = await ctx.edit_original_message(embeds=embeds, view=self, attachments=files)
 
@@ -738,7 +758,7 @@ class CreationOCView(Basic):
                     {"id": m.id},
                     {
                         "id": m.id,
-                        "template": self.ref_template,
+                        "template": self.ref_template.name,
                         "author": self.user.id,
                         "character": self.oc.to_mongo_dict(),
                         "progress": list(self.progress),
