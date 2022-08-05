@@ -303,12 +303,19 @@ class PreEvoSpeciesField(TemplateField):
     description = "Optional. Fill the OC's Pre evo Species"
 
     @classmethod
+    def evaluate(cls, oc: Character) -> bool:
+        if isinstance(species := oc.species, Fakemon):
+            mon = species.species_evolves_from
+            return not mon or isinstance(mon, Pokemon)
+        return True
+
+    @classmethod
     def check(cls, oc: Character) -> bool:
         return isinstance(oc.species, Fakemon)
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
-        mon_total = {x for x in Species.all() if not x.banned}
+        mon_total = {x for x in Pokemon.all() if not x.banned}
         view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total)
         async with view.send(title="Select if it has a canon Pre-Evo (Skip if not needed)", single=True) as choice:
             oc.species.evolves_from = choice.id if choice else None
