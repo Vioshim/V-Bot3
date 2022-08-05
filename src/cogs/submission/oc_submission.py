@@ -501,7 +501,7 @@ class AbilitiesField(TemplateField):
         async with view.send() as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant))
+                if isinstance(oc.species, (Fakemon, Variant)):
                     oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
