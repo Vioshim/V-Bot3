@@ -817,8 +817,14 @@ class ModCharactersView(CharactersView):
                         target = self.target
                     else:
                         target = interaction
+
+                    ephemeral = self.message.flags.ephemeral
                     view = PingView(oc=item, reference=target)
-                    await interaction.followup.send(embeds=item.embeds, view=view, ephemeral=True)
+                    await interaction.followup.send(
+                        embeds=item.embeds,
+                        view=view,
+                        ephemeral=ephemeral,
+                    )
                 await view.wait()
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)

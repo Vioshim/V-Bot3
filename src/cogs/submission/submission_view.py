@@ -192,6 +192,6 @@ class SubmissionView(View):
         view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
         view.embed.title = "Select Character to modify"
         view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        async with view.send(single=True, ephemeral=True) as oc:
+        async with view.send(single=True) as oc:
             if isinstance(oc, Character):
                 logger.info("%s is modifying a Character(%s) aka %s", str(ctx.user), repr(oc), oc.name)
