@@ -629,10 +629,10 @@ class ImageField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.image and not isinstance(oc.image, File):
-            if oc.image == oc.default_image:
-                return "Default Image in Memory"
-        return "No Image has been defined"
+        if not oc.image:
+            return "No Image has been defined"
+        if oc.image and not isinstance(oc.image, File) and oc.image == oc.default_image:
+            return "Default Image in Memory"
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
