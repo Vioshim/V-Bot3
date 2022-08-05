@@ -94,15 +94,18 @@ class TemplateField(ABC):
     def get(cls, **attrs):
         return get(cls.__subclasses__(), **attrs)
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return isinstance(oc, Character)
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return isinstance(oc, Character)
 
+    @classmethod
     @abstractmethod
     async def on_submit(
-        self,
+        cls,
         ctx: Interaction,
         template: Template,
         progress: set[str],
@@ -115,10 +118,12 @@ class NameField(TemplateField):
     name = "Name"
     description = "Fill the OC's Name"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return bool(oc.name)
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         handler = text_view.handle(
             label="Write the character's Name.",
@@ -129,17 +134,19 @@ class NameField(TemplateField):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.name = answer.title()
-                progress.add(self.name)
+                progress.add(cls.name)
 
 
 class AgeField(TemplateField):
     name = "Age"
     description = "Optional. Fill the OC's Age"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return not oc.age or 13 <= oc.age <= 99
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         age = str(oc.age) if oc.age else "Unknown"
         handler = text_view.handle(
@@ -151,17 +158,19 @@ class AgeField(TemplateField):
         async with handler as answer:
             if isinstance(answer, str):
                 oc.age = int_check(answer, 13, 99)
-                progress.add(self.name)
+                progress.add(cls.name)
 
 
 class PronounField(TemplateField):
     name = "Pronoun"
     description = "Optional. Fill the OC's Pronoun"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return isinstance(oc.pronoun, Pronoun)
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         default = getattr(oc.pronoun, "name", "Them")
         view = Complex[Pronoun](
             member=ctx.user,
@@ -187,17 +196,19 @@ class PronounField(TemplateField):
         ) as pronoun:
             if isinstance(pronoun, Pronoun):
                 oc.pronoun = pronoun
-                progress.add(self.name)
+                progress.add(cls.name)
 
 
 class SpeciesField(TemplateField):
     name = "Species"
     description = "Fill the OC's Species"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return oc.species and not oc.species.banned
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         max_values: int = 1
 
         match template:
@@ -273,7 +284,7 @@ class SpeciesField(TemplateField):
         oc.image = oc.image or oc.default_image
 
         if species := oc.species:
-            progress.add(self.name)
+            progress.add(cls.name)
             moves = species.movepool()
             if not oc.moveset and len(moves) <= 6:
                 oc.moveset = frozenset(moves)
@@ -285,15 +296,17 @@ class PreEvoSpeciesField(TemplateField):
     name = "Pre Evo Species"
     description = "Optional. Fill the OC's Pre evo Species"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return isinstance(oc, Fakemon)
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         mon_total = {x for x in Species.all() if not x.banned}
         view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total)
         async with view.send(title="Select if it has a canon Pre-Evo (Skip if not needed)", single=True) as choice:
             oc.species.evolves_from = choice.id if choice else None
-            progress.add(self.name)
+            progress.add(cls.name)
             moves = oc.species.movepool()
             if not oc.moveset and len(moves) <= 6:
                 oc.moveset = frozenset(moves)
@@ -303,16 +316,19 @@ class TypesField(TemplateField):
     name = "Types"
     escription = "Fill the OC's Types"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         species = oc.species
         if isinstance(species, (Fakemon, Variant, Fusion)):
             return oc.types in species.possible_types
         return False
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return isinstance(oc.species, (Fusion, Fakemon, Variant))
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         species = oc.species
         if isinstance(species, Fusion):  # type: ignore
             values = species.possible_types
@@ -349,14 +365,15 @@ class TypesField(TemplateField):
         async with view.send(title="Select Typing", single=single) as types:
             if types:
                 species.types = frozenset(types)
-                progress.add(self.name)
+                progress.add(cls.name)
 
 
 class MovesetField(TemplateField):
     name = "Moveset"
     description = "Optional. Fill the OC's fav. moves"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         if species := oc.species:
             mon = Pokemon.from_ID("SMEARGLE")
 
@@ -379,10 +396,12 @@ class MovesetField(TemplateField):
 
         return False
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         moves = oc.total_movepool()
         mon = Pokemon.from_ID("SMEARGLE")
         if isinstance(oc.species, Fusion):
@@ -408,40 +427,46 @@ class MovesetField(TemplateField):
             if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
                 oc.movepool = Movepool(tutor=oc.moveset.copy())
                 progress.add("Movepool")
-            progress.add(self.name)
+            progress.add(cls.name)
 
 
 class MovepoolField(TemplateField):
     name = "Movepool"
     description = "Optional. Fill the OC's movepool"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return all(not x.banned for x in oc.movepool())
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return isinstance(oc.species, (Fakemon, Variant))
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         view = MovepoolView(ctx, ctx.user, oc)
         await view.send()
         await view.wait()
-        progress.add(self.name)
+        progress.add(cls.name)
 
 
 class AbilitiesField(TemplateField):
     name = "Abilities"
     description = "Fill the OC's Abilities"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         condition = 1 <= len(oc.abilities) <= oc.max_amount_abilities
         if not isinstance(oc.species, (Fakemon, Variant)):
             condition &= all(x in oc.species.abilities for x in oc.abilities)
         return condition
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities = oc.species.abilities
         if isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
@@ -470,15 +495,15 @@ class AbilitiesField(TemplateField):
         async with view.send() as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
-                progress.add(self.name)
+                progress.add(cls.name)
 
 
 class HiddenPowerField(TemplateField):
     name = "Hidden Power"
     description = "Optional. Fill the OC's Hidden Power"
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
-
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         view = Complex[Typing](
             member=ctx.user,
             target=ctx,
@@ -493,35 +518,38 @@ class HiddenPowerField(TemplateField):
             ),
             silent_mode=True,
         )
-
         async with view.send(title="Select Hidden Power", single=True) as types:
             oc.hidden_power = types
-            progress.add(self.name)
+            progress.add(cls.name)
 
 
 class SpAbilityField(TemplateField):
     name = "Special Ability"
     description = "Optional. Fill the OC's Special Ability"
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         return oc.can_have_special_abilities or not oc.sp_ability
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return oc.species and oc.can_have_special_abilities
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         view = SPAbilityView(ctx.user, oc)
         await ctx.followup.send("Continue with Submission", view=view)
         await view.wait()
         oc.sp_ability = view.sp_ability
-        progress.add(self.name)
+        progress.add(cls.name)
 
 
 class BackstoryField(TemplateField):
     name = "Backstory"
     description = "Optional. Fill the OC's Backstory"
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Backstory.",
@@ -530,15 +558,17 @@ class BackstoryField(TemplateField):
             required=False,
             style=TextStyle.paragraph,
         ) as answer:
-            oc.backstory = answer or None
-            progress.add(self.name)
+            if isinstance(answer, str):
+                oc.backstory = answer or None
+                progress.add(cls.name)
 
 
 class ExtraField(TemplateField):
     name = "Extra Information"
     description = "Optional. Fill the OC's Extra Information"
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Extra Information.",
@@ -547,29 +577,33 @@ class ExtraField(TemplateField):
             required=False,
             style=TextStyle.paragraph,
         ) as answer:
-            oc.extra = answer or None
-            progress.add(self.name)
+            if isinstance(answer, str):
+                oc.extra = answer or None
+                progress.add(cls.name)
 
 
 class ImageField(TemplateField):
     name = "Image"
     description = "Fill the OC's Image"
 
-    def check(self, oc: Character) -> bool:
+    @classmethod
+    def check(cls, oc: Character) -> bool:
         return bool(oc.species)
 
-    def evaluate(self, oc: Character) -> bool:
+    @classmethod
+    def evaluate(cls, oc: Character) -> bool:
         if oc.image and not isinstance(oc.image, File):
             return oc.image != oc.default_image
         return False
 
-    async def on_submit(self, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    @classmethod
+    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         default_image = oc.image_url or oc.image or oc.default_image
         view = ImageView(member=ctx.user, default_img=default_image, target=ctx)
         async with view.send() as text:
             if text and isinstance(text, str):
                 oc.image = text
-                progress.add(self.name)
+                progress.add(cls.name)
 
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
             db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Background")
@@ -718,8 +752,7 @@ class CreationOCView(Basic):
         await resp.defer(ephemeral=True, thinking=True)
         try:
             if item := TemplateField.get(name=sct.values[0]):
-                method = item()
-                await method.on_submit(ctx, self.ref_template, self.progress, self.oc)
+                await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
         except Exception as e:
             ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
             await ctx.followup.send(str(e), ephemeral=True)
