@@ -237,9 +237,12 @@ class SpeciesField(TemplateField):
                 mon_total = Species.all()
 
         choices: list[Species] = []
+
+        origin = None
         if mon_total := {x for x in mon_total if not x.banned}:
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, max_values=max_values)
             async with view.send() as data:
+                origin = view.message
                 choices.extend(data)
                 if len(choices) != max_values:
                     return
@@ -255,7 +258,7 @@ class SpeciesField(TemplateField):
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="Write the character's Species.",
                     required=True,
-                    origin=view.message,
+                    origin=origin,
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         oc.species = Fakemon(
@@ -268,7 +271,7 @@ class SpeciesField(TemplateField):
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"Write the name of the {choices[0].name} Variant's Species.",
                     required=True,
-                    origin=view.message,
+                    origin=origin,
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         oc.species = Variant(base=choices[0], name=answer)
