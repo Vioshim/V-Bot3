@@ -296,7 +296,7 @@ class SpeciesField(TemplateField):
 
 
 class PreEvoSpeciesField(TemplateField):
-    name = "Pre Evo Species"
+    name = "Pre-Evolution"
     description = "Optional. Fill the OC's Pre evo Species"
 
     @classmethod
@@ -428,7 +428,7 @@ class MovesetField(TemplateField):
         ) as choices:
             oc.moveset = frozenset(choices)
             if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
-                oc.movepool = Movepool(tutor=oc.moveset.copy())
+                oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                 progress.add("Movepool")
             progress.add(cls.name)
 
