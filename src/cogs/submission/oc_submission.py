@@ -261,12 +261,15 @@ class SpeciesField(TemplateField):
                     origin=origin,
                 ) as answer:
                     if isinstance(answer, str) and answer:
-                        oc.species = Fakemon(
-                            name=answer,
-                            abilities=oc.abilities,
-                            base_image=oc.image_url,
-                            movepool=Movepool(other=oc.moveset),
-                        )
+                        if isinstance(oc.species, Fakemon):
+                            oc.species.name = answer
+                        else:
+                            oc.species = Fakemon(
+                                name=answer,
+                                abilities=oc.abilities,
+                                base_image=oc.image_url,
+                                movepool=Movepool(other=oc.moveset.copy()),
+                            )
             case Template.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"Write the name of the {choices[0].name} Variant's Species.",
@@ -301,7 +304,7 @@ class PreEvoSpeciesField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc, Fakemon)
+        return isinstance(oc.species, Fakemon)
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -498,6 +501,8 @@ class AbilitiesField(TemplateField):
         async with view.send() as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
+                if isinstance(oc.species, (Fakemon, Variant))
+                    oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
 
@@ -728,14 +733,14 @@ class CreationOCView(Basic):
             if m and not m.flags.ephemeral:
                 db = self.bot.mongo_db("OC Creation")
                 await db.replace_one(
-                    {"id": m.id},
-                    {
-                        "id": m.id,
-                        "template": self.ref_template.name,
-                        "author": self.user.id,
-                        "character": self.oc.to_mongo_dict(),
-                        "progress": list(self.progress),
-                    },
+                    dict(id=m.id),
+                    dict(
+                        id=m.id,
+                        template=self.ref_template.name,
+                        author=self.user.id,
+                        character=self.oc.to_mongo_dict(),
+                        progress=list(self.progress),
+                    ),
                     upsert=True,
                 )
 
