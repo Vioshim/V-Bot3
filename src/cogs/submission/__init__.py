@@ -252,7 +252,6 @@ class Submission(commands.Cog):
             kwargs = dict(
                 content=f"<@{user.id}>",
                 embeds=embeds,
-                thread=Object(id=oc.thread),
                 allowed_mentions=AllowedMentions(users=True),
             )
 
@@ -455,8 +454,7 @@ class Submission(commands.Cog):
                 if content.isdigit():
                     self.oc_list[int(content)] = message.id
                     view = RPView(int(content), self.oc_list)
-                    await message.edit(view=view)
-                    # self.bot.add_view(view=view, message_id=message.id)
+                    self.bot.add_view(view=view, message_id=message.id)
         self.bot.logger.info("Finished loading all Profiles.")
 
     async def load_submssions(self):

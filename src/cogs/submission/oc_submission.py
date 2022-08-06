@@ -877,7 +877,7 @@ class CreationOCView(Basic):
             word = "modified" if self.oc.id else "registered"
             await cog.register_oc(self.oc, image_as_is=True)
             registered = ctx.guild.get_role(719642423327719434)
-            if registered and registered not in self.user.roles:
+            if isinstance(self.user, Member) and registered and registered not in self.user.roles:
                 await self.user.add_roles(registered)
             await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
         except Exception as e:
