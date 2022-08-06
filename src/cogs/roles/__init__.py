@@ -47,7 +47,9 @@ from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
 
 __all__ = ("Roles", "setup")
 
-IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png"
+IMAGE_EMBED = Embed(
+    color=Color.blurple(),
+).set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png")
 
 
 class Roles(commands.Cog):
@@ -97,9 +99,9 @@ class Roles(commands.Cog):
             async for m in channel.history(limit=1):
                 view = RPRolesView(timeout=None)
                 if m.author == self.bot.user and not m.webhook_id:
-                    self.ref_msg = await m.edit(content=IMAGE, view=view)
+                    self.ref_msg = await m.edit(embed=IMAGE_EMBED, view=view)
                 else:
-                    self.ref_msg = await channel.send(content=IMAGE, view=view)
+                    self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=view)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
@@ -137,7 +139,7 @@ class Roles(commands.Cog):
             view = RPRolesView(timeout=None)
             if m := self.ref_msg:
                 await m.delete(delay=0)
-            self.ref_msg = await msg.channel.send(content=IMAGE, view=view)
+            self.ref_msg = await msg.channel.send(embed=IMAGE_EMBED, view=view)
         elif msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name and not msg.author.bot:
             db2 = self.bot.mongo_db("RP Sessions")
             log_w = await self.bot.webhook(1001125143071965204)
