@@ -297,8 +297,9 @@ class SpeciesField(TemplateField):
                 oc.species = choices[0]
                 oc.abilities = choices[0].abilities.copy()
             case _:
-                oc.species = choices[0]
-                oc.abilities &= oc.species.abilities
+                if choices:
+                    oc.species = choices[0]
+                    oc.abilities &= oc.species.abilities
 
         oc.image = oc.image or oc.default_image
 
@@ -353,7 +354,7 @@ class TypesField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fusion, Fakemon, Variant))
+        return isinstance(oc.species, (Fusion, Fakemon, Variant, CustomMega))
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
@@ -502,7 +503,7 @@ class AbilitiesField(TemplateField):
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities = oc.species.abilities
-        if isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
+        if isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
             abilities = ALL_ABILITIES.values()
         view = Complex[Ability](
             member=ctx.user,
