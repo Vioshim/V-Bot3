@@ -260,7 +260,6 @@ class Basic(View):
             except HTTPException:
                 pass
         finally:
-            self.message = None
             self.stop()
 
     async def on_timeout(self) -> None:

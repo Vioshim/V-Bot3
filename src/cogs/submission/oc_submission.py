@@ -104,10 +104,6 @@ class TemplateField(ABC):
         return None
 
     @classmethod
-    def message(cls, _: Character) -> bool:
-        return cls.description
-
-    @classmethod
     @abstractmethod
     async def on_submit(
         cls,
@@ -240,7 +236,7 @@ class SpeciesField(TemplateField):
         max_values: int = 1
 
         match template:
-            case Template.Pokemon | Template.CustomMega:
+            case Template.Pokemon | Template.CustomMega | Template.Variant:
                 mon_total = Pokemon.all()
             case Template.Legendary:
                 mon_total = Legendary.all()
@@ -253,10 +249,8 @@ class SpeciesField(TemplateField):
             case Template.Fusion:
                 mon_total = Species.all()
                 max_values = 2
-            case Template.CustomPokemon | Template.CustomLegendary | Template.CustomMythical | Template.CustomUltraBeast:
-                mon_total = []
             case _:
-                mon_total = Species.all()
+                mon_total = []
 
         choices: list[Species] = []
 
