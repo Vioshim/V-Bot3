@@ -33,7 +33,7 @@ class RPView(View):
         self.last_ping = None
         self.oc_list = oc_list
         self.server = server
-        btn = Button(label="Check User's OCs", url=self.url)
+        btn = Button(label="See Characters", url=self.url)
         self.add_item(btn)
 
     @property
@@ -60,7 +60,7 @@ class RPView(View):
 
         return True
 
-    @button(label="Mention the User", style=ButtonStyle.green, custom_id="ping")
+    @button(label="Ping User", style=ButtonStyle.green, custom_id="ping")
     async def ping(self, interaction: Interaction, _: Button):
         member: Member = interaction.user
         guild = interaction.guild

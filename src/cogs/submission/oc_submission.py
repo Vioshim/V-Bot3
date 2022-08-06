@@ -26,10 +26,9 @@ from discord import (
     InteractionResponse,
     Member,
     NotFound,
-    Object,
+    PartialMessage,
     SelectOption,
     TextStyle,
-    Webhook,
 )
 from discord.ui import Button, Select, TextInput, button, select
 from discord.utils import MISSING, get
@@ -854,9 +853,10 @@ class CreationOCView(Basic):
     async def finish_oc(self, ctx: Interaction, _: Button):
         try:
             if self.oc.id and self.oc.thread:
-                webhook: Webhook = await ctx.client.webhook(919277769735680050)
-                thread = Object(id=self.oc.thread)
-                await webhook.delete_message(self.oc.id, thread=thread)
+                if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
+                    channel = await ctx.guild.fetch_channel(self.oc.thread)
+                msg = PartialMessage(channel=channel, id=self.oc.id)
+                await msg.delete(delay=0)
             await self.delete(ctx)
         except Exception as e:
             self.bot.logger.exception("Exception Deleting Character", exc_info=e)

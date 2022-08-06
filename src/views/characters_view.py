@@ -18,7 +18,6 @@ from logging import getLogger, setLoggerClass
 from discord import (
     AllowedMentions,
     ButtonStyle,
-    DiscordException,
     Embed,
     File,
     Forbidden,
@@ -28,6 +27,7 @@ from discord import (
     Member,
     Object,
     PartialEmoji,
+    PartialMessage,
     Role,
     SelectOption,
     TextChannel,
@@ -215,15 +215,13 @@ class PingView(View):
         if ctx.user != member:
             await resp.send_message("This is not yours", ephemeral=True)
             return
-        try:
-            await resp.send_message("Deleted character", ephemeral=True)
-            thread = await ctx.guild.fetch_channel(self.oc.thread)
-            message = await thread.fetch_message(self.oc.id)
-            await message.delete()
-        except DiscordException:
-            pass
-        finally:
-            self.stop()
+
+        await resp.send_message("Deleted character", ephemeral=True)
+        if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
+            channel = await ctx.guild.fetch_channel(self.oc.thread)
+        msg = PartialMessage(channel=channel, id=self.oc.id)
+        await msg.delete(delay=0)
+        self.stop()
 
 
 class CharactersView(Complex[Character]):

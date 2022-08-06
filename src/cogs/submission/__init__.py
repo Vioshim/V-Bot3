@@ -29,12 +29,12 @@ from discord import (
     NotFound,
     Object,
     PartialEmoji,
+    PartialMessage,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     Status,
     Thread,
     User,
-    WebhookMessage,
     app_commands,
 )
 from discord.ext import commands
@@ -195,7 +195,7 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
-    async def list_update(self, member: Object):
+    async def list_update(self, member: Object) -> int:
         """This function updates an user's character list message
 
         Parameters
@@ -205,20 +205,23 @@ class Submission(commands.Cog):
         """
         if isinstance(member, int):
             member = Object(id=member)
-        webhook = await self.bot.webhook(919277769735680050)
+
+        if not (channel := self.bot.get_channel(1005360320585400390)):
+            channel = await self.bot.fetch_channel(1005360320585400390)
+
         if oc_list := self.oc_list.get(member.id):
             try:
-                await webhook.edit_message(oc_list, embed=None)
+                msg = PartialMessage(channel=channel, id=oc_list)
+                await msg.fetch()
             except NotFound:
                 oc_list = None
 
         if not oc_list:
-            message: WebhookMessage = await webhook.send(
+            message = await channel.send(
                 content=f"<@{member.id}>",
-                wait=True,
                 allowed_mentions=AllowedMentions(users=True),
             )
-            if user := webhook.guild.get_member(member.id):
+            if user := channel.guild.get_member(member.id):
                 thread = await message.create_thread(name=user.display_name)
                 await thread.add_user(user)
             else:
@@ -231,13 +234,18 @@ class Submission(commands.Cog):
     async def register_oc(self, oc: Character, image_as_is: bool = False):
         try:
             member = Object(id=oc.author)
-            webhook = await self.bot.webhook(919277769735680050)
+
             try:
                 thread_id = self.oc_list[member.id]
             except KeyError:
                 thread_id = await self.list_update(member)
+
             oc.thread = thread_id
             guild: Guild = self.bot.get_guild(oc.server)
+
+            if not (thread := guild.get_channel_or_thread(thread_id)):
+                thread = await self.bot.fetch_channel(thread_id)
+
             user = guild.get_member(member.id) or member
             embeds = oc.embeds
             embeds[0].set_image(url="attachment://image.png")
@@ -261,10 +269,10 @@ class Submission(commands.Cog):
                     kwargs[word] = [file]
 
             if oc.id:
-                msg_oc = await webhook.edit_message(oc.id, **kwargs)
+                await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                 word = "modified"
             else:
-                msg_oc = await webhook.send(**kwargs, wait=True)
+                msg_oc = await thread.send(**kwargs)
                 word = "registered"
 
             oc.id = msg_oc.id
@@ -325,16 +333,17 @@ class Submission(commands.Cog):
     async def oc_update(self, oc: Character):
         embeds = oc.embeds
         embeds[0].set_image(url="attachment://image.png")
-        webhook = await self.bot.webhook(919277769735680050)
+        channel = await self.bot.fetch_channel(oc.thread)
+        msg = PartialMessage(channel=channel, id=oc.id)
         try:
             try:
-                await webhook.edit_message(oc.id, embeds=embeds, thread=Object(id=oc.thread))
+                await msg.edit(embeds=embeds)
             except HTTPException:
                 guild = self.bot.get_guild(oc.server)
                 if not (thread := guild.get_thread(oc.thread)):
                     thread: Thread = await self.bot.fetch_channel(oc.thread)
                 await thread.edit(archived=False)
-                await webhook.edit_message(oc.id, embeds=embeds, thread=thread)
+                await msg.edit(embeds=embeds)
         except NotFound:
             await self.register_oc(oc)
 
@@ -438,31 +447,34 @@ class Submission(commands.Cog):
 
     async def load_profiles(self):
         self.bot.logger.info("Loading All Profiles")
-        ch = self.bot.get_channel(919277769735680050)
+        if not (ch := self.bot.get_channel(1005360320585400390)):
+            ch = await self.bot.fetch_channel(1005360320585400390)
         async for message in ch.history(limit=None, oldest_first=True):
-            if message.webhook_id and message.mentions:
-                user = message.mentions[0]
-                self.oc_list[user.id] = message.id
-                view = RPView(user.id, self.oc_list)
-                self.bot.add_view(view=view, message_id=message.id)
+            if content := message.content:
+                content = content[2:-1]
+                if content.isdigit():
+                    self.oc_list[int(content)] = message.id
+                    view = RPView(int(content), self.oc_list)
+                    await message.edit(view=view)
+                    # self.bot.add_view(view=view, message_id=message.id)
         self.bot.logger.info("Finished loading all Profiles.")
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
-        thread: Thread = await self.bot.fetch_channel(961345742222536744)
-        webhook = await self.bot.webhook(852180971985043466)
+        thread: Thread = await self.bot.fetch_channel(1005387453055639612)
         view = SubmissionView(ocs=self.ocs, supporting=self.supporting)
         async for msg in thread.history(limit=None, oldest_first=True):
-            if (embeds := msg.embeds) and msg.webhook_id:
+            if (embeds := msg.embeds) and msg.author == self.bot.user:
                 view.show_template.add_option(
                     label=embeds[0].title,
                     value=str(msg.id),
                     description=embeds[0].footer.text[:100],
                     emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
                 )
-                msg = await webhook.edit_message(msg.id, thread=thread, view=None)
                 view.templates[str(msg.id)] = msg
-        await webhook.edit_message(961345742222536744, view=view)
+        if not (channel := self.bot.get_channel(852180971985043466)):
+            channel = await self.bot.fetch_channel(852180971985043466)
+        await PartialMessage(channel=channel, id=1005387453055639612).edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
     async def load_saved_submssions(self):
@@ -515,16 +527,6 @@ class Submission(commands.Cog):
         if thread.archived:
             await thread.edit(archived=False)
         await thread.edit(name=member.display_name, reason=f"Unknown -> {member.display_name}")
-
-    @commands.Cog.listener()
-    async def on_member_update(self, past: Member, now: Member):
-        if not (entry := self.oc_list.get(now.id)) or past.display_name == now.display_name:
-            return
-        if not (thread := now.guild.get_thread(entry)):
-            thread = await self.bot.fetch_channel(entry)
-        if thread.archived:
-            await thread.edit(archived=False)
-        await thread.edit(name=now.display_name, reason=f"{past.display_name} -> {now.display_name}")
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
