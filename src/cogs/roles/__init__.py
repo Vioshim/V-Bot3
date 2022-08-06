@@ -25,6 +25,7 @@ from discord import (
     Message,
     NotFound,
     Object,
+    PartialMessage,
     RawMessageDeleteEvent,
     Role,
     Thread,
@@ -142,25 +143,23 @@ class Roles(commands.Cog):
             self.ref_msg = await msg.channel.send(embed=IMAGE_EMBED, view=view)
         elif msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name and not msg.author.bot:
             db2 = self.bot.mongo_db("RP Sessions")
-            log_w = await self.bot.webhook(1001125143071965204)
-            w = await self.bot.webhook(msg.channel)
 
             if isinstance(msg.channel, Thread):
-                channel_id, thread_id = msg.channel.parent_id, msg.channel.id
-                thread = msg.channel
+                key = {
+                    "category": msg.channel.category_id,
+                    "thread": msg.channel.id,
+                    "channel": msg.channel.parent_id,
+                }
             else:
-                channel_id, thread_id = msg.channel.id, None
-                thread = MISSING
-
-            key = {"category": msg.channel.category_id, "thread": thread_id, "channel": channel_id}
+                key = {
+                    "category": msg.channel.category_id,
+                    "thread": None,
+                    "channel": msg.channel.id,
+                }
 
             if entry := await db2.find_one(key):
                 message_id = entry["id"]
-                try:
-                    await w.delete_message(message_id, thread=thread)
-                except NotFound:
-                    pass
-
+                await PartialMessage(channel=msg.channel, id=message_id).delete(delay=0)
                 date = snowflake_time(message_id)
                 embed = Embed(
                     title="RP has started!",
@@ -176,7 +175,7 @@ class Roles(commands.Cog):
 
                 view = View()
                 view.add_item(Button(label="Jump URL", url=msg.channel.jump_url))
-
+                log_w = await self.bot.webhook(1001125143071965204)
                 await log_w.send(
                     embed=embed,
                     username=username,
@@ -184,7 +183,6 @@ class Roles(commands.Cog):
                     view=view,
                     thread=Object(id=1001949202621931680),
                 )
-
                 await db2.delete_one(entry)
 
     @app_commands.command()
@@ -218,19 +216,21 @@ class Roles(commands.Cog):
     async def finish(self, ctx: commands.Context):
         db1 = self.bot.mongo_db("RP Channels")
         db2 = self.bot.mongo_db("RP Sessions")
-        log_w = await self.bot.webhook(1001125143071965204)
-        w = await self.bot.webhook(ctx.channel)
 
         await ctx.message.delete(delay=0)
 
         if isinstance(ctx.channel, Thread):
-            channel_id, thread_id = ctx.channel.parent_id, ctx.channel.id
-            thread = ctx.channel
+            key = {
+                "category": ctx.channel.category_id,
+                "thread": ctx.channel.id,
+                "channel": ctx.channel.parent_id,
+            }
         else:
-            channel_id, thread_id = ctx.channel.id, None
-            thread = MISSING
-
-        key = {"category": ctx.channel.category_id, "thread": thread_id, "channel": channel_id}
+            key = {
+                "category": ctx.channel.category_id,
+                "thread": None,
+                "channel": ctx.channel.id,
+            }
 
         if entry := await db2.find_one(key):
             message_id = entry["id"]
@@ -238,7 +238,7 @@ class Roles(commands.Cog):
                 return
 
             try:
-                m = await w.fetch_message(message_id, thread=thread)
+                m = await ctx.channel.fetch_message(message_id)
                 e = m.embeds[0]
 
                 try:
@@ -276,7 +276,7 @@ class Roles(commands.Cog):
 
             view = View()
             view.add_item(Button(label="Jump URL", url=ctx.channel.jump_url))
-
+            log_w = await self.bot.webhook(1001125143071965204)
             await log_w.send(
                 embed=embed,
                 username=username,
@@ -307,14 +307,14 @@ class Roles(commands.Cog):
             if image := data["image"]:
                 embed.set_image(url=image)
 
-        message = await w.send(
-            embed=embed,
-            view=view,
-            username=ctx.author.display_name,
-            avatar_url=ctx.author.display_avatar.url,
-            wait=True,
-            thread=thread,
+        file = await ctx.author.display_avatar.to_file()
+
+        embed.set_author(
+            name=ctx.author.display_name,
+            avatar_url=f"attachment://{file.filename}",
         )
+
+        message = await ctx.channel.send(embed=embed, view=view, file=file)
 
         await db2.replace_one(
             key,

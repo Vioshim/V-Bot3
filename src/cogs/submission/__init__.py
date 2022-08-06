@@ -269,7 +269,7 @@ class Submission(commands.Cog):
             if oc.id:
                 if thread.archived:
                     await thread.edit(archived=False)
-                await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
+                msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                 word = "modified"
             else:
                 msg_oc = await thread.send(**kwargs)
