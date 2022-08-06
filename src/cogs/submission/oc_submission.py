@@ -47,6 +47,7 @@ from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     _BEASTBOOST,
+    CustomMega,
     Fakemon,
     Fusion,
     Legendary,
@@ -218,15 +219,28 @@ class SpeciesField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if not oc.species or oc.species.banned:
-            return "Invalid Species."
+        species = oc.species
+        if not species:
+            return "Missing Species"
+
+        CORE = (Legendary, Mythical, Mega, UltraBeast)
+        if species.banned:
+            return f"{species.name} as species are banned."
+        if isinstance(species, Variant) and isinstance(species.base, CORE):
+            return "This kind of Pokemon can't have variants."
+        if isinstance(species, CustomMega) and isinstance(species.base, CORE):
+            return "This kind of Pokemon can't have custom megas."
+        if isinstance(species, Fakemon) and isinstance(species.evolves_from, CORE):
+            return "Fakemon evolutions from this kind of Pokemon aren't possible."
+        if isinstance(species, Fusion) and all(isinstance(x, CORE) for x in species.bases):
+            return "Fusions require at least one common Pokemon."
 
     @classmethod
     async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
         max_values: int = 1
 
         match template:
-            case Template.Pokemon:
+            case Template.Pokemon | Template.CustomMega:
                 mon_total = Pokemon.all()
             case Template.Legendary:
                 mon_total = Legendary.all()
@@ -239,13 +253,7 @@ class SpeciesField(TemplateField):
             case Template.Fusion:
                 mon_total = Species.all()
                 max_values = 2
-            case (
-                Template.CustomPokemon
-                | Template.CustomLegendary
-                | Template.CustomMythical
-                | Template.CustomUltraBeast
-                | Template.CustomMega
-            ):
+            case Template.CustomPokemon | Template.CustomLegendary | Template.CustomMythical | Template.CustomUltraBeast:
                 mon_total = []
             case _:
                 mon_total = Species.all()
@@ -262,13 +270,7 @@ class SpeciesField(TemplateField):
                     return
 
         match template:
-            case (
-                Template.CustomPokemon
-                | Template.CustomLegendary
-                | Template.CustomMythical
-                | Template.CustomUltraBeast
-                | Template.CustomMega
-            ):
+            case Template.CustomPokemon | Template.CustomLegendary | Template.CustomMythical | Template.CustomUltraBeast:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="Write the character's Species.",
                     required=True,
@@ -292,6 +294,9 @@ class SpeciesField(TemplateField):
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         oc.species = Variant(base=choices[0], name=answer)
+            case Template.CustomMega:
+                oc.species = CustomMega(choices[0])
+                oc.abilities &= oc.species.abilities
             case Template.Fusion:
                 oc.species = Fusion(*choices)
             case Template.Legendary | Template.Mythical | Template.UltraBeast | Template.Mega:
