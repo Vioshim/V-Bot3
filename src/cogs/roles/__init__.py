@@ -311,7 +311,7 @@ class Roles(commands.Cog):
 
         embed.set_author(
             name=ctx.author.display_name,
-            avatar_url=f"attachment://{file.filename}",
+            icon_url=f"attachment://{file.filename}",
         )
 
         message = await ctx.channel.send(embed=embed, view=view, file=file)
