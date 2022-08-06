@@ -21,7 +21,6 @@ from discord import (
     Color,
     Embed,
     Guild,
-    HTTPException,
     Interaction,
     InteractionResponse,
     Member,
@@ -268,6 +267,8 @@ class Submission(commands.Cog):
                     kwargs[word] = [file]
 
             if oc.id:
+                if thread.archived:
+                    await thread.edit(archived=False)
                 await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                 word = "modified"
             else:
@@ -335,14 +336,9 @@ class Submission(commands.Cog):
         channel = await self.bot.fetch_channel(oc.thread)
         msg = PartialMessage(channel=channel, id=oc.id)
         try:
-            try:
-                await msg.edit(embeds=embeds)
-            except HTTPException:
-                guild = self.bot.get_guild(oc.server)
-                if not (thread := guild.get_thread(oc.thread)):
-                    thread: Thread = await self.bot.fetch_channel(oc.thread)
-                await thread.edit(archived=False)
-                await msg.edit(embeds=embeds)
+            if channel.archived:
+                await channel.edit(archived=False)
+            await msg.edit(embeds=embeds)
         except NotFound:
             await self.register_oc(oc)
 
