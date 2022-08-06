@@ -334,7 +334,7 @@ class Submission(commands.Cog):
                 if not (thread := guild.get_thread(oc.thread)):
                     thread: Thread = await self.bot.fetch_channel(oc.thread)
                 await thread.edit(archived=False)
-                await webhook.edit_message(oc.id, embed=embeds, thread=thread)
+                await webhook.edit_message(oc.id, embeds=embeds, thread=thread)
         except NotFound:
             await self.register_oc(oc)
 
