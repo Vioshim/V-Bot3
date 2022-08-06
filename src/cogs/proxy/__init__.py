@@ -31,7 +31,6 @@ from discord.utils import MISSING
 from rapidfuzz import process
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
-from src.cogs.proxy.proxy import NameGenerator
 from src.cogs.submission import Submission
 from src.structures.bot import CustomBot
 from src.structures.character import CharacterArg
@@ -97,7 +96,7 @@ class Proxy(commands.Cog):
     async def slash_npc(
         self,
         ctx: Interaction,
-        name: Optional[NameGenerator],
+        name: Optional[str],
         pokemon: Optional[DefaultSpeciesArg],
         shiny: Optional[bool],
         pronoun: Optional[Pronoun],
@@ -110,7 +109,7 @@ class Proxy(commands.Cog):
         ----------
         ctx : ApplicationContext
             Context
-        name : Optional[NameGenerator]
+        name : Optional[str]
             Name of the NPC
         pokemon : str, optional
             Species to use
@@ -254,7 +253,7 @@ class Proxy(commands.Cog):
             if user:
                 text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
             else:
-                text = "That message was sent by a Deleted User."
+                text = f"That message was sent by a Deleted User (id: {author_id})."
             try:
                 await payload.member.send(text, view=view)
             except DiscordException:

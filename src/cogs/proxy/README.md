@@ -5,6 +5,5 @@
 
 > An implementation of a Proxy system, which allows users to use their characters by replacing their PFP through webhook messages as long as the regex matches.
 
-| File       | Description                          |
-| ---------- | ------------------------------------ |
-| `proxy.py` | Proxy implementation class (concept) |
+| File | Description |
+| ---- | ----------- |
