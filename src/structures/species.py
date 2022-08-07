@@ -758,7 +758,7 @@ class Fusion(Species):
         types1 = self.mon1.types
         types2 = self.mon2.types
         if types1 == types2:
-            return types1
+            return frozenset({types1})
         return frozenset(frozenset({x, y}) for x in types1 for y in types2)
 
     @property
