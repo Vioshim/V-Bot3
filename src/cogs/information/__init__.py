@@ -415,7 +415,7 @@ class Information(commands.Cog):
             view.add_item(
                 Button(
                     label="Characters",
-                    url=f"https://discord.com/channels/719343092963999804/{value}",
+                    url=f"https://discord.com/channels/{member.guild.id}/{value}",
                 )
             )
 
@@ -465,8 +465,8 @@ class Information(commands.Cog):
             if value := cog.oc_list.get(member.id):
                 view.add_item(
                     Button(
-                        label="User Characters",
-                        url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
+                        label="Characters",
+                        url=f"https://discord.com/channels/{member.guild.id}/{value}",
                     )
                 )
             await log.send(
