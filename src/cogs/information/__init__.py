@@ -415,7 +415,7 @@ class Information(commands.Cog):
             view.add_item(
                 Button(
                     label="Characters",
-                    url=f"https://discord.com/channels/719343092963999804/919277769735680050/{value}",
+                    url=f"https://discord.com/channels/719343092963999804/{value}",
                 )
             )
 
