@@ -757,19 +757,9 @@ class Fusion(Species):
         """
         types1 = self.mon1.types
         types2 = self.mon2.types
-        elements: list[frozenset[Typing]] = []
-        if self.mon1 in self.mon2.evolves_to or self.mon2 in self.mon1.evolves_to:
-            elements.append(types1)
-            elements.append(types2)
-        elif items := frozenset(types1) | frozenset(types2):
-            if len(items) <= 2:
-                elements.append(items)
-            elif common := types1.intersection(types2):
-                uncommon = items - common
-                elements.extend(frozenset({x, y}) for x in common for y in uncommon)
-            else:
-                elements.extend(frozenset({x, y}) for x in types1 for y in types2)
-        return frozenset(elements)
+        if types1 == types2:
+            return types1
+        return frozenset(frozenset({x, y}) for x in types1 for y in types2)
 
     @property
     def requires_image(self) -> bool:
