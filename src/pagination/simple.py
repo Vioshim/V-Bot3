@@ -356,7 +356,7 @@ class Simple(Generic[_T], Basic):
             if message := self.message or interaction.message:
                 await message.edit(**data)
             else:
-                self.message = await interaction.edit_original_message(**data)
+                self.message = await interaction.edit_original_response(**data)
         except DiscordException:
             self.stop()
 

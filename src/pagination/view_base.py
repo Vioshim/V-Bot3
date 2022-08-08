@@ -255,7 +255,7 @@ class Basic(View):
         except HTTPException:
             try:
                 if isinstance(self.target, Interaction):
-                    message = await self.target.original_message()
+                    message = await self.target.original_response()
                     await message.edit(view=None)
             except HTTPException:
                 pass
