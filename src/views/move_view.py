@@ -15,11 +15,18 @@
 from itertools import groupby
 from typing import Optional
 
-from discord import DiscordException, Interaction, InteractionResponse, Member
+from discord import (
+    ButtonStyle,
+    DiscordException,
+    Interaction,
+    InteractionResponse,
+    Member,
+    PartialEmoji,
+)
 from discord.abc import Messageable
-from discord.ui import Button, Select, TextInput, View, select
+from discord.ui import Button, Select, TextInput, View, button, select
 
-from src.pagination.complex import Complex
+from src.pagination.complex import Complex, DefaultModal
 from src.structures.move import Move
 from src.utils.etc import LIST_EMOJI
 
@@ -57,7 +64,6 @@ class MoveComplex(Complex[Move]):
         self.embed.title = "Select Moves"
         self.total = total
         self.data = {}
-        self.message_handler.row = 3
 
     def menu_format(self) -> None:
 
@@ -136,6 +142,22 @@ class MoveComplex(Complex[Move]):
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         self.values = set.intersection(*[self.data[value] for value in sct.values])
         await self.edit(interaction=interaction, page=0)
+
+    @button(
+        label="Write down the choice instead.",
+        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+        custom_id="writer",
+        style=ButtonStyle.blurple,
+        disabled=False,
+        row=4,
+    )
+    async def message_handler(self, interaction: Interaction, _: Button):
+        response: InteractionResponse = interaction.response
+        component = self.text_component
+        if isinstance(component, TextInput):
+            component = DefaultModal(view=self)
+        await response.send_modal(component)
+        await component.wait()
 
 
 class MoveView(MoveComplex):
