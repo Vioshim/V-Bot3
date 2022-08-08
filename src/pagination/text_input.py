@@ -68,6 +68,7 @@ class ModernInput(Basic):
     async def handle(self, **kwargs):
         data = dict(member=kwargs.pop("member", self.member), target=kwargs.pop("target", self.target))
         origin = kwargs.pop("origin", None)
+        ephemeral = kwargs.pop("ephemeral", False)
         if placeholder := kwargs.get("placeholder"):
             kwargs["placeholder"] = placeholder[:100]
         data["input_text"] = input_text = TextInput(**kwargs)
@@ -82,7 +83,7 @@ class ModernInput(Basic):
                 await aux.wait()
                 await origin.edit(content="Process concluded with success.", embed=None, view=None)
             else:
-                await aux.send()
+                await aux.send(ephemeral=ephemeral)
                 await aux.wait()
             yield aux.text
         except Exception as e:
