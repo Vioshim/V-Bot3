@@ -17,7 +17,7 @@ from typing import Optional
 
 from discord import DiscordException, Interaction, InteractionResponse, Member
 from discord.abc import Messageable
-from discord.ui import Button, Select, View, select
+from discord.ui import Button, Select, TextInput, View, select
 
 from src.pagination.complex import Complex
 from src.structures.move import Move
@@ -36,6 +36,7 @@ class MoveComplex(Complex[Move]):
         max_values: int = 6,
     ):
         total = sorted(moves, key=lambda x: (x.type.id or 0) if isinstance(x, Move) else 0)
+        max_values = min(max_values, len(total))
         super(MoveComplex, self).__init__(
             member=member,
             target=target,
@@ -44,8 +45,13 @@ class MoveComplex(Complex[Move]):
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
             sort_key=lambda x: x.name,
-            max_values=min(max_values, len(total)),
+            max_values=max_values,
             silent_mode=True,
+            text_component=TextInput(
+                label="Moves",
+                placeholder=("Move, " * max_values).removesuffix(", "),
+                required=True,
+            ),
         )
         self.real_max = self.max_values
         self.embed.title = "Select Moves"
@@ -86,6 +92,13 @@ class MoveComplex(Complex[Move]):
                     emoji=getattr(k, "emoji", LIST_EMOJI),
                     description=f"Has {len(items)} items.",
                 )
+
+        self.text_component = TextInput(
+            label="Moves",
+            placeholder=("Move, " * self.max_values).removesuffix(", "),
+            required=True,
+            default=", ".join(x.name for x in self.choices),
+        )
 
         return super(MoveComplex, self).menu_format()
 

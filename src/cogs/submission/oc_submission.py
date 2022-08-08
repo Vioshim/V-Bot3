@@ -110,6 +110,7 @@ class TemplateField(ABC):
         template: Template,
         progress: set[str],
         oc: Character,
+        ephemeral: bool = False,
     ):
         """Abstract method which affects progress and the character"""
 
@@ -130,13 +131,21 @@ class NameField(TemplateField):
         return cls.description
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         handler = text_view.handle(
             label="Write the character's Name.",
             placeholder=f"> {oc.name}",
             default=oc.name,
             required=True,
+            ephemeral=ephemeral,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -154,7 +163,14 @@ class AgeField(TemplateField):
             return "Invalid Age"
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         age = str(oc.age) if oc.age else "Unknown"
         handler = text_view.handle(
@@ -162,6 +178,7 @@ class AgeField(TemplateField):
             placeholder=f"> {age}",
             default=age,
             required=False,
+            ephemeral=ephemeral,
         )
         async with handler as answer:
             if isinstance(answer, str):
@@ -179,7 +196,14 @@ class PronounField(TemplateField):
             return "Invalid Pronoun"
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         default = getattr(oc.pronoun, "name", "Them")
         view = Complex[Pronoun](
             member=ctx.user,
@@ -201,6 +225,7 @@ class PronounField(TemplateField):
             title="Write the character's Pronoun. Current below",
             description=f"> {default}",
             single=True,
+            ephemeral=ephemeral,
         ) as pronoun:
             if isinstance(pronoun, Pronoun):
                 oc.pronoun = pronoun
@@ -230,7 +255,14 @@ class SpeciesField(TemplateField):
             return "Fusions require at least one common Pokemon."
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         max_values: int = 1
 
         match template:
@@ -255,7 +287,7 @@ class SpeciesField(TemplateField):
         origin = None
         if mon_total := {x for x in mon_total if not x.banned}:
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, max_values=max_values)
-            async with view.send() as data:
+            async with view.send(ephemeral=ephemeral) as data:
                 origin = view.message
                 choices.extend(data)
                 if len(choices) != max_values:
@@ -267,6 +299,7 @@ class SpeciesField(TemplateField):
                     label="Write the character's Species.",
                     required=True,
                     origin=origin,
+                    ephemeral=ephemeral,
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         if isinstance(oc.species, Fakemon):
@@ -281,6 +314,7 @@ class SpeciesField(TemplateField):
             case Template.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"Write the name of the {choices[0].name} Variant's Species.",
+                    ephemeral=ephemeral,
                     required=True,
                     origin=origin,
                 ) as answer:
@@ -326,10 +360,21 @@ class PreEvoSpeciesField(TemplateField):
         return isinstance(oc.species, Fakemon)
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         mon_total = {x for x in Pokemon.all() if not x.banned}
         view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total)
-        async with view.send(title="Select if it has a canon Pre-Evo (Skip if not needed)", single=True) as choice:
+        async with view.send(
+            title="Select if it has a canon Pre-Evo (Skip if not needed)",
+            single=True,
+            ephemeral=ephemeral,
+        ) as choice:
             oc.species.evolves_from = choice.id if choice else None
             progress.add(cls.name)
             moves = oc.species.movepool()
@@ -355,7 +400,14 @@ class TypesField(TemplateField):
         return isinstance(oc.species, (Fusion, Fakemon, Variant, CustomMega))
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         species = oc.species
         if isinstance(species, Fusion):  # type: ignore
             values = species.possible_types
@@ -389,7 +441,11 @@ class TypesField(TemplateField):
             )
             single = False
 
-        async with view.send(title="Select Typing", single=single) as types:
+        async with view.send(
+            title="Select Typing",
+            single=single,
+            ephemeral=ephemeral,
+        ) as types:
             if types:
                 species.types = frozenset(types)
                 progress.add(cls.name)
@@ -428,7 +484,14 @@ class MovesetField(TemplateField):
         return bool(oc.species)
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         moves = oc.total_movepool()
         mon = Pokemon.from_ID("SMEARGLE")
         if isinstance(oc.species, Fusion):
@@ -449,6 +512,7 @@ class MovesetField(TemplateField):
         async with view.send(
             title="Write the character's moveset. Current below",
             description=description,
+            ephemeral=ephemeral,
         ) as choices:
             oc.moveset = frozenset(choices)
             if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
@@ -471,9 +535,16 @@ class MovepoolField(TemplateField):
         return isinstance(oc.species, (Fakemon, Variant))
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         view = MovepoolView(ctx, ctx.user, oc)
-        await view.send()
+        await view.send(ephemeral=ephemeral)
         await view.wait()
         progress.add(cls.name)
 
@@ -498,7 +569,14 @@ class AbilitiesField(TemplateField):
         return bool(oc.species)
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities = oc.species.abilities
         if isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
@@ -524,7 +602,7 @@ class AbilitiesField(TemplateField):
                 value=item.description,
                 inline=False,
             )
-        async with view.send() as choices:
+        async with view.send(ephemeral=ephemeral) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
                 if isinstance(oc.species, (Fakemon, Variant)):
@@ -537,7 +615,14 @@ class HiddenPowerField(TemplateField):
     description = "Optional. Fill the OC's Hidden Power"
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         view = Complex[Typing](
             member=ctx.user,
             target=ctx,
@@ -552,7 +637,11 @@ class HiddenPowerField(TemplateField):
             ),
             silent_mode=True,
         )
-        async with view.send(title="Select Hidden Power", single=True) as types:
+        async with view.send(
+            title="Select Hidden Power",
+            single=True,
+            ephemeral=ephemeral,
+        ) as types:
             oc.hidden_power = types
             progress.add(cls.name)
 
@@ -571,9 +660,17 @@ class SpAbilityField(TemplateField):
         return oc.species and oc.can_have_special_abilities
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        resp: InteractionResponse = ctx.response
         view = SPAbilityView(ctx.user, oc)
-        await ctx.followup.send("Continue with Submission", view=view)
+        await resp.send_message("Continue with Submission", view=view, ephemeral=ephemeral)
         await view.wait()
         oc.sp_ability = view.sp_ability
         progress.add(cls.name)
@@ -584,13 +681,21 @@ class BackstoryField(TemplateField):
     description = "Optional. Fill the OC's Backstory"
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Backstory.",
             placeholder=oc.backstory,
             default=oc.backstory,
             required=False,
+            ephemeral=ephemeral,
             style=TextStyle.paragraph,
         ) as answer:
             if isinstance(answer, str):
@@ -603,11 +708,19 @@ class ExtraField(TemplateField):
     description = "Optional. Fill the OC's Extra Information"
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Extra Information.",
             placeholder=oc.extra,
+            ephemeral=ephemeral,
             default=oc.extra,
             required=False,
             style=TextStyle.paragraph,
@@ -633,10 +746,17 @@ class ImageField(TemplateField):
             return "Default Image in Memory"
 
     @classmethod
-    async def on_submit(cls, ctx: Interaction, template: Template, progress: set[str], oc: Character):
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
         default_image = oc.image_url or oc.image or oc.default_image
         view = ImageView(member=ctx.user, default_img=default_image, target=ctx)
-        async with view.send() as text:
+        async with view.send(ephemeral=ephemeral) as text:
             if text and isinstance(text, str):
                 oc.image = text
                 progress.add(cls.name)
@@ -671,6 +791,7 @@ class CreationOCView(Basic):
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
+        self.ephemeral: bool = False
 
         if not isinstance(template, Template):
             if isinstance(template, str):
@@ -817,6 +938,7 @@ class CreationOCView(Basic):
             self.stop()
 
     async def send(self, *, ephemeral: bool = False):
+        self.ephemeral = ephemeral
         m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
         await self.upload()
         return m
@@ -825,7 +947,7 @@ class CreationOCView(Basic):
     async def fields(self, ctx: Interaction, sct: Select):
         try:
             if item := TemplateField.get(name=sct.values[0]):
-                await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
+                await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
             await self.update()
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
