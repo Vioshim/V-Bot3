@@ -332,7 +332,8 @@ class Submission(commands.Cog):
     async def oc_update(self, oc: Character):
         embeds = oc.embeds
         embeds[0].set_image(url="attachment://image.png")
-        channel = await self.bot.fetch_channel(oc.thread)
+        guild = self.bot.get_guild(oc.server)
+        channel = await guild.fetch_channel(oc.thread)
         msg = PartialMessage(channel=channel, id=oc.id)
         try:
             if channel.archived:
