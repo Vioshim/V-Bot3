@@ -140,7 +140,7 @@ class MoveComplex(Complex[Move]):
         else:
             await self.delete(interaction)
 
-    @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, row=4)
+    @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         self.values = set.intersection(*[self.data[value] for value in sct.values])
         await self.edit(interaction=interaction, page=0)
