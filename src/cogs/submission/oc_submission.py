@@ -781,64 +781,56 @@ class CreationOCView(Basic):
             await resp.send_message(str(e), ephemeral=True)
             self.stop()
 
-    @select(placeholder="Click here!", row=1)
-    async def fields(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
+    async def update(self):
         try:
-            if item := TemplateField.get(name=sct.values[0]):
-                await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
-        except Exception as e:
-            ctx.client.logger.exception("Exception in OC Creation", exc_info=e)
-            await ctx.followup.send(str(e), ephemeral=True)
-        finally:
             self.setup()
-
-        try:
             embeds = self.oc.embeds
             embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
             if not self.oc.image_url:
                 embeds[0].set_image(url="attachment://image.png")
             files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
             try:
-                message = self.message or ctx.message
-                m = await message.edit(embeds=embeds, view=self, attachments=files)
-            except NotFound as e:
-                ctx.client.logger.exception(
-                    "NotFound Exception Message\n\nctx: %s\nself: %s",
-                    repr(ctx.message),
+                m = await self.message.edit(embeds=embeds, view=self, attachments=files)
+            except (NotFound, DiscordException) as e:
+                self.bot.logger.exception(
+                    "NotFound Exception Message\n\nself: %s",
                     repr(self.message),
                     exc_info=e,
                 )
-                await ctx.followup.send(str(e), ephemeral=True)
-                return self.stop()
-            except (DiscordException, AttributeError):
-                m = await ctx.edit_original_message(embeds=embeds, view=self, attachments=files)
+                self.stop()
+            else:
+                if files and m.embeds[0].image.proxy_url:
+                    self.oc.image = m.embeds[0].image.proxy_url
+                    self.setup()
+                    m = await m.edit(view=self)
 
-            if files and m.embeds[0].image.proxy_url:
-                self.oc.image = m.embeds[0].image.proxy_url
-                self.setup()
-                m = await m.edit(view=self)
+                if not m.flags.ephemeral:
+                    db = self.bot.mongo_db("OC Creation")
+                    await db.replace_one(
+                        {"id": m.id},
+                        {
+                            "id": m.id,
+                            "template": self.ref_template.name,
+                            "author": self.user.id,
+                            "character": self.oc.to_mongo_dict(),
+                            "progress": list(self.progress),
+                        },
+                        upsert=True,
+                    )
 
-            if not m.flags.ephemeral:
-                db = self.bot.mongo_db("OC Creation")
-                await db.replace_one(
-                    {"id": m.id},
-                    {
-                        "id": m.id,
-                        "template": self.ref_template.name,
-                        "author": self.user.id,
-                        "character": self.oc.to_mongo_dict(),
-                        "progress": list(self.progress),
-                    },
-                    upsert=True,
-                )
-
-            self.message = m
+                self.message = m
         except Exception as e:
-            ctx.client.logger.exception("Exception in OC Creation Edit", exc_info=e)
-            await ctx.followup.send(str(e), ephemeral=True)
+            self.bot.logger.exception("Exception in OC Creation Edit", exc_info=e)
             self.stop()
+
+    @select(placeholder="Click here!", row=1)
+    async def fields(self, ctx: Interaction, sct: Select):
+        try:
+            if item := TemplateField.get(name=sct.values[0]):
+                await item.on_submit(ctx, self.ref_template, self.progress, self.oc)
+            await self.update()
+        except Exception as e:
+            self.bot.logger.exception("Exception in OC Creation", exc_info=e)
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         try:
