@@ -23,7 +23,6 @@ from discord import (
     Member,
     PartialEmoji,
     PartialMessage,
-    WebhookMessage,
 )
 from discord.abc import Messageable
 from discord.ui import Button, Select, TextInput, View, button, select
@@ -129,7 +128,7 @@ class MoveComplex(Complex[Move]):
                 return await resp.edit_message(**data)
             try:
                 if message := self.message or interaction.message:
-                    if not message.flags.ephemeral and isinstance(message, WebhookMessage):
+                    if self.message.author == interaction.client.user and not message.flags.ephemeral:
                         message = PartialMessage(channel=message.channel, id=message.id)
                     self.message = await message.edit(**data)
                 else:

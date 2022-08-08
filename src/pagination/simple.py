@@ -354,10 +354,13 @@ class Simple(Generic[_T], Basic):
             return await resp.edit_message(**data)
         try:
             if message := self.message or interaction.message:
-                await message.edit(**data)
+                if self.message.author == interaction.client.user and not message.flags.ephemeral:
+                    message = PartialMessage(channel=message.channel, id=message.id)
+                self.message = await message.edit(**data)
             else:
                 self.message = await interaction.edit_original_response(**data)
-        except DiscordException:
+        except DiscordException as e:
+            interaction.client.logger.exception("Error in Simple View", exc_info=e)
             self.stop()
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)

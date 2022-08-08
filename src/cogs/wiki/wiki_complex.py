@@ -22,6 +22,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     PartialEmoji,
+    PartialMessage,
     TextStyle,
 )
 from discord.ui import Modal, Select, TextInput, button, select
@@ -114,7 +115,9 @@ class WikiComplex(Complex[WikiEntry]):
                 return await resp.edit_message(**data)
             try:
                 if message := self.message or interaction.message:
-                    await message.edit(**data)
+                    if self.message.author == interaction.client.user and not message.flags.ephemeral:
+                        message = PartialMessage(channel=message.channel, id=message.id)
+                    self.message = await message.edit(**data)
                 else:
                     self.message = await interaction.edit_original_response(**data)
             except DiscordException as e:

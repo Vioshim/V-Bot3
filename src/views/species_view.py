@@ -15,7 +15,13 @@
 
 from typing import Optional
 
-from discord import DiscordException, Interaction, InteractionResponse, Member
+from discord import (
+    DiscordException,
+    Interaction,
+    InteractionResponse,
+    Member,
+    PartialMessage,
+)
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
@@ -96,9 +102,11 @@ class SpeciesComplex(Complex[Species]):
                 return await resp.edit_message(**data)
             try:
                 if message := self.message or interaction.message:
-                    await message.edit(**data)
+                    if self.message.author == interaction.client.user and not message.flags.ephemeral:
+                        message = PartialMessage(channel=message.channel, id=message.id)
+                    self.message = await message.edit(**data)
                 else:
-                    self.message = await interaction.edit_original_message(**data)
+                    self.message = await interaction.edit_original_response(**data)
             except DiscordException as e:
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()
