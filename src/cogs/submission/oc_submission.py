@@ -509,6 +509,7 @@ class MovesetField(TemplateField):
         moves = {x for x in moves if not x.banned}
         description = "\n".join(f"> {x!r}" for x in oc.moveset) or "No Moves"
         view = MoveComplex(member=ctx.user, moves=moves, target=ctx)
+        view.text_component.default = ", ".join(x.name for x in (oc.moveset & moves))
         async with view.send(
             title="Write the character's moveset. Current below",
             description=description,
