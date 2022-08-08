@@ -22,6 +22,8 @@ from discord import (
     InteractionResponse,
     Member,
     PartialEmoji,
+    PartialMessage,
+    WebhookMessage,
 )
 from discord.abc import Messageable
 from discord.ui import Button, Select, TextInput, View, button, select
@@ -57,7 +59,7 @@ class MoveComplex(Complex[Move]):
             text_component=TextInput(
                 label="Moves",
                 placeholder=("Move, " * max_values).removesuffix(", "),
-                required=True,
+                required=False,
             ),
         )
         self.real_max = self.max_values
@@ -100,8 +102,6 @@ class MoveComplex(Complex[Move]):
                     description=f"Has {len(items)} items.",
                 )
 
-        self.text_component.default = ", ".join(x.name for x in self.choices)
-
         return super(MoveComplex, self).menu_format()
 
     async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
@@ -129,9 +129,11 @@ class MoveComplex(Complex[Move]):
                 return await resp.edit_message(**data)
             try:
                 if message := self.message or interaction.message:
-                    await message.edit(**data)
+                    if not message.flags.ephemeral and isinstance(message, WebhookMessage):
+                        message = PartialMessage(channel=message.channel, id=message.id)
+                    self.message = await message.edit(**data)
                 else:
-                    self.message = await interaction.edit_original_message(**data)
+                    self.message = await interaction.edit_original_response(**data)
             except DiscordException as e:
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()
