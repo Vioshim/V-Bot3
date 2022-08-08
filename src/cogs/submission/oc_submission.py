@@ -672,7 +672,6 @@ class CreationOCView(Basic):
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
-        self.embeds[0].set_author(name=user.display_name, icon_url=user.display_avatar)
 
         if not isinstance(template, Template):
             if isinstance(template, str):
@@ -711,7 +710,7 @@ class CreationOCView(Basic):
         await resp.send_message(embed=embed, ephemeral=True)
         return False
 
-    def setup(self):
+    def setup(self, embed_update: bool = True):
         self.kind.options = [
             SelectOption(
                 label=x.name,
@@ -733,6 +732,10 @@ class CreationOCView(Basic):
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
+        if embed_update:
+            embeds = self.oc.embeds
+            embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
+            self.embeds = embeds
 
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
@@ -756,36 +759,36 @@ class CreationOCView(Basic):
                     if self.ref_template == Template.CustomUltraBeast:
                         self.oc.abilities = frozenset({_BEASTBOOST})
 
-            m = self.message
-            if m and not m.flags.ephemeral:
-                db = self.bot.mongo_db("OC Creation")
-                await db.replace_one(
-                    dict(id=m.id),
-                    dict(
-                        id=m.id,
-                        template=self.ref_template.name,
-                        author=self.user.id,
-                        character=self.oc.to_mongo_dict(),
-                        progress=list(self.progress),
-                    ),
-                    upsert=True,
-                )
-
+            await self.update()
             self.setup()
             if resp.is_done():
-                await ctx.edit_original_message(embeds=self.oc.embeds, view=self)
+                await ctx.edit_original_message(embeds=self.embeds, view=self)
             else:
-                await resp.edit_message(embeds=self.oc.embeds, view=self)
+                await resp.edit_message(embeds=self.embeds, view=self)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             await resp.send_message(str(e), ephemeral=True)
             self.stop()
 
+    async def upload(self):
+        if (m := self.message) and not m.flags.ephemeral:
+            db = self.bot.mongo_db("OC Creation")
+            await db.replace_one(
+                dict(id=m.id),
+                dict(
+                    id=m.id,
+                    template=self.ref_template.name,
+                    author=self.user.id,
+                    character=self.oc.to_mongo_dict(),
+                    progress=list(self.progress),
+                ),
+                upsert=True,
+            )
+
     async def update(self):
         try:
             self.setup()
-            embeds = self.oc.embeds
-            embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
+            embeds = self.embeds
             if not self.oc.image_url:
                 embeds[0].set_image(url="attachment://image.png")
             files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
@@ -801,27 +804,20 @@ class CreationOCView(Basic):
             else:
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
-                    self.setup()
+                    self.setup(embed_update=False)
                     m = await m.edit(view=self)
 
-                if not m.flags.ephemeral:
-                    db = self.bot.mongo_db("OC Creation")
-                    await db.replace_one(
-                        {"id": m.id},
-                        {
-                            "id": m.id,
-                            "template": self.ref_template.name,
-                            "author": self.user.id,
-                            "character": self.oc.to_mongo_dict(),
-                            "progress": list(self.progress),
-                        },
-                        upsert=True,
-                    )
+                await self.upload()
 
                 self.message = m
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation Edit", exc_info=e)
             self.stop()
+
+    async def send(self, *, ephemeral: bool = False):
+        m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
+        await self.upload()
+        return m
 
     @select(placeholder="Click here!", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
@@ -868,9 +864,9 @@ class CreationOCView(Basic):
             cog = ctx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
             await cog.register_oc(self.oc, image_as_is=True)
-            registered = ctx.guild.get_role(719642423327719434)
-            if isinstance(self.user, Member) and registered and registered not in self.user.roles:
-                await self.user.add_roles(registered)
+            if registered := ctx.guild.get_role(719642423327719434):
+                if isinstance(self.user, Member) and registered not in self.user.roles:
+                    await self.user.add_roles(registered)
             await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
         except Exception as e:
             self.bot.logger.exception("Error in oc %s", btn.label, exc_info=e)
@@ -885,14 +881,11 @@ class ModCharactersView(CharactersView):
         await resp.defer(ephemeral=True, thinking=True)
         try:
             if item := self.current_choice:
-                guild = self.member.guild
                 cog = interaction.client.get_cog("Submission")
                 user: Member = cog.supporting.get(interaction.user, interaction.user)
                 if item.author in [user.id, interaction.user.id]:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
-                    if author := guild.get_member(item.author):
-                        view.embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
-                    await view.send(embeds=view.embeds, ephemeral=True)
+                    await view.send(ephemeral=True)
                 else:
                     if isinstance(self.target, Interaction):
                         target = self.target

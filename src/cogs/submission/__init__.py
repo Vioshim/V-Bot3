@@ -127,7 +127,6 @@ class Submission(commands.Cog):
         self.ocs: dict[int, Character] = {}
         self.oc_list: dict[int, int] = {}
         self.supporting: dict[Member, Member] = {}
-        self.backup: dict[Member, CreationOCView] = {}
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
@@ -351,10 +350,9 @@ class Submission(commands.Cog):
             author = self.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
                 view = CreationOCView(bot=self.bot, ctx=message, user=author, oc=oc)
-                self.backup[author] = view
                 if isinstance(message, Message):
                     await message.delete(delay=0)
-                await view.send(embeds=view.embeds)
+                await view.send()
                 await view.wait()
 
     async def on_message_submission(self, message: Message):
@@ -504,7 +502,6 @@ class Submission(commands.Cog):
                 template=template,
                 progress=progress,
             )
-            self.backup[member] = view
             view.message = await message.edit(view=view, embeds=view.embeds)
 
     @commands.Cog.listener()
@@ -646,7 +643,7 @@ class Submission(commands.Cog):
         if character:
             if character.author in [ctx.user.id, user.id]:
                 view = CreationOCView(bot=self.bot, ctx=ctx, user=user, oc=character)
-                await view.send(ephemeral=True, embeds=view.embeds)
+                await view.send(ephemeral=True)
             else:
                 view = PingView(oc=character, reference=ctx)
                 await ctx.followup.send(embeds=character.embeds, view=view, ephemeral=True)

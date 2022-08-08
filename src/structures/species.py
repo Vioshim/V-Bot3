@@ -18,9 +18,10 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from dataclasses import asdict, dataclass, field
 from json import JSONDecoder, JSONEncoder, load
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 from asyncpg import Record
+from discord.utils import find, get
 from frozendict import frozendict
 from rapidfuzz import process
 
@@ -118,6 +119,14 @@ class Species(metaclass=ABCMeta):
     @classmethod
     def all(cls) -> frozenset[Species]:
         return frozenset(x for x in ALL_SPECIES.values() if isinstance(x, cls))
+
+    @classmethod
+    def find(cls, predicate: Callable[[Species], Any]):
+        return find(predicate, cls.all())
+
+    @classmethod
+    def get(cls, **kwargs):
+        return get(cls.all(), **kwargs)
 
     @property
     def possible_types(self):

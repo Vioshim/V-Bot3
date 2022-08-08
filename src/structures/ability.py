@@ -19,10 +19,11 @@ from dataclasses import asdict, astuple, dataclass
 from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from asyncpg import Connection, Record
 from discord import Embed
+from discord.utils import find, get
 from frozendict import frozendict
 
 from src.utils.functions import fix
@@ -82,6 +83,14 @@ class Ability:
     @classmethod
     def all(cls) -> frozenset[Ability]:
         return frozenset(ALL_ABILITIES.values())
+
+    @classmethod
+    def find(cls, predicate: Callable[[Ability], Any]):
+        return find(predicate, cls.all())
+
+    @classmethod
+    def get(cls, **kwargs):
+        return get(cls.all(), **kwargs)
 
     @classmethod
     def deduce_many(cls, *elems: str, limit_range: Optional[int] = None) -> frozenset[Ability]:

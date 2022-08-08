@@ -20,10 +20,10 @@ from enum import Enum
 from json import JSONDecoder, JSONEncoder, load
 from random import choice
 from re import split
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from discord import Embed, PartialEmoji
-from discord.utils import utcnow
+from discord.utils import find, get, utcnow
 from frozendict import frozendict
 
 from src.structures.mon_typing import Typing
@@ -191,6 +191,14 @@ class Move:
     @classmethod
     def all(cls) -> frozenset[Move]:
         return frozenset(ALL_MOVES.values())
+
+    @classmethod
+    def find(cls, predicate: Callable[[Move], Any]):
+        return find(predicate, cls.all())
+
+    @classmethod
+    def get(cls, **kwargs):
+        return get(cls.all(), **kwargs)
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Move]:

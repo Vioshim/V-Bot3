@@ -170,7 +170,7 @@ class SubmissionView(View):
         try:
             cog.ignore |= users
             view = CreationOCView(ctx.client, ctx, user)
-            await view.send(embeds=view.embeds)
+            await view.send()
             await view.wait()
         except Exception as e:
             await resp.send_message(str(e), ephemeral=True)
