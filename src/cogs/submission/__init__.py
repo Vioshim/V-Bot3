@@ -617,8 +617,11 @@ class Submission(commands.Cog):
             data = [x for x in ctx.message.attachments if x.content_type.startswith("image/")]
             image = data[0].proxy_url if data else None
             ocs = [self.ocs[x] for x in oc_ids if x in self.ocs]
-            file = await self.bot.get_file(Character.collage(ocs, background=image, font=font))
-            await ctx.reply(file=file)
+            url = Character.collage(ocs, background=image, font=font)
+            if file := await self.bot.get_file(url):
+                await ctx.reply(file=file)
+            else:
+                await ctx.reply(content=url)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
