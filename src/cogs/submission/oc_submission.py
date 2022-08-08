@@ -25,10 +25,10 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    NotFound,
     PartialMessage,
     SelectOption,
     TextStyle,
+    WebhookMessage,
 )
 from discord.ui import Button, Select, TextInput, button, select
 from discord.utils import MISSING, get
@@ -791,8 +791,12 @@ class CreationOCView(Basic):
                 embeds[0].set_image(url="attachment://image.png")
             files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
             try:
-                m = await self.message.edit(embeds=embeds, view=self, attachments=files)
-            except (NotFound, DiscordException) as e:
+
+                m = self.message
+                if not m.flags.ephemeral and isinstance(self.message, WebhookMessage):
+                    m = PartialMessage(channel=m.channel, id=m.id)
+                m = await m.edit(embeds=embeds, view=self, attachments=files)
+            except DiscordException as e:
                 self.bot.logger.exception(
                     "NotFound Exception Message\n\nself: %s",
                     repr(self.message),

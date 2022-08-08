@@ -173,7 +173,9 @@ class SubmissionView(View):
             await view.send()
             await view.wait()
         except Exception as e:
+
             await resp.send_message(str(e), ephemeral=True)
+            ctx.client.logger.exception("Character Creation Exception", exc_info=e)
         finally:
             cog.ignore -= users
 
