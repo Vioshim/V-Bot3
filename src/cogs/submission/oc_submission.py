@@ -201,7 +201,6 @@ class PronounField(TemplateField):
             title="Write the character's Pronoun. Current below",
             description=f"> {default}",
             single=True,
-            ephemeral=True,
         ) as pronoun:
             if isinstance(pronoun, Pronoun):
                 oc.pronoun = pronoun
@@ -767,7 +766,6 @@ class CreationOCView(Basic):
                 await resp.edit_message(embeds=self.embeds, view=self)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
-            await resp.send_message(str(e), ephemeral=True)
             self.stop()
 
     async def upload(self):
