@@ -94,12 +94,7 @@ class MoveComplex(Complex[Move]):
                     description=f"Has {len(items)} items.",
                 )
 
-        self.text_component = TextInput(
-            label="Moves",
-            placeholder=("Move, " * self.max_values).removesuffix(", "),
-            required=True,
-            default=", ".join(x.name for x in self.choices),
-        )
+        self.text_component.default = ", ".join(x.name for x in self.choices)
 
         return super(MoveComplex, self).menu_format()
 
