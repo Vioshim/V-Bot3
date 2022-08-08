@@ -216,7 +216,7 @@ class Basic(View):
         if isinstance(target, Interaction):
             resp: InteractionResponse = target.response
             if editing_original:
-                self.message = await target.edit_original_message(**data)
+                self.message = await target.edit_original_response(**data)
                 return
 
             if not resp.is_done():

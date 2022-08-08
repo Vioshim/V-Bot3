@@ -77,7 +77,7 @@ class ModernInput(Basic):
         try:
             if origin:
                 if isinstance(origin, Interaction):
-                    origin = await origin.original_message()
+                    origin = await origin.original_response()
                 await origin.edit(content=None, embed=embed, view=aux)
                 await aux.wait()
                 await origin.edit(content="Process concluded with success.", embed=None, view=None)

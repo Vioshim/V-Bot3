@@ -116,7 +116,7 @@ class WikiComplex(Complex[WikiEntry]):
                 if message := self.message or interaction.message:
                     await message.edit(**data)
                 else:
-                    self.message = await interaction.edit_original_message(**data)
+                    self.message = await interaction.edit_original_response(**data)
             except DiscordException as e:
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()

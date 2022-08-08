@@ -761,7 +761,7 @@ class CreationOCView(Basic):
             await self.update()
             self.setup()
             if resp.is_done():
-                await ctx.edit_original_message(embeds=self.embeds, view=self)
+                await ctx.edit_original_response(embeds=self.embeds, view=self)
             else:
                 await resp.edit_message(embeds=self.embeds, view=self)
         except Exception as e:
