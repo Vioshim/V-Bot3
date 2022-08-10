@@ -330,14 +330,7 @@ class Simple(Generic[_T], Basic):
             **kwargs,
         )
 
-    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
-        """This method edits the pagination's page given an index.
-
-        Parameters
-        ----------
-        page : int, optional
-            page's index, defaults to None
-        """
+    def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
         data = {}
 
         if self.modifying_embed:
@@ -348,13 +341,24 @@ class Simple(Generic[_T], Basic):
             self.menu_format()
             data["view"] = self
 
+        return data
+
+    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
+        """This method edits the pagination's page given an index.
+
+        Parameters
+        ----------
+        page : int, optional
+            page's index, defaults to None
+        """
         resp: InteractionResponse = interaction.response
+        data = self.default_params(page=page)
 
         if not resp.is_done():
             return await resp.edit_message(**data)
         try:
             if message := self.message or interaction.message:
-                if self.message.author == interaction.client.user and not message.flags.ephemeral:
+                if message.author == interaction.client.user and not message.flags.ephemeral:
                     message = PartialMessage(channel=message.channel, id=message.id)
                 self.message = await message.edit(**data)
             else:

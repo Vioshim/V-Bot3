@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from itertools import groupby
-from typing import Optional
+from typing import Any, Optional
 
 from discord import (
     ButtonStyle,
@@ -103,6 +103,20 @@ class MoveComplex(Complex[Move]):
 
         return super(MoveComplex, self).menu_format()
 
+    def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
+        data = dict(embed=self.embed)
+
+        self.values = [x for x in self.values if x not in self.choices] or self.total
+        self.max_values = min(self.real_max, len(self.values))
+        self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
+
+        if isinstance(page, int):
+            self.pos = page
+            self.menu_format()
+            data["view"] = self
+
+        return data
+
     async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
         """Method used to edit the pagination
 
@@ -113,22 +127,12 @@ class MoveComplex(Complex[Move]):
         """
         if self.keep_working or len(self.choices) < self.real_max:
             resp: InteractionResponse = interaction.response
-            data = dict(embed=self.embed)
-
-            self.values = [x for x in self.values if x not in self.choices] or self.total
-            self.max_values = min(self.real_max, len(self.values))
-            self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
-
-            if isinstance(page, int):
-                self.pos = page
-                self.menu_format()
-                data["view"] = self
-
+            data = self.default_params(page=page)
             if not resp.is_done():
                 return await resp.edit_message(**data)
             try:
                 if message := self.message or interaction.message:
-                    if self.message.author == interaction.client.user and not message.flags.ephemeral:
+                    if message.author == interaction.client.user and not message.flags.ephemeral:
                         message = PartialMessage(channel=message.channel, id=message.id)
                     self.message = await message.edit(**data)
                 else:

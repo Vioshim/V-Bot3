@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 from discord import (
     DiscordException,
@@ -84,38 +84,41 @@ class WikiComplex(Complex[WikiEntry]):
         self.tree = tree
         self.parent_folder.disabled = not tree.parent
 
+    def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
+        content, embeds = self.tree.content, self.tree.embeds
+        if not (content or embeds):
+            embed = Embed(
+                title="This page has no information yet",
+                description="Feel free to make suggestions to fill this page!",
+                color=self.member.color,
+            )
+            embed.set_image(url=WHITE_BAR)
+            embed.set_footer(
+                text=self.member.guild.name,
+                icon_url=self.member.guild.icon,
+            )
+            embeds = [embed]
+
+        self.parent_folder.disabled = not self.tree.parent
+        data = dict(content=content, embeds=embeds)
+
+        if isinstance(page, int):
+            self.pos = page
+            self.menu_format()
+            data["view"] = self
+
+        return data
+
     async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
         if self.keep_working or len(self.choices) < self.max_values:
             resp: InteractionResponse = interaction.response
-            content, embeds = self.tree.content, self.tree.embeds
-            if not (content or embeds):
-                embed = Embed(
-                    title="This page has no information yet",
-                    description="Feel free to make suggestions to fill this page!",
-                    color=self.member.color,
-                )
-                embed.set_image(url=WHITE_BAR)
-                embed.set_footer(
-                    text=self.member.guild.name,
-                    icon_url=self.member.guild.icon,
-                )
-                embeds = [embed]
-
-            self.parent_folder.disabled = not self.tree.parent
-            data = dict(content=content, embeds=embeds)
-
-            if isinstance(page, int):
-                self.pos = page
-                self.menu_format()
-                data["view"] = self
-
-            resp: InteractionResponse = interaction.response
+            data = self.default_params(page=page)
 
             if not resp.is_done():
                 return await resp.edit_message(**data)
             try:
                 if message := self.message or interaction.message:
-                    if self.message.author == interaction.client.user and not message.flags.ephemeral:
+                    if message.author == interaction.client.user and not message.flags.ephemeral:
                         message = PartialMessage(channel=message.channel, id=message.id)
                     self.message = await message.edit(**data)
                 else:

@@ -19,7 +19,7 @@ python-versions = ">=3.6,<4.0"
 
 [[package]]
 name = "aiogoogle"
-version = "4.2.1"
+version = "4.3.0"
 description = "Async Google API client"
 category = "main"
 optional = false
@@ -86,7 +86,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "3.6.1.post197"
+version = "3.6.1.post199"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -113,7 +113,7 @@ test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "f
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "9ed784d83dbe90fc1ca5ef5e88e8f60c10144aef"
+resolved_reference = "93b219bf31a2638722c21f4ce44fe7c1d735ca45"
 
 [[package]]
 name = "astunparse"
@@ -357,7 +357,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a4472+g7e3b0887"
+version = "2.0.0a4484+gafcec46d"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -382,7 +382,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "7e3b08871badb8328413a50b25ab58b84d5ab692"
+resolved_reference = "afcec46dfddc5922171a9dd9326ed2c77f51f40f"
 
 [[package]]
 name = "distlib"
@@ -464,7 +464,7 @@ grpc = ["grpcio (>=1.33.2,<2.0dev)", "grpcio-status (>=1.33.2,<2.0dev)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.55.0"
+version = "2.56.0"
 description = "Google API Client Library for Python"
 category = "main"
 optional = false
@@ -681,7 +681,7 @@ python-versions = "*"
 
 [[package]]
 name = "more-itertools"
-version = "8.13.0"
+version = "8.14.0"
 description = "More routines for operating on iterables, beyond itertools"
 category = "dev"
 optional = false
@@ -916,7 +916,7 @@ dev = ["pre-commit", "tox"]
 
 [[package]]
 name = "protobuf"
-version = "4.21.4"
+version = "4.21.5"
 description = ""
 category = "main"
 optional = false
@@ -962,7 +962,7 @@ pyasn1 = ">=0.4.6,<0.5.0"
 
 [[package]]
 name = "pycares"
-version = "4.2.1"
+version = "4.2.2"
 description = "Python interface for c-ares"
 category = "main"
 optional = false
@@ -1143,7 +1143,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "rapidfuzz"
-version = "2.4.2"
+version = "2.4.3"
 description = "rapid fuzzy string matching"
 category = "main"
 optional = false
@@ -1280,7 +1280,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "tomlkit"
-version = "0.11.2"
+version = "0.11.3"
 description = "Style preserving TOML library"
 category = "main"
 optional = false
@@ -1888,10 +1888,7 @@ mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
 ]
-more-itertools = [
-    {file = "more-itertools-8.13.0.tar.gz", hash = "sha256:a42901a0a5b169d925f6f217cd5a190e32ef54360905b9c39ee7db5313bfec0f"},
-    {file = "more_itertools-8.13.0-py3-none-any.whl", hash = "sha256:c5122bffc5f104d37c1626b8615b511f3427aa5389b94d61e5ef8236bfbc3ddb"},
-]
+more-itertools = []
 motor = [
     {file = "motor-3.0.0-py3-none-any.whl", hash = "sha256:b076de44970f518177f0eeeda8b183f52eafa557775bfe3294e93bda18867a71"},
     {file = "motor-3.0.0.tar.gz", hash = "sha256:3e36d29406c151b61342e6a8fa5e90c00c4723b76e30f11276a4373ea2064b7d"},
@@ -2050,39 +2047,7 @@ pyasn1-modules = [
     {file = "pyasn1_modules-0.2.8-py3.6.egg", hash = "sha256:cbac4bc38d117f2a49aeedec4407d23e8866ea4ac27ff2cf7fb3e5b570df19e0"},
     {file = "pyasn1_modules-0.2.8-py3.7.egg", hash = "sha256:c29a5e5cc7a3f05926aff34e097e84f8589cd790ce0ed41b67aed6857b26aafd"},
 ]
-pycares = [
-    {file = "pycares-4.2.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d83f193563b42360528167705b1c7bb91e2a09f990b98e3d6378835b72cd5c96"},
-    {file = "pycares-4.2.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b03f69df69f0ab3bfb8dbe54444afddff6ff9389561a08aade96b4f91207a655"},
-    {file = "pycares-4.2.1-cp310-cp310-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:3b78bdee2f2f1351d5fccc2d1b667aea2d15a55d74d52cb9fd5bea8b5e74c4dc"},
-    {file = "pycares-4.2.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f05223de13467bb26f9a1594a1799ce2d08ad8ea241489fecd9d8ed3bbbfc672"},
-    {file = "pycares-4.2.1-cp310-cp310-win32.whl", hash = "sha256:1f37f762414680063b4dfec5be809a84f74cd8e203d939aaf3ba9c807a9e7013"},
-    {file = "pycares-4.2.1-cp310-cp310-win_amd64.whl", hash = "sha256:1a9506d496efeb809a1b63647cb2f3f33c67fcf62bf80a2359af692fef2c1755"},
-    {file = "pycares-4.2.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:2fd53eb5b441c4f6f9c78d7900e05883e9998b34a14b804be4fc4c6f9fea89f3"},
-    {file = "pycares-4.2.1-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:061dd4c80fec73feb150455b159704cd51a122f20d36790033bd6375d4198579"},
-    {file = "pycares-4.2.1-cp36-cp36m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:a521d7f54f3e52ded4d34c306ba05cfe9eb5aaa2e5aaf83c96564b9369495588"},
-    {file = "pycares-4.2.1-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:99e00e397d07a79c9f43e4303e67f4f97bcabd013bda0d8f2d430509b7aef8a0"},
-    {file = "pycares-4.2.1-cp36-cp36m-win32.whl", hash = "sha256:d9cd826d8e0c270059450709bff994bfeb072f79d82fd3f11c701690ff65d0e7"},
-    {file = "pycares-4.2.1-cp36-cp36m-win_amd64.whl", hash = "sha256:f8e6942965465ca98e212376c4afb9aec501d8129054929744b2f4a487c8c14b"},
-    {file = "pycares-4.2.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:e75cbd4d3b3d9b02bba6e170846e39893a825e7a5fb1b96728fc6d7b964f8945"},
-    {file = "pycares-4.2.1-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d2e8ec4c8e07c986b70a3cc8f5b297c53b08ac755e5b9797512002a466e2de86"},
-    {file = "pycares-4.2.1-cp37-cp37m-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:5333b51ef4ff3e8973b4a1b57cad5ada13e15552445ee3cd74bd77407dec9d44"},
-    {file = "pycares-4.2.1-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:2113529004df4894783eaa61e9abc3a680756b6f033d942f2800301ae8c71c29"},
-    {file = "pycares-4.2.1-cp37-cp37m-win32.whl", hash = "sha256:e7a95763cdc20cf9ec357066e656ea30b8de6b03de6175cbb50890e22aa01868"},
-    {file = "pycares-4.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:7a901776163a04de5d67c42bd63a287cff9cb05fc041668ad1681fe3daa36445"},
-    {file = "pycares-4.2.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:66b5390a4885a578e687d3f2683689c35e1d4573f4d0ecf217431f7bb55c49a0"},
-    {file = "pycares-4.2.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:15dd5cf21bc73ad539e8aabf7afe370d1df8af7bc6944cd7298f3bfef0c1a27c"},
-    {file = "pycares-4.2.1-cp38-cp38-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:4ee625d7571039038bca51ae049b047cbfcfc024b302aae6cc53d5d9aa8648a8"},
-    {file = "pycares-4.2.1-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:396ee487178e9de06ca4122a35a157474db3ce0a0db6038a31c831ebb9863315"},
-    {file = "pycares-4.2.1-cp38-cp38-win32.whl", hash = "sha256:e4dc37f732f7110ca6368e0128cbbd0a54f5211515a061b2add64da2ddb8e5ca"},
-    {file = "pycares-4.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:3636fccf643c5192c34ee0183c514a2d09419e3a76ca2717cef626638027cb21"},
-    {file = "pycares-4.2.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:6724573e830ea2345f4bcf0f968af64cc6d491dc2133e9c617f603445dcdfa58"},
-    {file = "pycares-4.2.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e9dbfcacbde6c21380c412c13d53ea44b257dea3f7b9d80be2c873bb20e21fee"},
-    {file = "pycares-4.2.1-cp39-cp39-manylinux_2_5_i686.manylinux1_i686.manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:c8a46839da642b281ac5f56d3c6336528e128b3c41eab9c5330d250f22325e9d"},
-    {file = "pycares-4.2.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:9b05c2cec644a6c66b55bcf6c24d4dfdaf2f7205b16e5c4ceee31db104fac958"},
-    {file = "pycares-4.2.1-cp39-cp39-win32.whl", hash = "sha256:8bd6ed3ad3a5358a635c1acf5d0f46be9afb095772b84427ff22283d2f31db1b"},
-    {file = "pycares-4.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:fbd53728d798d07811898e11991e22209229c090eab265a53d12270b95d70d1a"},
-    {file = "pycares-4.2.1.tar.gz", hash = "sha256:735b4f75fd0f595c4e9184da18cd87737f46bc81a64ea41f4edce2b6b68d46d2"},
-]
+pycares = []
 pycodestyle = [
     {file = "pycodestyle-2.8.0-py2.py3-none-any.whl", hash = "sha256:720f8b39dde8b293825e7ff02c475f3077124006db4f440dcbc9a20b76548a20"},
     {file = "pycodestyle-2.8.0.tar.gz", hash = "sha256:eddd5847ef438ea1c7870ca7eb78a9d47ce0cdb4851a5523949f2601d0cbbe7f"},

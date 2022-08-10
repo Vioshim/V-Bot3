@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import datetime
 from typing import Optional, Union
 
@@ -242,25 +243,23 @@ class Basic(View):
         try:
             if ctx and not ctx.response.is_done():
                 resp: InteractionResponse = ctx.response
-                if self.message and not self.message.flags.ephemeral:
+                if (msg := self.message) and not msg.flags.ephemeral:
                     await resp.pong()
-                    await self.message.delete(delay=0)
+                    await msg.delete(delay=0)
                 else:
                     await resp.edit_message(view=None)
-            elif self.message:
-                if self.message.flags.ephemeral:
-                    await self.message.edit(view=None)
+            elif msg := self.message:
+                if msg.flags.ephemeral:
+                    await msg.edit(view=None)
                 else:
-                    await self.message.delete(delay=0)
+                    await msg.delete(delay=0)
         except HTTPException:
-            try:
+            with suppress(HTTPException):
                 if isinstance(self.target, Interaction):
-                    message = await self.target.original_response()
-                    await message.edit(view=None)
-            except HTTPException:
-                pass
+                    await self.target.edit_original_response(view=None)
         finally:
             self.stop()
 
     async def on_timeout(self) -> None:
-        await self.delete()
+        with suppress(HTTPException):
+            await self.delete()

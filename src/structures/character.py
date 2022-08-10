@@ -852,7 +852,9 @@ class Character:
                 species.types = types
 
         if ability_info := common_pop_get(data, "abilities", "ability"):
-            if abilities := Ability.deduce_many(ability_info):
+            if isinstance(ability_info, str):
+                ability_info = [ability_info]
+            if abilities := Ability.deduce_many(*ability_info):
                 data["abilities"] = abilities
 
             if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
