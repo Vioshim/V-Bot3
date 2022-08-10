@@ -911,9 +911,8 @@ class CreationOCView(Basic):
             embeds = self.embeds
             if not self.oc.image_url:
                 embeds[0].set_image(url="attachment://image.png")
-            files = [self.oc.image] if isinstance(self.oc.image, File) else MISSING
+            files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
             try:
-
                 m = self.message
                 if not m.flags.ephemeral and isinstance(self.message, WebhookMessage):
                     m = PartialMessage(channel=m.channel, id=m.id)
@@ -930,9 +929,7 @@ class CreationOCView(Basic):
                     self.oc.image = m.embeds[0].image.proxy_url
                     self.setup(embed_update=False)
                     m = await m.edit(view=self)
-
                 await self.upload()
-
                 self.message = m
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation Edit", exc_info=e)
@@ -989,9 +986,6 @@ class CreationOCView(Basic):
             cog = ctx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
             await cog.register_oc(self.oc, image_as_is=True)
-            if registered := ctx.guild.get_role(719642423327719434):
-                if isinstance(self.user, Member) and registered not in self.user.roles:
-                    await self.user.add_roles(registered)
             await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
         except Exception as e:
             self.bot.logger.exception("Error in oc %s", btn.label, exc_info=e)
