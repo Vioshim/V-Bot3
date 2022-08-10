@@ -424,6 +424,7 @@ class RPModal(Modal):
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         if not items:
             items = sorted(self.ocs, key=lambda x: x.name)
+        items = set(items)
 
         reference = self.role
         name = f"{self.role.name} - {self.user.display_name}"
@@ -454,9 +455,9 @@ class RPModal(Modal):
         cog1 = interaction.client.get_cog("Roles")
         cog1.cool_down[reference.id] = utcnow()
         cog1.role_cool_down[reference.id] = utcnow()
-        ocs = [oc.id for oc in cog0.ocs.values() if oc.author == self.user.id]
-        if set(ocs) == {x.id if isinstance(x, Character) else x for x in self.ocs}:
-            ocs = []
+        ocs = {oc.id for oc in cog0.ocs.values() if oc.author == self.user.id}
+        if ocs == {x.id if isinstance(x, Character) else x for x in self.ocs}:
+            ocs = set()
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         await db.insert_one(
@@ -466,7 +467,7 @@ class RPModal(Modal):
                 "role": reference.id,
                 "server": self.user.guild.id,
                 "message": msg2.id,
-                "ocs": ocs,
+                "ocs": list(ocs),
             }
         )
 
