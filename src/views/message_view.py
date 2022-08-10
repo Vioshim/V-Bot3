@@ -89,6 +89,7 @@ class MessagePaginator(Complex[Message]):
             parser=parser,
             keep_working=True,
             sort_key=get_title,
+            silent_mode=True,
         )
         self.embed.title = "Select Message"
 
@@ -112,14 +113,8 @@ class MessagePaginator(Complex[Message]):
                 embeds = [Embed(title=sticker.name).set_image(url=sticker.url) for sticker in item.stickers]
 
             if not (files or embeds or item.content):
-                await ctx.followup.send(
-                    "Message information is unknown.",
-                    ephemeral=True,
-                )
-                try:
-                    item.delete()
-                except (HTTPException, NotFound, Forbidden):
-                    pass
+                await ctx.followup.send("Message information is unknown.", ephemeral=True)
+                await item.delete(delay=0)
             else:
                 await ctx.followup.send(content=item.content, embeds=embeds, files=files, view=view, ephemeral=True)
 

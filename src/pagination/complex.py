@@ -460,28 +460,25 @@ class Complex(Simple[_T]):
         """
         response: InteractionResponse = interaction.response
 
-        if not response.is_done():
+        if not response.is_done() and not self.silent_mode:
+            member: Member | User = interaction.user
+            if isinstance(interaction.channel, Thread) and interaction.channel.archived:
+                await interaction.channel.edit(archived=True)
+            await response.defer(ephemeral=True, thinking=True)
 
-            if self.silent_mode:
-                await response.pong()
+            if self.current_choices:
+                text: str = "\n".join(f"> **•** {x}" for x, _ in map(self.parser, self.current_choices))
+                embed = Embed(title="Great! you have selected", description=text)
             else:
-                member: Member | User = interaction.user
-                if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-                    await interaction.channel.edit(archived=True)
-                await response.defer(ephemeral=True, thinking=True)
+                embed = Embed(title="Nothing has been selected.")
 
-                if text := "\n".join(f"> **•** {x}" for x, _ in map(self.parser, self.current_choices)):
-                    embed = Embed(title="Great! you have selected", description=text)
-                else:
-                    embed = Embed(title="Nothing has been selected.")
+            embed.color = Color.blurple()
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            embed.set_image(url=WHITE_BAR)
+            if guild := interaction.guild:
+                embed.set_footer(text=guild.name, icon_url=guild.icon)
 
-                embed.color = Color.blurple()
-                embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-                embed.set_image(url=WHITE_BAR)
-                if guild := interaction.guild:
-                    embed.set_footer(text=guild.name, icon_url=guild.icon)
-
-                await interaction.followup.send(embed=embed, ephemeral=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
 
         if self.keep_working:
             self.choices = self.current_choices

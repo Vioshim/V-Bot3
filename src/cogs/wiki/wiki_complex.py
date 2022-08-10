@@ -73,13 +73,14 @@ class WikiComplex(Complex[WikiEntry]):
     def __init__(self, *, tree: WikiEntry, target: Interaction):
         super(WikiComplex, self).__init__(
             member=target.user,
-            values=sorted(tree.children.values(), key=lambda x: x.order),
+            values=sorted(tree.children.values(), key=lambda x: x.path),
             target=target,
             timeout=None,
             parser=wiki_parser,
             emoji_parser=lambda x: "\N{BLUE BOOK}" if x.children else "\N{PAGE FACING UP}",
             silent_mode=True,
             text_component=WikiModal(tree),
+            sort_key=lambda x: x.order,
         )
         self.tree = tree
         self.parent_folder.disabled = not tree.parent
@@ -135,7 +136,7 @@ class WikiComplex(Complex[WikiEntry]):
         if not (content or embeds):
             embeds = [self.embed]
         self.tree = tree
-        self._values = sorted(tree.children.values(), key=lambda x: x.order)
+        self.values = sorted(tree.children.values(), key=lambda x: x.path)
         await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")

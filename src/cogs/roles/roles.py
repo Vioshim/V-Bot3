@@ -23,7 +23,6 @@ from discord import (
     ButtonStyle,
     Color,
     Embed,
-    File,
     Guild,
     Interaction,
     InteractionResponse,
@@ -490,9 +489,11 @@ class RPModal(Modal):
         if img := await db.find_one({"author": self.user.id}):
             img = img["image"]
 
-        file: File = await interaction.client.get_file(Character.collage(items, background=img))
-        embed.set_image(url=f"attachment://{file.filename}")
-        await msg1.edit(embed=embed, attachments=[file])
+        if file := await interaction.client.get_file(Character.collage(items, background=img)):
+            embed.set_image(url=f"attachment://{file.filename}")
+            await msg1.edit(embed=embed, attachments=[file])
+        elif text := ", ".join(str(x.id) for x in items):
+            interaction.client.logger.info("Error Image Parsing OCs: %s", text)
         self.stop()
 
 
