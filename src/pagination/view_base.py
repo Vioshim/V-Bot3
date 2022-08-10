@@ -103,12 +103,16 @@ class Basic(View):
         bool
             If validation is successful
         """
-        cog = interaction.client.get_cog("Submission")
-        if self.member != cog.supporting.get(interaction.user, self.member):
+        condition = interaction.user == self.member
+        with suppress(KeyError):
+            cog = interaction.client.get_cog("Submission")
+            aux = cog.supporting[interaction.user]
+            condition |= interaction.user == aux
+
+        if not condition:
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
-            return False
-        return True
+        return condition
 
     async def send(
         self,

@@ -352,10 +352,15 @@ class Simple(Generic[_T], Basic):
             page's index, defaults to None
         """
         resp: InteractionResponse = interaction.response
+
+        if self.is_finished():
+            return
+
         data = self.default_params(page=page)
 
         if not resp.is_done():
             return await resp.edit_message(**data)
+
         try:
             if message := self.message or interaction.message:
                 if message.author == interaction.client.user and not message.flags.ephemeral:
@@ -364,7 +369,14 @@ class Simple(Generic[_T], Basic):
             else:
                 self.message = await interaction.edit_original_response(**data)
         except DiscordException as e:
-            interaction.client.logger.exception("Error in Simple View", exc_info=e)
+            interaction.client.logger.exception(
+                "Error in Simple View - Page %s - Author: %s - Info: %s",
+                str(page),
+                str(self.member),
+                str(self.embed.to_dict()),
+                exc_info=e,
+            )
+        finally:
             self.stop()
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)
