@@ -358,10 +358,12 @@ class Simple(Generic[_T], Basic):
 
         data = self.default_params(page=page)
         try:
-            if resp.is_done():
-                self.message = await interaction.edit_original_response(**data)
-            else:
+            if not resp.is_done():
                 await resp.edit_message(**data)
+            elif self.message:
+                self.message = await self.message.edit(**data)
+            else:
+                self.message = await interaction.edit_original_response(**data)
         except DiscordException as e:
             interaction.client.logger.exception(
                 "Error in Simple View - Page %s - Author: %s - Info: %s",
