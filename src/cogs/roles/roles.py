@@ -40,12 +40,12 @@ from discord.utils import get, time_snowflake, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
-from structures.bot import CustomBot
 
 setLoggerClass(ColoredLogger)
 
