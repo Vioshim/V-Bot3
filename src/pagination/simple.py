@@ -357,17 +357,11 @@ class Simple(Generic[_T], Basic):
             return
 
         data = self.default_params(page=page)
-
-        if not resp.is_done():
-            return await resp.edit_message(**data)
-
         try:
-            if message := self.message or interaction.message:
-                if message.author == interaction.client.user and not message.flags.ephemeral:
-                    message = PartialMessage(channel=message.channel, id=message.id)
-                self.message = await message.edit(**data)
-            else:
+            if resp.is_done():
                 self.message = await interaction.edit_original_response(**data)
+            else:
+                await resp.edit_message(**data)
         except DiscordException as e:
             interaction.client.logger.exception(
                 "Error in Simple View - Page %s - Author: %s - Info: %s",
