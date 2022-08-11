@@ -370,7 +370,6 @@ class Simple(Generic[_T], Basic):
                 str(self.embed.to_dict()),
                 exc_info=e,
             )
-        finally:
             self.stop()
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)
