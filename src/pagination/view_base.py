@@ -107,7 +107,7 @@ class Basic(View):
         with suppress(KeyError):
             cog = interaction.client.get_cog("Submission")
             aux = cog.supporting[interaction.user]
-            condition |= interaction.user == aux
+            condition |= self.member == aux
 
         if not condition:
             msg = f"This menu has been requested by {self.member}"

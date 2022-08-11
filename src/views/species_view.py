@@ -46,15 +46,15 @@ class SpeciesComplex(Complex[Species]):
                 continue
 
             if isinstance(oc.species, Fusion):
-                mons = oc.species.bases
-            elif isinstance(oc.species, Variant):
-                mons = [oc.species.base]
-            else:
-                mons = [oc.species]
+                for mon in oc.species.bases:
+                    self.reference.setdefault(mon, 0)
+                    self.reference[mon] += 1
 
-            for mon in mons:
-                self.reference.setdefault(mon, 0)
-                self.reference[mon] += 1
+            else:
+                mon = oc.species.base if isinstance(oc.species, Variant) else oc.species
+                if isinstance(mon, Species):
+                    self.reference.setdefault(mon, 0)
+                    self.reference[mon] += 1
 
         super(SpeciesComplex, self).__init__(
             member=member,
