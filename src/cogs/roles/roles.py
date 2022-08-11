@@ -578,9 +578,9 @@ class RPRolesView(View):
             if len(self.rp_pings.options) >= 25:
                 break
             if not (role := guild.get_role(item["role"])):
-                pass
+                continue
             if not (member := guild.get_member(item["member"])):
-                pass
+                continue
 
             self.rp_pings.add_option(
                 label=role.name,
