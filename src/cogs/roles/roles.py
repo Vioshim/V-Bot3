@@ -577,7 +577,7 @@ class RPRolesView(View):
             {
                 "id": {"$gte": date - 181193932800000},
             },
-            sort={"id": -1},
+            sort=[("id", -1)],
         ):
             if len(self.rp_pings.options) >= 25:
                 break
@@ -640,7 +640,7 @@ class RPRolesView(View):
         cog = interaction.client.get_cog("Submission")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         key = {"id": {"$gte": interaction.id - 181193932800000}, "role": role.id}
-        data: list[dict[str, int]] = await db.find(key, sort={"id": -1}).to_list(length=25)
+        data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=25)
         entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
         member: Member = cog.supporting.get(interaction.user, interaction.user)
         view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
