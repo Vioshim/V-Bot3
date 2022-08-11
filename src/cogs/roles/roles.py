@@ -22,6 +22,7 @@ from discord import (
     AllowedMentions,
     ButtonStyle,
     Color,
+    DiscordException,
     Embed,
     Guild,
     Interaction,
@@ -35,7 +36,7 @@ from discord import (
     Webhook,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import get, utcnow
+from discord.utils import get, time_snowflake, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
@@ -44,6 +45,7 @@ from src.structures.logger import ColoredLogger
 from src.utils.etc import SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
+from structures.bot import CustomBot
 
 setLoggerClass(ColoredLogger)
 
@@ -110,14 +112,14 @@ def seconds(test: datetime) -> int:
 
 
 RP_SEARCH_ROLES = dict(
-    Any=962719564167254077,
-    Plot=962719564863508510,
-    Action=962719565182271590,
-    Narrated=962719566402813992,
-    Romance=962719567149408256,
-    Drama=962719567694659604,
-    Literate=962719568172814368,
-    Horror=962719570148331560,
+    Any=("Useful for finding Any kind of RP", 962719564167254077),
+    Plot=("If you need a hand with an Arc or plot.", 962719564863508510),
+    Action=("Encounters that involve action such as battles, thievery, etc.", 962719565182271590),
+    Narrated=("Narrate for others or get narrated.", 962719566402813992),
+    Romance=("Useful for long term planned ships, not instantaneous.", 962719567149408256),
+    Drama=("RPs that present a problem for OCs to solve.", 962719567694659604),
+    Literate=("Be descriptive and detailed as possible", 962719568172814368),
+    Horror=("Scary or mysterious RPs for OCs", 962719570148331560),
 )
 
 
@@ -246,9 +248,9 @@ class RoleSelect(View):
                 label=f"{key} RP Search",
                 emoji="💠",
                 value=str(item),
-                description=f"Enables {key} RP search ping notifications.",
+                description=desc,
             )
-            for key, item in RP_SEARCH_ROLES.items()
+            for key, (desc, item) in RP_SEARCH_ROLES.items()
         ],
     )
     async def rp_search_choice(self, ctx: Interaction, sct: Select):
@@ -260,13 +262,12 @@ class RoleSelect(View):
             view.add_item(
                 Button(
                     label="OC Submissions",
-                    url="https://discord.com/channels/719343092963999804/852180971985043466/961345742222536744",
+                    url="https://canary.discord.com/channels/719343092963999804/852180971985043466/1005387453055639612",
                     emoji="\N{OPEN BOOK}",
                 )
             )
-
             await resp.send_message(
-                "In order to use this function, you have to make a character.",
+                f"In order to use this function, you need to have {role.mention}",
                 view=view,
                 ephemeral=True,
             )
@@ -564,17 +565,73 @@ class RPSearchComplex(Complex[Member]):
 
 
 class RPRolesView(View):
+    async def load(self, bot: CustomBot, guild: Guild, removing: Optional[int] = None):
+        self.rp_pings.options.clear()
+        date = time_snowflake(utcnow())
+        db: AsyncIOMotorCollection = bot.mongo_db("RP Search")
+
+        if isinstance(removing, int):
+            await db.delete_one({"id": removing})
+
+        async for item in db.find(
+            {
+                "id": {"$gte": date - 181193932800000},
+            },
+            sort={"id": -1},
+        ):
+            if len(self.rp_pings.options) >= 25:
+                break
+            if not (role := guild.get_role(item["role"])):
+                pass
+            if not (member := guild.get_member(item["member"])):
+                pass
+
+            self.rp_pings.add_option(
+                label=role.name,
+                description=f"{member.display_name} w/ {len(item['ocs']) or 'their'} OCs"[:100],
+                value=str(item["id"]),
+                emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
+            )
+
+        if not self.rp_pings.options:
+            self.remove_item(self.rp_pings)
+
+    @select(placeholder="Existing Pings", custom_id="rp-pings")
+    async def rp_pings(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        item = int(sct.values[0])
+        try:
+            msg = await ctx.channel.fetch_message(item)
+            if not (thread := ctx.guild.get_channel_or_thread(item)):
+                thread = await ctx.guild.fetch_channel(item)
+            view = View()
+            view.add_item(
+                Button(
+                    label="Check Thread",
+                    url=thread.jump_url,
+                    emoji=PartialEmoji(name="MessageLink", id=778925231506587668),
+                )
+            )
+            await resp.send_message(
+                embeds=msg.embeds,
+                view=view,
+                ephemeral=True,
+            )
+        except DiscordException:
+            await self.load(ctx.client, ctx.guild, removing=item)
+            await resp.edit_message(view=self)
+
     @select(
-        placeholder="Select a role to Ping",
+        placeholder="Make a new Ping",
         custom_id="rp-view",
         options=[
             SelectOption(
                 label=f"{key} RP Search",
                 emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
                 value=str(item),
-                description=f"Pings {key} RP search.",
+                description=desc,
             )
-            for key, item in RP_SEARCH_ROLES.items()
+            for key, (desc, item) in RP_SEARCH_ROLES.items()
         ],
     )
     async def choice(self, interaction: Interaction, sct: Select):
@@ -583,7 +640,7 @@ class RPRolesView(View):
         cog = interaction.client.get_cog("Submission")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         key = {"id": {"$gte": interaction.id - 181193932800000}, "role": role.id}
-        data: list[dict[str, int]] = await db.find(key).to_list(length=25)
+        data: list[dict[str, int]] = await db.find(key, sort={"id": -1}).to_list(length=25)
         entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
         member: Member = cog.supporting.get(interaction.user, interaction.user)
         view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)

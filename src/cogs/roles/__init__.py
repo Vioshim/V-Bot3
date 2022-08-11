@@ -97,10 +97,11 @@ class Roles(commands.Cog):
     async def on_ready(self):
         if not self.ref_msg:
             channel = self.bot.get_channel(958122815171756042)
-            async for m in channel.history(limit=1):
-                view = RPRolesView(timeout=None)
-                if m.author == self.bot.user and not m.webhook_id:
-                    self.ref_msg = await m.edit(embed=IMAGE_EMBED, view=view)
+            view = RPRolesView(timeout=None)
+            await view.load(self.bot, channel.guild)
+            async for msg in channel.history(limit=1):
+                if msg.author == self.bot.user and not msg.webhook_id:
+                    self.ref_msg = await msg.edit(embed=IMAGE_EMBED, view=view)
                 else:
                     self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=view)
 
@@ -138,6 +139,7 @@ class Roles(commands.Cog):
             return
         if msg.webhook_id and msg.channel.id == 958122815171756042:
             view = RPRolesView(timeout=None)
+            await view.load(self.bot, msg.guild)
             if m := self.ref_msg:
                 await m.delete(delay=0)
             self.ref_msg = await msg.channel.send(embed=IMAGE_EMBED, view=view)
@@ -187,7 +189,7 @@ class Roles(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @app_commands.choices(role=[Choice(name=k, value=str(v)) for k, v in RP_SEARCH_ROLES.items()])
+    @app_commands.choices(role=[Choice(name=k, value=str(v)) for k, (_, v) in RP_SEARCH_ROLES.items()])
     async def ping(self, interaction: Interaction, role: str, member: Optional[Member] = None):
         """Command used to ping roles, and even users.
 
