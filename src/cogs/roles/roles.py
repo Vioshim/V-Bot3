@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from difflib import get_close_matches
 from logging import getLogger, setLoggerClass
 from time import mktime
@@ -567,18 +567,14 @@ class RPSearchComplex(Complex[Member]):
 class RPRolesView(View):
     async def load(self, bot: CustomBot, guild: Guild, removing: Optional[int] = None):
         self.rp_pings.options.clear()
-        date = time_snowflake(utcnow())
+        date = utcnow()
+        date = time_snowflake(date) - time_snowflake(date - timedelta(days=1))
         db: AsyncIOMotorCollection = bot.mongo_db("RP Search")
 
         if isinstance(removing, int):
             await db.delete_one({"id": removing})
 
-        async for item in db.find(
-            {
-                "id": {"$gte": date - 181193932800000},
-            },
-            sort=[("id", -1)],
-        ):
+        async for item in db.find({"id": {"$gte": date}}, sort=[("id", -1)]):
             if len(self.rp_pings.options) >= 25:
                 break
             if not (role := guild.get_role(item["role"])):
@@ -639,7 +635,9 @@ class RPRolesView(View):
         role: Role = interaction.guild.get_role(int(sct.values[0]))
         cog = interaction.client.get_cog("Submission")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
-        key = {"id": {"$gte": interaction.id - 181193932800000}, "role": role.id}
+        date = interaction.created_at
+        date = time_snowflake(date) - time_snowflake(date - timedelta(days=1))
+        key = {"id": {"$gte": date}, "role": role.id}
         data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=25)
         entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
         member: Member = cog.supporting.get(interaction.user, interaction.user)
