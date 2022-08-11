@@ -22,7 +22,6 @@ from discord import (
     InteractionResponse,
     Member,
     PartialEmoji,
-    PartialMessage,
 )
 from discord.abc import Messageable
 from discord.ui import Button, Select, TextInput, View, button, select
@@ -128,15 +127,11 @@ class MoveComplex(Complex[Move]):
         if self.keep_working or len(self.choices) < self.real_max:
             resp: InteractionResponse = interaction.response
             data = self.default_params(page=page)
-            if not resp.is_done():
-                return await resp.edit_message(**data)
             try:
-                if message := self.message or interaction.message:
-                    if message.author == interaction.client.user and not message.flags.ephemeral:
-                        message = PartialMessage(channel=message.channel, id=message.id)
-                    self.message = await message.edit(**data)
-                else:
+                if resp.is_done():
                     self.message = await interaction.edit_original_response(**data)
+                else:
+                    await resp.edit_message(**data)
             except DiscordException as e:
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()

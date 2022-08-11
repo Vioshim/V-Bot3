@@ -28,7 +28,6 @@ from discord import (
     PartialMessage,
     SelectOption,
     TextStyle,
-    WebhookMessage,
 )
 from discord.ui import Button, Select, TextInput, button, select
 from discord.utils import MISSING, get
@@ -914,7 +913,7 @@ class CreationOCView(Basic):
             files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
             try:
                 m = self.message
-                if not m.flags.ephemeral and isinstance(self.message, WebhookMessage):
+                if not m.flags.ephemeral:
                     m = PartialMessage(channel=m.channel, id=m.id)
                 m = await m.edit(embeds=embeds, view=self, attachments=files)
             except DiscordException as e:
