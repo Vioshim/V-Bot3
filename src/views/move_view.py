@@ -15,14 +15,7 @@
 from itertools import groupby
 from typing import Any, Optional
 
-from discord import (
-    ButtonStyle,
-    DiscordException,
-    Interaction,
-    InteractionResponse,
-    Member,
-    PartialEmoji,
-)
+from discord import ButtonStyle, Interaction, InteractionResponse, Member, PartialEmoji
 from discord.abc import Messageable
 from discord.ui import Button, Select, TextInput, View, button, select
 
@@ -115,28 +108,6 @@ class MoveComplex(Complex[Move]):
             data["view"] = self
 
         return data
-
-    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
-        """Method used to edit the pagination
-
-        Parameters
-        ----------
-        page: int, optional
-            Page to be accessed, defaults to None
-        """
-        if self.keep_working or len(self.choices) < self.real_max:
-            resp: InteractionResponse = interaction.response
-            data = self.default_params(page=page)
-            try:
-                if resp.is_done():
-                    self.message = await interaction.edit_original_response(**data)
-                else:
-                    await resp.edit_message(**data)
-            except DiscordException as e:
-                interaction.client.logger.exception("View Error", exc_info=e)
-                self.stop()
-        else:
-            await self.delete(interaction)
 
     @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:

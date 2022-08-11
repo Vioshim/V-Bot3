@@ -15,7 +15,7 @@
 
 from typing import Any, Optional
 
-from discord import DiscordException, Interaction, InteractionResponse, Member
+from discord import Interaction, Member
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
@@ -66,8 +66,8 @@ class SpeciesComplex(Complex[Species]):
             sort_key=lambda x: x.name,
             max_values=max_values,
             silent_mode=True,
+            real_max=max_values,
         )
-        self.real_max = max_values
         self.embed.title = "Select Species"
         self.data = {}
 
@@ -84,28 +84,6 @@ class SpeciesComplex(Complex[Species]):
             data["view"] = self
 
         return data
-
-    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
-        """Method used to edit the pagination
-
-        Parameters
-        ----------
-        page: int, optional
-            Page to be accessed, defaults to None
-        """
-        if self.keep_working or len(self.choices) < self.real_max:
-            resp: InteractionResponse = interaction.response
-            data = self.default_params(page=page)
-            try:
-                if resp.is_done():
-                    self.message = await interaction.edit_original_response(**data)
-                else:
-                    await resp.edit_message(**data)
-            except DiscordException as e:
-                interaction.client.logger.exception("View Error", exc_info=e)
-                self.stop()
-        else:
-            await self.delete(interaction)
 
     def menu_format(self) -> None:
         self.select_types.options.clear()

@@ -100,6 +100,7 @@ class Complex(Simple[_T]):
         keep_working: bool = False,
         sort_key: Optional[Callable[[_T], Any]] = None,
         text_component: Optional[TextInput | Modal] = None,
+        real_max: Optional[int] = None,
     ):
         super(Complex, self).__init__(
             timeout=timeout,
@@ -118,6 +119,7 @@ class Complex(Simple[_T]):
         self.max_values = max_values
         self._emoji_parser = emoji_parser
         self.text_component = text_component
+        self.real_max = real_max
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
@@ -253,7 +255,8 @@ class Complex(Simple[_T]):
         page: int, optional
             Page to be accessed, defaults to None
         """
-        if self.keep_working or len(self.choices) < self.max_values:
+        amount = self.max_values if self.real_max is None else self.real_max
+        if self.keep_working or len(self.choices) < amount:
             await super(Complex, self).edit(interaction=interaction, page=page)
         else:
             await self.delete(interaction)
