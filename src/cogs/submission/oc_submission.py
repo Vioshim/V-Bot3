@@ -664,9 +664,8 @@ class SpAbilityField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        resp: InteractionResponse = ctx.response
         view = SPAbilityView(ctx.user, oc)
-        await resp.send_message("Continue with Submission", view=view, ephemeral=ephemeral)
+        await view.send(ephemeral=ephemeral)
         await view.wait()
         oc.sp_ability = view.sp_ability
         progress.add(cls.name)

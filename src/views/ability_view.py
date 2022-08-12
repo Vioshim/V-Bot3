@@ -15,18 +15,19 @@ from random import sample
 from typing import Optional, Union
 
 from discord import (
-    ButtonStyle,
     Interaction,
     InteractionResponse,
     Member,
     PartialEmoji,
+    SelectOption,
     TextChannel,
     TextStyle,
     Webhook,
 )
-from discord.ui import Button, Modal, Select, TextInput, View, button, select
+from discord.ui import Modal, Select, TextInput, select
 
 from src.pagination.complex import Complex
+from src.pagination.view_base import Basic
 from src.structures.ability import Ability, SpAbility
 from src.structures.character import Character
 
@@ -135,26 +136,51 @@ class SPAbilityModal(Modal):
         )
         if not self.sp_ability.valid:
             self.sp_ability = None
-        await resp.send_message("Special ability added/modified", ephemeral=True)
+        await resp.pong()
         self.stop()
 
 
-class SPAbilityView(View):
-    def __init__(self, member: Member, oc: Character):
-        super(SPAbilityView, self).__init__(timeout=None)
+class SPAbilityView(Basic):
+    def __init__(self, target: Interaction, member: Member, oc: Character):
+        super(SPAbilityView, self).__init__(target=target, member=member, timeout=None)
+        self.embed.title = "Special Ability Settings"
         self.sp_ability: Optional[SpAbility] = None
         self.member = member
         self.oc = oc
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        return interaction.user == self.member
-
-    @button(
-        label="Add Sp. Ability",
-        style=ButtonStyle.blurple,
-        emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
+    @select(
+        placeholder="Available Options",
+        options=[
+            SelectOption(
+                label="Add Sp. Ability",
+                value="add",
+                description="Provide Sp. Ability (Name, Desc, Origin, Pros, Cons)",
+                emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
+            ),
+            SelectOption(
+                label="No Sp. Ability",
+                value="remove",
+                description="Removes Sp. Ability",
+                emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
+            ),
+            SelectOption(
+                label="Keep as is",
+                value="default",
+                description="Skip this process",
+                emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
+            ),
+        ],
     )
-    async def confirm(self, ctx: Interaction, _: Button):
+    async def setting(self, ctx: Interaction, sct: Select):
+        match sct.values[0]:
+            case "add":
+                await self.confirm(ctx)
+            case "remove":
+                await self.deny(ctx)
+            case "default":
+                await self.cancel(ctx)
+
+    async def confirm(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         modal = SPAbilityModal(self.sp_ability)
         await resp.send_modal(modal)
@@ -188,28 +214,21 @@ class SPAbilityView(View):
                 else:
                     sp_ability = None
 
-        if sp_ability.valid:
+        if sp_ability and sp_ability.valid:
             self.sp_ability = sp_ability
+
         self.stop()
 
-    @button(
-        label="No Sp. Ability",
-        style=ButtonStyle.blurple,
-        emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
-    )
-    async def deny(self, ctx: Interaction, _: Button):
+    async def deny(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        await resp.edit_message(content="Alright, no Sp Ability", view=None)
         self.sp_ability = None
+        self.embed.description = "Alright, no Sp Ability"
+        await resp.edit_message(embed=self.embed, view=None)
         self.stop()
 
-    @button(
-        label="Cancel",
-        style=ButtonStyle.red,
-        emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
-    )
-    async def cancel(self, ctx: Interaction, _: Button):
+    async def cancel(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         self.sp_ability = SpAbility()
-        await resp.edit_message(content="Process concluded", view=None)
+        self.embed.description = "Process concluded"
+        await resp.edit_message(embed=self.embed, view=None)
         self.stop()

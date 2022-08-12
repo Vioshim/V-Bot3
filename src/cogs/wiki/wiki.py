@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Optional
 
-from discord import Embed, Interaction
+from discord import Embed, Interaction, PartialEmoji
 from discord.app_commands import Choice, Transform, Transformer
 
 from src.structures.bot import CustomBot
@@ -36,7 +36,7 @@ class WikiEntry:
         content: Optional[str] = None,
         embeds: list[Embed] = None,
         order: int = 0,
-        emoji: str = None,
+        emoji: Optional[PartialEmoji | str] = None,
         tags: Iterable[str] = None,
     ) -> None:
 
@@ -52,6 +52,8 @@ class WikiEntry:
         self.parent: Optional[WikiEntry] = None
         self.order = order
         self.tags = sorted(tags)
+        if isinstance(emoji, str):
+            emoji = PartialEmoji.from_str(emoji)
         self._emoji = emoji
 
     def copy(self):
@@ -75,10 +77,11 @@ class WikiEntry:
         )
 
     @property
-    def emoji(self) -> str:
+    def emoji(self) -> PartialEmoji:
         if self._emoji:
             return self._emoji
-        return "\N{BLUE BOOK}" if self.children else "\N{PAGE FACING UP}"
+        emoji = "\N{BLUE BOOK}" if self.children else "\N{PAGE FACING UP}"
+        return PartialEmoji.from_str(emoji)
 
     def __str__(self, level: int = 0) -> str:
         ret = f"{TREE_ICON}{LEVEL_ICON * (level * 2)} /{self.path}\n"
@@ -119,7 +122,7 @@ class WikiEntry:
             "content": self.content,
             "embeds": [x.to_dict() for x in self.embeds],
             "order": self.order,
-            "emoji": self._emoji,
+            "emoji": str(self._emoji) if self._emoji else None,
             "tags": self.tags,
         }
 
