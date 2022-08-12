@@ -151,9 +151,12 @@ class MoveComplex(Complex[Move]):
     )
     async def move_remove(self, interaction: Interaction, _: Button):
         view = MoveComplex(member=self.member, moves=self.choices, target=interaction)
-        view.embed.title = "Remove Moves"
         view.remove_item(view.move_remove)
-        async with view.send(editing_original=True) as choices:
+        async with view.send(
+            title="Remove Moves",
+            description="\n".join(f"> {x!r}" for x in self.choices),
+            editing_original=True,
+        ) as choices:
             self.choices -= choices
         await self.edit(interaction, page=0)
 
