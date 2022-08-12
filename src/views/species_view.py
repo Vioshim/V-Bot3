@@ -96,7 +96,7 @@ class SpeciesComplex(Complex[Species]):
                 data[t].add(item)
 
         items = [("No Filter", total)]
-        items.extend(sorted(data.items(), key=lambda x: x[0]))
+        items.extend(sorted(data.items(), key=lambda x: x[0].name))
         for k, items in items:
             if items:
                 if isinstance(k, Typing):
