@@ -148,7 +148,6 @@ class WikiComplex(Complex[WikiEntry]):
             values=list(data.keys()),
             max_values=len(data),
             parser=lambda x: (x, f"{len(data[x])} Entries."),
-            emoji=None,
             text_component=TextInput(
                 label=btn.label,
                 placeholder="Tag, Tag",
