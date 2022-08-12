@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
-from difflib import get_close_matches
 from logging import getLogger, setLoggerClass
 from time import mktime
 from typing import Iterable, Optional
@@ -38,6 +37,7 @@ from discord import (
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import get, time_snowflake, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
+from rapidfuzz import process
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
@@ -414,8 +414,8 @@ class RPModal(Modal):
                 item = item.split("|")[-1].strip()
                 if oc := info.get(item):
                     items.append(oc)
-                elif elements := get_close_matches(item, info, n=1, cutoff=0.85):
-                    items.append(info[elements[0]])
+                elif data := process.extractOne(item, info, score_cutoff=85):
+                    items.append(info[data[0]])
 
         for item in self.select_ocs_group:
             items.extend(map(lambda x: info_ids[x], item.values))

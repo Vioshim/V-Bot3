@@ -273,8 +273,9 @@ class Species(metaclass=ABCMeta):
                 return elem
 
         entries = list(cls.all())
+        items = [o for x in ",".join(aux).split(",") if (o := x.strip().title())]
 
-        for word in filter(bool, [x.strip().title() for x in ",".join(aux).split(",")]):
+        for word in items:
             for key, value in PHRASES.items():
                 phrase1, phrase2 = f"{value} ".title(), f"{key} ".title()
                 if word.startswith(phrase1) or word.startswith(phrase2):
