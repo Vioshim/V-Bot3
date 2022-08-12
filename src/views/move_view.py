@@ -80,8 +80,8 @@ class MoveComplex(Complex[Move]):
         )
 
         data = {k: set(v) for row in elements for k, v in row}
-        items = [("None", moves1), ("Abilities", moves2)]
-        items.append(
+        values = [("None", moves1), ("Abilities", moves2)]
+        values.append(
             sorted(
                 data.items(),
                 key=lambda x: len(x[1]),
@@ -89,7 +89,7 @@ class MoveComplex(Complex[Move]):
             )
         )
 
-        for k, items in items:
+        for k, items in values:
             if items:
                 label = getattr(k, "name", k).title()
                 self.data[label] = items
