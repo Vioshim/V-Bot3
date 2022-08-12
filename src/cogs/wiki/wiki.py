@@ -55,16 +55,17 @@ class WikiEntry:
         self._emoji = emoji
 
     def copy(self):
-        return WikiEntry(
+        item = WikiEntry(
             path=self.path,
             content=self.content,
             embeds=self.embeds.copy(),
-            children=self.children.copy(),
-            parent=self.parent,
             order=self.order,
             emoji=self.emoji,
             tags=self.tags.copy(),
         )
+        item.children = self.children.copy()
+        item.parent = self.parent
+        return item
 
     @property
     def ordered_children(self):
