@@ -65,7 +65,6 @@ class WikiEntry:
             emoji=self.emoji,
             tags=self.tags.copy(),
         )
-        pass
 
     @property
     def ordered_children(self):
