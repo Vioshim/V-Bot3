@@ -56,6 +56,7 @@ class MoveComplex(Complex[Move]):
         self.modifying_embed = True
         self.real_max = self.max_values
         self.embed.title = "Select Moves"
+        self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
         self.total = total
         self.data = {}
 
