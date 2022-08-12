@@ -18,9 +18,10 @@ from dataclasses import asdict, dataclass, field
 from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from discord import PartialEmoji
+from discord.utils import find, get
 from frozendict import frozendict
 
 from src.utils.functions import fix
@@ -241,6 +242,14 @@ class Typing:
     @classmethod
     def all(cls) -> frozenset[Typing]:
         return frozenset(ALL_TYPES.values())
+
+    @classmethod
+    def find(cls, predicate: Callable[[Typing], Any]):
+        return find(predicate, cls.all())
+
+    @classmethod
+    def get(cls, **kwargs: Any):
+        return get(cls.all(), **kwargs)
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Typing]:

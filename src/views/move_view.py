@@ -53,6 +53,7 @@ class MoveComplex(Complex[Move]):
                 required=False,
             ),
         )
+        self.modifying_embed = True
         self.real_max = self.max_values
         self.embed.title = "Select Moves"
         self.total = total
