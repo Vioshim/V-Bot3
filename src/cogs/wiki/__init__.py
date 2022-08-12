@@ -40,8 +40,12 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.message = message
         self.folder = TextInput(label="Path", style=TextStyle.paragraph, required=True, default="/")
         self.redirect = TextInput(label="Change", style=TextStyle.paragraph, required=False)
+        self.order = TextInput(label="Order", required=False, default="0")
+        self.tags = TextInput(label="Tags", style=TextStyle.paragraph, required=False)
         self.add_item(self.folder)
         self.add_item(self.redirect)
+        self.add_item(self.order)
+        self.add_item(self.tags)
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
@@ -72,7 +76,9 @@ class WikiPathModal(Modal, title="Wiki Path"):
                     aux_embed.description = ""
                     embeds.extend(aux_embed.copy().set_image(url=x.url) for x in attachments)
 
-            entry = WikiEntry(path=redirect_path, content=content, embeds=embeds)
+            tags = [x.strip() for x in self.tags.value.split(",")]
+            order = int(self.order.value) if self.order.value else 0
+            entry = WikiEntry(path=redirect_path, content=content, embeds=embeds, tags=tags, order=order)
             await db.replace_one({"path": path.removesuffix("/")}, entry.simplified, upsert=True)
         except Exception as e:
             interaction.client.logger.exception(

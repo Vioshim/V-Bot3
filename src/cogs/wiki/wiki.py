@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from discord import Embed, Interaction
 from discord.app_commands import Choice, Transform, Transformer
@@ -36,10 +36,14 @@ class WikiEntry:
         content: Optional[str] = None,
         embeds: list[Embed] = None,
         order: int = 0,
+        emoji: str = None,
+        tags: Iterable[str] = None,
     ) -> None:
 
         if not embeds:
             embeds = []
+        if not tags:
+            tags = []
 
         self.path = path or ""
         self.content = content
@@ -47,6 +51,34 @@ class WikiEntry:
         self.children: dict[str, WikiEntry] = {}
         self.parent: Optional[WikiEntry] = None
         self.order = order
+        self.tags = sorted(tags)
+        self._emoji = emoji
+
+    def copy(self):
+        return WikiEntry(
+            path=self.path,
+            content=self.content,
+            embeds=self.embeds.copy(),
+            children=self.children.copy(),
+            parent=self.parent,
+            order=self.order,
+            emoji=self.emoji,
+            tags=self.tags.copy(),
+        )
+        pass
+
+    @property
+    def ordered_children(self):
+        return sorted(
+            self.children.values(),
+            key=lambda x: (-len(x.children), x.order, x.path),
+        )
+
+    @property
+    def emoji(self) -> str:
+        if self._emoji:
+            return self._emoji
+        return "\N{BLUE BOOK}" if self.children else "\N{PAGE FACING UP}"
 
     def __str__(self, level: int = 0) -> str:
         ret = f"{TREE_ICON}{LEVEL_ICON * (level * 2)} /{self.path}\n"
@@ -55,6 +87,21 @@ class WikiEntry:
 
     def __repr__(self) -> str:
         return f"WikiEntry({len(self.children)})"
+
+    def current_tags_raw(self, limit: int = None):
+        items: set[str] = set()
+        data: dict[str, set[WikiEntry]] = {}
+        for item in self.children.values():
+            items.update(item.tags)
+            for tag in item.tags:
+                data.setdefault(tag, set())
+                data[tag].add(item)
+
+        values = sorted(data.items(), key=lambda x: (-len(x[1]), x[0]))
+        return dict(values[:limit])
+
+    def current_tags(self, limit: int = None):
+        return list(self.current_tags_raw(limit=limit).keys())
 
     @property
     def route(self) -> str:
@@ -72,6 +119,8 @@ class WikiEntry:
             "content": self.content,
             "embeds": [x.to_dict() for x in self.embeds],
             "order": self.order,
+            "emoji": self._emoji,
+            "tags": self.tags,
         }
 
     def printTree(
@@ -112,8 +161,19 @@ class WikiEntry:
         content: Optional[str] = None,
         embeds: list[Embed] = None,
         order: int = 0,
+        emoji: str = None,
+        tags: Iterable[str] = None,
     ):
-        self.add_node(WikiEntry(path, content, embeds, order))
+        self.add_node(
+            WikiEntry(
+                path=path,
+                content=content,
+                embeds=embeds,
+                order=order,
+                emoji=emoji,
+                tags=tags,
+            )
+        )
 
     @classmethod
     def from_data(cls, node: WikiEntry | list[str] | str | dict[str, Any]):

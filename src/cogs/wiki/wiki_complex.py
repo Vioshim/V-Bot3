@@ -24,7 +24,7 @@ from discord import (
     PartialEmoji,
     TextStyle,
 )
-from discord.ui import Modal, Select, TextInput, button, select
+from discord.ui import Button, Modal, Select, TextInput, button, select
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.cogs.wiki.wiki import WikiEntry
@@ -72,15 +72,14 @@ class WikiComplex(Complex[WikiEntry]):
     def __init__(self, *, tree: WikiEntry, target: Interaction):
         super(WikiComplex, self).__init__(
             member=target.user,
-            values=sorted(tree.children.values(), key=lambda x: x.path),
+            values=tree.ordered_children,
             target=target,
             timeout=None,
             parser=wiki_parser,
-            emoji_parser=lambda x: "\N{BLUE BOOK}" if x.children else "\N{PAGE FACING UP}",
             silent_mode=True,
             text_component=WikiModal(tree),
-            sort_key=lambda x: x.order,
         )
+        self.real_max = self.max_values
         self.tree = tree
         self.parent_folder.disabled = not tree.parent
 
@@ -115,10 +114,12 @@ class WikiComplex(Complex[WikiEntry]):
             data = self.default_params(page=page)
 
             try:
-                if resp.is_done():
-                    self.message = await interaction.edit_original_response(**data)
-                else:
+                if not resp.is_done():
                     await resp.edit_message(**data)
+                elif self.message:
+                    self.message = await self.message.edit(**data)
+                else:
+                    self.message = await interaction.edit_original_response(**data)
             except DiscordException as e:
                 interaction.client.logger.exception("View Error", exc_info=e)
                 self.stop()
@@ -131,17 +132,37 @@ class WikiComplex(Complex[WikiEntry]):
         if not (content or embeds):
             embeds = [self.embed]
         self.tree = tree
-        self.values = sorted(tree.children.values(), key=lambda x: x.path)
+        self._values = tree.ordered_children
         await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         await self.selection(interaction, self.current_choice)
 
-    @button(
-        label="Parent Folder",
-        emoji=PartialEmoji(name="IconReply", id=816772114639487057),
-        custom_id="parent",
-    )
-    async def parent_folder(self, interaction: Interaction, _: Select) -> None:
+    @button(label="Use Tags", custom_id="tags")
+    async def select_tags(self, interaction: Interaction, btn: Button):
+        data = self.tree.current_tags_raw()
+        view: Complex[str] = Complex(
+            member=interaction.user,
+            target=interaction,
+            values=list(data.keys()),
+            max_values=len(data),
+            parser=lambda x: (x, f"{len(data[x])} Entries."),
+            emoji=None,
+            text_component=TextInput(
+                label=btn.label,
+                placeholder="Tag, Tag",
+                default=", ".join(data.keys()),
+            ),
+        )
+        async with view.send(editing_original=True) as data:
+            aux = self.tree.copy()
+            aux.path = "/"
+            items = [aux]
+            items.extend(set.intersection(*[data[x] for x in data]))
+            tree = WikiEntry.from_list(items)
+            await self.selection(interaction, tree)
+
+    @button(label="Parent Folder", emoji=PartialEmoji(name="IconReply", id=816772114639487057), custom_id="parent")
+    async def parent_folder(self, interaction: Interaction, _: Button) -> None:
         await self.selection(interaction, self.tree.parent)
