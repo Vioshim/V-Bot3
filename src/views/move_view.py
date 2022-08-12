@@ -79,15 +79,11 @@ class MoveComplex(Complex[Move]):
             ),
         )
 
-        data = {k: set(v) for row in elements for k, v in row}
         values = [("None", moves1), ("Abilities", moves2)]
-        values.extend(
-            sorted(
-                data.items(),
-                key=lambda x: len(x[1]),
-                reverse=True,
-            )
-        )
+        for element in elements:
+            aux = {k: set(v) for k, v in element}
+            aux = sorted(aux.items(), key=lambda x: len(x[1]), reverse=True)
+            values.extend(aux)
 
         for k, items in values:
             if items:
