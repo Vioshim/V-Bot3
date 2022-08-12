@@ -162,7 +162,9 @@ class WikiComplex(Complex[WikiEntry]):
                 items.extend(set.intersection(*[data[x] for x in entries]))
                 tree = WikiEntry.from_list(items)
                 tree.parent = self.tree
-                await self.selection(interaction, tree)
+            else:
+                tree = self.tree
+            await self.selection(interaction, tree)
 
     @button(label="Parent Folder", emoji=PartialEmoji(name="IconReply", id=816772114639487057), custom_id="parent")
     async def parent_folder(self, interaction: Interaction, _: Button) -> None:
