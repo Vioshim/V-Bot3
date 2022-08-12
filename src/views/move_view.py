@@ -34,6 +34,7 @@ class MoveComplex(Complex[Move]):
         target: Optional[Messageable] = None,
         keep_working: bool = False,
         max_values: int = 6,
+        choices: set[Move] = None,
     ):
         total = sorted(moves, key=lambda x: (x.type.id or 0) if isinstance(x, Move) else 0)
         max_values = min(max_values, len(total))
@@ -56,7 +57,8 @@ class MoveComplex(Complex[Move]):
         self.modifying_embed = True
         self.real_max = self.max_values
         self.embed.title = "Select Moves"
-        self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
+        if choices:
+            self.choices.update(choices)
         self.total = total
         self.data = {}
 

@@ -502,8 +502,7 @@ class MovesetField(TemplateField):
             moves = Move.all()
 
         moves = {x for x in moves if not x.banned}
-        view = MoveComplex(member=ctx.user, moves=moves, target=ctx)
-        view.choices |= oc.moveset
+        view = MoveComplex(member=ctx.user, moves=moves, target=ctx, choices=oc.moveset)
         async with view.send(ephemeral=ephemeral) as choices:
             oc.moveset = frozenset(choices)
             if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
