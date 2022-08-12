@@ -132,6 +132,22 @@ class MoveComplex(Complex[Move]):
         await response.send_modal(component)
         await component.wait()
 
+    @button(
+        label="Remove Moves",
+        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+        custom_id="writer",
+        style=ButtonStyle.blurple,
+        disabled=False,
+        row=4,
+    )
+    async def move_remove(self, interaction: Interaction, _: Button):
+        view = MoveComplex(member=self.member, moves=self.choices, target=interaction)
+        view.embed.title = "Remove Moves"
+        view.remove_item(view.move_remove)
+        async with view.send(ephemeral=interaction.message.flags.ephemeral) as choices:
+            self.choices -= choices
+        await self.edit(interaction, page=0)
+
 
 class MoveView(MoveComplex):
     def __init__(

@@ -58,7 +58,7 @@ __all__ = ("Complex",)
 
 class DefaultModal(Modal):
     def __init__(self, view: Complex, title: str = "Fill the information") -> None:
-        super().__init__(title=title)
+        super(DefaultModal, self).__init__(title=title)
         self.text: Optional[str] = None
         self.view = view
         if item := view.text_component:
@@ -67,12 +67,13 @@ class DefaultModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         text = self.item.value or ""
-        aux = dict(map(lambda x: (self.view.parser(x)[0], x), self.view.values))
+        aux = {self.view.parser(x)[0]: x for x in self.view.real_values}
         current = set()
         for elem in map(lambda x: x.strip(), text.split(",")):
             choices = self.view.choices
             entries = get_close_matches(word=elem, possibilities=aux, n=1)
-            if entries and len(choices) < self.view.max_values - len(current):
+            max_amount = self.view.real_max or self.view.max_values
+            if entries and len(choices) < max_amount - len(current):
                 item = aux[entries[0]]
                 current.add(item)
 
@@ -120,6 +121,40 @@ class Complex(Simple[_T]):
         self._emoji_parser = emoji_parser
         self.text_component = text_component
         self.real_max = real_max
+        self.real_values = self.values
+
+    @property
+    def values(self) -> list[_T]:
+        return self._values
+
+    @values.setter
+    def values(self, values: Iterable[_T]):
+        if not isinstance(values, Iterable):
+            name = values.__class__.__name__ if values is not None else "None"
+            raise TypeError(f"{name} is not iterable.")
+        items: list[_T] = list(values)
+        self._values = items
+        self.real_values = items
+        self.sort()
+
+    def sort(self, sort_key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
+        """Sort method used for the view's values
+
+        Attributes
+        ----------
+        key : Callable[[_T], Any], optional
+            key to use for sorting, defaults to None
+        reverse : bool, optional
+            sets the order to reverse, defaults to False
+        """
+        try:
+            self._sort_key = sort_key
+            self.values.sort(key=sort_key, reverse=reverse)
+            self.real_values.sort(key=sort_key, reverse=reverse)
+        except TypeError:
+            self._sort_key = str
+            self.values.sort(key=str, reverse=reverse)
+            self.real_values.sort(key=str, reverse=reverse)
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
