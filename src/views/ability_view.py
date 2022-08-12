@@ -136,7 +136,7 @@ class SPAbilityModal(Modal):
         )
         if not self.sp_ability.valid:
             self.sp_ability = None
-        await resp.pong()
+        await resp.edit_message(view=None)
         self.stop()
 
 
@@ -179,6 +179,7 @@ class SPAbilityView(Basic):
                 await self.deny(ctx)
             case "default":
                 await self.cancel(ctx)
+        await self.delete(ctx)
 
     async def confirm(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -217,18 +218,14 @@ class SPAbilityView(Basic):
         if sp_ability and sp_ability.valid:
             self.sp_ability = sp_ability
 
-        self.stop()
-
     async def deny(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         self.sp_ability = None
         self.embed.description = "Alright, no Sp Ability"
         await resp.edit_message(embed=self.embed, view=None)
-        self.stop()
 
     async def cancel(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         self.sp_ability = SpAbility()
         self.embed.description = "Process concluded"
         await resp.edit_message(embed=self.embed, view=None)
-        self.stop()
