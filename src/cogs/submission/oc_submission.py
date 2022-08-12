@@ -293,7 +293,7 @@ class SpeciesField(TemplateField):
         match template:
             case Template.CustomPokemon | Template.CustomLegendary | Template.CustomMythical | Template.CustomUltraBeast:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label="Write the character's Species.",
+                    label="Character's Species.",
                     required=True,
                     ephemeral=ephemeral,
                 ) as answer:
@@ -309,7 +309,7 @@ class SpeciesField(TemplateField):
                             )
             case Template.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label=f"Write the name of the {choices[0].name} Variant's Species.",
+                    label=f"{choices[0].name} Variant"[:45],
                     ephemeral=ephemeral,
                     required=True,
                 ) as answer:
@@ -627,7 +627,7 @@ class HiddenPowerField(TemplateField):
             timeout=None,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
             text_component=TextInput(
-                label="Character's Hidden Power",
+                label="Hidden Power",
                 placeholder="Type",
                 required=True,
             ),
@@ -664,7 +664,7 @@ class SpAbilityField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = SPAbilityView(ctx.user, oc)
+        view = SPAbilityView(ctx, ctx.user, oc)
         await view.send(ephemeral=ephemeral)
         await view.wait()
         oc.sp_ability = view.sp_ability
