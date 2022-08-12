@@ -28,6 +28,7 @@ from discord import (
     PartialMessage,
     RawMessageDeleteEvent,
     Role,
+    TextChannel,
     Thread,
     app_commands,
 )
@@ -133,17 +134,18 @@ class Roles(commands.Cog):
             }
         )
 
+    async def view_load(self, channel: TextChannel):
+        view = RPRolesView(timeout=None)
+        await view.load(self.bot, channel.guild)
+        if m := self.ref_msg:
+            await m.delete(delay=0)
+        self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=view)
+
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
         if msg.flags.ephemeral or not msg.guild:
             return
-        if msg.webhook_id and msg.channel.id == 958122815171756042:
-            view = RPRolesView(timeout=None)
-            await view.load(self.bot, msg.guild)
-            if m := self.ref_msg:
-                await m.delete(delay=0)
-            self.ref_msg = await msg.channel.send(embed=IMAGE_EMBED, view=view)
-        elif msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name and not msg.author.bot:
+        if msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name and not msg.author.bot:
             db2 = self.bot.mongo_db("RP Sessions")
 
             if isinstance(msg.channel, Thread):

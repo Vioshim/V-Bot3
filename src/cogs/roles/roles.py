@@ -60,6 +60,7 @@ __all__ = (
     "seconds",
 )
 
+INTERVAL = timedelta(hours=12)
 RP_SEARCH_EMBED = (
     Embed(
         description="This is the section where RP Search roles get pinged, and don't worry even if you don't have the role, it will get assigned to you when you use the options",
@@ -496,6 +497,7 @@ class RPModal(Modal):
             await msg1.edit(embed=embed, attachments=[file])
         elif text := ", ".join(str(x.id) for x in items):
             interaction.client.logger.info("Error Image Parsing OCs: %s", text)
+        await cog1.view_load(interaction.channel)
         self.stop()
 
 
@@ -568,7 +570,7 @@ class RPRolesView(View):
     async def load(self, bot: CustomBot, guild: Guild, removing: Optional[int] = None):
         self.rp_pings.options.clear()
         date = utcnow()
-        date = time_snowflake(date) - time_snowflake(date - timedelta(days=1))
+        date = time_snowflake(date) - time_snowflake(date - INTERVAL)
         db: AsyncIOMotorCollection = bot.mongo_db("RP Search")
 
         if isinstance(removing, int):
@@ -636,7 +638,7 @@ class RPRolesView(View):
         cog = interaction.client.get_cog("Submission")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         date = interaction.created_at
-        date = time_snowflake(date) - time_snowflake(date - timedelta(days=1))
+        date = time_snowflake(date) - time_snowflake(date - INTERVAL)
         key = {"id": {"$gte": date}, "role": role.id}
         data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=25)
         entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
