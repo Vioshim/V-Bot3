@@ -137,25 +137,6 @@ class Complex(Simple[_T]):
         self.real_values = items
         self.sort()
 
-    def sort(self, sort_key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
-        """Sort method used for the view's values
-
-        Attributes
-        ----------
-        key : Callable[[_T], Any], optional
-            key to use for sorting, defaults to None
-        reverse : bool, optional
-            sets the order to reverse, defaults to False
-        """
-        try:
-            self._sort_key = sort_key
-            self.values.sort(key=sort_key, reverse=reverse)
-            self.real_values.sort(key=sort_key, reverse=reverse)
-        except TypeError:
-            self._sort_key = str
-            self.values.sort(key=str, reverse=reverse)
-            self.real_values.sort(key=str, reverse=reverse)
-
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
         await self.wait()
