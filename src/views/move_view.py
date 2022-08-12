@@ -95,6 +95,11 @@ class MoveComplex(Complex[Move]):
                     description=f"Has {len(items)} items.",
                 )
 
+        if not self.choices:
+            self.remove_item(self.move_remove)
+        elif self.move_remove not in self.children:
+            self.add_item(self.move_remove)
+
         return super(MoveComplex, self).menu_format()
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
@@ -134,7 +139,7 @@ class MoveComplex(Complex[Move]):
 
     @button(
         label="Remove Moves",
-        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+        emoji=PartialEmoji(name="channeldelete", id=432986579674333215),
         custom_id="remover",
         style=ButtonStyle.blurple,
         disabled=False,
