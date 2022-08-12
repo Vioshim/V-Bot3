@@ -236,10 +236,7 @@ class WikiEntry:
     @classmethod
     def from_list(cls, nodes: list[WikiEntry]):
         result = cls()
-
-        nodes = [cls.from_data(x) for x in nodes]
-        nodes.sort(key=lambda x: x.order)
-        for item in nodes:
+        for item in sorted(map(cls.from_data, nodes), key=lambda x: x.order):
             result.add_node(item)
         return result
 

@@ -94,6 +94,25 @@ class Basic(View):
         self.target = target
         self.message: Optional[Message] = None
 
+    async def on_error(self, interaction: Interaction, error: Exception, item) -> None:
+        """|coro|
+
+        A callback that is called when an item's callback or :meth:`interaction_check`
+        fails with an error.
+
+        The default implementation logs to the library logger.
+
+        Parameters
+        -----------
+        interaction: :class:`~discord.Interaction`
+            The interaction that led to the failure.
+        error: :class:`Exception`
+            The exception that was raised.
+        item: :class:`Item`
+            The item that failed the dispatch.
+        """
+        interaction.client.logger.exception("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         """Verification for the interaction user
