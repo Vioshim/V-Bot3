@@ -135,7 +135,7 @@ class MoveComplex(Complex[Move]):
     @button(
         label="Remove Moves",
         emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
-        custom_id="writer",
+        custom_id="remover",
         style=ButtonStyle.blurple,
         disabled=False,
         row=4,
