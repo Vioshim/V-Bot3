@@ -80,7 +80,7 @@ class DefaultModal(Modal):
         if current:
             self.view.choices |= current
 
-        await self.view.update(interaction=interaction)
+        await self.view.edit(interaction=interaction, page=self.view.pos)
         self.stop()
 
 

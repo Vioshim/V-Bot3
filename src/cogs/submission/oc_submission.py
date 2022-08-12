@@ -502,14 +502,9 @@ class MovesetField(TemplateField):
             moves = Move.all()
 
         moves = {x for x in moves if not x.banned}
-        description = "\n".join(f"> {x!r}" for x in oc.moveset) or "No Moves"
         view = MoveComplex(member=ctx.user, moves=moves, target=ctx)
-        view.text_component.default = ", ".join(x.name for x in (oc.moveset & moves))
-        async with view.send(
-            title="Write the character's moveset. Current below",
-            description=description,
-            ephemeral=ephemeral,
-        ) as choices:
+        view.choices |= oc.moveset
+        async with view.send(ephemeral=ephemeral) as choices:
             oc.moveset = frozenset(choices)
             if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
                 oc.species.movepool = Movepool(tutor=oc.moveset.copy())

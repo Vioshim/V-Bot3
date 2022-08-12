@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from math import ceil
 from typing import (
     Any,
     Callable,
@@ -337,11 +338,15 @@ class Simple(Generic[_T], Basic):
             data["embed"] = self.embed
 
         if isinstance(page, int):
-            self.pos = page
+            self.pos = min(max(0, page), self.max_pages)
             self.menu_format()
             data["view"] = self
 
         return data
+
+    @property
+    def max_pages(self):
+        return ceil(len(self.values) / self.entries_per_page)
 
     async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
         """This method edits the pagination's page given an index.
