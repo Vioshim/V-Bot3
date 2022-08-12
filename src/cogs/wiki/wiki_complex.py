@@ -155,13 +155,14 @@ class WikiComplex(Complex[WikiEntry]):
             ),
         )
         async with view.send(title="Select Tags", editing_original=True) as entries:
-            aux = self.tree.copy()
-            aux.path = "/"
-            items = [aux]
             if entries:
+                aux = self.tree.copy()
+                aux.path = "/"
+                items = [aux]
                 items.extend(set.intersection(*[data[x] for x in entries]))
-            tree = WikiEntry.from_list(items)
-            await self.selection(interaction, tree)
+                tree = WikiEntry.from_list(items)
+                tree.parent = self.tree
+                await self.selection(interaction, tree)
 
     @button(label="Parent Folder", emoji=PartialEmoji(name="IconReply", id=816772114639487057), custom_id="parent")
     async def parent_folder(self, interaction: Interaction, _: Button) -> None:
