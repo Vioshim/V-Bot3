@@ -81,7 +81,7 @@ class MoveComplex(Complex[Move]):
 
         data = {k: set(v) for row in elements for k, v in row}
         values = [("None", moves1), ("Abilities", moves2)]
-        values.append(
+        values.extend(
             sorted(
                 data.items(),
                 key=lambda x: len(x[1]),
