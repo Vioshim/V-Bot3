@@ -154,11 +154,11 @@ class WikiComplex(Complex[WikiEntry]):
                 default=", ".join(data.keys()),
             ),
         )
-        async with view.send(editing_original=True) as data:
+        async with view.send(editing_original=True) as entries:
             aux = self.tree.copy()
             aux.path = "/"
             items = [aux]
-            items.extend(set.intersection(*[data[x] for x in data]))
+            items.extend(set.intersection(*[data[x] for x in entries]))
             tree = WikiEntry.from_list(items)
             await self.selection(interaction, tree)
 
