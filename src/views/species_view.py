@@ -89,18 +89,20 @@ class SpeciesComplex(Complex[Species]):
         self.select_types.options.clear()
         total: set[Species] = set(self.total) - self.choices
 
-        data: dict[str | Typing, set[Species]] = {"No Filter": total}
+        data: dict[str | Typing, set[Species]] = {}
         for item in total:
             for t in item.types:
                 data.setdefault(t, set())
                 data[t].add(item)
 
-        for k, items in sorted(data.items(), key=lambda x: len(x[1]), reverse=True):
+        items = [("No Filter", total)]
+        items.extend(sorted(data.items(), key=lambda x: x[0]))
+        for k, items in items:
             if items:
-                if isinstance(k, str):
-                    label, emoji = k, LIST_EMOJI
-                else:
+                if isinstance(k, Typing):
                     label, emoji = k.name, k.emoji
+                else:
+                    label, emoji = k, LIST_EMOJI
 
                 aux1 = len({x for x in items if len(x.types) == 1})
                 aux2 = len({x for x in items if len(x.types) == 2})

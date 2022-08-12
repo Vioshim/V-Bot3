@@ -74,17 +74,16 @@ class MoveComplex(Complex[Move]):
                 key=lambda x: x.category,
             ),
             groupby(
-                sorted(moves1, key=lambda x: x.type.id or 0),
+                sorted(moves1, key=lambda x: x.type.name),
                 key=lambda x: x.type,
             ),
         )
 
-        data = {"None": moves1, "Abilities": moves2}
+        data = {k: set(v) for row in elements for k, v in row}
+        items = [("None", moves1), ("Abilities", moves2)]
+        items.append(sorted(data.items(), key=lambda x: (-len(x[1]), x[0])))
 
-        for items in elements:
-            data.update({k: set(v) for k, v in items})
-
-        for k, items in sorted(data.items(), key=lambda x: len(x[1]), reverse=True):
+        for k, items in items:
             if items:
                 label = getattr(k, "name", k).title()
                 self.data[label] = items
