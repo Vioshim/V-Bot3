@@ -167,7 +167,7 @@ class SPAbilityView(Basic):
                 label="Keep as is",
                 value="default",
                 description="Skip this process",
-                emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
+                emoji=PartialEmoji(name="emoteupdate", id=460539246508507157),
             ),
         ],
     )
