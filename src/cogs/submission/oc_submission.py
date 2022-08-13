@@ -19,7 +19,6 @@ from typing import Optional
 from discord import (
     ButtonStyle,
     Color,
-    DiscordException,
     Embed,
     File,
     Interaction,
@@ -844,11 +843,12 @@ class CreationOCView(Basic):
         if embed_update:
             embeds = self.oc.embeds
             embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
+            if not self.oc.image_url:
+                embeds[0].set_image(url="attachment://image.png")
             self.embeds = embeds
 
     @select(placeholder="Select Kind", row=0)
     async def kind(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
         try:
             self.oc.species = None
             self.progress -= {"Species", "Types", "Abilities", "Moveset"}
@@ -868,12 +868,7 @@ class CreationOCView(Basic):
                     if self.ref_template == Template.CustomUltraBeast:
                         self.oc.abilities = frozenset({_BEASTBOOST})
 
-            await self.update()
-            self.setup()
-            if resp.is_done():
-                await ctx.edit_original_response(embeds=self.embeds, view=self)
-            else:
-                await resp.edit_message(embeds=self.embeds, view=self)
+            await self.update(ctx)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             self.stop()
@@ -893,35 +888,25 @@ class CreationOCView(Basic):
                 upsert=True,
             )
 
-    async def update(self):
-        try:
-            self.setup()
-            embeds = self.embeds
-            if not self.oc.image_url:
-                embeds[0].set_image(url="attachment://image.png")
-            files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
-            try:
-                m = self.message
-                if not m.flags.ephemeral:
-                    m = PartialMessage(channel=m.channel, id=m.id)
-                m = await m.edit(embeds=embeds, view=self, attachments=files)
-            except DiscordException as e:
-                self.bot.logger.exception(
-                    "NotFound Exception Message\n\nself: %s",
-                    repr(self.message),
-                    exc_info=e,
-                )
-                self.stop()
-            else:
-                if files and m.embeds[0].image.proxy_url:
-                    self.oc.image = m.embeds[0].image.proxy_url
-                    self.setup(embed_update=False)
-                    m = await m.edit(view=self)
-                await self.upload()
-                self.message = m
-        except Exception as e:
-            self.bot.logger.exception("Exception in OC Creation Edit", exc_info=e)
-            self.stop()
+    async def update(self, ctx: Interaction):
+        resp: InteractionResponse = ctx.response
+        self.setup()
+        embeds = self.embeds
+        files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
+
+        if not resp.is_done():
+            await resp.edit_message(embeds=embeds, view=self, attachments=files)
+            m = await ctx.original_response()
+        else:
+            m = await self.message.edit(embeds=embeds, view=self, attachments=files)
+
+        if files and m.embeds[0].image.proxy_url:
+            self.oc.image = m.embeds[0].image.proxy_url
+            self.setup(embed_update=False)
+            m = await m.edit(view=self)
+
+        await self.upload()
+        self.message = m
 
     async def send(self, *, ephemeral: bool = False):
         self.ephemeral = ephemeral
@@ -931,40 +916,28 @@ class CreationOCView(Basic):
 
     @select(placeholder="Click here!", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
-        try:
-            if item := TemplateField.get(name=sct.values[0]):
-                await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
-            await self.update()
-        except Exception as e:
-            self.bot.logger.exception("Exception in OC Creation", exc_info=e)
+        if item := TemplateField.get(name=sct.values[0]):
+            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
+        await self.update(ctx)
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
-        try:
-            db = self.bot.mongo_db("OC Creation")
-            if (m := self.message) and not m.flags.ephemeral:
-                await db.delete_one({"id": m.id})
-            return await super(CreationOCView, self).delete(ctx)
-        except Exception as e:
-            self.bot.logger.exception("Exception Deleting View", exc_info=e)
+        db = self.bot.mongo_db("OC Creation")
+        if (m := self.message) and not m.flags.ephemeral:
+            await db.delete_one({"id": m.id})
+        return await super(CreationOCView, self).delete(ctx)
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
     async def finish_oc(self, ctx: Interaction, _: Button):
-        try:
-            if self.oc.id and self.oc.thread:
-                if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
-                    channel = await ctx.guild.fetch_channel(self.oc.thread)
-                msg = PartialMessage(channel=channel, id=self.oc.id)
-                await msg.delete(delay=0)
-            await self.delete(ctx)
-        except Exception as e:
-            self.bot.logger.exception("Exception Deleting Character", exc_info=e)
+        if self.oc.id and self.oc.thread:
+            if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
+                channel = await ctx.guild.fetch_channel(self.oc.thread)
+            msg = PartialMessage(channel=channel, id=self.oc.id)
+            await msg.delete(delay=0)
+        await self.delete(ctx)
 
     @button(label="Close this Menu", row=2)
     async def cancel(self, ctx: Interaction, _: Button):
-        try:
-            await self.delete(ctx)
-        except Exception as e:
-            self.bot.logger.exception("Exception Closing Menu", exc_info=e)
+        await self.delete(ctx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
     async def submit(self, ctx: Interaction, btn: Button):

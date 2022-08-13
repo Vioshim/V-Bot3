@@ -17,7 +17,7 @@ from asyncio import sleep
 from discord import Message
 from discord.ext.commands import Cog
 
-from src.cogs.bumps.bumps import BUMPS, PingBump
+from src.cogs.bumps.bumps import BumpBot, PingBump
 from src.structures.bot import CustomBot
 
 __all__ = ("Bump", "setup")
@@ -46,9 +46,10 @@ class Bump(Cog):
         if not (ctx.author.bot and ctx.embeds):
             return
 
-        if item := BUMPS.get(ctx.author.id):
+        if item := BumpBot.get(id=ctx.author.id):
             self.bot.msg_cache_add(ctx)
-            bump = PingBump(after=ctx, data=item)
+            w = await self.bot.webhook(ctx.channel)
+            bump = PingBump(after=ctx, data=item, webhook=w)
             if bump.valid:
                 await ctx.delete()
                 await bump.send()
@@ -73,9 +74,10 @@ class Bump(Cog):
         if not (after.author.bot and after.embeds):
             return
 
-        if item := BUMPS.get(after.author.id):
+        if item := BumpBot.get(id=after.author.id):
             self.bot.msg_cache_add(after)
-            bump = PingBump(before=before, after=after, data=item)
+            w = await self.bot.webhook(after.channel)
+            bump = PingBump(before=before, after=after, data=item, webhook=w)
             if bump.valid:
                 await after.delete()
                 await bump.send()
