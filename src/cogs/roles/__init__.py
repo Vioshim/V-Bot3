@@ -49,9 +49,8 @@ from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
 
 __all__ = ("Roles", "setup")
 
-IMAGE_EMBED = Embed(
-    color=Color.blurple(),
-).set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png")
+IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png"
+IMAGE_EMBED = Embed(color=Color.blurple()).set_image(url=IMAGE)
 
 
 class Roles(commands.Cog):
@@ -83,11 +82,9 @@ class Roles(commands.Cog):
                 item["ocs"],
             )
             created_at = snowflake_time(msg_id)
-            self.role_cool_down.setdefault(role_id, created_at)
-            self.cool_down.setdefault(member_id, created_at)
-            if self.role_cool_down[role_id] < created_at:
+            if self.role_cool_down.get(role_id, created_at) <= created_at:
                 self.role_cool_down[role_id] = created_at
-            if self.cool_down[member_id] < created_at:
+            if self.cool_down.get(role_id, created_at) <= created_at:
                 self.cool_down[member_id] = created_at
             view = RPSearchManage(member_id=member_id, ocs=ocs)
             self.bot.add_view(view=view, message_id=msg_id)
