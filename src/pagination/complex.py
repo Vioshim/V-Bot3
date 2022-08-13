@@ -181,11 +181,11 @@ class Complex(Simple[_T]):
         foo: Select = self.select_choice
         pages: Select = self.navigate
         choices = self.choices
-        foo.placeholder = f"Picked: {len(choices)}, Max: {self.max_values}, Total: {len(self.values)}"
+        amount = self.real_max or self.max_values
+        foo.placeholder = f"Picked: {len(choices)}, Max: {amount}, Total: {len(self.values)}"
         foo.options.clear()
         pages.options.clear()
         # Then gets defined the amount of entries an user can pick
-        amount = self.real_max or self.max_values
         foo.max_values = min(max(amount - len(choices), 1), self.entries_per_page)
         # Now we get the indexes that each page should start with
         indexes = self.values[:: self.entries_per_page]
@@ -244,8 +244,6 @@ class Complex(Simple[_T]):
             pages.disabled = len(pages.options) == 1
 
         # This is the outcome for provided values.
-        foo.max_values = len(foo.options)
-
         if len(pages.options) <= 1:
             self.remove_item(pages)
         elif pages.options and pages not in self.children:
