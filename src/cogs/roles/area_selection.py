@@ -67,7 +67,7 @@ class AreaSelection(View):
 
         entries = groupby(filter(foo, cog.ocs.values()), key=foo2)
         self.entries = {str(k.id): set(v) for k, v in entries if k}
-        self.total = sum(len(item) for item in self.entries.values())
+        self.total = sum(map(len, self.entries.values()))
 
         def handle(item: TextChannel) -> str:
             text = f"{len(self.entries.get(str(item.id), [])):02d}"
