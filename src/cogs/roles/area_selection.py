@@ -32,10 +32,8 @@ from src.views.characters_view import CharactersView
 
 
 class AreaSelection(View):
-
-    # noinspection PyTypeChecker
     def __init__(self, bot: CustomBot, cat: CategoryChannel, member: Member):
-        super(AreaSelection, self).__init__(timeout=None)
+        super().__init__(timeout=None)
         self.bot = bot
         self.cat = cat
         if isinstance(member, User):
@@ -89,7 +87,7 @@ class AreaSelection(View):
 
     @select(placeholder="Select a location to check", row=0)
     async def selection(self, ctx: Interaction, sct: Select):
-        channel: TextChannel = self.bot.get_channel(int(sct.values[0]))
+        channel: TextChannel = ctx.client.get_channel(int(sct.values[0]))
         self.bot.logger.info(
             "%s is reading Channel Information of %s",
             str(ctx.user),
