@@ -111,7 +111,8 @@ class Basic(View):
         item: :class:`Item`
             The item that failed the dispatch.
         """
-        interaction.client.logger.exception("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+        interaction.client.logger.exception("Exception in view %r for item %r", self, item, exc_info=error)
+        self.stop()
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response

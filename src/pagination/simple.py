@@ -30,7 +30,6 @@ from typing import (
 from discord import (
     AllowedMentions,
     ButtonStyle,
-    DiscordException,
     Embed,
     File,
     GuildSticker,
@@ -362,22 +361,12 @@ class Simple(Generic[_T], Basic):
             return
 
         data = self.default_params(page=page)
-        try:
-            if not resp.is_done():
-                await resp.edit_message(**data)
-            elif self.message:
-                self.message = await self.message.edit(**data)
-            else:
-                self.message = await interaction.edit_original_response(**data)
-        except DiscordException as e:
-            interaction.client.logger.exception(
-                "Error in Simple View - Page %s - Author: %s - Info: %s",
-                str(page),
-                str(self.member),
-                str(self.embed.to_dict()),
-                exc_info=e,
-            )
-            self.stop()
+        if not resp.is_done():
+            await resp.edit_message(**data)
+        elif self.message:
+            self.message = await self.message.edit(**data)
+        else:
+            self.message = await interaction.edit_original_response(**data)
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)
     async def first(self, interaction: Interaction, _: Button) -> None:

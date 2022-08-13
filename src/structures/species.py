@@ -607,7 +607,7 @@ class Variant(Species):
 
     @property
     def requires_image(self) -> bool:
-        return True
+        return False
 
     @property
     def max_amount_abilities(self) -> int:
