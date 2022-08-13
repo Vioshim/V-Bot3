@@ -87,9 +87,9 @@ class AreaSelection(Complex[TextChannel]):
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
             embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
             await view.simple_send(ephemeral=True, embed=embed)
-            self.bot.logger.info("%s user is checking ocs at %s", str(interaction.user), channel.name)
+            interaction.client.logger.info("%s user is checking ocs at %s", str(interaction.user), channel.name)
         except Exception as e:
-            self.bot.logger.exception("Error in location view", exc_info=e)
+            interaction.client.logger.exception("Error in location view", exc_info=e)
         finally:
             await super(AreaSelection, self).select_choice(interaction=interaction, sct=sct)
 
