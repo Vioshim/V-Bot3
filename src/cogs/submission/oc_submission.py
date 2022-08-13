@@ -731,7 +731,7 @@ class ImageField(TemplateField):
     def evaluate(cls, oc: Character) -> Optional[str]:
         if not oc.image:
             return "No Image has been defined"
-        if oc.image and not isinstance(oc.image, File) and oc.image == oc.default_image:
+        if oc.image == oc.default_image or isinstance(oc.image, File):
             return "Default Image in Memory"
 
     @classmethod
