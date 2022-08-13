@@ -88,7 +88,7 @@ class BumpBot:
 
         if interaction := ctx.interaction:
             user = interaction.user
-            embed.set_author(name=user.display_name, icon_url=user.display_icon)
+            embed.set_author(name=user.display_name, icon_url=user.display_avatar)
 
         if url := cls.url:
             embed.url = url.format(server=ctx.guild.id)
@@ -97,7 +97,7 @@ class BumpBot:
                 value=f"> If you like the server, "
                 f"feel free to let us know your opinion by rating/reviewing the server in {cls.name}.",
             )
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
+
         if guild := ctx.guild:
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         return embed
