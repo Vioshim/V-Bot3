@@ -214,6 +214,7 @@ class PingBump(View):
         else:
             embed, view, wait = self.embed, self, True
 
+        avatar_url = self.after.author.display_avatar or "https://cdn.discordapp.com/emojis/230815471299985408.webp"
         self.message = await self.webhook.send(
             content=mention,
             embed=embed,
@@ -221,7 +222,7 @@ class PingBump(View):
             wait=wait,
             thread=thread,
             username=self.after.author.display_name,
-            avatar_url=self.after.author.display_avatar,
+            avatar_url=avatar_url,
             allowed_mentions=AllowedMentions(users=True),
         )
 
