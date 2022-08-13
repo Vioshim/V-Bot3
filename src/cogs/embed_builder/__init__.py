@@ -31,6 +31,7 @@ from discord import (
     Message,
     NotFound,
     PartialEmoji,
+    PartialMessage,
     RawMessageDeleteEvent,
     TextChannel,
     Thread,
@@ -498,7 +499,112 @@ class EmbedBuilder(commands.Cog):
                 )
             await self.write(message, ctx.author)
 
-    @embed.command(name="unset")
+    @commands.group(aliases=["bot"], invoke_without_command=True)
+    @commands.has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
+    async def embed_bot(self, ctx: commands.Context):
+        await self.embed(ctx)
+
+    @embed_bot.command(name="new", aliases=["create"])
+    async def embed_bot_new(
+        self,
+        ctx: commands.Context,
+        title: str = "",
+        *,
+        description: str = "",
+        attachment: Optional[Attachment] = None,
+    ):
+        """Allows to create discord embeds
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        title: str = ""
+            Title of the embed. Defaults to None
+        description: str = ""
+            Description of the embed. Defaults to None
+        attachment: Optional[Attachment] = None
+            Image to use in the embed.
+        """
+        embed = Embed(title=title, description=description)
+        author: Member = ctx.author
+        attachments = [attachment] if attachment else ctx.message.attachments
+        if len(images := [x for x in attachments if x.content_type.startswith("image/")]) == 1:
+            embed.set_image(url=f"attachment://{images[0].filename}")
+
+        files = [await x.to_file() for x in attachments]
+        message = await ctx.channel.send(embed=embed, files=files)
+        await self.write(message, author)
+        await ctx.message.delete(delay=0)
+
+    @embed_bot.group(name="post", fallback="copy", invoke_without_command=True)
+    async def embed_bot_post(self, ctx: commands.Context):
+        """Posts an embed in another channel
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        """
+        async with self.edit(ctx) as embed:
+            message: Optional[Message] = None
+            if reference := ctx.message.reference:
+                if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
+                    try:
+                        message = PartialMessage(channel=ctx.channel, id=reference.message_id)
+                        message = await message.edit(embed=embed)
+                    except DiscordException:
+                        if not isinstance(msg, Message):
+                            try:
+                                msg = await ctx.channel.fetch_message(reference.message_id)
+                            except DiscordException:
+                                msg = None
+
+                        if isinstance(msg, Message) and msg.author == self.bot.user:
+                            try:
+                                message = await msg.edit(embed=embed)
+                            except DiscordException:
+                                message = None
+
+            if not message:
+                message = await ctx.channel.send(embed=embed)
+            await self.write(message, ctx.author)
+
+    @embed_bot_post.command(name="raw")
+    async def embed_bot_post_raw(self, ctx: commands.Context):
+        """Posts an embed in another channel
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        """
+        async with self.edit(ctx) as embed:
+            files, embed_aux = await self.bot.embed_raw(embed)
+            message: Optional[Message] = None
+            if reference := ctx.message.reference:
+                if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
+                    try:
+                        message = PartialMessage(channel=ctx.channel, id=reference.message_id)
+                        message = await message.edit(embed=embed, files=files)
+                    except DiscordException:
+                        if not isinstance(msg, Message):
+                            try:
+                                msg = await ctx.channel.fetch_message(reference.message_id)
+                            except DiscordException:
+                                msg = None
+
+                        if isinstance(msg, Message) and msg.author == self.bot.user:
+                            try:
+                                message = await msg.edit(embed=embed, files=files)
+                            except DiscordException:
+                                message = None
+
+            if not message:
+                message = await ctx.channel.send(files=files, embed=embed_aux)
+            await self.write(message, ctx.author)
+
+    @embed_bot.command(name="unset")
     async def embed_unset(self, ctx: commands.Context):
         """Allows to remove the stored embed
 
