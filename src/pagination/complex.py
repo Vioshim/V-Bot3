@@ -243,6 +243,8 @@ class Complex(Simple[_T]):
             pages.disabled = len(pages.options) == 1
 
         # This is the outcome for provided values.
+        pages.min_values, pages.max_values = 1, 1
+
         if len(pages.options) <= 1:
             self.remove_item(pages)
         elif pages.options and pages not in self.children:
