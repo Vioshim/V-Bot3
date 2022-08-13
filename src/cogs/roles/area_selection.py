@@ -88,7 +88,7 @@ class AreaSelection(View):
     @select(placeholder="Select a location to check", row=0)
     async def selection(self, ctx: Interaction, sct: Select):
         channel: TextChannel = ctx.client.get_channel(int(sct.values[0]))
-        self.bot.logger.info(
+        ctx.client.logger.info(
             "%s is reading Channel Information of %s",
             str(ctx.user),
             channel.name,
