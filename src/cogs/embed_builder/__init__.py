@@ -499,7 +499,7 @@ class EmbedBuilder(commands.Cog):
                 )
             await self.write(message, ctx.author)
 
-    @commands.group(aliases=["bot"], invoke_without_command=True)
+    @embed.group(aliases=["bot"], invoke_without_command=True)
     @commands.has_guild_permissions(manage_messages=True, send_messages=True, embed_links=True)
     async def embed_bot(self, ctx: commands.Context):
         await self.embed(ctx)
