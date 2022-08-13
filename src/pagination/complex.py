@@ -243,6 +243,8 @@ class Complex(Simple[_T]):
                 foo.add_option(label=name, value=str(index), description=value, emoji=emoji)
             pages.disabled = len(pages.options) == 1
 
+        foo.max_values = min(foo.max_values, len(foo.options))
+
         # This is the outcome for provided values.
         if len(pages.options) <= 1:
             self.remove_item(pages)
