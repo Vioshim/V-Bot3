@@ -162,7 +162,16 @@ class Wiki(commands.Cog):
             page = WikiEntry.from_list(items)
 
         view = WikiComplex(tree=page, target=ctx)
-        async with view.send(ephemeral=True, embeds=page.embeds, content=page.content):
+        if tags or search:
+            embeds = [view.embed]
+            if search:
+                embeds[0].title = f"Search: {search.title()}"
+            if tags:
+                embeds[0].description = tags
+        else:
+            embeds = page.embeds
+
+        async with view.send(ephemeral=True, embeds=embeds, content=page.content):
             self.bot.logger.info("%s is reading wiki's page: %s", ctx.user.display_name, page.path)
 
     @commands.command()
