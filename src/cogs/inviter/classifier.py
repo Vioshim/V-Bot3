@@ -78,6 +78,10 @@ class InviterView(View):
             sct.disabled = False
         sct.max_values = len(sct.options)
 
+    def append(self, message: Message):
+        self._messages.append(message)
+        self.group_method(self._messages)
+
     @property
     def messages(self):
         return self._messages

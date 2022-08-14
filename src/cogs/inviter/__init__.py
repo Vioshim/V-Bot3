@@ -28,7 +28,6 @@ from discord import (
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     TextChannel,
-    Webhook,
 )
 from discord.ext import commands
 from discord.ext.commands.converter import BadInviteArgument, InviteConverter
@@ -44,7 +43,14 @@ __all__ = ("Inviter", "setup")
 
 
 class InviteView(View):
-    def __init__(self, invite: Invite, embed: Embed, author: Member, data: dict[str, set[Message]], **kwargs):
+    def __init__(
+        self,
+        invite: Invite,
+        embed: Embed,
+        author: Member,
+        data: dict[str, set[Message]],
+        **kwargs,
+    ):
         super(InviteView, self).__init__(timeout=None)
         self.invite = invite
         self.embed = embed
@@ -78,9 +84,9 @@ class InviteView(View):
     async def process(self, inter: Interaction, sct: Select):
         member: Member = inter.user
         resp: InteractionResponse = inter.response
-        w: Webhook = await inter.client.webhook(957602085753458708, reason="Partnership")
+        channel = inter.guild.get_channel(957602085753458708)
         self.embed.set_footer(text=", ".join(sct.values))
-        message = await w.send(content=self.invite.url, embed=self.embed, wait=True, **self.kwargs)
+        message = await channel.send(content=self.invite.url, embed=self.embed, **self.kwargs)
         for tag in sct.values:
             self.data.setdefault(tag, set())
             self.data[tag].add(message)
@@ -127,9 +133,10 @@ class Inviter(commands.Cog):
                 if not m.embeds:
                     continue
                 if m.author == self.bot.user:
-                    self.message = m
-                elif m.webhook_id:
-                    messages.append(m)
+                    if m.content:
+                        messages.append(m)
+                    else:
+                        self.message = m
 
             guild = channel.guild
             self.view = InviterView()
@@ -157,16 +164,17 @@ class Inviter(commands.Cog):
         ctx: Message
             Message to be scanned
         """
-        if ctx.flags.ephemeral or not self.message or not ctx.guild or ctx.author == self.bot.user:
+        if ctx.flags.ephemeral or not self.message or not ctx.guild:
             return
 
-        if ctx.channel.id == 957602085753458708 and ctx.webhook_id:
-            m = self.message
-            self.message = await ctx.channel.send(embeds=m.embeds, view=self.view)
-            return await m.delete(delay=0)
+        if ctx.channel.id == 957602085753458708 and ctx.author == self.bot.user:
+            if m := self.message:
+                self.message = await ctx.channel.send(embeds=m.embeds, view=self.view)
+                await m.delete(delay=0)
+            return
 
-        if ctx.webhook_id or not (match := INVITE.search(ctx.content)):
-            if ctx.channel.id == 957602085753458708 and not ctx.webhook_id:
+        if not (match := INVITE.search(ctx.content)):
+            if ctx.channel.id == 957602085753458708:
                 await ctx.delete(delay=0)
             return
 
@@ -189,7 +197,7 @@ class Inviter(commands.Cog):
 
         generator = Embed(
             title=f"__**{guild.name} is now officially partnered with {invite_guild.name}**__",
-            description=ctx.clean_content[:2048],
+            description=ctx.clean_content[:4096],
             colour=Color.blurple(),
             timestamp=utcnow(),
         )
@@ -216,7 +224,6 @@ class Inviter(commands.Cog):
         data = self.view.data
         pm_manager_role = guild.get_role(788215077336514570)
         if pm_manager_role and pm_manager_role in author.roles and ctx.channel.id == 957602085753458708:
-            w = await self.bot.webhook(ctx.channel, reason="Partnership")
             view: Complex[str] = Complex(
                 member=author,
                 values=data.keys(),
@@ -232,14 +239,13 @@ class Inviter(commands.Cog):
                     generator.set_footer(text=", ".join(choices))
                     if partnered_role := get(author.guild.roles, name="Partners"):
                         await author.add_roles(partnered_role)
-                    message = await w.send(
+                    message = await ctx.channel.send(
                         content=invite.url,
                         embed=generator,
-                        wait=True,
                         view=link_view,
                         files=files,
                     )
-                    self.view.messages += [message]
+                    self.view.append(message)
                     self.message = await self.message.edit(view=self.view)
         else:
             generator.set_footer(text=author.display_name, icon_url=author.display_avatar.url)
