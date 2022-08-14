@@ -156,6 +156,7 @@ class Wiki(commands.Cog):
 
         if tags:
             aux: set[str] = {x.strip().lower() for x in tags.split(",") if x.strip()}
+            tags = ", ".join(aux)
             items = [item for item in page.flatten if aux.issubset(item.tags)]
             page = WikiEntry.from_list(items)
             page.parent = total_tree
@@ -179,9 +180,9 @@ class Wiki(commands.Cog):
             self.bot.logger.info(
                 "%s is reading wiki's page: %s, search: %s, tags: %s",
                 ctx.user.display_name,
+                page.path or "/",
                 str(search),
                 str(tags),
-                page.path,
             )
 
     @commands.command()
