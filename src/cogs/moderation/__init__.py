@@ -346,7 +346,7 @@ class Moderation(commands.Cog):
         :return:
         """
         async with ctx.typing():
-            await ctx.message.delete()
+            await ctx.message.delete(delay=0)
             deleted = await ctx.channel.purge(limit=amount)
         await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
@@ -361,7 +361,7 @@ class Moderation(commands.Cog):
         :return:
         """
         async with ctx.typing():
-            await ctx.message.delete()
+            await ctx.message.delete(delay=0)
             deleted = await ctx.channel.purge(limit=amount, check=lambda m: m.author.bot)
         await ctx.channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
@@ -386,7 +386,7 @@ class Moderation(commands.Cog):
         """
         channel: TextChannel = ctx.channel
         async with ctx.typing():
-            await ctx.message.delete()
+            await ctx.message.delete(delay=0)
             deleted = await channel.purge(limit=amount, check=lambda m: m.author.id == user.id)
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
@@ -415,7 +415,7 @@ class Moderation(commands.Cog):
         channel: TextChannel = ctx.channel
 
         async with ctx.typing():
-            await ctx.message.delete()
+            await ctx.message.delete(delay=0)
             deleted = await channel.purge(limit=amount, check=check)
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
@@ -435,7 +435,7 @@ class Moderation(commands.Cog):
         if (ref := message.reference) and isinstance(ref.resolved, Message):
             message = ref.resolved
         async with ctx.typing():
-            await ctx.message.delete()
+            await ctx.message.delete(delay=0)
             deleted = await channel.purge(limit=amount, after=message)
         await channel.send(f"Deleted {len(deleted)} message(s)", delete_after=3)
 
@@ -497,7 +497,7 @@ class Moderation(commands.Cog):
                 reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                 delete_message_days=0,
             )
-        await ctx.message.delete()
+        await ctx.message.delete(delay=0)
 
     @commands.command(name="massban")
     @commands.has_guild_permissions(ban_members=True)
@@ -539,7 +539,7 @@ class Moderation(commands.Cog):
                         delete_message_days=0,
                     )
 
-        await ctx.message.delete()
+        await ctx.message.delete(delay=0)
 
     @commands.command(name="unban")
     @commands.bot_has_guild_permissions(ban_members=True)
@@ -560,7 +560,7 @@ class Moderation(commands.Cog):
             await ctx.send(f"Unbanned {user} for the reason: {reason}", delete_after=3)
         else:
             await ctx.reply("Unable to retrieve the user.")
-        await ctx.message.delete()
+        await ctx.message.delete(delay=0)
 
 
 async def setup(bot: CustomBot) -> None:
