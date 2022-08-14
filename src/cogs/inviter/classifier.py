@@ -55,7 +55,7 @@ class InviterView(View):
         sct = self.select_msg
         sct.options.clear()
         self._messages = messages = sorted(
-            filter(lambda x: x.webhook_id and x.embeds, messages),
+            filter(lambda x: x.author.bot and x.content and x.embeds, messages),
             key=inv_msg_parser,
         )
         entries: dict[str, set[Message]] = {}
