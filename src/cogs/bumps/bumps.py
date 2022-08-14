@@ -23,7 +23,6 @@ from discord import (
     Embed,
     Interaction,
     InteractionResponse,
-    Member,
     Message,
     Thread,
     Webhook,
@@ -44,6 +43,7 @@ class BumpBot:
     url: str
     hours: int
     format_date: Pattern[str]
+    avatar: str
 
     @classmethod
     def get(cls, **attrs):
@@ -141,6 +141,7 @@ class ListIO(BumpBot):
     hours = 7.0
     cmd_id = 999330004548735016
     format_date = compile(r"Please wait (\d+ hours \d+ minutes) more until next bump", IGNORECASE | MULTILINE)
+    avatar = "https://cdn.discordapp.com/emojis/230815471299985408.webp"
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
@@ -162,7 +163,6 @@ class PingBump(View):
         webhook: Webhook = None,
     ):
         super(PingBump, self).__init__(timeout=data.hours * 3600.0)
-        self.mentions: set[Member] = set()
         self.embed = data.adapt_embed(after)
         self.webhook = webhook
         if url := self.embed.url:
@@ -171,6 +171,7 @@ class PingBump(View):
         self.before = before
         self.after = after
         self.data = data
+        self.role = webhook.guild.get_role(1008443862559240312)
         self.message: Optional[WebhookMessage] = None
 
     @property
@@ -207,15 +208,14 @@ class PingBump(View):
 
         mention = f"</bump:{self.data.cmd_id}>"
         if timeout:
-            mention = f"**Bump Reminder (Slash Command is {mention}):**"
-            if mentions := ", ".join(item.mention for item in self.mentions):
-                mention += f"\n\nNotifying: {mentions}"
-            self.mentions.clear()
+            mention = f"**{self.role.mention} (Slash Command is {mention}):**"
             embed, view, wait = MISSING, MISSING, False
         else:
             embed, view, wait = self.embed, self, True
 
-        avatar_url = self.after.author.display_avatar or "https://cdn.discordapp.com/emojis/230815471299985408.webp"
+        if not (avatar_url := self.data.avatar):
+            avatar_url = self.after.author.display_avatar.url
+
         self.message = await self.webhook.send(
             content=mention,
             embed=embed,
@@ -224,17 +224,17 @@ class PingBump(View):
             thread=thread,
             username=self.after.author.display_name,
             avatar_url=avatar_url,
-            allowed_mentions=AllowedMentions(users=True),
+            allowed_mentions=AllowedMentions(users=True, roles=True),
         )
 
     @button(emoji="a:SZD_desk_bell:769116713639215124", style=ButtonStyle.blurple)
     async def reminder(self, inter: Interaction, _: Button) -> None:
         resp: InteractionResponse = inter.response
-        if inter.user in self.mentions:
-            self.mentions.remove(inter.user)
+        if self.role in inter.user.roles:
+            await inter.user.remove_roles(self.role)
             msg = "Alright, you won't get notified"
         else:
-            self.mentions.add(inter.user)
+            await inter.user.add_roles(self.role)
             msg = "Alright, you will get notified"
         await resp.send_message(msg, ephemeral=True)
 

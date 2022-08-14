@@ -234,6 +234,12 @@ class RoleSelect(View):
                 value="998937033068253309",
                 description="Enables PVP ON (Art Fight wise)",
             ),
+            SelectOption(
+                label="Bump Reminder",
+                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
+                value="1008443862559240312",
+                description="Reminds you to bump the server",
+            ),
         ],
     )
     async def basic_choice(self, ctx: Interaction, sct: Select):
