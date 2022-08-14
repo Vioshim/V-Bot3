@@ -131,7 +131,7 @@ class Inviter(commands.Cog):
             messages: list[Message] = []
             async for m in channel.history(limit=None, oldest_first=True):
                 if m.embeds and m.author == self.bot.user:
-                    if not m.content:
+                    if m.content:
                         messages.append(m)
                     else:
                         self.message = m
