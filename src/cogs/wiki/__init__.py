@@ -172,7 +172,13 @@ class Wiki(commands.Cog):
             embeds = page.embeds
 
         async with view.send(ephemeral=True, embeds=embeds, content=page.content):
-            self.bot.logger.info("%s is reading wiki's page: %s", ctx.user.display_name, page.path)
+            self.bot.logger.info(
+                "%s is reading wiki's page: %s, search: %s, tags: %s",
+                ctx.user.display_name,
+                str(search),
+                str(tags),
+                page.path,
+            )
 
     @commands.command()
     async def wiki_remove(self, ctx: commands.Context, *, path: str):
