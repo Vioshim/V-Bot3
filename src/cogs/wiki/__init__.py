@@ -148,18 +148,24 @@ class Wiki(commands.Cog):
         """
         page: Optional[WikiEntry] = page or group
 
+        entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
+        total_tree = WikiEntry.from_list(entries)
+
         if not page:
-            entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
-            page = WikiEntry.from_list(entries)
+            page = total_tree
 
         if tags:
             aux: set[str] = {x.strip().lower() for x in tags.split(",") if x.strip()}
             items = [item for item in page.flatten if aux.issubset(item.tags)]
             page = WikiEntry.from_list(items)
+            page.parent = total_tree
+            page.path = "Search Results"
 
         if search:
             items = [item for item in page.flatten if item.contains(search)]
             page = WikiEntry.from_list(items)
+            page.parent = total_tree
+            page.path = "Search Results"
 
         view = WikiComplex(tree=page, target=ctx)
         if tags or search:
