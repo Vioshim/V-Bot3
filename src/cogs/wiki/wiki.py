@@ -56,6 +56,20 @@ class WikiEntry:
             emoji = PartialEmoji.from_str(emoji)
         self._emoji = emoji
 
+    def contains(self, text: str):
+        text = text.lower()
+        return any(
+            (
+                self.content and text in self.content.lower(),
+                any(x.title and text in x.title.lower() for x in self.embeds),
+                any(x.description and text in x.description.lower() for x in self.embeds),
+                any(x.footer.text and text in x.footer.text.lower() for x in self.embeds),
+                any(x.author.name and text in x.author.name.lower() for x in self.embeds),
+                any(text in f.name or text in f.value for x in self.embeds for f in x.fields),
+                any(text == x.lower() for x in self.tags),
+            )
+        )
+
     def copy(self):
         item = WikiEntry(
             path=self.path,
@@ -252,6 +266,17 @@ class WikiEntry:
 
     def __setitem__(self, key: str, value: WikiEntry):
         self.children[key] = value
+
+    @property
+    def flatten(self):
+        return self.to_list(self)
+
+    @classmethod
+    def to_list(cls, parent: WikiEntry):
+        yield parent
+        for child in parent.children.values():
+            for item in cls.to_list(child):
+                yield item
 
 
 class WikiTransformer(Transformer):

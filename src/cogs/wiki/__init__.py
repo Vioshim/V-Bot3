@@ -117,16 +117,20 @@ class Wiki(commands.Cog):
         if not (role and role in ctx.user.roles):
             return await resp.send_message("User hasn't been authorized for adding wiki entries", ephemeral=True)
 
-        try:
-            modal = WikiPathModal(msg)
-            await resp.send_modal(modal)
-            await modal.wait()
-        except Exception as e:
-            self.bot.logger.exception("Exception while sending modal.", exc_info=e)
+        modal = WikiPathModal(msg)
+        await resp.send_modal(modal)
+        await modal.wait()
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def wiki(self, ctx: Interaction, group: Optional[WikiTreeArg], page: Optional[WikiNodeArg]):
+    async def wiki(
+        self,
+        ctx: Interaction,
+        group: Optional[WikiTreeArg],
+        page: Optional[WikiNodeArg],
+        search: Optional[str],
+        tags: Optional[str],
+    ):
         """Built-in server Wiki
 
         Parameters
@@ -137,12 +141,25 @@ class Wiki(commands.Cog):
             Group
         page : WikiNodeArg
             Parameter
+        search : str
+            Lookup
+        tags : str
+            Tags separated by comma
         """
         page: Optional[WikiEntry] = page or group
 
         if not page:
             entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
             page = WikiEntry.from_list(entries)
+
+        if tags:
+            aux: set[str] = {x.strip().lower() for x in tags.split(",") if x.strip()}
+            items = [item for item in page.flatten if aux.issubset(item.tags)]
+            page = WikiEntry.from_list(items)
+
+        if search:
+            items = [item for item in page.flatten if item.contains(search)]
+            page = WikiEntry.from_list(items)
 
         view = WikiComplex(tree=page, target=ctx)
         async with view.send(ephemeral=True, embeds=page.embeds, content=page.content):

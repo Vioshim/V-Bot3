@@ -27,6 +27,7 @@ from discord import (
     Message,
     Thread,
     Webhook,
+    WebhookMessage,
 )
 from discord.ui import Button, View, button
 from discord.utils import MISSING, get, utcnow
@@ -170,7 +171,7 @@ class PingBump(View):
         self.before = before
         self.after = after
         self.data = data
-        self.message: Optional[Message] = None
+        self.message: Optional[WebhookMessage] = None
 
     @property
     def valid(self) -> bool:
