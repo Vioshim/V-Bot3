@@ -50,12 +50,9 @@ class Bump(Cog):
             self.bot.msg_cache_add(ctx)
             w = await self.bot.webhook(ctx.channel)
             bump = PingBump(after=ctx, data=item, webhook=w)
-            if bump.valid:
-                await ctx.delete()
-                await bump.send()
-            elif timedelta := bump.timedelta:
+            if not bump.valid and (timedelta := bump.timedelta):
                 await sleep(timedelta.total_seconds())
-                await bump.send()
+            await bump.send()
 
     @Cog.listener()
     async def on_message_edit(self, before: Message, after: Message):
@@ -79,12 +76,10 @@ class Bump(Cog):
             w = await self.bot.webhook(after.channel)
             bump = PingBump(before=before, after=after, data=item, webhook=w)
             if bump.valid:
-                await after.delete()
-                await bump.send()
-                await bump.wait()
+                await after.delete(delay=0)
             elif timedelta := bump.timedelta:
                 await sleep(timedelta.total_seconds())
-                await bump.send()
+            await bump.send()
 
 
 async def setup(bot: CustomBot) -> None:
