@@ -627,7 +627,7 @@ class RPRolesView(View):
         key = {"$and": [{"id": {"$gte": date}}, {"member": {"$ne": user.id}}]}
         items = [
             (
-                ocs,
+                frozenset(ocs),
                 (
                     f"{role.name} - {member}",
                     f"{member.display_name} w/ {len(ocs)} OCs",
