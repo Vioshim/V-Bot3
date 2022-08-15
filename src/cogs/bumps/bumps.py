@@ -43,7 +43,7 @@ class BumpBot:
     url: str
     hours: int
     format_date: Pattern[str]
-    avatar: str
+    avatar: str = ""
 
     @classmethod
     def get(cls, **attrs):
