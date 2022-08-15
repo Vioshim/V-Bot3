@@ -736,31 +736,16 @@ class Information(commands.Cog):
             colour=Colour.green(),
             timestamp=channel.created_at,
         )
-        embed.set_image(url=WHITE_BAR)
 
-        embeds = [embed]
+        for item, perms in channel.overwrites.items():
 
-        if channel.overwrites:
-            differences = Embed(
-                title="Permissions Overwritten",
-                colour=Colour.blurple(),
-                timestamp=utcnow(),
-            )
+            if len(embed.fields) >= 25:
+                break
 
-            for item, perms in channel.overwrites.items():
-                name = getattr(item, "name", str(item))
+            name = getattr(item, "name", str(item))
 
-                text = ""
-
-                for key, value in perms:
-                    if value is not None:
-                        icon = ICON_VALUES[value]
-                        text += f"\n {icon}: {key.replace('_', ' ').title()}"
-
-                if text := text.strip():
-                    differences.add_field(name=name, value=text[:1024])
-
-            embeds.append(differences)
+            if text := "\n".join(f"{ICON_VALUES[value]}: {key.replace('_', ' ').title()}" for key, value in perms):
+                embed.add_field(name=name, value=text[:1024])
 
         try:
             name = channel.name.replace("»", "")
@@ -777,7 +762,7 @@ class Information(commands.Cog):
 
         log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
         await log.send(
-            embeds=embeds,
+            embed=embed,
             view=view,
             thread=Object(id=1008593211473805443),
         )
@@ -810,14 +795,7 @@ class Information(commands.Cog):
 
             name = getattr(item, "name", str(item))
 
-            text = ""
-
-            for key, value in perms:
-                if value is not None:
-                    icon = ICON_VALUES[value]
-                    text += f"\n {icon}: {key.replace('_', ' ').title()}"
-
-            if text := text.strip():
+            if text := "\n".join(f"{ICON_VALUES[value]}: {key.replace('_', ' ').title()}" for key, value in perms):
                 embed.add_field(name=name, value=text[:1024])
 
         if threads := "\n".join(f"• {x.name}" for x in getattr(channel, "threads", [])):
@@ -897,20 +875,18 @@ class Information(commands.Cog):
                 elif not (item in before.overwrites and item in after.overwrites):
                     continue
 
-                text = ""
                 value1 = before.overwrites.get(item, PermissionOverwrite())
                 value2 = after.overwrites.get(item, PermissionOverwrite())
 
-                if value1 != value2:
-                    raw_value1 = dict(value1)
-                    raw_value2 = dict(value2)
-                    for key in raw_value1.keys():
-                        if raw_value1[key] != raw_value2[key]:
-                            icon1 = ICON_VALUES[raw_value1[key]]
-                            icon2 = ICON_VALUES[raw_value2[key]]
-                            text += f"\n{icon1} -> {icon2}: {key.replace('_', ' ').title()}"
+                raw_value1, raw_value2 = dict(value1), dict(value2)
 
-                if text := text.strip():
+                if text := "\n".join(
+                    f"{icon1} -> {icon2}: {key.replace('_', ' ').title()}"
+                    for key in raw_value1.keys()
+                    if raw_value1[key] != raw_value2[key]
+                    and (icon1 := ICON_VALUES[raw_value1[key]])
+                    and (icon2 := ICON_VALUES[raw_value2[key]])
+                ):
                     differences.add_field(name=name, value=text[:1024])
 
             embeds.append(differences)
