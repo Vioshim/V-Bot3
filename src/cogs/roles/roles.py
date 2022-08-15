@@ -633,10 +633,16 @@ class RPRolesView(View):
             and (member := ctx.guild.get_member(item["member"]))
             and (
                 ocs := {oc for x in item["ocs"] if isinstance(oc := cog.ocs.get(x), Character)}
-                or {x for x in cog.ocs.values() if x.author == user.id}
+                or {x for x in cog.ocs.values() if x.author == member.id}
             )
         ]
-        view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1], silent_mode=True)
+        view = Complex(
+            member=ctx.user,
+            target=ctx,
+            values=items,
+            parser=lambda x: x[1],
+            silent_mode=True,
+        )
         async with view.send(ephemeral=True, single=True) as choice:
             if not choice:
                 return
@@ -649,9 +655,8 @@ class RPRolesView(View):
 
             try:
                 msg = await msg.fetch()
-                embed = msg.embeds[0]
+                oc_view.embed = msg.embeds[0]
             except DiscordException:
-                embed = oc_view.embed
                 await db.delete_one({"id": msg.id})
 
-            await oc_view.send(embed=embed, editing_original=True)
+            await oc_view.send(editing_original=True)
