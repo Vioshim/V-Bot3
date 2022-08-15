@@ -576,7 +576,7 @@ class RPRolesView(View):
     async def load(self, bot: CustomBot, guild: Guild, removing: Optional[int] = None):
         self.rp_pings.options.clear()
         date = utcnow()
-        date = time_snowflake(date) - time_snowflake(date - INTERVAL)
+        date = time_snowflake(date - INTERVAL)
         db: AsyncIOMotorCollection = bot.mongo_db("RP Search")
 
         if isinstance(removing, int):
@@ -644,7 +644,7 @@ class RPRolesView(View):
         cog = interaction.client.get_cog("Submission")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         date = interaction.created_at
-        date = time_snowflake(date) - time_snowflake(date - INTERVAL)
+        date = time_snowflake(date - INTERVAL)
         key = {"id": {"$gte": date}, "role": role.id}
         data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=25)
         entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
