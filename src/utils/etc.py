@@ -44,6 +44,7 @@ MAP_URL = "https://cdn.discordapp.com/attachments/748384705098940426/98067560066
 STICKER_EMOJI = PartialEmoji(name="MessageSticker", id=753338258963824801)
 SETTING_EMOJI = PartialEmoji(name="setting", id=962380600902320148, animated=True)
 LOADING_EMOJI = PartialEmoji(name="loading", id=969722876003512320, animated=True)
+LINK_EMOJI = PartialEmoji(name="MessageLink", id=778925231506587668)
 THUMBS_UP_EMOJI = PartialEmoji(name="thumbs_up", id=995303508419026954)
 THUMBS_DOWN_EMOJI = PartialEmoji(name="thumbs_down", id=995303546503311380)
 INVITE_EMOJI = PartialEmoji(name="IconInvite", id=778931752835088426)

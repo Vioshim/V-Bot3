@@ -21,12 +21,11 @@ from discord import (
     Interaction,
     InteractionResponse,
     Message,
-    PartialEmoji,
     SelectOption,
 )
 from discord.ui import Button, Select, View, button, select
 
-from src.utils.etc import INVITE_EMOJI, SETTING_EMOJI
+from src.utils.etc import INVITE_EMOJI, LINK_EMOJI, SETTING_EMOJI
 from src.views.message_view import MessagePaginator, msg_parser
 
 __all__ = ("InviterView",)
@@ -65,14 +64,9 @@ class InviterView(View):
                 entries[tag].add(item)
         self.data = dict(sorted(entries.items(), key=lambda x: (len(x[1]), x[0]), reverse=True))
         for key, value in self.data.items():
-            sct.add_option(
-                label=key,
-                value=key,
-                description=f"{len(value)} servers.",
-                emoji=PartialEmoji(name="MessageLink", id=778925231506587668),
-            )
+            sct.add_option(label=key, value=key, description=f"{len(value)} servers.", emoji=LINK_EMOJI)
         if not sct.options:
-            sct.append_option(SelectOption(label="Empty", value="Empty"))
+            sct.add_option(label="Empty")
             sct.disabled = True
         else:
             sct.disabled = False
