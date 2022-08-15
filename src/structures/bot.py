@@ -32,6 +32,7 @@ from discord import (
     ForumChannel,
     HTTPException,
     Intents,
+    Member,
     Message,
     NotFound,
     PartialMessage,
@@ -105,6 +106,7 @@ class CustomBot(Bot):
         self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
         self.scam_urls: set[str] = set()
         self.webhook_cache: dict[int, Webhook] = {}
+        self.supporting: dict[Member, Member] = {}
 
     def mongo_db(self, db: str) -> AsyncIOMotorCollection:
         return self.mongodb.discord[db]

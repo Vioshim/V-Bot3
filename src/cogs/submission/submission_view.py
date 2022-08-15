@@ -136,10 +136,9 @@ class TemplateView(View):
 
 
 class SubmissionView(View):
-    def __init__(self, ocs: list[Character], supporting: dict[Member, Member]):
+    def __init__(self, ocs: list[Character]):
         super(SubmissionView, self).__init__(timeout=None)
         self.ocs = ocs
-        self.supporting = supporting
         self.templates: dict[str, Message] = {}
 
     @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
@@ -164,7 +163,7 @@ class SubmissionView(View):
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         cog = ctx.client.get_cog("Submission")
-        user = self.supporting.get(ctx.user, ctx.user)
+        user = ctx.client.supporting.get(ctx.user, ctx.user)
         resp: InteractionResponse = ctx.response
         users = {ctx.user.id, user.id}
         try:
@@ -186,7 +185,7 @@ class SubmissionView(View):
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
-        member = self.supporting.get(member, member)
+        member = ctx.client.supporting.get(member, member)
         values: list[Character] = [oc for oc in self.ocs.values() if member.id == oc.author]
         if not values:
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)

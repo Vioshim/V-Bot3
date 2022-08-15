@@ -126,7 +126,6 @@ class Submission(commands.Cog):
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
         self.oc_list: dict[int, int] = {}
-        self.supporting: dict[Member, Member] = {}
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
@@ -349,7 +348,7 @@ class Submission(commands.Cog):
         else:
             refer_author = message.author
         if msg_data:
-            author = self.supporting.get(refer_author, refer_author)
+            author = self.bot.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
                 view = CreationOCView(bot=self.bot, ctx=message, user=author, oc=oc)
                 if isinstance(message, Message):
@@ -456,7 +455,7 @@ class Submission(commands.Cog):
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
         thread: Thread = await self.bot.fetch_channel(1005387453055639612)
-        view = SubmissionView(ocs=self.ocs, supporting=self.supporting)
+        view = SubmissionView(ocs=self.ocs)
         async for msg in thread.history(limit=None, oldest_first=True):
             if (embeds := msg.embeds) and msg.author == self.bot.user:
                 view.show_template.add_option(
@@ -643,7 +642,7 @@ class Submission(commands.Cog):
         await resp.defer(ephemeral=True, thinking=True)
         if member is None:
             member = ctx.user
-        user = self.supporting.get(ctx.user, ctx.user)
+        user = self.bot.supporting.get(ctx.user, ctx.user)
 
         if character:
             if character.author in [ctx.user.id, user.id]:
@@ -685,13 +684,11 @@ class Submission(commands.Cog):
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
-        if not member:
-            member = ctx.user
-        if ctx.user == member:
-            self.supporting.pop(ctx.user, None)
+        if member is None or ctx.user == member:
+            self.bot.supporting.pop(ctx.user, None)
             await ctx.followup.send(content="OCs registered now will be assigned to your account.!", ephemeral=True)
         else:
-            self.supporting[ctx.user] = member
+            self.bot.supporting[ctx.user] = member
             await ctx.followup.send(content=f"OCs registered now will be assigned to {member.mention}!", ephemeral=True)
 
 

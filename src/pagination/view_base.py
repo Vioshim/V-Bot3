@@ -125,8 +125,7 @@ class Basic(View):
         """
         condition = interaction.user == self.member
         with suppress(KeyError):
-            cog = interaction.client.get_cog("Submission")
-            aux = cog.supporting[interaction.user]
+            aux = interaction.client.supporting[interaction.user]
             condition |= self.member == aux
 
         if not condition:

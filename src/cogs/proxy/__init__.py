@@ -188,7 +188,7 @@ class Proxy(commands.Cog):
             Text, by default None
         """
         cog: Submission = self.bot.get_cog("Submission")
-        member = cog.supporting.get(ctx.author, ctx.author)
+        member = self.bot.supporting.get(ctx.author, ctx.author)
         entries1 = {x.name: x.base_image for x in Species.all()}
         entries2 = {x.name: x.image_url for x in cog.ocs.values() if x.author == member.id}
         if options := process.extractOne(pokemon, choices=entries1, limit=1, score_cutoff=60):

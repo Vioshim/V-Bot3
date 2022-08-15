@@ -98,7 +98,6 @@ class Roles(commands.Cog):
         if not self.ref_msg:
             channel = self.bot.get_channel(958122815171756042)
             view = RPRolesView(timeout=None)
-            await view.load(self.bot, channel.guild)
             async for msg in channel.history(limit=1):
                 if msg.author == self.bot.user and not msg.webhook_id:
                     self.ref_msg = await msg.edit(embed=IMAGE_EMBED, view=view)
@@ -134,10 +133,9 @@ class Roles(commands.Cog):
         )
 
     async def view_load(self, channel: TextChannel):
-        view = RPRolesView(timeout=None)
-        await view.load(self.bot, channel.guild)
         if m := self.ref_msg:
             await m.delete(delay=0)
+        view = RPRolesView(timeout=None)
         self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=view)
 
     @commands.Cog.listener()
@@ -207,7 +205,7 @@ class Roles(commands.Cog):
         cog = interaction.client.get_cog("Submission")
         guild = interaction.guild
         role: Role = guild.get_role(int(role))
-        user: Member = cog.supporting.get(interaction.user, interaction.user)
+        user = self.bot.supporting.get(interaction.user, interaction.user)
         ocs = [oc for oc in cog.ocs.values() if oc.author == user.id]
         modal = RPModal(user=user, role=role, ocs=ocs, to_user=member)
         if await modal.check(interaction):

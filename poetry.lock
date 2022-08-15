@@ -86,7 +86,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "3.6.1.post204"
+version = "3.6.1.post209"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -102,7 +102,7 @@ tzlocal = ">=3.0"
 [package.extras]
 asyncpg = ["asyncpg (>=0.20)"]
 cbor = ["cbor2 (>=5.0)"]
-doc = ["sphinx", "sphinx-rtd-theme", "sphinx-autodoc-typehints", "sphinx-tabs (>=3.3.1)"]
+doc = ["sphinx", "sphinx-autodoc-typehints", "sphinx-tabs (>=3.3.1)"]
 mongodb = ["pymongo (>=4)"]
 mqtt = ["paho-mqtt (>=1.5)"]
 redis = ["redis (>=4.0)"]
@@ -113,7 +113,7 @@ test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "f
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "b2613a06317ae3b5ea00ad1041aade293fdfa7e8"
+resolved_reference = "de722a1b8985cf6308ba602e8e7b8bab21349448"
 
 [[package]]
 name = "astunparse"
@@ -357,7 +357,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.0.0a4511+g668196c1"
+version = "2.0.0a4516+g41824967"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -382,7 +382,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "668196c14c525b40d8217995c9413f49344629d4"
+resolved_reference = "4182496713f854ff3dc7a949de2a0e18de31c417"
 
 [[package]]
 name = "distlib"

@@ -28,6 +28,7 @@ from discord import (
     InteractionResponse,
     Member,
     PartialEmoji,
+    PartialMessage,
     Role,
     SelectOption,
     TextStyle,
@@ -40,7 +41,6 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import SETTING_EMOJI, WHITE_BAR
@@ -303,7 +303,7 @@ class RPSearchManage(View):
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         cog = ctx.client.get_cog("Submission")
-        if not self.ocs or not (ocs := [x for item in self.ocs if isinstance(x := cog.ocs.get(item, item), Character)]):
+        if not (ocs := [x for item in self.ocs if isinstance(x := cog.ocs.get(item, item), Character)]):
             ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == self.member_id]
         view = CharactersView(member=ctx.user, target=ctx, ocs=ocs, keep_working=True)
         embed = view.embed
@@ -334,14 +334,12 @@ class RPModal(Modal):
         ocs: set[Character],
         to_user: Optional[Member] = None,
         mobile: bool = False,
-        role_mode: bool = True,
     ) -> None:
         super(RPModal, self).__init__(title=f"Pinging {role.name}")
         self.user = user
         self.role = role
         self.ocs = ocs
         self.to_user = to_user
-        self.role_mode = role_mode
 
         self.names = TextInput(
             style=TextStyle.paragraph,
@@ -439,8 +437,6 @@ class RPModal(Modal):
         if self.to_user:
             reference = self.to_user
             name += f" - {self.to_user.display_name}"
-        elif self.role not in self.user.roles:
-            await self.user.add_roles(self.role)
         webhook: Webhook = await interaction.client.webhook(958122815171756042, reason="RP Search")
         kwargs = dict(
             content=reference.mention,
@@ -482,17 +478,7 @@ class RPModal(Modal):
         aux_embed = RP_SEARCH_EMBED.copy()
         aux_embed.clear_fields()
         aux_embed.title = "Ping has been done successfully!"
-        view = View()
-        if not self.role_mode:
-            aux_embed.description = "Alright, if you change your mind you can find the role at <#719709333369258015>"
-            view.add_item(
-                Button(
-                    label="Self Roles",
-                    emoji="\N{CHEERING MEGAPHONE}",
-                    url="https://canary.discord.com/channels/719343092963999804/719709333369258015/992522335808671854",
-                )
-            )
-        await interaction.followup.send(embed=aux_embed, view=view, ephemeral=True)
+        await interaction.followup.send(embed=aux_embed, ephemeral=True)
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
         if img := await db.find_one({"author": self.user.id}):
@@ -529,12 +515,18 @@ class RPSearchComplex(Complex[Member]):
         self.role = role
         self.ping = True
         if role in member.roles:
-            self.remove_item(self.ping_mode)
+            self.ping_mode.label, self.ping_mode.style, self.ping_mode.emoji = (
+                f"Remove {role.name} Role",
+                ButtonStyle.red,
+                "\N{BELL WITH CANCELLATION STROKE}",
+            )
+        elif role:
+            self.ping_mode.label = f"Add {role.name} Role"
 
     async def method(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         cog = ctx.client.get_cog("Submission")
-        member: Member = cog.supporting.get(ctx.user, ctx.user)
+        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         ocs = [oc for oc in cog.ocs.values() if oc.author == member.id]
         modal = RPModal(
             user=member,
@@ -548,83 +540,41 @@ class RPSearchComplex(Complex[Member]):
             await modal.wait()
             self.stop()
 
-    @button(emoji="\N{BELL}", style=ButtonStyle.green, row=4)
+    @button(emoji="\N{BELL}", style=ButtonStyle.blurple, row=4)
     async def ping_mode(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        if condition := btn.style == ButtonStyle.green:
-            btn.style, btn.emoji = ButtonStyle.red, "\N{BELL WITH CANCELLATION STROKE}"
-        else:
-            btn.style, btn.emoji = ButtonStyle.green, "\N{BELL}"
-        self.ping = condition
-        await self.message.edit(view=self)
-        embed = RP_SEARCH_EMBED.copy()
-        embed.title = f"Role will get {'added' if condition else 'removed'}"
-        embed.description = ""
-        embed.clear_fields()
-        await resp.send_message(embed=embed, ephemeral=True)
+        match btn.style:
+            case ButtonStyle.blurple:
+                btn.label, btn.style, btn.emoji = (
+                    f"Remove {self.role.name} Role",
+                    ButtonStyle.red,
+                    "\N{BELL WITH CANCELLATION STROKE}",
+                )
+                await ctx.user.remove_roles(self.role)
+            case ButtonStyle.red:
+                btn.label, btn.style, btn.emoji = (
+                    f"Add {self.role.name} Role",
+                    ButtonStyle.blurple,
+                    "\N{BELL}",
+                )
+                await ctx.user.add_roles(self.role)
+        await resp.edit_message(view=self)
 
-    @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263), row=4)
+    @button(
+        label="New Ping (Mobile)",
+        style=ButtonStyle.blurple,
+        emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263),
+        row=4,
+    )
     async def mobile_pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
-    @button(label="Uninterested in previous pings, I'll make a new one", style=ButtonStyle.blurple, row=4)
+    @button(label="New Ping (Desktop)", style=ButtonStyle.blurple, row=4)
     async def pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
 
 class RPRolesView(View):
-    async def load(self, bot: CustomBot, guild: Guild, removing: Optional[int] = None):
-        self.rp_pings.options.clear()
-        date = utcnow()
-        date = time_snowflake(date - INTERVAL)
-        db: AsyncIOMotorCollection = bot.mongo_db("RP Search")
-
-        if isinstance(removing, int):
-            await db.delete_one({"id": removing})
-
-        async for item in db.find({"id": {"$gte": date}}, sort=[("id", -1)]):
-            if len(self.rp_pings.options) >= 25:
-                break
-            if not (role := guild.get_role(item["role"])):
-                continue
-            if not (member := guild.get_member(item["member"])):
-                continue
-
-            self.rp_pings.add_option(
-                label=role.name,
-                description=f"{member.display_name} w/ {len(item['ocs']) or 'their'} OCs"[:100],
-                value=str(item["id"]),
-                emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
-            )
-
-        if not self.rp_pings.options:
-            self.remove_item(self.rp_pings)
-
-    @select(placeholder="Existing Pings", custom_id="rp-pings")
-    async def rp_pings(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        item = int(sct.values[0])
-        try:
-            msg = await ctx.channel.fetch_message(item)
-            if not (thread := ctx.guild.get_channel_or_thread(item)):
-                thread = await ctx.guild.fetch_channel(item)
-            view = View()
-            view.add_item(
-                Button(
-                    label="Check Thread",
-                    url=thread.jump_url,
-                    emoji=PartialEmoji(name="MessageLink", id=778925231506587668),
-                )
-            )
-            await resp.send_message(
-                embeds=msg.embeds,
-                view=view,
-                ephemeral=True,
-            )
-        except DiscordException:
-            await self.load(ctx.client, ctx.guild, removing=item)
-            await resp.edit_message(view=self)
-
     @select(
         placeholder="Make a new Ping",
         custom_id="rp-view",
@@ -641,14 +591,23 @@ class RPRolesView(View):
     async def choice(self, interaction: Interaction, sct: Select):
         guild: Guild = interaction.guild
         role: Role = interaction.guild.get_role(int(sct.values[0]))
-        cog = interaction.client.get_cog("Submission")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
-        date = interaction.created_at
-        date = time_snowflake(date - INTERVAL)
-        key = {"id": {"$gte": date}, "role": role.id}
-        data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=25)
-        entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
-        member: Member = cog.supporting.get(interaction.user, interaction.user)
+        user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
+        key = {
+            "$and": [
+                {"role": role.id},
+                {"id": {"$gte": time_snowflake(interaction.created_at - INTERVAL)}},
+                {"member": {"$ne": user.id}},
+            ]
+        }
+        cog = interaction.client.get_cog("Submission")
+        data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=None)
+        entries = {
+            m: item["id"]
+            for item in data
+            if (m := guild.get_member(item["member"])) and ({x for x in cog.ocs.values() if x.author == user.id})
+        }
+        member: Member = interaction.client.supporting.get(interaction.user, interaction.user)
         view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
         async with view.send(ephemeral=True, single=True) as choice:
             if thread_id := entries.get(choice):
@@ -658,3 +617,43 @@ class RPRolesView(View):
                     await thread.edit(archived=False)
                 await thread.add_user(member)
                 await thread.add_user(choice)
+
+    @button(label="Existing RP Pings", style=ButtonStyle.blurple, custom_id="rp-pings")
+    async def rp_pings(self, ctx: Interaction, _: Button):
+        date = time_snowflake(ctx.created_at - INTERVAL)
+        cog = ctx.client.get_cog("Submission")
+        user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+        key = {"$and": [{"id": {"$gte": date}}, {"member": {"$ne": user.id}}]}
+        items = [
+            (
+                ocs,
+                (
+                    f"{role.name} - {member}",
+                    f"{member.display_name} w/ {len(ocs)} OCs",
+                ),
+                PartialMessage(channel=ctx.channel, id=item["id"]),
+            )
+            async for item in db.find(key, sort=[("id", -1)])
+            if (role := ctx.guild.get_role(item["role"]))
+            and (member := ctx.guild.get_member(item["member"]))
+            and (
+                ocs := {oc for x in item["ocs"] if isinstance(oc := cog.ocs.get(x), Character)}
+                or {x for x in cog.ocs.values() if x.author == user.id}
+            )
+        ]
+        view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1])
+        async with view.send(ephemeral=True, single=True) as choice:
+            if not choice:
+                return
+            oc_view = CharactersView(member=ctx.user, target=ctx, ocs=choice[0])
+            msg: PartialMessage = choice[2]
+
+            try:
+                msg = await msg.fetch()
+                embed = msg.embeds[0]
+            except DiscordException:
+                embed = oc_view.embed
+                await db.delete_one({"id": msg.id})
+
+            await oc_view.simple_send(editing_original=True, embed=embed)
