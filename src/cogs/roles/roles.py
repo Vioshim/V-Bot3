@@ -621,7 +621,6 @@ class RPRolesView(View):
         key = {"$and": [{"id": {"$gte": date}}, {"member": {"$ne": user.id}}]}
         items = [
             (
-                frozenset(ocs),
                 (
                     f"{role.name} - {member}",
                     f"{member.display_name} w/ {len(ocs)} OCs",
@@ -640,23 +639,18 @@ class RPRolesView(View):
             member=ctx.user,
             target=ctx,
             values=items,
-            parser=lambda x: x[1],
+            parser=lambda x: x[0],
             silent_mode=True,
         )
         async with view.send(ephemeral=True, single=True) as choice:
             if not choice:
                 return
-            oc_view = CharactersView(
-                member=ctx.user,
-                target=view.message,
-                ocs=choice[0],
-            )
-            msg: PartialMessage = choice[2]
+            msg: PartialMessage = choice[1]
 
             try:
                 msg = await msg.fetch()
-                oc_view.embed = msg.embeds[0]
+                aux = View()
+                aux.add_item(Button(label="Jump URL", url=msg.jump_url))
+                await view.message.edit(embed=msg.embeds[0], view=aux)
             except DiscordException:
                 await db.delete_one({"id": msg.id})
-
-            await oc_view.send(editing_original=True)
