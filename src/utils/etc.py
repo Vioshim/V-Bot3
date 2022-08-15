@@ -42,6 +42,7 @@ RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/86341522462
 WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/1001229327188365423/line.png"
 MAP_URL = "https://cdn.discordapp.com/attachments/748384705098940426/980675600664653844/unknown.png"
 STICKER_EMOJI = PartialEmoji(name="MessageSticker", id=753338258963824801)
+MOBILE_EMOJI = PartialEmoji(name="StatusMobileOld", id=716828817796104263)
 SETTING_EMOJI = PartialEmoji(name="setting", id=962380600902320148, animated=True)
 LOADING_EMOJI = PartialEmoji(name="loading", id=969722876003512320, animated=True)
 LINK_EMOJI = PartialEmoji(name="MessageLink", id=778925231506587668)

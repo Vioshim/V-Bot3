@@ -27,7 +27,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    PartialEmoji,
     PartialMessage,
     Role,
     SelectOption,
@@ -43,7 +42,7 @@ from rapidfuzz import process
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import MOBILE_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
 
@@ -513,7 +512,6 @@ class RPSearchComplex(Complex[Member]):
         self.embed = RP_SEARCH_EMBED.copy()
         self.embed.title = role.name
         self.role = role
-        self.ping = True
         if role in member.roles:
             self.ping_mode.label, self.ping_mode.style, self.ping_mode.emoji = (
                 f"Remove {role.name} Role",
@@ -532,8 +530,7 @@ class RPSearchComplex(Complex[Member]):
             user=member,
             role=self.role,
             ocs=ocs,
-            mobile=bool(btn.emoji),
-            role_mode=self.ping,
+            mobile=(btn.emoji == MOBILE_EMOJI),
         )
         if await modal.check(ctx):
             await resp.send_modal(modal)
@@ -560,16 +557,11 @@ class RPSearchComplex(Complex[Member]):
                 await ctx.user.add_roles(self.role)
         await resp.edit_message(view=self)
 
-    @button(
-        label="New Ping (Mobile)",
-        style=ButtonStyle.blurple,
-        emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263),
-        row=4,
-    )
+    @button(label="New Ping", style=ButtonStyle.blurple, emoji=MOBILE_EMOJI, row=4)
     async def mobile_pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
-    @button(label="New Ping (Desktop)", style=ButtonStyle.blurple, row=4)
+    @button(label="New Ping", emoji="\N{DESKTOP COMPUTER}", style=ButtonStyle.blurple, row=4)
     async def pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
