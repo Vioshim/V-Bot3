@@ -236,6 +236,8 @@ class Basic(View):
             return self.message
 
         if isinstance(target, Message):
+            if editing_original:
+                return await target.edit(**data)
             target = target.channel
 
         if isinstance(target, Interaction):

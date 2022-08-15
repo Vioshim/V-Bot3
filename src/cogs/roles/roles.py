@@ -644,11 +644,15 @@ class RPRolesView(View):
                 or {x for x in cog.ocs.values() if x.author == user.id}
             )
         ]
-        view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1])
+        view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1], silent_mode=True)
         async with view.send(ephemeral=True, single=True) as choice:
             if not choice:
                 return
-            oc_view = CharactersView(member=ctx.user, target=ctx, ocs=choice[0])
+            oc_view = CharactersView(
+                member=ctx.user,
+                target=view.message,
+                ocs=choice[0],
+            )
             msg: PartialMessage = choice[2]
 
             try:
@@ -658,5 +662,4 @@ class RPRolesView(View):
                 embed = oc_view.embed
                 await db.delete_one({"id": msg.id})
 
-            if view.message:
-                await view.message.edit(embed=embed, view=oc_view)
+            await oc_view.send(embed=embed, editing_original=True)
