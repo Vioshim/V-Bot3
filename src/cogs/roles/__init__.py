@@ -67,9 +67,7 @@ class Roles(commands.Cog):
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
         self.view = RoleSelect(timeout=None)
-        if channel := self.bot.get_channel(719709333369258015):
-            msg = PartialMessage(channel=channel, id=1008443862559240312)
-            await msg.edit(view=self.view)
+        self.bot.add_view(self.view, 1008443862559240312)
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
