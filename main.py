@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from asyncio import run
 from json import dumps
-from logging import getLogger, setLoggerClass
+from logging import setLoggerClass
 from os import getenv
 
 from aiogoogle import Aiogoogle
@@ -29,9 +30,8 @@ from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 
+logger = logging.getLogger("discord")
 setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
 
 load_dotenv()
 
