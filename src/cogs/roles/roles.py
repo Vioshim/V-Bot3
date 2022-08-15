@@ -621,6 +621,7 @@ class RPRolesView(View):
         key = {"$and": [{"id": {"$gte": date}}, {"member": {"$ne": user.id}}]}
         items = [
             (
+                frozenset(ocs),
                 (
                     f"{role.name} - {member}",
                     f"{member.display_name} w/ {len(ocs)} OCs",
@@ -635,22 +636,18 @@ class RPRolesView(View):
                 or {x for x in cog.ocs.values() if x.author == member.id}
             )
         ]
-        view = Complex(
-            member=ctx.user,
-            target=ctx,
-            values=items,
-            parser=lambda x: x[0],
-            silent_mode=True,
-        )
+        view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1], silent_mode=True)
         async with view.send(ephemeral=True, single=True) as choice:
             if not choice:
                 return
-            msg: PartialMessage = choice[1]
 
-            try:
-                msg = await msg.fetch()
-                aux = View()
-                aux.add_item(Button(label="Jump URL", url=msg.jump_url))
-                await view.message.edit(embed=msg.embeds[0], view=aux)
-            except DiscordException:
-                await db.delete_one({"id": msg.id})
+        oc_view = CharactersView(member=ctx.user, target=view.message, ocs=choice[0])
+        msg: PartialMessage = choice[2]
+
+        try:
+            msg = await msg.fetch()
+            oc_view.embed = msg.embeds[0]
+        except DiscordException:
+            await db.delete_one({"id": msg.id})
+
+        await oc_view.send(editing_original=True)
