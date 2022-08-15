@@ -744,7 +744,10 @@ class Information(commands.Cog):
 
             name = getattr(item, "name", str(item))
 
-            if text := "\n".join(f"{ICON_VALUES[value]}: {key.replace('_', ' ').title()}" for key, value in perms):
+            text = "\n".join(
+                f"{ICON_VALUES[value]}: {key.replace('_', ' ').title()}" for key, value in perms if value is not None
+            )
+            if text:
                 embed.add_field(name=name, value=text[:1024])
 
         try:
@@ -795,7 +798,10 @@ class Information(commands.Cog):
 
             name = getattr(item, "name", str(item))
 
-            if text := "\n".join(f"{ICON_VALUES[value]}: {key.replace('_', ' ').title()}" for key, value in perms):
+            text = "\n".join(
+                f"{ICON_VALUES[value]}: {key.replace('_', ' ').title()}" for key, value in perms if value is not None
+            )
+            if text:
                 embed.add_field(name=name, value=text[:1024])
 
         if threads := "\n".join(f"• {x.name}" for x in getattr(channel, "threads", [])):
@@ -843,16 +849,20 @@ class Information(commands.Cog):
         if not before.guild or before.guild.id != 719343092963999804:
             return
 
-        embed1 = Embed(title="Channel Update", colour=Colour.red(), timestamp=before.created_at)
+        embed1 = Embed(title=f"Channel Update: {after.name}", colour=Colour.red(), timestamp=before.created_at)
         embed1.set_image(url=WHITE_BAR)
         embed2 = Embed(colour=Colour.green(), timestamp=utcnow())
         embed2.set_image(url=WHITE_BAR)
 
-        embeds = [embed1, embed2]
+        embeds = [embed1]
 
-        if condition := before.name != after.name:
+        topic1 = getattr(before, "topic", None)
+        topic2 = getattr(after, "topic", None)
+        if condition := before.name != after.name or topic1 != topic2:
             embed1.title = f"Channel Before: {before.name}"
             embed2.title = f"Channel Afterwards: {after.name}"
+            if topic1 != topic2:
+                embed1.description, embed2.description = topic1, topic2
 
         if before.overwrites != after.overwrites:
             condition = True
@@ -863,43 +873,35 @@ class Information(commands.Cog):
                 colour=Colour.blurple(),
                 timestamp=utcnow(),
             )
+            items = []
 
             for item in before.overwrites | after.overwrites:
 
-                name = getattr(item, "name", str(item))
+                if len(differences.fields) >= 25:
+                    break
 
                 if item not in before.overwrites:
-                    differences.description += f"\n+ {name}"
+                    items.append(f"+ {item}")
                 elif item not in after.overwrites:
-                    differences.description += f"\n- {name}"
+                    items.append(f"- {item}")
                 elif not (item in before.overwrites and item in after.overwrites):
                     continue
 
-                value1 = before.overwrites.get(item, PermissionOverwrite())
-                value2 = after.overwrites.get(item, PermissionOverwrite())
-
-                raw_value1, raw_value2 = dict(value1), dict(value2)
+                value1 = dict(before.overwrites.get(item, PermissionOverwrite()))
+                value2 = dict(after.overwrites.get(item, PermissionOverwrite()))
 
                 if text := "\n".join(
                     f"{icon1} -> {icon2}: {key.replace('_', ' ').title()}"
-                    for key in raw_value1.keys()
-                    if raw_value1[key] != raw_value2[key]
-                    and (icon1 := ICON_VALUES[raw_value1[key]])
-                    and (icon2 := ICON_VALUES[raw_value2[key]])
+                    for key in value1.keys()
+                    if value1[key] != value2[key]
+                    and (icon1 := ICON_VALUES[value1[key]])
+                    and (icon2 := ICON_VALUES[value2[key]])
                 ):
-                    differences.add_field(name=name, value=text[:1024])
+                    differences.add_field(name=str(item), value=text[:1024])
+
+            differences.description = "\n".join(items)
 
             embeds.append(differences)
-
-        if (topic1 := getattr(before, "topic", None)) != (topic2 := getattr(after, "topic", None)):
-            condition = True
-            embed1.description, embed2.description = topic1, topic2
-
-        if before.category != after.category:
-            condition = True
-            cat_name1 = getattr(before.category, "name", "No Category")
-            cat_name2 = getattr(after.category, "name", "No Category")
-            embed2.set_footer(text=f"Category: {cat_name1} -> {cat_name2}")
 
         if not condition:
             return
@@ -914,6 +916,15 @@ class Information(commands.Cog):
 
         view = View()
         view.add_item(Button(emoji=emoji, label=name, url=after.jump_url))
+
+        if embed2.title or embed2.description:
+            embeds.append(embed2)
+
+        if before.category != after.category:
+            condition = True
+            cat_name1 = getattr(before.category, "name", "No Category")
+            cat_name2 = getattr(after.category, "name", "No Category")
+            embeds[-1].set_footer(text=f"Category: {cat_name1} -> {cat_name2}")
 
         log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
         await log.send(
