@@ -50,7 +50,9 @@ class Bump(Cog):
             self.bot.msg_cache_add(ctx)
             w = await self.bot.webhook(ctx.channel)
             bump = PingBump(after=ctx, data=item, webhook=w)
-            if not bump.valid and (timedelta := bump.timedelta):
+            if bump.valid:
+                await ctx.delete(delay=0)
+            elif timedelta := bump.timedelta:
                 await sleep(timedelta.total_seconds())
             await bump.send()
 
