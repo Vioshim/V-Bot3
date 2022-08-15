@@ -547,14 +547,14 @@ class RPSearchComplex(Complex[Member]):
                     ButtonStyle.red,
                     "\N{BELL WITH CANCELLATION STROKE}",
                 )
-                await ctx.user.remove_roles(self.role)
+                await ctx.user.add_roles(self.role)
             case ButtonStyle.red:
                 btn.label, btn.style, btn.emoji = (
                     f"Add {self.role.name} Role",
                     ButtonStyle.blurple,
                     "\N{BELL}",
                 )
-                await ctx.user.add_roles(self.role)
+                await ctx.user.remove_roles(self.role)
         await resp.edit_message(view=self)
 
     @button(label="New Ping", style=ButtonStyle.blurple, emoji=MOBILE_EMOJI, row=4)
