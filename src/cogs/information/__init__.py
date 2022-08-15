@@ -802,41 +802,27 @@ class Information(commands.Cog):
             colour=Colour.red(),
             timestamp=channel.created_at,
         )
-        embed.set_image(url=WHITE_BAR)
 
-        embeds = [embed]
+        for item, perms in channel.overwrites.items():
 
-        if channel.overwrites:
-            differences = Embed(
-                title="Permissions Overwritten",
-                description="",
-                colour=Colour.blurple(),
-                timestamp=utcnow(),
-            )
+            if len(embed.fields) >= 25:
+                break
 
-            for item, perms in channel.overwrites.items():
-                name = getattr(item, "name", str(item))
+            name = getattr(item, "name", str(item))
 
-                text = ""
+            text = ""
 
-                for key, value in perms:
-                    if value is not None:
-                        icon = ICON_VALUES[value]
-                        text += f"\n {icon}: {key.replace('_', ' ').title()}"
+            for key, value in perms:
+                if value is not None:
+                    icon = ICON_VALUES[value]
+                    text += f"\n {icon}: {key.replace('_', ' ').title()}"
 
-                if text := text.strip():
-                    differences.add_field(name=name, value=text[:1024])
+            if text := text.strip():
+                embed.add_field(name=name, value=text[:1024])
 
-            embeds.append(differences)
-
-        if threads := "\n".join(f"• {x.name}" for x in getattr(channel, "Threads", [])):
-            embeds.append(
-                Embed(
-                    title="Deleted Threads",
-                    description=threads[:4096],
-                    colour=Colour.blurple(),
-                ).set_image(url=WHITE_BAR)
-            )
+        if threads := "\n".join(f"• {x.name}" for x in getattr(channel, "threads", [])):
+            embed.title = f"{embed.title} - Deleted Threads"
+            embed.description = threads[:4096]
 
         try:
             name = channel.name.replace("»", "")
@@ -856,7 +842,7 @@ class Information(commands.Cog):
 
         log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
         await log.send(
-            embeds=embeds,
+            embed=embed,
             view=view,
             thread=Object(id=1008593211473805443),
         )
