@@ -620,6 +620,8 @@ class RPRolesView(View):
 
     @button(label="Existing RP Pings", style=ButtonStyle.blurple, custom_id="rp-pings")
     async def rp_pings(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True, thinking=True)
         date = time_snowflake(ctx.created_at - INTERVAL)
         cog = ctx.client.get_cog("Submission")
         user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
@@ -656,4 +658,5 @@ class RPRolesView(View):
                 embed = oc_view.embed
                 await db.delete_one({"id": msg.id})
 
-            await oc_view.simple_send(editing_original=True, embed=embed)
+            if view.message:
+                await view.message.edit(embed=embed, view=oc_view)
