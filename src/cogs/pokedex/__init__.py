@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import astuple
+from itertools import groupby
 from random import random
 from re import IGNORECASE
 from re import compile as re_compile
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 
 from bs4 import BeautifulSoup
 from discord import (
@@ -44,6 +45,7 @@ from src.cogs.pokedex.search import (
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character, Kind
+from src.structures.mon_typing import Typing
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion, Species
@@ -367,6 +369,42 @@ class Pokedex(commands.Cog):
 
         async with view.send(ephemeral=True, embeds=embeds, content=text):
             self.bot.logger.info("%s is reading /find %s", str(ctx.user), repr(ctx.namespace))
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    async def chart(
+        self,
+        ctx: Interaction,
+        type1: TypingArg,
+        type2: Optional[TypingArg],
+        mode: Literal["Attacking", "Defending"] = "Attacking",
+    ):
+        """Command for getting Type Chart
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        type1 : Optional[TypingArg]
+            Type 1
+        type2 : Optional[TypingArg]
+            Type 2
+        """
+        if type2:
+            type1 += type2
+
+        embed = Embed(title=f"{type1.name} when {mode}", color=type1.color)
+        embed.set_image(url=WHITE_BAR)
+
+        def method(x: Typing) -> float:
+            return type1.when_attacking(x) if mode == "Attacking" else type1.when_attacked_by(x)
+
+        items = sorted(Typing.all(), key=method)
+
+        for k, v in groupby(items, key=method):
+            embed.add_field(name=f"Damage {k:02d}x", value="\n".join(f"{x.emoji} {x.name}" for x in v), inline=False)
+
+        await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(bot: CustomBot) -> None:
