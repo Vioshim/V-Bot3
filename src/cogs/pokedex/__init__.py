@@ -377,7 +377,7 @@ class Pokedex(commands.Cog):
         ctx: Interaction,
         type1: TypingArg,
         type2: Optional[TypingArg],
-        mode: Literal["Attacking", "Defending"] = "Attacking",
+        mode: Literal["Attacking", "Defending"] = "Defending",
     ):
         """Command for getting Type Chart
 
@@ -397,12 +397,19 @@ class Pokedex(commands.Cog):
         embed.set_image(url=WHITE_BAR)
 
         def method(x: Typing) -> float:
-            return type1.when_attacking(x) if mode == "Attacking" else type1.when_attacked_by(x)
+            if mode == "Attacking":
+                return type1.when_attacking(x)
+            return type1.when_attacked_by(x)
 
-        items = sorted(Typing.all(), key=method)
-
-        for k, v in groupby(items, key=method):
-            embed.add_field(name=f"Damage {k:02f}x", value="\n".join(f"{x.emoji} {x.name}" for x in v), inline=False)
+        for k, v in groupby(
+            sorted(Typing.all(), key=method, reverse=True),
+            key=method,
+        ):
+            embed.add_field(
+                name=f"Damage {k:.1f}x",
+                value="\n".join(f"{x.emoji} {x.name}" for x in v),
+                inline=False,
+            )
 
         await ctx.response.send_message(embed=embed, ephemeral=True)
 
