@@ -394,7 +394,6 @@ class Pokedex(commands.Cog):
             type1 += type2
 
         embed = Embed(title=f"{type1.name} when {mode}", color=type1.color)
-        embed.set_image(url=WHITE_BAR)
 
         def method(x: Typing) -> float:
             if mode == "Attacking":
@@ -408,7 +407,6 @@ class Pokedex(commands.Cog):
             embed.add_field(
                 name=f"Damage {k}x",
                 value="\n".join(f"{x.emoji} {x.name}" for x in v),
-                inline=False,
             )
 
         await ctx.response.send_message(embed=embed, ephemeral=True)
