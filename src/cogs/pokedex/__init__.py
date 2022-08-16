@@ -401,14 +401,9 @@ class Pokedex(commands.Cog):
                 return type1.when_attacking(x)
             return type1.when_attacked_by(x)
 
-        for k, v in groupby(
-            sorted(Typing.all(), key=method, reverse=True),
-            key=method,
-        ):
-            embed.add_field(
-                name=f"Damage {k}x",
-                value="\n".join(f"{x.emoji} {x.name}" for x in v),
-            )
+        for k, v in groupby(sorted(Typing.all(), key=method, reverse=True), key=method):
+            if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):
+                embed.add_field(name=f"Damage {k}x", value=item)
 
         await ctx.response.send_message(embed=embed, ephemeral=True)
 

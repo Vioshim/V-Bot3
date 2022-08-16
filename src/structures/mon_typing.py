@@ -82,7 +82,7 @@ class Typing:
         Typing's name
     icon: str
         Image of the typing.
-    id: int
+    ids: frozenset[int]
         Type's ID, Defaults to 0
     color: int
         Type's Color, Defaults to 0
@@ -99,7 +99,7 @@ class Typing:
 
     name: str = ""
     icon: str = ""
-    id: Optional[int] = None
+    ids: frozenset[int] = field(default_factory=frozenset)
     color: int = 0
     emoji: PartialEmoji = PartialEmoji(name="\N{MEDIUM BLACK CIRCLE}")
     z_move: str = ""
@@ -108,6 +108,8 @@ class Typing:
     banner: str = ""
 
     def __post_init__(self):
+        if isinstance(self.ids, (int, float)):
+            self.ids = frozenset({self.ids})
         self.chart = frozendict({k: v for k, v in self.chart.items() if v != 1})
 
     def __add__(self, other: Typing) -> Typing:
@@ -126,6 +128,7 @@ class Typing:
         if (a := self.chart) != (b := other.chart):
             chart = {x: a.get(x, 1) * b.get(x, 1) for x in a | b}
             return Typing(
+                ids=self.ids | other.ids,
                 name=f"{self.name}/{other.name}",
                 chart=frozendict(chart),
             )
@@ -157,17 +160,7 @@ class Typing:
         bool
             If included in the chart
         """
-        return other.id in self.chart
-
-    def __int__(self) -> int:
-        """int method
-
-        Returns
-        -------
-        int
-            Type's ID
-        """
-        return self.id
+        return any(x in self.chart for x in self.ids)
 
     def __setitem__(
         self,
@@ -184,7 +177,8 @@ class Typing:
             reference value
         """
         chart = dict(self.chart)
-        chart[int(type_id)] = value
+        for item in type_id.id:
+            chart[item] = value
         self.chart = frozendict(chart)
 
     def __getitem__(self, other: Typing) -> float:
@@ -200,7 +194,10 @@ class Typing:
         float
             chart value
         """
-        return self.chart.get(int(other), 1.0)
+        value = 1.0
+        for item in other.ids:
+            value *= self.chart.get(item, 1.0)
+        return value
 
     def when_attacked_by(self, *others: Typing) -> float:
         """method to determine multiplier
@@ -215,7 +212,8 @@ class Typing:
             if isinstance(other, str):
                 other = self.from_ID(other)
             if isinstance(other, Typing):
-                base *= self.chart.get(other.id, 1.0)
+                for item in other.ids:
+                    base *= self.chart.get(item, 1.0)
         return base
 
     def when_attacking(self, *others: Typing | str) -> float:
@@ -231,7 +229,8 @@ class Typing:
             if isinstance(other, str):
                 other = self.from_ID(other)
             if isinstance(other, Typing):
-                base *= other.chart.get(self.id, 1.0)
+                for item in self.ids:
+                    base *= other.chart.get(item, 1.0)
         return base
 
     @property
