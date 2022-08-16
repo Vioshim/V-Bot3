@@ -134,9 +134,6 @@ class Typing:
             )
         return self
 
-    def __hash__(self) -> int:
-        return hash(self.ids)
-
     def __str__(self) -> str:
         """str method
 
