@@ -550,7 +550,7 @@ class AbilitiesField(TemplateField):
         if isinstance(oc.species, (Fakemon, Variant)):
             return None
 
-        if items := ", ".join(x for x in oc.abilities if x not in oc.species.abilities):
+        if items := ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities):
             return f"Invalid Abilities: {items}"
 
     @classmethod
