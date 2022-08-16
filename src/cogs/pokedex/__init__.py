@@ -406,7 +406,7 @@ class Pokedex(commands.Cog):
             key=method,
         ):
             embed.add_field(
-                name=f"Damage {k:.1f}x",
+                name=f"Damage {k}x",
                 value="\n".join(f"{x.emoji} {x.name}" for x in v),
                 inline=False,
             )
