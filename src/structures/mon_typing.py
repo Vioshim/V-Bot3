@@ -134,6 +134,9 @@ class Typing:
             )
         return self
 
+    def __hash__(self) -> int:
+        return hash(self.ids)
+
     def __str__(self) -> str:
         """str method
 
@@ -177,7 +180,7 @@ class Typing:
             reference value
         """
         chart = dict(self.chart)
-        for item in type_id.id:
+        for item in type_id.ids:
             chart[item] = value
         self.chart = frozendict(chart)
 
@@ -368,6 +371,8 @@ class TypingDecoder(JSONDecoder):
                 dct["emoji"] = PartialEmoji.from_str(emoji)
             if chart := dct.get("chart", {}):
                 dct["chart"] = frozendict({int(k): float(v) for k, v in chart.items()})
+            if type_id := dct.pop("id", 0):
+                dct["ids"] = frozenset({type_id})
             return Typing(**dct)
         return dct
 
