@@ -363,7 +363,9 @@ class TypingDecoder(JSONDecoder):
         Any
             Result
         """
-        if all(x in dct for x in Typing.__slots__):
+        items = set(Typing.__slots__)
+        items -= {"id"}
+        if all(x in dct for x in items):
             if emoji := dct.get("emoji", ""):
                 dct["emoji"] = PartialEmoji.from_str(emoji)
             if chart := dct.get("chart", {}):
