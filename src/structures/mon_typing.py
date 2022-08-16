@@ -127,7 +127,7 @@ class Typing:
             chart = {x: a.get(x, 1) * b.get(x, 1) for x in a | b}
             return Typing(
                 name=f"{self.name}/{other.name}",
-                color=((self.color + other.color) ** 2) / 2,
+                color=((self.color + other.color) ** 2) // 2,
                 chart=frozendict(chart),
             )
         return self
