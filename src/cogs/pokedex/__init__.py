@@ -402,7 +402,7 @@ class Pokedex(commands.Cog):
         items = sorted(Typing.all(), key=method)
 
         for k, v in groupby(items, key=method):
-            embed.add_field(name=f"Damage {k:02d}x", value="\n".join(f"{x.emoji} {x.name}" for x in v), inline=False)
+            embed.add_field(name=f"Damage {k:02f}x", value="\n".join(f"{x.emoji} {x.name}" for x in v), inline=False)
 
         await ctx.response.send_message(embed=embed, ephemeral=True)
 
