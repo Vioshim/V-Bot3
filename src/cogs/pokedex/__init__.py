@@ -378,6 +378,7 @@ class Pokedex(commands.Cog):
         type1: TypingArg,
         type2: Optional[TypingArg],
         mode: Literal["Attacking", "Defending"] = "Defending",
+        inverse: bool = False,
     ):
         """Command for getting Type Chart
 
@@ -389,17 +390,23 @@ class Pokedex(commands.Cog):
             Type 1
         type2 : Optional[TypingArg]
             Type 2
+        mode : str
+            Method to calculate
+        inverse : bool
+            Used for inverse battles. Defaults to False
         """
         if type2:
             type1 += type2
 
         embed = Embed(title=f"{type1.name} when {mode}", color=type1.color)
+        if inverse:
+            embed.title += "(Inverse)"
         embed.set_image(url=WHITE_BAR)
 
         def method(x: Typing) -> float:
             if mode == "Attacking":
-                return type1.when_attacking(x)
-            return type1.when_attacked_by(x)
+                return type1.when_attacking(x, inverse=inverse)
+            return type1.when_attacked_by(x, inverse=inverse)
 
         for k, v in groupby(sorted(Typing.all(), key=method, reverse=True), key=method):
             if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):

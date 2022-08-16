@@ -216,7 +216,7 @@ class Typing:
                     base *= self.chart.get(item, 1.0)
         return base
 
-    def when_attacking(self, *others: Typing | str) -> float:
+    def when_attacking(self, *others: Typing | str, inverse: bool = False) -> float:
         """method to determine multiplier
 
         Returns
@@ -230,7 +230,10 @@ class Typing:
                 other = self.from_ID(other)
             if isinstance(other, Typing):
                 for item in self.ids:
-                    base *= other.chart.get(item, 1.0)
+                    value = other.chart.get(item, 1.0)
+                    if inverse and value != 1.0:
+                        value = 0.5 if value > 1 else 2
+                    base *= value
         return base
 
     @property
