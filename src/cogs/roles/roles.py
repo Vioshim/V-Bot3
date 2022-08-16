@@ -567,6 +567,9 @@ class RPSearchComplex(Complex[Member]):
 
 
 class RPRolesView(View):
+    async def on_error(self, interaction: Interaction, error: Exception, item) -> None:
+        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+
     @select(
         placeholder="Make a new Ping",
         custom_id="rp-view",
@@ -650,4 +653,4 @@ class RPRolesView(View):
         except DiscordException:
             await db.delete_one({"id": msg.id})
 
-        await oc_view.send(editing_original=True)
+        await oc_view.simple_send(editing_original=True)

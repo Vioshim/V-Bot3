@@ -1026,12 +1026,13 @@ class Information(commands.Cog):
         after : Message
             Message after editing
         """
-        member = after.author
+        if not isinstance(member := after.author, Member):
+            return
 
         if member.guild.id != 719343092963999804:
             return
 
-        if not before.guild or member.bot or await self.bot.is_owner(member):
+        if member.bot or await self.bot.is_owner(member):
             return
 
         embed1 = Embed(

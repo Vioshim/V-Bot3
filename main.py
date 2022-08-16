@@ -14,7 +14,7 @@
 
 from asyncio import run
 from json import dumps
-from logging import INFO, basicConfig, getLogger, setLoggerClass
+from logging import getLogger, setLoggerClass
 from os import getenv
 
 from aiogoogle import Aiogoogle
@@ -29,7 +29,7 @@ from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 
-basicConfig(level=INFO)
+# basicConfig(level=INFO)
 setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
