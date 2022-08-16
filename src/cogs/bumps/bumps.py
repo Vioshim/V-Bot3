@@ -207,7 +207,7 @@ class PingBump(View):
 
         mention = f"</bump:{self.data.cmd_id}>"
         if timeout:
-            mention = f"**<@&1008443862559240312> (Slash Command is {mention}):**"
+            mention = f"**<@&1008443584594325554> (Slash Command is {mention}):**"
             embed, view, wait = MISSING, MISSING, False
         else:
             embed, view, wait = self.embed, self, True
@@ -229,7 +229,7 @@ class PingBump(View):
     @button(emoji="a:SZD_desk_bell:769116713639215124", style=ButtonStyle.blurple)
     async def reminder(self, inter: Interaction, _: Button) -> None:
         resp: InteractionResponse = inter.response
-        role = inter.guild.get_role(1008443862559240312)
+        role = inter.guild.get_role(1008443584594325554)
         if role in inter.user.roles:
             await inter.user.remove_roles(role)
             msg = "Alright, you won't get notified"
