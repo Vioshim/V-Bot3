@@ -806,9 +806,8 @@ class CreationOCView(Basic):
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
-        cog = interaction.client.get_cog("Submission")
 
-        if self.user == cog.supporting.get(interaction.user, interaction.user):
+        if self.user == interaction.client.supporting.get(interaction.user, interaction.user):
             return True
 
         embed = Embed(title="This OC isn't yours", color=Color.red(), timestamp=interaction.created_at)
@@ -961,8 +960,7 @@ class ModCharactersView(CharactersView):
         await resp.defer(ephemeral=True, thinking=True)
         try:
             if item := self.current_choice:
-                cog = interaction.client.get_cog("Submission")
-                user: Member = cog.supporting.get(interaction.user, interaction.user)
+                user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
                 if item.author in [user.id, interaction.user.id]:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
                     await view.send(ephemeral=True)
