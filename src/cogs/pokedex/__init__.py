@@ -394,6 +394,7 @@ class Pokedex(commands.Cog):
             type1 += type2
 
         embed = Embed(title=f"{type1.name} when {mode}", color=type1.color)
+        embed.set_image(url=WHITE_BAR)
 
         def method(x: Typing) -> float:
             if mode == "Attacking":
