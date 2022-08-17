@@ -483,6 +483,7 @@ class OCGroupByMember(OCGroupBy):
 
 class GroupByArg(Enum):
     Kind = OCGroupByKind
+    Shape = OCGroupByShape
     Age = OCGroupByAge
     Species = OCGroupBySpecies
     EvoLine = OCGroupByEvoLine
