@@ -28,7 +28,7 @@ from src.structures.ability import Ability
 from src.structures.character import Character, Kind
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
-from src.structures.species import Fusion, Species, Variant
+from src.structures.species import CustomMega, Fakemon, Fusion, Species, Variant
 from src.views.characters_view import CharactersView
 
 STANDARD = [
@@ -338,7 +338,7 @@ class OCGroupBy(ABC):
     def generate(cls, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
         items = {
             k: sorted(v, key=lambda x: x.name)
-            for k, v in sorted(cls.method(ctx, ocs).items(), reverse=True, key=lambda x: (len(x[1]), x[0]))
+            for k, v in sorted(cls.method(ctx, ocs).items(), key=lambda x: (-len(x[1]), x[0]))
             if amount_parser(amount, v)
         }
         return GroupByComplex(member=ctx.user, target=ctx, data=items)
@@ -358,17 +358,6 @@ class OCGroupByAge(OCGroupBy):
         return {str(k or "Unknown"): frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
 
 
-def species_checker(item: Species):
-    def inner(oc_species: Species):
-        if isinstance(oc_species, Fusion):
-            return item in oc_species.bases
-        if isinstance(oc_species, Variant):
-            return item == oc_species.base
-        return oc_species == item
-
-    return inner
-
-
 class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
@@ -381,6 +370,32 @@ class OCGroupBySpecies(OCGroupBy):
             if any(x.from_class(k) for x in STANDARD)
         }
         return items
+
+
+class OCGroupByEvoLine(OCGroupBy):
+    @classmethod
+    def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        data: dict[str, set[Character]] = {}
+        for oc in ocs:
+            if isinstance(species := oc.species, Fusion):
+                mon1, mon2 = species.mon1.first_evo, species.mon2.first_evo
+                data.setdefault(mon1.name, set())
+                data.setdefault(mon2.name, set())
+                data[mon1.name].add(oc)
+                data[mon2.name].add(oc)
+            elif species:
+                mon = species
+                if isinstance(species, (CustomMega, Variant)):
+                    mon = species.base.first_evo
+                elif isinstance(species, Fakemon):
+                    if mon := species.species_evolves_from:
+                        mon = mon.first_evo
+                    else:
+                        continue
+                data.setdefault(mon.name, set())
+                data[mon.name].add(ocs)
+
+        return data
 
 
 class OCGroupByType(OCGroupBy):
@@ -439,6 +454,7 @@ class GroupByArg(Enum):
     Kind = OCGroupByKind
     Age = OCGroupByAge
     Species = OCGroupBySpecies
+    EvoLine = OCGroupByEvoLine
     Type = OCGroupByType
     Pronoun = OCGroupByPronoun
     Move = OCGroupByMove

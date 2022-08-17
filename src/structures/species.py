@@ -116,6 +116,18 @@ class Species(metaclass=ABCMeta):
             case _:
                 return self.base_image
 
+    @property
+    def first_evo(self):
+        return self.evol_line[0]
+
+    @property
+    def evol_line(self):
+        items = [self]
+        aux = self
+        while isinstance(mon := aux.species_evolves_from, Species):
+            items.append(aux := mon)
+        return items[::-1]
+
     @classmethod
     def all(cls) -> frozenset[Species]:
         return frozenset(x for x in ALL_SPECIES.values() if isinstance(x, cls))
@@ -730,6 +742,10 @@ class Fusion(Species):
         if mon1 and mon2 and mon1 != mon2:
             return Fusion(mon1=mon1, mon2=mon2)
         return mon1 or mon2
+
+    @property
+    def evol_line(self):
+        return self.mon1.evol_line + self.mon2.evol_line
 
     @property
     def total_species_evolves_from(self) -> list[Fusion]:
