@@ -561,7 +561,7 @@ class RPSearchComplex(Complex[Member]):
     async def mobile_pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
-    @button(label="New Ping", emoji="\N{DESKTOP COMPUTER}", style=ButtonStyle.blurple, row=4)
+    @button(label="New Ping", emoji="\N{DESKTOP COMPUTER}", style=ButtonStyle.blurple, row=4, disabled=True)
     async def pinging(self, ctx: Interaction, btn: Button):
         await self.method(ctx, btn)
 
