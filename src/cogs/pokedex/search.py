@@ -392,6 +392,8 @@ class OCGroupByEvoLine(OCGroupBy):
                         mon = mon.first_evo
                     else:
                         continue
+                else:
+                    mon = mon.first_evo
                 data.setdefault(mon.name, set())
                 data[mon.name].add(oc)
 
