@@ -351,6 +351,35 @@ class OCGroupByKind(OCGroupBy):
         return {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
 
 
+class OCGroupByShape(OCGroupBy):
+    @classmethod
+    def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        data: dict[str, set[Character]] = {}
+        for oc in ocs:
+            if isinstance(species := oc.species, Fusion):
+                mon1, mon2 = species.mon1.shape, species.mon2.shape
+                data.setdefault(mon1, set())
+                data.setdefault(mon2, set())
+                data[mon1].add(oc)
+                data[mon2].add(oc)
+            elif mon := species:
+                if isinstance(species, (CustomMega, Variant)):
+                    mon = species.base.shape
+                elif isinstance(species, Fakemon):
+                    if mon := species.species_evolves_from:
+                        mon = mon.shape
+                    else:
+                        continue
+                else:
+                    mon = mon.shape
+
+                if mon:
+                    data.setdefault(mon, set())
+                    data[mon].add(oc)
+
+        return data
+
+
 class OCGroupByAge(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):

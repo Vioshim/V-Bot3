@@ -10781,7 +10781,7 @@
 	{
 		"id": "BRAVIARYHISUI",
 		"name": "Braviary Hisui",
-		"shape": "",
+		"shape": "Wings",
 		"base_image": "https://www.serebii.net/swordshield/pokemon/628-h.png",
 		"base_image_shiny": "https://www.serebii.net/Shiny/SWSH/628-h.png",
 		"female_image": "https://www.serebii.net/swordshield/pokemon/628-h.png",

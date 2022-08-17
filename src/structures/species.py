@@ -703,6 +703,8 @@ class Fusion(Species):
         item1 = self.mon1.evolves_to
         item2 = self.mon2.evolves_to
         self.evolves_to = frozenset(zip(item1, item2))
+        if mon1.shape == mon2.shape:
+            self.shape = mon1.shape
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
             self.evolves_from = item1, item2
 
