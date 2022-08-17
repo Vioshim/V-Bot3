@@ -393,7 +393,7 @@ class OCGroupByEvoLine(OCGroupBy):
                     else:
                         continue
                 data.setdefault(mon.name, set())
-                data[mon.name].add(ocs)
+                data[mon.name].add(oc)
 
         return data
 
