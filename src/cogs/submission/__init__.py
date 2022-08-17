@@ -265,8 +265,7 @@ class Submission(commands.Cog):
                     kwargs[word] = [file]
 
             if oc.id:
-                if thread.archived:
-                    await thread.edit(archived=False)
+                thread = await thread.edit(archived=False)
                 msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                 word = "modified"
             else:
