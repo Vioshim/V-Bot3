@@ -36,7 +36,10 @@ class MoveComplex(Complex[Move]):
         max_values: int = 6,
         choices: set[Move] = None,
     ):
-        total = sorted(moves, key=lambda x: (x.type.id or 0) if isinstance(x, Move) else 0)
+        total = sorted(
+            moves,
+            key=lambda x: x.type.name if isinstance(x, Move) else getattr(x, "name", str(x)),
+        )
         max_values = min(max_values, len(total))
         super(MoveComplex, self).__init__(
             member=member,

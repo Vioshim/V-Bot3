@@ -5,7 +5,7 @@ description = ""
 authors = ["Vioshim <Krangelj@unicartagena.edu.co>"]
 
 [tool.poetry.dependencies]
-python = "3.10.5"
+python = "3.10.6"
 pyright = "^0.0.13"
 beautifulsoup4 = "^4.10.0"
 pyaml = "^21.10.1"
