@@ -327,8 +327,6 @@ class SpeciesField(TemplateField):
                     oc.species = choices[0]
                     oc.abilities &= oc.species.abilities
 
-        oc.image = oc.image or oc.default_image
-
         if species := oc.species:
             progress.add(cls.name)
             moves = species.movepool()
