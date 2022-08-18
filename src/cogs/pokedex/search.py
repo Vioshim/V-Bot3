@@ -143,13 +143,30 @@ class MoveTransformer(Transformer):
 MoveArg = Transform[Move, MoveTransformer]
 
 
+class ABCTransformer(Transformer):
+    async def on_submit(self, ctx: Interaction, value: str) -> list[Choice[str]]:
+        return []
+
+    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
+        items = await self.on_submit(ctx, value)
+        if options := process.extract(
+            value,
+            choices=items,
+            limit=25,
+            processor=lambda x: x.name,
+            score_cutoff=60,
+        ):
+            return [x[0] for x in options]
+        return items[:25]
+
+
 class SpeciesTransformer(Transformer):
     async def transform(self, ctx: Interaction, value: Optional[str]):
         value = value or ""
         cog = ctx.client.get_cog("Submission")
         if value.isdigit() and (oc := cog.ocs.get(int(value))):
             return oc
-        mon = Species.from_ID(value)
+        mon = Species.from_ID(value) or Species.single_deduce(value)
         if not mon:
             raise ValueError(f"Species {value!r} not found")
         return mon
@@ -170,9 +187,11 @@ class SpeciesTransformer(Transformer):
         elif kind := Kind.associated(ctx.namespace.kind):
             filters.append(lambda x: x.kind == kind if isinstance(x, Character) else isinstance(x, kind.value))
             mons = kind.all() or mons
+
         if member := ctx.namespace.member:
             ocs1 = {x.species for x in cog.ocs.values() if x.author == member.id}
             filters.append(lambda x: x.author == member.id if isinstance(x, Character) else x in ocs1)
+
         if location := ctx.namespace.location:
 
             def foo2(oc: Character) -> bool:
@@ -181,10 +200,13 @@ class SpeciesTransformer(Transformer):
 
             ocs2 = {x.species for x in filter(foo2, cog.ocs.values())}
             filters.append(lambda x: foo2(x) if isinstance(x, Character) else x in ocs2)
+
         if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
             filters.append(lambda x: mon_type in x.types)
+
         if (abilities := ctx.namespace.abilities) and (ability := Ability.from_ID(abilities)):
             filters.append(lambda x: ability in x.abilities)
+
         if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
             filters.append(lambda x: move in x.movepool)
 
@@ -198,6 +220,8 @@ class SpeciesTransformer(Transformer):
 
 
 class DefaultSpeciesTransformer(Transformer):
+    cache: dict = {}
+
     async def transform(self, _: Interaction, value: Optional[str]):
         item = Species.single_deduce(value)
         if not item:
@@ -215,6 +239,7 @@ class DefaultSpeciesTransformer(Transformer):
                     if isinstance(x.species, Fusion) and fused in x.species.bases
                 }
             )
+
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:
@@ -252,7 +277,7 @@ class TypingTransformer(Transformer):
             raise ValueError(f"Typing {item!r} not found")
         return item
 
-    async def autocomplete(self, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         items = list(Typing.all())
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
