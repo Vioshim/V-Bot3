@@ -485,14 +485,7 @@ class Submission(commands.Cog):
             if not (member := channel.guild.get_member(author)):
                 msg_id = 0
 
-            try:
-                message = await channel.fetch_message(msg_id)
-            except NotFound:
-                message = await channel.send(f"<@{author}>", allowed_mentions=AllowedMentions(users=True))
-                await db.replace_one(data, data | {"id": message.id})
-            else:
-                if not character.image_url and (image := message.embeds[0].image):
-                    character.image_url = image.url
+            message = PartialMessage(channel=channel, id=msg_id)
 
             view = CreationOCView(
                 bot=self.bot,
@@ -502,7 +495,19 @@ class Submission(commands.Cog):
                 template=template,
                 progress=progress,
             )
-            view.message = await message.edit(view=view, embeds=view.embeds)
+
+            try:
+                view.message = message = await message.edit(view=view, embeds=view.embeds)
+                if not character.image_url and (image := message.embeds[0].image):
+                    character.image_url = image.url
+            except NotFound:
+                view.message = message = await channel.send(
+                    f"<@{author}>",
+                    view=view,
+                    embeds=view.embeds,
+                    allowed_mentions=AllowedMentions(users=True),
+                )
+                await db.replace_one(data, data | {"id": message.id})
 
     @commands.Cog.listener()
     async def on_ready(self):
