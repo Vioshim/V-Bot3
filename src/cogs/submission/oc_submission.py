@@ -934,6 +934,7 @@ class CreationOCView(Basic):
         if self.oc.id and self.oc.thread:
             if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
                 channel = await ctx.guild.fetch_channel(self.oc.thread)
+            await channel.edit(archived=False)
             msg = PartialMessage(channel=channel, id=self.oc.id)
             await msg.delete(delay=0)
         await self.delete(ctx)
