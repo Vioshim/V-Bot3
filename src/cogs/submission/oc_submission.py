@@ -14,6 +14,7 @@
 
 from abc import ABC, abstractmethod
 from enum import IntEnum, auto
+from http.client import HTTPException
 from typing import Optional
 
 from discord import (
@@ -897,7 +898,10 @@ class CreationOCView(Basic):
         elif message := self.message:
             if not self.message.flags.ephemeral:
                 message = PartialMessage(channel=self.message.channel, id=self.message.id)
-            m = await message.edit(embeds=embeds, view=self, attachments=files)
+            try:
+                m = await message.edit(embeds=embeds, view=self, attachments=files)
+            except HTTPException:
+                m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
         else:
             m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
 

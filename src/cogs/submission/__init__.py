@@ -498,7 +498,8 @@ class Submission(commands.Cog):
             )
 
             try:
-                view.message = message = await message.edit(view=view, embeds=view.embeds)
+                message = await message.edit(view=view, embeds=view.embeds)
+                view.message = message
                 if not character.image_url and (image := message.embeds[0].image):
                     character.image_url = image.url
             except NotFound:
