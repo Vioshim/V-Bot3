@@ -896,8 +896,12 @@ class CreationOCView(Basic):
         if not resp.is_done():
             await resp.edit_message(embeds=embeds, view=self, attachments=files)
             m = await ctx.original_response()
+        elif message := self.message:
+            if not self.message.flags.ephemeral:
+                message = PartialMessage(channel=self.message.channel, id=self.message.id)
+            m = await message.edit(embeds=embeds, view=self, attachments=files)
         else:
-            m = await self.message.edit(embeds=embeds, view=self, attachments=files)
+            m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
 
         if files and m.embeds[0].image.proxy_url:
             self.oc.image = m.embeds[0].image.proxy_url

@@ -469,7 +469,7 @@ class Submission(commands.Cog):
         await PartialMessage(channel=channel, id=1005387453055639612).edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
-    async def load_saved_submssions(self):
+    async def load_saved_submissions(self):
         db = self.bot.mongo_db("OC Creation")
         channel = self.bot.get_channel(852180971985043466)
         for data in await db.find({}).to_list(length=None):
@@ -488,7 +488,7 @@ class Submission(commands.Cog):
             try:
                 message = await channel.fetch_message(msg_id)
             except NotFound:
-                message = await channel.send(member.mention, allowed_mentions=AllowedMentions(users=True))
+                message = await channel.send(f"<@{author}>", allowed_mentions=AllowedMentions(users=True))
                 await db.replace_one(data, data | {"id": message.id})
             else:
                 if not character.image_url and (image := message.embeds[0].image):
@@ -507,7 +507,7 @@ class Submission(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.load_profiles()
-        await self.load_saved_submssions()
+        await self.load_saved_submissions()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
