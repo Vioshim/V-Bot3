@@ -169,10 +169,9 @@ class SubmissionView(View):
         try:
             cog.ignore |= users
             view = CreationOCView(ctx.client, ctx, user)
-            await view.send()
+            await view.send(ephemeral=True)
             await view.wait()
         except Exception as e:
-
             await resp.send_message(str(e), ephemeral=True)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
         finally:

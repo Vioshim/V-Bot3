@@ -18,6 +18,7 @@ from http.client import HTTPException
 from typing import Optional
 
 from discord import (
+    AllowedMentions,
     ButtonStyle,
     Color,
     Embed,
@@ -29,7 +30,7 @@ from discord import (
     SelectOption,
     TextStyle,
 )
-from discord.ui import Button, Select, TextInput, button, select
+from discord.ui import Button, Select, TextInput, View, button, select
 from discord.utils import MISSING, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -472,16 +473,16 @@ class MovesetField(TemplateField):
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         if species := oc.species:
-            mon = Pokemon.from_ID("SMEARGLE")
+            mons = "SMEARGLE", "DITTO", "MEW"
 
-            if isinstance(species, Fusion):
-                condition = mon in species.bases
+            if isinstance(species, (Chimera, Fusion)):
+                condition = any(x.id in mons for x in species.bases)
             elif isinstance(species, Variant):
-                condition = mon == species.base
+                condition = species.base.id in mons
             elif isinstance(species, Fakemon):
-                condition = mon == species.species_evolves_from
+                condition = species.evolves_from in mons
             else:
-                condition = mon == species
+                condition = species.id in mons
 
             if value := ", ".join(x.name for x in oc.moveset if x.banned):
                 value = f"Banned Moves: {value}. "
@@ -507,15 +508,17 @@ class MovesetField(TemplateField):
         ephemeral: bool = False,
     ):
         moves = oc.total_movepool()
-        mon = Pokemon.from_ID("SMEARGLE")
-        if isinstance(oc.species, Fusion):
-            condition = mon in oc.species.bases
-        elif isinstance(oc.species, Variant):
-            condition = mon == oc.species.base
-        elif isinstance(oc.species, Fakemon):
-            condition = mon == oc.species.evolves_from
+
+        mons = "SMEARGLE", "DITTO", "MEW"
+
+        if isinstance(species := oc.species, (Chimera, Fusion)):
+            condition = any(x.id in mons for x in species.bases)
+        elif isinstance(species, Variant):
+            condition = species.base.id in mons
+        elif isinstance(species, Fakemon):
+            condition = species.evolves_from in mons
         else:
-            condition = mon == oc.species
+            condition = species.id in mons
 
         if condition or not moves:
             moves = Move.all()
@@ -936,6 +939,8 @@ class CreationOCView(Basic):
 
     async def send(self, *, ephemeral: bool = False):
         self.ephemeral = ephemeral
+        if not ephemeral:
+            self.remove_item(self.help)
         m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
         await self.upload()
         return m
@@ -965,6 +970,21 @@ class CreationOCView(Basic):
     @button(label="Close this Menu", row=2)
     async def cancel(self, ctx: Interaction, _: Button):
         await self.delete(ctx)
+
+    @button(label="Request Help", row=2)
+    async def help(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        channel = ctx.guild.get_channel(852180971985043466)
+        message = await channel.send(
+            self.user.mention,
+            allowed_mentions=AllowedMentions(users=True),
+        )
+        self.message = message
+        view = View()
+        view.add_item(Button(label="Go to Help", url=message.jump_url))
+        await resp.edit_message(view=view)
+        btn.disabled = True
+        await self.update(ctx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
     async def submit(self, ctx: Interaction, btn: Button):
