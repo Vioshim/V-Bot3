@@ -45,6 +45,7 @@ from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     _BEASTBOOST,
+    Chimera,
     CustomMega,
     Fakemon,
     Fusion,
@@ -79,6 +80,7 @@ class Template(IntEnum):
     CustomUltraBeast = auto()
     CustomMega = auto()
     Variant = auto()
+    Chimera = auto()
 
 
 class TemplateField(ABC):
@@ -275,9 +277,9 @@ class SpeciesField(TemplateField):
                 mon_total = UltraBeast.all()
             case Template.Mega:
                 mon_total = Mega.all()
-            case Template.Fusion:
+            case Template.Fusion | Template.Chimera:
                 mon_total = Species.all()
-                max_values = 2
+                max_values = 2 if template == Template.Fusion else 3
             case _:
                 mon_total = []
 
@@ -287,7 +289,11 @@ class SpeciesField(TemplateField):
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, max_values=max_values)
             async with view.send(ephemeral=ephemeral) as data:
                 choices.extend(data)
-                if len(choices) != max_values:
+
+                if not choices:
+                    return
+
+                if template != Template.Chimera and len(choices) != max_values:
                     return
 
         match template:
@@ -318,6 +324,8 @@ class SpeciesField(TemplateField):
             case Template.CustomMega:
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
+            case Template.Chimera:
+                oc.species = Chimera(choices)
             case Template.Fusion:
                 oc.species = Fusion(*choices)
             case Template.Legendary | Template.Mythical | Template.UltraBeast | Template.Mega:
@@ -390,7 +398,9 @@ class TypesField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fusion, Fakemon, Variant, CustomMega))
+        item = isinstance(oc.species, (Fakemon, Variant, CustomMega))
+        item |= isinstance(oc.species, (Fusion, Chimera)) and len(oc.species.possible_types) > 1
+        return item
 
     @classmethod
     async def on_submit(
@@ -402,7 +412,7 @@ class TypesField(TemplateField):
         ephemeral: bool = False,
     ):
         species = oc.species
-        if isinstance(species, Fusion):  # type: ignore
+        if isinstance(species, (Fusion, Chimera)):  # type: ignore
             values = species.possible_types
             view = Complex[set[Typing]](
                 member=ctx.user,
@@ -826,15 +836,14 @@ class CreationOCView(Basic):
             for x in Template
         ]
         self.fields.options.clear()
-        for item in TemplateField.all():
-            if item.check(self.oc):
-                emoji = "\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}"
-                description = item.evaluate(self.oc)
-                if not description:
-                    description = item.description
-                else:
-                    emoji = "\N{CROSS MARK}"
-                self.fields.add_option(label=item.name, description=description[:100], emoji=emoji)
+        for item in filter(lambda x: x.check(self.oc), TemplateField.all()):
+            emoji = "\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}"
+            description = item.evaluate(self.oc)
+            if not description:
+                description = item.description
+            else:
+                emoji = "\N{CROSS MARK}"
+            self.fields.add_option(label=item.name, description=description[:100], emoji=emoji)
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
@@ -860,6 +869,7 @@ class CreationOCView(Basic):
                     | Template.CustomLegendary
                     | Template.CustomMythical
                     | Template.CustomUltraBeast
+                    | Template.Chimera
                 ):
                     self.progress -= {"Special Ability"}
                     self.oc.sp_ability = None
