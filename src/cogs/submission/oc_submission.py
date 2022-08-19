@@ -402,7 +402,7 @@ class TypesField(TemplateField):
             if not items:
                 return "Chimera needs species."
 
-            mon_types = set.union(*items)
+            mon_types = frozenset.union(*items)
             if not oc.types.issubset(mon_types):
                 return f"Chimera requires from typings: {', '.join(x.name for x in mon_types)}."
 
