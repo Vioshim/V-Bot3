@@ -28,7 +28,14 @@ from src.structures.ability import Ability
 from src.structures.character import Character, Kind
 from src.structures.mon_typing import Typing
 from src.structures.move import Move
-from src.structures.species import CustomMega, Fakemon, Fusion, Species, Variant
+from src.structures.species import (
+    Chimera,
+    CustomMega,
+    Fakemon,
+    Fusion,
+    Species,
+    Variant,
+)
 from src.views.characters_view import CharactersView
 
 STANDARD = [
@@ -182,7 +189,7 @@ class SpeciesTransformer(Transformer):
             mons = {
                 (set(x.species.bases) - {fused}).pop()
                 for x in mons
-                if isinstance(x.species, Fusion) and fused in x.species.bases
+                if isinstance(x.species, (Fusion, Chimera)) and fused in x.species.bases
             }
         elif kind := Kind.associated(ctx.namespace.kind):
             filters.append(lambda x: x.kind == kind if isinstance(x, Character) else isinstance(x, kind.value))
@@ -236,7 +243,7 @@ class DefaultSpeciesTransformer(Transformer):
                 {
                     (set(x.species.bases) - {fused}).pop()
                     for x in cog.ocs.values()
-                    if isinstance(x.species, Fusion) and fused in x.species.bases
+                    if isinstance(x.species, (Fusion, Chimera)) and fused in x.species.bases
                 }
             )
 
@@ -381,12 +388,10 @@ class OCGroupByShape(OCGroupBy):
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         data: dict[str, set[Character]] = {}
         for oc in ocs:
-            if isinstance(species := oc.species, Fusion):
-                mon1, mon2 = species.mon1.shape, species.mon2.shape
-                data.setdefault(mon1, set())
-                data.setdefault(mon2, set())
-                data[mon1].add(oc)
-                data[mon2].add(oc)
+            if isinstance(species := oc.species, (Fusion, Chimera)):
+                for mon in species.bases:
+                    data.setdefault(mon.shape, set())
+                    data[mon.shape].add(oc)
             elif mon := species:
                 if isinstance(species, (CustomMega, Variant)):
                     mon = species.base.shape
@@ -431,12 +436,11 @@ class OCGroupByEvoLine(OCGroupBy):
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         data: dict[str, set[Character]] = {}
         for oc in ocs:
-            if isinstance(species := oc.species, Fusion):
-                mon1, mon2 = species.mon1.first_evo, species.mon2.first_evo
-                data.setdefault(mon1.name, set())
-                data.setdefault(mon2.name, set())
-                data[mon1.name].add(oc)
-                data[mon2.name].add(oc)
+            if isinstance(species := oc.species, (Fusion, Chimera)):
+                for mon in species.bases:
+                    mon = mon.first_evo.name
+                    data.setdefault(mon, set())
+                    data[mon].add(oc)
             elif species:
                 mon = species
                 if isinstance(species, (CustomMega, Variant)):
