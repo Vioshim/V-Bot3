@@ -579,7 +579,7 @@ class Chimera(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if _BEASTBOOST in self.abilities else 2
+        return 1
 
     @property
     def can_have_special_abilities(self) -> bool:
