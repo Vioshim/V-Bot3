@@ -439,7 +439,7 @@ class TypesField(TemplateField):
             single = True
         else:
             if isinstance(species, Chimera):
-                elements = [*{x.types for x in species.bases}]
+                elements = frozenset.union([*{x.types for x in species.bases}])
             else:
                 elements = Typing.all()
 
