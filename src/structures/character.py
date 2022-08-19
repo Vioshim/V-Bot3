@@ -33,6 +33,7 @@ from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
+    Chimera,
     CustomMega,
     Fakemon,
     Fusion,
@@ -60,6 +61,7 @@ class Kind(Enum):
     Mega = Mega
     Fusion = Fusion
     CustomMega = CustomMega
+    Chimera = Chimera
 
     @property
     def to_db(self) -> str:
@@ -82,6 +84,8 @@ class Kind(Enum):
                 return "FUSION"
             case self.CustomMega:
                 return "CUSTOM MEGA"
+            case self.Chimera:
+                return "CHIMERA"
 
     @classmethod
     def associated(cls, name: str) -> Optional[Kind]:
@@ -104,6 +108,8 @@ class Kind(Enum):
                 return cls.Fusion
             case "CUSTOM MEGA":
                 return cls.CustomMega
+            case "CHIMERA":
+                return cls.Chimera
 
     def all(self) -> frozenset[Species]:
         return self.value.all()
@@ -144,7 +150,9 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
-        if isinstance(self.species, (Fakemon, Variant)):
+        if isinstance(self.species, Chimera):
+            data["species"] = [x.id for x in self.species.bases]
+        elif isinstance(self.species, (Fakemon, Variant)):
             data["species"] = {
                 "f_name": self.species.name,
                 "f_types": [x.name for x in self.species.types],
@@ -169,9 +177,13 @@ class Character:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         species: Optional[dict[str, str]] = dct.get("species")
-        if isinstance(species, dict):
+        if isinstance(species, list):
+            dct["species"] = Chimera(species)
+        elif isinstance(species, dict):
             data = {k.removeprefix("f_"): v for k, v in species.items()}
-            dct["species"] = Variant(**data) if "base" in data else Fakemon(**data)
+            species = data.get("species", "")
+            species = Variant(**data) if "base" in data else Fakemon(**data)
+            dct["species"] = species
         return Character(**dct)
 
     def __post_init__(self):
@@ -409,12 +421,10 @@ class Character:
 
         if self.species and self.species.name:
             match self.kind:
-                case Kind.Fusion:
-                    name1, name2 = self.species.name.split("/")
-                    c_embed.add_field(
-                        name="Fusion Species",
-                        value=f"> **•** {name1}\n> **•** {name2}".title(),
-                    )
+                case Kind.Fusion | Kind.Chimera:
+                    names = self.species.name.split("/")
+                    if name := "\n".join(f"> **•** {name}" for name in names).title():
+                        c_embed.add_field(name=f"{self.kind.name} Species", value=name[:1024])
                 case Kind.Fakemon:
                     if evolves_from := self.evolves_from:
                         name = f"Fakemon Evolution - {evolves_from.name}"
@@ -596,15 +606,23 @@ class Character:
             data = dict(item)
             kind = Kind.associated(data.pop("kind", "COMMON"))
 
-            species = Species.from_ID(data.pop("species", None))
             mon_type = Typing.deduce_many(*data.pop("types"))
+
+            if kind == Kind.Chimera:
+                key = data.pop("species", "")
+                species = Chimera(key.split("_"))
+            else:
+                species = Species.from_ID(data.pop("species", None))
+
             if fakemon_data := Fakemon.from_record(data.pop("fakemon")):
                 if kind == Kind.Variant:
                     species = Variant(base=species, name=fakemon_data.name)
                 elif kind == Kind.Fakemon:
                     species = fakemon_data
-            if mon_type and isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+
+            if mon_type and isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                 species.types = mon_type
+
             movepool = data.pop("movepool")
 
             if species:

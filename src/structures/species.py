@@ -17,6 +17,8 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from copy import copy
 from dataclasses import asdict, dataclass, field
+from enum import Enum
+from itertools import combinations
 from json import JSONDecoder, JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional
 
@@ -42,26 +44,34 @@ __all__ = (
     "Pokemon",
     "CustomMega",
     "Variant",
+    "Chimera",
     "ALL_SPECIES",
     "SPECIES_BY_NAME",
 )
 
+
+class Colors(Enum):
+    Green = 0x64D364
+    Purple = 0xC183C1
+    White = 0xFFF
+    Blue = 0x94DBEE
+    Red = 0xEC8484
+    Brown = 0xC96
+    Gray = 0xD1D1E0
+    Pink = 0xF4BDC9
+    Black = 0xBBB
+    Yellow = 0xFF9
+
+
 ALL_SPECIES = frozendict()
 SPECIES_BY_NAME = frozendict()
-COLORS = {
-    "Green": 0x64D364,
-    "Purple": 0xC183C1,
-    "White": 0xFFF,
-    "Blue": 0x94DBEE,
-    "Red": 0xEC8484,
-    "Brown": 0xC96,
-    "Gray": 0xD1D1E0,
-    "Pink": 0xF4BDC9,
-    "Black": 0xBBB,
-    "Yellow": 0xFF9,
-}
 _BEASTBOOST = Ability.from_ID(item="BEASTBOOST")
-PHRASES = {"GALAR": "Galarian", "HISUI": "Hisuian", "ALOLA": "Alolan", "KANTO": "Kantoian"}
+PHRASES = {
+    "GALAR": "Galarian",
+    "HISUI": "Hisuian",
+    "ALOLA": "Alolan",
+    "KANTO": "Kantoian",
+}
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -498,6 +508,80 @@ class Fakemon(Species):
 
 
 @dataclass(unsafe_hash=True, slots=True)
+class Chimera(Species):
+    """
+    This class Represents a Chimera
+    """
+
+    bases: frozenset[Species] = field(default_factory=frozenset)
+
+    def __init__(self, bases: frozenset[Species]):
+        bases = {o for x in bases if (o := Species.from_ID(x) if isinstance(x, str) else x)}
+        self.bases = frozenset(bases)
+        amount = len(bases) or 1
+        abilities = set.union(*[x.abilities for x in bases])
+        movepool = Movepool(egg=set.intersection(*[set(base.movepool()) for base in bases]))
+
+        super(Chimera, self).__init__(
+            id="_".join(sorted(x.id for x in bases)),
+            name="/".join(sorted(x.name for x in bases)),
+            height=round(sum(x.height for x in bases) / amount),
+            weight=round(sum(x.weight for x in bases) / amount),
+            HP=round(sum(x.HP for x in bases) / amount),
+            ATK=round(sum(x.ATK for x in bases) / amount),
+            DEF=round(sum(x.DEF for x in bases) / amount),
+            SPA=round(sum(x.SPA for x in bases) / amount),
+            SPD=round(sum(x.SPD for x in bases) / amount),
+            SPE=round(sum(x.SPE for x in bases) / amount),
+            banned=any(x.banned for x in bases),
+            movepool=movepool,
+            abilities=abilities,
+        )
+
+        shapes = {x.shape for x in bases}
+        if len(shapes) == 1:
+            self.shape = shapes.pop()
+
+    def __eq__(self, other: Fusion):
+        if isinstance(other, Chimera):
+            return self.bases == other.bases
+        return super(Chimera, self).__eq__(other)
+
+    @property
+    def possible_types(self):
+        """This returns a list of valid types for the pokemon
+
+        Returns
+        -------
+        frozenset[frozenset[Typing]]
+            List of sets (valid types)
+        """
+        elements = [*{x.types for x in self.bases}]
+        if elements and all(x == elements[0] for x in elements):
+            return frozenset({elements[0]})
+        elements = set[Typing].union(*elements)
+        items = [frozenset({x}) for x in elements]
+        items.extend(combinations(elements, 2))
+        return frozenset(items)
+
+    @property
+    def evol_line(self):
+        return []
+
+    @property
+    def requires_image(self) -> bool:
+        return True
+
+    @property
+    def max_amount_abilities(self) -> int:
+        return 1 if _BEASTBOOST in self.abilities else 2
+
+    @property
+    def can_have_special_abilities(self) -> bool:
+        return False
+
+
+@dataclass(unsafe_hash=True, slots=True)
 class CustomMega(Species):
     """
     This class Represents a Custom Mega
@@ -707,10 +791,6 @@ class Fusion(Species):
             self.shape = mon1.shape
         if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
             self.evolves_from = item1, item2
-
-    def __post_init__(self):
-        super(Fusion, self).__post_init__()
-        self.abilities = self.mon1.abilities | self.mon2.abilities
 
     def __eq__(self, other: Fusion):
         if isinstance(other, Fusion):
