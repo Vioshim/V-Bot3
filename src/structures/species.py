@@ -318,7 +318,7 @@ class Species(metaclass=ABCMeta):
                 return elements[0]
 
     @classmethod
-    def any_deduce(cls, item: str):
+    def any_deduce(cls, item: str, chimera: bool = False):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
 
@@ -333,6 +333,8 @@ class Species(metaclass=ABCMeta):
             result
         """
         if items := set(cls.deduce(item)):
+            if chimera:
+                return Chimera(items)
             if len(items) == 2:
                 mon1, mon2 = items
                 return Fusion(mon1=mon1, mon2=mon2)
@@ -545,7 +547,7 @@ class Chimera(Species):
         if len(shapes) == 1:
             self.shape = shapes.pop()
 
-    def __eq__(self, other: Fusion):
+    def __eq__(self, other: Chimera):
         if isinstance(other, Chimera):
             return self.bases == other.bases
         return super(Chimera, self).__eq__(other)
@@ -582,6 +584,26 @@ class Chimera(Species):
     @property
     def can_have_special_abilities(self) -> bool:
         return False
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[Chimera]:
+        """This is a function which allows to obtain the species given
+        an ID or multiple values.
+
+        Parameters
+        ----------
+        item : str
+            Item to look for
+        fusions_allowed : bool, optional
+            If fusions should be used
+
+        Returns
+        -------
+        Optional[Chimera]
+            result
+        """
+        if isinstance(mon := Species.any_deduce(item, chimera=True), cls):
+            return mon
 
 
 @dataclass(unsafe_hash=True, slots=True)

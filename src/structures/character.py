@@ -850,6 +850,8 @@ class Character:
             data["species"] = species
         elif species := Fusion.deduce(data.pop("fusion", "")):
             data["species"] = species
+        elif chimera := Chimera.deduce(data.pop("chimera", "")):
+            data["species"] = chimera
         else:
             aux = common_pop_get(data, "species", "pokemon") or ""
             method = Species.any_deduce if "," in aux else Species.single_deduce
@@ -862,7 +864,7 @@ class Character:
                 )
 
         if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                 species.types = types
             elif species.types != types:
                 types_txt = "/".join(i.name for i in types)
@@ -875,7 +877,7 @@ class Character:
             if abilities := Ability.deduce_many(*ability_info):
                 data["abilities"] = abilities
 
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega)):
+            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                 species.abilities = abilities
             elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
                 species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")

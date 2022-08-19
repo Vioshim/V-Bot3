@@ -254,6 +254,8 @@ class SpeciesField(TemplateField):
             return "Fakemon evolutions from this kind of Pokemon aren't possible."
         if isinstance(species, Fusion) and all(isinstance(x, CORE) for x in species.bases):
             return "Fusions require at least one common Pokemon."
+        if isinstance(species, Chimera) and not (1 <= len(species.bases) <= 3):
+            return "Chimeras require to have 1-3 species."
 
     @classmethod
     async def on_submit(
@@ -338,7 +340,7 @@ class SpeciesField(TemplateField):
 
         if species := oc.species:
             progress.add(cls.name)
-            moves = species.movepool()
+            moves = species.total_movepool()
             if not oc.moveset and len(moves) <= 6:
                 oc.moveset = frozenset(moves)
             if not oc.abilities and len(species.abilities) == 1:
@@ -395,6 +397,14 @@ class TypesField(TemplateField):
             if oc.types not in mon_types:
                 name = ", ".join("/".join(y.name for y in x) for x in mon_types)
                 return f"Possible Typings: {name}"
+        elif isinstance(species, Chimera):
+            items = [*{x.types for x in species.bases}]
+            if not items:
+                return "Chimera needs species."
+
+            mon_types = set.union(*items)
+            if not oc.types.issubset(mon_types):
+                return f"Chimera requires from typings: {', '.join(x.name for x in mon_types)}."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -412,7 +422,7 @@ class TypesField(TemplateField):
         ephemeral: bool = False,
     ):
         species = oc.species
-        if isinstance(species, (Fusion, Chimera)):  # type: ignore
+        if isinstance(species, Fusion):
             values = species.possible_types
             view = Complex[set[Typing]](
                 member=ctx.user,
@@ -428,10 +438,15 @@ class TypesField(TemplateField):
             )
             single = True
         else:
+            if isinstance(species, Chimera):
+                elements = [*{x.types for x in species.bases}]
+            else:
+                elements = Typing.all()
+
             view = Complex[Typing](
                 member=ctx.user,
                 target=ctx,
-                values=Typing.all(),
+                values=elements,
                 max_values=2,
                 timeout=None,
                 parser=lambda x: (x.name, f"Adds the typing {x.name}"),
@@ -444,11 +459,7 @@ class TypesField(TemplateField):
             )
             single = False
 
-        async with view.send(
-            title="Select Typing",
-            single=single,
-            ephemeral=ephemeral,
-        ) as types:
+        async with view.send(title="Select Typing", single=single, ephemeral=ephemeral) as types:
             if types:
                 species.types = frozenset(types)
                 progress.add(cls.name)
