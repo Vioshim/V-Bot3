@@ -594,8 +594,6 @@ class Chimera(Species):
         ----------
         item : str
             Item to look for
-        fusions_allowed : bool, optional
-            If fusions should be used
 
         Returns
         -------
@@ -915,8 +913,6 @@ class Fusion(Species):
         ----------
         item : str
             Item to look for
-        fusions_allowed : bool, optional
-            If fusions should be used
 
         Returns
         -------
