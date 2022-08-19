@@ -90,6 +90,15 @@ channels = {
     860590339327918100: "Information",
 }
 
+roles = {
+    "Storyline": 805878418225889280,
+    "Mission": 805878418225889280,
+    "Random Fact": 805878418225889280,
+    "Poll": 967980442919784488,
+    "Question": 967980442919784488,
+    "Suggestion": 967980442919784488,
+}
+
 MSG_INFO = {
     719343092963999804: 913555643699458088,
     952517983786377287: 952617304095592478,
@@ -117,6 +126,7 @@ PING_ROLES = {
     "Partners": 725582056620294204,
     "Moderation": 720296534742138880,
     "Registered": 719642423327719434,
+    "Supporters": 967980442919784488,
     "No": 0,
 }
 
@@ -130,10 +140,17 @@ class AnnouncementModal(Modal):
     def __init__(self, *, word: str, name: str, **kwargs):
         super(AnnouncementModal, self).__init__(title=word, timeout=None)
         self.word = word
+
+        if role := roles.get(word):
+            kwargs["content"] = f"<@&{role}>"
+            kwargs["allowed_mentions"] = AllowedMentions(roles=True)
+            title = f"{word} (Pinging)"
+        else:
+            title = word
         self.kwargs = kwargs
         self.thread_name = TextInput(
             label="Title",
-            placeholder=word,
+            placeholder=title,
             default=name,
             required=True,
             max_length=100,
@@ -215,10 +232,7 @@ class AnnouncementView(View):
         modal = AnnouncementModal(word=word, name=name, **self.kwargs)
         await resp.send_modal(modal)
         await modal.wait()
-        try:
-            await ctx.message.delete()
-        except DiscordException:
-            pass
+        await ctx.message.delete(delay=0)
         self.stop()
 
     @button(label="Cancel", style=ButtonStyle.blurple, emoji=SETTING_EMOJI)

@@ -207,13 +207,19 @@ class RoleSelect(View):
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=4,
+        max_values=6,
         options=[
             SelectOption(
-                label="Radio",
+                label="RP Events",
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
                 value="805878418225889280",
-                description="Get pinged each time Reshy streams in radio.",
+                description="Get informed of RP Events, Missions and Storylines.",
+            ),
+            SelectOption(
+                label="Supporter",
+                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
+                value="967980442919784488",
+                description="Get pings when people need a hand.",
             ),
             SelectOption(
                 label="Announcements",
