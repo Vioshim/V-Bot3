@@ -472,27 +472,27 @@ class MovesetField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if species := oc.species:
-            mons = "SMEARGLE", "DITTO", "MEW"
+        species = oc.species
 
-            if isinstance(species, (Chimera, Fusion)):
-                condition = any(x.id in mons for x in species.bases)
-            elif isinstance(species, Variant):
-                condition = species.base.id in mons
-            elif isinstance(species, Fakemon):
-                condition = species.evolves_from in mons
-            else:
-                condition = species.id in mons
+        mons = "SMEARGLE", "DITTO", "MEW"
 
-            if value := ", ".join(x.name for x in oc.moveset if x.banned):
-                value = f"Banned Moves: {value}. "
+        if value := ", ".join(x.name for x in oc.moveset if x.banned):
+            value = f"Banned Moves: {value}. "
 
-            if not condition:
-                moves = oc.total_movepool()
-                if items := ", ".join(x.name for x in oc.moveset if x not in moves):
-                    value += f"Not in Movepool: {items}"
+        if not any(
+            (
+                isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
+                isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
+                isinstance(species, Variant) and species.base.id in mons,
+                isinstance(species, Fakemon) and species.evolves_from in mons,
+                isinstance(species, Species) and species.id in mons,
+            )
+        ):
+            moves = oc.total_movepool()
+            if items := ", ".join(x.name for x in oc.moveset if x not in moves):
+                value += f"Not in Movepool: {items}"
 
-            return value or None
+        return value or None
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -508,19 +508,20 @@ class MovesetField(TemplateField):
         ephemeral: bool = False,
     ):
         moves = oc.total_movepool()
+        species = oc.species
 
         mons = "SMEARGLE", "DITTO", "MEW"
 
-        if isinstance(species := oc.species, (Chimera, Fusion)):
-            condition = any(x.id in mons for x in species.bases)
-        elif isinstance(species, Variant):
-            condition = species.base.id in mons
-        elif isinstance(species, Fakemon):
-            condition = species.evolves_from in mons
-        else:
-            condition = species.id in mons
-
-        if condition or not moves:
+        if any(
+            (
+                isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
+                isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
+                isinstance(species, Variant) and species.base.id in mons,
+                isinstance(species, Fakemon) and species.evolves_from in mons,
+                isinstance(species, Species) and species.id in mons,
+                not moves and not isinstance(species, Chimera),
+            )
+        ):
             moves = Move.all()
 
         moves = {x for x in moves if not x.banned}
