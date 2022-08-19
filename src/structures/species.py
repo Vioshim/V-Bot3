@@ -523,7 +523,7 @@ class Chimera(Species):
         if abilities := [set(x.abilities) for x in bases]:
             abilities = set.union(*abilities)
 
-        movepool = Movepool(egg=set.intersection(*[set(base.movepool()) for base in bases]))
+        movepool = Movepool(egg=set.intersection(*[set(base.total_movepool()) for base in bases]))
 
         super(Chimera, self).__init__(
             id="_".join(sorted(x.id for x in bases)),
