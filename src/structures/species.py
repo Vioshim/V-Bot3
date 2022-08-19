@@ -519,7 +519,10 @@ class Chimera(Species):
         bases = {o for x in bases if (o := Species.from_ID(x) if isinstance(x, str) else x)}
         self.bases = frozenset(bases)
         amount = len(bases) or 1
-        abilities = set.union(*[set(x.abilities) for x in bases])
+
+        if abilities := [set(x.abilities) for x in bases]:
+            abilities = set.union(*abilities)
+
         movepool = Movepool(egg=set.intersection(*[set(base.movepool()) for base in bases]))
 
         super(Chimera, self).__init__(
@@ -559,7 +562,7 @@ class Chimera(Species):
         elements = [*{x.types for x in self.bases}]
         if elements and all(x == elements[0] for x in elements):
             return frozenset({elements[0]})
-        elements = set[Typing].union(*elements)
+        elements = frozenset[Typing].union(*elements)
         items = [frozenset({x}) for x in elements]
         items.extend(combinations(elements, 2))
         return frozenset(items)
