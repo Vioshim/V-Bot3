@@ -462,7 +462,13 @@ class Complex(Simple[_T]):
     def current_choices(self) -> set[_T]:
         sct = self.select_choice
         chunk = self.current_chunk
-        return {chunk[int(index)] for index in sct.values}
+        data = set()
+        for index in sct.values:
+            try:
+                data.add(chunk[int(index)])
+            except IndexError:
+                continue
+        return data
 
     @property
     def current_choice(self) -> Optional[_T]:

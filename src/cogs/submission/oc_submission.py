@@ -14,7 +14,6 @@
 
 from abc import ABC, abstractmethod
 from enum import IntEnum, auto
-from http.client import HTTPException
 from typing import Optional
 
 from discord import (
@@ -23,6 +22,7 @@ from discord import (
     Color,
     Embed,
     File,
+    HTTPException,
     Interaction,
     InteractionResponse,
     Member,
