@@ -571,7 +571,7 @@ class AbilitiesField(TemplateField):
         if not (1 <= len(oc.abilities) <= oc.max_amount_abilities):
             return f"Abilities, Min: 1, Max: {oc.max_amount_abilities}"
 
-        if isinstance(oc.species, (Fakemon, Variant)):
+        if isinstance(oc.species, (Fakemon, Variant, CustomMega)):
             return None
 
         if items := ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities):
