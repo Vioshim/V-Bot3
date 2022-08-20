@@ -861,7 +861,7 @@ class CreationOCView(Basic):
                 emoji = "\N{CROSS MARK}"
             self.fields.add_option(label=item.name, description=description[:100], emoji=emoji)
 
-        self.fields.options.sort(key=lambda x: x.emoji != "\N{CROSS MARK}")
+        self.fields.options.sort(key=lambda x: str(x.emoji) != "\N{CROSS MARK}")
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
