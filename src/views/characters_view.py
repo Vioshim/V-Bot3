@@ -43,7 +43,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import MOBILE_EMOJI, WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
 
 setLoggerClass(ColoredLogger)
@@ -168,41 +168,50 @@ class PingView(View):
             return False
         return True
 
-    async def ping_method(self, ctx: Interaction, mobile: bool = False):
+    async def ping_method(self, ctx: Interaction, desktop: bool = False):
         member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         if ctx.user != member:
             modal = PingModal(oc=self.oc, reference=self.reference)
-            if mobile:
+            if desktop:
+                db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+                items: dict[Role, str] = {
+                    role.name: str(item["id"])
+                    async for item in db.find({"member": self.oc.author})
+                    if (role := ctx.guild.get_role(item["role"]))
+                }
+                if items := list(items.items())[:25]:
+                    for k, v in items:
+                        modal.ping_mode.add_option(
+                            label=k,
+                            value=v,
+                            description=f"Pinging in {k} thread"[:100],
+                            emoji=PING_EMOJI,
+                        )
+                else:
+                    modal.remove_item(modal.ping_mode)
+            else:
                 modal.remove_item(modal.ping_mode)
-            db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
-            items: dict[Role, str] = {
-                role.name: str(item["id"])
-                async for item in db.find({"member": self.oc.author})
-                if (role := ctx.guild.get_role(item["role"]))
-            }
-            for k, v in items.items():
-                modal.ping_mode.add_option(
-                    label=k,
-                    value=v,
-                    description=f"Pinging in {k} thread"[:100],
-                    emoji=PING_EMOJI,
-                )
             await resp.send_modal(modal)
         else:
             await resp.send_message("You can't ping yourself.", ephemeral=True)
 
-    @button(emoji=PartialEmoji(name="StatusMobileOld", id=716828817796104263))
-    async def ping1(self, ctx: Interaction, _: Button) -> None:
-        await self.ping_method(ctx, mobile=True)
+    @button(
+        label="OC RP Ping (Mobile)",
+        style=ButtonStyle.blurple,
+        emoji=MOBILE_EMOJI,
+    )
+    async def ping1(self, ctx: Interaction, btn: Button) -> None:
+        await self.ping_method(ctx, desktop=btn.disabled)
 
     @button(
-        label="Ping to RP with the OC",
+        label="OC RP Ping (Desktop)",
         style=ButtonStyle.blurple,
         emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
+        disabled=True,
     )
-    async def ping2(self, ctx: Interaction, _: Button) -> None:
-        await self.ping_method(ctx)
+    async def ping2(self, ctx: Interaction, btn: Button) -> None:
+        await self.ping_method(ctx, desktop=btn.disabled)
 
     @button(
         label="Delete Character",
