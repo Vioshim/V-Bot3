@@ -26,6 +26,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    NotFound,
     PartialMessage,
     SelectOption,
     TextStyle,
@@ -925,7 +926,7 @@ class CreationOCView(Basic):
                 message = PartialMessage(channel=self.message.channel, id=self.message.id)
             try:
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
-            except HTTPException:
+            except (HTTPException, NotFound):
                 m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
         else:
             m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
