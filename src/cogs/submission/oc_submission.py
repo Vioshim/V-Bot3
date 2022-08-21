@@ -928,8 +928,13 @@ class CreationOCView(Basic):
                 message = PartialMessage(channel=self.message.channel, id=self.message.id)
             try:
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
-            except (HTTPException, NotFound):
-                m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
+            except (HTTPException, NotFound) as e:
+                match e.status:
+                    case 401:
+                        ctx.client.logger.exception("Exception in editing OC Creation View", exc_info=e)
+                        m = await self.help_method(ctx, embeds=embeds, view=self, files=files)
+                    case _:
+                        m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
         else:
             m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
 
@@ -955,6 +960,23 @@ class CreationOCView(Basic):
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
         await self.update(ctx)
 
+    async def help_method(self, ctx: Interaction, **kwargs):
+        resp: InteractionResponse = ctx.response
+        channel = ctx.guild.get_channel(852180971985043466)
+        message = await channel.send(
+            self.user.mention,
+            allowed_mentions=AllowedMentions(users=True),
+            **kwargs,
+        )
+        self.message = message
+        if not resp.is_done():
+            view = View()
+            view.add_item(Button(label="Go to Help", url=message.jump_url))
+            await resp.edit_message(view=view)
+        self.help.disabled = True
+        await self.update(ctx)
+        return message
+
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
         if (m := self.message) and not m.flags.ephemeral:
@@ -976,19 +998,8 @@ class CreationOCView(Basic):
         await self.delete(ctx)
 
     @button(label="Request Help", row=2)
-    async def help(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        channel = ctx.guild.get_channel(852180971985043466)
-        message = await channel.send(
-            self.user.mention,
-            allowed_mentions=AllowedMentions(users=True),
-        )
-        self.message = message
-        view = View()
-        view.add_item(Button(label="Go to Help", url=message.jump_url))
-        await resp.edit_message(view=view)
-        btn.disabled = True
-        await self.update(ctx)
+    async def help(self, ctx: Interaction, _: Button):
+        await self.help_method(ctx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
     async def submit(self, ctx: Interaction, btn: Button):
