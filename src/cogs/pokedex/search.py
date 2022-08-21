@@ -26,7 +26,7 @@ from rapidfuzz import process
 from src.pagination.complex import Complex
 from src.structures.ability import Ability
 from src.structures.character import Character, Kind
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.species import (
     Chimera,
@@ -208,7 +208,7 @@ class SpeciesTransformer(Transformer):
             ocs2 = {x.species for x in filter(foo2, cog.ocs.values())}
             filters.append(lambda x: foo2(x) if isinstance(x, Character) else x in ocs2)
 
-        if (mon_type := ctx.namespace.types) and (mon_type := Typing.from_ID(mon_type)):
+        if (mon_type := ctx.namespace.types) and (mon_type := TypingEnum.deduce(mon_type)):
             filters.append(lambda x: mon_type in x.types)
 
         if (abilities := ctx.namespace.abilities) and (ability := Ability.from_ID(abilities)):
@@ -275,25 +275,6 @@ class AbilityTransformer(Transformer):
 
 
 AbilityArg = Transform[Ability, AbilityTransformer]
-
-
-class TypingTransformer(Transformer):
-    async def transform(self, _: Interaction, value: Optional[str]):
-        item = Typing.deduce(value)
-        if not item:
-            raise ValueError(f"Typing {item!r} not found")
-        return item
-
-    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
-        items = list(Typing.all())
-        if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
-            options = [x[0] for x in options]
-        elif not value:
-            options = items[:25]
-        return [Choice(name=x.name, value=str(x)) for x in set(options)]
-
-
-TypingArg = Transform[Typing, TypingTransformer]
 
 
 class FakemonTransformer(Transformer):
@@ -461,7 +442,7 @@ class OCGroupByEvoLine(OCGroupBy):
 class OCGroupByType(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {item.name: frozenset({oc for oc in ocs if item in oc.types}) for item in Typing.all()}
+        return {item.name: frozenset({oc for oc in ocs if item in oc.types}) for item in TypingEnum}
 
 
 class OCGroupByPronoun(OCGroupBy):

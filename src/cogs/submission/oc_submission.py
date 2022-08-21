@@ -41,7 +41,7 @@ from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -426,7 +426,7 @@ class TypesField(TemplateField):
         species = oc.species
         if isinstance(species, Fusion):
             values = species.possible_types
-            view = Complex[set[Typing]](
+            view = Complex[set[TypingEnum]](
                 member=ctx.user,
                 target=ctx,
                 values=values,
@@ -443,9 +443,9 @@ class TypesField(TemplateField):
             if isinstance(species, Chimera):
                 elements = frozenset.union(*[x.types for x in species.bases])
             else:
-                elements = Typing.all()
+                elements = TypingEnum
 
-            view = Complex[Typing](
+            view = Complex[TypingEnum](
                 member=ctx.user,
                 target=ctx,
                 values=elements,
@@ -637,10 +637,10 @@ class HiddenPowerField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = Complex[Typing](
+        view = Complex[TypingEnum](
             member=ctx.user,
             target=ctx,
-            values=Typing.all(),
+            values=TypingEnum,
             max_values=1,
             timeout=None,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),

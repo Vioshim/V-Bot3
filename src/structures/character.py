@@ -28,7 +28,7 @@ from discord.utils import snowflake_time, utcnow
 from rapidfuzz import process
 
 from src.structures.ability import Ability, SpAbility
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -140,7 +140,7 @@ class Character:
     url: Optional[str] = None
     image: Optional[int] = None
     location: Optional[int] = None
-    hidden_power: Optional[Typing] = None
+    hidden_power: Optional[TypingEnum] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -212,7 +212,7 @@ class Character:
         if not self.can_have_special_abilities:
             self.sp_ability = None
         if self.hidden_power:
-            self.hidden_power = Typing.deduce(self.hidden_power)
+            self.hidden_power = TypingEnum.deduce(self.hidden_power)
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -226,13 +226,13 @@ class Character:
         return self.id >> 22
 
     @property
-    def types(self) -> frozenset[Typing]:
+    def types(self) -> frozenset[TypingEnum]:
         if self.species:
             return frozenset(self.species.types)
         return frozenset()
 
     @property
-    def possible_types(self) -> frozenset[frozenset[Typing]]:
+    def possible_types(self) -> frozenset[frozenset[TypingEnum]]:
         if self.species:
             return self.species.possible_types
         return frozenset()
@@ -603,7 +603,7 @@ class Character:
             data = dict(item)
             kind = Kind.associated(data.pop("kind", "COMMON"))
 
-            mon_type = Typing.deduce_many(*data.pop("types"))
+            mon_type = TypingEnum.deduce_many(*data.pop("types"))
 
             if kind == Kind.Chimera:
                 key = data.pop("species", "")
@@ -860,7 +860,7 @@ class Character:
                     f"Unable to determine the species, value: {species}, make sure you're using a recent template."
                 )
 
-        if (type_info := common_pop_get(data, "types", "type")) and (types := Typing.deduce_many(type_info)):
+        if (type_info := common_pop_get(data, "types", "type")) and (types := TypingEnum.deduce_many(type_info)):
             if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                 species.types = types
             elif species.types != types:

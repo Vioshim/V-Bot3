@@ -19,7 +19,7 @@ from discord import Interaction, Member
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.structures.species import Fusion, Species, Variant
 from src.utils.etc import LIST_EMOJI
 
@@ -89,7 +89,7 @@ class SpeciesComplex(Complex[Species]):
         self.select_types.options.clear()
         total: set[Species] = set(self.total) - self.choices
 
-        data: dict[str | Typing, set[Species]] = {}
+        data: dict[str | TypingEnum, set[Species]] = {}
         for item in total:
             for t in item.types:
                 data.setdefault(t, set())
@@ -99,7 +99,7 @@ class SpeciesComplex(Complex[Species]):
         items.extend(sorted(data.items(), key=lambda x: x[0].name))
         for k, items in items:
             if items:
-                if isinstance(k, Typing):
+                if isinstance(k, TypingEnum):
                     label, emoji = k.name, k.emoji
                 else:
                     label, emoji = k, LIST_EMOJI
@@ -122,6 +122,6 @@ class SpeciesComplex(Complex[Species]):
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         if "No Filter" in sct.values:
             self.values = set.intersection(*[self.data[value] for value in sct.values])
-        elif types := Typing.deduce_many(*sct.values):
+        elif types := TypingEnum.deduce_many(*sct.values):
             self.values = {x for x in self.total if x.types == types}
         await self.edit(interaction=interaction, page=0)

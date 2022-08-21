@@ -28,7 +28,7 @@ from frozendict import frozendict
 from rapidfuzz import process
 
 from src.structures.ability import Ability
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.utils.functions import fix
@@ -83,7 +83,7 @@ class Species(metaclass=ABCMeta):
     base_image_shiny: Optional[str] = None
     female_image: Optional[str] = None
     female_image_shiny: Optional[str] = None
-    types: frozenset[Typing] = field(default_factory=frozenset)
+    types: frozenset[TypingEnum] = field(default_factory=frozenset)
     height: int = 0
     weight: int = 0
     HP: int = 0
@@ -110,7 +110,7 @@ class Species(metaclass=ABCMeta):
 
         if isinstance(self.types, str):
             self.types = [self.types]
-        self.types = Typing.deduce_many(*self.types)
+        self.types = TypingEnum.deduce_many(*self.types)
 
     def __eq__(self, other: Species):
         return isinstance(other, Species) and str(self.id) == str(other.id)
@@ -572,7 +572,7 @@ class Chimera(Species):
         elements = [*{x.types for x in self.bases}]
         if elements and all(x == elements[0] for x in elements):
             return frozenset({elements[0]})
-        elements = frozenset[Typing].union(*elements)
+        elements = frozenset[TypingEnum].union(*elements)
         items = [frozenset({x}) for x in elements]
         items.extend(combinations(elements, 2))
         return frozenset(items)
@@ -692,7 +692,7 @@ class Variant(Species):
         self,
         base: Species,
         name: str,
-        types: frozenset[Typing] = None,
+        types: frozenset[TypingEnum] = None,
         evolves_from: Optional[str] = None,
         abilities: frozenset[Ability] = None,
         movepool: Optional[Movepool] = None,

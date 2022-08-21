@@ -16,7 +16,6 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
-from src.structures.mon_typing import Typing
 from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.species import (
@@ -39,7 +38,7 @@ __all__ = (
     "Character",
     "CustomHelp",
     "ColoredLogger",
-    "Typing",
+    "TypingEnum",
     "Move",
     "Movepool",
     "Fakemon",

@@ -14,21 +14,19 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
-from difflib import get_close_matches
-from json import JSONDecoder, JSONEncoder, load
+from dataclasses import dataclass, field
+from enum import Enum
 from re import split
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from discord import PartialEmoji
 from discord.utils import find, get
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.utils.functions import fix
 
-__all__ = ("Typing", "Z_MOVE_RANGE", "MAX_MOVE_RANGE1", "MAX_MOVE_RANGE2")
-
-ALL_TYPES = frozendict()
+__all__ = ("TypingEnum",)
 
 Z_MOVE_RANGE = frozendict(
     {
@@ -107,10 +105,23 @@ class Typing:
     chart: frozendict[int, float] = field(default_factory=frozendict)
     banner: str = ""
 
-    def __post_init__(self):
-        if isinstance(self.ids, (int, float)):
-            self.ids = frozenset({self.ids})
-        self.chart = frozendict({k: v for k, v in self.chart.items() if v != 1})
+    def __init__(self, data: dict[str, Any]) -> None:
+        self.name = data.get("name", "")
+        self.icon = data.get("icon", "")
+        if type_id := data.get("id", None):
+            self.ids = frozenset({type_id})
+        else:
+            self.ids = frozenset(data.get("ids", []))
+        self.color = data.get("color", 0)
+        self.emoji = PartialEmoji.from_str(data.get("emoji", ""))
+        self.z_move = data.get("z_move", "")
+        self.max_move = data.get("max_move", "")
+        self.chart = frozendict(data.get("chart", {}))
+        self.banner = data.get("banner", "")
+
+    @classmethod
+    def from_dict(cls, **data: Any):
+        return Typing(data)
 
     def __add__(self, other: Typing) -> Typing:
         """Add Method
@@ -126,12 +137,8 @@ class Typing:
             Type with resulting chart
         """
         if (a := self.chart) != (b := other.chart):
-            chart = {x: a.get(x, 1) * b.get(x, 1) for x in a | b}
-            return Typing(
-                ids=self.ids | other.ids,
-                name=f"{self.name}/{other.name}",
-                chart=frozendict(chart),
-            )
+            chart = {x: o for x in a | b if (o := a.get(x, 1.0) * b.get(x, 1.0)) != 1.0}
+            return Typing.from_dict(ids=self.ids | other.ids, name=f"{self.name}/{other.name}", chart=frozendict(chart))
         return self
 
     def __str__(self) -> str:
@@ -143,9 +150,6 @@ class Typing:
             Upper name
         """
         return self.name.upper()
-
-    def __repr__(self) -> str:
-        return f"Typing.{self}"
 
     def __contains__(self, other: Typing) -> bool:
         """contains method
@@ -160,7 +164,7 @@ class Typing:
         bool
             If included in the chart
         """
-        return any(x in self.chart for x in self.ids)
+        return any(x in self.chart for x in other.ids)
 
     def __setitem__(
         self,
@@ -208,19 +212,15 @@ class Typing:
             value
         """
         base = 1.0
-        for other in others:
-            if isinstance(other, str):
-                other = self.from_ID(other)
-            if isinstance(other, Typing):
-                for item in other.ids:
-                    value = self.chart.get(item, 1.0)
-                    if inverse and value != 1.0:
-                        value = 0.5 if value > 1 else 2
-                    base *= value
-
+        for other in filter(lambda x: isinstance(x, Typing), others):
+            for item in other.ids:
+                value = self.chart.get(item, 1.0)
+                if inverse and value != 1.0:
+                    value = 0.5 if value > 1 else 2
+                base *= value
         return base
 
-    def when_attacking(self, *others: Typing | str, inverse: bool = False) -> float:
+    def when_attacking(self, *others: Typing, inverse: bool = False) -> float:
         """method to determine multiplier
 
         Returns
@@ -229,35 +229,266 @@ class Typing:
             value
         """
         base = 1.0
-        for other in others:
-            if isinstance(other, str):
-                other = self.from_ID(other)
-            if isinstance(other, Typing):
-                for item in self.ids:
-                    value = other.chart.get(item, 1.0)
-                    if inverse and value != 1.0:
-                        value = 0.5 if value > 1 else 2
-                    base *= value
+        for other in filter(lambda x: isinstance(x, Typing), others):
+            for item in self.ids:
+                value = other.chart.get(item, 1.0)
+                if inverse and value != 1.0:
+                    value = 0.5 if value > 1 else 2
+                base *= value
         return base
+
+
+class TypingEnum(Typing, Enum):
+    Normal = {
+        "name": "Normal",
+        "icon": "/Chart/NormalIC_lsh07JZFXF.png",
+        "id": 1,
+        "color": 11052922,
+        "emoji": "<:Normal:952523352839450634>",
+        "z_move": "Breakneck Blitz",
+        "max_move": "Max Strike",
+        "chart": {7: 2.0, 14: 0},
+        "banner": "/Banners/Normal_7WLut6aBRu9.png",
+    }
+    Fire = {
+        "name": "Fire",
+        "icon": "/Chart/FireIC_FSXZ0ewoZ.png",
+        "id": 2,
+        "color": 15630640,
+        "emoji": "<:Fire:952523352667484160>",
+        "z_move": "Inferno Overdrive",
+        "max_move": "Max Flare",
+        "chart": {3: 2.0, 9: 2.0, 13: 2.0, 2: 0.5, 5: 0.5, 6: 0.5, 12: 0.5, 17: 0.5, 18: 0.5},
+        "banner": "/Banners/Fire_MWKQIWPHCI.png",
+    }
+    Water = {
+        "name": "Water",
+        "icon": "/Chart/WaterIC_AePidQZ435.png",
+        "id": 3,
+        "color": 6525168,
+        "emoji": "<:Water:952523352688451594>",
+        "z_move": "Hydro Vortex",
+        "max_move": "Max Geyser",
+        "chart": {4: 2.0, 5: 2.0, 2: 0.5, 3: 0.5, 6: 0.5, 17: 0.5},
+        "banner": "/Banners/Water_QrO8_rrrQA.png",
+    }
+    Electric = {
+        "name": "Electric",
+        "icon": "/Chart/ElectricIC_SAqZW5RtMs.png",
+        "id": 4,
+        "color": 16240684,
+        "emoji": "<:Electric:952523352646492180>",
+        "z_move": "Gigavolt Havoc",
+        "max_move": "Max Lightning",
+        "chart": {9: 2.0, 4: 0.5, 10: 0.5, 17: 0.5},
+        "banner": "/Banners/Electric__HK82VrgVP.png",
+    }
+    Grass = {
+        "name": "Grass",
+        "icon": "/Chart/GrassIC_U9S3zw7Hqs.png",
+        "id": 5,
+        "color": 8046412,
+        "emoji": "<:Grass:952523352571011072>",
+        "z_move": "Bloom Doom",
+        "max_move": "Max Overgrowth",
+        "chart": {2: 2.0, 6: 2.0, 8: 2.0, 10: 2.0, 12: 2.0, 4: 0.5, 5: 0.5, 9: 0.5, 3: 0.5},
+        "banner": "/Banners/Grass_MibpgmlZSu.png",
+    }
+    Ice = {
+        "name": "Ice",
+        "icon": "/Chart/IceIC_40f5wWdnqb.png",
+        "id": 6,
+        "color": 9886166,
+        "emoji": "<:Ice:952523352587784222>",
+        "z_move": "Subzero Slammer",
+        "max_move": "Max Hailstorm",
+        "chart": {2: 2.0, 7: 2.0, 13: 2.0, 17: 2.0, 6: 0.5},
+        "banner": "/Banners/Ice_qf9cM_0BZ.png",
+    }
+    Fighting = {
+        "name": "Fighting",
+        "icon": "/Chart/FightingIC_no8wYHEEg.png",
+        "id": 7,
+        "color": 12725800,
+        "emoji": "<:Fighting:952523352533266432>",
+        "z_move": "All-Out Pummeling",
+        "max_move": "Max Knuckle",
+        "chart": {10: 2.0, 11: 2.0, 18: 2.0, 12: 0.5, 13: 0.5, 16: 0.5},
+        "banner": "/Banners/Fighting_KadL0Lfvu.png",
+    }
+    Poison = {
+        "name": "Poison",
+        "icon": "/Chart/PoisonIC_oQDclvCSdq.png",
+        "id": 8,
+        "color": 10698401,
+        "emoji": "<:Poison:952523352633901106>",
+        "z_move": "Acid Downpour",
+        "max_move": "Max Ooze",
+        "chart": {9: 2.0, 11: 2.0, 5: 0.5, 7: 0.5, 8: 0.5, 12: 0.5, 18: 0.5},
+        "banner": "/Banners/Poison_51HLU3KQT.png",
+    }
+    Ground = {
+        "name": "Ground",
+        "icon": "/Chart/GroundIC_s-APkZLs1S.png",
+        "id": 9,
+        "color": 14860133,
+        "emoji": "<:Ground:952523352612958239>",
+        "z_move": "Tectonic Rage",
+        "max_move": "Max Quake",
+        "chart": {3: 2.0, 5: 2.0, 6: 2.0, 8: 0.5, 13: 0.5, 4: 0},
+        "banner": "/Banners/Ground_0nzRnpGnrb.png",
+    }
+    Flying = {
+        "name": "Flying",
+        "icon": "/Chart/FlyingIC_c9yZsKBzO.png",
+        "id": 10,
+        "color": 11112435,
+        "emoji": "<:Flying:952523352994619402>",
+        "z_move": "Supersonic Skystrike",
+        "max_move": "Max Airstream",
+        "chart": {4: 2.0, 6: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 12: 0.5, 9: 0},
+        "banner": "/Banners/Flying_ndzxuXXBd.png",
+    }
+    Psychic = {
+        "name": "Psychic",
+        "icon": "/Chart/PsychicIC_DWslZRN75-.png",
+        "id": 11,
+        "color": 16340359,
+        "emoji": "<:Psychic:952523352872996934>",
+        "z_move": "Shattered Psyche",
+        "max_move": "Max Mindstorm",
+        "chart": {12: 2.0, 14: 2.0, 16: 2.0, 7: 0.5, 11: 0.5},
+        "banner": "/Banners/Psychic_DZdtI2j5sN.png",
+    }
+    Bug = {
+        "name": "Bug",
+        "icon": "/Chart/BugIC_aYtpLtj9te.png",
+        "id": 12,
+        "color": 10926362,
+        "emoji": "<:Bug:952523352524877835>",
+        "z_move": "Savage Spin-Out",
+        "max_move": "Max Flutterby",
+        "chart": {2: 2.0, 10: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 9: 0.5},
+        "banner": "/Banners/Bug_NF9aQ4XCV0.png",
+    }
+    Rock = {
+        "name": "Rock",
+        "icon": "/Chart/RockIC_9g894kz-kf.png",
+        "id": 13,
+        "color": 11968822,
+        "emoji": "<:Rock:952523352671662140>",
+        "z_move": "Continental Crush",
+        "max_move": "Max Rockfall",
+        "chart": {3: 2.0, 5: 2.0, 7: 2.0, 9: 2.0, 17: 2.0, 1: 0.5, 2: 0.5, 8: 0.5, 10: 0.5},
+        "banner": "/Banners/Rock_io2kdnYrTQ.png",
+    }
+    Ghost = {
+        "name": "Ghost",
+        "icon": "/Chart/GhostIC_jeQRdkKWUU.png",
+        "id": 14,
+        "color": 7559063,
+        "emoji": "<:Ghost:952523352575209573>",
+        "z_move": "Never-Ending Nightmare",
+        "max_move": "Max Phantasm",
+        "chart": {14: 2.0, 16: 2.0, 8: 0.5, 12: 0.5, 1: 0, 7: 0},
+        "banner": "/Banners/Ghost_-8cmW_6pBqM.png",
+    }
+    Dragon = {
+        "name": "Dragon",
+        "icon": "/Chart/DragonIC_n9B85giAn.png",
+        "id": 15,
+        "color": 7288316,
+        "emoji": "<:Dragon:952523352545837066>",
+        "z_move": "Devastating Drake",
+        "max_move": "Max Wyrmwind",
+        "chart": {6: 2.0, 15: 2.0, 18: 2.0, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5},
+        "banner": "/Banners/Dragon_fxDjF0oKbiw.png",
+    }
+    Dark = {
+        "name": "Dark",
+        "icon": "/Chart/DarkIC_FwzVeCOWx.png",
+        "id": 16,
+        "color": 7362374,
+        "emoji": "<:Dark:952523352617144380>",
+        "z_move": "Black Hole Eclipse",
+        "max_move": "Max Darkness",
+        "chart": {7: 2.0, 12: 2.0, 18: 2.0, 14: 0.5, 16: 0.5, 11: 0},
+        "banner": "/Banners/Dark_ZKw4hIYdnp.png",
+    }
+    Steel = {
+        "name": "Steel",
+        "icon": "/Chart/SteelIC_0wxMPLo8K.png",
+        "id": 17,
+        "color": 12040142,
+        "emoji": "<:Steel:952523352717799454>",
+        "z_move": "Corkscrew Crash",
+        "max_move": "Max Steelspike",
+        "chart": {
+            2: 2.0,
+            7: 2.0,
+            9: 2.0,
+            1: 0.5,
+            5: 0.5,
+            6: 0.5,
+            10: 0.5,
+            11: 0.5,
+            12: 0.5,
+            13: 0.5,
+            15: 0.5,
+            17: 0.5,
+            18: 0.5,
+            8: 0,
+        },
+        "banner": "/Banners/Steel_lSEoLioGM.png",
+    }
+    Fairy = {
+        "name": "Fairy",
+        "icon": "/Chart/FairyIC_eeeXGKfZv0.png",
+        "id": 18,
+        "color": 14058925,
+        "emoji": "<:Fairy:952523352164159539>",
+        "z_move": "Twinkle Tackle",
+        "max_move": "Max Starfall",
+        "chart": {8: 2.0, 17: 2.0, 7: 0.5, 12: 0.5, 16: 0.5, 15: 0},
+        "banner": "/Banners/Fairy_avtBHCy-TB.png",
+    }
 
     @property
     def terrain(self):
-        return {"FAIRY": "Misty Terrain", "GRASS": "Grassy Terrain"}.get(item := str(self), f"{item} Terrain".title())
+        match self:
+            case self.Fairy:
+                return "Misty Terrain"
+            case self.Grass:
+                return "Grassy Terrain"
+            case _:
+                return f"{self.name} Terrain".title()
+
+    @property
+    def z_move_range(self):
+        return Z_MOVE_RANGE
+
+    @property
+    def max_move_range(self):
+        match self:
+            case self.Fighting | self.Poison:
+                return MAX_MOVE_RANGE2
+            case _:
+                return MAX_MOVE_RANGE1
 
     @classmethod
-    def all(cls) -> frozenset[Typing]:
-        return frozenset(ALL_TYPES.values())
+    def all(cls):
+        return frozenset(TypingEnum)
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):
-        return find(predicate, cls.all())
+        return find(predicate, TypingEnum)
 
     @classmethod
     def get(cls, **kwargs: Any):
-        return get(cls.all(), **kwargs)
+        return get(TypingEnum, **kwargs)
 
     @classmethod
-    def deduce(cls, item: str) -> Optional[Typing]:
+    def deduce(cls, item: str):
         """This is a method that determines the Typing out of
         the existing entries, it has a 85% of precision.
 
@@ -271,15 +502,24 @@ class Typing:
         Optional[Typing]
             Obtained result
         """
-        if isinstance(item, cls):
+        if isinstance(item, TypingEnum):
             return item
-        if data := ALL_TYPES.get(fix(item)):
+        if isinstance(item, Typing):
+            return TypingEnum(item)
+
+        name = fix(item).title()
+        if data := TypingEnum.get(name=name):
             return data
-        for elem in get_close_matches(item, possibilities=ALL_TYPES, n=1, cutoff=0.85):
-            return ALL_TYPES[elem]
+        if data := process.extractOne(
+            name,
+            TypingEnum,
+            processor=lambda x: getattr(x, "name", x),
+            score_cutoff=85,
+        ):
+            return data[0]
 
     @classmethod
-    def deduce_many(cls, *elems: str, range_check: bool = False) -> frozenset[Typing]:
+    def deduce_many(cls, *elems: str, range_check: bool = False):
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
 
@@ -292,95 +532,45 @@ class Typing:
 
         Returns
         -------
-        frozenset[ALL_TYPES]
+        frozenset[TypingEnum]
             Obtained result
         """
-        items: list[Typing] = []
+        items: list[cls] = []
         aux: list[str] = []
 
         for elem in elems:
-            if isinstance(elem, cls):
+            if isinstance(elem, TypingEnum):
                 items.append(elem)
+            elif isinstance(cls, Typing):
+                items.append(cls(elem))
             elif isinstance(elem, str):
                 aux.append(elem)
 
-        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
-
-            if not elem:
-                continue
-
-            if data := ALL_TYPES.get(elem := fix(elem)):
-                items.append(data)
-            else:
-                for data in get_close_matches(word=elem, possibilities=ALL_TYPES, n=1, cutoff=0.85):
-                    items.append(ALL_TYPES[data])
+        items.extend(item for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)) if elem and (item := cls.deduce(elem)))
 
         if range_check and len(items) > 2:
             items = []
 
         return frozenset(items)
 
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[Typing]:
-        """This is a method that returns a Move given an exact ID.
-
-        Parameters
-        ----------
-        item : str
-            Move ID to check
+    def when_attacked_by(self, *others: Typing | str, inverse: bool = False) -> float:
+        """method to determine multiplier
 
         Returns
         -------
-        Optional[Move]
-            Obtained result
+        float
+            value
         """
-        if isinstance(item, cls):
-            return item
-        if isinstance(item, str):
-            return ALL_TYPES.get(fix(item))
+        others = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else x)]
+        return super().when_attacked_by(*others, inverse=inverse)
 
-
-class TypingEncoder(JSONEncoder):
-    """Typing encoder"""
-
-    def default(self, o):
-        if isinstance(o, Typing):
-            data = asdict(o)
-            data["emoji"] = str(o.emoji)
-            return data
-        return super(TypingEncoder, self).default(o)
-
-
-class TypingDecoder(JSONDecoder):
-    """Typing decoder"""
-
-    def __init__(self):
-        super(TypingDecoder, self).__init__(object_hook=self.object_hook)
-
-    def object_hook(self, dct: dict[str, Any]):
-        """Decoder method for dicts
-
-        Parameters
-        ----------
-        dct : dict[str, Any]
-            Input
+    def when_attacking(self, *others: Typing | str, inverse: bool = False) -> float:
+        """method to determine multiplier
 
         Returns
         -------
-        Any
-            Result
+        float
+            value
         """
-        if isinstance(dct, dict) and "id" in dct:
-            if emoji := dct.get("emoji", ""):
-                dct["emoji"] = PartialEmoji.from_str(emoji)
-            if chart := dct.get("chart", {}):
-                dct["chart"] = frozendict({int(k): float(v) for k, v in chart.items()})
-            if type_id := dct.pop("id", 0):
-                dct["ids"] = frozenset({type_id})
-            return Typing(**dct)
-        return dct
-
-
-with open("resources/types.json") as f:
-    DATA: list[Typing] = load(f, cls=TypingDecoder)
-    ALL_TYPES = frozendict({str(item): item for item in DATA})
+        others = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else x)]
+        return super().when_attacking(*others, inverse=inverse)

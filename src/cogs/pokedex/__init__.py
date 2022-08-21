@@ -40,12 +40,11 @@ from src.cogs.pokedex.search import (
     GroupByArg,
     MoveArg,
     SpeciesArg,
-    TypingArg,
     age_parser,
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character, Kind
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion, Species
@@ -193,7 +192,7 @@ class Pokedex(commands.Cog):
         ctx: Interaction,
         name: Optional[str],
         kind: Optional[Kind],
-        _type: Optional[TypingArg],
+        _type: Optional[TypingEnum],
         ability: Optional[AbilityArg],
         move: Optional[MoveArg],
         species: Optional[SpeciesArg],
@@ -375,8 +374,8 @@ class Pokedex(commands.Cog):
     async def chart(
         self,
         ctx: Interaction,
-        type1: TypingArg,
-        type2: Optional[TypingArg],
+        type1: TypingEnum,
+        type2: Optional[TypingEnum],
         mode: Literal["Attacking", "Defending"] = "Defending",
         inverse: bool = False,
     ):
@@ -403,12 +402,12 @@ class Pokedex(commands.Cog):
             embed.title += "(Inverse)"
         embed.set_image(url=WHITE_BAR)
 
-        def method(x: Typing) -> float:
+        def method(x: TypingEnum) -> float:
             if mode == "Attacking":
                 return type1.when_attacking(x, inverse=inverse)
             return type1.when_attacked_by(x, inverse=inverse)
 
-        for k, v in groupby(sorted(Typing.all(), key=method, reverse=True), key=method):
+        for k, v in groupby(sorted(TypingEnum, key=method, reverse=True), key=method):
             if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):
                 embed.add_field(name=f"Damage {k}x", value=item)
 

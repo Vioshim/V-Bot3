@@ -26,7 +26,7 @@ from discord import Embed, PartialEmoji
 from discord.utils import find, get, utcnow
 from frozendict import frozendict
 
-from src.structures.mon_typing import Typing
+from src.structures.mon_typing import TypingEnum
 from src.utils.functions import fix
 
 __all__ = (
@@ -106,7 +106,7 @@ class Move:
     index: int
     id: str
     name: str
-    type: Typing
+    type: TypingEnum
     url: str
     image: str
     contest: Optional[str] = None
@@ -320,7 +320,7 @@ class MoveDecoder(JSONDecoder):
                 dct["category"] = Category[dct["category"]]
             except KeyError:
                 dct["category"] = Category.STATUS
-            dct["type"] = Typing.from_ID(mon_type)
+            dct["type"] = TypingEnum.deduce(mon_type)
             return Move(**dct)
         return dct
 
