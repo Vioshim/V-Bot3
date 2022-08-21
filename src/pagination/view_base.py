@@ -131,6 +131,9 @@ class Basic(View):
         if not condition:
             msg = f"This menu has been requested by {self.member}"
             await resp.send_message(msg, ephemeral=True)
+        elif isinstance(self.target, Interaction):
+            self.target = interaction
+
         return condition
 
     async def send(

@@ -19,7 +19,6 @@ from typing import Optional
 from discord import (
     AllowedMentions,
     ButtonStyle,
-    Color,
     Embed,
     File,
     HTTPException,
@@ -59,7 +58,6 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.etc import WHITE_BAR
 from src.utils.functions import int_check
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
@@ -828,19 +826,6 @@ class CreationOCView(Basic):
         if not oc.id:
             self.remove_item(self.finish_oc)
         self.setup()
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
-
-        if self.user == interaction.client.supporting.get(interaction.user, interaction.user):
-            return True
-
-        embed = Embed(title="This OC isn't yours", color=Color.red(), timestamp=interaction.created_at)
-        embed.set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
-        embed.set_image(url=WHITE_BAR)
-
-        await resp.send_message(embed=embed, ephemeral=True)
-        return False
 
     def setup(self, embed_update: bool = True):
         self.kind.options = [
