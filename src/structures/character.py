@@ -432,12 +432,11 @@ class Character:
                         name = "Fakemon Species"
                     c_embed.add_field(name=name, value=self.species.name)
                 case Kind.CustomMega | Kind.Variant:
-                    name = f"{self.kind.name} Species"
-                    c_embed.add_field(name=name, value=self.species.name)
+                    c_embed.add_field(name=f"{self.kind.name} Species", value=self.species.name)
                 case _:
                     c_embed.add_field(name="Species", value=self.species.name)
 
-        for index, ability in enumerate(self.abilities, start=1):
+        for index, ability in enumerate(sorted(self.abilities, key=lambda x: x.name), start=1):
             c_embed.add_field(
                 name=f"Ability {index} - {ability.name}",
                 value=f"> {ability.description}",
@@ -471,12 +470,10 @@ class Character:
                 sp_embed.add_field(name="Sp.Ability - Cons", value=cons, inline=False)
             embeds.append(sp_embed)
 
-        if moves_text := "\n".join(f"> {item!r}" for item in self.moveset):
+        if self.moveset:
+            moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
             if hidden_power := self.hidden_power:
-                moves_text = moves_text.replace(
-                    "[Hidden Power] - Normal (Special)",
-                    f"[Hidden Power] - {hidden_power.name} (Special)",
-                )
+                moves_text = moves_text.replace("[Hidden Power] - Normal", f"[Hidden Power] - {hidden_power.name}")
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
         if image := self.image_url:
