@@ -169,7 +169,8 @@ class SubmissionView(View):
         try:
             cog.ignore |= users
             view = CreationOCView(ctx.client, ctx, user)
-            await view.send(ephemeral=True)
+            ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
+            await view.send(ephemeral=ephemeral)
             await view.wait()
         except Exception as e:
             await resp.send_message(str(e), ephemeral=True)
