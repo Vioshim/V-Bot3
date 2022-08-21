@@ -68,4 +68,4 @@ DISCORD_MSG_URL = re_compile(
     r"/(?P<channel_id>[0-9]{15,20})/(?P<message_id>[0-9]{15,20})/?"
 )
 DISCORD_MSG_URL2 = re_compile(r"(?:(?P<channel_id>[0-9]{15,20})-)?(?P<message_id>[0-9]{15,20})$")
-INVITE = re_compile(r"(https?://)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com/invite)/([^\s/]+?(?=\b))", IGNORECASE)
+INVITE = re_compile(r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/([a-zA-Z0-9_\-]+)/?", IGNORECASE)

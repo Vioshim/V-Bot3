@@ -184,7 +184,7 @@ class Inviter(commands.Cog):
         context = await self.bot.get_context(ctx)
 
         try:
-            invite = await self.adapt.convert(ctx=context, argument=match.group())
+            invite = await self.adapt.convert(ctx=context, argument=match.group(1))
         except BadInviteArgument:
             return
 
