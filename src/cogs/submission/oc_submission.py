@@ -930,8 +930,7 @@ class CreationOCView(Basic):
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
             except (HTTPException, NotFound) as e:
                 match e.status:
-                    case 401:
-                        ctx.client.logger.exception("Exception in editing OC Creation View", exc_info=e)
+                    case 401 | 404:
                         m = await self.help_method(ctx, embeds=embeds, view=self, files=files)
                     case _:
                         m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
@@ -963,6 +962,17 @@ class CreationOCView(Basic):
     async def help_method(self, ctx: Interaction, **kwargs):
         resp: InteractionResponse = ctx.response
         channel = ctx.guild.get_channel(852180971985043466)
+
+        embeds: list[Embed] = kwargs.get("embeds", [])
+        files = kwargs.get("files", [])
+        if files is MISSING and isinstance(self.oc.image, str) and embeds:
+            if file := await ctx.client.get_file(self.oc.image):
+                files = [file]
+                embeds[0].set_image(url=f"attachment://{file.filename}")
+
+        kwargs["embeds"] = embeds
+        kwargs["files"] = files
+
         message = await channel.send(
             self.user.mention,
             allowed_mentions=AllowedMentions(users=True),
