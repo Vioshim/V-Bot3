@@ -908,19 +908,24 @@ class CreationOCView(Basic):
         if not resp.is_done():
             await resp.edit_message(embeds=embeds, view=self, attachments=files)
             m = await ctx.original_response()
+            ctx.client.logger.info("Succeed 0: %s", m.jump_url)
         elif message := self.message:
             if not self.message.flags.ephemeral:
                 message = PartialMessage(channel=self.message.channel, id=self.message.id)
             try:
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
+                ctx.client.logger.info("Succeed 1: %s", m.jump_url)
             except (HTTPException, NotFound) as e:
                 match e.status:
                     case 401 | 404:
                         m = await self.help_method(ctx, embeds=embeds, view=self, files=files)
+                        ctx.client.logger.exception("Error 1: %s", m.jump_url, exc_info=e)
                     case _:
                         m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
+                        ctx.client.logger.info("Succeed 2: %s", m.jump_url)
         else:
             m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
+            ctx.client.logger.info("Succeed 3: %s", m.jump_url)
 
         if files and m.embeds[0].image.proxy_url:
             self.oc.image = m.embeds[0].image.proxy_url
@@ -948,10 +953,10 @@ class CreationOCView(Basic):
         resp: InteractionResponse = ctx.response
         channel = ctx.guild.get_channel(852180971985043466)
 
-        embeds: list[Embed] = kwargs.get("embeds", [])
+        embeds: list[Embed] = kwargs.get("embeds", self.embeds)
         files = kwargs.get("files", [])
-        if files is MISSING and isinstance(self.oc.image, str) and embeds:
-            if file := await ctx.client.get_file(self.oc.image):
+        if files is MISSING and isinstance(self.oc.image, str):
+            if isinstance(file := await ctx.client.get_file(self.oc.image), File):
                 files = [file]
                 embeds[0].set_image(url=f"attachment://{file.filename}")
 
