@@ -77,6 +77,7 @@ PHRASES = {
 
 @dataclass(unsafe_hash=True, slots=True)
 class Species(metaclass=ABCMeta):
+    __dict__ = {}
     id: str = ""
     name: str = ""
     shape: str = ""
