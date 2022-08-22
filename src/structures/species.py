@@ -534,7 +534,7 @@ class Chimera(Species):
             abilities = set.union(*abilities)
 
         bases = [base for base in self.bases if base.id not in ["MEW", "DITTO", "SMEARGLE"]]
-        if items := [frozenset(base.total_movepool) for base in bases]:
+        if items := [frozenset(base.total_movepool()) for base in bases]:
             movepool = Movepool(egg=frozenset.intersection(*items))
         movepool = Movepool()
 
