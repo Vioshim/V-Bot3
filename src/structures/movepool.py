@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
-from functools import cached_property
+from functools import lru_cache
 from json import JSONDecoder, JSONEncoder
 from typing import Any, Callable, Iterable, Optional
 
@@ -273,7 +273,7 @@ class Movepool:
                 moves.update(*item.values())
         return sorted(moves, key=key, reverse=reverse)
 
-    @cached_property
+    @lru_cache(maxsize=None)
     def to_list(self) -> list[Move]:
         return self.flatten()
 
