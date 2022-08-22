@@ -79,7 +79,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
             tags = [x.strip() for x in self.tags.value.split(",")]
             order = int(self.order.value) if self.order.value else 0
             if order < 0:
-                entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
+                entries = await interaction.client.mongo_db("Wiki").find({}).to_list(length=None)
                 total_tree = WikiEntry.from_list(entries)
                 foo = total_tree.lookup(path.removesuffix("/"))
                 parent = foo.parent or foo
