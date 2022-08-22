@@ -293,5 +293,5 @@ class Basic(View):
             self.stop()
 
     async def on_timeout(self) -> None:
-        with suppress(HTTPException):
+        with suppress(DiscordException):
             await self.delete()

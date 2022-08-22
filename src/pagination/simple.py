@@ -30,6 +30,7 @@ from typing import (
 from discord import (
     AllowedMentions,
     ButtonStyle,
+    DiscordException,
     Embed,
     File,
     GuildSticker,
@@ -363,8 +364,13 @@ class Simple(Generic[_T], Basic):
         data = self.default_params(page=page)
         if not resp.is_done():
             await resp.edit_message(**data)
-        elif self.message:
-            self.message = await self.message.edit(**data)
+        elif message := self.message:
+            if not message.flags.ephemeral:
+                message = PartialMessage(channel=message.channel, id=message.id)
+            try:
+                self.message = await message.edit(**data)
+            except DiscordException:
+                self.message = await interaction.edit_original_response(**data)
         else:
             self.message = await interaction.edit_original_response(**data)
 
