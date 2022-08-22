@@ -32,7 +32,6 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.utils import utcnow
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
 from src.structures.bot import CustomBot
@@ -241,7 +240,6 @@ class Utilities(commands.Cog):
         await resp.send_message(embed=item.embed)
 
     @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     async def roll(self, ctx: Interaction, expression: str, hidden: bool = False):
         """Allows to roll dice based on 20
 
@@ -255,33 +253,29 @@ class Utilities(commands.Cog):
             If it's shown, by default visible
         """
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=hidden, thinking=True)
+
+        embed = Embed(title=f"Rolling: {expression}", color=Color.blurple(), timestamp=ctx.created_at)
+
+        if len(embed.title) > 256:
+            embed.title = "Rolling Expression"
+
+        embed.set_image(url=WHITE_BAR)
+
+        if guild := ctx.guild:
+            embed.set_footer(text=guild.name, icon_url=guild.icon)
+
         try:
             value = roll(expr=expression, allow_comments=True)
             if len(value.result) > 4096:
                 simplify_expr(value.expr)
-
-            embed = Embed(
-                title=f"Rolling: {expression}",
-                description=value.result,
-                color=Color.blurple(),
-                timestamp=utcnow(),
-            )
-            if len(embed.title) > 256:
-                embed.title = "Rolling Expression"
-
-            embed.set_image(url=WHITE_BAR)
+            embed.description = value.result
             embed.set_thumbnail(url=f"https://dummyimage.com/512x512/FFFFFF/000000&text={value.total}")
-
-            if guild := ctx.guild:
-                embed.set_footer(text=guild.name, icon_url=guild.icon)
-
-            await ctx.followup.send(embed=embed, ephemeral=hidden)
         except Exception as e:
+            embed.description = "Invalid expression."
             self.bot.logger.exception("Error while rolling dice.", exc_info=e)
-            await ctx.followup.send("Invalid expression", ephemeral=True)
+        finally:
+            await ctx.followup.send(embed=embed, ephemeral=hidden)
 
 
 async def setup(bot: CustomBot) -> None:

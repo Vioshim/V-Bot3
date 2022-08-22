@@ -30,15 +30,16 @@ from typing import (
 from discord import (
     AllowedMentions,
     ButtonStyle,
-    DiscordException,
     Embed,
     File,
     GuildSticker,
+    HTTPException,
     Interaction,
     InteractionResponse,
     Member,
     Message,
     MessageReference,
+    NotFound,
     PartialEmoji,
     PartialMessage,
     StickerItem,
@@ -369,8 +370,11 @@ class Simple(Generic[_T], Basic):
                 message = PartialMessage(channel=message.channel, id=message.id)
             try:
                 self.message = await message.edit(**data)
-            except DiscordException:
-                self.message = await interaction.edit_original_response(**data)
+            except (HTTPException, NotFound) as e:
+                if e.code != 401:
+                    self.message = await interaction.edit_original_response(**data)
+                else:
+                    self.stop()
         else:
             self.message = await interaction.edit_original_response(**data)
 
