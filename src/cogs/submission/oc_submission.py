@@ -340,7 +340,7 @@ class SpeciesField(TemplateField):
 
         if species := oc.species:
             progress.add(cls.name)
-            moves = species.total_movepool()
+            moves = species.total_movepool
             if not oc.moveset and len(moves) <= 6:
                 oc.moveset = frozenset(moves)
             if not oc.abilities and len(species.abilities) == 1:
