@@ -290,7 +290,7 @@ class Movepool:
         bool
             Wether included or not
         """
-        return bool(item in self.to_list)
+        return bool(item in self.to_list())
 
     def assign(self, key: str, value: Optional[str | set[Move] | dict[int, set[Move]]] = None):
         """Assigning method for movepool
