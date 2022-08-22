@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
+from functools import cached_property
 from json import JSONDecoder, JSONEncoder
 from typing import Any, Callable, Iterable, Optional
 
@@ -246,6 +247,23 @@ class Movepool:
         list[Move]
             List of moves that belong to this instance.
         """
+        return self.flatten(key=key, reverse=reverse)
+
+    def flatten(self, *, key: Optional[Callable[[Move]]] = None, reverse: bool = False) -> list[Move]:
+        """Returns all moves that belong to this instance sorted.
+
+        Parameters
+        ----------
+        key : Optional[Callable[[Move]]], optional
+            Sorting key, by default None
+        reverse : bool, optional
+            If Reversed, by default False
+
+        Returns
+        -------
+        list[Move]
+            List of moves that belong to this instance.
+        """
         key = key or (lambda x: x.name)
         moves: set[Move] = set()
         for item in astuple(self):
@@ -254,6 +272,10 @@ class Movepool:
             elif isinstance(item, frozendict):
                 moves.update(*item.values())
         return sorted(moves, key=key, reverse=reverse)
+
+    @cached_property
+    def to_list(self) -> list[Move]:
+        return self.flatten()
 
     def __contains__(self, item: Move) -> bool:
         """Check if movepool contains a move.
@@ -268,7 +290,7 @@ class Movepool:
         bool
             Wether included or not
         """
-        return bool(item in self.__call__())
+        return bool(item in self.to_list)
 
     def assign(self, key: str, value: Optional[str | set[Move] | dict[int, set[Move]]] = None):
         """Assigning method for movepool

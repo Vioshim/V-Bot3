@@ -215,7 +215,11 @@ class SpeciesTransformer(Transformer):
             filters.append(lambda x: ability in x.abilities)
 
         if (move := ctx.namespace.move) and (move := Move.from_ID(move)):
-            filters.append(lambda x: move in x.moveset if isinstance(x, Character) else move in x.movepool)
+            filters.append(
+                lambda x: move in x.moveset or move in x.total_movepool
+                if isinstance(x, Character)
+                else move in x.total_movepool
+            )
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
         options = []
