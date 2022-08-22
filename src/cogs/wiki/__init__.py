@@ -81,12 +81,10 @@ class WikiPathModal(Modal, title="Wiki Path"):
             if order < 0:
                 entries = await interaction.client.mongo_db("Wiki").find({}).to_list(length=None)
                 total_tree = WikiEntry.from_list(entries)
-                foo = total_tree.lookup(path.removesuffix("/"))
-                parent = foo.parent or foo
-                if parent.children:
-                    order += max(x.order for x in parent.children.values())
-                else:
-                    order = 0
+                if foo := total_tree.lookup(path.removesuffix("/")):
+                    if path.endswith(foo.path) and (children := (foo.parent or foo).children):
+                        order += max(x.order for x in children.values())
+                order += 1
 
             entry = WikiEntry(path=redirect_path, content=content, embeds=embeds, tags=tags, order=order)
             await db.replace_one({"path": path.removesuffix("/")}, entry.simplified, upsert=True)
