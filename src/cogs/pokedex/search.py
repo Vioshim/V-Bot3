@@ -60,12 +60,6 @@ def item_name(mon: Character | Species) -> str:
     return getattr(mon, "name", mon)
 
 
-def item_value(mon: Character | Species):
-    if isinstance(mon, Character):
-        mon = mon.species
-    return str(mon.id)
-
-
 def foo(x: str) -> Optional[int]:
     x = x.strip()
     if x.isdigit():
@@ -224,7 +218,7 @@ class SpeciesTransformer(Transformer):
         elif not value:
             options = list(values)[:25]
 
-        entries = {item_name(x): item_value(x) for x in options if not isinstance(x, Variant)}
+        entries = {item_name(x): str(x.id) for x in options}
 
         return [Choice(name=k, value=v) for k, v in entries.items()]
 
