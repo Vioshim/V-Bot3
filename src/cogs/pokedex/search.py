@@ -208,14 +208,14 @@ class SpeciesTransformer(Transformer):
             ocs2 = {x.species for x in filter(foo2, cog.ocs.values())}
             filters.append(lambda x: foo2(x) if isinstance(x, Character) else x in ocs2)
 
-        if (mon_type := ctx.namespace.types) and (mon_type := TypingEnum.deduce(mon_type)):
+        if (mon_type := ctx.namespace.type) and (mon_type := TypingEnum.deduce(mon_type)):
             filters.append(lambda x: mon_type in x.types)
 
-        if (abilities := ctx.namespace.abilities) and (ability := Ability.from_ID(abilities)):
+        if (ability := ctx.namespace.ability) and (ability := Ability.from_ID(ability)):
             filters.append(lambda x: ability in x.abilities)
 
-        if (moves := ctx.namespace.moves) and (move := Move.from_ID(moves)):
-            filters.append(lambda x: move in x.movepool)
+        if (move := ctx.namespace.move) and (move := Move.from_ID(move)):
+            filters.append(lambda x: move in x.moveset if isinstance(x, Character) else move in x.movepool)
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
         if options := process.extract(value, choices=values, limit=25, processor=item_name, score_cutoff=60):
