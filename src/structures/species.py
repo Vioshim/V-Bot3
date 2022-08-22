@@ -532,7 +532,10 @@ class Chimera(Species):
         if abilities := [set(x.abilities) for x in bases]:
             abilities = set.union(*abilities)
 
-        movepool = Movepool(egg=set.intersection(*[set(base.total_movepool) for base in bases]))
+        bases = [base for base in self.bases if base.id not in ["MEW", "DITTO", "SMEARGLE"]]
+        if items := [frozenset(base.total_movepool) for base in bases]:
+            movepool = Movepool(egg=frozenset.intersection(*items))
+        movepool = Movepool()
 
         super(Chimera, self).__init__(
             id="_".join(sorted(x.id for x in bases)),
@@ -558,14 +561,6 @@ class Chimera(Species):
         if isinstance(other, Chimera):
             return self.bases == other.bases
         return super(Chimera, self).__eq__(other)
-
-    @property
-    def total_movepool(self):
-        bases = [base for base in self.bases if base.id not in ["MEW", "DITTO", "SMEARGLE"]]
-        items = [frozenset(base.total_movepool) for base in bases]
-        if items:
-            return Movepool(egg=frozenset.intersection(*items))
-        return Movepool()
 
     @property
     def possible_types(self):
