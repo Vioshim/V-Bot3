@@ -189,7 +189,7 @@ class SpeciesTransformer(Transformer):
             mons = {
                 (set(x.species.bases) - {fused}).pop()
                 for x in mons
-                if isinstance(x.species, (Fusion, Chimera)) and fused in x.species.bases
+                if isinstance(x, Character) and isinstance(x.species, (Fusion, Chimera)) and fused in x.species.bases
             }
         elif kind := Kind.associated(ctx.namespace.kind):
             filters.append(lambda x: x.kind == kind if isinstance(x, Character) else isinstance(x, kind.value))
@@ -218,11 +218,14 @@ class SpeciesTransformer(Transformer):
             filters.append(lambda x: move in x.moveset if isinstance(x, Character) else move in x.movepool)
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
-        if options := process.extract(value, choices=values, limit=25, processor=item_name, score_cutoff=60):
-            options = [x[0] for x in options]
+        options = []
+        if data := process.extract(value, choices=values, limit=25, processor=item_name, score_cutoff=60):
+            options.extend(x[0] for x in data)
         elif not value:
             options = list(values)[:25]
-        entries = {item_name(x): item_value(x) for x in options}
+
+        entries = {item_name(x): item_value(x) for x in options if not isinstance(x, Variant)}
+
         return [Choice(name=k, value=v) for k, v in entries.items()]
 
 
