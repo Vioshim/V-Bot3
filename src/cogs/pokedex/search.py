@@ -181,7 +181,7 @@ class SpeciesTransformer(Transformer):
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         cog = ctx.client.get_cog("Submission")
         guild: Guild = ctx.guild
-        mons = cog.ocs.values()
+        mons = set[Character](cog.ocs.values()) | set(Species.all())
         filters: list[Callable[[Character | Species], bool]] = [
             lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True
         ]
