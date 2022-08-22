@@ -916,8 +916,8 @@ class CreationOCView(Basic):
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
                 ctx.client.logger.info("Succeed 1: %s", m.jump_url)
             except (HTTPException, NotFound) as e:
-                match e.status:
-                    case 401 | 404:
+                match e.code:
+                    case 50027:
                         m = await self.help_method(ctx, embeds=embeds, view=self, files=files)
                         ctx.client.logger.exception("Error 1: %s", m.jump_url, exc_info=e)
                     case _:
