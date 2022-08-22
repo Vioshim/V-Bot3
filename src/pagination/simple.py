@@ -371,10 +371,11 @@ class Simple(Generic[_T], Basic):
             try:
                 self.message = await message.edit(**data)
             except (HTTPException, NotFound) as e:
-                if e.code != 401:
-                    self.message = await interaction.edit_original_response(**data)
-                else:
-                    self.stop()
+                match e.code:
+                    case 50027:
+                        self.stop()
+                    case _:
+                        self.message = await interaction.edit_original_response(**data)
         else:
             self.message = await interaction.edit_original_response(**data)
 
