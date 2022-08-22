@@ -40,7 +40,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.message = message
         self.folder = TextInput(label="Path", style=TextStyle.paragraph, required=True, default="/")
         self.redirect = TextInput(label="Change", style=TextStyle.paragraph, required=False)
-        self.order = TextInput(label="Order", required=False, default="0")
+        self.order = TextInput(label="Order", required=False, default="-1")
         self.tags = TextInput(label="Tags", style=TextStyle.paragraph, required=False)
         self.add_item(self.folder)
         self.add_item(self.redirect)
@@ -78,6 +78,16 @@ class WikiPathModal(Modal, title="Wiki Path"):
 
             tags = [x.strip() for x in self.tags.value.split(",")]
             order = int(self.order.value) if self.order.value else 0
+            if order < 0:
+                entries = await self.bot.mongo_db("Wiki").find({}).to_list(length=None)
+                total_tree = WikiEntry.from_list(entries)
+                foo = total_tree.lookup(path.removesuffix("/"))
+                parent = foo.parent or foo
+                if parent.children:
+                    order += max(x.order for x in parent.children.values())
+                else:
+                    order = 0
+
             entry = WikiEntry(path=redirect_path, content=content, embeds=embeds, tags=tags, order=order)
             await db.replace_one({"path": path.removesuffix("/")}, entry.simplified, upsert=True)
         except Exception as e:
