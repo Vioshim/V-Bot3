@@ -897,7 +897,7 @@ class Fusion(Species):
 
         return items
 
-    @cached_property
+    @property
     def possible_types(self):
         """This returns a list of valid types for the pokemon
 
