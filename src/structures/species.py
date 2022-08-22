@@ -559,7 +559,7 @@ class Chimera(Species):
             return self.bases == other.bases
         return super(Chimera, self).__eq__(other)
 
-    @cached_property
+    @property
     def total_movepool(self):
         bases = [base for base in self.bases if base.id not in ["MEW", "DITTO", "SMEARGLE"]]
         items = [frozenset(base.total_movepool) for base in bases]
@@ -567,7 +567,7 @@ class Chimera(Species):
             return Movepool(egg=frozenset.intersection(*items))
         return Movepool()
 
-    @cached_property
+    @property
     def possible_types(self):
         """This returns a list of valid types for the pokemon
 
