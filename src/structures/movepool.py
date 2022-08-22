@@ -286,13 +286,13 @@ class Movepool:
             Wether included or not
         """
         return (
-            item in self.tm
-            or item in self.event
-            or item in self.tutor
-            or item in self.egg
-            or item in self.levelup
-            or item in self.other
-            or item in self.level_moves
+            (self.tm and item in self.tm)
+            or (self.tutor and item in self.event)
+            or (self.tutor and item in self.tutor)
+            or (self.egg and item in self.egg)
+            or (self.levelup and item in self.levelup)
+            or (self.other and item in self.other)
+            or (self.level and item in self.level_moves)
         )
 
     def assign(self, key: str, value: Optional[str | set[Move] | dict[int, set[Move]]] = None):
