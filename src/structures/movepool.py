@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
-from functools import lru_cache
 from json import JSONDecoder, JSONEncoder
 from typing import Any, Callable, Iterable, Optional
 
@@ -273,10 +272,6 @@ class Movepool:
                 moves.update(*item.values())
         return sorted(moves, key=key, reverse=reverse)
 
-    @lru_cache(maxsize=None)
-    def to_list(self) -> list[Move]:
-        return self.flatten()
-
     def __contains__(self, item: Move) -> bool:
         """Check if movepool contains a move.
 
@@ -290,7 +285,15 @@ class Movepool:
         bool
             Wether included or not
         """
-        return bool(item in self.to_list())
+        return (
+            item in self.tm
+            or item in self.event
+            or item in self.tutor
+            or item in self.egg
+            or item in self.levelup
+            or item in self.other
+            or item in self.level_moves
+        )
 
     def assign(self, key: str, value: Optional[str | set[Move] | dict[int, set[Move]]] = None):
         """Assigning method for movepool
