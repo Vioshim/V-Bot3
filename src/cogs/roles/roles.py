@@ -613,7 +613,7 @@ class RPRolesView(View):
         async with view.send(ephemeral=True, single=True) as choice:
             if thread_id := entries.get(choice):
                 if not (thread := guild.get_channel_or_thread(thread_id)):
-                    thread = await guild.fetch_channel(thread)
+                    thread = await guild.fetch_channel(thread_id)
                 if thread.archived:
                     await thread.edit(archived=False)
                 await thread.add_user(member)
