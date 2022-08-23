@@ -165,15 +165,16 @@ class SubmissionView(View):
         cog = ctx.client.get_cog("Submission")
         user = ctx.client.supporting.get(ctx.user, ctx.user)
         resp: InteractionResponse = ctx.response
+        ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
+        await resp.defer(ephemeral=ephemeral, thinking=True)
         users = {ctx.user.id, user.id}
         try:
             cog.ignore |= users
             view = CreationOCView(ctx.client, ctx, user)
-            ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
             await view.send(ephemeral=ephemeral)
             await view.wait()
         except Exception as e:
-            await resp.send_message(str(e), ephemeral=True)
+            await ctx.followup.send(str(e), ephemeral=ephemeral)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
         finally:
             cog.ignore -= users

@@ -954,7 +954,7 @@ class CreationOCView(Basic):
         channel = ctx.guild.get_channel(852180971985043466)
 
         embeds: list[Embed] = kwargs.get("embeds", self.embeds)
-        files = kwargs.get("files", [])
+        files = kwargs.get("files", MISSING)
         if files is MISSING and isinstance(self.oc.image, str):
             if isinstance(file := await ctx.client.get_file(self.oc.image), File):
                 files = [file]
