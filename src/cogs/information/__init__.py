@@ -878,7 +878,12 @@ class Information(commands.Cog):
             if topic1 != topic2:
                 embed1.description, embed2.description = topic1, topic2
 
-        if before.overwrites != after.overwrites:
+        if not any(
+            (
+                after.category and after.category.overwrites == after.overwrites,
+                before.overwrites == after.overwrites,
+            )
+        ):
             condition = True
 
             differences = Embed(
