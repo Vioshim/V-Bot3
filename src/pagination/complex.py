@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from difflib import get_close_matches
 from inspect import isfunction
 from logging import getLogger, setLoggerClass
 from types import TracebackType
@@ -42,6 +41,7 @@ from discord import (
 )
 from discord.abc import Messageable, Snowflake
 from discord.ui import Button, Modal, Select, TextInput, button, select
+from rapidfuzz import process
 
 from src.pagination.simple import Simple
 from src.structures.logger import ColoredLogger
@@ -66,16 +66,18 @@ class DefaultModal(Modal):
             self.add_item(self.item)
 
     async def on_submit(self, interaction: Interaction) -> None:
-        text = self.item.value or ""
-        aux = {self.view.parser(x)[0]: x for x in self.view.real_values}
         current = set()
-        for elem in map(lambda x: x.strip(), text.split(",")):
+        for elem in map(lambda x: x.strip(), (self.item.value or "").split(",")):
             choices = self.view.choices
-            entries = get_close_matches(word=elem, possibilities=aux, n=1)
-            max_amount = self.view.real_max or self.view.max_values
-            if entries and len(choices) < max_amount - len(current):
-                item = aux[entries[0]]
-                current.add(item)
+            if entry := process.extractOne(
+                elem,
+                self.view.real_values,
+                processor=lambda x: self.view.parser(x)[0],
+                score_cutoff=85,
+            ):
+                max_amount = self.view.real_max or self.view.max_values
+                if len(choices) < max_amount - len(current):
+                    current.add(entry[0])
 
         if current:
             self.view.choices |= current

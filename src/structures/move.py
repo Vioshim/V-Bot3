@@ -15,8 +15,8 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from difflib import get_close_matches
 from enum import Enum
+from functools import lru_cache
 from json import JSONDecoder, JSONEncoder, load
 from random import choice
 from re import split
@@ -25,6 +25,7 @@ from typing import Any, Callable, Optional
 from discord import Embed, PartialEmoji
 from discord.utils import find, get, utcnow
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.structures.mon_typing import TypingEnum
 from src.utils.functions import fix
@@ -35,54 +36,10 @@ __all__ = (
     "MoveEncoder",
     "ALL_MOVES",
     "ALL_MOVES_BY_NAME",
-    "MAX_MOVE_RANGE1",
-    "MAX_MOVE_RANGE2",
-    "Z_MOVE_RANGE",
 )
 
 ALL_MOVES = frozendict()
 ALL_MOVES_BY_NAME = frozendict()
-
-MAX_MOVE_RANGE1 = frozendict(
-    {
-        0: 0,
-        40: 90,
-        50: 100,
-        60: 110,
-        70: 120,
-        100: 130,
-        140: 140,
-        250: 150,
-    }
-)
-MAX_MOVE_RANGE2 = frozendict(
-    {
-        0: 0,
-        40: 70,
-        50: 75,
-        60: 80,
-        70: 85,
-        100: 90,
-        140: 95,
-        250: 100,
-    }
-)
-Z_MOVE_RANGE = frozendict(
-    {
-        0: 0,
-        55: 100,
-        65: 120,
-        75: 140,
-        85: 160,
-        95: 175,
-        100: 190,
-        110: 195,
-        125: 190,
-        130: 195,
-        140: 200,
-        250: 200,
-    }
-)
 
 
 class Category(Enum):
@@ -156,37 +113,26 @@ class Move:
         """
         return f"[{self.name}] - {self.type} ({self.category.name})".title()
 
-    @property
-    def z_move_base(self) -> int:
-        """Obtains the calculated Z-move base for the move
+    def calculated_base(self, raw: dict[int, int]) -> int:
+        """Obtains the calculated base for the move
 
         Returns
         -------
         int
             Calculated Base
         """
-        base = self.base or 0
-        elements = filter(lambda x: x >= base, Z_MOVE_RANGE)
-        index = next(elements, 250)
-        return Z_MOVE_RANGE[index]
-
-    @property
-    def max_move_base(self) -> int:
-        """Obtains the calculated Max-move base for the move
-
-        Returns
-        -------
-        int
-            Calculated Base
-        """
-        if str(self.type) in ["FIGHTING", "POISON"]:
-            raw = MAX_MOVE_RANGE2
-        else:
-            raw = MAX_MOVE_RANGE1
         base = self.base or 0
         elements = filter(lambda x: x >= base, raw)
         index = next(elements, 250)
         return raw[index]
+
+    @property
+    def z_move_base(self) -> int:
+        return self.calculated_base(self.type.z_move_range)
+
+    @property
+    def max_move_base(self) -> int:
+        return self.calculated_base(self.type.max_move_range)
 
     @classmethod
     def all(cls) -> frozenset[Move]:
@@ -214,7 +160,7 @@ class Move:
         Optional[Move]
             Obtained result
         """
-        if isinstance(item, Move):
+        if isinstance(item, cls):
             return item
         if isinstance(item, str):
             return ALL_MOVES.get(fix(item))
@@ -236,41 +182,35 @@ class Move:
         """
         if data := cls.from_ID(item):
             return data
-        for elem in get_close_matches(item, possibilities=ALL_MOVES, n=1, cutoff=0.85):
-            return ALL_MOVES[elem]
+        if value := process.extractOne(
+            item,
+            ALL_MOVES,
+            processor=lambda x: getattr(x, "name", x),
+            score_cutoff=85,
+        ):
+            return value[0]
 
     @classmethod
-    def deduce_many(cls, *elems: str, limit: Optional[int] = None) -> frozenset[Move]:
+    @lru_cache(maxsize=None)
+    def deduce_many(cls, *elems: str | Move) -> frozenset[Move]:
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
         Parameters
         ----------
         elems : str
             Strings to search
-        limit : int
-            If there's a limit of moves to get
         Returns
         -------
         frozenset[Move]
             Obtained result
         """
-        items: set[Move] = set()
-        aux: list[str] = []
+        items = {elem for elem in elems if isinstance(elem, Move)}
 
-        for elem in elems:
-            if isinstance(elem, Move):
-                items.add(elem)
-            elif isinstance(elem, str):
-                aux.append(elem)
+        if aux := ",".join(elem for elem in elems if isinstance(elem, str)):
+            data = split(r"[^A-Za-z0-9 \.'-]", aux)
+            items.update(x for elem in data if (x := cls.deduce(elem)))
 
-        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
-            if data := ALL_MOVES.get(elem := fix(elem)):
-                items.add(data)
-            else:
-                for data in get_close_matches(word=elem, possibilities=ALL_MOVES, n=1, cutoff=0.85):
-                    items.add(ALL_MOVES[data])
-
-        return frozenset(list(items)[:limit])
+        return frozenset(items)
 
     @classmethod
     def getMetronome(cls) -> Move:
@@ -281,7 +221,7 @@ class Move:
         Move
             Obtained result
         """
-        return choice([item for item in ALL_MOVES.values() if item.metronome])
+        return choice([item for item in cls.all() if item.metronome])
 
 
 class MoveEncoder(JSONEncoder):

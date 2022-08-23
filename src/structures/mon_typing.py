@@ -16,8 +16,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from functools import lru_cache
 from re import split
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from discord import PartialEmoji
 from discord.utils import find, get
@@ -461,7 +462,7 @@ class TypingEnum(Typing, Enum):
             case self.Grass:
                 return "Grassy Terrain"
             case _:
-                return f"{self.name} Terrain".title()
+                return f"{self.name} Terrain"
 
     @property
     def z_move_range(self):
@@ -488,7 +489,8 @@ class TypingEnum(Typing, Enum):
         return get(TypingEnum, **kwargs)
 
     @classmethod
-    def deduce(cls, item: str):
+    @lru_cache(maxsize=None)
+    def deduce(cls, item: str | TypingEnum) -> Optional[TypingEnum]:
         """This is a method that determines the Typing out of
         the existing entries, it has a 85% of precision.
 
@@ -502,8 +504,6 @@ class TypingEnum(Typing, Enum):
         Optional[Typing]
             Obtained result
         """
-        if isinstance(item, TypingEnum):
-            return item
         if isinstance(item, Typing):
             return TypingEnum(item)
 
@@ -519,7 +519,8 @@ class TypingEnum(Typing, Enum):
             return data[0]
 
     @classmethod
-    def deduce_many(cls, *elems: str, range_check: bool = False):
+    @lru_cache(maxsize=None)
+    def deduce_many(cls, *elems: str | TypingEnum):
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
 
@@ -527,32 +528,21 @@ class TypingEnum(Typing, Enum):
         ----------
         elems : str
             Strings to search
-        range_check : bool, optional
-            If it should limit to a max of 2 types.
 
         Returns
         -------
         frozenset[TypingEnum]
             Obtained result
         """
-        items: list[cls] = []
-        aux: list[str] = []
+        items = [TypingEnum(x) for x in elems if isinstance(x, Typing)]
 
-        for elem in elems:
-            if isinstance(elem, TypingEnum):
-                items.append(elem)
-            elif isinstance(cls, Typing):
-                items.append(cls(elem))
-            elif isinstance(elem, str):
-                aux.append(elem)
-
-        items.extend(item for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)) if elem and (item := cls.deduce(elem)))
-
-        if range_check and len(items) > 2:
-            items = []
+        if aux := ",".join(x for x in elems if isinstance(x, str)):
+            data = split(r"[^A-Za-z0-9 \.'-]", aux)
+            items.extend(x for elem in data if elem and (x := cls.deduce(elem)))
 
         return frozenset(items)
 
+    @lru_cache(maxsize=None)
     def when_attacked_by(self, *others: Typing | str, inverse: bool = False) -> float:
         """method to determine multiplier
 
@@ -561,9 +551,10 @@ class TypingEnum(Typing, Enum):
         float
             value
         """
-        others = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else x)]
-        return super().when_attacked_by(*others, inverse=inverse)
+        data = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else TypingEnum(x))]
+        return super().when_attacked_by(*data, inverse=inverse)
 
+    @lru_cache(maxsize=None)
     def when_attacking(self, *others: Typing | str, inverse: bool = False) -> float:
         """method to determine multiplier
 
@@ -572,5 +563,5 @@ class TypingEnum(Typing, Enum):
         float
             value
         """
-        others = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else x)]
-        return super().when_attacking(*others, inverse=inverse)
+        data = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else TypingEnum(x))]
+        return super().when_attacking(*data, inverse=inverse)

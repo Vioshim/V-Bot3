@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict, astuple, dataclass
-from difflib import get_close_matches
 from json import JSONDecoder, JSONEncoder, load
 from re import split
 from typing import Any, Callable, Optional
@@ -25,6 +24,7 @@ from asyncpg import Connection, Record
 from discord import Embed
 from discord.utils import find, get
 from frozendict import frozendict
+from rapidfuzz import process
 
 from src.utils.functions import fix
 
@@ -107,26 +107,10 @@ class Ability:
         frozenset[Ability]
             Obtained result
         """
-        items: set[Ability] = set()
-        aux: list[str] = []
-
-        for elem in elems:
-            if isinstance(elem, str):
-                aux.append(elem)
-            elif isinstance(elem, Ability):
-                items.add(elem)
-
-        for elem in split(r"[^A-Za-z0-9 \.'-]", ",".join(aux)):
-            if data := ALL_ABILITIES.get(elem := fix(elem)):
-                items.add(data)
-            else:
-                for data in get_close_matches(
-                    word=elem,
-                    possibilities=ALL_ABILITIES,
-                    n=1,
-                    cutoff=0.85,
-                ):
-                    items.add(ALL_ABILITIES[data])
+        items = {elem for elem in elems if isinstance(elem, cls)}
+        if aux := ",".join(elem for elem in elems if isinstance(elem, str)):
+            data = split(r"[^A-Za-z0-9 \.'-]", aux)
+            items.update(x for elem in data if (x := cls.deduce(elem)))
 
         return frozenset(list(items)[:limit_range])
 
@@ -143,18 +127,17 @@ class Ability:
         Optional[Ability]
             Obtained result
         """
-        if isinstance(item, Ability):
+        if isinstance(item, cls):
             return item
-        if isinstance(item, str):
-            if data := ALL_ABILITIES.get(item := fix(item)):
-                return data
-            for elem in get_close_matches(
-                item,
-                possibilities=ALL_ABILITIES,
-                n=1,
-                cutoff=0.85,
-            ):
-                return ALL_ABILITIES[elem]
+        if data := ALL_ABILITIES.get(fix(item)):
+            return data
+        if data := process.extractOne(
+            item,
+            cls.all(),
+            processor=lambda x: getattr(x, "name", x),
+            score_cutoff=85,
+        ):
+            return data[0]
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Ability]:

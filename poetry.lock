@@ -86,7 +86,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "4.0.0a1"
+version = "4.0.0a1.post1"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -113,7 +113,7 @@ test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "f
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "945ea4eda0cb7c83e476b07f26892f9cf7e7804e"
+resolved_reference = "1e7b3df4557ae99470f9d9ae61d524119858544f"
 
 [[package]]
 name = "astunparse"
