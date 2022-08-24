@@ -1009,6 +1009,3 @@ with open("resources/species.json", mode="r") as f:
     SPECIES_BY_NAME: frozendict[str, Species] = frozendict(
         {item.name: item for item in DATA if isinstance(item, Species)}
     )
-
-if items := [item for item in DATA if not isinstance(item, Species)]:
-    print(items)
