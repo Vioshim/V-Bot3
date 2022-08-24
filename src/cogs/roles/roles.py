@@ -409,25 +409,29 @@ class RPModal(Modal):
         resp: InteractionResponse = interaction.response
         if isinstance(interaction.channel, Thread) and interaction.channel.archived:
             await interaction.channel.edit(archived=True)
+
         await resp.defer(ephemeral=True, thinking=True)
-        info = {x.name.title(): x for x in self.ocs}
-        info_ids = {str(x.id): x for x in self.ocs}
-        interaction.client.get_cog("Submission")
 
-        items: list[Character] = []
+        items = [
+            data[0]
+            for item in map(
+                lambda x: x.removeprefix("-").strip(),
+                self.names.value.title().split("\n"),
+            )
+            if (
+                data := process.extractOne(
+                    item.split("|")[-1].strip(),
+                    self.ocs,
+                    score_cutoff=85,
+                    processor=lambda x: getattr(x, "name", x),
+                )
+            )
+        ]
 
-        if data := self.names.value:
+        cog0 = interaction.client.get_cog("Submission")
+        cog1 = interaction.client.get_cog("Roles")
 
-            for item in data.split("\n"):
-                item = item.removeprefix("-").strip().title()
-                item = item.split("|")[-1].strip()
-                if oc := info.get(item):
-                    items.append(oc)
-                elif data := process.extractOne(item, info, score_cutoff=85):
-                    items.append(info[data[0]])
-
-        for item in self.select_ocs_group:
-            items.extend(map(lambda x: info_ids[x], item.values))
+        items.extend(oc for item in self.select_ocs_group for value in item.values if (oc := cog0.ocs.get(int(value))))
 
         embed = Embed(title=self.role.name, color=self.user.color, description=self.message.value)
         guild: Guild = self.user.guild
@@ -460,8 +464,7 @@ class RPModal(Modal):
         await thread.add_user(self.user)
         if isinstance(reference, Member):
             await thread.add_user(reference)
-        cog0 = interaction.client.get_cog("Submission")
-        cog1 = interaction.client.get_cog("Roles")
+
         cog1.cool_down[reference.id] = utcnow()
         cog1.role_cool_down[reference.id] = utcnow()
         ocs = {oc.id for oc in cog0.ocs.values() if oc.author == self.user.id}
