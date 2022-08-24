@@ -1005,5 +1005,10 @@ class SpeciesDecoder(JSONDecoder):
 
 with open("resources/species.json", mode="r") as f:
     DATA: list[Species] = load(f, cls=SpeciesDecoder)
-    ALL_SPECIES: frozendict[str, Species] = frozendict({item.id: item for item in DATA})
-    SPECIES_BY_NAME: frozendict[str, Species] = frozendict({item.name: item for item in DATA})
+    ALL_SPECIES: frozendict[str, Species] = frozendict({item.id: item for item in DATA if isinstance(item, Species)})
+    SPECIES_BY_NAME: frozendict[str, Species] = frozendict(
+        {item.name: item for item in DATA if isinstance(item, Species)}
+    )
+
+if items := [item for item in DATA if not isinstance(item, Species)]:
+    print(items)
