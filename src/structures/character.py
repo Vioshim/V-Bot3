@@ -613,6 +613,9 @@ class Character:
 
             if fakemon_data := Fakemon.from_record(data.pop("fakemon")):
                 if kind == Kind.Variant:
+                    if not species:
+                        print(fakemon_data)
+                        continue
                     species = Variant(base=species, name=fakemon_data.name)
                 elif kind == Kind.Fakemon:
                     species = fakemon_data
