@@ -48924,7 +48924,29 @@
 			]
 		},
 		"abilities": ["MAGICIAN"],
-		"kind": "Mythical"
+		"kind": "Mythical",
+		"evolves_to": ["HOOPAUNBOUND"]
+	},
+	{
+		"id": "HOOPAUNBOUND",
+		"name": "Hoopa Unbound",
+		"shape": "Head w/ Arms",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0720_001_uk_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0720_001_uk_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0720_001_uk_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0720_001_uk_n_00000000_f_r.png",
+		"types": ["PSYCHIC", "DARK"],
+		"height": 6.5,
+		"weight": 490,
+		"HP": 80,
+		"ATK": 160,
+		"DEF": 60,
+		"SPA": 170,
+		"SPD": 130,
+		"SPE": 80,
+		"abilities": ["MAGICIAN"],
+		"kind": "Mythical",
+		"evolves_from": "HOOPA"
 	},
 	{
 		"id": "HOOTHOOT",
