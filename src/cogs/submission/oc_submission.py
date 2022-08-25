@@ -17,20 +17,17 @@ from enum import IntEnum, auto
 from typing import Optional
 
 from discord import (
-    AllowedMentions,
     ButtonStyle,
-    Embed,
+    DiscordException,
     File,
-    HTTPException,
     Interaction,
     InteractionResponse,
     Member,
-    NotFound,
     PartialMessage,
     SelectOption,
     TextStyle,
 )
-from discord.ui import Button, Select, TextInput, View, button, select
+from discord.ui import Button, Select, TextInput, button, select
 from discord.utils import MISSING, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -915,14 +912,9 @@ class CreationOCView(Basic):
             try:
                 m = await message.edit(embeds=embeds, view=self, attachments=files)
                 ctx.client.logger.info("Succeed 1: %s", m.jump_url)
-            except (HTTPException, NotFound) as e:
-                match e.code:
-                    case 50027:
-                        m = await self.help_method(ctx, embeds=embeds, view=self, files=files)
-                        ctx.client.logger.exception("Error 1: %s", m.jump_url, exc_info=e)
-                    case _:
-                        m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
-                        ctx.client.logger.info("Succeed 2: %s", m.jump_url)
+            except DiscordException:
+                m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
+                ctx.client.logger.info("Succeed 2: %s", m.jump_url)
         else:
             m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
             ctx.client.logger.info("Succeed 3: %s", m.jump_url)
@@ -949,34 +941,6 @@ class CreationOCView(Basic):
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
         await self.update(ctx)
 
-    async def help_method(self, ctx: Interaction, **kwargs):
-        resp: InteractionResponse = ctx.response
-        channel = ctx.guild.get_channel(852180971985043466)
-
-        embeds: list[Embed] = kwargs.get("embeds", self.embeds)
-        files = kwargs.get("files", MISSING)
-        if files is MISSING and isinstance(self.oc.image, str):
-            if isinstance(file := await ctx.client.get_file(self.oc.image), File):
-                files = [file]
-                embeds[0].set_image(url=f"attachment://{file.filename}")
-
-        kwargs["embeds"] = embeds
-        kwargs["files"] = files
-
-        message = await channel.send(
-            self.user.mention,
-            allowed_mentions=AllowedMentions(users=True),
-            **kwargs,
-        )
-        self.message = message
-        if not resp.is_done():
-            view = View()
-            view.add_item(Button(label="Go to Help", url=message.jump_url))
-            await resp.edit_message(view=view)
-        self.help.disabled = True
-        await self.update(ctx)
-        return message
-
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
         if (m := self.message) and not m.flags.ephemeral:
@@ -999,7 +963,29 @@ class CreationOCView(Basic):
 
     @button(label="Request Help", row=2)
     async def help(self, ctx: Interaction, _: Button):
-        await self.help_method(ctx)
+        channel = ctx.guild.get_channel(852180971985043466)
+
+        view = CreationOCView(
+            bot=self.bot,
+            ctx=channel,
+            user=self.member,
+            oc=self.oc,
+            template=self.ref_template,
+            progress=self.progress,
+        )
+        await view.send(ephemeral=False)
+
+        if isinstance(self.oc.image, str):
+            if file := await ctx.client.get_file(self.oc.image):
+                embeds = view.embeds
+                attachments = [file]
+                embeds[0].set_image(url=f"attachment://{file.filename}")
+                message = await view.message.edit(attachments=attachments, embeds=embeds)
+                if image := message.embeds[0].image:
+                    self.oc.image = image.url
+                    await view.upload()
+
+        await self.delete(ctx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
     async def submit(self, ctx: Interaction, btn: Button):

@@ -13,14 +13,15 @@
 # limitations under the License.
 
 
-from typing import Any, Optional
+from functools import lru_cache
+from typing import Any, Iterable, Optional
 
 from discord import Interaction, Member
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
 from src.structures.mon_typing import TypingEnum
-from src.structures.species import Fusion, Species, Variant
+from src.structures.species import Chimera, CustomMega, Fusion, Species, Variant
 from src.utils.etc import LIST_EMOJI
 
 __all__ = ("SpeciesComplex",)
@@ -31,37 +32,52 @@ class SpeciesComplex(Complex[Species]):
         self,
         member: Member,
         target: Interaction,
-        mon_total: set[Species],
+        mon_total: Iterable[Species],
         max_values: int = 1,
     ):
 
-        self.total = {x for x in mon_total if not x.banned}
+        self.total = mon_total = {x for x in mon_total if not x.banned}
         max_values = min(len(self.total), max_values)
 
-        self.reference: dict[Species, int] = {}
+        self.reference1: dict[Species, int] = {}
+        self.reference2: dict[Species, int] = {}
+        self.reference3: dict[Species, int] = {}
 
         for oc in target.client.get_cog("Submission").ocs.values():
-
             if not target.guild.get_member(oc.author):
                 continue
 
-            if isinstance(oc.species, Fusion):
+            if isinstance(oc.species, (Fusion, Chimera)):
                 for mon in oc.species.bases:
-                    self.reference.setdefault(mon, 0)
-                    self.reference[mon] += 1
+                    self.reference1.setdefault(mon, 0)
+                    self.reference1[mon] += 1
+            elif isinstance(oc.species, (Variant, CustomMega)):
+                mon = oc.species.base
+                self.reference2.setdefault(mon, 0)
+                self.reference2[mon] += 1
+            elif isinstance(oc.species, Species):
+                self.reference3[mon] += 1
+                self.reference3[mon] += 1
 
+        @lru_cache(maxsize=None)
+        def parser(x: Species):
+            data = dict(
+                Species=self.reference3.get(x, 0),
+                Fusions=self.reference1.get(x, 0),
+                Variants=self.reference2.get(x, 0),
+            )
+            if text := ", ".join(f"{x}: {y}" for x, y in data.items() if y):
+                phrase = f"{sum(data.values())} OCs ({text})"
             else:
-                mon = oc.species.base if isinstance(oc.species, Variant) else oc.species
-                if isinstance(mon, Species):
-                    self.reference.setdefault(mon, 0)
-                    self.reference[mon] += 1
+                phrase = "Unused Species."
+            return x.name, phrase
 
         super(SpeciesComplex, self).__init__(
             member=member,
             target=target,
             values=mon_total,
             timeout=None,
-            parser=lambda x: (x.name, f"Species have {self.reference.get(x, 0)} OCs"),
+            parser=parser,
             keep_working=False,
             sort_key=lambda x: x.name,
             max_values=max_values,
@@ -76,7 +92,7 @@ class SpeciesComplex(Complex[Species]):
 
         self.values = [x for x in self.values if x not in self.choices] or self.total
         self.max_values = min(self.real_max, len(self.values))
-        self.embed.description = "\n".join(f"> • {x.name}" for x in self.choices)
+        self.embed.description = "\n".join(sorted(f"> • {x.name}" for x in self.choices))
 
         if isinstance(page, int):
             self.pos = page
