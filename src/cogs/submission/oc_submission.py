@@ -92,7 +92,7 @@ class TemplateItem:
             "Abilities": "Ability, Ability",
             "Moveset": "Move, Move, Move, Move, Move, Move",
         }
-        exclude = data.get("fields", [])
+        exclude = data.get("exclude", [])
         self.fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
         self.docs = data.get("docs", {})
 
