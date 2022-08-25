@@ -67666,7 +67666,7 @@
 	},
 	{
 		"id": "MELOETTA",
-		"name": "Meloetta",
+		"name": "Meloetta Aria Forme",
 		"shape": "Bipedal",
 		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0648_000_uk_n_00000000_f_n.png",
 		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0648_000_uk_n_00000000_f_r.png",
@@ -67802,8 +67802,8 @@
 		"kind": "Mythical"
 	},
 	{
-		"id": "MELOETTA",
-		"name": "Meloetta Aria Forme",
+		"id": "MELOETTAPIROUETTE",
+		"name": "Meloetta Pirouette Forme",
 		"shape": "Bipedal",
 		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0648_001_uk_n_00000000_f_n.png",
 		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0648_001_uk_n_00000000_f_r.png",
