@@ -240,14 +240,16 @@ class SpeciesField(TemplateField):
         if not species:
             return "Missing Species"
 
-        CORE = (Legendary, Mythical, Mega, UltraBeast)
         if species.banned:
             return f"{species.name} as species are banned."
-        if isinstance(species, Variant) and isinstance(species.base, CORE):
-            return "This kind of Pokemon can't have variants."
-        if isinstance(species, CustomMega) and isinstance(species.base, CORE):
+
+        CORE = (Legendary, Mythical, Mega, UltraBeast)
+
+        if isinstance(species, CustomMega) and isinstance(species.base, Mega):
             return "This kind of Pokemon can't have custom megas."
-        if isinstance(species, Fakemon) and isinstance(species.evolves_from, CORE):
+        if isinstance(species, Variant) and isinstance(species.base, Mega):
+            return "This kind of Pokemon can't have variants."
+        if isinstance(species, Fakemon) and isinstance(species.evolves_from, Mega):
             return "Fakemon evolutions from this kind of Pokemon aren't possible."
         if isinstance(species, Fusion) and all(isinstance(x, CORE) for x in species.bases):
             return "Fusions require at least one common Pokemon."
@@ -266,8 +268,10 @@ class SpeciesField(TemplateField):
         max_values: int = 1
 
         match template:
-            case Template.Pokemon | Template.CustomMega | Template.Variant:
+            case Template.Pokemon:
                 mon_total = Pokemon.all()
+            case Template.CustomMega | Template.Variant:
+                mon_total = {x for x in Species.all() if not isinstance(x, Mega)}
             case Template.Legendary:
                 mon_total = Legendary.all()
             case Template.Mythical:
@@ -479,7 +483,7 @@ class MovesetField(TemplateField):
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
                 isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
-                isinstance(species, Variant) and species.base.id in mons,
+                isinstance(species, (CustomMega, Variant)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
             )
@@ -512,7 +516,7 @@ class MovesetField(TemplateField):
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
                 isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
-                isinstance(species, Variant) and species.base.id in mons,
+                isinstance(species, (CustomMega, Variant)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
                 not moves and not isinstance(species, Chimera),
