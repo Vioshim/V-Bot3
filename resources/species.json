@@ -24243,7 +24243,6 @@
 		"SPA": 150,
 		"SPD": 100,
 		"SPE": 90,
-		"banned": true,
 		"evolves_to": ["DIALGAORIGIN"],
 		"movepool": {
 			"level": {
@@ -24421,7 +24420,6 @@
 		"SPA": 150,
 		"SPD": 120,
 		"SPE": 90,
-		"banned": true,
 		"evolves_from": "DIALGA",
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary"
@@ -24547,8 +24545,30 @@
 				"WONDERROOM"
 			]
 		},
+		"evolves_to": ["DIANCIEMEGA"],
 		"abilities": ["CLEARBODY"],
 		"kind": "Mythical"
+	},
+	{
+		"id": "DIANCIEMEGA",
+		"name": "Mega Diancie",
+		"shape": "Head w/ Arms",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0719_001_uk_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0719_001_uk_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0719_001_uk_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0719_001_uk_n_00000000_f_r.png",
+		"types": ["FAIRY", "ROCK"],
+		"height": 0.7,
+		"weight": 8.8,
+		"HP": 50,
+		"ATK": 160,
+		"DEF": 110,
+		"SPA": 160,
+		"SPD": 110,
+		"SPE": 110,
+		"evolves_from": "DIANCIE",
+		"abilities": ["MAGICBOUNCE"],
+		"kind": "Mega"
 	},
 	{
 		"id": "DIGGERSBY",
@@ -44383,7 +44403,6 @@
 		"SPA": 150,
 		"SPD": 90,
 		"SPE": 90,
-		"banned": true,
 		"evolves_from": "GROUDON",
 		"abilities": ["DESOLATELAND"],
 		"kind": "Mega"
@@ -56015,7 +56034,6 @@
 		"SPA": 180,
 		"SPD": 160,
 		"SPE": 90,
-		"banned": true,
 		"evolves_from": "KYOGRE",
 		"abilities": ["PRIMORDIALSEA"],
 		"kind": "Mega"
@@ -57387,8 +57405,30 @@
 				"ZENHEADBUTT"
 			]
 		},
+		"evolves_to": ["LATIASMEGA"],
 		"abilities": ["LEVITATE"],
 		"kind": "Legendary"
+	},
+	{
+		"id": "LATIASMEGA",
+		"name": "Mega Latias",
+		"shape": "Wings",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0380_001_fo_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0380_001_fo_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0380_001_fo_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0380_001_fo_n_00000000_f_r.png",
+		"types": ["DRAGON", "PSYCHIC"],
+		"height": 1.8,
+		"weight": 52,
+		"HP": 80,
+		"ATK": 100,
+		"DEF": 120,
+		"SPA": 140,
+		"SPD": 150,
+		"SPE": 110,
+		"evolves_from": "LATIAS",
+		"abilities": ["LEVITATE"],
+		"kind": "Mega"
 	},
 	{
 		"id": "LATIOS",
@@ -57575,8 +57615,30 @@
 				"ZENHEADBUTT"
 			]
 		},
+		"evolves_to": ["LATIOSMEGA"],
 		"abilities": ["LEVITATE"],
 		"kind": "Legendary"
+	},
+	{
+		"id": "LATIOSMEGA",
+		"name": "Mega Latios",
+		"shape": "Wings",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0381_001_mo_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0381_001_mo_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0381_001_mo_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0381_001_mo_n_00000000_f_r.png",
+		"types": ["DRAGON", "PSYCHIC"],
+		"height": 2.3,
+		"weight": 70,
+		"HP": 80,
+		"ATK": 100,
+		"DEF": 120,
+		"SPA": 140,
+		"SPD": 150,
+		"SPE": 110,
+		"evolves_from": "LATIOS",
+		"abilities": ["LEVITATE"],
+		"kind": "Mega"
 	},
 	{
 		"id": "LEAFEON",
@@ -69826,8 +69888,51 @@
 				"ZENHEADBUTT"
 			]
 		},
+		"evolves_to": ["MEWTWOMEGAX", "MEWTWOMEGAY"],
 		"abilities": ["PRESSURE", "UNNERVE"],
 		"kind": "Legendary"
+	},
+	{
+		"id": "MEWTWOMEGAX",
+		"name": "Mewtwo Mega X",
+		"shape": "Bipedal w/ Tail",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_001_uk_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_001_uk_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_001_uk_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_001_uk_n_00000000_f_r.png",
+		"types": ["PSYCHIC", "FIGHTING"],
+		"height": 2.3,
+		"weight": 127,
+		"HP": 106,
+		"ATK": 190,
+		"DEF": 100,
+		"SPA": 154,
+		"SPD": 100,
+		"SPE": 130,
+		"evolves_from": "MEWTWO",
+		"abilities": ["STEADFAST"],
+		"kind": "Mega"
+	},
+	{
+		"id": "MEWTWOMEGAX",
+		"name": "Mewtwo Mega X",
+		"shape": "Bipedal w/ Tail",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_002_uk_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_002_uk_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_002_uk_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0150_002_uk_n_00000000_f_r.png",
+		"types": ["PSYCHIC"],
+		"height": 1.5,
+		"weight": 33,
+		"HP": 106,
+		"ATK": 150,
+		"DEF": 70,
+		"SPA": 194,
+		"SPD": 120,
+		"SPE": 140,
+		"evolves_from": "MEWTWO",
+		"abilities": ["INSOMNIA"],
+		"kind": "Mega"
 	},
 	{
 		"id": "MIENFOO",
@@ -74775,7 +74880,6 @@
 		"SPA": 167,
 		"SPD": 97,
 		"SPE": 129,
-		"banned": true,
 		"evolves_from": "NECROZMA",
 		"abilities": ["NEUROFORCE"],
 		"kind": "Legendary"
@@ -78961,7 +79065,6 @@
 		"SPA": 150,
 		"SPD": 120,
 		"SPE": 100,
-		"banned": true,
 		"evolves_to": ["PALKIAORIGIN"],
 		"movepool": {
 			"level": {
@@ -79141,7 +79244,6 @@
 		"SPA": 150,
 		"SPD": 120,
 		"SPE": 120,
-		"banned": true,
 		"evolves_from": "PALKIA",
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary"
@@ -89448,7 +89550,29 @@
 			]
 		},
 		"abilities": ["AIRLOCK"],
+		"evolves_to": ["RAYQUAZAMEGA"],
 		"kind": "Legendary"
+	},
+	{
+		"id": "RAYQUAZAMEGA",
+		"name": "Mega Rayquaza",
+		"shape": "Serpentine",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0384_001_uk_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0384_001_uk_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0384_001_uk_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0384_001_uk_n_00000000_f_r.png",
+		"types": ["DRAGON", "FLYING"],
+		"height": 10.8,
+		"weight": 392.0,
+		"HP": 105,
+		"ATK": 180,
+		"DEF": 100,
+		"SPA": 180,
+		"SPD": 100,
+		"SPE": 115,
+		"evolves_from": "RAYQUAZA",
+		"abilities": ["DELTASTREAM"],
+		"kind": "MEGA"
 	},
 	{
 		"id": "REGICE",
