@@ -152,7 +152,6 @@ class PingView(View):
         else:
             thread_id = None
         self.thread_id = thread_id
-        self.ping2.label = f"Ping to RP with {oc.name}"
         if reference.user.id != oc.author:
             self.remove_item(self.delete)
 

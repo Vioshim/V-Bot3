@@ -176,6 +176,7 @@ class Character:
 
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
+        dct.pop("_id", None)
         species: Optional[dict[str, str]] = dct.get("species")
         if isinstance(species, list):
             dct["species"] = Chimera(species)
@@ -306,12 +307,12 @@ class Character:
         return self.moveset
 
     @property
-    def evolves_from(self) -> Optional[Type[Species]]:
+    def evolves_from(self) -> Optional[Species]:
         if self.species:
             return self.species.species_evolves_from
 
     @property
-    def evolves_to(self) -> list[Type[Species]]:
+    def evolves_to(self) -> list[Species]:
         if self.species:
             return self.species.species_evolves_to
 

@@ -80,7 +80,6 @@ class TemplateItem:
 
     def __init__(self, data: dict[str, str]) -> None:
         self.description = data.get("description", "")
-
         modifier = data.get("modifier", {})
         self.custom = data.get("custom", False)
         default = {
@@ -93,8 +92,9 @@ class TemplateItem:
             "Moveset": "Move, Move, Move, Move, Move, Move",
         }
         exclude = data.get("exclude", [])
-        self.fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
-        self.docs = data.get("docs", {})
+        fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
+        self.fields = frozendict(fields)
+        self.docs = frozendict(data.get("docs", {}))
 
 
 class Template(TemplateItem, Enum):
@@ -135,6 +135,7 @@ class Template(TemplateItem, Enum):
             "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04",
             "w/Sp. Ability": "1l_fQ2i2By63CgCco29XvkZiAdEpWgs4xkDMunwceLHM",
         },
+        custom=True,
     )
     CustomPokemon = dict(
         description="Community created species which are assumed to be foreigners",
@@ -198,6 +199,92 @@ class Template(TemplateItem, Enum):
         docs={"Standard": "1MbaUTR2NDOpsifRO2lVw6t0eAUKFGaOOIOHD0nXC2aA"},
         custom=True,
     )
+
+    async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
+        choices: list[Species] = []
+        if mon_total := self.total_species:
+            view = SpeciesComplex(
+                member=ctx.user,
+                target=ctx,
+                mon_total=mon_total,
+                max_values=self.max_values,
+            )
+            async with view.send(ephemeral=ephemeral) as data:
+                if 1 <= len(data) <= self.max_values:
+                    choices.extend(data)
+                else:
+                    return
+
+        match self:
+            case self.CustomPokemon | self.CustomLegendary | self.CustomMythical | self.CustomUltraBeast:
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label="Character's Species.",
+                    required=True,
+                    ephemeral=ephemeral,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        if isinstance(oc.species, Fakemon):
+                            oc.species.name = answer
+                        else:
+                            oc.species = Fakemon(
+                                name=answer,
+                                abilities=oc.abilities,
+                                base_image=oc.image_url,
+                                movepool=Movepool(other=oc.moveset.copy()),
+                            )
+            case self.Variant:
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label=f"{choices[0].name} Variant"[:45],
+                    ephemeral=ephemeral,
+                    required=True,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        oc.species = Variant(base=choices[0], name=answer)
+            case self.CustomMega:
+                oc.species = CustomMega(choices[0])
+                oc.abilities &= oc.species.abilities
+            case self.Chimera:
+                oc.species = Chimera(choices)
+            case self.Fusion:
+                oc.species = Fusion(*choices)
+            case self.Legendary | self.Mythical | self.UltraBeast | self.Mega:
+                oc.species = choices[0]
+                oc.abilities = choices[0].abilities.copy()
+            case _:
+                if choices:
+                    oc.species = choices[0]
+                    oc.abilities &= oc.species.abilities
+
+    @property
+    def max_values(self):
+        match self:
+            case self.Fusion:
+                return 2
+            case self.Chimera:
+                return 3
+            case _:
+                return 1
+
+    @property
+    def total_species(self) -> frozenset[Species]:
+        match self:
+            case self.Pokemon:
+                mon_total = Pokemon.all()
+            case self.CustomMega | Template.Variant:
+                mon_total = {x for x in Species.all() if not isinstance(x, Mega)}
+            case self.Legendary:
+                mon_total = Legendary.all()
+            case self.Mythical:
+                mon_total = Mythical.all()
+            case self.UltraBeast:
+                mon_total = UltraBeast.all()
+            case self.Mega:
+                mon_total = Mega.all()
+            case self.Fusion | self.Chimera:
+                mon_total = Species.all()
+            case _:
+                mon_total = []
+        return frozenset({x for x in mon_total if not x.banned})
 
     @property
     def text(self):
@@ -272,12 +359,6 @@ class NameField(TemplateField):
     def evaluate(cls, oc: Character) -> Optional[str]:
         if not oc.name:
             return "Missing Name"
-
-    @classmethod
-    def message(cls, oc: Character) -> bool:
-        if not oc.name:
-            return "No Name was Provided"
-        return cls.description
 
     @classmethod
     async def on_submit(
@@ -414,79 +495,7 @@ class SpeciesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        max_values: int = 1
-
-        match template:
-            case Template.Pokemon:
-                mon_total = Pokemon.all()
-            case Template.CustomMega | Template.Variant:
-                mon_total = {x for x in Species.all() if not isinstance(x, Mega)}
-            case Template.Legendary:
-                mon_total = Legendary.all()
-            case Template.Mythical:
-                mon_total = Mythical.all()
-            case Template.UltraBeast:
-                mon_total = UltraBeast.all()
-            case Template.Mega:
-                mon_total = Mega.all()
-            case Template.Fusion | Template.Chimera:
-                mon_total = Species.all()
-                max_values = 2 if template == Template.Fusion else 3
-            case _:
-                mon_total = []
-
-        choices: list[Species] = []
-
-        if mon_total := {x for x in mon_total if not x.banned}:
-            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, max_values=max_values)
-            async with view.send(ephemeral=ephemeral) as data:
-                choices.extend(data)
-                if not choices:
-                    return
-
-                if template != Template.Chimera and len(choices) != max_values:
-                    return
-
-        match template:
-            case Template.CustomPokemon | Template.CustomLegendary | Template.CustomMythical | Template.CustomUltraBeast:
-                async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label="Character's Species.",
-                    required=True,
-                    ephemeral=ephemeral,
-                ) as answer:
-                    if isinstance(answer, str) and answer:
-                        if isinstance(oc.species, Fakemon):
-                            oc.species.name = answer
-                        else:
-                            oc.species = Fakemon(
-                                name=answer,
-                                abilities=oc.abilities,
-                                base_image=oc.image_url,
-                                movepool=Movepool(other=oc.moveset.copy()),
-                            )
-            case Template.Variant:
-                async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label=f"{choices[0].name} Variant"[:45],
-                    ephemeral=ephemeral,
-                    required=True,
-                ) as answer:
-                    if isinstance(answer, str) and answer:
-                        oc.species = Variant(base=choices[0], name=answer)
-            case Template.CustomMega:
-                oc.species = CustomMega(choices[0])
-                oc.abilities &= oc.species.abilities
-            case Template.Chimera:
-                oc.species = Chimera(choices)
-            case Template.Fusion:
-                oc.species = Fusion(*choices)
-            case Template.Legendary | Template.Mythical | Template.UltraBeast | Template.Mega:
-                oc.species = choices[0]
-                oc.abilities = choices[0].abilities.copy()
-            case _:
-                if choices:
-                    oc.species = choices[0]
-                    oc.abilities &= oc.species.abilities
-
+        await template.process(oc=oc, ctx=ctx, ephemeral=ephemeral)
         if species := oc.species:
             progress.add(cls.name)
             moves = species.total_movepool()
@@ -1127,15 +1136,14 @@ class CreationOCView(Basic):
         )
         await view.send(ephemeral=False)
 
-        if isinstance(self.oc.image, str):
-            if file := await ctx.client.get_file(self.oc.image):
-                embeds = view.embeds
-                attachments = [file]
-                embeds[0].set_image(url=f"attachment://{file.filename}")
-                message = await view.message.edit(attachments=attachments, embeds=embeds)
-                if image := message.embeds[0].image:
-                    self.oc.image = image.url
-                    await view.upload()
+        if isinstance(self.oc.image, str) and isinstance(file := await ctx.client.get_file(self.oc.image), File):
+            embeds = view.embeds
+            attachments = [file]
+            embeds[0].set_image(url=f"attachment://{file.filename}")
+            message = await view.message.edit(attachments=attachments, embeds=embeds)
+            if image := message.embeds[0].image:
+                self.oc.image = image.url
+                await view.upload()
 
         await self.delete(ctx)
 
@@ -1178,7 +1186,6 @@ class ModCharactersView(CharactersView):
                         view=view,
                         ephemeral=ephemeral,
                     )
-                await view.wait()
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
         finally:
@@ -1307,6 +1314,5 @@ class SubmissionView(View):
         view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
         view.embed.title = "Select Character to modify"
         view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        async with view.send(single=True) as oc:
-            if isinstance(oc, Character):
-                ctx.client.logger.info("%s is modifying a Character(%s) aka %s", str(ctx.user), repr(oc), oc.name)
+        async with view.send(single=True):
+            ctx.client.logger.info("%s is modifying characters", str(ctx.user))

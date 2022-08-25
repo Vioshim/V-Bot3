@@ -129,6 +129,7 @@ class Submission(commands.Cog):
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
         self.oc_list: dict[int, int] = {}
+        self.db = self.bot.mongo_db("Character")
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
@@ -258,11 +259,10 @@ class Submission(commands.Cog):
             if not oc.image_url:
                 if image_as_is:
                     image = oc.image
+                elif img := await self.bot.mongo_db("OC Background").find_one({"author": oc.author}):
+                    image = oc.generated_image(img["image"])
                 else:
-                    db = self.bot.mongo_db("OC Background")
-                    if img := await db.find_one({"author": oc.author}):
-                        img: str = img["image"]
-                    image = oc.generated_image(img)
+                    image = oc.generated_image()
                 if file := await self.bot.get_file(url=image, filename="image"):
                     word = "attachments" if oc.id else "files"
                     kwargs[word] = [file]
@@ -277,6 +277,7 @@ class Submission(commands.Cog):
 
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
+
             former = self.ocs.pop(oc.id, None)
             self.ocs[oc.id] = oc
             self.bot.logger.info(
@@ -286,8 +287,12 @@ class Submission(commands.Cog):
                 repr(oc),
                 oc.document_url or "Manual",
             )
-            async with self.bot.database() as conn:
-                await oc.update(connection=conn, idx=msg_oc.id)
+
+            await self.db.replace_one(
+                {"id": oc.id},
+                oc.to_mongo_dict(),
+                upsert=True,
+            )
 
             try:
                 if former:
@@ -324,7 +329,6 @@ class Submission(commands.Cog):
                             avatar_url=avatar_url,
                             view=view,
                         )
-
             except Exception as e2:
                 self.bot.logger.exception("Error when logging oc modification", exc_info=e2)
         except Exception as e1:
@@ -405,10 +409,9 @@ class Submission(commands.Cog):
                 return
 
             if oc.location != channel.id:
-                async with self.bot.database() as db:
-                    oc.location = channel.id
-                    await db.execute("UPDATE CHARACTER SET LOCATION = $1 WHERE ID = $2", channel.id, oc.id)
-                    await self.oc_update(oc)
+                oc.location = channel.id
+                await self.db.replace_one({"id": oc.id}, oc.to_mongo_dict(), upsert=True)
+                await self.oc_update(oc)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
@@ -436,10 +439,9 @@ class Submission(commands.Cog):
             await self.on_message_tupper(msg, message.author.id)
 
     async def load_characters(self):
-        async with self.bot.database() as db:
-            self.bot.logger.info("Loading all Characters.")
-            self.ocs = {oc.id: oc async for oc in Character.fetch_all(db)}
-            self.bot.logger.info("Finished loading all characters")
+        self.bot.logger.info("Loading all Characters.")
+        self.ocs = {oc.id: oc async for data in self.db.find({}) if (oc := Character.from_mongo_dict(data))}
+        self.bot.logger.info("Finished loading all characters")
 
     async def load_profiles(self):
         self.bot.logger.info("Loading All Profiles")
@@ -572,16 +574,15 @@ class Submission(commands.Cog):
             return
 
         self.oc_list.pop(ocs[0].author, None)
-        async with self.bot.database() as db:
-            for oc in ocs:
-                self.ocs.pop(oc.id, None)
-                self.bot.logger.info(
-                    "Character Removed as Thread was removed! > %s - %s > %s",
-                    oc.name,
-                    repr(oc),
-                    oc.document_url or "None",
-                )
-                await oc.delete(db)
+        for oc in ocs:
+            self.ocs.pop(oc.id, None)
+            self.bot.logger.info(
+                "Character Removed as Thread was removed! > %s - %s > %s",
+                oc.name,
+                repr(oc),
+                oc.document_url or "None",
+            )
+            await self.db.delete_one({"id": oc.id})
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
@@ -603,11 +604,10 @@ class Submission(commands.Cog):
             message = "Character Removed as Thread was removed! > %s - %s > %s"
         if not ocs:
             return
-        async with self.bot.database() as db:
-            for oc in ocs:
-                self.ocs.pop(oc.id, None)
-                self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
-                await oc.delete(db)
+        for oc in ocs:
+            self.ocs.pop(oc.id, None)
+            self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
+            await self.db.delete_one({"id": oc.id})
 
     @commands.command()
     @commands.guild_only()
