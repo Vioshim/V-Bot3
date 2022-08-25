@@ -123,8 +123,8 @@ class SpeciesComplex(Complex[Species]):
                 aux2 = len({x for x in items if len(x.types) == 2})
 
                 description = f"Has {aux1} mono-types, {aux2} dual-types."
+                self.data[label] = sorted(items, key=lambda x: x.name)
 
-                self.data[label] = items
                 self.select_types.add_option(
                     label=label,
                     emoji=emoji,
@@ -136,7 +136,10 @@ class SpeciesComplex(Complex[Species]):
     @select(placeholder="Filter by Typings", custom_id="filter", max_values=2)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         if "No Filter" in sct.values:
-            self.values = set.intersection(*[self.data[value] for value in sct.values])
+            items = set.intersection(*[self.data[value] for value in sct.values])
         elif types := TypingEnum.deduce_many(*sct.values):
-            self.values = {x for x in self.total if x.types == types}
+            items = {x for x in self.total if x.types == types}
+        else:
+            items = self.values
+        self.values = sorted(items, key=lambda x: x.name)
         await self.edit(interaction=interaction, page=0)

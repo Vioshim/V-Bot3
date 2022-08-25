@@ -291,10 +291,10 @@ class SpeciesField(TemplateField):
         if mon_total := {x for x in mon_total if not x.banned}:
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, max_values=max_values)
             async with view.send(ephemeral=ephemeral) as data:
-                choices.extend(data)
-
                 if not choices:
                     return
+
+                choices.extend(data)
 
                 if template != Template.Chimera and len(choices) != max_values:
                     return

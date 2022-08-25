@@ -134,10 +134,15 @@ class Complex(Simple[_T]):
         if not isinstance(values, Iterable):
             name = values.__class__.__name__ if values is not None else "None"
             raise TypeError(f"{name} is not iterable.")
-        items: list[_T] = list(values)
-        self._values = items
-        self.real_values = items
-        self.sort()
+
+        if isinstance(values, list):
+            self._values = values
+            self.real_values = values
+        else:
+            items = list(values)
+            self._values = items
+            self.real_values = items
+            self.sort()
 
     async def __aenter__(self) -> set[_T]:
         await super(Complex, self).send()
