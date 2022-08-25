@@ -277,6 +277,19 @@ class Utilities(commands.Cog):
         finally:
             await ctx.followup.send(embed=embed, ephemeral=hidden)
 
+    @commands.command()
+    async def archive(self, ctx: commands.Context):
+        """Command to archive threads
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context
+        """
+        await ctx.message.delete(delay=0)
+        if isinstance(thread := ctx.channel, Thread) and thread.permissions_for(ctx.author).manage_threads:
+            await thread.edit(archived=True, reason=f"Archived by {ctx.author}")
+
 
 async def setup(bot: CustomBot) -> None:
     """Default Cog loader
