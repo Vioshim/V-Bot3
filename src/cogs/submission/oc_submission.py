@@ -211,7 +211,7 @@ class Template(TemplateItem, Enum):
 
     @property
     def formatted_text(self):
-        return f"````yaml\n{self.text}\n```"
+        return f"```yaml\n{self.text}\n```"
 
     @property
     def doc_urls(self):
