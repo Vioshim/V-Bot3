@@ -55,8 +55,8 @@ class SpeciesComplex(Complex[Species]):
                 mon = oc.species.base
                 self.reference2.setdefault(mon, 0)
                 self.reference2[mon] += 1
-            elif isinstance(oc.species, Species):
-                self.reference3[mon] += 1
+            elif isinstance(mon := oc.species, Species):
+                self.reference3.setdefault(mon, 0)
                 self.reference3[mon] += 1
 
         @lru_cache(maxsize=None)
