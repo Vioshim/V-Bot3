@@ -78619,7 +78619,7 @@
 		"SPA": 98,
 		"SPD": 70,
 		"SPE": 93,
-		"evolves_from": "ORICORIO",
+		"evolves_from": "ORICORIOBAILE",
 		"abilities": ["DANCER"],
 		"kind": "Pokemon"
 	},
@@ -78640,7 +78640,7 @@
 		"SPA": 98,
 		"SPD": 70,
 		"SPE": 93,
-		"evolves_from": "ORICORIO",
+		"evolves_from": "ORICORIOBAILE",
 		"abilities": ["DANCER"],
 		"kind": "Pokemon"
 	},
@@ -78661,7 +78661,7 @@
 		"SPA": 98,
 		"SPD": 70,
 		"SPE": 93,
-		"evolves_from": "ORICORIO",
+		"evolves_from": "ORICORIOBAILE",
 		"abilities": ["DANCER"],
 		"kind": "Pokemon"
 	},

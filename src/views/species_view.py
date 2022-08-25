@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from functools import lru_cache
 from typing import Any, Iterable, Optional
 
@@ -59,6 +58,7 @@ class SpeciesComplex(Complex[Species]):
                 self.reference3.setdefault(mon, 0)
                 self.reference3[mon] += 1
 
+        @lru_cache(maxsize=None)
         def parser(x: Species):
             data = dict(
                 Species=self.reference3.get(x, 0),
