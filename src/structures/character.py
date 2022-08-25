@@ -181,7 +181,8 @@ class Character:
         if isinstance(species, list):
             dct["species"] = Chimera(species)
         elif isinstance(species, dict):
-            data = {k.removeprefix("f_"): v for k, v in species.items()}
+            data = {k.removeprefix("f_"): v for k, v in species.items() if k.startswith("f_")}
+            dct = {k: v for k, v in species.items() if not k.startswith("f_")}
             species = data.get("species", "")
             species = Variant(**data) if "base" in data else Fakemon(**data)
             dct["species"] = species
