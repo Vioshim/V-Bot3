@@ -129,7 +129,7 @@ class Submission(commands.Cog):
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
         self.oc_list: dict[int, int] = {}
-        self.db = self.bot.mongo_db("Character")
+        self.db = self.bot.mongo_db("Characters")
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
