@@ -625,6 +625,10 @@ class CustomMega(Species):
     base: Optional[Species] = None
 
     def __init__(self, base: Species):
+
+        if isinstance(base, str):
+            base = Species.from_ID(base)
+
         super(CustomMega, self).__init__(
             id=base.id,
             name=f"Mega {base.name}",

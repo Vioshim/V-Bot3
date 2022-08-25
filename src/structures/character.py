@@ -150,19 +150,20 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
-        if isinstance(self.species, Chimera):
-            data["species"] = [x.id for x in self.species.bases]
-        elif isinstance(self.species, (Fakemon, Variant)):
-            species = {
-                "f_name": self.species.name,
-                "f_types": [x.name for x in self.species.types],
-                "f_evolves_from": self.species.evolves_from,
-                "f_abilities": data["abilities"],
-                "f_movepool": self.species.movepool.as_dict,
-            }
-            if isinstance(self.species, Variant) and self.species.base:
-                species["f_base"] = self.species.base.id
-            data["species"] = species
+        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera)):
+            if isinstance(self.species, Chimera):
+                aux = {"chimera": [x for x in self.species.bases]}
+            elif isinstance(self.species, CustomMega):
+                aux = {"mega": self.species.id}
+            else:
+                aux = {
+                    "name": self.species.name,
+                    "evolves_from": self.species.evolves_from,
+                    "movepool": self.species.movepool.as_dict,
+                }
+                if isinstance(self.species, Variant):
+                    aux["base"] = self.species.id
+            data["species"] = aux
         elif self.species:
             data["species"] = self.species.id
 
@@ -178,13 +179,21 @@ class Character:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
-        species: Optional[dict[str, str]] = dct.get("species")
+        species: Optional[dict[str, Any]] = dct.get("species")
         if isinstance(species, list):
             dct["species"] = Chimera(species)
         elif isinstance(species, dict):
-            data = {k.removeprefix("f_"): v for k, v in species.items() if k.startswith("f_")}
-            species = Variant(**data) if "base" in data else Fakemon(**data)
-            dct["species"] = species
+            if chimera := species.pop("chimera", []):
+                mon = Chimera(bases=chimera)
+            elif mega := species.pop("mega", ""):
+                mon = CustomMega(base=mega)
+            elif "base" in species:
+                mon = Variant(**species)
+            else:
+                mon = Fakemon(**species)
+
+            dct["species"] = mon
+
         return Character(**dct)
 
     def __post_init__(self):
