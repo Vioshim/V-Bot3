@@ -462,7 +462,7 @@ class Submission(commands.Cog):
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
-        view = SubmissionView(ocs=self.ocs)
+        view = SubmissionView(timeout=None)
         if not (channel := self.bot.get_channel(852180971985043466)):
             channel = await self.bot.fetch_channel(852180971985043466)
         await PartialMessage(channel=channel, id=1005387453055639612).edit(view=view)

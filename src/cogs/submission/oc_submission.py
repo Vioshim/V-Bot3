@@ -1253,10 +1253,6 @@ class TemplateView(View):
 
 
 class SubmissionView(View):
-    def __init__(self, ocs: list[Character]):
-        super(SubmissionView, self).__init__(timeout=None)
-        self.ocs = ocs
-
     @select(
         placeholder="Click here to read our Templates",
         row=0,
@@ -1307,7 +1303,8 @@ class SubmissionView(View):
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         member = ctx.client.supporting.get(member, member)
-        values: list[Character] = [oc for oc in self.ocs.values() if member.id == oc.author]
+        ocs = ctx.client.get_cog("Submission").ocs.values()
+        values: list[Character] = [oc for oc in ocs if member.id == oc.author]
         if not values:
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
         values.sort(key=lambda x: x.name)
