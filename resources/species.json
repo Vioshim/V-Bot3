@@ -55877,7 +55877,7 @@
 		"SPA": 150,
 		"SPD": 140,
 		"SPE": 90,
-		"evolves_to": [""],
+		"evolves_to": ["KYOGREPRIMAL"],
 		"movepool": {
 			"level": {
 				"1": ["ANCIENTPOWER", "BODYSLAM", "SCARYFACE", "WATERPULSE"],
