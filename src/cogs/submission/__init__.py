@@ -129,7 +129,6 @@ class Submission(commands.Cog):
         self.data_msg: dict[int, Message] = {}
         self.ocs: dict[int, Character] = {}
         self.oc_list: dict[int, int] = {}
-        self.db = self.bot.mongo_db("Characters")
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
@@ -288,7 +287,7 @@ class Submission(commands.Cog):
                 oc.document_url or "Manual",
             )
 
-            await self.db.replace_one(
+            await self.bot.mongo_db("Characters").replace_one(
                 {"id": oc.id},
                 oc.to_mongo_dict(),
                 upsert=True,
@@ -410,7 +409,11 @@ class Submission(commands.Cog):
 
             if oc.location != channel.id:
                 oc.location = channel.id
-                await self.db.replace_one({"id": oc.id}, oc.to_mongo_dict(), upsert=True)
+                await self.bot.mongo_db("Characters").replace_one(
+                    {"id": oc.id},
+                    oc.to_mongo_dict(),
+                    upsert=True,
+                )
                 await self.oc_update(oc)
 
     async def on_message_proxy(self, message: Message):
@@ -440,7 +443,8 @@ class Submission(commands.Cog):
 
     async def load_characters(self):
         self.bot.logger.info("Loading all Characters.")
-        self.ocs = {oc.id: oc async for data in self.db.find({}) if (oc := Character.from_mongo_dict(data))}
+        data: list[dict] = [x async for x in self.bot.mongo_db("Characters").find({})]
+        self.ocs = {oc.id: oc for oc in map(Character.from_mongo_dict, data)}
         self.bot.logger.info("Finished loading all characters")
 
     async def load_profiles(self):
@@ -574,6 +578,7 @@ class Submission(commands.Cog):
             return
 
         self.oc_list.pop(ocs[0].author, None)
+        db = self.bot.mongo_db("Characters")
         for oc in ocs:
             self.ocs.pop(oc.id, None)
             self.bot.logger.info(
@@ -582,7 +587,7 @@ class Submission(commands.Cog):
                 repr(oc),
                 oc.document_url or "None",
             )
-            await self.db.delete_one({"id": oc.id})
+            await db.delete_one({"id": oc.id})
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
@@ -604,10 +609,11 @@ class Submission(commands.Cog):
             message = "Character Removed as Thread was removed! > %s - %s > %s"
         if not ocs:
             return
+        db = self.bot.mongo_db("Characters")
         for oc in ocs:
             self.ocs.pop(oc.id, None)
             self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
-            await self.db.delete_one({"id": oc.id})
+            await db.delete_one({"id": oc.id})
 
     @commands.command()
     @commands.guild_only()
