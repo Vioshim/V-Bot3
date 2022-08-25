@@ -151,12 +151,13 @@ class Character:
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
         if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera)):
+            aux = {"types": [x.name for x in self.types]}
             if isinstance(self.species, Chimera):
-                aux = {"chimera": [x for x in self.species.bases]}
+                aux |= {"chimera": [x for x in self.species.bases]}
             elif isinstance(self.species, CustomMega):
-                aux = {"mega": self.species.id}
+                aux |= {"mega": self.species.id}
             else:
-                aux = {
+                aux |= {
                     "name": self.species.name,
                     "evolves_from": self.species.evolves_from,
                     "movepool": self.species.movepool.as_dict,
@@ -191,6 +192,8 @@ class Character:
                 mon = Variant(**species)
             else:
                 mon = Fakemon(**species)
+
+            mon.types = TypingEnum.deduce_many(*species.get("types", []))
 
             dct["species"] = mon
 
