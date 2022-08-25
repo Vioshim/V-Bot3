@@ -245,9 +245,7 @@ class SpeciesField(TemplateField):
 
         CORE = (Legendary, Mythical, Mega, UltraBeast)
 
-        if isinstance(species, CustomMega) and isinstance(species.base, Mega):
-            return "This kind of Pokemon can't have custom megas."
-        if isinstance(species, Variant) and isinstance(species.base, Mega):
+        if isinstance(species, (Variant, CustomMega)) and isinstance(species.base, Mega):
             return "This kind of Pokemon can't have variants."
         if isinstance(species, Fakemon) and isinstance(species.evolves_from, Mega):
             return "Fakemon evolutions from this kind of Pokemon aren't possible."

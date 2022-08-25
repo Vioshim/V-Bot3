@@ -123,7 +123,7 @@ class SpeciesComplex(Complex[Species]):
                 aux2 = len({x for x in items if len(x.types) == 2})
 
                 description = f"Has {aux1} mono-types, {aux2} dual-types."
-                self.data[label] = sorted(items, key=lambda x: x.name)
+                self.data[label] = items
 
                 self.select_types.add_option(
                     label=label,
