@@ -13,12 +13,15 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from enum import IntEnum, auto
+from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional
 
 from discord import (
     ButtonStyle,
+    Color,
     DiscordException,
+    Embed,
     File,
     Interaction,
     InteractionResponse,
@@ -26,11 +29,14 @@ from discord import (
     PartialMessage,
     SelectOption,
     TextStyle,
+    Thread,
 )
-from discord.ui import Button, Select, TextInput, button, select
+from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import MISSING, get
+from frozendict import frozendict
 from motor.motor_asyncio import AsyncIOMotorCollection
 
+from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
@@ -55,6 +61,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
+from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
 from src.utils.functions import int_check
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
@@ -64,20 +71,164 @@ from src.views.movepool_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
 
-class Template(IntEnum):
-    Pokemon = auto()
-    Legendary = auto()
-    Mythical = auto()
-    UltraBeast = auto()
-    Mega = auto()
-    Fusion = auto()
-    CustomPokemon = auto()
-    CustomLegendary = auto()
-    CustomMythical = auto()
-    CustomUltraBeast = auto()
-    CustomMega = auto()
-    Variant = auto()
-    Chimera = auto()
+@dataclass(unsafe_hash=True, slots=True)
+class TemplateItem:
+    description: str = ""
+    fields: frozendict[str, str] = field(default_factory=frozendict)
+    docs: frozendict[str, str] = field(default_factory=frozendict)
+    custom: bool = False
+
+    def __init__(self, data: dict[str, str]) -> None:
+        self.description = data.get("description", "")
+
+        modifier = data.get("modifier", {})
+        self.custom = data.get("custom", False)
+        default = {
+            "Name": "Name",
+            "Species": "Species",
+            "Types": "Type, Type",
+            "Age": "Age",
+            "Pronoun": "He/She/Them",
+            "Abilities": "Ability, Ability",
+            "Moveset": "Move, Move, Move, Move, Move, Move",
+        }
+        exclude = data.get("fields", [])
+        self.fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
+        self.docs = data.get("docs", {})
+
+
+class Template(TemplateItem, Enum):
+    Pokemon = dict(
+        description="The residents of this world.",
+        exclude=["Types"],
+        docs={
+            "Standard": "1-Ebq40ONEzl0klHqUatG0Sy54mffal6AC2iX2aDHNas",
+            "w/Sp. Ability": "1prCYzbqJAAetv_c3HRsXIU22dN7Co-tqykhxWo2SrwY",
+        },
+    )
+    Legendary = dict(
+        description="Legendaries that came from other world which want a new home/purpose.",
+        exclude=["Types"],
+        docs={"Standard": "1N2ZEZd1PEKusdIg9aAYw0_ODmoxHoe5GugkTGZWP21Y"},
+    )
+    Mythical = dict(
+        description="Mythicals that came from other world which want a new home/purpose.",
+        exclude=["Types"],
+        docs={"Standard": "1rVdi3XMXBadIZc03SrZl-vz3b-AcM2WgBSAfvdgW5Fs"},
+    )
+    UltraBeast = dict(
+        description="Ultra Beasts that came from other world which want a new home/purpose.",
+        docs={"Standard": "1Xi25gAj6qoh14xYSXsinfMZ3-6loJ_CTCdrRdPlEhW8"},
+    )
+    Mega = dict(
+        description="People that mega evolved and kept stuck like this.",
+        exclude=["Abilities", "Types"],
+        docs={
+            "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM",
+            "w/Sp. Ability": "1j7dO_sf4wEaO-enKBvmLjrD9gnBh5jMY_QY0XBb0-To",
+        },
+    )
+    Fusion = dict(
+        description="They are also known as Hybrids sometimes, fusions that contain legendaries can't have special abilities.",
+        modifier={"Species": ("Species", "Species 1, Species 2")},
+        docs={
+            "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04",
+            "w/Sp. Ability": "1l_fQ2i2By63CgCco29XvkZiAdEpWgs4xkDMunwceLHM",
+        },
+    )
+    CustomPokemon = dict(
+        description="Community created species which are assumed to be foreigners",
+        modifier={"Species": ("Fakemon", "Fakemon Species")},
+        docs={
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
+            "w/Sp. Ability": "12EJpXCJmtDksb1VZjdr8DrMiJeRlpIWI3544r47MVns",
+            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
+            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+        },
+        custom=True,
+    )
+    CustomLegendary = dict(
+        description="Community created species which are assumed to be foreigners",
+        modifier={"Species": ("Fakemon", "Fakemon Legendary Species")},
+        docs={
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
+            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
+            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+        },
+        custom=True,
+    )
+    CustomMythical = dict(
+        description="Community created species which are assumed to be foreigners",
+        modifier={"Species": ("Fakemon", "Fakemon Mythical Species")},
+        docs={
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
+            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
+            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+        },
+        custom=True,
+    )
+    CustomUltraBeast = dict(
+        description="Community created species which are assumed to be foreigners",
+        modifier={"Species": ("Fakemon", "Fakemon Ultra Beast Species")},
+        docs={
+            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
+            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
+            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+        },
+        custom=True,
+    )
+    CustomMega = dict(
+        description="Community created species which are assumed to be foreigners",
+        modifier={"Species": ("Fakemon", "Mega Species")},
+        docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
+        custom=True,
+    )
+    Variant = dict(
+        description="Community created variants of canon species",
+        modifier={"Species": ("Variant", "Variant Species")},
+        docs={
+            "Standard": "1zLNd_5QZ39aBuDEHt3RC4cmymBjRlFmxuesbfSDgDbA",
+            "w/Sp. Ability": "12MwUc3uDUOAobHo-fyiwXxh-jI6Tfj5zimOmQHJUWTc",
+        },
+        custom=True,
+    )
+    Chimera = dict(
+        description="Pokemon created by science, either by the Pixy foundation's research in current times or by clandestine researchers.",
+        modifier={"Species": ("Chimera", "Species, Species, Species, ...")},
+        docs={"Standard": "1MbaUTR2NDOpsifRO2lVw6t0eAUKFGaOOIOHD0nXC2aA"},
+        custom=True,
+    )
+
+    @property
+    def text(self):
+        return "\n".join(f"{k}: {v}" for k, v in self.fields.items())
+
+    @property
+    def title(self):
+        if self.custom:
+            return self.name.removeprefix("Custom") + " (Custom)"
+        return self.name
+
+    @property
+    def formatted_text(self):
+        return f"````yaml\n{self.text}\n```"
+
+    @property
+    def doc_urls(self):
+        return {k: f"https://docs.google.com/document/d/{v}/edit?usp=sharing" for k, v in self.docs.items()}
+
+    @property
+    def embed(self):
+        embed = Embed(
+            title=self.title,
+            description=self.formatted_text,
+            color=Color.blurple(),
+        )
+        embed.set_image(url=WHITE_BAR)
+        for key, url in self.doc_urls.items():
+            embed.add_field(name=key, value=f"[Google Docs URL]({url})")
+        embed.set_footer(text=self.description)
+        return embed
 
 
 class TemplateField(ABC):
@@ -1032,3 +1183,130 @@ class ModCharactersView(CharactersView):
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
         finally:
             await super(CharactersView, self).select_choice(interaction, sct)
+
+
+class SubmissionModal(Modal):
+    def __init__(self, text: str):
+        super(SubmissionModal, self).__init__(title="Character Submission Template")
+        self.text = TextInput(
+            style=TextStyle.paragraph,
+            label=self.title,
+            placeholder="Template or Google Document goes here",
+            default=text,
+            required=True,
+        )
+        self.add_item(self.text)
+
+    async def on_submit(self, interaction: Interaction):
+        resp: InteractionResponse = interaction.response
+        try:
+            cog = interaction.client.get_cog("Submission")
+            async for item in ParserMethods.parse(text=self.text.value, bot=interaction.client):
+                await cog.submission_handler(interaction, **item)
+        except Exception as e:
+            if not resp.is_done():
+                if isinstance(interaction.channel, Thread) and interaction.channel.archived:
+                    await interaction.channel.edit(archived=True)
+                await resp.defer(ephemeral=True, thinking=True)
+            await interaction.followup.send(str(e), ephemeral=True)
+        else:
+            if not resp.is_done():
+                await resp.pong()
+        finally:
+            self.stop()
+
+
+class TemplateView(View):
+    def __init__(self, template: Template):
+        super(TemplateView, self).__init__(timeout=None)
+        self.template = template
+
+    @button(label="Form", row=0, style=ButtonStyle.blurple)
+    async def mode1(self, interaction: Interaction, _: Button):
+        resp: InteractionResponse = interaction.response
+        modal = SubmissionModal(self.template.text)
+        await resp.send_modal(modal)
+
+    @button(label="Message", row=0, style=ButtonStyle.blurple)
+    async def mode2(self, interaction: Interaction, _: Button):
+        resp: InteractionResponse = interaction.response
+        await resp.edit_message(content=self.template.formatted_text, embed=None, view=None)
+        self.stop()
+
+    @button(label="Google Document", row=0, style=ButtonStyle.blurple)
+    async def mode3(self, interaction: Interaction, _: Button):
+        resp: InteractionResponse = interaction.response
+        embed = self.template.embed
+        embed.title = f"Available Templates - {embed.title}"
+        embed.description = (
+            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel."
+        )
+        await resp.edit_message(embed=embed, view=None)
+        self.stop()
+
+
+class SubmissionView(View):
+    def __init__(self, ocs: list[Character]):
+        super(SubmissionView, self).__init__(timeout=None)
+        self.ocs = ocs
+
+    @select(
+        placeholder="Click here to read our Templates",
+        row=0,
+        custom_id="read",
+        options=[
+            SelectOption(
+                label=x.title,
+                value=x.name,
+                description=x.description[:100],
+                emoji=RICH_PRESENCE_EMOJI,
+            )
+            for x in Template
+        ],
+    )
+    async def show_template(self, ctx: Interaction, sct: Select) -> None:
+        resp: InteractionResponse = ctx.response
+        await resp.defer(ephemeral=True, thinking=True)
+        embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
+        template = Template[sct.values[0]]
+        embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png")
+        embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
+        await ctx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
+
+    @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
+    async def oc_add(self, ctx: Interaction, _: Button):
+        cog = ctx.client.get_cog("Submission")
+        user = ctx.client.supporting.get(ctx.user, ctx.user)
+        resp: InteractionResponse = ctx.response
+        ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
+        await resp.defer(ephemeral=ephemeral, thinking=True)
+        users = {ctx.user.id, user.id}
+        try:
+            cog.ignore |= users
+            view = CreationOCView(ctx.client, ctx, user)
+            await view.send(ephemeral=ephemeral)
+            await view.wait()
+        except Exception as e:
+            await ctx.followup.send(str(e), ephemeral=ephemeral)
+            ctx.client.logger.exception("Character Creation Exception", exc_info=e)
+        finally:
+            cog.ignore -= users
+
+    @button(label="Character Modification", emoji="\N{PENCIL}", row=1, custom_id="modify-oc")
+    async def oc_update(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
+        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
+            await ctx.channel.edit(archived=True)
+        await resp.defer(ephemeral=True, thinking=True)
+        member = ctx.client.supporting.get(member, member)
+        values: list[Character] = [oc for oc in self.ocs.values() if member.id == oc.author]
+        if not values:
+            return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
+        values.sort(key=lambda x: x.name)
+        view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+        view.embed.title = "Select Character to modify"
+        view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        async with view.send(single=True) as oc:
+            if isinstance(oc, Character):
+                ctx.client.logger.info("%s is modifying a Character(%s) aka %s", str(ctx.user), repr(oc), oc.name)

@@ -5,8 +5,7 @@
 
 > A dynamic character submission system with the purpose to facilitate the creation of characters for role-playing purposes aimed at easing the process to all users despite limitations.
 
-| File                 | Description                  |
-| -------------------- | ---------------------------- |
-| `submission_view.py` | Submission related views     |
-| `oc_parsers.py`      | Character SubmissionParsers  |
-| `oc_submission.py`   | Character Submission Methods |
+| File               | Description                  |
+| ------------------ | ---------------------------- |
+| `oc_parsers.py`    | Character SubmissionParsers  |
+| `oc_submission.py` | Character Submission Methods |

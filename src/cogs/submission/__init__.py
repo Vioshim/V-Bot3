@@ -42,8 +42,11 @@ from discord.utils import MISSING
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
-from src.cogs.submission.oc_submission import CreationOCView, ModCharactersView
-from src.cogs.submission.submission_view import SubmissionView
+from src.cogs.submission.oc_submission import (
+    CreationOCView,
+    ModCharactersView,
+    SubmissionView,
+)
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
@@ -453,17 +456,7 @@ class Submission(commands.Cog):
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
-        thread: Thread = await self.bot.fetch_channel(1005387453055639612)
         view = SubmissionView(ocs=self.ocs)
-        async for msg in thread.history(limit=None, oldest_first=True):
-            if (embeds := msg.embeds) and msg.author == self.bot.user:
-                view.show_template.add_option(
-                    label=embeds[0].title,
-                    value=str(msg.id),
-                    description=embeds[0].footer.text[:100],
-                    emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
-                )
-                view.templates[str(msg.id)] = msg
         if not (channel := self.bot.get_channel(852180971985043466)):
             channel = await self.bot.fetch_channel(852180971985043466)
         await PartialMessage(channel=channel, id=1005387453055639612).edit(view=view)
