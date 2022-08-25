@@ -703,6 +703,8 @@ class Variant(Species):
         abilities: frozenset[Ability] = None,
         movepool: Optional[Movepool] = None,
     ):
+        if isinstance(base, str):
+            base = Species.from_ID(base)
         super(Variant, self).__init__(
             id=base.id,
             name=name.title(),

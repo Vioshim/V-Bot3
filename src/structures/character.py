@@ -153,7 +153,7 @@ class Character:
         if isinstance(self.species, Chimera):
             data["species"] = [x.id for x in self.species.bases]
         elif isinstance(self.species, (Fakemon, Variant)):
-            data["species"] = {
+            species = {
                 "f_name": self.species.name,
                 "f_types": [x.name for x in self.species.types],
                 "f_evolves_from": self.species.evolves_from,
@@ -161,7 +161,8 @@ class Character:
                 "f_movepool": self.species.movepool.as_dict,
             }
             if isinstance(self.species, Variant) and self.species.base:
-                data["f_base"] = self.species.base.id
+                species["f_base"] = self.species.base.id
+            data["species"] = species
         elif self.species:
             data["species"] = self.species.id
 
@@ -183,7 +184,6 @@ class Character:
         elif isinstance(species, dict):
             data = {k.removeprefix("f_"): v for k, v in species.items() if k.startswith("f_")}
             dct = {k: v for k, v in species.items() if not k.startswith("f_")}
-            species = data.get("species", "")
             species = Variant(**data) if "base" in data else Fakemon(**data)
             dct["species"] = species
         return Character(**dct)
