@@ -13,9 +13,19 @@
 # limitations under the License.
 
 from contextlib import suppress
+from typing import Any
 
-from discord import DiscordException, Embed, Message, TextChannel, Thread
+from discord import (
+    DiscordException,
+    Embed,
+    Message,
+    RawMessageDeleteEvent,
+    RawThreadDeleteEvent,
+    TextChannel,
+    Thread,
+)
 from discord.ext import commands
+from frozendict import frozendict
 from rapidfuzz import process
 
 from src.pagination.complex import Complex
@@ -79,47 +89,35 @@ class AiCog(commands.Cog):
 
             await db.replace_one({"id": message.id}, data, upsert=True)
 
-    @commands.command()
-    @commands.is_owner()
-    @commands.guild_only()
-    async def ai_load_samples(self, ctx: commands.Context, cache: bool = True):
-        channels: set[TextChannel | Thread] = set()
-        if cache and self.msg_cache:
-            msgs = list(self.msg_cache.values())
-        else:
-            for channel in filter(
-                lambda x: isinstance(x, TextChannel)
-                and not x.name.endswith("-ooc")
-                and x.category
-                and x.category.id not in IDS,
-                ctx.guild.channels,
-            ):
-                channels.add(channel)
-                channels.update([x async for x in channel.archived_threads(limit=None)])
-                channels.update(channel.threads)
+    @commands.Cog.listener()
+    async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent):
+        db = self.bot.mongo_db("RP Samples")
+        await db.delete_many({"thread": payload.thread_id})
 
-            msgs = []
-            for channel in channels:
-                msgs.extend(
-                    [
-                        msg
-                        async for msg in channel.history(limit=None, oldest_first=True)
-                        if (msg.content and msg.webhook_id and msg.author != self.bot.user)
-                    ]
-                )
+    @commands.Cog.listener()
+    async def on_channel_delete(self, channel: TextChannel):
+        if isinstance(channel, TextChannel):
+            db = self.bot.mongo_db("RP Samples")
+            await db.delete_many({"channel": channel.id})
 
-        for msg in sorted(msgs, key=lambda x: x.id):
-            await self.process(msg)
-
-        await ctx.reply("Finished Scan")
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
+        db = self.bot.mongo_db("RP Samples")
+        self.cache.pop(payload.message_id, None)
+        self.msg_cache.pop(payload.message_id, None)
+        await db.delete_one({"id": payload.message_id})
 
     @commands.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def ai_solve_samples(self, ctx: commands.Context, caching: bool = True):
+    async def ai_solve_samples(self, ctx: commands.Context, caching: bool = True, fetching: bool = False):
         db = self.bot.mongo_db("RP Samples")
         if not (caching and self.msg_cache and self.cache):
             async for item in db.find({"ocs": {"$exists": True}}):
+                self.cache[item["id"]] = item
+                if not fetching:
+                    continue
+
                 with suppress(DiscordException):
                     if not (guild := self.bot.get_guild(item["server"])):
                         continue
@@ -135,23 +133,39 @@ class AiCog(commands.Cog):
 
                     msg = await thread.fetch_message(item["id"])
                     self.msg_cache[msg.id] = msg
-                    self.cache[msg.id] = item
 
-        values: list[Message] = [m for k, v in self.cache.items() if "ocs" in v and (m := self.msg_cache.get(k))]
+        values: list[dict] = [frozendict(x) for x in self.cache.values() if "ocs" in x]
 
-        view = Complex[Message](
+        def parser(x: dict):
+            if o := self.msg_cache.get(x["id"]):
+                return o.author.display_name, f"Written in {o.channel}"
+            o = self.bot.get_channel(x["channel"])
+            return f"Message {x['id']}", f"Written in {o}"
+
+        view = Complex[frozendict[str, Any]](
             member=ctx.author,
             values=values,
             target=ctx.channel,
-            parser=lambda x: (x.author.name, f"Written in {x.channel}"),
+            parser=parser,
         )
 
-        async with view.send(single=True) as msg:
-            if isinstance(msg, Message):
+        async with view.send(single=True) as raw:
+            if isinstance(raw, dict):
                 cog = self.bot.get_cog("Submission")
-                ocs = [o for x in self.cache[msg.id].get("ocs", []) if (o := cog.ocs.get(x))]
+                ocs = [o for x in self.cache[raw["id"]].get("ocs", []) if (o := cog.ocs.get(x))]
 
-                embed = Embed(title=msg.author.name, description=msg.content)
+                if not (msg := self.msg_cache.get(raw["id"])):
+                    if channel := self.bot.get_channel(raw["channel"]):
+                        if raw["thread"]:
+                            if not (thread := channel.guild.get_thread(raw["thread"])):
+                                thread = channel.guild.fetch_channel(raw["thread"])
+                            channel = thread
+                        msg = await channel.fetch_message(msg["id"])
+                        self.msg_cache[msg.id] = msg
+                    else:
+                        return
+
+                embed = Embed(title=msg.author.name, description=msg.content, url=msg.jump_url)
                 embed.set_image(url=msg.author.display_avatar.with_size(4096))
                 embed.add_field(name="mention", value=msg.channel.mention)
 
@@ -160,6 +174,7 @@ class AiCog(commands.Cog):
                     if isinstance(oc, Character):
                         data = message_parse(msg)
                         data["oc"] = oc.id
+                        self.cache[msg.id] = data
                         await db.replace_one({"id": msg.id}, data, upsert=True)
 
 
