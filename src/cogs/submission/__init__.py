@@ -407,6 +407,26 @@ class Submission(commands.Cog):
             else:
                 return
 
+            if isinstance(channel := message.channel, Thread):
+                thread_id, channel_id = channel.id, channel.parent_id
+            else:
+                thread_id, channel_id = None, channel.id
+
+            await self.bot.mongo_db("RP Samples").replace_one(
+                {"id": message.id},
+                {
+                    "id": message.id,
+                    "text": message.content,
+                    "category": message.channel.category_id,
+                    "thread": thread_id,
+                    "channel": channel_id,
+                    "server": message.guild.id,
+                    "created_at": message.created_at,
+                    "oc": oc.id,
+                },
+                upsert=True,
+            )
+
             if oc.location != channel.id:
                 oc.location = channel.id
                 await self.bot.mongo_db("Characters").replace_one(
