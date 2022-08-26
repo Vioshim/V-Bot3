@@ -134,7 +134,7 @@ class AiCog(commands.Cog):
                     msg = await thread.fetch_message(item["id"])
                     self.msg_cache[msg.id] = msg
 
-        values: list[dict] = [frozendict(x) for x in self.cache.values() if "ocs" in x]
+        values = {frozendict(x) for x in self.cache.values() if "ocs" in x}
 
         def parser(x: dict):
             if o := self.msg_cache.get(x["id"]):
