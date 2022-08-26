@@ -161,7 +161,7 @@ class AiCog(commands.Cog):
                             if not (thread := channel.guild.get_thread(raw["thread"])):
                                 thread = channel.guild.fetch_channel(raw["thread"])
                             channel = thread
-                        msg = await channel.fetch_message(msg["id"])
+                        msg = await channel.fetch_message(raw["id"])
                         self.msg_cache[msg.id] = msg
                     else:
                         return
