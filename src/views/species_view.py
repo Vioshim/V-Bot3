@@ -15,13 +15,13 @@
 from functools import lru_cache
 from typing import Any, Iterable, Optional
 
-from discord import Color, Embed, Interaction, InteractionResponse, Member
+from discord import Interaction, InteractionResponse, Member
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
 from src.structures.mon_typing import TypingEnum
 from src.structures.species import Chimera, CustomMega, Fusion, Species, Variant
-from src.utils.etc import LIST_EMOJI, WHITE_BAR
+from src.utils.etc import LIST_EMOJI
 
 __all__ = ("SpeciesComplex",)
 
@@ -148,11 +148,4 @@ class SpeciesComplex(Complex[Species]):
             self.values = sorted(items, key=lambda x: x.name)
             await self.edit(interaction=interaction, page=0)
         else:
-            embed = Embed(
-                title="No entries found",
-                description="\n".join(f"• {x}" for x in sct.values),
-                color=Color.blurple(),
-                timestamp=interaction.created_at,
-            )
-            embed.set_image(url=WHITE_BAR)
-            await resp.send_message(embed=embed, ephemeral=True)
+            await resp.pong()
