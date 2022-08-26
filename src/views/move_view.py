@@ -145,7 +145,7 @@ class MoveComplex(Complex[Move]):
                 timestamp=interaction.created_at,
             )
             embed.set_image(url=WHITE_BAR)
-            await resp.send_message(embed=embed)
+            await resp.send_message(embed=embed, ephemeral=True)
 
     @button(
         label="Write down the choice instead.",

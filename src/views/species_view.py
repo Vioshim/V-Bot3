@@ -155,4 +155,4 @@ class SpeciesComplex(Complex[Species]):
                 timestamp=interaction.created_at,
             )
             embed.set_image(url=WHITE_BAR)
-            await resp.send_message(embed=embed)
+            await resp.send_message(embed=embed, ephemeral=True)
