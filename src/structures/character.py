@@ -181,16 +181,20 @@ class Character:
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
         species: Optional[dict[str, Any]] = dct.get("species")
-        if isinstance(species, list):
-            dct["species"] = Chimera(species)
-        elif isinstance(species, dict):
+        if isinstance(species, dict):
             if chimera := species.pop("chimera", []):
                 species["bases"] = chimera
                 dct["species"] = Chimera(**species)
             elif mega := species.pop("mega", ""):
                 species["base"] = mega
                 dct["species"] = CustomMega(**species)
+            elif fusion := Fusion.deduce(species.get("fusion")):
+                if not fusion.types:
+                    fusion.types = TypingEnum.deduce_many(*species.get("types", []))
+                dct["species"] = fusion
             elif "base" in species:
+                dct["species"] = Variant(**species)
+            elif "fusion" in species:
                 dct["species"] = Variant(**species)
             else:
                 dct["species"] = Fakemon(**species)
