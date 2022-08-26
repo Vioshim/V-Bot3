@@ -134,9 +134,10 @@ class AiCog(commands.Cog):
                     msg = await thread.fetch_message(item["id"])
                     self.msg_cache[msg.id] = msg
 
-        values = {frozendict(x) for x in self.cache.values() if "ocs" in x}
+        values = {x["id"]: x for x in self.cache.values() if "ocs" in x}
 
-        def parser(x: dict):
+        def parser(o: str):
+            x = values[o]
             if o := self.msg_cache.get(x["id"]):
                 return o.author.display_name, f"Written in {o.channel}"
             o = self.bot.get_channel(x["channel"])
@@ -144,13 +145,13 @@ class AiCog(commands.Cog):
 
         view = Complex[frozendict[str, Any]](
             member=ctx.author,
-            values=values,
+            values=values.keys(),
             target=ctx.channel,
             parser=parser,
         )
 
         async with view.send(single=True) as raw:
-            if isinstance(raw, dict):
+            if raw := values.get(raw):
                 cog = self.bot.get_cog("Submission")
                 ocs = [o for x in self.cache[raw["id"]].get("ocs", []) if (o := cog.ocs.get(x))]
 
