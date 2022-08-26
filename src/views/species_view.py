@@ -15,13 +15,13 @@
 from functools import lru_cache
 from typing import Any, Iterable, Optional
 
-from discord import Interaction, Member
+from discord import Color, Embed, Interaction, InteractionResponse, Member
 from discord.ui import Select, select
 
 from src.pagination.complex import Complex
 from src.structures.mon_typing import TypingEnum
 from src.structures.species import Chimera, CustomMega, Fusion, Species, Variant
-from src.utils.etc import LIST_EMOJI
+from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
 __all__ = ("SpeciesComplex",)
 
@@ -135,11 +135,24 @@ class SpeciesComplex(Complex[Species]):
 
     @select(placeholder="Filter by Typings", custom_id="filter", max_values=2)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
+        resp: InteractionResponse = interaction.response
+
         if "No Filter" in sct.values:
             items = set.intersection(*[self.data[value] for value in sct.values])
         elif types := TypingEnum.deduce_many(*sct.values):
             items = {x for x in self.total if x.types == types}
         else:
             items = self.values
-        self.values = sorted(items, key=lambda x: x.name)
-        await self.edit(interaction=interaction, page=0)
+
+        if items:
+            self.values = sorted(items, key=lambda x: x.name)
+            await self.edit(interaction=interaction, page=0)
+        else:
+            embed = Embed(
+                title="No entries found",
+                description="\n".join(f"• {x}" for x in sct.values),
+                color=Color.blurple(),
+                timestamp=interaction.created_at,
+            )
+            embed.set_image(url=WHITE_BAR)
+            await resp.send_message(embed=embed)

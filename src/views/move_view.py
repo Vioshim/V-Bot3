@@ -15,13 +15,21 @@
 from itertools import groupby
 from typing import Any, Optional
 
-from discord import ButtonStyle, Interaction, InteractionResponse, Member, PartialEmoji
+from discord import (
+    ButtonStyle,
+    Color,
+    Embed,
+    Interaction,
+    InteractionResponse,
+    Member,
+    PartialEmoji,
+)
 from discord.abc import Messageable
 from discord.ui import Button, Select, TextInput, View, button, select
 
 from src.pagination.complex import Complex, DefaultModal
 from src.structures.move import Move
-from src.utils.etc import LIST_EMOJI
+from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
 __all__ = ("MoveView", "MoveComplex")
 
@@ -125,8 +133,19 @@ class MoveComplex(Complex[Move]):
 
     @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        self.values = set.intersection(*[self.data[value] for value in sct.values])
-        await self.edit(interaction=interaction, page=0)
+        resp: InteractionResponse = interaction.response
+        if items := set.intersection(*[self.data[value] for value in sct.values]):
+            self.values = items
+            await self.edit(interaction=interaction, page=0)
+        else:
+            embed = Embed(
+                title="No entries with",
+                description="\n".join(f"• {x}" for x in sct.values),
+                color=Color.blurple(),
+                timestamp=interaction.created_at,
+            )
+            embed.set_image(url=WHITE_BAR)
+            await resp.send_message(embed=embed)
 
     @button(
         label="Write down the choice instead.",
