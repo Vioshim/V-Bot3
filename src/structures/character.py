@@ -150,12 +150,14 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
-        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera)):
+        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera, Fusion)):
             aux = {"types": [x.name for x in self.types]}
             if isinstance(self.species, Chimera):
-                aux |= {"chimera": [x for x in self.species.bases]}
+                aux |= {"chimera": [x.id for x in self.species.bases]}
             elif isinstance(self.species, CustomMega):
                 aux |= {"mega": self.species.id}
+            elif isinstance(self.species, Fusion):
+                aux |= {"fusion": [x.id for x in self.species.bases]}
             else:
                 aux |= {
                     "name": self.species.name,
@@ -164,6 +166,7 @@ class Character:
                 }
                 if isinstance(self.species, Variant):
                     aux["base"] = self.species.id
+
             data["species"] = aux
         elif self.species:
             data["species"] = self.species.id
@@ -188,14 +191,12 @@ class Character:
             elif mega := species.pop("mega", ""):
                 species["base"] = mega
                 dct["species"] = CustomMega(**species)
+            elif "base" in species:
+                dct["species"] = Variant(**species)
             elif fusion := Fusion.deduce(species.get("fusion")):
                 if not fusion.types:
                     fusion.types = TypingEnum.deduce_many(*species.get("types", []))
                 dct["species"] = fusion
-            elif "base" in species:
-                dct["species"] = Variant(**species)
-            elif "fusion" in species:
-                dct["species"] = Variant(**species)
             else:
                 dct["species"] = Fakemon(**species)
 
