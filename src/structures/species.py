@@ -525,7 +525,8 @@ class Chimera(Species):
 
     bases: frozenset[Species] = field(default_factory=frozenset)
 
-    def __init__(self, bases: frozenset[Species]):
+    def __init__(self, bases: frozenset[Species], types: frozenset[TypingEnum] = None):
+        types = types or []
         bases = {o for x in bases if (o := Species.from_ID(x) if isinstance(x, str) else x)}
         self.bases = frozenset(bases)
         amount = len(bases) or 1
@@ -549,6 +550,7 @@ class Chimera(Species):
             SPA=round(sum(x.SPA for x in bases) / amount),
             SPD=round(sum(x.SPD for x in bases) / amount),
             SPE=round(sum(x.SPE for x in bases) / amount),
+            types=types,
             banned=any(x.banned for x in bases),
             movepool=movepool,
             abilities=abilities,
@@ -624,10 +626,13 @@ class CustomMega(Species):
 
     base: Optional[Species] = None
 
-    def __init__(self, base: Species):
+    def __init__(self, base: Species, types: frozenset[TypingEnum] = None):
 
         if isinstance(base, str):
             base = Species.from_ID(base)
+
+        if not types:
+            types = base.types
 
         super(CustomMega, self).__init__(
             id=base.id,
@@ -641,6 +646,7 @@ class CustomMega(Species):
             SPA=base.SPA,
             SPD=base.SPD,
             SPE=base.SPE,
+            types=types,
             movepool=base.movepool,
             abilities=copy(base.abilities),
         )

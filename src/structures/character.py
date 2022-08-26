@@ -185,17 +185,15 @@ class Character:
             dct["species"] = Chimera(species)
         elif isinstance(species, dict):
             if chimera := species.pop("chimera", []):
-                mon = Chimera(bases=chimera)
+                species["bases"] = chimera
+                dct["species"] = Chimera(**species)
             elif mega := species.pop("mega", ""):
-                mon = CustomMega(base=mega)
+                species["base"] = mega
+                dct["species"] = CustomMega(**species)
             elif "base" in species:
-                mon = Variant(**species)
+                dct["species"] = Variant(**species)
             else:
-                mon = Fakemon(**species)
-
-            mon.types = TypingEnum.deduce_many(*species.get("types", []))
-
-            dct["species"] = mon
+                dct["species"] = Fakemon(**species)
 
         return Character(**dct)
 
