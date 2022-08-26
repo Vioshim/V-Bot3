@@ -14,7 +14,7 @@
 
 from contextlib import suppress
 
-from discord import DiscordException, Message, TextChannel, Thread
+from discord import DiscordException, Embed, Message, TextChannel, Thread
 from discord.ext import commands
 from rapidfuzz import process
 
@@ -150,8 +150,13 @@ class AiCog(commands.Cog):
             if isinstance(msg, Message):
                 cog = self.bot.get_cog("Submission")
                 ocs = [o for x in self.cache[msg.id].get("ocs", []) if (o := cog.ocs.get(x))]
+
+                embed = Embed(title=msg.author.name, description=msg.content)
+                embed.set_image(url=msg.author.display_avatar.with_size(4096))
+                embed.add_field(name="mention", value=msg.channel.mention)
+
                 view2 = CharactersView(member=ctx.author, target=ctx.channel, ocs=ocs)
-                async with view2.send(single=True) as oc:
+                async with view2.send(embed=embed, single=True) as oc:
                     if isinstance(oc, Character):
                         data = message_parse(msg)
                         data["oc"] = oc.id
