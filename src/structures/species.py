@@ -357,13 +357,16 @@ class Species(metaclass=ABCMeta):
         """
         if isinstance(item, cls):
             return item
+
         if isinstance(item, str):
-            values = {i.id: i for i in cls.all()} or ALL_SPECIES
-            items = {x for i in item.split("_") if (x := values.get(i))}
-            if len(items) == 2:
-                items = {Fusion(*items)}
-            if items and isinstance(data := items.pop(), cls):
-                return data
+            item = item.split("_")
+
+        items = {x for i in item if (x := Species.deduce(i))}
+
+        if len(items) == 2:
+            items = {Fusion(*items)}
+        if items and isinstance(data := items.pop(), cls):
+            return data
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -811,6 +814,11 @@ class Fusion(Species):
     mon2: Optional[Species] = None
 
     def __init__(self, mon1: Species, mon2: Species):
+        if isinstance(mon1, str):
+            mon1 = Species.from_ID(mon1)
+        if isinstance(mon2, str):
+            mon2 = Species.from_ID(mon2)
+
         ids = sorted((mon1.id, mon2.id))
         names = sorted((mon1.name, mon2.name))
         abilities = mon1.abilities | mon2.abilities

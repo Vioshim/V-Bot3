@@ -193,7 +193,8 @@ class Character:
                 dct["species"] = CustomMega(**species)
             elif "base" in species:
                 dct["species"] = Variant(**species)
-            elif fusion := Fusion.deduce(species.get("fusion")):
+            elif "fusion" in species:
+                fusion = Fusion(*species.get("fusion"))
                 if not fusion.types:
                     fusion.types = TypingEnum.deduce_many(*species.get("types", []))
                 dct["species"] = fusion
