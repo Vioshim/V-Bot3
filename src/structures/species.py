@@ -359,14 +359,12 @@ class Species(metaclass=ABCMeta):
             return item
 
         if isinstance(item, str):
-            item = item.split("_")
-
-        items = {x for i in item if (x := Species.deduce(i))}
-
-        if len(items) == 2:
-            items = {Fusion(*items)}
-        if items and isinstance(data := items.pop(), cls):
-            return data
+            values = {i.id: i for i in cls.all()} or ALL_SPECIES
+            items = {x for i in item.split("_") if (x := values.get(i))}
+            if len(items) == 2:
+                items = {Fusion(*items)}
+            if items and isinstance(data := items.pop(), cls):
+                return data
 
 
 @dataclass(unsafe_hash=True, slots=True)
