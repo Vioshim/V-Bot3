@@ -95,15 +95,18 @@ class AiCog(commands.Cog):
                 ctx.guild.channels,
             ):
                 channels.add(channel)
-                channels.update(x async for x in channel.archived_threads(limit=None))
+                channels.update([x async for x in channel.archived_threads(limit=None)])
                 channels.update(channel.threads)
 
-            msgs = [
-                msg
-                for channel in channels
-                async for msg in channel.history(limit=None, oldest_first=True)
-                if (msg.content and msg.webhook_id and msg.author != self.bot.user)
-            ]
+            msgs = []
+            for channel in channels:
+                msgs.extend(
+                    [
+                        msg
+                        async for msg in channel.history(limit=None, oldest_first=True)
+                        if (msg.content and msg.webhook_id and msg.author != self.bot.user)
+                    ]
+                )
 
         for msg in sorted(msgs, key=lambda x: x.id):
             await self.process(msg)
