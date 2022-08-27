@@ -874,6 +874,13 @@ class Character:
 
         data.pop("stats", {})
 
+        if move_info := common_pop_get(data, "moveset", "moves"):
+            if isinstance(move_info, str):
+                move_info = [move_info]
+            move_info = [x for x in move_info if x.lower() != "move"]
+            if moveset := Move.deduce_many(*move_info):
+                data["moveset"] = moveset
+
         if species:
             if (type_info := common_pop_get(data, "types", "type")) and (types := TypingEnum.deduce_many(type_info)):
                 if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
@@ -895,12 +902,6 @@ class Character:
                     species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
                     species.abilities = abilities
                     data["species"] = species
-
-            if move_info := common_pop_get(data, "moveset", "moves"):
-                if isinstance(move_info, str):
-                    move_info = [move_info]
-                if moveset := Move.deduce_many(*move_info):
-                    data["moveset"] = moveset
 
             if isinstance(species, Fakemon):
                 if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
