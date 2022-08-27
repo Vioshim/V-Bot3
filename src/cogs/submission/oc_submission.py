@@ -1073,30 +1073,28 @@ class CreationOCView(Basic):
         embeds = self.embeds
         files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
 
-        if not resp.is_done():
-            await resp.edit_message(embeds=embeds, view=self, attachments=files)
-            m = await ctx.original_response()
-            ctx.client.logger.info("Succeed 0: %s", m.jump_url)
-        elif message := self.message:
-            if not self.message.flags.ephemeral:
-                message = PartialMessage(channel=self.message.channel, id=self.message.id)
-            try:
-                m = await message.edit(embeds=embeds, view=self, attachments=files)
-                ctx.client.logger.info("Succeed 1: %s", m.jump_url)
-            except DiscordException:
-                m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
-                ctx.client.logger.info("Succeed 2: %s", m.jump_url)
+        try:
+            if resp.is_done():
+                message = self.message or ctx.message
+                if not message.flags.ephemeral:
+                    message = PartialMessage(channel=message.channel, id=message.id)
+                try:
+                    m = await message.edit(embeds=embeds, view=self, attachments=files)
+                except DiscordException:
+                    m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
+            else:
+                await resp.edit_message(embeds=embeds, view=self, attachments=files)
+                m = await ctx.original_response()
+        except (DiscordException, AttributeError):
+            await self.help_method(ctx)
         else:
-            m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
-            ctx.client.logger.info("Succeed 3: %s", m.jump_url)
+            if files and m.embeds[0].image.proxy_url:
+                self.oc.image = m.embeds[0].image.proxy_url
+                self.setup(embed_update=False)
+                m = await m.edit(view=self)
 
-        if files and m.embeds[0].image.proxy_url:
-            self.oc.image = m.embeds[0].image.proxy_url
-            self.setup(embed_update=False)
-            m = await m.edit(view=self)
-
-        await self.upload()
-        self.message = m
+            await self.upload()
+            self.message = m
 
     async def send(self, *, ephemeral: bool = False):
         self.ephemeral = ephemeral
@@ -1132,8 +1130,7 @@ class CreationOCView(Basic):
     async def cancel(self, ctx: Interaction, _: Button):
         await self.delete(ctx)
 
-    @button(label="Request Help", row=2)
-    async def help(self, ctx: Interaction, _: Button):
+    async def help_method(self, ctx: Interaction):
         channel = ctx.guild.get_channel(852180971985043466)
 
         view = CreationOCView(
@@ -1156,6 +1153,10 @@ class CreationOCView(Basic):
                 await view.upload()
 
         await self.delete(ctx)
+
+    @button(label="Request Help", row=2)
+    async def help(self, ctx: Interaction, _: Button):
+        await self.help_method(ctx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
     async def submit(self, ctx: Interaction, btn: Button):
