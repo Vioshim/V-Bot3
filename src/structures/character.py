@@ -221,11 +221,7 @@ class Character:
         self.moveset = Move.deduce_many(*self.moveset)
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun.deduce(self.pronoun)
-        if isinstance(self.age, int):
-            if self.age < 13:
-                self.age = 13
-            if self.age >= 100:
-                self.age = None
+        self.age = int_check(self.age, 13, 100)
         if not self.can_have_special_abilities:
             self.sp_ability = None
         if self.hidden_power:
