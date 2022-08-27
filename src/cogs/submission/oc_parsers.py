@@ -214,16 +214,17 @@ class DiscordOCParser(OCParser):
     async def parse(cls, text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
         if isinstance(text, Message):
             content = text.content
+            images = [x for x in text.attachments if x.content_type.startswith("image/")]
         else:
             content = text
+            images = None
         content = codeblock_converter(content or "").content
         if REGEX_URL.match(content) or G_DOCUMENT.match(content):
             return
         content = yaml_handler(content)
         with suppress(ScannerError):
             if isinstance(msg_data := safe_load(content), dict):
-                images = [x for x in text.attachments if x.content_type.startswith("image/")]
-                if isinstance(text, Message) and images:
+                if images:
                     msg_data["image"] = await images[0].to_file(use_cached=True)
 
                 return msg_data
