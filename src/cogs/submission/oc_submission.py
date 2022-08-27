@@ -317,6 +317,15 @@ class Template(TemplateItem, Enum):
         embed.set_footer(text=self.description)
         return embed
 
+    @property
+    def docs_embed(self):
+        embed = self.embed
+        embed.title = f"Available Templates - {embed.title}"
+        embed.description = (
+            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel."
+        )
+        return embed
+
 
 class TemplateField(ABC):
     name: str = ""
@@ -1228,27 +1237,45 @@ class TemplateView(View):
         super(TemplateView, self).__init__(timeout=None)
         self.template = template
 
-    @button(label="Form", row=0, style=ButtonStyle.blurple)
-    async def mode1(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        modal = SubmissionModal(self.template.text)
-        await resp.send_modal(modal)
-
-    @button(label="Message", row=0, style=ButtonStyle.blurple)
-    async def mode2(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        await resp.edit_message(content=self.template.formatted_text, embed=None, view=None)
-        self.stop()
-
-    @button(label="Google Document", row=0, style=ButtonStyle.blurple)
-    async def mode3(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        embed = self.template.embed
-        embed.title = f"Available Templates - {embed.title}"
-        embed.description = (
-            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel."
-        )
-        await resp.edit_message(embed=embed, view=None)
+    @select(
+        placeholder="Select Submission Method",
+        custom_id="method",
+        options=[
+            SelectOption(
+                label="Form",
+                description="This will pop-up a Menu.",
+                emoji=RICH_PRESENCE_EMOJI,
+            ),
+            SelectOption(
+                label="Message",
+                description="Template to send within the channel.",
+                emoji=RICH_PRESENCE_EMOJI,
+            ),
+            SelectOption(
+                label="Google Document",
+                description="Get URL, Copy Document, Send new URL in channel.",
+                emoji=RICH_PRESENCE_EMOJI,
+            ),
+        ],
+    )
+    async def method(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        match sct.values[0]:
+            case "Form":
+                modal = SubmissionModal(self.template.text)
+                await resp.send_modal(modal)
+                await modal.wait()
+            case "Message":
+                await resp.edit_message(
+                    content=self.template.formatted_text,
+                    embed=None,
+                    view=None,
+                )
+            case "Google Document":
+                await resp.edit_message(
+                    embed=self.template.docs_embed,
+                    view=None,
+                )
         self.stop()
 
 
