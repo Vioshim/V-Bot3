@@ -848,9 +848,6 @@ class Character:
             else:
                 species = Fakemon(name=name)
 
-            if species is None:
-                raise ValueError("Fakemon was not deduced by the bot.")
-
             data["species"] = species
         elif variant := data.pop("variant", ""):
             if species := Variant.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
@@ -861,72 +858,66 @@ class Character:
                     if species := Variant.deduce(item):
                         species.name = variant.title()
                         break
-                else:
-                    raise ValueError("Unable to determine the variant' species")
 
             data["species"] = species
         elif species := Fusion.deduce(data.pop("fusion", "")):
             data["species"] = species
-        elif chimera := Chimera.deduce(data.pop("chimera", "")):
-            data["species"] = chimera
+        elif species := Chimera.deduce(data.pop("chimera", "")):
+            data["species"] = species
         else:
             aux = common_pop_get(data, "species", "pokemon") or ""
             method = Species.any_deduce if "," in aux else Species.single_deduce
             if species := method(aux):
                 data["species"] = species
-            else:
-                print(data)
-                raise ValueError(
-                    f"Unable to determine the species, value: {species}, make sure you're using a recent template."
-                )
 
-        if (type_info := common_pop_get(data, "types", "type")) and (types := TypingEnum.deduce_many(type_info)):
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
-                species.types = types
-            elif species.types != types:
-                types_txt = "/".join(i.name for i in types)
-                species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
-                species.types = types
+        if species:
+            if (type_info := common_pop_get(data, "types", "type")) and (types := TypingEnum.deduce_many(type_info)):
+                if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
+                    species.types = types
+                elif species.types != types:
+                    types_txt = "/".join(i.name for i in types)
+                    species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
+                    species.types = types
 
-        if ability_info := common_pop_get(data, "abilities", "ability"):
-            if isinstance(ability_info, str):
-                ability_info = [ability_info]
-            if abilities := Ability.deduce_many(*ability_info):
-                data["abilities"] = abilities
+            if ability_info := common_pop_get(data, "abilities", "ability"):
+                if isinstance(ability_info, str):
+                    ability_info = [ability_info]
+                if abilities := Ability.deduce_many(*ability_info):
+                    data["abilities"] = abilities
 
-            if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
-                species.abilities = abilities
-            elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
-                species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
-                species.abilities = abilities
-                data["species"] = species
+                if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
+                    species.abilities = abilities
+                elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
+                    species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
+                    species.abilities = abilities
+                    data["species"] = species
 
-        if move_info := common_pop_get(data, "moveset", "moves"):
-            if isinstance(move_info, str):
-                move_info = [move_info]
-            if moveset := Move.deduce_many(*move_info):
-                data["moveset"] = moveset
+            if move_info := common_pop_get(data, "moveset", "moves"):
+                if isinstance(move_info, str):
+                    move_info = [move_info]
+                if moveset := Move.deduce_many(*move_info):
+                    data["moveset"] = moveset
 
-        if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
-            if pronoun := Pronoun.deduce(pronoun_info):
-                data["pronoun"] = pronoun
+            if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
+                if pronoun := Pronoun.deduce(pronoun_info):
+                    data["pronoun"] = pronoun
 
-        if age := common_pop_get(data, "age", "years"):
-            data["age"] = int_check(age, 13, 99)
+            if age := common_pop_get(data, "age", "years"):
+                data["age"] = int_check(age, 13, 99)
 
-        data.pop("stats", {})
+            data.pop("stats", {})
 
-        if isinstance(species, Fakemon):
-            if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
-                species.movepool = Movepool.from_dict(**movepool)
+            if isinstance(species, Fakemon):
+                if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
+                    species.movepool = Movepool.from_dict(**movepool)
 
-        data = {k: v for k, v in data.items() if v}
-        data["species"] = species
+            data = {k: v for k, v in data.items() if v}
+            data["species"] = species
 
-        if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
-            data["sp_ability"] = value
-        elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
-            data["sp_ability"] = SpAbility()
+            if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
+                data["sp_ability"] = value
+            elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
+                data["sp_ability"] = SpAbility()
 
         return cls.from_dict(data)
 
