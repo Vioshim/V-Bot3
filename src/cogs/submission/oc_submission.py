@@ -1225,6 +1225,11 @@ class SubmissionModal(Modal):
                     await interaction.channel.edit(archived=True)
                 await resp.defer(ephemeral=True, thinking=True)
             await interaction.followup.send(str(e), ephemeral=True)
+            interaction.client.logger.exception(
+                "Exception when registering, user: %s",
+                str(interaction.user),
+                exc_info=e,
+            )
         else:
             if not resp.is_done():
                 await resp.pong()
