@@ -220,7 +220,7 @@ class Character:
             self.moveset = [self.moveset]
         self.moveset = Move.deduce_many(*self.moveset)
         if isinstance(self.pronoun, str):
-            self.pronoun = Pronoun[self.pronoun]
+            self.pronoun = Pronoun.deduce(self.pronoun)
         if isinstance(self.age, int):
             if self.age < 13:
                 self.age = 13
