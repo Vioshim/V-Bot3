@@ -26,6 +26,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    Message,
     PartialMessage,
     SelectOption,
     TextStyle,
@@ -969,11 +970,8 @@ class CreationOCView(Basic):
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
-        if ctx.message:
-            self.ephemeral = ctx.message.flags.ephemeral
-        else:
-            self.ephemeral = False
-
+        message = getattr(ctx, "message", ctx)
+        self.ephemeral = isinstance(message, Message) and message.flags.ephemeral
         if not isinstance(template, Template):
             if isinstance(template, str):
                 name = template
