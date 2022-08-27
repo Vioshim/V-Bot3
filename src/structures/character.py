@@ -876,13 +876,20 @@ class Character:
 
         if move_info := common_pop_get(data, "moveset", "moves"):
             if isinstance(move_info, str):
-                move_info = [move_info]
+                move_info = move_info.split(",")
             move_info = [x for x in move_info if x.lower() != "move"]
             if moveset := Move.deduce_many(*move_info):
                 data["moveset"] = moveset
 
-        if species:
-            if (type_info := common_pop_get(data, "types", "type")) and (types := TypingEnum.deduce_many(type_info)):
+        type_info = common_pop_get(data, "types", "type")
+        ability_info = common_pop_get(data, "abilities", "ability")
+        movepool = Movepool.from_dict(**data.pop("movepool", dict(event=data.get("moveset", set()))))
+        data["sp_ability"] = data.pop("spability", None)
+
+        if not species:
+            data.pop("moveset", None)
+        else:
+            if type_info and (types := TypingEnum.deduce_many(type_info)):
                 if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                     species.types = types
                 elif species.types != types:
@@ -890,7 +897,7 @@ class Character:
                     species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
                     species.types = types
 
-            if ability_info := common_pop_get(data, "abilities", "ability"):
+            if ability_info:
                 if isinstance(ability_info, str):
                     ability_info = [ability_info]
                 if abilities := Ability.deduce_many(*ability_info):
@@ -903,17 +910,11 @@ class Character:
                     species.abilities = abilities
                     data["species"] = species
 
-            if isinstance(species, Fakemon):
-                if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
-                    species.movepool = Movepool.from_dict(**movepool)
+            if isinstance(species, (Fakemon, Variant)):
+                species.movepool = movepool
 
             data = {k: v for k, v in data.items() if v}
             data["species"] = species
-
-            if isinstance(value := data.pop("spability", None), (SpAbility, dict)):
-                data["sp_ability"] = value
-            elif "false" not in (value := str(value).lower()) and ("true" in value or "yes" in value):
-                data["sp_ability"] = SpAbility()
 
         return cls.from_dict(data)
 
