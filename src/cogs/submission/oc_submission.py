@@ -1215,10 +1215,13 @@ class SubmissionModal(Modal):
 
     async def on_submit(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
+        refer_author = interaction.user
         try:
-            cog = interaction.client.get_cog("Submission")
+            author = interaction.client.supporting.get(refer_author, refer_author)
             async for item in ParserMethods.parse(text=self.text.value, bot=interaction.client):
-                await cog.submission_handler(interaction, **item)
+                if oc := Character.process(**item):
+                    view = CreationOCView(bot=interaction.client, ctx=interaction, user=author, oc=oc)
+                    await resp.edit_message(embeds=view.embeds, view=view)
         except Exception as e:
             if not resp.is_done():
                 if isinstance(interaction.channel, Thread) and interaction.channel.archived:
