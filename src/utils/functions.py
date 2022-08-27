@@ -247,7 +247,7 @@ def int_check(data: str, a: int = None, b: int = None) -> Optional[int]:
     """
     value: Optional[int] = None
     try:
-        value = int(data)
+        value = int(data or 0)
     except ValueError:
         if text := "".join(char for char in str(data) if char.isdigit()):
             value = int(text)

@@ -866,6 +866,14 @@ class Character:
             if species := method(aux):
                 data["species"] = species
 
+        if age := common_pop_get(data, "age", "years"):
+            data["age"] = int_check(age, 13, 100)
+
+        if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
+            data["pronoun"] = Pronoun.deduce(pronoun_info)
+
+        data.pop("stats", {})
+
         if species:
             if (type_info := common_pop_get(data, "types", "type")) and (types := TypingEnum.deduce_many(type_info)):
                 if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
@@ -893,15 +901,6 @@ class Character:
                     move_info = [move_info]
                 if moveset := Move.deduce_many(*move_info):
                     data["moveset"] = moveset
-
-            if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
-                if pronoun := Pronoun.deduce(pronoun_info):
-                    data["pronoun"] = pronoun
-
-            if age := common_pop_get(data, "age", "years"):
-                data["age"] = int_check(age, 13, 99)
-
-            data.pop("stats", {})
 
             if isinstance(species, Fakemon):
                 if movepool := data.pop("movepool", dict(event=data.get("moveset", set()))):
