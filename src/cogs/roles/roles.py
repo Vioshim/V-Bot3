@@ -154,10 +154,6 @@ class AFKSchedule:
     hours: frozenset[int] = field(default_factory=frozenset)
     offset: int = 0
 
-    @property
-    def offset_hours(self):
-        return sorted((x + self.offset // 3600) % 24 for x in self.hours)
-
     def pairs(self, wrap: Callable[[time], time | datetime] = None):
         # find all consecutive runs
         runs = [list(group) for _, group in groupby(self.hours, key=AdjacentTimeState())]
@@ -183,7 +179,7 @@ class AFKSchedule:
     @property
     def formatted_text(self):
         reference = utcnow()
-        offset = timedelta(seconds=-self.offset)
+        offset = timedelta(seconds=3600 * -self.offset)
         tz = timezone(offset=offset)
 
         def method(x: time):
@@ -223,9 +219,10 @@ class AFKModal(Modal, title="Current Time"):
         await resp.defer(ephemeral=True, thinking=True)
         date1 = interaction.created_at.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
-        self.offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - abs(date1 - date2).seconds))
+        self.offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - abs(date1 - date2).seconds)) / 3600
         if date1 > date2:
             self.offset = -self.offset
+
         data = AFKSchedule(interaction.user.id, self.hours, self.offset)
 
         embed = Embed(
@@ -239,7 +236,7 @@ class AFKModal(Modal, title="Current Time"):
             embed.description = description
 
         embed.set_footer(
-            text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them."
+            text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them.",
         )
 
         await interaction.followup.send(embed=embed)
