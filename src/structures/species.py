@@ -650,6 +650,7 @@ class CustomMega(Species):
             types=types,
             movepool=base.movepool,
             abilities=copy(base.abilities),
+            evolves_from=base.id,
         )
         self.base = base
 
