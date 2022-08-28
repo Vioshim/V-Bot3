@@ -178,13 +178,14 @@ class AFKSchedule:
 
     @property
     def tz(self):
-        offset = -timedelta(seconds=3600 * self.offset)
+        offset = timedelta(seconds=3600 * self.offset)
         return timezone(offset=offset)
 
     @property
     def formatted_text(self):
         reference = utcnow()
-        tz = self.tz
+        offset = -timedelta(seconds=3600 * self.offset)
+        tz = timezone(offset=offset)
 
         def method(x: time):
             return datetime.combine(reference, x).astimezone(tz)
