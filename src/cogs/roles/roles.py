@@ -17,7 +17,7 @@ from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from time import mktime
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional
 
 from dateparser import parse
 from discord import (
@@ -135,6 +135,20 @@ def get_role(items: Iterable, guild: Guild):
 
 
 @dataclass(unsafe_hash=True, slots=True)
+class AdjacentTimeState:
+    key: int = 0
+    previous: float = float("nan")
+
+    def __call__(self, value):
+        adjacent = value - self.previous == 1
+        wraps_around = value == 0 and self.previous == 23
+        if not adjacent and not wraps_around:
+            self.key += 1
+        self.previous = value
+        return self.key
+
+
+@dataclass(unsafe_hash=True, slots=True)
 class AFKSchedule:
     user: int = 0
     hours: frozenset[int] = field(default_factory=frozenset)
@@ -144,24 +158,37 @@ class AFKSchedule:
     def offset_hours(self):
         return sorted((x + self.offset // 3600) % 24 for x in self.hours)
 
+    def pairs(self, wrap: Callable[[time], time | datetime] = None):
+        # find all consecutive runs
+        runs = [list(group) for _, group in groupby(self.hours, key=AdjacentTimeState())]
+
+        # check wrap-around
+        if len(runs) >= 2:
+            (first_time, *_), *_, (*_, last_time) = runs
+            if first_time - last_time == 1 or first_time == 0 and last_time == 23:
+                runs[0] = runs[-1] + runs[0]
+                del runs[-1]
+
+        # form tuples
+        def procedure(x: int):
+            return wrap(time(x)) if wrap else time(x)
+
+        return sorted((procedure(run[0]), procedure(run[-1])) for run in runs)
+
     @property
     def formatted_text(self):
-        return "\n".join(
-            f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
-            for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
-            if k and (o := list(v))
-        )
+        return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs())
 
     @property
     def text(self):
         reference = utcnow()
         offset = timedelta(seconds=-self.offset)
         tz = timezone(offset=offset)
-        return "\n".join(
-            f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
-            for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
-            if k and (o := [datetime.combine(reference, x).astimezone(tz) for x in v])
-        )
+
+        def method(x: time):
+            return datetime.combine(reference, x).astimezone(tz)
+
+        return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs(method))
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, int]):
