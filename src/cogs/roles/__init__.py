@@ -267,7 +267,7 @@ class Roles(commands.Cog):
                 color=Color.blurple(),
             )
             embed.set_image(url=WHITE_BAR)
-            embed.set_author(name=member.display_name, icon_url=member.default_avatar)
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
 
             if item2 := await db.find_one({"user": member.id}):
                 offset -= item2["offset"]
