@@ -277,14 +277,13 @@ class Roles(commands.Cog):
 
                 embed = Embed(
                     title="AFK Schedule",
-                    description="No schedules stored.",
+                    description=data.formatted_text,
                     timestamp=ctx.created_at,
                     color=Color.blurple(),
                 )
+                text = ctx.created_at.astimezone(data.tz).strftime("%I:00 %p")
+                embed.set_footer(text=f"It's {text} for the user.")
                 embed.set_image(url=WHITE_BAR)
-
-                if description := data.formatted_text:
-                    embed.description = description
             else:
                 embed.description = "User has no schedule in database"
             await resp.send_message(embed=embed, ephemeral=True)

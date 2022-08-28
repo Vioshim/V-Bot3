@@ -177,10 +177,14 @@ class AFKSchedule:
         return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs())
 
     @property
+    def tz(self):
+        offset = -timedelta(seconds=3600 * self.offset)
+        return timezone(offset=offset)
+
+    @property
     def formatted_text(self):
         reference = utcnow()
-        offset = timedelta(seconds=3600 * -self.offset)
-        tz = timezone(offset=offset)
+        tz = self.tz
 
         def method(x: time):
             return datetime.combine(reference, x).astimezone(tz)
@@ -232,7 +236,7 @@ class AFKModal(Modal, title="Current Time"):
         )
         embed.set_image(url=WHITE_BAR)
 
-        if description := data.text:
+        if description := data.formatted_text:
             embed.description = description
 
         embed.set_footer(
