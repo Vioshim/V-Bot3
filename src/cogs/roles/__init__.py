@@ -281,7 +281,7 @@ class Roles(commands.Cog):
                     timestamp=ctx.created_at,
                     color=Color.blurple(),
                 )
-                date = ctx.created_at + timedelta(hours=data.offset)
+                date = ctx.created_at - timedelta(hours=data.offset)
                 text = date.strftime("%I:%M %p")
                 embed.set_footer(text=f"It's {text} for the user.")
                 embed.set_image(url=WHITE_BAR)
