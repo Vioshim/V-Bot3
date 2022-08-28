@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, time, timedelta
+from itertools import groupby
 from logging import getLogger, setLoggerClass
 from time import mktime
 from typing import Iterable, Optional
 
+from dateparser import parse
 from discord import (
     AllowedMentions,
     ButtonStyle,
@@ -129,6 +132,85 @@ def get_role(items: Iterable, guild: Guild):
             x = x.value
         if role := guild.get_role(int(x)):
             yield role
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class AFKSchedule:
+    user: int = 0
+    hours: frozenset[int] = field(default_factory=frozenset)
+    offset: int = 0
+
+    @property
+    def text(self):
+        return "\n".join(
+            f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
+            for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
+            if not k and (o := [x - timedelta(seconds=self.offset) for x in v])
+        )
+
+    @classmethod
+    def from_dict(cls, kwargs: dict[str, int]):
+        if kwargs:
+            kwargs.pop("_id", None)
+            return cls(**kwargs)
+        return cls()
+
+
+class AFKModal(Modal, title="Current Time"):
+    data = TextInput(
+        label="What time is for you?",
+        max_length=8,
+        placeholder="01:00 PM",
+    )
+
+    def __init__(self, hours: list[int] = None) -> None:
+        super().__init__(timeout=None)
+        self.hours = [*map(int, hours)] if hours else []
+        self.data.placeholder = self.data.default = utcnow().strftime("%I:00 %p")
+        self.offset: int = 0
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        date1 = interaction.created_at
+        date2 = parse(self.data.value) or date1
+        base = abs(date1 - date2)
+        self.offset = base.seconds if date1 <= date2 else -base.seconds
+        data = AFKSchedule(interaction.user.id, self.hours, self.offset)
+
+        embed = Embed(
+            title="Sleep Schedule",
+            description="All schedules were removed.",
+            timestamp=date1,
+            color=Color.blurple(),
+        )
+        embed.set_image(url=WHITE_BAR)
+
+        if description := data.text:
+            embed.description = description
+
+        if base == 0:
+            embed.add_field(
+                name="Disclaimer",
+                value="Using GMT+0 as time was not recognized.",
+            )
+
+        embed.set_footer(
+            text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them."
+        )
+        await resp.send_message(embed=embed)
+
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("AFK")
+        await db.replace_one(
+            {"user": interaction.user.id},
+            {
+                "user": interaction.user.id,
+                "hours": self.hours,
+                "offset": self.offset,
+            },
+            upsert=True,
+        )
+
+        self.stop()
 
 
 class RoleSelect(View):
@@ -285,6 +367,26 @@ class RoleSelect(View):
             )
         else:
             await self.choice(ctx, sct)
+
+    @select(
+        placeholder="AFL Schedule (No timezone)",
+        custom_id="afk",
+        min_values=0,
+        max_values=24,
+        options=[
+            SelectOption(
+                label=lapse.strftime("%I:00 %p"),
+                value=str(lapse.hour),
+                description=lapse.strftime("From %I:00 %p to %I:59 %p"),
+                emoji="\N{SLEEPING SYMBOL}",
+            )
+            for lapse in map(time, range(24))
+        ],
+    )
+    async def afk_schedule(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        modal = AFKModal(hours=sct.values)
+        await resp.send_modal(modal)
 
 
 class RPSearchManage(View):

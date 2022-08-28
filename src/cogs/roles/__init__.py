@@ -13,10 +13,11 @@
 # limitations under the License.
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from discord import (
+    AllowedMentions,
     Color,
     Embed,
     Interaction,
@@ -39,6 +40,8 @@ from discord.utils import MISSING, find, format_dt, snowflake_time
 
 from src.cogs.roles.roles import (
     RP_SEARCH_ROLES,
+    AFKModal,
+    AFKSchedule,
     RoleSelect,
     RPModal,
     RPRolesView,
@@ -59,15 +62,26 @@ class Roles(commands.Cog):
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
         self.ref_msg: Optional[Message] = None
+        self.ctx_menu1 = app_commands.ContextMenu(
+            name="AFK Schedule",
+            callback=self.check_afk,
+            guild_ids=[719343092963999804],
+        )
 
     async def cog_load(self):
+        self.bot.tree.add_command(self.ctx_menu1)
         await self.load_self_roles()
         await self.load_rp_searches()
 
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
-        self.view = RoleSelect(timeout=None)
-        self.bot.add_view(self.view, message_id=1008443862559240312)
+        view = RoleSelect(timeout=None)
+        if not (channel := self.bot.get_channel(719709333369258015)):
+            channel = await self.bot.fetch_channel(719709333369258015)
+        await PartialMessage(channel=channel, id=1008443862559240312).edit(view=view)
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
@@ -138,9 +152,41 @@ class Roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
-        if msg.flags.ephemeral or not msg.guild:
+        if msg.flags.ephemeral or not msg.guild or msg.author.bot:
             return
-        if msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name and not msg.author.bot:
+
+        db = self.bot.mongo_db("AFK")
+        if msg.mentions and (
+            afk_members := [
+                f"• {user.mention}"
+                async for item in db.find(
+                    {
+                        "user": {
+                            "$in": [x.id for x in msg.mentions if isinstance(x, Member) and str(x.status) == "offline"]
+                        }
+                    }
+                )
+                if (user := msg.guild.get_member(item["user"]))
+                and ((msg.created_at + timedelta(seconds=item["offset"])).hour in item["hours"])
+            ]
+        ):
+            embed = Embed(
+                title="AFK Schedules",
+                description="\n".join(afk_members),
+                color=Color.blurple(),
+                timestamp=msg.created_at,
+            )
+            embed.set_image(url=WHITE_BAR)
+            embed.set_footer(text="Feel free to use /afk to check their AFK schedules.")
+
+            await msg.channel.send(
+                content=msg.author.mention,
+                embed=embed,
+                delete_after=3,
+                allowed_mentions=AllowedMentions(users=True),
+            )
+
+        if msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name:
             db2 = self.bot.mongo_db("RP Sessions")
 
             if isinstance(msg.channel, Thread):
@@ -208,6 +254,57 @@ class Roles(commands.Cog):
         modal = RPModal(user=user, role=role, ocs=ocs, to_user=member)
         if await modal.check(interaction):
             await resp.send_modal(modal)
+
+    async def check_afk(self, ctx: Interaction, member: Member):
+        resp: InteractionResponse = ctx.response
+        db = self.bot.mongo_db("AFK")
+        if item := await db.find_one({"user": ctx.id}):
+            offset: int = item["offset"]
+
+            embed = Embed(
+                title="Sleep Schedule",
+                description="No schedules stored.",
+                timestamp=ctx.created_at,
+                color=Color.blurple(),
+            )
+            embed.set_image(url=WHITE_BAR)
+
+            if item2 := await db.find_one({"user": member.id}):
+                offset -= item2["offset"]
+                hours = item2["hours"]
+
+                data = AFKSchedule(member.id, hours, offset)
+
+                embed = Embed(
+                    title="AFK Schedule",
+                    description="No schedules stored.",
+                    timestamp=ctx.created_at,
+                    color=Color.blurple(),
+                )
+                embed.set_image(url=WHITE_BAR)
+
+                if description := data.text:
+                    embed.description = description
+            else:
+                embed.description = "User has no schedule in database"
+            await resp.send_message(embed=embed, ephemeral=True)
+        else:
+            modal = AFKModal()
+            await resp.send_modal(modal)
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    async def afk(self, ctx: Interaction, member: Member):
+        """Check users' AFK Schedule
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        member : Member
+            User to Check
+        """
+        await self.check_afk(ctx, member)
 
     @commands.command()
     @commands.guild_only()

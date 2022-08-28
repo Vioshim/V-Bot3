@@ -22,14 +22,12 @@ from discord import (
     AllowedMentions,
     DiscordException,
     Embed,
-    Guild,
     Interaction,
     InteractionResponse,
     Member,
     Message,
     Role,
     TextChannel,
-    Thread,
     User,
     app_commands,
 )
@@ -262,65 +260,6 @@ class Moderation(commands.Cog):
         view.message = msg
         await msg.edit(view=view)
         await view.wait()
-
-    @app_commands.command(description="Sets yourself as AFK")
-    @app_commands.guilds(719343092963999804)
-    @app_commands.describe(reason="The reason why you are going AFK.")
-    async def afk(self, ctx: Interaction, reason: Optional[str]):
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
-        afk_role: Role = member.guild.get_role(932324221168795668)
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
-        await resp.defer(ephemeral=True, thinking=True)
-        if afk_role in member.roles:
-            await ctx.followup.send(
-                "You are already AFK. If you wanna remove the Role, simply send a message in the server.",
-                ephemeral=True,
-            )
-            return
-
-        if not reason:
-            reason = "No reason provided."
-
-        await member.add_roles(afk_role, reason=reason)
-        await ctx.followup.send(
-            "You are now AFK, the next time you send a message in the server, the role will be removed.",
-            ephemeral=True,
-        )
-
-    @commands.Cog.listener()
-    async def on_message(self, message: Message):
-
-        guild: Guild = message.guild
-
-        if not guild:
-            return
-
-        afk_role: Role = guild.get_role(932324221168795668)
-
-        if not afk_role:
-            return
-
-        if message.author in afk_role.members:
-            await message.author.remove_roles(afk_role, reason=f"Removed AFK as user replied at {message.channel}")
-
-        mentioned_users = message.mentions.copy()
-        try:
-            if reference := message.reference:
-                if not (msg := message.reference.resolved):
-                    msg = await message.channel.fetch_message(reference.message_id)
-                mentioned_users.append(msg.author)
-        except DiscordException:
-            pass
-
-        mentioned = set(afk_role.members) & set(mentioned_users)
-        if mentions := ", ".join(x.mention for x in mentioned):
-            await message.reply(
-                f"The users {mentions} are AFK. Check our Audit log for more information.",
-                delete_after=10,
-                allowed_mentions=AllowedMentions(replied_user=True, users=False),
-            )
 
     @commands.command(name="cooldown", aliases=["sleep"])
     @commands.has_guild_permissions(manage_messages=True)
