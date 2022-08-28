@@ -171,16 +171,17 @@ class AFKSchedule:
 
         # form tuples
         def procedure(x: int):
-            return wrap(time(x)) if wrap else time(x)
+            item = time(x)
+            return wrap(item) if wrap else item
 
         return sorted((procedure(run[0]), procedure(run[-1])) for run in runs)
 
     @property
-    def formatted_text(self):
+    def text(self):
         return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs())
 
     @property
-    def text(self):
+    def formatted_text(self):
         reference = utcnow()
         offset = timedelta(seconds=-self.offset)
         tz = timezone(offset=offset)
@@ -233,7 +234,7 @@ class AFKModal(Modal, title="Current Time"):
         )
         embed.set_image(url=WHITE_BAR)
 
-        if description := data.formatted_text:
+        if description := data.text:
             embed.description = description
 
         if base == 0:
@@ -254,7 +255,10 @@ class AFKModal(Modal, title="Current Time"):
             {
                 "user": interaction.user.id,
                 "hours": sorted(self.hours),
-                "offset": self.offset // 60 * 60,
+                "offset": min(
+                    range(0, 48 * 1800 + 1, 1800),
+                    key=lambda x: abs(x - self.offset),
+                ),
             },
             upsert=True,
         )
