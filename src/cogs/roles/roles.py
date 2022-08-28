@@ -238,7 +238,7 @@ class AFKModal(Modal, title="Current Time"):
         )
         embed.set_image(url=WHITE_BAR)
 
-        if description := data.formatted_text:
+        if description := data.text:
             embed.description = description
 
         embed.set_footer(
