@@ -283,7 +283,7 @@ class Roles(commands.Cog):
                 )
                 embed.set_image(url=WHITE_BAR)
 
-                if description := data.formatted_text:
+                if description := data.text:
                     embed.description = description
             else:
                 embed.description = "User has no schedule in database"
