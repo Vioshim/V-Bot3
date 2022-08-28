@@ -674,7 +674,7 @@ class MovesetField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        moves = oc.total_movepool()
+        moves = {x for x in oc.total_movepool() if not x.banned}
         species = oc.species
 
         mons = "SMEARGLE", "DITTO", "MEW"
@@ -686,12 +686,12 @@ class MovesetField(TemplateField):
                 isinstance(species, (CustomMega, Variant)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
-                not moves and not isinstance(species, Chimera),
+                isinstance(species, Chimera),
+                not moves,
             )
         ):
-            moves = Move.all()
+            moves = {x for x in Move.all() if not x.banned}
 
-        moves = {x for x in moves if not x.banned}
         view = MoveComplex(member=ctx.user, moves=moves, target=ctx, choices=oc.moveset)
         async with view.send(ephemeral=ephemeral) as choices:
             oc.moveset = frozenset(choices)
