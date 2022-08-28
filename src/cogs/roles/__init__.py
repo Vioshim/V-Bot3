@@ -257,7 +257,6 @@ class Roles(commands.Cog):
 
     async def check_afk(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
-        member = member or ctx.user
         db = self.bot.mongo_db("AFK")
         if item := await db.find_one({"user": ctx.user.id}):
             offset: int = item["offset"]
@@ -305,7 +304,7 @@ class Roles(commands.Cog):
         member : Member
             User to Check
         """
-        await self.check_afk(ctx, member)
+        await self.check_afk(ctx, member or ctx.user)
 
     @commands.command()
     @commands.guild_only()
