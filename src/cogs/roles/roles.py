@@ -200,7 +200,7 @@ class AFKModal(Modal, title="Current Time"):
         data = AFKSchedule(interaction.user.id, self.hours, self.offset)
 
         embed = Embed(
-            title="Sleep Schedule",
+            title="AFK Schedule",
             description="All schedules were removed.",
             color=Color.blurple(),
         )
