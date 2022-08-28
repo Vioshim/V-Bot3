@@ -157,20 +157,24 @@ class AFKSchedule:
 
 
 class AFKModal(Modal, title="Current Time"):
-    data = TextInput(
-        label="What time is for you?",
-        max_length=8,
-        placeholder="01:00 PM",
-    )
-
     def __init__(self, hours: list[int] = None) -> None:
         super().__init__(timeout=None)
+
+        data = TextInput(
+            label="What time is for you?",
+            max_length=8,
+            placeholder="01:00 PM",
+        )
         self.hours = [*map(int, hours)] if hours else []
-        self.data.placeholder = self.data.default = utcnow().strftime("%I:00 %p")
+        data.placeholder = data.default = utcnow().strftime("%I:00 %p")
         self.offset: int = 0
+        self.data = data
+        self.add_item(data)
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
+
         date1 = interaction.created_at
         date2 = parse(self.data.value) or date1
         base = abs(date1 - date2)
@@ -197,7 +201,8 @@ class AFKModal(Modal, title="Current Time"):
         embed.set_footer(
             text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them."
         )
-        await resp.send_message(embed=embed)
+
+        await interaction.followup.send(embed=embed)
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("AFK")
         await db.replace_one(
