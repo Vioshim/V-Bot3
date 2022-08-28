@@ -141,6 +141,14 @@ class AFKSchedule:
     offset: int = 0
 
     @property
+    def formatted_text(self):
+        return "\n".join(
+            f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
+            for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
+            if not k and (o := list(v))
+        )
+
+    @property
     def text(self):
         reference = utcnow()
         return "\n".join(
@@ -192,7 +200,7 @@ class AFKModal(Modal, title="Current Time"):
         )
         embed.set_image(url=WHITE_BAR)
 
-        if description := data.text:
+        if description := data.formatted_text:
             embed.description = description
 
         if base == 0:
@@ -212,7 +220,7 @@ class AFKModal(Modal, title="Current Time"):
             {"user": interaction.user.id},
             {
                 "user": interaction.user.id,
-                "hours": self.hours,
+                "hours": sorted(self.hours),
                 "offset": self.offset,
             },
             upsert=True,
