@@ -282,15 +282,6 @@ class Roles(commands.Cog):
                 text = quote_plus(date.strftime("User time %I:%M %p"))
                 embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
 
-                aux = set(range(24))
-                aux2 = (aux - set(item["hours"])) ^ (aux - set(item2["hours"]))
-
-                if (text := AFKSchedule(aux2, item["offset"]).formatted_text) and text != embed.description:
-                    embed.add_field(name="Both awake", value=text, inline=False)
-
-                if text := AFKSchedule(aux - aux2, item["offset"]).formatted_text:
-                    embed.add_field(name="Can't meet", value=text, inline=False)
-
             else:
                 embed.description = "User has no schedule in database"
             await resp.send_message(embed=embed, ephemeral=True)
