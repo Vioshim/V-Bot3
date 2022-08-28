@@ -264,6 +264,7 @@ class Roles(commands.Cog):
 
             embed = Embed(
                 title="AFK Schedule",
+                description="User has no schedule in database",
                 timestamp=ctx.created_at,
                 color=Color.blurple(),
             )
@@ -281,9 +282,6 @@ class Roles(commands.Cog):
                 date = ctx.created_at.astimezone(data.tz)
                 text = quote_plus(date.strftime("User time %I:%M %p"))
                 embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
-
-            else:
-                embed.description = "User has no schedule in database"
             await resp.send_message(embed=embed, ephemeral=True)
         else:
             modal = AFKModal()
