@@ -255,7 +255,7 @@ class Roles(commands.Cog):
         if await modal.check(interaction):
             await resp.send_modal(modal)
 
-    async def check_afk(self, ctx: Interaction, member: Optional[Member] = None):
+    async def check_afk(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
         member = member or ctx.user
         db = self.bot.mongo_db("AFK")
