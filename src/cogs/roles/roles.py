@@ -219,6 +219,10 @@ class AFKModal(Modal, title="Current Time"):
 
 
 class RoleSelect(View):
+    async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
+        log = interaction.client.logger
+        log.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+
     async def choice(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
@@ -374,7 +378,7 @@ class RoleSelect(View):
             await self.choice(ctx, sct)
 
     @select(
-        placeholder="AFL Schedule (No timezone)",
+        placeholder="AFK Schedule (No timezone)",
         custom_id="afk",
         min_values=0,
         max_values=24,
