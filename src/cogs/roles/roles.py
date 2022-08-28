@@ -156,7 +156,7 @@ class AFKSchedule:
 
     def pairs(self, wrap: Callable[[time], time | datetime] = None):
         # find all consecutive runs
-        runs = [list(group) for _, group in groupby(self.hours, key=AdjacentTimeState())]
+        runs = [list(group) for _, group in groupby(sorted(self.hours), key=AdjacentTimeState())]
 
         # check wrap-around
         if len(runs) >= 2:
@@ -210,6 +210,7 @@ class AFKModal(Modal, title="Current Time"):
             placeholder="01:00 PM",
         )
         self.hours = [*map(int, hours)] if hours else []
+        self.hours.sort()
         data.placeholder = data.default = utcnow().strftime("%I:00 %p")
         self.offset: int = 0
         self.data = data
