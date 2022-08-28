@@ -268,8 +268,10 @@ class Submission(commands.Cog):
 
             if not oc.id:
                 msg_oc = await thread.send(**kwargs)
+                reference_id = msg_oc.id
                 word = "registered"
             else:
+                reference_id = oc.id
                 thread = await thread.edit(archived=False)
                 try:
                     msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
@@ -277,6 +279,7 @@ class Submission(commands.Cog):
                 except NotFound:
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
+
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
 
@@ -291,7 +294,7 @@ class Submission(commands.Cog):
             )
 
             await self.bot.mongo_db("Characters").replace_one(
-                {"id": oc.id},
+                {"id": reference_id},
                 oc.to_mongo_dict(),
                 upsert=True,
             )
