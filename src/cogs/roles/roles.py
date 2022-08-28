@@ -171,6 +171,10 @@ class AFKModal(Modal, title="Current Time"):
         self.data = data
         self.add_item(data)
 
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        log = interaction.client.logger
+        log.error("Ignoring exception in modal %r", self, exc_info=error)
+
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
