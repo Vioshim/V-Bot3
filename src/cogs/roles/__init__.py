@@ -255,10 +255,11 @@ class Roles(commands.Cog):
         if await modal.check(interaction):
             await resp.send_modal(modal)
 
-    async def check_afk(self, ctx: Interaction, member: Member):
+    async def check_afk(self, ctx: Interaction, member: Optional[Member] = None):
         resp: InteractionResponse = ctx.response
+        member = member or ctx.user
         db = self.bot.mongo_db("AFK")
-        if item := await db.find_one({"user": ctx.id}):
+        if item := await db.find_one({"user": ctx.user.id}):
             offset: int = item["offset"]
 
             embed = Embed(
@@ -294,7 +295,7 @@ class Roles(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def afk(self, ctx: Interaction, member: Member):
+    async def afk(self, ctx: Interaction, member: Optional[Member]):
         """Check users' AFK Schedule
 
         Parameters

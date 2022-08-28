@@ -188,7 +188,7 @@ class AFKModal(Modal, title="Current Time"):
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         date1 = interaction.created_at.astimezone(DEFAULT_TIMEZONE)
-        date2 = (parse(self.data.value) or date1).astimezone(DEFAULT_TIMEZONE)
+        date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
         base = abs(date1 - date2)
         self.offset = base.seconds if date1 <= date2 else -base.seconds
         data = AFKSchedule(interaction.user.id, self.hours, self.offset)
