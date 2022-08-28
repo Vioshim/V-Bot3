@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from time import mktime
@@ -153,12 +153,17 @@ class AFKSchedule:
         )
 
     @property
+    def offset_timedelta(self):
+        return timedelta(seconds=self.offset)
+
+    @property
     def text(self):
         reference = utcnow()
+        tz = timezone(offset=self.offset_timedelta)
         return "\n".join(
             f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
             for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
-            if k and (o := [datetime.combine(reference, x) - timedelta(seconds=self.offset) for x in v])
+            if k and (o := [datetime.combine(reference, x, tz) for x in v])
         )
 
     @classmethod
