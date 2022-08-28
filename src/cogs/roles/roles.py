@@ -141,6 +141,10 @@ class AFKSchedule:
     offset: int = 0
 
     @property
+    def offset_hours(self):
+        return sorted((x + self.offset // 3600) % 24 for x in self.hours)
+
+    @property
     def formatted_text(self):
         return "\n".join(
             f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
