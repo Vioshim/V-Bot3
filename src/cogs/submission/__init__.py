@@ -266,11 +266,11 @@ class Submission(commands.Cog):
                     word = "attachments" if oc.id else "files"
                     kwargs[word] = [file]
 
-            if oc.id:
+            try:
                 thread = await thread.edit(archived=False)
                 msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                 word = "modified"
-            else:
+            except NotFound:
                 msg_oc = await thread.send(**kwargs)
                 word = "registered"
 
