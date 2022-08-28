@@ -227,7 +227,7 @@ class AFKModal(Modal, title="Current Time"):
             {
                 "user": interaction.user.id,
                 "hours": sorted(self.hours),
-                "offset": self.offset,
+                "offset": self.offset // 60 * 60,
             },
             upsert=True,
         )
