@@ -262,12 +262,12 @@ class Roles(commands.Cog):
             offset: int = item["offset"]
 
             embed = Embed(
-                title="Sleep Schedule",
-                description="No schedules stored.",
+                title="AFK Schedule",
                 timestamp=ctx.created_at,
                 color=Color.blurple(),
             )
             embed.set_image(url=WHITE_BAR)
+            embed.set_author(name=member.display_name, icon_url=member.default_avatar)
 
             if item2 := await db.find_one({"user": member.id}):
                 offset -= item2["offset"]
@@ -275,12 +275,7 @@ class Roles(commands.Cog):
 
                 data = AFKSchedule(hours, offset)
 
-                embed = Embed(
-                    title="AFK Schedule",
-                    description=data.formatted_text,
-                    timestamp=ctx.created_at,
-                    color=Color.blurple(),
-                )
+                embed.description = data.formatted_text
                 data.offset = item2["offset"]
                 date = ctx.created_at.astimezone(data.tz)
                 text = date.strftime("%I:%M %p")
