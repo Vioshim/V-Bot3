@@ -273,7 +273,7 @@ class Roles(commands.Cog):
                 offset -= item2["offset"]
                 hours = item2["hours"]
 
-                data = AFKSchedule(member.id, hours, offset)
+                data = AFKSchedule(hours, offset)
 
                 embed = Embed(
                     title="AFK Schedule",
@@ -281,7 +281,8 @@ class Roles(commands.Cog):
                     timestamp=ctx.created_at,
                     color=Color.blurple(),
                 )
-                text = data.convert(ctx.created_at).strftime("%I:%M %p")
+                date = ctx.created_at + timedelta(hours=data.offset)
+                text = date.strftime("%I:%M %p")
                 embed.set_footer(text=f"It's {text} for the user.")
                 embed.set_image(url=WHITE_BAR)
             else:

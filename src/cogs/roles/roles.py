@@ -150,7 +150,6 @@ class AdjacentTimeState:
 
 @dataclass(unsafe_hash=True, slots=True)
 class AFKSchedule:
-    user: int = 0
     hours: frozenset[int] = field(default_factory=frozenset)
     offset: int = 0
 
@@ -175,7 +174,7 @@ class AFKSchedule:
     def convert(self, date: Optional[datetime] = None):
         if not date:
             date = utcnow()
-        offset = -timedelta(seconds=3600 * self.offset)
+        offset = -timedelta(hours=self.offset)
         tz = timezone(offset=offset)
         return date.astimezone(tz)
 
@@ -185,13 +184,13 @@ class AFKSchedule:
 
     @property
     def tz(self):
-        offset = timedelta(seconds=3600 * self.offset)
+        offset = timedelta(hours=self.offset)
         return timezone(offset=offset)
 
     @property
     def formatted_text(self):
         reference = utcnow()
-        offset = -timedelta(seconds=3600 * self.offset)
+        offset = -timedelta(hours=self.offset)
         tz = timezone(offset=offset)
 
         def method(x: time):
@@ -236,7 +235,7 @@ class AFKModal(Modal, title="Current Time"):
         if date1 > date2:
             self.offset = -self.offset
 
-        data = AFKSchedule(interaction.user.id, self.hours, self.offset)
+        data = AFKSchedule(self.hours, self.offset)
 
         embed = Embed(
             title="AFK Schedule",
@@ -260,7 +259,7 @@ class AFKModal(Modal, title="Current Time"):
             {
                 "user": interaction.user.id,
                 "hours": sorted(self.hours),
-                "offset": self.offset,
+                "offset": float(self.offset),
             },
             upsert=True,
         )
