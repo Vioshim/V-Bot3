@@ -15,6 +15,7 @@
 
 from datetime import datetime, timedelta
 from typing import Optional
+from urllib.parse import quote_plus
 
 from discord import (
     AllowedMentions,
@@ -278,9 +279,18 @@ class Roles(commands.Cog):
                 embed.description = data.formatted_text
                 data.offset = item2["offset"]
                 date = ctx.created_at.astimezone(data.tz)
-                text = date.strftime("%I:%M %p")
-                embed.set_footer(text=f"It's {text} for the user.")
-                embed.set_image(url=WHITE_BAR)
+                text = quote_plus(date.strftime("User time %I:%M %p"))
+                embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
+
+                aux = set(range(24))
+                aux2 = (aux - set(item["hours"])) ^ (aux - set(item2["hours"]))
+
+                if text := AFKSchedule(aux2, offset).formatted_text:
+                    embed.add_field(name="Both Online at", value=text, inline=False)
+
+                if text := AFKSchedule(aux - aux2, offset).formatted_text:
+                    embed.add_field(name="Can't hangout at", value=text, inline=False)
+
             else:
                 embed.description = "User has no schedule in database"
             await resp.send_message(embed=embed, ephemeral=True)
