@@ -223,8 +223,8 @@ class AFKModal(Modal, title="Current Time"):
         await resp.defer(ephemeral=True, thinking=True)
         date1 = interaction.created_at.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
-        base = abs(date1 - date2)
-        self.offset = base.seconds if date1 <= date2 else -base.seconds
+        base = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - abs(date1 - date2).seconds))
+        self.offset = base if date1 <= date2 else -base
         data = AFKSchedule(interaction.user.id, self.hours, self.offset)
 
         embed = Embed(
@@ -255,10 +255,7 @@ class AFKModal(Modal, title="Current Time"):
             {
                 "user": interaction.user.id,
                 "hours": sorted(self.hours),
-                "offset": min(
-                    range(0, 48 * 1800 + 1, 1800),
-                    key=lambda x: abs(x - self.offset),
-                ),
+                "offset": self.offset,
             },
             upsert=True,
         )
