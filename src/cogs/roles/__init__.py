@@ -281,6 +281,7 @@ class Roles(commands.Cog):
                     timestamp=ctx.created_at,
                     color=Color.blurple(),
                 )
+                data.offset = item2["offset"]
                 date = ctx.created_at.astimezone(data.tz)
                 text = date.strftime("%I:%M %p")
                 embed.set_footer(text=f"It's {text} for the user.")
