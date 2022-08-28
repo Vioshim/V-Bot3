@@ -172,6 +172,13 @@ class AFKSchedule:
 
         return sorted((procedure(run[0]), procedure(run[-1])) for run in runs)
 
+    def convert(self, date: Optional[datetime] = None):
+        if not date:
+            date = utcnow()
+        offset = -timedelta(seconds=3600 * self.offset)
+        tz = timezone(offset=offset)
+        return date.astimezone(tz)
+
     @property
     def text(self):
         return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs())
