@@ -142,10 +142,11 @@ class AFKSchedule:
 
     @property
     def text(self):
+        reference = utcnow()
         return "\n".join(
             f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
             for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
-            if not k and (o := [x - timedelta(seconds=self.offset) for x in v])
+            if not k and (o := [datetime.combine(reference, x) - timedelta(seconds=self.offset) for x in v])
         )
 
     @classmethod
