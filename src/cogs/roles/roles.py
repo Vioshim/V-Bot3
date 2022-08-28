@@ -145,7 +145,7 @@ class AFKSchedule:
         return "\n".join(
             f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
             for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
-            if not k and (o := list(v))
+            if k and (o := list(v))
         )
 
     @property
@@ -154,7 +154,7 @@ class AFKSchedule:
         return "\n".join(
             f"• {o[0].strftime('%I:00 %p')} - {o[-1].strftime('%I:59 %p')}"
             for k, v in groupby(map(time, range(24)), key=lambda x: x.hour in self.hours)
-            if not k and (o := [datetime.combine(reference, x) - timedelta(seconds=self.offset) for x in v])
+            if k and (o := [datetime.combine(reference, x) - timedelta(seconds=self.offset) for x in v])
         )
 
     @classmethod
