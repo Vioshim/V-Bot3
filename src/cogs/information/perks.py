@@ -188,16 +188,14 @@ class OCBackgroundPerk(Perk):
         key = {"author": ctx.user.id}
         embed = Embed(title="OC Background", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
+        embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/1004016803317563402/unknown.png")
+        file = MISSING
         w: Webhook = await ctx.client.webhook(1001125143071965204)
 
         if img:
-            url = f"attachment://{img.filename}"
+            embed.set_image(url=f"attachment://{img.filename}")
             file = await img.to_file()
-        else:
-            url = "https://cdn.discordapp.com/attachments/748384705098940426/1004016803317563402/unknown.png"
-            file = MISSING
 
-        embed.set_image(url=url)
         m = await w.send(
             embed=embed,
             file=file,

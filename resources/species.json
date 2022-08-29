@@ -126650,6 +126650,7 @@
 		"SPA": 80,
 		"SPD": 115,
 		"SPE": 148,
+		"movepool": { "event": ["BEHEMOTHBLADE"] },
 		"evolves_from": "ZACIAN",
 		"abilities": ["INTREPIDSWORD"],
 		"kind": "Legendary"
@@ -126761,6 +126762,7 @@
 		"SPA": 80,
 		"SPD": 115,
 		"SPE": 138,
+		"movepool": { "event": ["BEHEMOTHBASH"] },
 		"evolves_from": "ZAMAZENTA",
 		"abilities": ["DAUNTLESSSHIELD"],
 		"kind": "Legendary"
