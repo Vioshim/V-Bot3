@@ -271,19 +271,16 @@ class Pokedex(commands.Cog):
                 lambda oc: (ch := guild.get_channel_or_thread(oc.location))
                 and (ch.parent if isinstance(ch, Thread) else ch) == location
             )
-        if member:
-            filters.append(lambda oc: oc.author == getattr(member, "id", member))
+        if member_id := getattr(member, "id", member):
+            filters.append(lambda oc: oc.author == member_id)
 
-        if isinstance(species, Species):
-            if fused and species != fused and not isinstance(fused, Fusion) and not isinstance(species, Fusion):
-                species = Fusion(species, fused)
-            filters.append(lambda oc: getattr(oc.species, "base", oc.species) == species)
-            mon = species
+        if isinstance(mon := species, Species):
+            if fused and mon != fused and not isinstance(fused, Fusion) and not isinstance(mon, Fusion):
+                mon = Fusion(mon, fused)
+            filters.append(lambda oc: getattr(oc.species, "base", oc.species) == mon)
         elif fused and not isinstance(fused, Fusion):
             filters.append(lambda oc: isinstance(oc.species, Fusion) and fused in oc.species.bases)
             mon = fused
-        else:
-            mon = species
 
         if isinstance(mon, Species):
             embed.title = mon.name

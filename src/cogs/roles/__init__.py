@@ -30,7 +30,6 @@ from discord import (
     PartialMessage,
     RawMessageDeleteEvent,
     Role,
-    TextChannel,
     Thread,
     app_commands,
 )
@@ -110,12 +109,12 @@ class Roles(commands.Cog):
     async def on_ready(self):
         if not self.ref_msg:
             channel = self.bot.get_channel(958122815171756042)
-            view = RPRolesView(timeout=None)
+            self.view = RPRolesView(timeout=None)
             async for msg in channel.history(limit=1):
                 if msg.author == self.bot.user and not msg.webhook_id:
-                    self.ref_msg = await msg.edit(embed=IMAGE_EMBED, view=view)
+                    self.ref_msg = await msg.edit(embed=IMAGE_EMBED, view=self.view)
                 else:
-                    self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=view)
+                    self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=self.view)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
@@ -144,12 +143,6 @@ class Roles(commands.Cog):
                 "id": payload.message_id,
             }
         )
-
-    async def view_load(self, channel: TextChannel):
-        if m := self.ref_msg:
-            await m.delete(delay=0)
-        view = RPRolesView(timeout=None)
-        self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=view)
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):

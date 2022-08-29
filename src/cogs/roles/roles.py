@@ -30,6 +30,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    Message,
     PartialMessage,
     Role,
     SelectOption,
@@ -657,7 +658,13 @@ class RPModal(Modal):
             await msg1.edit(embed=embed, attachments=[file])
         elif text := ", ".join(str(x.id) for x in items):
             interaction.client.logger.info("Error Image Parsing OCs: %s", text)
-        await cog1.view_load(interaction.channel)
+
+        if isinstance(m := cog1.ref_msg, Message):
+            await m.delete(delay=0)
+        IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png"
+        IMAGE_EMBED = Embed(color=Color.blurple()).set_image(url=IMAGE)
+        self.ref_msg = await interaction.channel.send(embed=IMAGE_EMBED, view=self)
+
         self.stop()
 
 
@@ -736,6 +743,10 @@ class RPSearchComplex(Complex[Member]):
 
 
 class RPRolesView(View):
+    def __init__(self, *, timeout: Optional[float] = 180, current: dict[Role, Member] = None):
+        super().__init__(timeout=timeout)
+        self.current = current or {}
+
     async def on_error(self, interaction: Interaction, error: Exception, item) -> None:
         interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
@@ -755,6 +766,21 @@ class RPRolesView(View):
     async def choice(self, interaction: Interaction, sct: Select):
         guild: Guild = interaction.guild
         role: Role = interaction.guild.get_role(int(sct.values[0]))
+
+        if aux := self.current.get(role):
+            resp: InteractionResponse = interaction.response
+
+            embed = Embed(
+                title=role.name,
+                description=f"Hello there, the user {aux.mention} is about to ping {role.mention}, have some patience and then join the user's thread.",
+                color=Color.blurple(),
+                timestamp=interaction.created_at,
+            )
+            embed.set_image(url=WHITE_BAR)
+            embed.set_footer(text=guild.name, icon_url=guild.icon)
+
+            return await resp.send_message(embed=embed, ephemeral=True)
+
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
         key = {
@@ -772,8 +798,10 @@ class RPRolesView(View):
             if (m := guild.get_member(item["member"])) and ({x for x in cog.ocs.values() if x.author == user.id})
         }
         member: Member = interaction.client.supporting.get(interaction.user, interaction.user)
+        self.current[role] = member
         view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
         async with view.send(ephemeral=True, single=True) as choice:
+            self.current.pop(role, None)
             if thread_id := entries.get(choice):
                 if not (thread := guild.get_channel_or_thread(thread_id)):
                     thread = await guild.fetch_channel(thread_id)
