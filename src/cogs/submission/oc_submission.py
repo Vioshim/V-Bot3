@@ -686,6 +686,7 @@ class MovesetField(TemplateField):
                 isinstance(species, (CustomMega, Variant)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
+                isinstance(species, (Fakemon, Variant)) and not moves,
             )
         ):
             moves = {x for x in Move.all() if not x.banned}
@@ -694,7 +695,7 @@ class MovesetField(TemplateField):
         view = MoveComplex(member=ctx.user, moves=moves, target=ctx, choices=moveset)
         async with view.send(ephemeral=ephemeral) as choices:
             oc.moveset = frozenset(choices)
-            if isinstance(oc.species, (Variant, Fakemon)) and not oc.movepool:
+            if isinstance(oc.species, (Fakemon, Variant)) and not oc.movepool:
                 oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                 progress.add("Movepool")
             progress.add(cls.name)
