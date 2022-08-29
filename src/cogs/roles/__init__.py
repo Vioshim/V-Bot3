@@ -268,7 +268,6 @@ class Roles(commands.Cog):
                 timestamp=ctx.created_at,
                 color=Color.blurple(),
             )
-            embed.set_image(url=WHITE_BAR)
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
 
             if item2 := await db.find_one({"user": member.id}):
@@ -282,6 +281,8 @@ class Roles(commands.Cog):
                 date = ctx.created_at.astimezone(data.tz)
                 text = quote_plus(date.strftime("User time %I:%M %p"))
                 embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
+            else:
+                embed.set_image(url=WHITE_BAR)
             await resp.send_message(embed=embed, ephemeral=True)
         else:
             modal = AFKModal()

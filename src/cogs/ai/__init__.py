@@ -19,6 +19,7 @@ from discord import (
     DiscordException,
     Embed,
     Message,
+    RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     TextChannel,
@@ -106,6 +107,14 @@ class AiCog(commands.Cog):
         self.cache.pop(payload.message_id, None)
         self.msg_cache.pop(payload.message_id, None)
         await db.delete_one({"id": payload.message_id})
+
+    @commands.Cog.listener()
+    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
+        db = self.bot.mongo_db("RP Samples")
+        await db.delete_many({"id": {"$in": list(payload.message_ids)}})
+        for item in payload.message_ids:
+            self.cache.pop(item, None)
+            self.msg_cache.pop(item, None)
 
     @commands.command()
     @commands.is_owner()

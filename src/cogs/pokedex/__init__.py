@@ -274,7 +274,6 @@ class Pokedex(commands.Cog):
         if member:
             filters.append(lambda oc: oc.author == getattr(member, "id", member))
 
-        mon = None
         if isinstance(species, Species):
             if fused and species != fused and not isinstance(fused, Fusion) and not isinstance(species, Fusion):
                 species = Fusion(species, fused)
@@ -283,24 +282,26 @@ class Pokedex(commands.Cog):
         elif fused and not isinstance(fused, Fusion):
             filters.append(lambda oc: isinstance(oc.species, Fusion) and fused in oc.species.bases)
             mon = fused
+        else:
+            mon = species
 
         if isinstance(mon, Species):
             embed.title = mon.name
             if mon.banned:
                 embed.title += " - Banned Species"
-            if mon_types := ", ".join(i.name for i in species.types):
+            if mon_types := ", ".join(i.name for i in mon.types):
                 embed.set_footer(text=f"Types: {mon_types}")
             elif isinstance(species, Fusion):
-                mon_types = "\n".join(f"• {'/'.join(i.name for i in item)}" for item in species.possible_types)
+                mon_types = "\n".join(f"• {'/'.join(i.name for i in item)}" for item in mon.possible_types)
                 embed.set_footer(text=f"Possible Types:\n{mon_types}")
 
-            if ab_text := "\n".join(f"• {ab.name}" for ab in species.abilities):
-                embed.add_field(name=f"Abilities (Max {species.max_amount_abilities})", value=ab_text)
+            if ab_text := "\n".join(f"• {ab.name}" for ab in mon.abilities):
+                embed.add_field(name=f"Abilities (Max {mon.max_amount_abilities})", value=ab_text)
 
-            if isinstance(species, Fusion):
-                image1, image2 = species.mon1.image(gender=pronoun), species.mon2.image(gender=pronoun)
+            if isinstance(mon, Fusion):
+                image1, image2 = mon.mon1.image(gender=pronoun), mon.mon2.image(gender=pronoun)
             else:
-                image1, image2 = species.image(gender=pronoun), species.image(gender=pronoun, shiny=True)
+                image1, image2 = mon.image(gender=pronoun), mon.image(gender=pronoun, shiny=True)
 
             embeds = [embed.set_image(url=image1), Embed(url=PLACEHOLDER).set_image(url=image2)]
         if pronoun:
