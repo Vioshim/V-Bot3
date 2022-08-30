@@ -59,17 +59,11 @@ from yaml import dump
 
 from src.cogs.information.area_selection import RegionViewComplex
 from src.cogs.information.perks import CustomPerks
+from src.cogs.information.poll import PollView
 from src.cogs.wiki.wiki import WikiEntry
 from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
-from src.utils.etc import (
-    DEFAULT_TIMEZONE,
-    SETTING_EMOJI,
-    STICKER_EMOJI,
-    THUMBS_DOWN_EMOJI,
-    THUMBS_UP_EMOJI,
-    WHITE_BAR,
-)
+from src.utils.etc import DEFAULT_TIMEZONE, SETTING_EMOJI, STICKER_EMOJI, WHITE_BAR
 from src.utils.functions import message_line
 
 __all__ = ("Information", "setup")
@@ -157,6 +151,15 @@ class AnnouncementModal(Modal):
         )
         self.add_item(self.thread_name)
 
+        self.poll_data = TextInput(label="Poll Data", placeholder="Value, Value, Value", required=True)
+        self.poll_min = TextInput(label="Poll min. values", placeholder="1 - 25", default="1", required=True)
+        self.poll_max = TextInput(label="Poll max. values", placeholder="1 - 25", default="1", required=True)
+
+        if word == "Poll":
+            self.add_item(self.poll_data)
+            self.add_item(self.poll_min)
+            self.add_item(self.poll_max)
+
     async def on_submit(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
         if isinstance(interaction.channel, Thread) and interaction.channel.archived:
@@ -171,8 +174,14 @@ class AnnouncementModal(Modal):
         await thread.add_user(interaction.user)
         match self.word:
             case "Poll":
-                await msg.add_reaction(THUMBS_UP_EMOJI)
-                await msg.add_reaction(THUMBS_DOWN_EMOJI)
+                view = PollView.parse(
+                    text=self.poll_data.value,
+                    min_values=int(self.poll_min.value),
+                    max_values=int(self.poll_max.value),
+                )
+                await msg.edit(view=view)
+                db: AsyncIOMotorCollection = interaction.client.mongo_db("Poll")
+                await db.insert_one({"id": msg.id} | view.data)
             case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
                 if tupper := interaction.guild.get_member(431544605209788416):
                     await thread.add_user(tupper)
@@ -1532,6 +1541,11 @@ class Information(commands.Cog):
 
         if not (channel := self.bot.get_channel(860590339327918100)):
             channel = await self.bot.fetch_channel(860590339327918100)
+
+        db = self.bot.mongo_db("Poll")
+        async for item in db.find({}):
+            view = PollView.from_mongo(item)
+            self.bot.add_view(view, message_id=item["id"])
 
         view = InformationView()
         async for message in channel.history(limit=None, oldest_first=True):
