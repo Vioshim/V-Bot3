@@ -32,7 +32,6 @@ class PollView(View):
         self.options = options
         self.poll.min_values = min(min_values, len(options))
         self.poll.max_values = min(max_values, len(options))
-        self.poll.placeholder = "Min: {0.min_values}, Max: {0.max_values}".format(self.poll)
         self.format()
 
     @classmethod
@@ -52,12 +51,14 @@ class PollView(View):
         )
 
     def format(self):
-        amount = sum(map(len, self.options.values())) or 1
+        amount = sum(map(len, self.options.values()))
+        reference_amount = amount or 1
         self.poll.options.clear()
+        self.poll.placeholder = f"Poll Participants: {amount:02d}"
         for k, v in self.options.items():
-            ref = 16 * len(v) // amount
+            ref = 16 * len(v) // reference_amount
             aux = (ref * "▓") + ((16 - ref) * "░")
-            description = f"{aux} {len(v)/amount:.1%} ({len(v)})"
+            description = f"{aux} {len(v)/reference_amount:.1%}"
             self.poll.add_option(label=k, description=description, emoji=LIST_EMOJI)
         return self
 
