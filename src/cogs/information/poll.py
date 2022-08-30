@@ -55,8 +55,8 @@ class PollView(View):
         amount = sum(map(len, self.options.values())) or 1
         self.poll.options.clear()
         for k, v in self.options.items():
-            ref = 15 * len(v) // amount
-            aux = (ref * "▓") + ((15 - ref) * "░")
+            ref = 16 * len(v) // amount
+            aux = (ref * "▓") + ((16 - ref) * "░")
             description = f"{aux} {len(v)/amount:.1%} ({len(v)})"
             self.poll.add_option(label=k, description=description, emoji=LIST_EMOJI)
         return self
