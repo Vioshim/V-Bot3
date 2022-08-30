@@ -59,7 +59,7 @@ class PollView(View):
         self.poll.options.clear()
         self.poll.placeholder = f"Poll Participants: {participants:02d}"
 
-        for k, v in sorted(self.options.items(), key=lambda x: (-len(v), k)):
+        for k, v in sorted(self.options.items(), key=lambda x: (-len(x[1]), x[0])):
             ref = 16 * len(v) // amount
             aux = (ref * "▓") + ((16 - ref) * "░")
             description = f"{aux} {len(v)/amount:.1%}"
