@@ -438,7 +438,6 @@ class Submission(commands.Cog):
                     oc.to_mongo_dict(),
                     upsert=True,
                 )
-                await self.oc_update(oc)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
