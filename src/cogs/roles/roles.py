@@ -30,7 +30,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    Message,
     PartialMessage,
     Role,
     SelectOption,
@@ -658,13 +657,6 @@ class RPModal(Modal):
             await msg1.edit(embed=embed, attachments=[file])
         elif text := ", ".join(str(x.id) for x in items):
             interaction.client.logger.info("Error Image Parsing OCs: %s", text)
-
-        if isinstance(m := cog1.ref_msg, Message):
-            await m.delete(delay=0)
-        IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/990454127639269416/unknown.png"
-        IMAGE_EMBED = Embed(color=Color.blurple()).set_image(url=IMAGE)
-        self.ref_msg = await interaction.channel.send(embed=IMAGE_EMBED, view=self)
-
         self.stop()
 
 

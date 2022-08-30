@@ -146,7 +146,14 @@ class Roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):
-        if msg.flags.ephemeral or not msg.guild or msg.author.bot:
+        if msg.flags.ephemeral or not msg.guild:
+            return
+
+        if msg.webhook_id and msg.channel.id == 958122815171756042:
+            if msg := self.ref_msg:
+                await msg.delete(delay=0)
+            self.ref_msg = await msg.channel.send(embed=IMAGE_EMBED, view=self.view)
+        elif msg.author.bot:
             return
 
         db = self.bot.mongo_db("AFK")

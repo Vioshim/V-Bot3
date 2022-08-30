@@ -176,8 +176,8 @@ class AnnouncementModal(Modal):
             case "Poll":
                 view = PollView.parse(
                     text=self.poll_data.value,
-                    min_values=int(self.poll_min.value),
-                    max_values=int(self.poll_max.value),
+                    min_values=self.poll_min.value,
+                    max_values=self.poll_max.value,
                 )
                 await msg.edit(view=view)
                 db: AsyncIOMotorCollection = interaction.client.mongo_db("Poll")

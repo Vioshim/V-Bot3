@@ -46,16 +46,16 @@ class PollView(View):
     def parse(cls, text: str, min_values: int = 1, max_values: int = 1):
         return cls(
             options={o: [] for x in text.split(",") if (o := x.strip())},
-            min_values=min_values,
-            max_values=max_values,
+            min_values=int(min_values),
+            max_values=int(max_values),
         )
 
     def format(self):
-        amount = sum(map(len, self.options.values()))
-        if participants := amount:
+        if amount := sum(map(len, self.options.values())):
             participants = len(set.union(*map(set, self.options.values())))
         else:
-            amount = 1
+            amount, participants = 1, 0
+
         self.poll.options.clear()
         self.poll.placeholder = f"Poll Participants: {participants:02d}"
 
@@ -64,6 +64,7 @@ class PollView(View):
             aux = (ref * "▓") + ((16 - ref) * "░")
             description = f"{aux} {len(v)/amount:.1%}"
             self.poll.add_option(label=k, description=description, emoji=LIST_EMOJI)
+
         return self
 
     @property
@@ -77,10 +78,10 @@ class PollView(View):
     @select(placeholder="Poll", custom_id="poll")
     async def poll(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Poll")
         self.options = {k: [x for x in v if x != ctx.user.id] for k, v in self.options.items()}
         for item in sct.values:
             self.options.setdefault(item, [])
             self.options[item].append(ctx.user.id)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Poll")
         await resp.edit_message(view=self.format())
         await db.replace_one(key := {"id": ctx.message.id}, key | self.data, upsert=True)
