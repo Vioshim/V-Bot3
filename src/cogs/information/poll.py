@@ -30,7 +30,7 @@ class PollView(View):
     ) -> None:
         super().__init__(timeout=None)
         self.options = options
-        self.poll.min_values = max(min_values, len(options))
+        self.poll.min_values = min(min_values, len(options))
         self.poll.max_values = min(max_values, len(options))
         self.poll.placeholder = "Min: {0.min_values}, Max: {0.max_values}".format(self.poll)
         self.format()
