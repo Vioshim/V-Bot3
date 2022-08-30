@@ -60,7 +60,7 @@ class PollView(View):
         self.poll.placeholder = f"Poll Participants: {participants:02d}"
 
         for k, v in sorted(self.options.items(), key=lambda x: (-len(x[1]), x[0])):
-            ref = 16 * len(v) // amount
+            ref = round(16 * len(v) / amount)
             aux = (ref * "▓") + ((16 - ref) * "░")
             description = f"{aux} {len(v)/amount:.1%}"
             self.poll.add_option(label=k, description=description, emoji=LIST_EMOJI)
