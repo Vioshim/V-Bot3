@@ -52,13 +52,16 @@ class PollView(View):
 
     def format(self):
         amount = sum(map(len, self.options.values()))
-        reference_amount = amount or 1
+        if participants := amount:
+            participants = len(set.intersection(*map(set, self.options.values())))
+        else:
+            amount = 1
         self.poll.options.clear()
-        self.poll.placeholder = f"Poll Participants: {amount:02d}"
+        self.poll.placeholder = f"Poll Participants: {participants:02d}"
         for k, v in self.options.items():
-            ref = 16 * len(v) // reference_amount
+            ref = 16 * len(v) // amount
             aux = (ref * "▓") + ((16 - ref) * "░")
-            description = f"{aux} {len(v)/reference_amount:.1%}"
+            description = f"{aux} {len(v)/amount:.1%}"
             self.poll.add_option(label=k, description=description, emoji=LIST_EMOJI)
         return self
 
