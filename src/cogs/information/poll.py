@@ -53,7 +53,7 @@ class PollView(View):
     def format(self):
         amount = sum(map(len, self.options.values()))
         if participants := amount:
-            participants = len(set.intersection(*map(set, self.options.values())))
+            participants = len(set.union(*map(set, self.options.values())))
         else:
             amount = 1
         self.poll.options.clear()
