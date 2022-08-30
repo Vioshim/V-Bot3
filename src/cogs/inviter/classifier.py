@@ -33,7 +33,7 @@ __all__ = ("InviterView",)
 
 DATA: dict[str, Embed] = {}
 
-with open("resources/hub_partners.json", mode="r") as f:
+with open("resources/hub_partners.json", mode="r", encoding="utf8") as f:
     data = load(f)
     if isinstance(data, dict):
         DATA = {k: Embed.from_dict(v) for k, v in data.items()}

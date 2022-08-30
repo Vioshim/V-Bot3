@@ -335,6 +335,6 @@ class AbilityDecoder(JSONDecoder):
         return dct
 
 
-with open("resources/abilities.json", mode="r") as f:
+with open("resources/abilities.json", mode="r", encoding="utf8") as f:
     abilities: list[Ability] = load(f, cls=AbilityDecoder)
     ALL_ABILITIES = frozendict({ab.id: ab for ab in abilities})

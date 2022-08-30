@@ -265,7 +265,7 @@ class MoveDecoder(JSONDecoder):
         return dct
 
 
-with open("resources/moves.json") as f:
+with open("resources/moves.json", mode="r", encoding="utf8") as f:
     DATA: list[Move] = load(f, cls=MoveDecoder)
     ALL_MOVES = frozendict({item.id: item for item in DATA})
     ALL_MOVES_BY_NAME = frozendict({item.name: item for item in DATA})

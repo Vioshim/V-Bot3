@@ -79,9 +79,9 @@ class CustomBot(Bot):
     def __init__(
         self,
         scheduler: AsyncScheduler,
-        pool: Pool,
         logger: Logger,
         aiogoogle: Aiogoogle,
+        pool: Optional[Pool] = None,
         **options,
     ):
         super(CustomBot, self).__init__(
@@ -95,7 +95,7 @@ class CustomBot(Bot):
             ),
         )
         self.scheduler = scheduler
-        self.pool = pool
+        self.pool: Optional[Pool] = pool
         self.logger = logger
         self.aiogoogle = aiogoogle
         self.session = ClientSession(json_serialize=dumps, raise_for_status=True)

@@ -8,3 +8,5 @@
 | File                | Description                   |
 | ------------------- | ----------------------------- |
 | `area_selection.py` | AreaView Class Implementation |
+| `perks.py`          | Features for boosters         |
+| `polls.py`          | Poll System                   |
