@@ -69,11 +69,11 @@ class PollView(View):
 
     @property
     def data(self):
-        return {
-            "min_values": self.poll.min_values,
-            "max_values": self.poll.max_values,
-            "options": self.options,
-        }
+        return dict(
+            min_values=self.poll.min_values,
+            max_values=self.poll.max_values,
+            options=self.options,
+        )
 
     @select(placeholder="Poll", custom_id="poll")
     async def poll(self, ctx: Interaction, sct: Select):

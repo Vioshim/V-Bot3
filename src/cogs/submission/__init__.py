@@ -568,7 +568,10 @@ class Submission(commands.Cog):
             and not message.webhook_id
             and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
         ):
-            await self.on_message_proxy(message)
+            if tupper == message.author:
+                await message.delete(delay=5)
+            else:
+                await self.on_message_proxy(message)
 
     @commands.Cog.listener()
     async def on_message_edit(self, _: Message, message: Message):
