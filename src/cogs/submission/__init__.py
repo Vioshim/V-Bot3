@@ -569,7 +569,8 @@ class Submission(commands.Cog):
             and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
         ):
             if tupper == message.author:
-                await message.delete(delay=5)
+                self.bot.msg_cache_add(message)
+                await message.delete(delay=3)
             else:
                 await self.on_message_proxy(message)
 
