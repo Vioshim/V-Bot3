@@ -62,7 +62,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.10.4"
+pythonVersion = "3.10.6"
 flake8 = "^4.0.1"
 
 
