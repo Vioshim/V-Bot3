@@ -1194,8 +1194,8 @@ class Information(commands.Cog):
 
         if messages := [x for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]:
             if paste := await self.bot.m_bin.create_paste(
-                filename=f"bulk_message_delete - {msg.channel} -{msg.created_at}",
-                content=dump([message_line(x) for x in messages]),
+                filename=f"bulk_message_delete - {msg.channel} -{msg.created_at}.yaml",
+                content=dump([*map(message_line, messages)], allow_unicode=True),
                 syntax="yaml",
             ):
                 embed = Embed(
