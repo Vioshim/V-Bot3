@@ -407,26 +407,30 @@ def message_line(message: Message):
     dict[str, Any]
         Dict of string parsed properties out of a message
     """
-    channel = message.channel
     user = message.author
     data = dict(
-        channel=f"{channel.name} - {channel.mention}",
-        user=f"{user.display_name} - {user.mention}",
-        created_at=message.created_at,
-        files=[
-            dict(
-                url=item.url,
-                proxy_url=item.proxy_url,
-                filename=item.filename,
-                type=item.content_type,
-                spoiler=item.is_spoiler(),
-            )
-            for item in message.attachments
-        ],
-        embeds=[item.to_dict() for item in message.embeds],
-        content=message.content,
+        user=f"{user.display_name} (ID: {user.id})",
+        created_at=message.created_at.strftime("%c"),
     )
-    return {k: v for k, v in data.items() if v}
+    if content := message.content:
+        data["content"] = content
+
+    if files := [
+        dict(
+            url=item.url,
+            proxy_url=item.proxy_url,
+            filename=item.filename,
+            type=item.content_type,
+            spoiler=item.is_spoiler(),
+        )
+        for item in message.attachments
+    ]:
+        data["files"] = files
+
+    if embeds := [*map(Embed.to_dict, message.embeds)]:
+        data["embeds"] = embeds
+
+    return data
 
 
 def embed_handler(message: Message, embed: Embed) -> Embed:

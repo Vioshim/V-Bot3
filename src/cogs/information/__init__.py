@@ -1192,34 +1192,39 @@ class Information(commands.Cog):
 
         w = await self.bot.webhook(1001125143071965204, reason="Bulk delete logging")
 
-        if messages := [x for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]:
-            if paste := await self.bot.m_bin.create_paste(
-                filename=f"bulk_message_delete - {msg.channel} -{msg.created_at}.yaml",
-                content=dump([*map(message_line, messages)], allow_unicode=True),
+        if (messages := [x for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]) and (
+            paste := await self.bot.m_bin.create_paste(
+                filename=f"{utcnow().strftime('%x')} - {msg.channel}.yaml",
+                content=dump(
+                    data=[*map(message_line, messages)],
+                    allow_unicode=True,
+                    sort_keys=False,
+                ),
                 syntax="yaml",
-            ):
-                embed = Embed(
-                    title="Bulk Message Delete",
-                    url=paste,
-                    description=f"Deleted {len(messages)} messages",
-                    timestamp=utcnow(),
-                )
-                embed.set_image(url=WHITE_BAR)
-                embed.set_footer(text=msg.guild.name, icon_url=msg.guild.icon)
+            )
+        ):
+            embed = Embed(
+                title="Bulk Message Delete",
+                url=paste,
+                description=f"Deleted {len(messages)} messages",
+                timestamp=utcnow(),
+            )
+            embed.set_image(url=WHITE_BAR)
+            embed.set_footer(text=msg.guild.name, icon_url=msg.guild.icon)
 
+            emoji, name = SETTING_EMOJI, msg.channel.name
+            try:
+                name = msg.channel.name.replace("»", "")
+                emoji, name = name.split("〛")
+            except ValueError:
                 emoji, name = SETTING_EMOJI, msg.channel.name
-                try:
-                    name = msg.channel.name.replace("»", "")
-                    emoji, name = name.split("〛")
-                except ValueError:
-                    emoji, name = SETTING_EMOJI, msg.channel.name
-                finally:
-                    name = name.replace("-", " ").title()
+            finally:
+                name = name.replace("-", " ").title()
 
-                view = View()
-                view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
-                view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
-                await w.send(embed=embed, view=view, thread=Object(id=1001125665128579142))
+            view = View()
+            view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
+            view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
+            await w.send(embed=embed, view=view, thread=Object(id=1001125665128579142))
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
