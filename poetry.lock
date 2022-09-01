@@ -24,6 +24,7 @@ description = "Async Google API client"
 category = "main"
 optional = false
 python-versions = "*"
+develop = false
 
 [package.dependencies]
 aiofiles = "*"
@@ -35,6 +36,12 @@ tonyg-rfc3339 = "*"
 [package.extras]
 curio_asks = ["asks", "curio"]
 trio_asks = ["asks", "trio"]
+
+[package.source]
+type = "git"
+url = "https://github.com/omarryhan/aiogoogle.git"
+reference = "master"
+resolved_reference = "7ef2e9ec664aedee225cb5aff19782b797b101b3"
 
 [[package]]
 name = "aiohttp"
@@ -1212,8 +1219,8 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.10.6"
-content-hash = "c982860549f51c949247cb2d09be572a0e81e01b90bf3c69f48fea345fbf67cf"
+python-versions = "3.10.4"
+content-hash = "b582eefe270b9077e9ce9c12bcbbbf9cbe487b412615c67169ac91182d5886e1"
 
 [metadata.files]
 aiodns = []
