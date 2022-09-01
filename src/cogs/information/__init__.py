@@ -1200,7 +1200,7 @@ class Information(commands.Cog):
             ):
                 embed = Embed(
                     title="Bulk Message Delete",
-                    url=paste.created_at,
+                    url=paste,
                     description=f"Deleted {len(messages)} messages",
                     timestamp=utcnow(),
                 )
