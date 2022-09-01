@@ -564,8 +564,7 @@ class TypesField(TemplateField):
         if isinstance(species, (Fakemon, Variant, Fusion)):
             mon_types = species.possible_types
             if oc.types not in mon_types:
-                name = ", ".join("/".join(y.name for y in x) for x in mon_types)
-                return f"Possible Typings: {name}"
+                return "Possible Typings: {}".format(", ".join("/".join(y.name for y in x) for x in mon_types))
         elif isinstance(species, Chimera):
             items = [*{x.types for x in species.bases}]
             if not items:
@@ -573,7 +572,10 @@ class TypesField(TemplateField):
 
             mon_types = frozenset.union(*items)
             if not oc.types.issubset(mon_types):
-                return f"Chimera requires from typings: {', '.join(x.name for x in mon_types)}."
+                return "Chimera requires from typings: {}.".format(", ".join(x.name for x in mon_types))
+
+        if len(oc.types) > 2:
+            return "Max 2 Pokemon Types."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
