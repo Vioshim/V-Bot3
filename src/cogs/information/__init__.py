@@ -36,6 +36,7 @@ from discord import (
     Message,
     NotFound,
     Object,
+    PartialEmoji,
     PermissionOverwrite,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
@@ -140,30 +141,35 @@ class AnnouncementModal(Modal):
         super(AnnouncementModal, self).__init__(title=word, timeout=None)
         self.word = word
 
-        if role := roles.get(word):
-            kwargs["content"] = f"<@&{role}>"
-            kwargs["allowed_mentions"] = AllowedMentions(roles=True)
-            title = f"{word} (Pinging)"
-        else:
-            title = word
         self.kwargs = kwargs
         self.thread_name = TextInput(
             label="Title",
-            placeholder=title,
+            placeholder=word,
             default=name,
             required=True,
             max_length=100,
         )
         self.add_item(self.thread_name)
 
-        self.poll_data = TextInput(label="Poll Data", placeholder="Value, Value, Value", required=True)
-        self.poll_min = TextInput(label="Poll min. values", placeholder="1 - 25", default="1", required=True)
-        self.poll_max = TextInput(label="Poll max. values", placeholder="1 - 25", default="1", required=True)
+        self.poll_data = TextInput(
+            label="Poll Data",
+            style=TextStyle.paragraph,
+            placeholder="Value, Value, Value",
+            required=True,
+        )
+        self.poll_range = TextInput(
+            label="Poll min-max values (e.g. 1-2 or 4)",
+            placeholder="1 - 25",
+            default="1",
+            required=True,
+        )
 
-        if word == "Poll":
+        self.thread_mode = kwargs.pop("thread", False)
+        self.poll_mode = kwargs.pop("poll", word == "Poll")
+
+        if self.poll_mode:
             self.add_item(self.poll_data)
-            self.add_item(self.poll_min)
-            self.add_item(self.poll_max)
+            self.add_item(self.poll_range)
 
     async def on_submit(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
@@ -174,31 +180,43 @@ class AnnouncementModal(Modal):
         embeds: list[Embed] = self.kwargs.get("embeds")
         if embeds:
             embeds[0].title = self.thread_name.value
-        msg = await webhook.send(**self.kwargs, wait=True)
-        thread = await msg.create_thread(name=self.thread_name.value)
-        await thread.add_user(interaction.user)
-        match self.word:
-            case "Poll":
-                view = PollView.parse(
-                    text=self.poll_data.value,
-                    min_values=self.poll_min.value,
-                    max_values=self.poll_max.value,
-                )
-                await msg.edit(view=view)
-                db: AsyncIOMotorCollection = interaction.client.mongo_db("Poll")
-                await db.insert_one({"id": msg.id} | view.data)
-            case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
-                if tupper := interaction.guild.get_member(431544605209788416):
-                    await thread.add_user(tupper)
+
+        msg = await webhook.send(**self.kwargs, allowed_mentions=AllowedMentions(everyone=True, roles=True), wait=True)
+
+        if self.poll_mode:
+            db: AsyncIOMotorCollection = interaction.client.mongo_db("Poll")
+            if not (answers := [int(o) for x in self.poll_range.value.split("-") if (o := x.strip()) and o.isdigit()]):
+                answers = [1]
+            view = PollView.parse(text=self.poll_data.value, min_values=answers[0], max_values=answers[-1])
+            await msg.edit(view=view)
+            await db.insert_one({"id": msg.id} | view.data)
+
+        if self.thread_mode:
+            thread = await msg.create_thread(name=self.thread_name.value)
+            await thread.add_user(interaction.user)
+            match self.word:
+                case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
+                    if tupper := interaction.guild.get_member(431544605209788416):
+                        await thread.add_user(tupper)
+
         await interaction.followup.send("Thread created successfully", ephemeral=True)
         self.stop()
 
 
 class AnnouncementView(View):
-    def __init__(self, *, member: Member, **kwargs):
+    def __init__(self, *, member: Member, staff: bool = False, **kwargs):
         super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
+        if staff:
+            for k, v in PING_ROLES.items():
+                self.features.add_option(
+                    label=f"{k} Role",
+                    value=f"{v}",
+                    description=f"Pings the {k} role" if v else "No pings",
+                    emoji="\N{CHEERING MEGAPHONE}",
+                    default=not v,
+                )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -208,52 +226,52 @@ class AnnouncementView(View):
         return True
 
     @select(
-        placeholder="Role to Ping",
+        placeholder="Select Features",
         options=[
             SelectOption(
-                label=f"{k} Role",
-                value=f"{v}",
-                description=f"Pings the {k} role" if v else "No pings",
-                emoji="\N{CHEERING MEGAPHONE}",
-                default=not v,
-            )
-            for k, v in PING_ROLES.items()
+                label="Pinging @supporters",
+                value="supporters",
+                emoji=PartialEmoji(name="memberjoin", id=432986578755911680),
+            ),
+            SelectOption(
+                label="Add a thread",
+                value="thread",
+                emoji=PartialEmoji(name="messageupdate", id=432986578927747073),
+            ),
+            SelectOption(
+                label="Add a poll",
+                value="poll",
+                emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+            ),
+            SelectOption(label="Cancel Process", value="cancel", emoji="\N{CROSS MARK}"),
         ],
+        max_values=3,
     )
-    async def ping(self, ctx: Interaction, sct: Select):
+    async def features(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        if role := ctx.guild.get_role(int(sct.values[0])):
-            if role.is_default():
-                self.kwargs["content"] = "@everyone"
-                mentions = AllowedMentions(everyone=True)
-            else:
-                self.kwargs["content"] = role.mention
-                mentions = AllowedMentions(roles=True)
-            self.kwargs["allowed_mentions"] = mentions
-            info = f"Alright, will ping {role.mention}"
+        if roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := ctx.guild.get_role(int(x)))):
+            self.kwargs["content"] = roles
+        elif "supporters" in sct.values:
+            self.kwargs["content"] = "<@&967980442919784488>"
+        elif "@everyone" in sct.values:
+            self.kwargs["content"] = "@everyone"
         else:
-            self.kwargs["content"] = ""
-            self.kwargs["allowed_mentions"] = AllowedMentions.none()
-            info = "Alright, won't ping."
-        await resp.send_message(info, ephemeral=True)
+            self.kwargs["content"] = None
 
-    @button(label="Proceed", style=ButtonStyle.blurple, emoji=SETTING_EMOJI)
-    async def confirm(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        word = channels.get(ctx.channel_id)
-        data = ctx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
-        name = f"{word} {ctx.user.display_name} {data.strftime('%B %d')}"
-        modal = AnnouncementModal(word=word, name=name, **self.kwargs)
-        await resp.send_modal(modal)
-        await modal.wait()
+        self.kwargs["poll"] = "poll" in sct.values
+        self.kwargs["thread"] = "thread" in sct.values
+
+        if "cancel" in sct.values:
+            await resp.pong()
+        else:
+            word = channels.get(ctx.channel_id)
+            data = ctx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
+            name = f"{word} {ctx.user.display_name} {data.strftime('%B %d')}"
+            modal = AnnouncementModal(word=word, name=name, **self.kwargs)
+            await resp.send_modal(modal)
+            await modal.wait()
+
         await ctx.message.delete(delay=0)
-        self.stop()
-
-    @button(label="Cancel", style=ButtonStyle.blurple, emoji=SETTING_EMOJI)
-    async def cancel(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.pong()
-        await ctx.message.delete()
         self.stop()
 
 
@@ -1032,12 +1050,9 @@ class Information(commands.Cog):
         if embeds := kwargs.get("embeds", []):
             embeds[0].title = word
         del kwargs["view"]
-        view = AnnouncementView(member=member, **kwargs)
-        if word != "Announcement":
-            view.remove_item(view.ping)
-        conf_embed = Embed(title="Confirmation", color=Colour.blurple(), timestamp=utcnow())
+        view = AnnouncementView(member=member, staff=word == "Announcement", **kwargs)
+        conf_embed = Embed(title=word, color=Colour.blurple(), timestamp=utcnow())
         conf_embed.set_image(url=WHITE_BAR)
-        conf_embed.set_thumbnail(url=message.guild.icon)
         conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
         await message.reply(embed=conf_embed, view=view)
         await view.wait()
