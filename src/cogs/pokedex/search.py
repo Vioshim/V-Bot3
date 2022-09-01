@@ -406,7 +406,7 @@ class OCGroupBySpecies(OCGroupBy):
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         items = {k.name.title(): set(v) for k, v in groupby(ocs, key=lambda x: x.kind) if k not in STANDARD}
-        ocs = sorted(ocs, key=lambda x: getattr(x.species, "base", x.species).name)
+        ocs.sort(key=lambda x: getattr(x.species, "base", x.species).name)
         items |= {
             k.name.title(): set(v)
             for k, v in groupby(ocs, key=lambda x: getattr(x.species, "base", x.species))
@@ -445,26 +445,26 @@ class OCGroupByEvoLine(OCGroupBy):
 class OCGroupByType(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {item.name: frozenset({oc for oc in ocs if item in oc.types}) for item in TypingEnum}
+        return {item.name: frozenset(o) for item in TypingEnum if (o := {oc for oc in ocs if item in oc.types})}
 
 
 class OCGroupByPronoun(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.pronoun.name)
-        return {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun)}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun.name)}
 
 
 class OCGroupByMove(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {item.name: {oc for oc in ocs if item in oc.moveset} for item in Move.all()}
+        return {item.name: frozenset(o) for item in Move.all() if (o := {oc for oc in ocs if item in oc.moveset})}
 
 
 class OCGroupByAbility(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {item.name: {oc for oc in ocs if item in oc.abilities} for item in Ability.all()}
+        return {item.name: frozenset(o) for item in Ability.all() if (o := {oc for oc in ocs if item in oc.moveset})}
 
 
 class OCGroupByLocation(OCGroupBy):
@@ -494,6 +494,14 @@ class OCGroupByMember(OCGroupBy):
         }
 
 
+class OCGroupByHiddenPower(OCGroupBy):
+    @classmethod
+    def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        ocs = [oc for oc in ocs if oc.hidden_power]
+        ocs.sort(key=lambda x: x.hidden_power.name)
+        return {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.hidden_power)}
+
+
 class GroupByArg(Enum):
     Kind = OCGroupByKind
     Shape = OCGroupByShape
@@ -506,6 +514,7 @@ class GroupByArg(Enum):
     Ability = OCGroupByAbility
     Location = OCGroupByLocation
     Member = OCGroupByMember
+    HiddenPower = OCGroupByHiddenPower
 
     def generate(self, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
         """Short cut generate

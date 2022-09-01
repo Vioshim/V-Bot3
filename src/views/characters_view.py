@@ -14,6 +14,7 @@
 
 from contextlib import suppress
 from logging import getLogger, setLoggerClass
+from typing import Optional
 
 from discord import (
     AllowedMentions,
@@ -28,8 +29,6 @@ from discord import (
     Object,
     PartialEmoji,
     PartialMessage,
-    Role,
-    SelectOption,
     TextChannel,
     TextStyle,
     Thread,
@@ -43,7 +42,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import MOBILE_EMOJI, WHITE_BAR
+from src.utils.etc import WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
 
 setLoggerClass(ColoredLogger)
@@ -56,8 +55,9 @@ PING_EMOJI = PartialEmoji(name="IconInsights", id=751160378800472186)
 
 
 class PingModal(Modal):
-    def __init__(self, oc: Character, reference: Interaction) -> None:
+    def __init__(self, oc: Character, thread_id: Optional[int] = None) -> None:
         super(PingModal, self).__init__(title=f"Pinging {oc.name}"[:45], timeout=None)
+        self.thread_id = thread_id
         self.message = TextInput(
             label="Message",
             style=TextStyle.paragraph,
@@ -66,21 +66,7 @@ class PingModal(Modal):
             required=True,
         )
         self.add_item(self.message)
-        self.ping_mode = Select(
-            placeholder="Thread pinging?",
-            options=[
-                SelectOption(
-                    label="Normal Ping",
-                    value="0",
-                    description="To ping at #rp-pings",
-                    emoji=PING_EMOJI,
-                    default=True,
-                ),
-            ],
-        )
-        self.add_item(self.ping_mode)
         self.oc = oc
-        self.reference = reference
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
@@ -91,13 +77,12 @@ class PingModal(Modal):
             origin = origin.parent
         await resp.defer(ephemeral=True, thinking=True)
 
-        if not self.ping_mode.values or "0" in self.ping_mode.values:
-            thread = MISSING
-            channel: TextChannel = interaction.guild.get_channel(740568087820238919)
+        if self.thread_id:
+            thread, channel_id = Object(id=self.thread_id), 958122815171756042
         else:
-            thread = Object(id=int(self.ping_mode.values[0]))
-            channel: TextChannel = interaction.guild.get_channel(958122815171756042)
+            thread, channel_id = MISSING, 740568087820238919
 
+        channel: TextChannel = interaction.guild.get_channel(channel_id)
         embed = Embed(title=self.oc.name, description=self.message.value, color=user.color)
         embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
         embed.set_footer(text=repr(self.oc))
@@ -147,11 +132,6 @@ class PingView(View):
         super(PingView, self).__init__(timeout=None)
         self.oc = oc
         self.reference = reference
-        if isinstance(channel := reference.channel, Thread) and channel.parent.id == 958122815171756042:
-            thread_id = channel.id
-        else:
-            thread_id = None
-        self.thread_id = thread_id
         if reference.user.id != oc.author:
             self.remove_item(self.delete)
 
@@ -167,50 +147,27 @@ class PingView(View):
             return False
         return True
 
-    async def ping_method(self, ctx: Interaction, desktop: bool = False):
-        member = ctx.guild.get_member(self.oc.author)
+    @button(label="Ping Character", style=ButtonStyle.blurple)
+    async def ping(self, ctx: Interaction, btn: Button) -> None:
+        member: Member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         if ctx.user != member:
-            modal = PingModal(oc=self.oc, reference=self.reference)
-            if desktop:
-                db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
-                items: dict[Role, str] = {
-                    role.name: str(item["id"])
-                    async for item in db.find({"member": self.oc.author})
-                    if (role := ctx.guild.get_role(item["role"]))
-                }
-                if items := list(items.items())[:25]:
-                    for k, v in items:
-                        modal.ping_mode.add_option(
-                            label=k,
-                            value=v,
-                            description=f"Pinging in {k} thread"[:100],
-                            emoji=PING_EMOJI,
-                        )
-                else:
-                    modal.remove_item(modal.ping_mode)
+            db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+            options = [{"id": ctx.channel_id}]
+            if ctx.message:
+                options.append({"id": ctx.message.id})
+                options.append({"message": ctx.message.id})
+            if self.reference.message:
+                options.append({"id": self.reference.message.id})
+                options.append({"message": self.reference.message.id})
+
+            if data := await db.find_one({"$and": [{"member": self.oc.author}, {"$or": options}]}):
+                modal = PingModal(oc=self.oc, thread_id=data["id"])
             else:
-                modal.remove_item(modal.ping_mode)
+                modal = PingModal(oc=self.oc)
             await resp.send_modal(modal)
         else:
             await resp.send_message("You can't ping yourself.", ephemeral=True)
-
-    @button(
-        label="OC RP Ping (Mobile)",
-        style=ButtonStyle.blurple,
-        emoji=MOBILE_EMOJI,
-    )
-    async def ping1(self, ctx: Interaction, btn: Button) -> None:
-        await self.ping_method(ctx, desktop=btn.disabled)
-
-    @button(
-        label="OC RP Ping (Desktop)",
-        style=ButtonStyle.blurple,
-        emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
-        disabled=True,
-    )
-    async def ping2(self, ctx: Interaction, btn: Button) -> None:
-        await self.ping_method(ctx, desktop=btn.disabled)
 
     @button(
         label="Delete Character",
