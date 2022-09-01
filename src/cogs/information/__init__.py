@@ -127,7 +127,6 @@ PING_ROLES = {
     "Moderation": 720296534742138880,
     "Registered": 719642423327719434,
     "Supporters": 967980442919784488,
-    "No": 0,
 }
 
 DISABLED_CATEGORIES = [
@@ -208,15 +207,6 @@ class AnnouncementView(View):
         super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
-        if member.guild_permissions.administrator:
-            for k, v in PING_ROLES.items():
-                self.features.add_option(
-                    label=f"{k} Role",
-                    value=f"{v}",
-                    description=f"Pings the {k} role" if v else "No pings",
-                    emoji="\N{CHEERING MEGAPHONE}",
-                    default=not v,
-                )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -1051,6 +1041,14 @@ class Information(commands.Cog):
             embeds[0].title = word
         del kwargs["view"]
         view = AnnouncementView(member=member, **kwargs)
+        if member.guild_permissions.administrator:
+            for k, v in PING_ROLES.items():
+                view.features.add_option(
+                    label=f"{k} Role",
+                    value=f"{v}",
+                    description=f"Pings the {k} role",
+                    emoji="\N{CHEERING MEGAPHONE}",
+                )
         conf_embed = Embed(title=word, color=Colour.blurple(), timestamp=utcnow())
         conf_embed.set_image(url=WHITE_BAR)
         conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
