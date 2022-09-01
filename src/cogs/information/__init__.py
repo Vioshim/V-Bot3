@@ -1218,7 +1218,7 @@ class Information(commands.Cog):
 
                 view = View()
                 view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
-                view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=paste))
+                view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
                 await w.send(embed=embed, view=view, thread=Object(id=1001125665128579142))
 
     @commands.Cog.listener()
