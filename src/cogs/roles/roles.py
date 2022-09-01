@@ -499,7 +499,7 @@ class RPModal(Modal):
         role: Role,
         ocs: set[Character],
         to_user: Optional[Member] = None,
-        mobile: bool = False,
+        mobile: bool = True,
     ) -> None:
         super(RPModal, self).__init__(title=f"Pinging {role.name}")
         self.user = user
@@ -695,12 +695,7 @@ class RPSearchComplex(Complex[Member]):
         cog = ctx.client.get_cog("Submission")
         member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         ocs = [oc for oc in cog.ocs.values() if oc.author == member.id]
-        modal = RPModal(
-            user=member,
-            role=self.role,
-            ocs=ocs,
-            mobile=(btn.emoji == MOBILE_EMOJI),
-        )
+        modal = RPModal(user=member, role=self.role, ocs=ocs)
         if await modal.check(ctx):
             await resp.send_modal(modal)
             await modal.wait()
