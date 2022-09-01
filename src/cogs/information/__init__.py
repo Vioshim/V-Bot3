@@ -204,11 +204,11 @@ class AnnouncementModal(Modal):
 
 
 class AnnouncementView(View):
-    def __init__(self, *, member: Member, staff: bool = False, **kwargs):
+    def __init__(self, *, member: Member, **kwargs):
         super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
-        if staff:
+        if member.guild_permissions.administrator:
             for k, v in PING_ROLES.items():
                 self.features.add_option(
                     label=f"{k} Role",
@@ -1050,7 +1050,7 @@ class Information(commands.Cog):
         if embeds := kwargs.get("embeds", []):
             embeds[0].title = word
         del kwargs["view"]
-        view = AnnouncementView(member=member, staff=word == "Announcement", **kwargs)
+        view = AnnouncementView(member=member, **kwargs)
         conf_embed = Embed(title=word, color=Colour.blurple(), timestamp=utcnow())
         conf_embed.set_image(url=WHITE_BAR)
         conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
