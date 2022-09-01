@@ -22,7 +22,7 @@ from enum import Enum
 from functools import lru_cache
 from itertools import combinations
 from json import JSONDecoder, JSONEncoder, load
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional, Type
 
 from asyncpg import Record
 from discord.utils import find, get
@@ -142,8 +142,23 @@ class Species(metaclass=ABCMeta):
         return items[::-1]
 
     @classmethod
-    def all(cls) -> frozenset[Species]:
-        return frozenset(x for x in ALL_SPECIES.values() if isinstance(x, cls))
+    def all(
+        cls,
+        *,
+        include: Iterable[Type[Species]] | Type[Species] = None,
+        exclude: Iterable[Type[Species]] | Type[Species] = None,
+    ) -> frozenset[Species]:
+
+        include = tuple(include) if isinstance(include, Iterable) else (include or cls)
+        exclude = tuple(exclude) if isinstance(exclude, Iterable) else (exclude or None)
+
+        def check(x: Species):
+            condition = isinstance(x, include)
+            if exclude is not None:
+                condition &= not isinstance(x, exclude)
+            return condition
+
+        return frozenset(filter(check, ALL_SPECIES.values()))
 
     @classmethod
     def find(cls, predicate: Callable[[Species], Any]):

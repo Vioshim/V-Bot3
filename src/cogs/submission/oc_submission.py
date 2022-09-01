@@ -273,7 +273,7 @@ class Template(TemplateItem, Enum):
             case self.Pokemon:
                 mon_total = Pokemon.all()
             case self.CustomMega | Template.Variant:
-                mon_total = {x for x in Species.all() if not isinstance(x, Mega)}
+                mon_total = Species.all(exclude=Mega)
             case self.Legendary:
                 mon_total = Legendary.all()
             case self.Mythical:
