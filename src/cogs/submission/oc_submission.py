@@ -1205,8 +1205,9 @@ class ModCharactersView(CharactersView):
 
 
 class SubmissionModal(Modal):
-    def __init__(self, text: str):
+    def __init__(self, text: str, ephemeral: bool = False):
         super(SubmissionModal, self).__init__(title="Character Submission Template")
+        self.ephemeral = ephemeral
         self.text = TextInput(
             style=TextStyle.paragraph,
             label=self.title,
@@ -1224,7 +1225,10 @@ class SubmissionModal(Modal):
             async for item in ParserMethods.parse(text=self.text.value, bot=interaction.client):
                 if oc := Character.process(**item):
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=author, oc=oc)
-                    await resp.edit_message(embeds=view.embeds, view=view)
+                    if self.ephemeral:
+                        await resp.edit_message(embeds=view.embeds, view=view)
+                    else:
+                        await view.send(ephemeral=False)
         except Exception as e:
             if not resp.is_done():
                 if isinstance(interaction.channel, Thread) and interaction.channel.archived:
@@ -1273,7 +1277,8 @@ class TemplateView(View):
         resp: InteractionResponse = ctx.response
         match sct.values[0]:
             case "Form":
-                modal = SubmissionModal(self.template.text)
+                ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
+                modal = SubmissionModal(self.template.text, ephemeral=ephemeral)
                 await resp.send_modal(modal)
                 await modal.wait()
             case "Message":
