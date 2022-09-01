@@ -42,7 +42,6 @@ from discord import (
     RawMessageDeleteEvent,
     RawReactionActionEvent,
     Role,
-    SelectOption,
     TextChannel,
     TextStyle,
     Thread,
@@ -207,6 +206,7 @@ class AnnouncementView(View):
         super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
+        self.format()
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -215,28 +215,38 @@ class AnnouncementView(View):
             return False
         return True
 
-    @select(
-        placeholder="Select Features",
-        options=[
-            SelectOption(
-                label="Pinging @supporters",
-                value="supporters",
-                emoji=PartialEmoji(name="memberjoin", id=432986578755911680),
-            ),
-            SelectOption(
-                label="Add a thread",
-                value="thread",
-                emoji=PartialEmoji(name="messageupdate", id=432986578927747073),
-            ),
-            SelectOption(
-                label="Add a poll",
-                value="poll",
-                emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
-            ),
-            SelectOption(label="Cancel Process", value="cancel", emoji="\N{CROSS MARK}"),
-        ],
-        max_values=3,
-    )
+    def format(self):
+        self.features.options.clear()
+        self.features.add_option(
+            label="Pinging @supporters",
+            value="supporters",
+            emoji=PartialEmoji(name="memberjoin", id=432986578755911680),
+        )
+        self.features.add_option(
+            label="Add a thread",
+            value="thread",
+            emoji=PartialEmoji(name="messageupdate", id=432986578927747073),
+        )
+        self.features.add_option(
+            label="Add a poll",
+            value="poll",
+            emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+        )
+        self.features.add_option(
+            label="Cancel Process",
+            value="cancel",
+            emoji="\N{CROSS MARK}",
+        )
+        if self.member.guild_permissions.administrator:
+            for k, v in PING_ROLES.items():
+                self.features.add_option(
+                    label=f"{k} Role",
+                    value=f"{v}",
+                    description=f"Pings the {k} role",
+                    emoji="\N{CHEERING MEGAPHONE}",
+                )
+
+    @select(placeholder="Select Features", max_values=3)
     async def features(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         if roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := ctx.guild.get_role(int(x)))):
@@ -1041,14 +1051,6 @@ class Information(commands.Cog):
             embeds[0].title = word
         del kwargs["view"]
         view = AnnouncementView(member=member, **kwargs)
-        if member.guild_permissions.administrator:
-            for k, v in PING_ROLES.items():
-                view.features.add_option(
-                    label=f"{k} Role",
-                    value=f"{v}",
-                    description=f"Pings the {k} role",
-                    emoji="\N{CHEERING MEGAPHONE}",
-                )
         conf_embed = Embed(title=word, color=Colour.blurple(), timestamp=utcnow())
         conf_embed.set_image(url=WHITE_BAR)
         conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
