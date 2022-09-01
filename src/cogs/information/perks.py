@@ -30,7 +30,6 @@ from discord import (
 from discord.ui import Modal, TextInput
 from discord.utils import MISSING, get
 from motor.motor_asyncio import AsyncIOMotorCollection
-
 from src.utils.etc import WHITE_BAR
 
 __all__ = ("CustomPerks",)

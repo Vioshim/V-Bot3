@@ -16,7 +16,6 @@
 from discord import Interaction, InteractionResponse
 from discord.ui import Select, View, select
 from motor.motor_asyncio import AsyncIOMotorCollection
-
 from src.utils.etc import LIST_EMOJI
 
 

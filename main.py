@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from asyncio import run
 from json import dumps
 from logging import getLogger, setLoggerClass
@@ -20,7 +21,7 @@ from os import getenv
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 from apscheduler.schedulers.async_ import AsyncScheduler
-from asyncpg import Connection  # , create_pool
+from asyncpg import Connection, create_pool
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
 from orjson import loads
@@ -59,10 +60,10 @@ async def main() -> None:
         async with (
             Aiogoogle(service_account_creds=creds) as aiogoogle,
             AsyncScheduler() as scheduler,
-            # create_pool(getenv("POSTGRES_POOL_URI"), init=init_connection) as pool,
+            create_pool(getenv("POSTGRES_POOL_URI"), init=init_connection) as pool,
             CustomBot(
                 scheduler=scheduler,
-                # pool=pool,
+                pool=pool,
                 logger=logger,
                 owner_id=678374009045254198,
                 command_prefix=when_mentioned_or("?"),

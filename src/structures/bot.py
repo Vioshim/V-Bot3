@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 from contextlib import asynccontextmanager
 from io import BytesIO
 from logging import Logger
@@ -22,7 +23,6 @@ from typing import Literal, Optional
 from aiogoogle import Aiogoogle
 from aiohttp import ClientSession
 from apscheduler.schedulers.async_ import AsyncScheduler
-from asyncdagpi import Client as DagpiClient
 from asyncpg import Connection, Pool
 from discord import (
     AllowedMentions,
@@ -99,11 +99,10 @@ class CustomBot(Bot):
         self.logger = logger
         self.aiogoogle = aiogoogle
         self.session = ClientSession(json_serialize=dumps, raise_for_status=True)
-        self.m_bin = MystBinClient(session=self.session)
+        self.m_bin = MystBinClient(token=getenv("MYSTBIN_TOKEN"), session=self.session)
         self.mongodb = AsyncIOMotorClient(getenv("MONGO_URI"))
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
-        self.dagpi = DagpiClient(getenv("DAGPI_TOKEN"))
         self.scam_urls: set[str] = set()
         self.webhook_cache: dict[int, Webhook] = {}
         self.supporting: dict[Member, Member] = {}
