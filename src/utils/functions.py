@@ -408,10 +408,13 @@ def message_line(message: Message):
         Dict of string parsed properties out of a message
     """
     user = message.author
-    data = dict(
-        user=f"{user.display_name} (ID: {user.id})",
-        created_at=message.created_at.strftime("%c"),
-    )
+    data = dict(user=user.display_name)
+    if message.webhook_id:
+        data["webhook_id"] = message.webhook_id
+    else:
+        data["bot_id" if user.bot else "user_id"] = user.id
+
+    data["created_at"] = message.created_at.strftime("%c")
     if content := message.content:
         data["content"] = content
 
