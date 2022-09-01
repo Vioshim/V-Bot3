@@ -7,7 +7,7 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.10.6"
+python = "3.10.4"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git", extras=["speed", "voice"]}
 jishaku = "^2.5.1"
 uvloop = {version = "^0.16.0", platform = "linux"}
@@ -62,7 +62,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.10.6"
+pythonVersion = "3.10.4"
 flake8 = "^4.0.1"
 
 
