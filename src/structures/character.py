@@ -795,6 +795,7 @@ class Character:
             age=self.age,
             pronoun=self.pronoun,
             backstory=self.backstory,
+            personality=self.personality,
             extra=self.extra,
             abilities=self.abilities.copy(),
             moveset=self.moveset.copy(),
