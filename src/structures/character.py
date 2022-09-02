@@ -134,6 +134,7 @@ class Character:
     age: Optional[int] = None
     pronoun: Pronoun = Pronoun.Them
     backstory: Optional[str] = None
+    personality: Optional[str] = None
     extra: Optional[str] = None
     abilities: frozenset[Ability] = field(default_factory=frozenset)
     moveset: frozenset[Move] = field(default_factory=frozenset)
@@ -457,15 +458,11 @@ class Character:
                 inline=False,
             )
 
-        entry = "/".join(i.name.title() for i in self.types)
         if hidden_power := self.hidden_power:
-            sp_embed.color = c_embed.color = hidden_power.color
             c_embed.set_footer(
-                text=f"Types: {entry}, Hidden: {hidden_power.name}",
+                text=f"Hidden Power: {hidden_power.name}",
                 icon_url=hidden_power.emoji.url,
             )
-        else:
-            c_embed.set_footer(text=f"Types: {entry}")
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
             if name := sp_ability.name[:100]:
@@ -497,13 +494,11 @@ class Character:
         elif isinstance(self.image, str):
             c_embed.set_image(url=self.image)
 
-        if location := self.place_mention:
-            c_embed.add_field(name="Last Location", value=location, inline=False)
+        if self.personality:
+            c_embed.add_field(name="Personality", value=self.personality[:200], inline=False)
 
-        extra = self.extra or ""
-
-        if extra := extra[:256]:
-            c_embed.add_field(name="Extra Information", value=extra, inline=False)
+        if self.extra:
+            c_embed.add_field(name="Extra Information", value=self.extra[:256], inline=False)
 
         return embeds
 

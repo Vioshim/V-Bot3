@@ -202,6 +202,7 @@ class Pokedex(commands.Cog):
         member: Optional[Member],
         location: Optional[TextChannel],
         backstory: Optional[str],
+        personality: Optional[str],
         extra: Optional[str],
         sp_ability: Optional[str],
         pronoun: Optional[Pronoun],
@@ -235,6 +236,8 @@ class Pokedex(commands.Cog):
             Location to filter
         backstory : Optional[str]
             Any words to look for in backstories
+        personality : Optional[str]
+            Any words to look for in the personality info
         extra : Optional[str]
             Any words to look for in the extra info
         sp_ability : Optional[str]
@@ -308,15 +311,15 @@ class Pokedex(commands.Cog):
         if backstory:
             backstory_pattern = re_compile(backstory, IGNORECASE)
             filters.append(lambda oc: oc.backstory and backstory_pattern.search(oc.backstory))
+        if personality:
+            personality_pattern = re_compile(personality, IGNORECASE)
+            filters.append(lambda oc: oc.personality and personality_pattern.search(oc.personality))
         if extra:
             extra_pattern = re_compile(extra, IGNORECASE)
             filters.append(lambda oc: oc.extra and extra_pattern.search(oc.extra))
         if sp_ability:
             sp_ability_pattern = re_compile(sp_ability, IGNORECASE)
-            filters.append(
-                lambda oc: oc.sp_ability
-                and any(sp_ability_pattern.search(sp_ability) for y in astuple(oc.sp_ability) if y)
-            )
+            filters.append(lambda oc: oc.sp_ability and any(map(sp_ability_pattern.search, astuple(oc.sp_ability))))
         if _type:
             filters.append(lambda oc: _type in oc.types)
             if embed.color == ctx.user.color:

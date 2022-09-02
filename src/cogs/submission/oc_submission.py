@@ -885,6 +885,33 @@ class BackstoryField(TemplateField):
                 progress.add(cls.name)
 
 
+class PersonalityField(TemplateField):
+    name = "Personality"
+    description = "Optional. Fill the OC's Personality"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        text_view = ModernInput(member=ctx.user, target=ctx)
+        async with text_view.handle(
+            label="Write the character's Personality.",
+            placeholder=oc.extra,
+            ephemeral=ephemeral,
+            default=oc.extra,
+            required=False,
+            style=TextStyle.paragraph,
+        ) as answer:
+            if isinstance(answer, str):
+                oc.personality = answer or None
+                progress.add(cls.name)
+
+
 class ExtraField(TemplateField):
     name = "Extra Information"
     description = "Optional. Fill the OC's Extra Information"
