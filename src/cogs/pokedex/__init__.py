@@ -262,8 +262,8 @@ class Pokedex(commands.Cog):
         filters: list[Callable[[Character], bool]] = [lambda x: guild.get_member(x.author)]
         ocs = [species] if isinstance(species, Character) else total
         if name:
-            pattern = re_compile(name, IGNORECASE)
-            filters.append(lambda oc: pattern.search(oc.name))
+            name_pattern = re_compile(name, IGNORECASE)
+            filters.append(lambda oc: name_pattern.search(oc.name))
         if age:
             filters.append(lambda oc: age_parser(age, oc))
         if isinstance(location, Thread):
@@ -306,13 +306,16 @@ class Pokedex(commands.Cog):
         if pronoun:
             filters.append(lambda oc: oc.pronoun == pronoun)
         if backstory:
-            filters.append(lambda oc: oc.backstory and backstory.lower() in oc.backstory.lower())
+            backstory_pattern = re_compile(backstory, IGNORECASE)
+            filters.append(lambda oc: oc.backstory and backstory_pattern.search(oc.backstory))
         if extra:
-            filters.append(lambda oc: oc.extra and extra.lower() in oc.extra.lower())
+            extra_pattern = re_compile(extra, IGNORECASE)
+            filters.append(lambda oc: oc.extra and extra_pattern.search(oc.extra))
         if sp_ability:
+            sp_ability_pattern = re_compile(sp_ability, IGNORECASE)
             filters.append(
                 lambda oc: oc.sp_ability
-                and any(sp_ability.lower() in y.lower() for y in astuple(oc.sp_ability) if isinstance(y, str))
+                and any(sp_ability_pattern.search(sp_ability) for y in astuple(oc.sp_ability) if y)
             )
         if _type:
             filters.append(lambda oc: _type in oc.types)
