@@ -901,9 +901,9 @@ class PersonalityField(TemplateField):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
             label="Write the character's Personality.",
-            placeholder=oc.extra,
+            placeholder=oc.personality,
             ephemeral=ephemeral,
-            default=oc.extra,
+            default=oc.personality,
             required=False,
             style=TextStyle.paragraph,
         ) as answer:
