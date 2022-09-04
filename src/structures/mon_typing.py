@@ -121,6 +121,10 @@ class Typing:
         self.chart = frozendict(data.get("chart", {}))
         self.banner = data.get("banner", "")
 
+    @property
+    def id(self):
+        return next(iter(self.ids), 0)
+
     @classmethod
     def from_dict(cls, **data: Any):
         return Typing(data)

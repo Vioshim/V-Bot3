@@ -159,9 +159,28 @@ class Inviter(commands.Cog):
     @commands.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def update(self, ctx: commands.Context, invite: Invite, reference: Optional[Message] = None):
+    async def update(
+        self,
+        ctx: commands.Context,
+        invite: Optional[Invite] = None,
+        reference: Optional[Message] = None,
+    ):
+        """Update Invite command
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context
+        invite : Optional[Invite], optional
+            Invite to update, by default None
+        reference : Optional[Message], optional
+            Message reference, by default None
+        """
         if not reference:
             reference = ctx.message.reference.resolved
+        if not invite:
+            invite_url = INVITE.search(reference.content)
+            invite = await self.adapt.convert(ctx=ctx, argument=invite_url.group(1))
 
         view = View()
         view.add_item(Button(label="Click Here to Join", url=invite.url))
