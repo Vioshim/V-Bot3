@@ -170,6 +170,8 @@ class Inviter(commands.Cog):
         else:
             attachments, embed = await self.bot.embed_raw(reference.embeds[0])
 
+        embed.description = INVITE.sub(invite.url, embed.description)
+
         await reference.edit(attachments=attachments, embed=embed, view=view)
 
     @commands.Cog.listener()
