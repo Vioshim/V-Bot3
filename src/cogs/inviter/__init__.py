@@ -38,8 +38,8 @@ from discord.utils import find, get, utcnow
 from src.cogs.inviter.classifier import InviterView
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
+from src.utils.etc import WHITE_BAR
 from src.utils.matches import INVITE
-from utils.etc import WHITE_BAR
 
 __all__ = ("Inviter", "setup")
 
