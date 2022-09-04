@@ -39,7 +39,6 @@ from src.cogs.inviter.classifier import InviterView
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
-from src.utils.imagekit import ImageKit
 from src.utils.matches import INVITE
 
 __all__ = ("Inviter", "setup")
@@ -179,10 +178,9 @@ class Inviter(commands.Cog):
 
         embed.description = INVITE.sub(invite.url, embed.description)
         if not embed.image or embed.image.url == WHITE_BAR:
-            image = ImageKit(guild.banner.with_size(4096).url, height=1080, width=1920)
-            if file := await self.bot.get_file(image.url):
-                embed.set_image(url=f"attachment://{file.filename}")
-                attachments.append(file)
+            file = await guild.banner.with_size(4096).to_file()
+            embed.set_image(url=f"attachment://{file.filename}")
+            attachments.append(file)
 
         msgs = [x for x in self.view.messages if x.id != reference.id]
         msgs.append(reference)
@@ -260,10 +258,9 @@ class Inviter(commands.Cog):
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
         elif invite_guild.banner:
-            image = ImageKit(invite_guild.banner.with_size(4096).url, height=1080, width=1920)
-            if file := await self.bot.get_file(image.url):
-                generator.set_image(url=f"attachment://{file.filename}")
-                files.append(file)
+            file = await guild.banner.with_size(4096).to_file()
+            generator.set_image(url=f"attachment://{file.filename}")
+            files.append(file)
 
         link_view = View()
         link_view.add_item(Button(label="Click Here to Join", url=invite.url))
