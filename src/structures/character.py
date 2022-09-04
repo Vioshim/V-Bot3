@@ -781,10 +781,7 @@ class Character:
             )
 
     def copy(self):
-        if self.sp_ability:
-            sp_ability = self.sp_ability.copy()
-        else:
-            sp_ability = None
+        sp_ability = self.sp_ability.copy() if self.sp_ability else None
         return Character(
             species=self.species,
             id=self.id,

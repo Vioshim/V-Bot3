@@ -154,6 +154,24 @@ class Inviter(commands.Cog):
             self.message = msg
             self.ready = True
 
+    @commands.command()
+    async def update(self, ctx: commands.Context, invite: Invite, reference: Optional[Message] = None):
+        if not reference:
+            reference = ctx.message.reference.resolved
+
+        view = View()
+        view.add_item(Button(label="Click Here to Join", url=invite.url))
+
+        if invite.guild and invite.guild.icon:
+            attachments, embed = await self.bot.embed_raw(reference.embeds[0], "thumbnail")
+            file = await invite.guild.icon.with_size(4096).to_file(filename=str(invite.guild.id))
+            attachments.append(file)
+            embed.set_thumbnail(url=f"attachment://{file.filename}")
+        else:
+            attachments, embed = await self.bot.embed_raw(reference.embeds[0])
+
+        await reference.edit(attachments=attachments, embed=embed, view=view)
+
     @commands.Cog.listener()
     async def on_message(self, ctx: Message) -> None:
         """Discord invite detection
