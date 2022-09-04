@@ -166,7 +166,9 @@ class Inviter(commands.Cog):
 
         if invite.guild and invite.guild.icon:
             attachments, embed = await self.bot.embed_raw(reference.embeds[0], "thumbnail")
-            file = await invite.guild.icon.with_size(4096).to_file(filename=str(invite.guild.id))
+            fmt = "gif" if invite.guild.icon.is_animated() else "png"
+            icon = invite.guild.icon.with_size(4096).with_format(fmt)
+            file = await icon.to_file(filename=f"{invite.guild.id}.{fmt}")
             attachments.append(file)
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         else:
@@ -175,6 +177,7 @@ class Inviter(commands.Cog):
         embed.description = INVITE.sub(invite.url, embed.description)
 
         await reference.edit(content=invite.url, attachments=attachments, embed=embed, view=view)
+        await ctx.message.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_message(self, ctx: Message) -> None:
