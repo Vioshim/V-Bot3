@@ -177,10 +177,8 @@ class Inviter(commands.Cog):
             attachments, embed = await self.bot.embed_raw(reference.embeds[0])
 
         embed.description = INVITE.sub(invite.url, embed.description)
-        if (
-            not embed.image
-            or embed.image.url == WHITE_BAR
-            and (icon_banner := guild.splash or guild.discovery_splash or guild.banner)
+        if (not embed.image or embed.image.url == WHITE_BAR) and (
+            icon_banner := guild.splash or guild.discovery_splash or guild.banner
         ):
             file = await icon_banner.with_size(4096).to_file()
             embed.set_image(url=f"attachment://{file.filename}")
