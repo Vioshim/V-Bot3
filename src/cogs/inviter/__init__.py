@@ -155,6 +155,8 @@ class Inviter(commands.Cog):
             self.ready = True
 
     @commands.command()
+    @commands.is_owner()
+    @commands.guild_only()
     async def update(self, ctx: commands.Context, invite: Invite, reference: Optional[Message] = None):
         if not reference:
             reference = ctx.message.reference.resolved
