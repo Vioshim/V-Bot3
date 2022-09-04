@@ -179,7 +179,7 @@ class Inviter(commands.Cog):
 
         embed.description = INVITE.sub(invite.url, embed.description)
         if not embed.image or embed.image.url == WHITE_BAR:
-            image = ImageKit(guild.banner.url, height=540, width=960)
+            image = ImageKit(guild.banner.with_size(4096).url, height=1080, width=1920)
             if file := await self.bot.get_file(image.url):
                 embed.set_image(url=f"attachment://{file.filename}")
                 attachments.append(file)
@@ -260,7 +260,7 @@ class Inviter(commands.Cog):
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
         elif invite_guild.banner:
-            image = ImageKit(guild.banner.url, height=540, width=960)
+            image = ImageKit(invite_guild.banner.with_size(4096).url, height=1080, width=1920)
             if file := await self.bot.get_file(image.url):
                 generator.set_image(url=f"attachment://{file.filename}")
                 files.append(file)
