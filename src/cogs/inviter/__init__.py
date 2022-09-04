@@ -39,6 +39,7 @@ from src.cogs.inviter.classifier import InviterView
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.utils.matches import INVITE
+from utils.etc import WHITE_BAR
 
 __all__ = ("Inviter", "setup")
 
@@ -164,17 +165,22 @@ class Inviter(commands.Cog):
         view = View()
         view.add_item(Button(label="Click Here to Join", url=invite.url))
 
-        if invite.guild and invite.guild.icon:
+        guild = invite.guild
+        if guild.icon:
             attachments, embed = await self.bot.embed_raw(reference.embeds[0], "thumbnail")
-            fmt = "gif" if invite.guild.icon.is_animated() else "png"
-            icon = invite.guild.icon.with_size(4096).with_format(fmt)
-            file = await icon.to_file(filename=f"{invite.guild.id}.{fmt}")
+            fmt = "gif" if guild.icon.is_animated() else "png"
+            icon = guild.icon.with_size(4096).with_format(fmt)
+            file = await icon.to_file(filename=f"{guild.id}.{fmt}")
             attachments.append(file)
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         else:
             attachments, embed = await self.bot.embed_raw(reference.embeds[0])
 
         embed.description = INVITE.sub(invite.url, embed.description)
+        if not embed.image or embed.image.url == WHITE_BAR:
+            file = await guild.banner.to_file()
+            embed.set_image(url=f"attachment://{file.filename}")
+            attachments.append(file)
 
         msgs = [x for x in self.view.messages if x.id != reference.id]
         msgs.append(reference)
@@ -243,12 +249,16 @@ class Inviter(commands.Cog):
         ):
             generator.set_thumbnail(url=f"attachment://{file.filename}")
             files.append(file)
-        if attachments := ctx.attachments:
+        if attachments := [x for x in ctx.attachments if x.content_type.startswith("image/")]:
             file = await attachments[0].to_file(use_cached=True)
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
         elif (embeds := ctx.embeds) and (thumbnail := embeds[0].thumbnail):
             file = await self.bot.get_file(url=thumbnail.url)
+            generator.set_image(url=f"attachment://{file.filename}")
+            files.append(file)
+        elif invite_guild.banner:
+            file = await invite_guild.banner.to_file()
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
 
