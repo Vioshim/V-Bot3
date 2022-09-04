@@ -176,8 +176,12 @@ class Inviter(commands.Cog):
 
         embed.description = INVITE.sub(invite.url, embed.description)
 
+        msgs = [x for x in self.view.messages if x.id != reference.id]
+        msgs.append(reference)
+        self.view.messages = msgs
+
         await reference.edit(content=invite.url, attachments=attachments, embed=embed, view=view)
-        await ctx.message.delete(delay=0)
+        await ctx.message.delete(delay=3)
 
     @commands.Cog.listener()
     async def on_message(self, ctx: Message) -> None:
