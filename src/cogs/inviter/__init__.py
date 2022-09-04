@@ -26,6 +26,7 @@ from discord import (
     Member,
     Message,
     PartialEmoji,
+    PartialInviteGuild,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     TextChannel,
@@ -165,7 +166,7 @@ class Inviter(commands.Cog):
         view = View()
         view.add_item(Button(label="Click Here to Join", url=invite.url))
 
-        guild = invite.guild
+        guild: PartialInviteGuild = invite.guild
         if guild.icon:
             attachments, embed = await self.bot.embed_raw(reference.embeds[0], "thumbnail")
             fmt = "gif" if guild.icon.is_animated() else "png"
@@ -177,9 +178,7 @@ class Inviter(commands.Cog):
             attachments, embed = await self.bot.embed_raw(reference.embeds[0])
 
         embed.description = INVITE.sub(invite.url, embed.description)
-        if (not embed.image or embed.image.url == WHITE_BAR) and (
-            icon_banner := guild.splash or guild.discovery_splash or guild.banner
-        ):
+        if (not embed.image or embed.image.url == WHITE_BAR) and (icon_banner := guild.splash or guild.banner):
             file = await icon_banner.with_size(4096).to_file()
             embed.set_image(url=f"attachment://{file.filename}")
             attachments.append(file)
@@ -229,7 +228,7 @@ class Inviter(commands.Cog):
         guild: Guild = ctx.guild
         author: Member = ctx.author
 
-        if not (invite_guild := invite.guild) or invite_guild == guild:
+        if not isinstance(invite_guild := invite.guild, PartialInviteGuild) or invite_guild == guild:
             return
 
         mod_ch = find(lambda x: "mod-chat" in x.name, guild.channels)
@@ -259,7 +258,7 @@ class Inviter(commands.Cog):
             file = await self.bot.get_file(url=thumbnail.url)
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
-        elif icon_banner := invite_guild.splash or invite_guild.discovery_splash or invite_guild.banner:
+        elif icon_banner := invite_guild.splash or invite_guild.banner:
             file = await icon_banner.with_size(4096).to_file()
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
