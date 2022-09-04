@@ -174,7 +174,7 @@ class Inviter(commands.Cog):
 
         embed.description = INVITE.sub(invite.url, embed.description)
 
-        await reference.edit(attachments=attachments, embed=embed, view=view)
+        await reference.edit(content=invite.url, attachments=attachments, embed=embed, view=view)
 
     @commands.Cog.listener()
     async def on_message(self, ctx: Message) -> None:
