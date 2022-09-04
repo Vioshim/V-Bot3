@@ -177,7 +177,11 @@ class Inviter(commands.Cog):
             attachments, embed = await self.bot.embed_raw(reference.embeds[0])
 
         embed.description = INVITE.sub(invite.url, embed.description)
-        if not embed.image or embed.image.url == WHITE_BAR and (icon := guild.discovery_splash or guild.banner):
+        if (
+            not embed.image
+            or embed.image.url == WHITE_BAR
+            and (icon := guild.discovery_splash or guild.splash or guild.banner)
+        ):
             file = await guild.banner.with_size(4096).to_file()
             embed.set_image(url=f"attachment://{file.filename}")
             attachments.append(file)
@@ -257,7 +261,7 @@ class Inviter(commands.Cog):
             file = await self.bot.get_file(url=thumbnail.url)
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
-        elif icon := invite_guild.discovery_splash or invite_guild.banner:
+        elif icon := invite_guild.discovery_splash or guild.splash or invite_guild.banner:
             file = await guild.banner.with_size(4096).to_file()
             generator.set_image(url=f"attachment://{file.filename}")
             files.append(file)
