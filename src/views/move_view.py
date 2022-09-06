@@ -230,7 +230,8 @@ class MovepoolMoveComplex(MoveView):
             items.append(items1)
         if items2 := [*groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]:
             items.append(items2)
-        if items3 := [*groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)]:
+        items3 = [*groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)]
+        if sum(map(len, items)) <= 25 - len(items3):
             items.append(items3)
 
         return items
