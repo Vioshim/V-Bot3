@@ -154,9 +154,9 @@ class Proxy(commands.Cog):
             ephemeral=True,
         )
 
-    @commands.command(name="npci")
+    @commands.command(name="npc")
     @commands.guild_only()
-    async def cmd_npci(self, ctx: commands.Context, pokemon: str, *, text: str = None):
+    async def cmd_npc(self, ctx: commands.Context, pokemon: str, *, text: str = None):
         """Inplace NPC Narration
 
         Parameters
@@ -180,9 +180,9 @@ class Proxy(commands.Cog):
             npc = NPC(name=pokemon)
         await self.proxy_handler(npc=npc, message=ctx.message, text=text)
 
-    @commands.command(name="npc")
+    @commands.command(name="npci")
     @commands.guild_only()
-    async def cmd_npc(self, ctx: commands.Context, *, text: str = None):
+    async def cmd_npci(self, ctx: commands.Context, *, text: str = None):
         """Command for NPCs
 
         Parameters
