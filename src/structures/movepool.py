@@ -464,8 +464,50 @@ class Movepool:
                 movepool.assign(key=item, value=value)
         return movepool
 
+    def to_dict(self, allow_empty: bool = False, flatten_levels: bool = False):
+        """Returns a Movepool as dict with moves
+
+        Returns
+        -------
+        dict[str, list[Move] | dict[int, list[Move]]]
+            generated values
+        """
+
+        def foo(moves: frozenset[Move]) -> list[Move]:
+            """Inner method for conversion
+
+            Parameters
+            ----------
+            moves : frozenset[Move]
+                moves to convert
+
+            Returns
+            -------
+            list[str]
+                List of move IDs
+            """
+            return sorted(moves, key=lambda x: x.id)
+
+        if flatten_levels:
+            level_moves = foo(self.level_moves)
+        else:
+            level_moves = {int(k): foo(v) for k, v in sorted(self.level.items()) if v}
+
+        data = dict(
+            level=level_moves,
+            egg=foo(self.egg),
+            event=foo(self.event),
+            tm=foo(self.tm),
+            tutor=foo(self.tutor),
+            levelup=foo(self.levelup),
+            other=foo(self.other),
+        )
+        if not allow_empty:
+            data = {k: v for k, v in data.items() if v}
+        return data
+
     @property
-    def db_dict(self) -> dict[str, list[str] | dict[str, list[str]]]:
+    def db_dict(self) -> dict[str, list[str] | dict[int, list[str]]]:
         """Returns a Movepool as dict with moves as strings
 
         Returns
@@ -537,6 +579,89 @@ class Movepool:
 
         elements = dict(
             level={k: foo(v) for k, v in sorted(self.level.items()) if v},
+            egg=foo(self.egg),
+            event=foo(self.event),
+            tm=foo(self.tm),
+            tutor=foo(self.tutor),
+            levelup=foo(self.levelup),
+            other=foo(self.other),
+        )
+
+        return {k: v for k, v in elements.items() if v}
+
+    @property
+    def raw_db_dict(self) -> dict[str, list[str]]:
+        """Returns a Movepool as dict with moves as strings
+
+        Returns
+        -------
+        dict[str, list[str]]
+            generated values
+        """
+
+        def foo(moves: frozenset[Move]) -> list[str]:
+            """Inner method for conversion
+
+            Parameters
+            ----------
+            moves : frozenset[Move]
+                moves to convert
+
+            Returns
+            -------
+            list[str]
+                List of move IDs
+            """
+            return sorted(move.id for move in moves)
+
+        return dict(
+            level=foo(self.level_moves),
+            egg=foo(self.egg),
+            event=foo(self.event),
+            tm=foo(self.tm),
+            tutor=foo(self.tutor),
+            levelup=foo(self.levelup),
+            other=foo(self.other),
+        )
+
+    @property
+    def as_raw_dict(self) -> dict[str, list[str]]:
+        """Returns a Movepool as dict with moves as strings
+
+        Returns
+        -------
+        dict[str, list[str]]
+            generated values
+        """
+        return {k: v for k, v in self.raw_db_dict.items() if v}
+
+    @property
+    def as_raw_display_dict(self) -> dict[str, list[str]]:
+        """Returns a Movepool as dict with moves as strings
+
+        Returns
+        -------
+        dict[str, list[str]]
+            generated values
+        """
+
+        def foo(moves: frozenset[Move]) -> list[str]:
+            """Inner method for conversion
+
+            Parameters
+            ----------
+            moves : frozenset[Move]
+                moves to convert
+
+            Returns
+            -------
+            list[str]
+                List of move Names
+            """
+            return sorted(move.name for move in moves)
+
+        elements = dict(
+            level=foo(self.level_moves),
             egg=foo(self.egg),
             event=foo(self.event),
             tm=foo(self.tm),

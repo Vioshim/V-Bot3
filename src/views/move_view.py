@@ -30,6 +30,7 @@ from discord.ui import Button, Select, TextInput, View, button, select
 
 from src.pagination.complex import Complex, DefaultModal
 from src.structures.move import Move
+from src.structures.movepool import Movepool
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
 __all__ = ("MoveView", "MoveComplex")
@@ -75,41 +76,31 @@ class MoveComplex(Complex[Move]):
         self.total = total
         self.data = {}
 
+    def generate_elements(self):
+        moves: set[Move] = set(self.total) - self.choices
+        moves1 = {x for x in moves if isinstance(x, Move)}
+        moves2 = {x for x in moves if not isinstance(x, Move)}
+        return (
+            [("Abilities", moves2)],
+            groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category),
+            groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type),
+        )
+
     def menu_format(self) -> None:
 
         self.select_types.options.clear()
-
-        moves: set[Move] = set(self.total) - self.choices
-
-        moves1 = {x for x in moves if isinstance(x, Move)}
-        moves2 = {x for x in moves if not isinstance(x, Move)}
-
-        elements = (
-            groupby(
-                sorted(moves1, key=lambda x: x.category.name),
-                key=lambda x: x.category,
-            ),
-            groupby(
-                sorted(moves1, key=lambda x: x.type.name),
-                key=lambda x: x.type,
-            ),
-        )
-
-        values = [("None", moves1), ("Abilities", moves2)]
-        for element in elements:
-            aux = {k: set(v) for k, v in element}
-            aux = sorted(aux.items(), key=lambda x: len(x[1]), reverse=True)
-            values.extend(aux)
+        elements = self.generate_elements()
+        values = [(k, o) for element in elements for k, v in element if (o := set(v))]
+        values.sort(key=lambda x: len(x[1]), reverse=True)
 
         for k, items in values:
-            if items:
-                label = getattr(k, "name", k).title()
-                self.data[label] = items
-                self.select_types.add_option(
-                    label=label,
-                    emoji=getattr(k, "emoji", LIST_EMOJI),
-                    description=f"Has {len(items)} items.",
-                )
+            label = getattr(k, "name", k).title()
+            self.data[label] = items
+            self.select_types.add_option(
+                label=label,
+                emoji=getattr(k, "emoji", LIST_EMOJI),
+                description=f"Has {len(items)} items.",
+            )
 
         if not self.choices:
             self.remove_item(self.move_remove)
@@ -132,10 +123,13 @@ class MoveComplex(Complex[Move]):
 
         return data
 
-    @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, row=3)
+    @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, min_values=0, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         resp: InteractionResponse = interaction.response
-        if items := set.intersection(*[self.data[value] for value in sct.values]):
+        if len(sct.values) == 0:
+            self.values = self.total
+            await self.edit(interaction=interaction, page=0)
+        elif items := set.intersection(*[self.data[value] for value in sct.values]):
             self.values = items
             await self.edit(interaction=interaction, page=0)
         else:
@@ -211,3 +205,20 @@ class MoveView(MoveComplex):
                 view.add_item(Button(label="Click here to check more information at Bulbapedia.", url=url))
             await response.send_message(embed=embed, view=view, ephemeral=True)
         await super(MoveView, self).select_choice(interaction=interaction, sct=sct)
+
+
+class MovepoolMoveComplex(MoveView):
+    def __init__(
+        self,
+        member: Member,
+        movepool: Movepool,
+        target: Optional[Messageable] = None,
+        keep_working: bool = True,
+    ):
+        super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working)
+        self.movepool = movepool
+
+    def generate_elements(self):
+        data = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
+        moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
+        return (data.items(), groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type))

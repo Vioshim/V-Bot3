@@ -52,7 +52,7 @@ from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
-from src.views.movepool_view import MovepoolViewSelector
+from src.views.move_view import MovepoolMoveComplex
 from src.views.species_view import SpeciesComplex
 
 __all__ = ("Pokedex", "setup")
@@ -158,7 +158,7 @@ class Pokedex(commands.Cog):
             movepool = Movepool()
 
         if not move_id:
-            view = MovepoolViewSelector(movepool=movepool, member=ctx.user, target=ctx)
+            view = MovepoolMoveComplex(member=ctx.user, movepool=movepool, target=ctx)
         elif species:
             if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
                 await ctx.followup.send(f"{species.name} can learn {move_id.name} through:\n{methods}.", ephemeral=True)

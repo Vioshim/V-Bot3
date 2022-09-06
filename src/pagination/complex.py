@@ -499,7 +499,7 @@ class Complex(Simple[_T]):
         if not response.is_done() and not self.silent_mode:
             member: Member | User = interaction.user
             if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-                await interaction.channel.edit(archived=True)
+                await interaction.channel.edit(archived=False)
             await response.defer(ephemeral=True, thinking=True)
 
             if self.current_choices:

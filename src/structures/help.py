@@ -15,26 +15,123 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Mapping
+from dataclasses import dataclass
+from typing import Any, Callable, Mapping
 
-from discord import Color, Embed
-from discord.ext.commands import Command
+from discord import Color, Embed, Interaction, Member, TextChannel, User
+from discord.app_commands import Command as SlashCommand
+from discord.app_commands import ContextMenu
+from discord.app_commands import Group as SlashGroup
+from discord.ext.commands import Cog, Command, Context, Group, HelpCommand
+from discord.ui import Button, Select, button, select
 
-from src.utils.etc import WHITE_BAR
-
-if TYPE_CHECKING:
-    from discord.ext.commands import Group, Cog, Context
-
-from discord.ext.commands import HelpCommand
-
+from src.pagination.complex import Complex
 from src.pagination.simple import Simple
+from src.pagination.view_base import BasicStop
+from src.utils.etc import WHITE_BAR
 
 __all__ = ("CustomHelp",)
 
 
+@dataclass(unsafe_hash=True)
+class Listener:
+    name: str
+    func: Callable[..., Any]
+
+    @property
+    def short_doc(self):
+        if short_doc := self.__doc__:
+            return short_doc.split("\n", 1)[0]
+        return "Not Documented"
+
+
+def parser(x: Listener | Command | Group | SlashCommand | ContextMenu | SlashGroup | Cog):
+    if isinstance(x, Listener):
+        return x.name, x.short_doc
+    if isinstance(x, Cog):
+        return x.qualified_name, x.description
+    if isinstance(x, (Command, Group)):
+        return x.name, x.short_doc
+    if isinstance(x, (SlashCommand, SlashGroup)):
+        return x.name, x.description
+    if isinstance(x, ContextMenu):
+        return x.name, x.callback.__doc__
+
+
+def emoji_parser(x: Listener | Command | Group | SlashCommand | ContextMenu | SlashGroup | Cog):
+    if isinstance(x, Listener):
+        return "\N{NUT AND BOLT}"
+    if isinstance(x, Cog):
+        return "\N{GEAR}"
+    if isinstance(x, (Group, SlashGroup)):
+        return "\N{BLUE BOOK}"
+    if isinstance(x, (Command, SlashCommand)):
+        return "\N{PAGE FACING UP}"
+    if isinstance(x, ContextMenu):
+        return "\N{WRENCH}"
+
+
+class HelpExploration(Complex[Cog | Command | Group | SlashCommand | SlashGroup | Listener]):
+    def __init__(
+        self,
+        *,
+        target: TextChannel,
+        member: Member | User,
+        value: Mapping[Cog, list[Command]] | Group | Cog,
+    ):
+        title, items, parent = self.flatten(value)
+        super().__init__(
+            target=target,
+            member=member,
+            timeout=None,
+            values=items,
+            parser=parser,
+            emoji_parser=emoji_parser,
+            keep_working=True,
+        )
+        self.parent = parent
+        self.embed.title = title
+        self.parent_button.disabled = parent is None
+
+    def flatten(self, value: Mapping[Cog, list[Command]] | Group | Cog):
+        if isinstance(value, Cog):
+            items = [Listener(x, y) for x, y in value.get_listeners()]
+            items.extend(value.get_app_commands())
+            items.extend(value.get_commands())
+            return f"Cog {value.qualified_name}", items, None
+
+        if isinstance(value, Group):
+            return f"Group {value.qualified_name}", [*value.commands], value.cog
+
+        items = sorted(value.keys(), key=lambda x: x.qualified_name)
+        return "All Cogs", items, None
+
+    async def selection(
+        self,
+        interaction: Interaction,
+        value: Listener | Command | Group | SlashCommand | ContextMenu | SlashGroup | Cog,
+    ):
+        self.embed.title, self.values, self.parent = self.flatten(value)
+        if isinstance(value, Listener):
+            self.embed.title = value.name
+            self.embed.description = value.short_doc
+
+            pass
+        await self.edit(interaction=interaction, page=0)
+
+    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+        await self.selection(interaction, self.current_choice)
+
+    @button(label="Parent", custom_id="parent", row=4)
+    async def parent_button(self, interaction: Interaction, btn: Button):
+        btn.disabled = True
+        await self.selection(interaction, self.parent)
+
+
 class CustomHelp(HelpCommand):
     async def send_bot_help(self, mapping: Mapping[Cog, list[Command]]) -> None:
-        """Bot Help
+        """Bot Help (Cog Select)
 
         Parameters
         ----------
@@ -82,26 +179,28 @@ class CustomHelp(HelpCommand):
         cmd : Command
             Command
         """
-
-        values = {
-            "Short document": cmd.short_doc or "None",
-            "Cog": getattr(cmd.cog, "qualified_name", None) or "None",
-            "Usage": self.get_command_signature(cmd) or "None",
-        }
-
-        if aliases := getattr(cmd, "aliases", []):
-            values["Aliases"] = "\n".join(f"> • {item}" for item in aliases)
-
         target = self.get_destination()
 
-        view = Simple(
-            timeout=None,
+        view = BasicStop(
             target=target,
-            member=self.context.author,
-            values=values.items(),
-            inline=False,
-            entries_per_page=10,
+            timeout=None,
+            ember=self.context.author,
         )
+        embed = view.embed
+
+        entries = {
+            "Description": cmd.description,
+            "Short document": cmd.short_doc,
+            "Cog": cmd.short_doc,
+            "Usage": cmd.short_doc,
+            "Aliases": ", ".join(getattr(cmd, "aliases", [])),
+        }
+
+        embed.description = "```yaml\n{}\n```".format(f"{k}: {v}" for k, v in entries.items())
+
+        for k, v in cmd.clean_params.items():
+            embed.add_field(name=k, value=str(v), inline=False)
+
         await view.send(title=f"Command {cmd.qualified_name!r}", desciption=cmd.description)
 
     async def send_group_help(self, group: Group) -> None:
@@ -112,24 +211,28 @@ class CustomHelp(HelpCommand):
         group: Group
             Group
         """
-        aliases = "\n".join(f"> • {item}" for item in group.aliases) or "None"
-        text = f"__**Short Document**__\n> {group.short_doc}\n\n" f"__**Aliases**__\n{aliases}"
 
-        target = self.get_destination()
+        entries = {
+            "Description": group.description,
+            "Short document": group.short_doc,
+            "Cog": group.short_doc,
+            "Usage": group.short_doc,
+            "Aliases": ", ".join(getattr(group, "aliases", [])),
+        }
 
-        def group_parser(cmd: Command):
-            return self.get_command_signature(cmd), f"\n> {cmd.short_doc}"
+        description = "```yaml\n{}\n```".format(f"{k}: {v}" for k, v in entries.items())
 
-        view = Simple(
-            timeout=None,
-            target=target,
+        view = Complex[Command](
             member=self.context.author,
             values=group.commands,
-            inline=False,
-            entries_per_page=10,
-            parser=group_parser,
+            target=self.get_destination(),
+            timeout=None,
+            parser=lambda x: (x.name, x.short_doc),
         )
-        await view.send(title=f"Group {group.qualified_name!r}", desciption=text)
+
+        async with view.send(title=f"Group {group.qualified_name!r}", desciption=description, single=True) as cmd:
+            if isinstance(cmd, Command):
+                await self.send_command_help(cmd)
 
     async def send_cog_help(self, cog: Cog) -> None:
         """Cog help

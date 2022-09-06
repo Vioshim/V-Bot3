@@ -13,29 +13,16 @@
 # limitations under the License.
 
 
-from discord import (
-    Interaction,
-    InteractionResponse,
-    Member,
-    TextChannel,
-    TextStyle,
-    User,
-)
-from discord.ui import Button, Modal, Select, TextInput, button, select
+from discord import Interaction, InteractionResponse, Member, TextChannel, TextStyle
+from discord.ui import Button, Modal, TextInput, button
 
-from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
 from src.structures.character import Character
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Variant
 from src.utils.functions import yaml_handler
-from src.views.move_view import MoveView
 
-__all__ = (
-    "MovepoolView",
-    "MovepoolViewSelector",
-    "MovepoolModal",
-)
+__all__ = ("MovepoolView", "MovepoolModal")
 
 PLACEHOLDER = "Move, Move, Move"
 
@@ -127,39 +114,3 @@ class MovepoolView(Basic):
         await resp.send_message("Keeping current movepool", ephemeral=True)
         await self.delete()
         self.stop()
-
-
-def movepool_parser(movepool: Movepool):
-    def inner(item: str):
-        moves = movepool[item]
-        return item.title(), f"{len(moves):02d} moves in this category."
-
-    return inner
-
-
-class MovepoolViewSelector(Complex[str]):
-    def __init__(
-        self,
-        *,
-        member: Member | User,
-        movepool: Movepool,
-        target: Interaction | TextChannel,
-        timeout: float = None,
-    ):
-        super(MovepoolViewSelector, self).__init__(
-            member=member,
-            values=list(movepool.as_dict.keys()),
-            target=target,
-            parser=movepool_parser(movepool),
-            emoji_parser="\N{FLOPPY DISK}",
-            keep_working=True,
-            sort_key=str,
-            timeout=timeout,
-        )
-        self.movepool = movepool
-
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
-        view = MoveView(member=interaction.user, target=interaction, moves=self.movepool[self.current_choice])
-        async with view.send(ephemeral=True):
-            await super(MovepoolViewSelector, self).select_choice(interaction, sct)

@@ -17,10 +17,11 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime
-from typing import Optional, Union
+from typing import NamedTuple, Optional, Union
 
 from discord import (
     AllowedMentions,
+    ButtonStyle,
     DiscordException,
     Embed,
     File,
@@ -31,6 +32,7 @@ from discord import (
     Member,
     Message,
     MessageReference,
+    PartialEmoji,
     PartialMessage,
     StickerItem,
     Thread,
@@ -39,12 +41,20 @@ from discord import (
 )
 from discord.abc import Messageable, Snowflake
 from discord.ext.commands import Context
-from discord.ui import View
+from discord.ui import Button, View, button
 
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import embed_modifier
 
 __all__ = ("Basic",)
+
+
+class ArrowEmotes(NamedTuple):
+    START = PartialEmoji(name="DoubleArrowLeft", id=972196330808160296)
+    BACK = PartialEmoji(name="ArrowLeft", id=972196330837528606)
+    FORWARD = PartialEmoji(name="ArrowRight", id=972196330892058684)
+    END = PartialEmoji(name="DoubleArrowRight", id=972196330942390372)
+    CLOSE = PartialEmoji(name="Stop", id=972196330795585567)
 
 
 class Basic(View):
@@ -296,3 +306,24 @@ class Basic(View):
     async def on_timeout(self) -> None:
         with suppress(DiscordException):
             await self.delete()
+
+
+class BasicStop(Basic):
+    @button(emoji=ArrowEmotes.CLOSE, row=0, custom_id="finish", style=ButtonStyle.blurple)
+    async def finish(self, interaction: Interaction, _: Button) -> None:
+        """
+        Method used to conclude the pagination
+
+        Parameters
+        ----------
+        interaction: discord.Interaction
+            Current interaction of the user
+        _: discord.ui.Button
+            Button which interacts with the User
+        """
+        resp: InteractionResponse = interaction.response
+        if interaction.message.flags.ephemeral:
+            await resp.edit_message(view=None)
+        else:
+            await interaction.message.delete(delay=0)
+        self.stop()

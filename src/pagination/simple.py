@@ -16,17 +16,7 @@
 from __future__ import annotations
 
 from math import ceil
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    NamedTuple,
-    Optional,
-    Sized,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Generic, Iterable, Optional, Sized, TypeVar, Union
 
 from discord import (
     AllowedMentions,
@@ -41,7 +31,6 @@ from discord import (
     Message,
     MessageReference,
     NotFound,
-    PartialEmoji,
     PartialMessage,
     StickerItem,
     User,
@@ -49,19 +38,11 @@ from discord import (
 from discord.abc import Messageable, Snowflake
 from discord.ui import Button, button
 
-from src.pagination.view_base import Basic
+from src.pagination.view_base import ArrowEmotes, Basic
 
 _T = TypeVar("_T", bound=Sized)
 
 __all__ = ("Simple",)
-
-
-class ArrowEmotes(NamedTuple):
-    START = PartialEmoji(name="DoubleArrowLeft", id=972196330808160296)
-    BACK = PartialEmoji(name="ArrowLeft", id=972196330837528606)
-    FORWARD = PartialEmoji(name="ArrowRight", id=972196330892058684)
-    END = PartialEmoji(name="DoubleArrowRight", id=972196330942390372)
-    CLOSE = PartialEmoji(name="Stop", id=972196330795585567)
 
 
 def default_parser(item: _T) -> tuple[str, str]:

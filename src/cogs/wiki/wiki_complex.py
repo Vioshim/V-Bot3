@@ -17,14 +17,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from discord import (
-    DiscordException,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    PartialEmoji,
-    TextStyle,
-)
+from discord import Embed, Interaction, InteractionResponse, PartialEmoji, TextStyle
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -108,24 +101,6 @@ class WikiComplex(Complex[WikiEntry]):
             data["view"] = self
 
         return data
-
-    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
-        if self.keep_working or len(self.choices) < self.max_values:
-            resp: InteractionResponse = interaction.response
-            data = self.default_params(page=page)
-
-            try:
-                if not resp.is_done():
-                    await resp.edit_message(**data)
-                elif self.message:
-                    self.message = await self.message.edit(**data)
-                else:
-                    self.message = await interaction.edit_original_response(**data)
-            except DiscordException as e:
-                interaction.client.logger.exception("View Error", exc_info=e)
-                self.stop()
-        else:
-            await self.delete(interaction)
 
     async def selection(self, interaction: Interaction, tree: WikiEntry):
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
