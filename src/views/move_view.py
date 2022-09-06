@@ -92,7 +92,6 @@ class MoveComplex(Complex[Move]):
 
         self.select_types.options.clear()
         elements = self.generate_elements()
-        self.select_types.max_values = len(elements)
         values = [(k, o) for element in elements for k, v in element if (o := set(v))]
         values.sort(key=lambda x: len(x[1]), reverse=True)
 
@@ -225,13 +224,15 @@ class MovepoolMoveComplex(MoveView):
         data: dict[str, list[Move]] = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
         moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
 
-        items = []
-        if items1 := [*data.items()]:
-            items.append(items1)
-        if items2 := [*groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]:
-            items.append(items2)
+        items1 = [*data.items()]
+        items2 = [*groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
         items3 = [*groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)]
-        if sum(map(len, items)) <= 25 - len(items3):
+        items = [items1, items2]
+
+        if len(items1) + len(items2) <= 25 - len(items3):
+            self.select_types.max_values = 3
             items.append(items3)
+        else:
+            self.select_types.max_values = 2
 
         return items
