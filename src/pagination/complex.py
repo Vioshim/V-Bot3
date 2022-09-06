@@ -516,8 +516,10 @@ class Complex(Simple[_T]):
 
             await interaction.followup.send(embed=embed, ephemeral=True)
 
-        self.choices |= self.current_choices
-        if not self.keep_working:
+        if self.keep_working:
+            self.choices = self.current_choices
+        else:
+            self.choices |= self.current_choices
             self.values = set(self.values) - self.choices
             if len(sct.values) == self.entries_per_page:
                 self.pos = max(self._pos - 1, 0)

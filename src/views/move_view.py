@@ -249,7 +249,7 @@ class MovepoolMoveComplex(MoveComplex):
         return items
 
 
-class MovepoolView(MovepoolMoveComplex, MoveView):
+class MovepoolView(MoveView, MovepoolMoveComplex):
     def __init__(
         self,
         member: Member,
@@ -257,10 +257,10 @@ class MovepoolView(MovepoolMoveComplex, MoveView):
         target: Optional[Messageable] = None,
         keep_working: bool = True,
     ):
+        self.movepool = movepool
         super(MovepoolMoveComplex, self).__init__(
             member=member,
             moves=movepool(),
             target=target,
             keep_working=keep_working,
         )
-        self.movepool = movepool
