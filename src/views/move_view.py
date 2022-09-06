@@ -79,17 +79,20 @@ class MoveComplex(Complex[Move]):
     def generate_elements(self):
         moves: set[Move] = set(self.total) - self.choices
         moves1 = {x for x in moves if isinstance(x, Move)}
-        moves2 = {x for x in moves if not isinstance(x, Move)}
-        return [
-            [("Abilities", moves2)],
-            groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category),
-            groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type),
-        ]
+        items = []
+        if moves2 := {x for x in moves if not isinstance(x, Move)}:
+            items.append(("Abilities", moves2))
+        if moves_cat := [*groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)]:
+            items.append(moves_cat)
+        if moves_type := [*groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type)]:
+            items.append(moves_type)
+        return items
 
     def menu_format(self) -> None:
 
         self.select_types.options.clear()
         elements = self.generate_elements()
+        self.select_types.max_values = len(elements)
         values = [(k, o) for element in elements for k, v in element if (o := set(v))]
         values.sort(key=lambda x: len(x[1]), reverse=True)
 
@@ -223,13 +226,10 @@ class MovepoolMoveComplex(MoveView):
         moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
 
         items1 = [*data.items()]
-        items2 = [(k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
-        items3 = [
-            (k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)
-        ]
-        items = [items1, items2]
+        items2 = [*groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
+        items3 = [*groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)]
 
         if len(items1) + len(items2) <= 25 - len(items3):
-            items.append(items3)
+            return [items1, items2, items3]
 
-        return items
+        return [items1, items2]
