@@ -286,7 +286,5 @@ class MovepoolView(MovepoolMoveComplex, MoveView):
             moves=movepool(),
             target=target,
             keep_working=keep_working,
-            max_values=1,
-            choices=None,
         )
         self.movepool = movepool
