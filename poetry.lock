@@ -11,11 +11,11 @@ pycares = ">=4.0.0"
 
 [[package]]
 name = "aiofiles"
-version = "0.8.0"
+version = "22.1.0"
 description = "File support for asyncio."
 category = "main"
 optional = false
-python-versions = ">=3.6,<4.0"
+python-versions = ">=3.7,<4.0"
 
 [[package]]
 name = "aiogoogle"
@@ -93,7 +93,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "4.0.0a1.post9"
+version = "4.0.0a2.post2"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -104,6 +104,7 @@ develop = false
 anyio = ">=3.6,<4.0"
 attrs = ">=21.3"
 tenacity = ">=8.0,<9.0"
+typing-extensions = {version = "*", markers = "python_version < \"3.11\""}
 tzlocal = ">=3.0"
 
 [package.extras]
@@ -120,7 +121,7 @@ test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "f
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "f41a7e5c5588f1c802645a6e18292dfb9ac3ba16"
+resolved_reference = "ee5a5040c221137aadde75bf9f1eb401af30fcf8"
 
 [[package]]
 name = "astunparse"
@@ -345,7 +346,7 @@ calendars = ["convertdate", "hijri-converter", "convertdate"]
 
 [[package]]
 name = "discord.py"
-version = "2.1.0a4581+g9ed5fbec"
+version = "2.1.0a4585+g1c163b66"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -369,7 +370,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "9ed5fbecea20ed17c63185502a7a20069027921b"
+resolved_reference = "1c163b66cd59a69a9b96b8e9c495fd84fad81db6"
 
 [[package]]
 name = "distlib"
@@ -750,15 +751,14 @@ test = ["appdirs (==1.4.4)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)", "pytes
 
 [[package]]
 name = "plette"
-version = "0.2.3"
+version = "0.3.0"
 description = "Structured Pipfile and Pipfile.lock models."
 category = "dev"
 optional = false
-python-versions = ">=2.6,!=3.0,!=3.1,!=3.2,!=3.3"
+python-versions = ">=3.7"
 
 [package.dependencies]
 cerberus = {version = "*", optional = true, markers = "extra == \"validation\""}
-six = "*"
 tomlkit = "*"
 
 [package.extras]
@@ -1119,6 +1119,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "typing-extensions"
+version = "4.3.0"
+description = "Backported and Experimental Type Hints for Python 3.7+"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "tzdata"
 version = "2022.2"
 description = "Provider of IANA time zone data"
@@ -1329,6 +1337,7 @@ tenacity = []
 tomli = []
 tomlkit = []
 tonyg-rfc3339 = []
+typing-extensions = []
 tzdata = []
 tzlocal = []
 urllib3 = []
