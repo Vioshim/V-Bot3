@@ -209,7 +209,8 @@ class MoveView(MoveComplex):
         await super(MoveView, self).select_choice(interaction=interaction, sct=sct)
 
 
-class MovepoolMoveComplex(MoveView):
+"""
+class MovepoolView(MoveView):
     def __init__(
         self,
         member: Member,
@@ -237,3 +238,55 @@ class MovepoolMoveComplex(MoveView):
         self.select_types.max_values = len(items)
 
         return items
+"""
+
+
+class MovepoolMoveComplex(MoveComplex):
+    def __init__(
+        self,
+        member: Member,
+        movepool: Movepool,
+        target: Optional[Messageable] = None,
+        keep_working: bool = True,
+        max_values: int = 6,
+        choices: set[Move] = None,
+    ):
+        super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working, max_values, choices)
+        self.movepool = movepool
+
+    def generate_elements(self) -> list[list[Move]]:
+        data: dict[str, list[Move]] = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
+        moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
+
+        items1 = [*data.items()]
+        items2 = [(k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
+        items3 = [
+            (k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)
+        ]
+        items = [items1, items2]
+
+        if len(items1) + len(items2) <= 25 - len(items3):
+            items.append(items3)
+
+        self.select_types.max_values = len(items)
+
+        return items
+
+
+class MovepoolView(MovepoolMoveComplex, MoveView):
+    def __init__(
+        self,
+        member: Member,
+        movepool: Movepool,
+        target: Optional[Messageable] = None,
+        keep_working: bool = True,
+    ):
+        super(MovepoolMoveComplex, self).__init__(
+            member=member,
+            moves=movepool(),
+            target=target,
+            keep_working=keep_working,
+            max_values=1,
+            choices=None,
+        )
+        self.movepool = movepool

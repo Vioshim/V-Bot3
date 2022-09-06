@@ -68,7 +68,7 @@ from src.utils.functions import int_check
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
-from src.views.move_view import MoveComplex
+from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
@@ -692,10 +692,17 @@ class MovesetField(TemplateField):
                 isinstance(species, (Fakemon, Variant)) and not moves,
             )
         ):
-            moves = {x for x in Move.all() if not x.banned}
+            movepool = Movepool(other={x for x in Move.all() if not x.banned})
             moveset = oc.moveset
+        else:
+            movepool = oc.total_movepool
 
-        view = MoveComplex(member=ctx.user, moves=moves, target=ctx, choices=moveset)
+        view = MovepoolMoveComplex(
+            member=ctx.user,
+            movepool=movepool,
+            target=ctx,
+            choices=moveset,
+        )
         async with view.send(ephemeral=ephemeral) as choices:
             oc.moveset = frozenset(choices)
             if isinstance(oc.species, (Fakemon, Variant)) and not oc.movepool:
