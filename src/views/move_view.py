@@ -107,6 +107,10 @@ class MoveComplex(Complex[Move]):
             self.remove_item(self.move_remove)
         elif self.move_remove not in self.children:
             self.add_item(self.move_remove)
+        elif not self.select_types.options:
+            self.remove_item(self.select_types)
+        elif self.select_types not in self.children:
+            self.add_item(self.select_types)
 
         return super().menu_format()
 
