@@ -177,7 +177,7 @@ class Proxy(commands.Cog):
             processor=lambda x: getattr(x, "name", x),
         ):
             oc = options[0]
-            npc = NPC(name=oc.name, avatar=oc.image)
+            npc = NPC(name=oc.name, avatar=oc.image_url)
         else:
             npc = NPC(name=pokemon)
         await self.proxy_handler(npc=npc, message=ctx.message, text=text)
