@@ -117,7 +117,7 @@ class MoveComplex(Complex[Move]):
         elif self.select_types not in self.children:
             self.add_item(self.select_types)
 
-        return super().menu_format()
+        return super(MoveComplex, self).menu_format()
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
         data = dict(embed=self.embed)
