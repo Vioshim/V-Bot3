@@ -225,14 +225,13 @@ class MovepoolMoveComplex(MoveView):
         moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
 
         items1 = [*data.items()]
-        items2 = [*groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
-        items3 = [*groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)]
+        items2 = [(k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
+        items3 = [
+            (k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)
+        ]
         items = [items1, items2]
 
         if len(items1) + len(items2) <= 25 - len(items3):
-            self.select_types.max_values = 3
             items.append(items3)
-        else:
-            self.select_types.max_values = 2
 
         return items
