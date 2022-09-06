@@ -154,7 +154,33 @@ class Proxy(commands.Cog):
             ephemeral=True,
         )
 
-    @commands.group(name="npc")
+    @commands.command(name="npci")
+    @commands.guild_only()
+    async def cmd_npci(self, ctx: commands.Context, pokemon: str, *, text: str = None):
+        """Inplace NPC Narration
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            _description_
+        text : str, optional
+            _description_, by default None
+        """
+        cog: Submission = self.bot.get_cog("Submission")
+        member = self.bot.supporting.get(ctx.author, ctx.author)
+        entries1 = {x.name: x.base_image for x in Species.all()}
+        entries2 = {x.name: x.image_url for x in cog.ocs.values() if x.author == member.id}
+        if options := process.extractOne(pokemon, choices=entries1, limit=1, score_cutoff=60):
+            key = options[0]
+            npc = NPC(name=f"NPC〕{key}", avatar=entries1[key])
+        elif options := process.extractOne(pokemon, choices=entries2, limit=1, score_cutoff=60):
+            key = options[0]
+            npc = NPC(name=key, avatar=entries2[key])
+        else:
+            npc = NPC(name=pokemon)
+        await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+
+    @commands.command(name="npc")
     @commands.guild_only()
     async def cmd_npc(self, ctx: commands.Context, *, text: str = None):
         """Command for NPCs
@@ -173,33 +199,6 @@ class Proxy(commands.Cog):
             npc = NPC(name=entry["name"], avatar=entry["avatar"])
         else:
             npc = NPC()
-        await self.proxy_handler(npc=npc, message=ctx.message, text=text)
-
-    @cmd_npc.command(name="set")
-    async def cmd_npc_set(self, ctx: commands.Context, pokemon: str, *, text: str = None):
-        """Command for NPCs
-
-        Parameters
-        ----------
-        ctx : Context
-            Context
-        pokemon : SpeciesCall
-            Species
-        text : str, optional
-            Text, by default None
-        """
-        cog: Submission = self.bot.get_cog("Submission")
-        member = self.bot.supporting.get(ctx.author, ctx.author)
-        entries1 = {x.name: x.base_image for x in Species.all()}
-        entries2 = {x.name: x.image_url for x in cog.ocs.values() if x.author == member.id}
-        if options := process.extractOne(pokemon, choices=entries1, limit=1, score_cutoff=60):
-            key = options[0]
-            npc = NPC(name=f"NPC〕{key}", avatar=entries1[key])
-        elif options := process.extractOne(pokemon, choices=entries2, limit=1, score_cutoff=60):
-            key = options[0]
-            npc = NPC(name=key, avatar=entries2[key])
-        else:
-            npc = NPC(name=pokemon)
         await self.proxy_handler(npc=npc, message=ctx.message, text=text)
 
     @commands.Cog.listener()
