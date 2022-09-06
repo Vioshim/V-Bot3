@@ -51,7 +51,6 @@ class MoveComplex(Complex[Move]):
             key=lambda x: x.type.name if isinstance(x, Move) else getattr(x, "name", str(x)),
         )
         max_values = min(max_values, len(total))
-        self.total = total
         super(MoveComplex, self).__init__(
             member=member,
             target=target,
@@ -74,7 +73,9 @@ class MoveComplex(Complex[Move]):
         if choices:
             self.choices.update(choices)
         self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
+        self.total = total
         self.data = {}
+        self.menu_format()
 
     def generate_elements(self):
         moves: set[Move] = set(self.total) - self.choices
@@ -178,7 +179,6 @@ class MoveComplex(Complex[Move]):
     async def move_remove(self, interaction: Interaction, _: Button):
         view = MoveComplex(member=self.member, moves=self.choices, target=interaction)
         view.remove_item(view.move_remove)
-        view.remove_item(view.select_types)
         async with view.send(
             title="Remove Moves",
             description="\n".join(f"> {x!r}" for x in self.choices),
