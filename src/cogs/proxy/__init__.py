@@ -168,14 +168,16 @@ class Proxy(commands.Cog):
         """
         cog: Submission = self.bot.get_cog("Submission")
         member = self.bot.supporting.get(ctx.author, ctx.author)
-        entries1 = {x.name: x.base_image for x in Species.all()}
-        entries2 = {x.name: x.image_url for x in cog.ocs.values() if x.author == member.id}
-        if options := process.extractOne(pokemon, choices=entries1, score_cutoff=60):
-            key = options[0]
-            npc = NPC(name=f"NPC〕{key}", avatar=entries1[key])
-        elif options := process.extractOne(pokemon, choices=entries2, score_cutoff=60):
-            key = options[0]
-            npc = NPC(name=key, avatar=entries2[key])
+        if mon := Species.single_deduce(pokemon):
+            npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
+        elif options := process.extractOne(
+            pokemon,
+            choices=[x for x in cog.ocs.values() if x.author == member.id],
+            score_cutoff=60,
+            score_cutoff=lambda x: getattr(x, "name", x),
+        ):
+            oc = options[0]
+            npc = NPC(name=oc.name, avatar=oc.image)
         else:
             npc = NPC(name=pokemon)
         await self.proxy_handler(npc=npc, message=ctx.message, text=text)
