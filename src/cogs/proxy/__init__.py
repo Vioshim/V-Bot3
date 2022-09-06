@@ -174,7 +174,7 @@ class Proxy(commands.Cog):
             pokemon,
             choices=[x for x in cog.ocs.values() if x.author == member.id],
             score_cutoff=60,
-            score_cutoff=lambda x: getattr(x, "name", x),
+            processor=lambda x: getattr(x, "name", x),
         ):
             oc = options[0]
             npc = NPC(name=oc.name, avatar=oc.image)
