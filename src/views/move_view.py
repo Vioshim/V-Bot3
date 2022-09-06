@@ -80,11 +80,11 @@ class MoveComplex(Complex[Move]):
         moves: set[Move] = set(self.total) - self.choices
         moves1 = {x for x in moves if isinstance(x, Move)}
         moves2 = {x for x in moves if not isinstance(x, Move)}
-        return (
+        return [
             [("Abilities", moves2)],
             groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category),
             groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type),
-        )
+        ]
 
     def menu_format(self) -> None:
 
@@ -218,7 +218,18 @@ class MovepoolMoveComplex(MoveView):
         super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working)
         self.movepool = movepool
 
-    def generate_elements(self):
-        data = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
+    def generate_elements(self) -> list[list[Move]]:
+        data: dict[str, list[Move]] = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
         moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
-        return (data.items(), groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type))
+
+        items1 = [*data.items()]
+        items2 = [(k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
+        items3 = [
+            (k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)
+        ]
+        items = [items1, items2]
+
+        if len(items1) + len(items2) <= 25 - len(items3):
+            items.append(items3)
+
+        return items
