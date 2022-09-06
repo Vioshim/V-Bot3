@@ -51,6 +51,7 @@ class MoveComplex(Complex[Move]):
             key=lambda x: x.type.name if isinstance(x, Move) else getattr(x, "name", str(x)),
         )
         max_values = min(max_values, len(total))
+        self.total = total
         super(MoveComplex, self).__init__(
             member=member,
             target=target,
@@ -73,7 +74,6 @@ class MoveComplex(Complex[Move]):
         if choices:
             self.choices.update(choices)
         self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
-        self.total = total
         self.data = {}
 
     def generate_elements(self):
@@ -89,14 +89,13 @@ class MoveComplex(Complex[Move]):
         return items
 
     def menu_format(self) -> None:
-
         self.select_types.options.clear()
         elements = self.generate_elements()
         values = [(k, o) for element in elements for k, v in element if (o := set(v))]
         values.sort(key=lambda x: len(x[1]), reverse=True)
 
         for k, items in values:
-            label = getattr(k, "name", k).title()
+            label = getattr(k, "name", str(k)).title()
             self.data[label] = items
             self.select_types.add_option(
                 label=label,
@@ -109,7 +108,7 @@ class MoveComplex(Complex[Move]):
         elif self.move_remove not in self.children:
             self.add_item(self.move_remove)
 
-        return super(MoveComplex, self).menu_format()
+        return super().menu_format()
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
         data = dict(embed=self.embed)
@@ -207,38 +206,6 @@ class MoveView(MoveComplex):
                 view.add_item(Button(label="Click here to check more information at Bulbapedia.", url=url))
             await response.send_message(embed=embed, view=view, ephemeral=True)
         await super(MoveView, self).select_choice(interaction=interaction, sct=sct)
-
-
-"""
-class MovepoolView(MoveView):
-    def __init__(
-        self,
-        member: Member,
-        movepool: Movepool,
-        target: Optional[Messageable] = None,
-        keep_working: bool = True,
-    ):
-        super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working)
-        self.movepool = movepool
-
-    def generate_elements(self) -> list[list[Move]]:
-        data: dict[str, list[Move]] = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
-        moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
-
-        items1 = [*data.items()]
-        items2 = [(k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
-        items3 = [
-            (k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)
-        ]
-        items = [items1, items2]
-
-        if len(items1) + len(items2) <= 25 - len(items3):
-            items.append(items3)
-
-        self.select_types.max_values = len(items)
-
-        return items
-"""
 
 
 class MovepoolMoveComplex(MoveComplex):
