@@ -227,8 +227,8 @@ class MovepoolMoveComplex(MoveComplex):
         max_values: int = 6,
         choices: set[Move] = None,
     ):
-        super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working, max_values, choices)
         self.movepool = movepool
+        super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working, max_values, choices)
 
     def generate_elements(self) -> list[list[Move]]:
         data: dict[str, list[Move]] = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
