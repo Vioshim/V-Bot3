@@ -30,7 +30,7 @@ from discord.utils import utcnow
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
-from src.utils.etc import MAP_ELEMENTS, MAP_URL, WHITE_BAR, MapPair
+from src.utils.etc import MAP_ELEMENTS, WHITE_BAR, MapPair
 from src.views.characters_view import CharactersView
 
 __all__ = ("RegionViewComplex",)
@@ -108,7 +108,6 @@ class RegionViewComplex(Complex[MapPair]):
         )
         self.embed.title = "Map Selection Tool"
         self.embed.description = "Tool will also show you how many characters have been in certain areas."
-        self.embed.set_image(url=MAP_URL)
 
     @select(row=1, placeholder="Select region to read about", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
