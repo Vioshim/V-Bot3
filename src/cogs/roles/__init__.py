@@ -31,6 +31,7 @@ from discord import (
     RawMessageDeleteEvent,
     Role,
     Thread,
+    User,
     app_commands,
 )
 from discord.app_commands import Choice
@@ -234,7 +235,7 @@ class Roles(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.choices(role=[Choice(name=k, value=str(v)) for k, (_, v) in RP_SEARCH_ROLES.items()])
-    async def ping(self, interaction: Interaction, role: str, member: Optional[Member] = None):
+    async def ping(self, interaction: Interaction, role: str, member: Optional[Member | User] = None):
         """Command used to ping roles, and even users.
 
         Parameters
@@ -243,7 +244,7 @@ class Roles(commands.Cog):
             Interaction
         role : str
             Role to ping
-        member : Optional[Member], optional
+        member : Optional[Member | User], optional
             Member to ping
         """
         resp: InteractionResponse = interaction.response
@@ -290,7 +291,7 @@ class Roles(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def afk(self, ctx: Interaction, member: Optional[Member]):
+    async def afk(self, ctx: Interaction, member: Optional[Member | User]):
         """Check users' AFK Schedule
 
         Parameters

@@ -29,6 +29,7 @@ from discord import (
     Member,
     TextChannel,
     Thread,
+    User,
     app_commands,
 )
 from discord.ext import commands
@@ -199,7 +200,7 @@ class Pokedex(commands.Cog):
         move: Optional[MoveArg],
         species: Optional[SpeciesArg],
         fused: Optional[DefaultSpeciesArg],
-        member: Optional[Member],
+        member: Optional[Member | User],
         location: Optional[TextChannel],
         backstory: Optional[str],
         personality: Optional[str],

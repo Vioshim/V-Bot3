@@ -658,14 +658,14 @@ class Submission(commands.Cog):
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
-    async def get_ocs(self, ctx: Interaction, member: Optional[User], character: Optional[CharacterArg]):
+    async def get_ocs(self, ctx: Interaction, member: Optional[Member | User], character: Optional[CharacterArg]):
         """Allows to show characters
 
         Parameters
         ----------
         ctx : Interaction
             Interaction
-        member : Optional[User]
+        member : Optional[Member | User]
             Member, if not provided it's current user.
         character : Optional[CharacterArg]
             Search by name, directly
