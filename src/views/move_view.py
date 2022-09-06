@@ -234,4 +234,6 @@ class MovepoolMoveComplex(MoveView):
         if len(items1) + len(items2) <= 25 - len(items3):
             items.append(items3)
 
+        self.select_types.max_values = len(items)
+
         return items
