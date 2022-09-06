@@ -184,7 +184,9 @@ class MoveComplex(Complex[Move]):
             description="\n".join(f"> {x!r}" for x in self.choices),
             editing_original=True,
         ) as choices:
-            self.choices -= choices
+            if choices:
+                self.choices -= choices
+                self.values += [*choices]
         await self.edit(interaction, page=0)
 
 
