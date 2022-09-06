@@ -82,9 +82,13 @@ class MoveComplex(Complex[Move]):
         items = []
         if moves2 := {x for x in moves if not isinstance(x, Move)}:
             items.append(("Abilities", moves2))
-        if moves_cat := [*groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)]:
+        if moves_cat := [
+            (k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)
+        ]:
             items.append(moves_cat)
-        if moves_type := [*groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type)]:
+        if moves_type := [
+            (k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type)
+        ]:
             items.append(moves_type)
         return items
 
