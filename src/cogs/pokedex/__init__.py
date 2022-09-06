@@ -263,7 +263,7 @@ class Pokedex(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
         total: list[Character] = list(cog.ocs.values())
-        filters: list[Callable[[Character], bool]] = [lambda x: guild.get_member(x.author)]
+        filters: list[Callable[[Character], bool]] = []
         ocs = [species] if isinstance(species, Character) else total
         if name:
             name_pattern = re_compile(name, IGNORECASE)
@@ -279,6 +279,8 @@ class Pokedex(commands.Cog):
             )
         if member_id := getattr(member, "id", member):
             filters.append(lambda oc: oc.author == member_id)
+        else:
+            filters.append(lambda x: guild.get_member(x.author))
 
         if isinstance(mon := species, Species):
             if fused and mon != fused and not isinstance(fused, Fusion) and not isinstance(mon, Fusion):
