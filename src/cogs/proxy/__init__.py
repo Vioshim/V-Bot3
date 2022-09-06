@@ -150,7 +150,7 @@ class Proxy(commands.Cog):
             upsert=True,
         )
         await context(
-            content=f'NPC has been set as `{npc.name}`, you can now use it with `?npc`. Example ?npc "Hello".',
+            content=f'NPC has been set as `{npc.name}`, you can now use it with `?npci`. Example ?npci "Hello".',
             ephemeral=True,
         )
 
