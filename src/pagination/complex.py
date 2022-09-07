@@ -518,6 +518,7 @@ class Complex(Simple[_T]):
 
         if self.keep_working:
             self.choices = self.current_choices
+            self.values = set(self.values) | self.choices
         else:
             self.choices |= self.current_choices
             self.values = set(self.values) - self.choices
