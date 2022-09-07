@@ -480,8 +480,7 @@ class Complex(Simple[_T]):
 
     @property
     def current_choice(self) -> Optional[_T]:
-        if self.current_choices:
-            return self.current_choices.pop()
+        return next(iter(self.current_choices), None)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
@@ -516,14 +515,12 @@ class Complex(Simple[_T]):
 
             await interaction.followup.send(embed=embed, ephemeral=True)
 
-        if self.keep_working:
-            self.choices = self.current_choices
-            self.values = set(self.values) | self.choices
-        else:
+        if not self.keep_working:
             self.choices |= self.current_choices
-            self.values = set(self.values) - self.choices
-            if len(sct.values) == self.entries_per_page:
-                self.pos = max(self._pos - 1, 0)
+
+        self.values = set(self.values) - self.choices
+        if len(sct.values) == self.entries_per_page:
+            self.pos = max(self._pos - 1, 0)
 
         await self.edit(interaction=interaction, page=self.pos)
 
