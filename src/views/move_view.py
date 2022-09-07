@@ -225,7 +225,7 @@ class MovepoolMoveComplex(MoveComplex):
         member: Member,
         movepool: Movepool,
         target: Optional[Messageable] = None,
-        keep_working: bool = True,
+        keep_working: bool = False,
         max_values: int = 6,
         choices: set[Move] = None,
     ):
