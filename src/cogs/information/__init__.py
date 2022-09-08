@@ -80,7 +80,6 @@ channels = {
     728800301888307301: "Suggestion",
     769304918694690866: "Story",
     903627523911458816: "Storyline",
-    957711698205216799: "RP",
     839105256235335680: "Random Fact",
     723228500835958987: "Announcement",
     740606964727546026: "Question",
@@ -193,7 +192,7 @@ class AnnouncementModal(Modal):
             thread = await msg.create_thread(name=self.thread_name.value)
             await thread.add_user(interaction.user)
             match self.word:
-                case "RP" | "OC Question" | "Story" | "Storyline" | "Mission":
+                case "OC Question" | "Story" | "Storyline" | "Mission":
                     if tupper := interaction.guild.get_member(431544605209788416):
                         await thread.add_user(tupper)
 
