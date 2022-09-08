@@ -241,7 +241,7 @@ class Utilities(commands.Cog):
         await resp.send_message(embed=item.embed)
 
     @commands.command()
-    async def roll(self, ctx: commands.Context, *, expression: str):
+    async def roll(self, ctx: commands.Context, *, expression: Optional[str] = None):
         """Allows to roll dice based on 20
 
         Parameters
@@ -251,6 +251,8 @@ class Utilities(commands.Cog):
         expression : str
             Expression (Example: d20)
         """
+        if not expression:
+            expression = "d20"
         embed = Embed(
             title=f"Rolling: {expression}",
             color=Color.blurple(),
@@ -278,7 +280,7 @@ class Utilities(commands.Cog):
             await ctx.reply(embed=embed)
 
     @app_commands.command(name="roll")
-    async def slash_roll(self, ctx: Interaction, expression: str, hidden: bool = False):
+    async def slash_roll(self, ctx: Interaction, expression: Optional[str] = None, hidden: bool = False):
         """Allows to roll dice based on 20
 
         Parameters
@@ -292,6 +294,9 @@ class Utilities(commands.Cog):
         """
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=hidden, thinking=True)
+
+        if not expression:
+            expression = "d20"
 
         embed = Embed(title=f"Rolling: {expression}", color=Color.blurple(), timestamp=ctx.created_at)
 
