@@ -280,6 +280,7 @@ class Utilities(commands.Cog):
             await ctx.reply(embed=embed)
 
     @app_commands.command(name="roll")
+    @app_commands.guilds(719343092963999804)
     async def slash_roll(self, ctx: Interaction, expression: Optional[str] = None, hidden: bool = False):
         """Allows to roll dice based on 20
 
