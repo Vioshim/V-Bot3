@@ -240,8 +240,45 @@ class Utilities(commands.Cog):
         item = Move.getMetronome()
         await resp.send_message(embed=item.embed)
 
-    @app_commands.command()
-    async def roll(self, ctx: Interaction, expression: str, hidden: bool = False):
+    @commands.command()
+    async def roll(self, ctx: commands.Context, *, expression: str):
+        """Allows to roll dice based on 20
+
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        expression : str
+            Expression (Example: d20)
+        """
+        embed = Embed(
+            title=f"Rolling: {expression}",
+            color=Color.blurple(),
+            timestamp=ctx.message.created_at,
+        )
+
+        if len(embed.title) > 256:
+            embed.title = "Rolling Expression"
+
+        embed.set_image(url=WHITE_BAR)
+
+        if guild := ctx.guild:
+            embed.set_footer(text=guild.name, icon_url=guild.icon)
+
+        try:
+            value = roll(expr=expression, allow_comments=True)
+            if len(value.result) > 4096:
+                simplify_expr(value.expr)
+            embed.description = value.result
+            embed.set_thumbnail(url=f"https://dummyimage.com/512x512/FFFFFF/000000&text={value.total}")
+        except Exception as e:
+            embed.description = "Invalid expression."
+            self.bot.logger.exception("Error while rolling dice.", exc_info=e)
+        finally:
+            await ctx.reply(embed=embed)
+
+    @app_commands.command(name="roll")
+    async def slash_roll(self, ctx: Interaction, expression: str, hidden: bool = False):
         """Allows to roll dice based on 20
 
         Parameters
