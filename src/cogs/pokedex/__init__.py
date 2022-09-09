@@ -33,7 +33,7 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.utils import utcnow
+from discord.utils import MISSING, utcnow
 from yarl import URL
 
 from src.cogs.pokedex.search import (
@@ -48,13 +48,13 @@ from src.cogs.pokedex.search import (
 from src.structures.bot import CustomBot
 from src.structures.character import Character, Kind
 from src.structures.mon_typing import TypingEnum
-from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
+from structures.movepool import Movepool
 
 __all__ = ("Pokedex", "setup")
 
@@ -131,7 +131,12 @@ class Pokedex(commands.Cog):
             Move to lookup
         """
         resp: InteractionResponse = ctx.response
-        embed = Embed(title="See Movepool", color=ctx.user.color, timestamp=utcnow())
+        embed = Embed(
+            title="See Movepool",
+            description="To use this command, provide Species and/or Move.",
+            color=ctx.user.color,
+            timestamp=utcnow(),
+        )
         embed.set_image(url=WHITE_BAR)
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
@@ -156,17 +161,16 @@ class Pokedex(commands.Cog):
             movepool = fakemon.movepool
             embed.title = f"See {fakemon.species.name}'s movepool"
         else:
-            movepool = Movepool()
+            movepool = None
 
-        if not move_id:
-            view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
-        elif species:
-            if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
-                await ctx.followup.send(f"{species.name} can learn {move_id.name} through:\n{methods}.", ephemeral=True)
-            else:
-                await ctx.followup.send(f"{species.name} can not learn {move_id.name}.", ephemeral=True)
-            return
-        else:
+        view = MISSING
+        if isinstance(movepool, Movepool):
+            if move_id is None:
+                view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
+            elif species:
+                methods = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id))
+                embed.description = methods or f"{species.name} can not learn {move_id.name}."
+        elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons)
             view.silent_mode = True
@@ -180,12 +184,12 @@ class Pokedex(commands.Cog):
             embed.set_image(url=move_id.image or WHITE_BAR)
             embed.set_thumbnail(url=move_id.emoji.url)
 
-        async with view.send(embed=embed, ephemeral=True):
-            self.bot.logger.info(
-                "%s is reading %s's movepool",
-                str(ctx.user),
-                getattr(species or move_id, "name", "None"),
-            )
+        await ctx.followup.send(embed=embed, view=view, ephemeral=True)
+        self.bot.logger.info(
+            "%s is reading %s's movepool",
+            str(ctx.user),
+            getattr(species or move_id, "name", "None"),
+        )
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
