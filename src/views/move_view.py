@@ -120,11 +120,13 @@ class MoveComplex(Complex[Move]):
         return super(MoveComplex, self).menu_format()
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
-        data = dict(embed=self.embed)
-
+        data = {}
         self.values = [x for x in self.values if x not in self.choices] or self.total
         self.max_values = min(self.real_max, len(self.values))
-        self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
+
+        if self.modifying_embed:
+            data["embed"] = self.embed
+            self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
 
         if isinstance(page, int):
             self.pos = page
@@ -267,3 +269,4 @@ class MovepoolView(MoveView, MovepoolMoveComplex):
             keep_working=keep_working,
             max_values=1,
         )
+        self.modifying_embed = False

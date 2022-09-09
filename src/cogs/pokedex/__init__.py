@@ -33,7 +33,7 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.utils import MISSING, utcnow
+from discord.utils import utcnow
 from yarl import URL
 
 from src.cogs.pokedex.search import (
@@ -163,7 +163,7 @@ class Pokedex(commands.Cog):
         else:
             movepool = None
 
-        view = MISSING
+        view = None
         if isinstance(movepool, Movepool):
             if move_id is None:
                 view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
@@ -184,12 +184,16 @@ class Pokedex(commands.Cog):
             embed.set_image(url=move_id.image or WHITE_BAR)
             embed.set_thumbnail(url=move_id.emoji.url)
 
-        await ctx.followup.send(embed=embed, view=view, ephemeral=True)
         self.bot.logger.info(
             "%s is reading %s's movepool",
             str(ctx.user),
             getattr(species or move_id, "name", "None"),
         )
+
+        if view is None:
+            await ctx.followup.send(embed=embed, ephemeral=True)
+        else:
+            await view.simple_send(embed=embed, ephemeral=True)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
