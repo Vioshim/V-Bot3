@@ -117,6 +117,7 @@ def seconds(test: datetime) -> int:
 
 RP_SEARCH_ROLES = dict(
     Any=("Useful for finding Any kind of RP", 962719564167254077),
+    Casual=("Ideal for Slice of Life RP", 1017897677423378512),
     Plot=("If you need a hand with an Arc or plot.", 962719564863508510),
     Action=("Encounters that involve action such as battles, thievery, etc.", 962719565182271590),
     Narrated=("Narrate for others or get narrated.", 962719566402813992),
