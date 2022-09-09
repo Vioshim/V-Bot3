@@ -48,13 +48,13 @@ from src.cogs.pokedex.search import (
 from src.structures.bot import CustomBot
 from src.structures.character import Character, Kind
 from src.structures.mon_typing import TypingEnum
+from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
-from structures.movepool import Movepool
 
 __all__ = ("Pokedex", "setup")
 
