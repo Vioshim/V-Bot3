@@ -168,8 +168,12 @@ class Pokedex(commands.Cog):
             if move_id is None:
                 view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
             elif species:
-                methods = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id))
-                embed.description = methods or f"{species.name} can not learn {move_id.name}."
+                embed.clear_fields()
+                if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                    embed.title = f"{species.name} learns {move_id.name} by"
+                    embed.description = methods
+                else:
+                    embed.title = f"{species.name} can not learn {move_id.name}."
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons)
