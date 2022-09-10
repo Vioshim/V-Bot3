@@ -270,7 +270,7 @@ class Template(TemplateItem, Enum):
     @property
     def total_species(self) -> frozenset[Species]:
         match self:
-            case self.Pokemon:
+            case self.Pokemon | self.Chimera:
                 mon_total = Pokemon.all()
             case self.CustomMega | Template.Variant:
                 mon_total = Species.all(exclude=Mega)
@@ -282,7 +282,7 @@ class Template(TemplateItem, Enum):
                 mon_total = UltraBeast.all()
             case self.Mega:
                 mon_total = Mega.all()
-            case self.Fusion | self.Chimera:
+            case self.Fusion:
                 mon_total = Species.all()
             case _:
                 mon_total = []
@@ -494,8 +494,11 @@ class SpeciesField(TemplateField):
             return "Fakemon evolutions from this kind of Pokemon aren't possible."
         if isinstance(species, Fusion) and all(isinstance(x, CORE) for x in species.bases):
             return "Fusions require at least one common Pokemon."
-        if isinstance(species, Chimera) and not (1 <= len(species.bases) <= 3):
-            return "Chimeras require to have 1-3 species."
+        if isinstance(species, Chimera):
+            if not (1 <= len(species.bases) <= 3):
+                return "Chimeras require to have 1-3 species."
+            if any(isinstance(x, CORE) for x in species.bases):
+                return "Chimeras from this kind of Pokemon aren't possible."
 
     @classmethod
     async def on_submit(
