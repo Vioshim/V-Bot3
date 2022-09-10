@@ -28,8 +28,9 @@ from discord import (
     Webhook,
 )
 from discord.ui import Modal, TextInput
-from discord.utils import MISSING, get
+from discord.utils import MISSING, find
 from motor.motor_asyncio import AsyncIOMotorCollection
+
 from src.utils.etc import WHITE_BAR
 
 __all__ = ("CustomPerks",)
@@ -94,9 +95,9 @@ class CustomRoleModal(Modal, title="Custom Role"):
 
             if not role:
                 icon_data = icon_data or MISSING
-                AFK = get(ctx.guild.roles, name="AFK")
+                booster = find(lambda x: x.is_premium_subscriber(), ctx.guild.roles)
                 role = await ctx.guild.create_role(name=name, colour=color, display_icon=icon_data)
-                await role.edit(position=AFK.position - 1)
+                await role.edit(position=booster.position + 1)
             else:
                 await role.edit(name=name, color=color, display_icon=icon_data)
 
