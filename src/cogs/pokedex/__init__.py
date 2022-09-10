@@ -152,8 +152,12 @@ class Pokedex(commands.Cog):
                 mon_types = mon.possible_types
             else:
                 mon_types = frozenset.union(*[x.types for x in mons])
-                mon_types = [*map(set, combinations_with_replacement(mon_types, 2))]
-                mon = Chimera(mons) if len(mons) == 3 else mons.pop()
+                if len(mons) == 3:
+                    mon_types = [*map(set, combinations_with_replacement(mon_types, 2))]
+                    mon = Chimera(mons)
+                else:
+                    mon_types = [mon_types]
+                    mon = mons.pop()
 
             embed.title = f"See {mon.name}'s movepool (Possible Types below)"
             embed.description = "\n".join(
