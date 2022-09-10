@@ -155,10 +155,11 @@ class Pokedex(commands.Cog):
                 mon_types = [*map(set, combinations_with_replacement(mon_types, 2))]
                 mon = Chimera(mons) if len(mons) == 3 else mons.pop()
 
-            embed.title = f"See {mon.name}'s movepool"
+            embed.title = f"See {mon.name}'s movepool (Possible Types below)"
+            embed.description = "\n".join(
+                f"• {' '.join(str(i.emoji) for i in x)} {'/'.join(i.name for i in x)}" for x in mon_types
+            )
             movepool = mon.total_movepool
-            if info := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon_types):
-                embed.add_field(name="Possible Types", value=info)
         elif fakemon:
             species = fakemon
             movepool = fakemon.movepool
@@ -171,12 +172,12 @@ class Pokedex(commands.Cog):
             if move_id is None:
                 view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
             elif species:
-                embed.clear_fields()
                 if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
                     embed.title = f"{species.name} learns {move_id.name} by"
                     embed.description = methods
                 else:
                     embed.title = f"{species.name} can not learn {move_id.name}."
+                    embed.description = None
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons)
