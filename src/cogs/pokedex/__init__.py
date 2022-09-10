@@ -50,7 +50,7 @@ from src.structures.character import Character, Kind
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
-from src.structures.species import Fusion, Species
+from src.structures.species import Chimera, Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
@@ -112,6 +112,7 @@ class Pokedex(commands.Cog):
         ctx: Interaction,
         species: Optional[DefaultSpeciesArg],
         fused: Optional[DefaultSpeciesArg],
+        chimera: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
         move_id: Optional[MoveArg],
     ):
@@ -125,6 +126,8 @@ class Pokedex(commands.Cog):
             Species to look up info about
         fused : Optional[DefaultSpeciesArg]
             To check when fused
+        chimera : Optional[DefaultSpeciesArg]
+            To check when chimera
         fakemon : Optional[FakemonArg]
             Search fakemon species
         move_id : Optional[MoveArg]
@@ -141,16 +144,16 @@ class Pokedex(commands.Cog):
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
-        if not species:
-            species = fused
 
-        if species:
-            if fused and species != fused:
-                mon = Fusion(species, fused)
+        mons = {species, fused, chimera}
+        if mons := {x for x in mons if x is not None}:
+            if len(mons) == 2:
+                mon = Fusion(*mons)
                 mon_types = mon.possible_types
             else:
-                mon = species
-                mon_types = [species.types]
+                mon_types = [x.types for x in mons]
+                mon_types = frozenset({frozenset[TypingEnum].intersection(*mon_types)})
+                mon = Chimera(mons) if len(mons) == 3 else mons.pop()
 
             embed.title = f"See {mon.name}'s movepool"
             movepool = mon.total_movepool
