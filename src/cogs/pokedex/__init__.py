@@ -152,7 +152,7 @@ class Pokedex(commands.Cog):
                 mon_types = mon.possible_types
             else:
                 mon_types = [x.types for x in mons]
-                mon_types = frozenset({frozenset[TypingEnum].intersection(*mon_types)})
+                mon_types = frozenset({frozenset[TypingEnum].union(*mon_types)})
                 mon = Chimera(mons) if len(mons) == 3 else mons.pop()
 
             embed.title = f"See {mon.name}'s movepool"
