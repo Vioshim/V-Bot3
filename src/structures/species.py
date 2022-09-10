@@ -544,17 +544,16 @@ class Chimera(Species):
 
     def __init__(self, bases: frozenset[Species], types: frozenset[TypingEnum] = None):
         types = types or []
-        bases = {o for x in bases if (o := Species.from_ID(x) if isinstance(x, str) else x)}
+        bases = {o for x in bases if (o := Species.single_deduce(x) if isinstance(x, str) else x)}
         self.bases = frozenset(bases)
         amount = len(bases) or 1
 
         if abilities := [set(x.abilities) for x in bases]:
             abilities = set.union(*abilities)
 
-        bases = [base for base in self.bases if base.id not in ["MEW", "DITTO", "SMEARGLE"]]
-        if items := [frozenset(base.total_movepool()) for base in bases]:
-            movepool = Movepool(egg=frozenset.intersection(*items))
         movepool = Movepool()
+        for base in self.bases:
+            movepool += base.total_movepool
 
         super(Chimera, self).__init__(
             id="_".join(sorted(x.id for x in bases)),
