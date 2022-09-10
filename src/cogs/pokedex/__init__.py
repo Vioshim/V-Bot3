@@ -14,7 +14,7 @@
 
 
 from dataclasses import astuple
-from itertools import groupby
+from itertools import combinations_with_replacement, groupby
 from random import random
 from re import IGNORECASE
 from re import compile as re_compile
@@ -152,7 +152,7 @@ class Pokedex(commands.Cog):
                 mon_types = mon.possible_types
             else:
                 mon_types = [x.types for x in mons]
-                mon_types = frozenset({frozenset[TypingEnum].union(*mon_types)})
+                mon_types = [*map(set, combinations_with_replacement(frozenset({frozenset.union(*mon_types)}), 2))]
                 mon = Chimera(mons) if len(mons) == 3 else mons.pop()
 
             embed.title = f"See {mon.name}'s movepool"
