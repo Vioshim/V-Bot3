@@ -134,7 +134,8 @@ class ImageView(Basic):
             self.text = None
             await resp.edit_message(content="Removed default image.", embeds=[], view=None)
         else:
-            await resp.edit_message(content="Alright, now send the URL or Attach an image.", embeds=[])
+            sct.disabled = True
+            await resp.edit_message(content="Alright, now send the URL or Attach an image.", embeds=[], view=self)
 
             received: Message = await ctx.client.wait_for("message", check=check(ctx))
             if attachments := received.attachments:

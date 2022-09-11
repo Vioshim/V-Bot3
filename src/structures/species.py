@@ -20,7 +20,7 @@ from copy import copy
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import lru_cache
-from itertools import combinations
+from itertools import combinations_with_replacement
 from json import JSONDecoder, JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional, Type
 
@@ -170,7 +170,8 @@ class Species(metaclass=ABCMeta):
 
     @property
     def possible_types(self):
-        return frozenset({self.types} if self.types else [])
+        items = {self.types} if self.types else []
+        return frozenset(items)
 
     @property
     def total_movepool(self):
@@ -572,6 +573,9 @@ class Chimera(Species):
             abilities=abilities,
         )
 
+        if len(items := list(self.possible_types)) == 1:
+            self.types = frozenset(items[0])
+
         shapes = {x.shape for x in bases}
         if len(shapes) == 1:
             self.shape = shapes.pop()
@@ -590,13 +594,8 @@ class Chimera(Species):
         frozenset[frozenset[Typing]]
             List of sets (valid types)
         """
-        elements = [*{x.types for x in self.bases}]
-        if elements and all(x == elements[0] for x in elements):
-            return frozenset({elements[0]})
-        elements = frozenset[TypingEnum].union(*elements)
-        items = [frozenset({x}) for x in elements]
-        items.extend(combinations(elements, 2))
-        return frozenset(items)
+        mon_types = frozenset().union(*[x.types for x in self.bases])
+        return frozenset(map(frozenset[TypingEnum], combinations_with_replacement(mon_types, 2)))
 
     @property
     def evol_line(self):

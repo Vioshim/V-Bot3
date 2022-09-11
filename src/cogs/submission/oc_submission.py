@@ -565,21 +565,14 @@ class TypesField(TemplateField):
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         species = oc.species
-        if isinstance(species, (Fakemon, Variant, Fusion)):
-            mon_types = species.possible_types
+        if isinstance(species, (Fakemon, Variant, Fusion, Chimera)):
+            if not (mon_types := species.possible_types):
+                return "No possible types for current species"
             if oc.types not in mon_types:
                 return "Possible Typings: {}".format(", ".join("/".join(y.name for y in x) for x in mon_types))
-        elif isinstance(species, Chimera):
-            items = [*{x.types for x in species.bases}]
-            if not items:
-                return "Chimera needs species."
-
-            mon_types = frozenset.union(*items)
-            if not oc.types.issubset(mon_types):
-                return "Chimera requires from typings: {}.".format(", ".join(x.name for x in mon_types))
 
         if len(oc.types) > 2:
-            return "Max 2 Pokemon Types."
+            return "Max 2 Pokemon Types: ({})".format(", ".join(x.name for x in oc.types))
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -597,7 +590,7 @@ class TypesField(TemplateField):
         ephemeral: bool = False,
     ):
         species = oc.species
-        if isinstance(species, Fusion):
+        if isinstance(species, (Chimera, Fusion)):
             values = species.possible_types
             view = Complex[set[TypingEnum]](
                 member=ctx.user,
@@ -613,15 +606,10 @@ class TypesField(TemplateField):
             )
             single = True
         else:
-            if isinstance(species, Chimera):
-                elements = frozenset.union(*[x.types for x in species.bases])
-            else:
-                elements = TypingEnum
-
             view = Complex[TypingEnum](
                 member=ctx.user,
                 target=ctx,
-                values=elements,
+                values=TypingEnum,
                 max_values=2,
                 timeout=None,
                 parser=lambda x: (x.name, f"Adds the typing {x.name}"),
