@@ -271,6 +271,7 @@ class Basic(View):
                 self.message = await target.followup.send(**data, wait=True)
             except DiscordException as e:
                 target.client.logger.exception("Exception", exc_info=e)
+                data.pop("ephemeral", None)
                 self.message = await target.channel.send(**data)
             if message := self.message:
                 target.client.msg_cache.add(message.id)
