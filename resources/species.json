@@ -23715,6 +23715,7 @@
 		"SPA": 180,
 		"SPD": 20,
 		"SPE": 150,
+		"evolves_from": "DEOXYS",
 		"abilities": ["PRESSURE"],
 		"kind": "Mythical"
 	},
@@ -23735,6 +23736,7 @@
 		"SPA": 70,
 		"SPD": 160,
 		"SPE": 90,
+		"evolves_from": "DEOXYS",
 		"abilities": ["PRESSURE"],
 		"kind": "Mythical"
 	},
@@ -23755,6 +23757,7 @@
 		"SPA": 95,
 		"SPD": 90,
 		"SPE": 180,
+		"evolves_from": "DEOXYS",
 		"abilities": ["PRESSURE"],
 		"kind": "Mythical"
 	},
@@ -53436,6 +53439,7 @@
 		"SPA": 60,
 		"SPD": 100,
 		"SPE": 100,
+		"evolves_from": "KANGASKHAN",
 		"abilities": ["PARENTALBOND"],
 		"kind": "Mega"
 	},
