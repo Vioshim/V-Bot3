@@ -129,25 +129,26 @@ class ImageView(Basic):
         resp: InteractionResponse = ctx.response
 
         if "keep" in sct.values:
-            return await resp.edit_message(content="Keeping default image.", embeds=[], view=None)
+            await resp.edit_message(content="Keeping default image.", embeds=[], view=None)
         elif "remove" in sct.values:
             self.text = None
-            return await resp.edit_message(content="Removed default image.", embeds=[], view=None)
-
-        await resp.edit_message(content="Alright, now send the URL or Attach an image.", embeds=[])
-
-        received: Message = await ctx.client.wait_for("message", check=check(ctx))
-        if attachments := received.attachments:
-            self.text = attachments[0].proxy_url
-            self.received = received
-            await received.delete(delay=0)
-        elif file := await ctx.client.get_file(url=received.content, filename="image"):
-            await received.delete(delay=0)
-            self.received = foo = await ctx.channel.send(file=file)
-            self.text = self.received.attachments[0].proxy_url
-            await foo.delete(delay=0)
-        elif image := self.message.embeds[0].image:
-            self.text = image.url
+            await resp.edit_message(content="Removed default image.", embeds=[], view=None)
         else:
-            self.text = None
-        self.stop()
+            await resp.edit_message(content="Alright, now send the URL or Attach an image.", embeds=[])
+
+            received: Message = await ctx.client.wait_for("message", check=check(ctx))
+            if attachments := received.attachments:
+                self.text = attachments[0].proxy_url
+                self.received = received
+                await received.delete(delay=0)
+            elif file := await ctx.client.get_file(url=received.content, filename="image"):
+                await received.delete(delay=0)
+                self.received = foo = await ctx.channel.send(file=file)
+                self.text = self.received.attachments[0].proxy_url
+                await foo.delete(delay=0)
+            elif image := self.message.embeds[0].image:
+                self.text = image.url
+            else:
+                self.text = None
+
+        await self.delete(ctx)
