@@ -58,7 +58,7 @@ __all__ = ("Complex",)
 
 
 class DefaultModal(Modal):
-    def __init__(self, view: Complex, title: str = "Fill the information") -> None:
+    def __init__(self, view: Complex[_T], title: str = "Fill the information") -> None:
         super(DefaultModal, self).__init__(title=title)
         self.text: Optional[str] = None
         self.view = view
@@ -73,16 +73,18 @@ class DefaultModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         current = set()
-        elements = [o for x in (self.item.value or "").split(",") if (o := x.strip())]
+        elements = [o for x in str(self.item.value or "").split(",") if (o := x.strip())]
         choices = self.view.choices
         total = set(self.view.real_values) - choices
+
+        def processor(item: _T):
+            if isinstance(item, str):
+                return item
+            x, _ = self.view.parser(item)
+            return x
+
         for elem in elements:
-            if entry := process.extractOne(
-                elem,
-                total,
-                processor=lambda x: self.view.parser(x)[0],
-                score_cutoff=85,
-            ):
+            if entry := process.extractOne(elem, total, processor=processor, score_cutoff=85):
                 max_amount = self.view.real_max or self.view.max_values
                 if len(choices) < max_amount - len(current):
                     current.add(entry[0])
