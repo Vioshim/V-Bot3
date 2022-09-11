@@ -184,9 +184,7 @@ class Pokedex(commands.Cog):
                     embed.description = None
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
-            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons)
-            view.silent_mode = True
-            view.keep_working = True
+            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, keep_working=True)
             embed = view.embed
             embed.description = (
                 f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."

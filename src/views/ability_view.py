@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from random import sample
 from typing import Optional, Union
 
 from discord import (
@@ -52,8 +51,6 @@ class AbilityView(Complex[Ability | SpAbility]):
         keep_working: bool = False,
         max_values: int = 1,
     ):
-        placeholder = ", ".join(["Ability"] * max_values)
-        default = ", ".join(x.name for x in sample(abilities, 2))
         super(AbilityView, self).__init__(
             member=member,
             target=target,
@@ -64,12 +61,7 @@ class AbilityView(Complex[Ability | SpAbility]):
             sort_key=lambda x: x.name,
             emoji_parser=ability_emoji_parser,
             max_values=max_values,
-            text_component=TextInput(
-                label="Ability",
-                style=TextStyle.paragraph,
-                placeholder=placeholder,
-                default=default,
-            ),
+            text_component=TextInput(label="Ability", placeholder=", ".join(["Ability"] * max_values)),
         )
         self.embed.title = "Select an Ability"
 

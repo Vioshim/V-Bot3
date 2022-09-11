@@ -17,7 +17,7 @@ from functools import lru_cache
 from typing import Any, Iterable, Optional
 
 from discord import Color, Embed, Interaction, InteractionResponse, Member
-from discord.ui import Select, select
+from discord.ui import Select, TextInput, select
 
 from src.pagination.complex import Complex
 from src.structures.mon_typing import TypingEnum
@@ -34,6 +34,8 @@ class SpeciesComplex(Complex[Species]):
         target: Interaction,
         mon_total: Iterable[Species],
         max_values: int = 1,
+        silent_mode: bool = True,
+        keep_working: bool = False,
     ):
 
         self.total = mon_total = {x for x in mon_total if not x.banned}
@@ -76,11 +78,15 @@ class SpeciesComplex(Complex[Species]):
             values=mon_total,
             timeout=None,
             parser=parser,
-            keep_working=False,
+            keep_working=keep_working,
             sort_key=lambda x: x.name,
             max_values=max_values,
-            silent_mode=True,
+            silent_mode=silent_mode,
             real_max=max_values,
+            text_component=TextInput(
+                label="Species",
+                placeholder=", ".join(["Species"] * max_values),
+            ),
         )
         self.embed.title = "Select Species"
         self.data = {}
