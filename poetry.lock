@@ -93,7 +93,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "4.0.0a2.post5"
+version = "4.0.0a2.post6"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -104,7 +104,7 @@ develop = false
 anyio = ">=3.6,<4.0"
 attrs = ">=21.3"
 tenacity = ">=8.0,<9.0"
-typing-extensions = {version = "*", markers = "python_version < \"3.11\""}
+typing-extensions = {version = ">=4.0", markers = "python_version < \"3.11\""}
 tzlocal = ">=3.0"
 
 [package.extras]
@@ -121,7 +121,7 @@ test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "f
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "4fff22e17cb915f637e96a51ddd8f7fd569eed07"
+resolved_reference = "9b72c6171741fc9492c0a468d40829c8118e61b0"
 
 [[package]]
 name = "astunparse"
@@ -982,7 +982,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "rapidfuzz"
-version = "2.6.1"
+version = "2.7.0"
 description = "rapid fuzzy string matching"
 category = "main"
 optional = false

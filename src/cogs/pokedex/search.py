@@ -398,8 +398,8 @@ class OCGroupByShape(OCGroupBy):
 class OCGroupByAge(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.age or 0)
-        return {str(k or "Unknown"): frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
+        ocs = sorted(ocs, key=lambda x: x.age.key)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age.name)}
 
 
 class OCGroupBySpecies(OCGroupBy):

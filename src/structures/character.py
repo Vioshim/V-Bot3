@@ -52,6 +52,64 @@ from src.utils.imagekit import Fonts, ImageKit
 __all__ = ("Character", "CharacterArg", "Kind")
 
 
+class AgeGroup(Enum):
+    Unknown = (None, None)
+    Child = (None, 13)
+    Adolescent = (13, 24)
+    Adult = (24, 50)
+    Elderly = (50, 100)
+    Ancient = (100, None)
+
+    @property
+    def key(self) -> tuple[int, int]:
+        a, b = self.value
+        return a or 0, b or 0
+
+    @classmethod
+    def parse(cls, item: AgeGroup | Optional[int] | str):
+        if isinstance(item, AgeGroup):
+            return item
+        if isinstance(item, int) or item is None:
+            return cls.from_number(item)
+        if isinstance(item, str) and (
+            foo := process.extractOne(
+                item,
+                cls,
+                processor=lambda x: getattr(x, "name", x),
+                score_cutoff=85,
+            )
+        ):
+            return foo[0]
+        return cls.Unknown
+
+    @classmethod
+    def from_number(cls, item: Optional[int]):
+        for x in cls:
+            a, b = x.value
+            if any(
+                (
+                    not a and b and item >= b,
+                    a and not b and item <= a,
+                    a and b and a <= item <= b,
+                )
+            ):
+                return x
+
+        return cls.Unknown
+
+    @property
+    def description(self):
+        match self.value:
+            case (None, None):
+                return "The age is Unknown."
+            case (a, None):
+                return "Has lived for long enough."
+            case (None, b):
+                return "Considered a child."
+            case (a, b):
+                return f"{a} - {b} (Rough equivalent in human years)"
+
+
 class Kind(Enum):
     Common = Pokemon
     Legendary = Legendary
@@ -131,7 +189,7 @@ class Character:
     thread: Optional[int] = None
     server: int = 719343092963999804
     name: str = ""
-    age: Optional[int] = None
+    age: AgeGroup = AgeGroup.Unknown
     pronoun: Pronoun = Pronoun.Them
     backstory: Optional[str] = None
     personality: Optional[str] = None
@@ -173,6 +231,7 @@ class Character:
         elif self.species:
             data["species"] = self.species.id
 
+        data["age"] = self.age.name
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
@@ -223,7 +282,7 @@ class Character:
         self.moveset = Move.deduce_many(*self.moveset)
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun.deduce(self.pronoun)
-        self.age = int_check(self.age, 13, 100)
+        self.age = AgeGroup.parse(self.age)
         if not self.can_have_special_abilities:
             self.sp_ability = None
         if self.hidden_power:
@@ -432,7 +491,7 @@ class Character:
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]
         c_embed.add_field(name="Pronoun", value=self.pronoun.name)
-        c_embed.add_field(name="Age", value=self.age or "Unknown")
+        c_embed.add_field(name="Age", value=self.age.name)
 
         if self.species and self.species.name:
             match self.kind:
@@ -687,7 +746,7 @@ class Character:
             """,
             self.id,
             self.name,
-            self.age,
+            self.age.name,
             self.pronoun.name,
             self.backstory,
             self.extra,
@@ -808,7 +867,7 @@ class Character:
         types = "/".join(i.name for i in self.types)
         name = self.kind.name if self.kind else "Error"
         species = self.species.name if self.species else "None"
-        return f"{name}: {species}, Age: {self.age}, Types: {types}"
+        return f"{name}: {species}, Age: {self.age.name}, Types: {types}"
 
     @classmethod
     def process(cls, **kwargs) -> Character:
@@ -861,8 +920,10 @@ class Character:
             if species := method(aux):
                 data["species"] = species
 
-        if age := common_pop_get(data, "age", "years"):
-            data["age"] = int_check(age, 13, 100)
+        if isinstance(age := common_pop_get(data, "age", "years"), str):
+            if age.isdigit():
+                age = int_check(age, 13, 100)
+            data["age"] = AgeGroup.parse(age)
 
         if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
             data["pronoun"] = Pronoun.deduce(pronoun_info)

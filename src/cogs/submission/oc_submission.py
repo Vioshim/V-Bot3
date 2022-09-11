@@ -44,7 +44,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
-from src.structures.character import Character
+from src.structures.character import AgeGroup, Character
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -64,7 +64,6 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
-from src.utils.functions import int_check
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
@@ -400,11 +399,6 @@ class AgeField(TemplateField):
     description = "Optional. Fill the OC's Age"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.age and not (13 <= oc.age <= 99):
-            return "Invalid Age"
-
-    @classmethod
     async def on_submit(
         cls,
         ctx: Interaction,
@@ -413,18 +407,23 @@ class AgeField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        text_view = ModernInput(member=ctx.user, target=ctx)
-        age = str(oc.age) if oc.age else "Unknown"
-        handler = text_view.handle(
-            label="Write the character's Age.",
-            placeholder=f"> {age}",
-            default=age,
-            required=False,
-            ephemeral=ephemeral,
+        view = Complex[AgeGroup](
+            member=ctx.user,
+            target=ctx,
+            timeout=None,
+            values=AgeGroup,
+            parser=lambda x: (x.name, x.description),
+            sort_key=lambda x: x.key,
+            silent_mode=True,
         )
-        async with handler as answer:
-            if isinstance(answer, str):
-                oc.age = int_check(answer, 13, 99)
+        async with view.send(
+            title="Select the character's Age. Current below",
+            description=f"> {oc.age.name}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as age:
+            if isinstance(age, AgeGroup):
+                oc.age = age
                 progress.add(cls.name)
 
 
@@ -446,7 +445,6 @@ class PronounField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        default = getattr(oc.pronoun, "name", "Them")
         view = Complex[Pronoun](
             member=ctx.user,
             target=ctx,
@@ -457,15 +455,15 @@ class PronounField(TemplateField):
             text_component=TextInput(
                 label="Pronoun",
                 placeholder="He | She | Them",
-                default=default,
+                default=oc.pronoun.name,
                 min_length=2,
                 max_length=4,
             ),
             silent_mode=True,
         )
         async with view.send(
-            title="Write the character's Pronoun. Current below",
-            description=f"> {default}",
+            title="Select the character's Pronoun. Current below",
+            description=f"> {oc.pronoun.name}",
             single=True,
             ephemeral=ephemeral,
         ) as pronoun:

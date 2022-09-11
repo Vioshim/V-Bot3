@@ -43,10 +43,9 @@ from src.cogs.pokedex.search import (
     GroupByArg,
     MoveArg,
     SpeciesArg,
-    age_parser,
 )
 from src.structures.bot import CustomBot
-from src.structures.character import Character, Kind
+from src.structures.character import AgeGroup, Character, Kind
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -224,7 +223,7 @@ class Pokedex(commands.Cog):
         extra: Optional[str],
         sp_ability: Optional[str],
         pronoun: Optional[Pronoun],
-        age: Optional[str],
+        age: Optional[AgeGroup],
         group_by: Optional[GroupByArg],
         amount: Optional[str],
     ):
@@ -262,8 +261,8 @@ class Pokedex(commands.Cog):
             Any words to look for in Sp Abilities
         pronoun : Optional[Pronoun]
             Pronoun to Look for
-        age : Optional[str]
-            OC's age. e.g. 18-24, 13, >20
+        age : Optional[AgeGroup]
+            OC's Age group.
         group_by : Optional[GroupByArg]
             Group by method
         amount : amount
@@ -286,7 +285,7 @@ class Pokedex(commands.Cog):
             name_pattern = re_compile(name, IGNORECASE)
             filters.append(lambda oc: name_pattern.search(oc.name))
         if age:
-            filters.append(lambda oc: age_parser(age, oc))
+            filters.append(lambda oc: oc.age == age)
         if isinstance(location, Thread):
             location = location.parent
         if isinstance(location, TextChannel):
