@@ -84,16 +84,22 @@ class AgeGroup(Enum):
 
     @classmethod
     def from_number(cls, item: Optional[int]):
-        for x in cls:
-            a, b = x.value
-            if item and any(
-                (
-                    not a and b and item >= b,
-                    a and not b and item <= a,
-                    a and b and a <= item <= b,
-                )
-            ):
-                return x
+        if item:
+
+            if item < 13:
+                return cls.Child
+
+            if 13 <= item < 24:
+                return cls.Adolescent
+
+            if 24 <= item < 50:
+                return cls.Adult
+
+            if 50 <= item < 100:
+                return cls.Elderly
+
+            if item > 100:
+                return cls.Ancient
 
         return cls.Unknown
 
