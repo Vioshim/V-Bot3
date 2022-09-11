@@ -31568,6 +31568,7 @@
 		"SPD": 100,
 		"SPE": 46,
 		"abilities": ["OVERCOAT"],
+		"evolves_from": "ENAMORUS",
 		"kind": "Legendary"
 	},
 	{
