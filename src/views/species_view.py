@@ -67,10 +67,8 @@ class SpeciesComplex(Complex[Species]):
                 Variants=self.reference2.get(x, 0),
             )
             if text := ", ".join(f"{x}: {y}" for x, y in data.items() if y):
-                phrase = f"{sum(data.values())} OCs ({text})"
-            else:
-                phrase = "Unused Species."
-            return x.name, phrase
+                return x.name, f"{sum(data.values())} OCs ({text})"
+            return x.name, None
 
         super(SpeciesComplex, self).__init__(
             member=member,
