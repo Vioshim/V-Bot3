@@ -66,13 +66,20 @@ class DefaultModal(Modal):
             self.item = item
             self.add_item(self.item)
 
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        resp: InteractionResponse = interaction.response
+        await resp.send_message("An error has occurred.", ephemeral=True)
+        logger.error("Ignoring exception in modal %r:", self, exc_info=error)
+
     async def on_submit(self, interaction: Interaction) -> None:
         current = set()
-        for elem in map(lambda x: x.strip(), (self.item.value or "").split(",")):
-            choices = self.view.choices
+        elements = [o for x in (self.item.value or "").split(",") if (o := x.strip())]
+        choices = self.view.choices
+        total = set(self.view.real_values) - choices
+        for elem in elements:
             if entry := process.extractOne(
                 elem,
-                self.view.real_values,
+                total,
                 processor=lambda x: self.view.parser(x)[0],
                 score_cutoff=85,
             ):

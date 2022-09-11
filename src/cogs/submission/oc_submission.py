@@ -84,15 +84,16 @@ class TemplateItem:
         self.description = data.get("description", "")
         modifier = data.get("modifier", {})
         self.custom = data.get("custom", False)
-        default = {
-            "Name": "Name",
-            "Species": "Species",
-            "Types": "Type, Type",
-            "Age": "Age",
-            "Pronoun": "He/She/Them",
-            "Abilities": "Ability, Ability",
-            "Moveset": "Move, Move, Move, Move, Move, Move",
-        }
+        default = dict(
+            Name="Name",
+            Species="Species",
+            Types="Type, Type",
+            Age="Age",
+            Pronoun="He/She/Them",
+            Abilities="Ability, Ability",
+            Moveset="Move, Move, Move, Move, Move, Move",
+        )
+
         exclude = data.get("exclude", [])
         fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
         self.fields = frozendict(fields)
