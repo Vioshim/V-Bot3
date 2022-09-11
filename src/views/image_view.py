@@ -59,7 +59,12 @@ def check(ctx: Interaction):
 
 
 class ImageView(Basic):
-    def __init__(self, member: Member | User, target: _M, default_img: File | str | Asset = None):
+    def __init__(
+        self,
+        member: Member | User,
+        target: _M,
+        default_img: File | str | Asset = None,
+    ):
         super(ImageView, self).__init__(member=member, target=target, timeout=None)
         if isinstance(default_img, str):
             self.embed.set_image(url=default_img)
@@ -71,7 +76,6 @@ class ImageView(Basic):
         self.embed.title = "Image"
         self.received: Optional[Message] = None
         self.text: Optional[str] = default_img
-        self.default_image.disabled = not default_img
 
     @asynccontextmanager
     async def send(self, **kwargs):
