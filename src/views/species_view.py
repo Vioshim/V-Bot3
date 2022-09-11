@@ -138,7 +138,7 @@ class SpeciesComplex(Complex[Species]):
 
         return super(SpeciesComplex, self).menu_format()
 
-    @select(placeholder="Filter by Typings", custom_id="filter", max_values=2)
+    @select(placeholder="Filter by Typings", custom_id="filter", max_values=2, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
         resp: InteractionResponse = interaction.response
 

@@ -491,7 +491,7 @@ class Complex(Simple[_T]):
     def current_choice(self) -> Optional[_T]:
         return next(iter(self.current_choices), None)
 
-    @select(row=1, placeholder="Select the elements", custom_id="selector")
+    @select(placeholder="Select the elements", row=1, custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         """Method used to select values from the pagination
 
@@ -552,6 +552,7 @@ class Complex(Simple[_T]):
         custom_id="writer",
         style=ButtonStyle.blurple,
         disabled=False,
+        row=4,
     )
     async def message_handler(self, interaction: Interaction, _: Button):
         response: InteractionResponse = interaction.response
