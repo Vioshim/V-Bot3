@@ -86,7 +86,7 @@ class AgeGroup(Enum):
     def from_number(cls, item: Optional[int]):
         for x in cls:
             a, b = x.value
-            if any(
+            if item and any(
                 (
                     not a and b and item >= b,
                     a and not b and item <= a,
