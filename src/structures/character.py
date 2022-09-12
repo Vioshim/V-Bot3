@@ -912,9 +912,13 @@ class Character:
             (species := Fusion.deduce(data.pop("fusion", "")))
             or (species := Chimera.deduce(data.pop("chimera", "")))
             or (
-                (aux := (common_pop_get(data, "species", "pokemon") or "").split(","))
-                and (len(aux) == 1 and (species := Species.single_deduce(aux)))
-                or (aux and (species := Species.any_deduce(aux, chimera=True)))
+                (
+                    (
+                        (aux := (common_pop_get(data, "species", "pokemon") or "").split(","))
+                        and (len(aux) == 1 and (species := Species.single_deduce(aux)))
+                    )
+                    or (aux and (species := Species.any_deduce(aux, chimera=True)))
+                )
             )
         ):
             data["species"] = species
