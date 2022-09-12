@@ -353,6 +353,8 @@ class Species(metaclass=ABCMeta):
         Optional[Type[Species]]
             result
         """
+        if "," not in item:
+            return cls.single_deduce(item)
         if items := set(cls.deduce(item)):
             if chimera:
                 return Chimera(items)
