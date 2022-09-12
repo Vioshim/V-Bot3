@@ -53,12 +53,12 @@ __all__ = ("Character", "CharacterArg", "Kind")
 
 
 class AgeGroup(Enum):
-    Unknown = (None, None)
-    Child = (None, 13)
-    Adolescent = (13, 24)
-    Adult = (24, 50)
-    Elderly = (50, 100)
-    Ancient = (100, None)
+    Unknown = None, None
+    Child = None, 14
+    Adolescent = 14, 25
+    Adult = 25, 50
+    Elderly = 50, 100
+    Ancient = 100, None
 
     @property
     def key(self) -> tuple[int, int]:
@@ -84,24 +84,16 @@ class AgeGroup(Enum):
 
     @classmethod
     def from_number(cls, item: Optional[int]):
+        data = cls.Unknown
         if item:
+            for x in cls:
+                a, b = x.value
+                a = a or 0
+                b = b or item
 
-            if item < 13:
-                return cls.Child
-
-            if 13 <= item < 24:
-                return cls.Adolescent
-
-            if 24 <= item < 50:
-                return cls.Adult
-
-            if 50 <= item < 100:
-                return cls.Elderly
-
-            if item > 100:
-                return cls.Ancient
-
-        return cls.Unknown
+                if a <= item < b:
+                    data = x
+        return data
 
     @property
     def description(self):
@@ -113,7 +105,7 @@ class AgeGroup(Enum):
             case (None, b):
                 return "Considered a child."
             case (a, b):
-                return f"{a} - {b} (Rough equivalent in human years)"
+                return f"{a} - {b - 1} (Rough equivalent in human years)"
 
 
 class Kind(Enum):
