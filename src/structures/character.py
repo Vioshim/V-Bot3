@@ -912,11 +912,12 @@ class Character:
             data["species"] = species
         elif species := Chimera.deduce(data.pop("chimera", "")):
             data["species"] = species
-        else:
-            aux = common_pop_get(data, "species", "pokemon") or ""
-            method = Species.any_deduce if "," in aux else Species.single_deduce
-            if species := method(aux):
-                data["species"] = species
+        elif (
+            (aux := (common_pop_get(data, "species", "pokemon") or "").split(","))
+            and (len(aux) == 1 and (species := Species.single_deduce(aux)))
+            or (aux and (species := Species.any_deduce(aux, chimera=True)))
+        ):
+            data["species"] = species
 
         if isinstance(age := common_pop_get(data, "age", "years"), str):
             if age.isdigit():
