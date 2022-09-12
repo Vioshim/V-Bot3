@@ -248,12 +248,12 @@ class AnnouncementView(View):
     @select(placeholder="Select Features", max_values=3)
     async def features(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        if roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := ctx.guild.get_role(int(x)))):
+        if str(ctx.guild_id) in sct.values:
+            self.kwargs["content"] = "@everyone"
+        elif roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := ctx.guild.get_role(int(x)))):
             self.kwargs["content"] = roles
         elif "supporters" in sct.values:
             self.kwargs["content"] = "<@&967980442919784488>"
-        elif "@everyone" in sct.values:
-            self.kwargs["content"] = "@everyone"
         else:
             self.kwargs["content"] = None
 
