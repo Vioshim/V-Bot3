@@ -562,12 +562,14 @@ class TypesField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        species = oc.species
-        if isinstance(species, (Fakemon, Variant, Fusion, Chimera)):
+        if isinstance(species := oc.species, Species):
             if not (mon_types := species.possible_types):
                 return "No possible types for current species"
             if oc.types not in mon_types:
                 return "Possible Typings: {}".format(", ".join("/".join(y.name for y in x) for x in mon_types))
+
+        if not oc.types:
+            return "Types have not been specified."
 
         if len(oc.types) > 2:
             return "Max 2 Pokemon Types: ({})".format(", ".join(x.name for x in oc.types))

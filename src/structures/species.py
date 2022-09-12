@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from copy import copy
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import lru_cache
@@ -646,9 +645,6 @@ class CustomMega(Species):
         if isinstance(base, str):
             base = Species.from_ID(base)
 
-        if not types:
-            types = base.types
-
         super(CustomMega, self).__init__(
             id=base.id,
             name=f"Mega {base.name}",
@@ -661,9 +657,9 @@ class CustomMega(Species):
             SPA=base.SPA,
             SPD=base.SPD,
             SPE=base.SPE,
-            types=types,
+            types=types or base.types.copy(),
             movepool=base.movepool,
-            abilities=copy(base.abilities),
+            abilities=base.abilities.copy(),
             evolves_from=base.id,
         )
         self.base = base
@@ -743,9 +739,9 @@ class Variant(Species):
             SPA=base.SPA,
             SPD=base.SPD,
             SPE=base.SPE,
-            types=types or base.types,
-            movepool=movepool or copy(base.movepool),
-            abilities=abilities or copy(base.abilities),
+            types=types or base.types.copy(),
+            movepool=movepool or base.movepool.copy(),
+            abilities=abilities or base.abilities.copy(),
             base_image=base.base_image,
             base_image_shiny=base.base_image_shiny,
             female_image=base.female_image,
