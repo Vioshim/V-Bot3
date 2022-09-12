@@ -548,8 +548,7 @@ class Chimera(Species):
         self.bases = frozenset(bases)
         amount = len(bases) or 1
 
-        if abilities := [set(x.abilities) for x in bases]:
-            abilities = set.union(*abilities)
+        abilities = frozenset().union(*[frozenset(x.abilities) for x in bases])
 
         movepool = Movepool()
         for base in self.bases:
@@ -643,7 +642,7 @@ class CustomMega(Species):
     def __init__(self, base: Species, types: frozenset[TypingEnum] = None):
 
         if isinstance(base, str):
-            base = Species.from_ID(base)
+            base = Species.single_deduce(base)
 
         super(CustomMega, self).__init__(
             id=base.id,
@@ -725,8 +724,10 @@ class Variant(Species):
         abilities: frozenset[Ability] = None,
         movepool: Optional[Movepool] = None,
     ):
+
         if isinstance(base, str):
-            base = Species.from_ID(base)
+            base = Species.single_deduce(base)
+
         super(Variant, self).__init__(
             id=base.id,
             name=name.title(),
@@ -824,9 +825,9 @@ class Fusion(Species):
 
     def __init__(self, mon1: Species, mon2: Species):
         if isinstance(mon1, str):
-            mon1 = Species.from_ID(mon1)
+            mon1 = Species.single_deduce(mon1)
         if isinstance(mon2, str):
-            mon2 = Species.from_ID(mon2)
+            mon2 = Species.single_deduce(mon2)
 
         ids = sorted((mon1.id, mon2.id))
         names = sorted((mon1.name, mon2.name))
@@ -847,8 +848,6 @@ class Fusion(Species):
             banned=mon1.banned or mon2.banned,
             movepool=mon1.movepool + mon2.movepool,
             abilities=abilities,
-            evolves_from=None,
-            evolves_to=frozenset(),
         )
         if len(items := list(self.possible_types)) == 1:
             self.types = frozenset(items[0])
