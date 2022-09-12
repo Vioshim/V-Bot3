@@ -356,11 +356,11 @@ class Species(metaclass=ABCMeta):
         if "," not in item and "_" not in item:
             return cls.single_deduce(item)
         if items := set(cls.deduce(item)):
+            if len(items) == 3 and chimera:
+                return Chimera(items)
             if len(items) == 2:
                 mon1, mon2 = items
                 return Fusion(mon1=mon1, mon2=mon2)
-            if chimera:
-                return Chimera(items)
             return items.pop()
 
     @classmethod
