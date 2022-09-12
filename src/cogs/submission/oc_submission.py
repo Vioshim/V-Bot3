@@ -1096,6 +1096,8 @@ class CreationOCView(Basic):
 
     async def update(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
+        if self.is_finished():
+            return
         self.setup()
         embeds = self.embeds
         files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
