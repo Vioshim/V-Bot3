@@ -13,11 +13,13 @@
 # limitations under the License.
 
 
+from contextlib import suppress
 from typing import Optional
 
 from discord import (
     ButtonStyle,
     Color,
+    DiscordException,
     Embed,
     Guild,
     Interaction,
@@ -32,7 +34,6 @@ from discord import (
     TextChannel,
 )
 from discord.ext import commands
-from discord.ext.commands.converter import BadInviteArgument, InviteConverter
 from discord.ui import Button, Select, View, button, select
 from discord.utils import find, get, utcnow
 
@@ -120,7 +121,6 @@ class InviteView(View):
 class Inviter(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
-        self.adapt = InviteConverter()
         self.ready = False
         self.message: Optional[Message] = None
         self.view: Optional[InviterView] = None
@@ -179,7 +179,11 @@ class Inviter(commands.Cog):
         if not reference:
             reference = ctx.message.reference.resolved
         if not invite and (invite_url := INVITE.search(reference.content) or INVITE.search(ctx.message.content)):
-            invite = await self.adapt.convert(ctx=ctx, argument=invite_url.group(1))
+            with suppress(DiscordException):
+                invite = await self.bot.fetch_invite(url=invite_url.group(1))
+
+        if invite is None:
+            return await ctx.reply("Invalid URL", delete_after=2)
 
         view = View()
         view.add_item(Button(label="Click Here to Join", url=invite.url))
@@ -236,11 +240,9 @@ class Inviter(commands.Cog):
                 await ctx.delete(delay=0)
             return
 
-        context = await self.bot.get_context(ctx)
-
         try:
-            invite = await self.adapt.convert(ctx=context, argument=match.group(1))
-        except BadInviteArgument:
+            invite = await self.bot.fetch_invite(url=match.group(1))
+        except DiscordException:
             return
 
         guild: Guild = ctx.guild
@@ -249,8 +251,7 @@ class Inviter(commands.Cog):
         if not isinstance(invite_guild := invite.guild, PartialInviteGuild) or invite_guild == guild:
             return
 
-        mod_ch = find(lambda x: "mod-chat" in x.name, guild.channels)
-        if not mod_ch:
+        if not (mod_ch := find(lambda x: "mod-chat" in x.name, guild.channels)):
             return
 
         generator = Embed(
