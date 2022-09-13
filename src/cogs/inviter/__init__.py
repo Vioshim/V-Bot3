@@ -178,8 +178,7 @@ class Inviter(commands.Cog):
         """
         if not reference:
             reference = ctx.message.reference.resolved
-        if not invite:
-            invite_url = INVITE.search(reference.content)
+        if not invite and (invite_url := INVITE.search(reference.content) or INVITE.search(ctx.message.content)):
             invite = await self.adapt.convert(ctx=ctx, argument=invite_url.group(1))
 
         view = View()
