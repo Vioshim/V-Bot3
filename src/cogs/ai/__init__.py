@@ -112,7 +112,6 @@ class AiCog(commands.Cog):
             self.msg_cache.pop(item, None)
 
     @commands.command()
-    @commands.is_owner()
     @commands.guild_only()
     async def ai(self, ctx: commands.Context, *, text: str):
         """OpenAI Generator
