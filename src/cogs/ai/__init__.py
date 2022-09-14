@@ -15,8 +15,6 @@
 
 from chronological import cleaned_completion
 from discord import (
-    Colour,
-    Embed,
     Message,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
@@ -117,16 +115,8 @@ class AiCog(commands.Cog):
     @commands.guild_only()
     async def ai(self, ctx: commands.Context, *, text: str):
         data = await cleaned_completion(text, engine="text-davinci-002")
-        if isinstance(data, list):
-            data = "\n".join(data)
-        await ctx.reply(
-            embed=Embed(
-                title="Open AI (Generated Response)",
-                color=Colour.blurple(),
-                description=data,
-                timestamp=ctx.message.created_at,
-            )
-        )
+        data = "\n".join(data) if isinstance(data, list) else data
+        await ctx.reply(content=data)
 
 
 async def setup(bot: CustomBot) -> None:
