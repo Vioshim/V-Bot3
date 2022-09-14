@@ -15,6 +15,7 @@
 
 from chronological import cleaned_completion
 from discord import (
+    Embed,
     Message,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
@@ -114,9 +115,20 @@ class AiCog(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def ai(self, ctx: commands.Context, *, text: str):
+        """OpenAI Generator
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context
+        text : str
+            Text
+        """
         data = await cleaned_completion(text, engine="text-davinci-002", max_tokens=4000)
-        data = "\n".join(data) if isinstance(data, list) else data
-        await ctx.reply(content=data)
+        if len(text := "\n".join(data) if isinstance(data, list) else str(data)) <= 2000:
+            await ctx.reply(content=text)
+        else:
+            await ctx.reply(embed=Embed(description=text))
 
 
 async def setup(bot: CustomBot) -> None:
