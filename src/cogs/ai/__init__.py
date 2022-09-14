@@ -135,6 +135,7 @@ class AiCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
+    @commands.is_owner()
     async def ai(self, ctx: commands.Context, *, text: str):
         """OpenAI Generator
 
