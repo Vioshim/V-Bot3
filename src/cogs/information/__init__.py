@@ -495,12 +495,11 @@ class Information(commands.Cog):
                 avatar_url=member.display_avatar.url,
             )
 
-    @commands.Cog.listener(name="on_member_update")
-    async def boosting(self, past: Member, now: Member):
-        if now.guild.id != 719343092963999804:
+    @commands.Cog.listener()
+    async def on_member_update(self, past: Member, now: Member):
+        if now.guild.id != 719343092963999804 or past.premium_since == now.premium_since:
             return
-        if past.premium_since == now.premium_since:
-            return
+
         if past.premium_since and not now.premium_since:
             embed = Embed(
                 title="Has un-boosted the Server!",
@@ -537,43 +536,6 @@ class Information(commands.Cog):
             username=now.display_name,
             avatar_url=now.display_avatar.url,
         )
-
-    @commands.Cog.listener(name="on_member_update")
-    async def user_changes(self, past: Member, now: Member):
-        if now.guild.id != 719343092963999804:
-            return
-
-        if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
-            return
-
-        log = await self.bot.webhook(1001125143071965204, reason="Logging")
-
-        embed = Embed(color=Colour.blurple(), timestamp=utcnow())
-        embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
-        embed.set_image(url=WHITE_BAR)
-
-        kwargs = dict(
-            content=now.mention,
-            thread=Object(id=1001125686230126643),
-            username=now.display_name,
-            avatar_url=now.display_avatar.url,
-        )
-
-        if past.display_avatar != now.display_avatar:
-
-            file1 = await past.display_avatar.to_file()
-            file2 = await now.display_avatar.to_file()
-            kwargs["embeds"] = [
-                embed.copy().set_thumbnail(url=f"attachment://{file1.filename}"),
-                embed.copy().set_thumbnail(url=f"attachment://{file2.filename}"),
-            ]
-            kwargs["files"] = [file1, file2]
-        else:
-            embed.add_field(name="Former", value=past.display_name)
-            embed.add_field(name="Current", value=now.display_name)
-            kwargs["embed"] = embed
-
-        await log.send(**kwargs)
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: Guild, user: Member | User):

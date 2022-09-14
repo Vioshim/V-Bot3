@@ -20,7 +20,9 @@ from typing import Optional
 from discord import (
     AllowedMentions,
     Color,
+    DiscordException,
     Embed,
+    ForumChannel,
     Guild,
     Interaction,
     InteractionResponse,
@@ -55,7 +57,6 @@ from src.structures.move import Move
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
-from src.views.rp_view import RPView
 
 __all__ = ("Submission", "setup")
 
@@ -196,7 +197,7 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
-    async def list_update(self, member: Object) -> int:
+    async def list_update(self, member: Object):
         """This function updates an user's character list message
 
         Parameters
@@ -207,45 +208,44 @@ class Submission(commands.Cog):
         if isinstance(member, int):
             member = Object(id=member)
 
-        if not (channel := self.bot.get_channel(1005360320585400390)):
-            channel = await self.bot.fetch_channel(1005360320585400390)
+        if not (channel := self.bot.get_channel(1019686568644059136)):
+            channel: ForumChannel = await self.bot.fetch_channel(1019686568644059136)
 
-        if oc_list := self.oc_list.get(member.id):
+        db = self.bot.mongo_db("Roleplayers")
+
+        thread = None
+        if item := await db.find_one({"user": member.id}):
             try:
-                msg = PartialMessage(channel=channel, id=oc_list)
-                await msg.fetch()
-            except NotFound:
-                oc_list = None
+                thread: Thread = await channel.guild.fetch_channel(item["id"])
+            except DiscordException:
+                thread = None
 
-        if not oc_list:
-            message = await channel.send(
-                content=f"<@{member.id}>",
-                allowed_mentions=AllowedMentions(users=True),
-            )
-            if user := channel.guild.get_member(member.id):
-                thread = await message.create_thread(name=user.display_name)
-                await thread.add_user(user)
+        if not thread:
+            if isinstance(member, User):
+                file = await member.display_avatar.with_size(4096).to_file()
+                x = await channel.create_thread(
+                    name=member.display_name,
+                    content=member.mention,
+                    file=file,
+                    allowed_mentions=AllowedMentions(users=True),
+                )
             else:
-                thread = await message.create_thread(name=f"OCs⎱{member.id}")
+                x = await channel.create_thread(
+                    content=f"<@{member.id}>",
+                    allowed_mentions=AllowedMentions(users=True),
+                    name=f"{member.id}",
+                )
 
-            self.oc_list[member.id] = oc_list = thread.id
-            await message.edit(view=RPView(member.id, self.oc_list))
-        return oc_list
+            thread = x.thread
+
+        return thread
 
     async def register_oc(self, oc: Character, image_as_is: bool = False):
         try:
             member = Object(id=oc.author)
-
-            try:
-                thread_id = self.oc_list[member.id]
-            except KeyError:
-                thread_id = await self.list_update(member)
-
-            oc.thread = thread_id
+            thread = await self.list_update(member)
+            oc.thread = thread.id
             guild: Guild = self.bot.get_guild(oc.server)
-
-            if not (thread := guild.get_channel_or_thread(thread_id)):
-                thread = await self.bot.fetch_channel(thread_id)
 
             user = guild.get_member(member.id) or member
             embeds = oc.embeds
@@ -285,7 +285,7 @@ class Submission(commands.Cog):
             former = self.ocs.pop(oc.id, None)
             self.ocs[oc.id] = oc
             self.bot.logger.info(
-                "New character has been %s! > %s > %s > %s",
+                "Character has been %s! > %s > %s > %s",
                 word,
                 str(user),
                 repr(oc),
@@ -471,19 +471,6 @@ class Submission(commands.Cog):
         self.ocs = {oc.id: oc for oc in map(Character.from_mongo_dict, data)}
         self.bot.logger.info("Finished loading all characters")
 
-    async def load_profiles(self):
-        self.bot.logger.info("Loading All Profiles")
-        if not (ch := self.bot.get_channel(1005360320585400390)):
-            ch = await self.bot.fetch_channel(1005360320585400390)
-        async for message in ch.history(limit=None, oldest_first=True):
-            if content := message.content:
-                content = content[2:-1]
-                if content.isdigit():
-                    self.oc_list[int(content)] = message.id
-                    view = RPView(int(content), self.oc_list)
-                    self.bot.add_view(view=view, message_id=message.id)
-        self.bot.logger.info("Finished loading all Profiles.")
-
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
         view = SubmissionView(timeout=None)
@@ -538,16 +525,57 @@ class Submission(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.load_profiles()
         await self.load_saved_submissions()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
-        if not (entry := self.oc_list.get(member.id)):
+        if not (channel := self.bot.get_channel(1019686568644059136)):
+            channel: ForumChannel = await self.bot.fetch_channel(1019686568644059136)
+
+        db = self.bot.mongo_db("Roleplayers")
+
+        thread = None
+        if item := await db.find_one({"user": member.id}):
+            try:
+                msg = await PartialMessage(channel=channel, id=item["id"]).fetch()
+            except DiscordException:
+                await db.delete_one(item)
+            else:
+                file = await member.display_avatar.to_file()
+                await msg.edit(attachments=[file])
+                thread = await self.list_update(member)
+                await thread.edit(
+                    name=member.display_name,
+                    reason=f"{thread.name} -> {member.display_name}",
+                    archived=False,
+                )
+
+    @commands.Cog.listener()
+    async def on_member_update(self, past: Member, now: Member):
+        if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
             return
-        if not (thread := member.guild.get_thread(entry)):
-            thread = await self.bot.fetch_channel(entry)
-        await thread.edit(name=member.display_name, reason=f"Unknown -> {member.display_name}", archived=False)
+
+        if not (channel := self.bot.get_channel(1019686568644059136)):
+            channel: ForumChannel = await self.bot.fetch_channel(1019686568644059136)
+
+        db = self.bot.mongo_db("Roleplayers")
+        thread = None
+        if item := await db.find_one({"user": now.id}):
+            try:
+                msg = await PartialMessage(channel=channel, id=item["id"]).fetch()
+            except DiscordException:
+                await db.delete_one(item)
+            else:
+                if past.display_avatar != now.display_avatar:
+                    file = await now.display_avatar.to_file()
+                    await msg.edit(attachments=[file])
+
+                if past.display_name != now.display_name:
+                    thread = await self.list_update(now)
+                    await thread.edit(
+                        name=now.display_name,
+                        reason=f"{past.name} -> {now.display_name}",
+                    )
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
