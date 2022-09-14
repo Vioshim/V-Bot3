@@ -533,6 +533,7 @@ class Submission(commands.Cog):
                     allowed_mentions=AllowedMentions(users=True),
                 )
                 await db.replace_one(data, data | {"id": message.id})
+
         self.bot.logger.info("Finished loading saved submission menu")
 
     @commands.Cog.listener()
@@ -546,9 +547,7 @@ class Submission(commands.Cog):
             return
         if not (thread := member.guild.get_thread(entry)):
             thread = await self.bot.fetch_channel(entry)
-        if thread.archived:
-            await thread.edit(archived=False)
-        await thread.edit(name=member.display_name, reason=f"Unknown -> {member.display_name}")
+        await thread.edit(name=member.display_name, reason=f"Unknown -> {member.display_name}", archived=False)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:

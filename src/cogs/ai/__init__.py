@@ -13,11 +13,9 @@
 # limitations under the License.
 
 
-from contextlib import suppress
-from typing import Any
-
+from chronological import cleaned_completion
 from discord import (
-    DiscordException,
+    Colour,
     Embed,
     Message,
     RawBulkMessageDeleteEvent,
@@ -27,13 +25,10 @@ from discord import (
     Thread,
 )
 from discord.ext import commands
-from frozendict import frozendict
 from rapidfuzz import process
 
-from src.pagination.complex import Complex
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.views.characters_view import CharactersView
 
 IDS = [
     788172543273598976,
@@ -120,73 +115,16 @@ class AiCog(commands.Cog):
     @commands.command()
     @commands.is_owner()
     @commands.guild_only()
-    async def ai_solve_samples(self, ctx: commands.Context, caching: bool = True, fetching: bool = False):
-        db = self.bot.mongo_db("RP Samples")
-        if not (caching and self.msg_cache and self.cache):
-            async for item in db.find({"ocs": {"$exists": True}}):
-                self.cache[item["id"]] = item
-                if not fetching:
-                    continue
-
-                with suppress(DiscordException):
-                    if not (guild := self.bot.get_guild(item["server"])):
-                        continue
-
-                    if not (channel := guild.get_channel(item["channel"])):
-                        continue
-
-                    if thread_id := item["thread"]:
-                        if not (thread := channel.get_thread(thread_id)):
-                            thread = await guild.fetch_channel(thread_id)
-                    else:
-                        thread = channel
-
-                    msg = await thread.fetch_message(item["id"])
-                    self.msg_cache[msg.id] = msg
-
-        values = {x["id"]: x for x in self.cache.values() if "ocs" in x}
-
-        def parser(o: str):
-            x = values[o]
-            if o := self.msg_cache.get(x["id"]):
-                return o.author.display_name, f"Written in {o.channel}"
-            o = self.bot.get_channel(x["channel"])
-            return f"Message {x['id']}", f"Written in {o}"
-
-        view = Complex[frozendict[str, Any]](
-            member=ctx.author,
-            values=values.keys(),
-            target=ctx.channel,
-            parser=parser,
+    async def ai(self, ctx: commands.Context, *, text: str):
+        data = await cleaned_completion(text, engine="text-davinci-002")
+        await ctx.reply(
+            embed=Embed(
+                title="Open AI (Generated Response)",
+                color=Colour.blurple(),
+                description="\n".join(data),
+                timestamp=ctx.message.created_at,
+            )
         )
-
-        async with view.send(single=True) as raw:
-            if raw := values.get(raw):
-                cog = self.bot.get_cog("Submission")
-                ocs = [o for x in self.cache[raw["id"]].get("ocs", []) if (o := cog.ocs.get(x))]
-
-                if not (msg := self.msg_cache.get(raw["id"])):
-                    if channel := self.bot.get_channel(raw["channel"]):
-                        if raw["thread"]:
-                            if not (thread := channel.guild.get_thread(raw["thread"])):
-                                thread = channel.guild.fetch_channel(raw["thread"])
-                            channel = thread
-                        msg = await channel.fetch_message(raw["id"])
-                        self.msg_cache[msg.id] = msg
-                    else:
-                        return
-
-                embed = Embed(title=msg.author.name, description=msg.content, url=msg.jump_url)
-                embed.set_image(url=msg.author.display_avatar.with_size(4096))
-                embed.add_field(name="mention", value=msg.channel.mention)
-
-                view2 = CharactersView(member=ctx.author, target=ctx.channel, ocs=ocs)
-                async with view2.send(embed=embed, single=True) as oc:
-                    if isinstance(oc, Character):
-                        data = message_parse(msg)
-                        data["oc"] = oc.id
-                        self.cache[msg.id] = data
-                        await db.replace_one({"id": msg.id}, data, upsert=True)
 
 
 async def setup(bot: CustomBot) -> None:
