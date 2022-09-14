@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from chronological import cleaned_completion
 from discord import (
     Embed,
     Message,
@@ -24,6 +23,7 @@ from discord import (
     Thread,
 )
 from discord.ext import commands
+from openai import Completion
 from rapidfuzz import process
 
 from src.structures.bot import CustomBot
@@ -39,6 +39,26 @@ IDS = [
     719343092963999805,
     740567496721039401,
 ]
+
+
+def ai_completition(prompt: str):
+    resp = Completion.create(
+        prompt=prompt,
+        engine="text-davinci-002",
+        max_tokens=4000,
+        temperature=0.7,
+        top_p=1,
+        stop=None,
+        presence_penalty=0,
+        frequency_penalty=0,
+        echo=False,
+        n=1,
+        stream=False,
+        logprobs=None,
+        best_of=1,
+        logit_bias={},
+    )
+    return "\n".join(choice.strip() for choice in resp.choices)
 
 
 def message_parse(message: Message):
@@ -123,8 +143,7 @@ class AiCog(commands.Cog):
         text : str
             Text
         """
-        data = await cleaned_completion(text, engine="text-davinci-002", max_tokens=4000)
-        if len(text := "\n".join(data) if isinstance(data, list) else str(data)) <= 2000:
+        if len(text := await self.bot.loop.run_in_executor(None, ai_completition, text)) <= 2000:
             await ctx.reply(content=text)
         else:
             await ctx.reply(embed=Embed(description=text))
