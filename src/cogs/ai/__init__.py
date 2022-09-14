@@ -58,7 +58,7 @@ def ai_completition(prompt: str):
         best_of=1,
         logit_bias={},
     )
-    return "\n".join(choice.strip() for choice in resp.choices)
+    return "\n".join(choice.text.strip() for choice in resp.choices)
 
 
 def message_parse(message: Message):
