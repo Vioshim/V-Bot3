@@ -146,7 +146,7 @@ class AiCog(commands.Cog):
         if len(text := await self.bot.loop.run_in_executor(None, ai_completition, text)) <= 2000:
             await ctx.reply(content=text)
         else:
-            await ctx.reply(embed=Embed(description=text))
+            await ctx.reply(embed=Embed(description=text[:4096]))
 
 
 async def setup(bot: CustomBot) -> None:
