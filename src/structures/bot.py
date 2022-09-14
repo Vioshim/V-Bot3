@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from io import BytesIO
 from logging import Logger
 from os import getenv
@@ -38,6 +38,7 @@ from discord import (
     PartialMessage,
     TextChannel,
     Thread,
+    User,
     VoiceChannel,
     Webhook,
 )
@@ -121,6 +122,13 @@ class CustomBot(Bot):
                 self.logger.exception("Exception while loading %s", route, exc_info=e)
             else:
                 self.logger.info("Successfully loaded %s", route)
+
+    async def get_or_fetch_user(self, user_id: int, /) -> Optional[User]:
+        if user := self.get_user(user_id):
+            return user
+
+        with suppress(DiscordException):
+            return await self.fetch_user(user_id)
 
     async def fetch_webhook(self, webhook_id: int, /) -> Webhook:
         """|coro|
