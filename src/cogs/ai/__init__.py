@@ -114,7 +114,7 @@ class AiCog(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def ai(self, ctx: commands.Context, *, text: str):
-        data = await cleaned_completion(text, engine="text-davinci-002")
+        data = await cleaned_completion(text, engine="text-davinci-002", max_tokens=4000)
         data = "\n".join(data) if isinstance(data, list) else data
         await ctx.reply(content=data)
 
