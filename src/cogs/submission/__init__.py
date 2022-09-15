@@ -222,6 +222,7 @@ class Submission(commands.Cog):
                 thread = None
 
         if not thread:
+            member = member if isinstance(member, User) else channel.guild.get_member(member.id) or member
             if isinstance(member, User):
                 file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
