@@ -20,10 +20,10 @@ from discord import Color, Embed, Interaction, InteractionResponse, Member
 from discord.ui import Select, TextInput, select
 
 from src.pagination.complex import Complex
+from src.structures.character import Character
 from src.structures.mon_typing import TypingEnum
 from src.structures.species import Chimera, CustomMega, Fusion, Species, Variant
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
-from structures.character import Character
 
 __all__ = ("SpeciesComplex",)
 
