@@ -198,7 +198,7 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
-    async def list_update(self, member: Object):
+    async def list_update(self, member: Object | User | Member):
         """This function updates an user's character list message
 
         Parameters
@@ -222,8 +222,9 @@ class Submission(commands.Cog):
                 thread = None
 
         if not thread:
-            member = member if isinstance(member, User) else channel.guild.get_member(member.id) or member
-            if isinstance(member, User):
+            if isinstance(member, Object):
+                member = channel.guild.get_member(member.id) or member
+            if isinstance(member, (User, Member)):
                 file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
