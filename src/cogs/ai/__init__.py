@@ -135,7 +135,7 @@ class AiCog(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.has_role("Booster")
+    @commands.has_any_role("Booster", "Moderation")
     async def ai(self, ctx: commands.Context, *, text: str):
         """OpenAI Generator
 
