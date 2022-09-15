@@ -249,7 +249,9 @@ class DefaultSpeciesTransformer(Transformer):
                     async for x in db.find(
                         {"$or": [{"species.chimera": {"$exists": 1}}, {"species.fusion": {"$exists": 1}}]}
                     )
-                    if (oc := Character.from_mongo_dict(x)) and fused in oc.species.bases
+                    if (oc := Character.from_mongo_dict(x))
+                    and fused in oc.species.bases
+                    and ctx.guild.get_member(oc.author)
                 }
             )
 
