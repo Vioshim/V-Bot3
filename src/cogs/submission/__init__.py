@@ -547,7 +547,7 @@ class Submission(commands.Cog):
                 await msg.edit(attachments=[file])
                 thread = await self.list_update(member)
                 await thread.edit(
-                    name=member.display_name,
+                    name=member.display_name if thread.name != member.display_name else MISSING,
                     reason=f"{thread.name} -> {member.display_name}",
                     archived=False,
                 )
@@ -574,10 +574,11 @@ class Submission(commands.Cog):
 
                 if past.display_name != now.display_name:
                     thread = await self.list_update(now)
-                    await thread.edit(
-                        name=now.display_name,
-                        reason=f"{past.name} -> {now.display_name}",
-                    )
+                    if thread.name != now.display_name:
+                        await thread.edit(
+                            name=now.display_name,
+                            reason=f"{past.name} -> {now.display_name}",
+                        )
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
