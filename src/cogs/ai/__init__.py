@@ -47,7 +47,7 @@ def ai_completition(prompt: str):
     resp = Completion.create(
         prompt=prompt,
         engine="text-davinci-002",
-        max_tokens=4000,
+        max_tokens=4000 - len(prompt),
         temperature=0.7,
         top_p=1,
         stop=None,
