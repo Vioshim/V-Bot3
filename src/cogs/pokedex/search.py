@@ -419,9 +419,22 @@ class OCGroupByAge(OCGroupBy):
 
 class OCGroupBySpecies(OCGroupBy):
     @classmethod
+    def total_data(cls, ctx: Interaction) -> list[Species]:
+        items = [x for x in Species.all()]
+        if item_type := TypingEnum.deduce(ctx.namespace.type):
+            items = [x for x in items if item_type in x.types]
+        if item_ability := Ability.deduce(ctx.namespace.ability):
+            items = [x for x in items if item_ability in x.abilities]
+        if item_move := Move.deduce(ctx.namespace.move):
+            items = [x for x in items if item_move in x.total_movepool]
+        if item_kind := Kind.associated(ctx.namespace.kind):
+            items = [x for x in items if isinstance(x, item_kind.value)]
+        return items
+
+    @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         data = {x.name: frozenset() for x in Kind if x not in STANDARD}
-        data |= {x.name: frozenset() for x in Species.all()}
+        data |= {x.name: frozenset() for x in cls.total_data(ctx)}
         data |= {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind) if k not in STANDARD}
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         ocs.sort(key=lambda x: getattr(x.species, "base", x.species).name)
@@ -435,8 +448,21 @@ class OCGroupBySpecies(OCGroupBy):
 
 class OCGroupByEvoLine(OCGroupBy):
     @classmethod
+    def total_data(cls, ctx: Interaction) -> list[Species]:
+        items = [x for x in Species.all() if x.evolves_from is None]
+        if item_type := TypingEnum.deduce(ctx.namespace.type):
+            items = [x for x in items if item_type in x.types]
+        if item_ability := Ability.deduce(ctx.namespace.ability):
+            items = [x for x in items if item_ability in x.abilities]
+        if item_move := Move.deduce(ctx.namespace.move):
+            items = [x for x in items if item_move in x.total_movepool]
+        if item_kind := Kind.associated(ctx.namespace.kind):
+            items = [x for x in items if isinstance(x, item_kind.value)]
+        return items
+
+    @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        data = {x.name: set() for x in filter(lambda x: x.evolves_from is None, Species.all())}
+        data = {x.name: set() for x in cls.total_data(ctx)}
 
         for oc in ocs:
             if isinstance(species := oc.species, (Fusion, Chimera)):
