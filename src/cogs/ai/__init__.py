@@ -44,8 +44,6 @@ IDS = [
 
 
 def ai_completition(prompt: str):
-    if not prompt.endswith("."):
-        prompt += "."
     resp = Completion.create(
         prompt=prompt,
         engine="text-davinci-002",
