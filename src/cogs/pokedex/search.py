@@ -185,9 +185,7 @@ class SpeciesTransformer(Transformer):
         ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
         guild: Guild = ctx.guild
         mons = set[Character](ocs) | set(Species.all())
-        filters: list[Callable[[Character | Species], bool]] = [
-            lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True
-        ]
+        filters: list[Callable[[Character | Species], bool]] = []
         if fused := Species.from_ID(ctx.namespace.fused):
             mons = {
                 (set(x.species.bases) - {fused}).pop()
@@ -201,6 +199,8 @@ class SpeciesTransformer(Transformer):
         if member := ctx.namespace.member:
             ocs1 = {x.species for x in ocs if x.author == member.id}
             filters.append(lambda x: x.author == member.id if isinstance(x, Character) else x in ocs1)
+        else:
+            filters.append(lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True)
 
         if location := ctx.namespace.location:
 
