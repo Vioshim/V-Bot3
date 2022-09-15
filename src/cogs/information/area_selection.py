@@ -27,6 +27,7 @@ from discord import (
 )
 from discord.ui import Select, select
 from discord.utils import utcnow
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
@@ -37,10 +38,9 @@ __all__ = ("RegionViewComplex",)
 
 
 class AreaSelection(Complex[TextChannel]):
-    def __init__(self, target: Interaction, cat: CategoryChannel):
+    def __init__(self, target: Interaction, cat: CategoryChannel, ocs: set[Character]):
         channels = [x for x in cat.channels if not x.name.endswith("-ooc")]
 
-        cog = target.client.get_cog("Submission")
         self.entries: dict[str, set[Character]] = {}
 
         def foo(oc: Character):
@@ -53,7 +53,7 @@ class AreaSelection(Complex[TextChannel]):
                 ch = ch.parent
             return ch
 
-        entries = groupby(sorted(filter(foo, cog.ocs.values()), key=lambda x: foo2(x).id), key=foo2)
+        entries = groupby(sorted(filter(foo, ocs), key=lambda x: foo2(x).id), key=foo2)
         self.entries = {k.id: set(v) for k, v in entries if k}
         self.total = sum(map(len, self.entries.values()))
 
@@ -120,7 +120,9 @@ class RegionViewComplex(Complex[MapPair]):
             cat = interaction.guild.get_channel(info.category)
             embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=interaction.user.color)
             embed.set_image(url=info.image or WHITE_BAR)
-            view = AreaSelection(target=interaction, cat=cat)
+            db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
+            ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
+            view = AreaSelection(target=interaction, cat=cat, ocs=ocs)
             interaction.client.logger.info(
                 "%s is reading Map Information of %s",
                 str(interaction.user),

@@ -22,6 +22,7 @@ from discord import Guild, Interaction, Member, TextChannel, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
+from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.pagination.complex import Complex
@@ -170,19 +171,19 @@ class ABCTransformer(Transformer):
 
 class SpeciesTransformer(Transformer):
     async def transform(self, ctx: Interaction, value: Optional[str]):
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         value = value or ""
-        cog = ctx.client.get_cog("Submission")
-        if value.isdigit() and (oc := cog.ocs.get(int(value))):
+        if value.isdigit() and (item := await db.find_one({"id": int(value)})):
+            return Character.from_mongo_dict(item)
+        elif oc := Species.single_deduce(value):
             return oc
-        mon = Species.from_ID(value) or Species.single_deduce(value)
-        if not mon:
-            raise ValueError(f"Species {value!r} not found")
-        return mon
+        raise ValueError(f"Species {value!r} not found")
 
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
-        cog = ctx.client.get_cog("Submission")
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
         guild: Guild = ctx.guild
-        mons = set[Character](cog.ocs.values()) | set(Species.all())
+        mons = set[Character](ocs) | set(Species.all())
         filters: list[Callable[[Character | Species], bool]] = [
             lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True
         ]
@@ -197,7 +198,7 @@ class SpeciesTransformer(Transformer):
             mons = kind.all() or mons
 
         if member := ctx.namespace.member:
-            ocs1 = {x.species for x in cog.ocs.values() if x.author == member.id}
+            ocs1 = {x.species for x in ocs if x.author == member.id}
             filters.append(lambda x: x.author == member.id if isinstance(x, Character) else x in ocs1)
 
         if location := ctx.namespace.location:
@@ -206,7 +207,7 @@ class SpeciesTransformer(Transformer):
                 ref = ch.parent_id if (ch := guild.get_thread(oc.location)) else oc.location
                 return oc.species and ref == location.id
 
-            ocs2 = {x.species for x in filter(foo2, cog.ocs.values())}
+            ocs2 = {x.species for x in filter(foo2, ocs)}
             filters.append(lambda x: foo2(x) if isinstance(x, Character) else x in ocs2)
 
         if (mon_type := ctx.namespace.type) and (mon_type := TypingEnum.deduce(mon_type)):
@@ -234,20 +235,21 @@ class DefaultSpeciesTransformer(Transformer):
     cache: dict = {}
 
     async def transform(self, _: Interaction, value: Optional[str]):
-        item = Species.single_deduce(value)
-        if not item:
+        if not (item := Species.single_deduce(value)):
             raise ValueError(f"Species {value!r} not found")
         return item
 
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         items = list(Species.all())
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
-            cog = ctx.client.get_cog("Submission")
+            db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
             items = list(
                 {
-                    (set(x.species.bases) - {fused}).pop()
-                    for x in cog.ocs.values()
-                    if isinstance(x.species, (Fusion, Chimera)) and fused in x.species.bases
+                    (set(oc.species.bases) - {fused}).pop()
+                    async for x in db.find(
+                        {"$or": [{"species.chimera": {"$exists": 1}}, {"species.fusion": {"$exists": 1}}]}
+                    )
+                    if (oc := Character.from_mongo_dict(x)) and fused in oc.species.bases
                 }
             )
 
@@ -283,11 +285,19 @@ AbilityArg = Transform[Ability, AbilityTransformer]
 
 class FakemonTransformer(Transformer):
     async def transform(cls, ctx: Interaction, value: Optional[str]):
-        cog = ctx.client.get_cog("Submission")
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         oc: Optional[Character] = None
-        if value.isdigit():
-            oc = cog.ocs.get(int(value))
-        elif ocs := process.extractOne(value, choices=cog.ocs.values(), processor=item_name, score_cutoff=60):
+        if value.isdigit() and (item := await db.find_one({"id": int(value)})):
+            oc = Character.from_mongo_dict(item)
+        elif ocs := process.extractOne(
+            value,
+            choices=[
+                Character.from_mongo_dict(x)
+                async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
+            ],
+            processor=item_name,
+            score_cutoff=60,
+        ):
             oc = ocs[0]
         if not oc:
             raise ValueError(f"Fakemon {value!r} not found.")
@@ -295,8 +305,12 @@ class FakemonTransformer(Transformer):
 
     async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
         guild: Guild = ctx.guild
-        cog = ctx.client.get_cog("Submission")
-        mons = [oc for oc in cog.ocs.values() if oc.kind == Kind.Fakemon and guild.get_member(oc.author)]
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        mons = [
+            Character.from_mongo_dict(x)
+            async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
+            if guild.get_member(x["author"])
+        ]
         if options := process.extract(value, choices=mons, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:

@@ -32,9 +32,8 @@ from discord.utils import MISSING
 from rapidfuzz import process
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
-from src.cogs.submission import Submission
 from src.structures.bot import CustomBot
-from src.structures.character import CharacterArg
+from src.structures.character import Character, CharacterArg
 from src.structures.pronouns import Pronoun
 from src.structures.species import Species
 
@@ -166,15 +165,14 @@ class Proxy(commands.Cog):
         text : str, optional
             _description_, by default None
         """
-        cog: Submission = self.bot.get_cog("Submission")
+        db = self.bot.mongo_db("Characters")
         member = self.bot.supporting.get(ctx.author, ctx.author)
         if mon := Species.single_deduce(pokemon):
             npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
-        elif options := process.extractOne(
-            pokemon,
-            choices=[x for x in cog.ocs.values() if x.author == member.id],
-            score_cutoff=60,
-            processor=lambda x: getattr(x, "name", x),
+        elif (ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]) and (
+            options := process.extractOne(
+                pokemon, choices=ocs, score_cutoff=60, processor=lambda x: getattr(x, "name", x)
+            )
         ):
             oc = options[0]
             npc = NPC(name=oc.name, avatar=oc.image_url)
@@ -196,8 +194,7 @@ class Proxy(commands.Cog):
         text : str, optional
             Text, by default None
         """
-        entry = await self.bot.mongo_db("NPC").find_one({"author": ctx.author.id})
-        if entry:
+        if entry := await self.bot.mongo_db("NPC").find_one({"author": ctx.author.id}):
             npc = NPC(name=entry["name"], avatar=entry["avatar"])
         else:
             npc = NPC()
@@ -245,10 +242,7 @@ class Proxy(commands.Cog):
         elif emoji == "\N{BLACK QUESTION MARK ORNAMENT}":
             await message.clear_reaction(emoji=payload.emoji)
             if not (user := guild.get_member(author_id)):
-                try:
-                    user = await self.bot.fetch_user(author_id)
-                except DiscordException:
-                    user = None
+                user = await self.bot.get_or_fetch_user(author_id)
 
             view = View()
             view.add_item(Button(label="Jump URL", url=message.jump_url))

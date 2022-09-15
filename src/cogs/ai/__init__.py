@@ -88,8 +88,8 @@ class AiCog(commands.Cog):
 
     async def process(self, message: Message):
         db = self.bot.mongo_db("RP Samples")
-
-        ocs: list[Character] = list(self.bot.get_cog("Submission").ocs.values())
+        db2 = self.bot.mongo_db("Characters")
+        ocs = [Character.from_mongo_dict(x) async for x in db2.find({})]
         if items := process.extract(
             message.author.display_name,
             ocs,

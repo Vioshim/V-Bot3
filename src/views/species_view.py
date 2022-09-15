@@ -23,6 +23,7 @@ from src.pagination.complex import Complex
 from src.structures.mon_typing import TypingEnum
 from src.structures.species import Chimera, CustomMega, Fusion, Species, Variant
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
+from structures.character import Character
 
 __all__ = ("SpeciesComplex",)
 
@@ -36,6 +37,7 @@ class SpeciesComplex(Complex[Species]):
         max_values: int = 1,
         silent_mode: bool = True,
         keep_working: bool = False,
+        ocs: set[Character] = None,
     ):
 
         self.total = mon_total = {x for x in mon_total if not x.banned}
@@ -45,7 +47,11 @@ class SpeciesComplex(Complex[Species]):
         self.reference2: dict[Species, int] = {}
         self.reference3: dict[Species, int] = {}
 
-        for oc in target.client.get_cog("Submission").ocs.values():
+        values: set[Character] = set()
+        if ocs:
+            values.update(ocs)
+
+        for oc in values:
             if not target.guild.get_member(oc.author):
                 continue
 

@@ -49,6 +49,7 @@ from src.cogs.roles.roles import (
     RPSearchManage,
 )
 from src.structures.bot import CustomBot
+from src.structures.character import Character
 from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
 
 __all__ = ("Roles", "setup")
@@ -248,11 +249,11 @@ class Roles(commands.Cog):
             Member to ping
         """
         resp: InteractionResponse = interaction.response
-        cog = interaction.client.get_cog("Submission")
+        db = self.bot.mongo_db("Characters")
         guild = interaction.guild
         role: Role = guild.get_role(int(role))
         user = self.bot.supporting.get(interaction.user, interaction.user)
-        ocs = [oc for oc in cog.ocs.values() if oc.author == user.id]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id})]
         modal = RPModal(user=user, role=role, ocs=ocs, to_user=member)
         if await modal.check(interaction):
             await resp.send_modal(modal)

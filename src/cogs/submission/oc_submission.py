@@ -205,11 +205,14 @@ class Template(TemplateItem, Enum):
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
         choices: list[Species] = []
         if mon_total := self.total_species:
+            db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+            ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
             view = SpeciesComplex(
                 member=ctx.user,
                 target=ctx,
                 mon_total=mon_total,
                 max_values=self.max_values,
+                ocs=ocs,
             )
             async with view.send(ephemeral=ephemeral) as data:
                 if 1 <= len(data) <= self.max_values:
@@ -543,7 +546,9 @@ class PreEvoSpeciesField(TemplateField):
         ephemeral: bool = False,
     ):
         mon_total = {x for x in Pokemon.all() if not x.banned}
-        view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
+        view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, ocs=ocs)
         async with view.send(
             title="Select if it has a canon Pre-Evo (Skip if not needed)",
             single=True,
@@ -1370,14 +1375,14 @@ class SubmissionView(View):
 
     @button(label="Character Modification", emoji="\N{PENCIL}", row=1, custom_id="modify-oc")
     async def oc_update(self, ctx: Interaction, _: Button):
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         member = ctx.client.supporting.get(member, member)
-        ocs = ctx.client.get_cog("Submission").ocs.values()
-        values: list[Character] = [oc for oc in ocs if member.id == oc.author]
+        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
         if not values:
             return await ctx.followup.send("You don't have characters to modify", ephemeral=True)
         values.sort(key=lambda x: x.name)

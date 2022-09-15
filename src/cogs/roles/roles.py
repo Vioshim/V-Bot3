@@ -469,9 +469,14 @@ class RPSearchManage(View):
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
-        cog = ctx.client.get_cog("Submission")
-        if not (ocs := [x for item in self.ocs if isinstance(x := cog.ocs.get(item, item), Character)]):
-            ocs: list[Character] = [oc for oc in cog.ocs.values() if oc.author == self.member_id]
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        if not (
+            ocs := [
+                Character.from_mongo_dict(x)
+                async for x in db.find({"id": {"$in": [x.id if isinstance(x, Character) else x for x in self.ocs]}})
+            ]
+        ):
+            ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": self.member_id})]
         view = CharactersView(member=ctx.user, target=ctx, ocs=ocs, keep_working=True)
         embed = view.embed
         if member := ctx.guild.get_member(self.member_id) or ctx.client.get_user(self.member_id):
@@ -590,10 +595,15 @@ class RPModal(Modal):
             )
         ]
 
-        cog0 = interaction.client.get_cog("Submission")
         cog1 = interaction.client.get_cog("Roles")
-
-        items.extend(oc for item in self.select_ocs_group for value in item.values if (oc := cog0.ocs.get(int(value))))
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
+        data = [
+            Character.from_mongo_dict(x)
+            async for x in db.find(
+                {"id": {"$in": [int(value) for item in self.select_ocs_group for value in item.values]}}
+            )
+        ]
+        items.extend(data)
 
         embed = Embed(title=self.role.name, color=self.user.color, description=self.message.value)
         guild: Guild = self.user.guild
@@ -629,9 +639,13 @@ class RPModal(Modal):
 
         cog1.cool_down[reference.id] = utcnow()
         cog1.role_cool_down[reference.id] = utcnow()
-        ocs = {oc.id for oc in cog0.ocs.values() if oc.author == self.user.id}
-        if ocs == {x.id if isinstance(x, Character) else x for x in self.ocs}:
-            ocs = set()
+
+        ocs = {x["id"] async for x in db.find({"author": self.user.id})}
+        ocs2 = {x.id if isinstance(x, Character) else x for x in self.ocs}
+        if ocs == ocs2:
+            ocs2 = set()
+
+        ocs = ocs2
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         await db.insert_one(
@@ -693,9 +707,9 @@ class RPSearchComplex(Complex[Member]):
 
     async def method(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        cog = ctx.client.get_cog("Submission")
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        ocs = [oc for oc in cog.ocs.values() if oc.author == member.id]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
         modal = RPModal(user=member, role=self.role, ocs=ocs)
         if await modal.check(ctx):
             await resp.send_modal(modal)
@@ -779,13 +793,8 @@ class RPRolesView(View):
                 {"member": {"$ne": user.id}},
             ]
         }
-        cog = interaction.client.get_cog("Submission")
         data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=None)
-        entries = {
-            m: item["id"]
-            for item in data
-            if (m := guild.get_member(item["member"])) and ({x for x in cog.ocs.values() if x.author == user.id})
-        }
+        entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
         member: Member = interaction.client.supporting.get(interaction.user, interaction.user)
         self.current[role] = member
         view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
@@ -804,9 +813,10 @@ class RPRolesView(View):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         date = time_snowflake(ctx.created_at - INTERVAL)
-        cog = ctx.client.get_cog("Submission")
         user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+        db2: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+
         key = {"$and": [{"id": {"$gte": date}}, {"member": {"$ne": user.id}}]}
         items = [
             (
@@ -821,8 +831,8 @@ class RPRolesView(View):
             if (role := ctx.guild.get_role(item["role"]))
             and (member := ctx.guild.get_member(item["member"]))
             and (
-                ocs := {oc for x in item["ocs"] if isinstance(oc := cog.ocs.get(x), Character)}
-                or {x for x in cog.ocs.values() if x.author == member.id}
+                ocs := {Character.from_mongo_dict(x) async for x in db2.find({"id": {"$in": item["ocs"]}})}
+                or {Character.from_mongo_dict(x) async for x in db2.find({"author": member.id})}
             )
         ]
         view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1], silent_mode=True)

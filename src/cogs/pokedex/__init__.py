@@ -182,7 +182,9 @@ class Pokedex(commands.Cog):
                     embed.description = None
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
-            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, keep_working=True)
+            db = self.bot.mongo_db("Characters")
+            ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
+            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
             embed = view.embed
             embed.description = (
                 f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
@@ -271,14 +273,14 @@ class Pokedex(commands.Cog):
         resp: InteractionResponse = ctx.response
         text: str = ""
         guild: Guild = ctx.guild
-        cog = ctx.client.get_cog("Submission")
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=utcnow())
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
-        total: list[Character] = list(cog.ocs.values())
+        db = self.bot.mongo_db("Characters")
+        total = [Character.from_mongo_dict(x) async for x in db.find({})]
         filters: list[Callable[[Character], bool]] = []
         ocs = [species] if isinstance(species, Character) else total
         if name:

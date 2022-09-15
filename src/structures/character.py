@@ -26,6 +26,7 @@ from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
+from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.structures.ability import Ability, SpAbility
@@ -975,26 +976,25 @@ class Character:
 
 class CharacterTransform(Transformer):
     async def transform(self, interaction: Interaction, value: str):
-        cog = interaction.client.get_cog("Submission")
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.user
-        ocs = {x.id: x for x in cog.ocs.values() if x.author == member.id}
-        if isinstance(value, str):
-            if value.isdigit():
-                return ocs[int(value)]
-            elif options := process.extractOne(
-                value,
-                choices=ocs.values(),
-                processor=lambda x: getattr(x, "name", x),
-                score_cutoff=60,
-            ):
-                return options[0]
+        ocs = {oc.id: oc async for x in db.find({"author": member.id}) if (oc := Character.from_mongo_dict(x))}
+        if value.isdigit() and (oc := ocs.get(int(value))):
+            return oc
+        elif options := process.extractOne(
+            value,
+            choices=ocs.values(),
+            processor=lambda x: getattr(x, "name", x),
+            score_cutoff=60,
+        ):
+            return options[0]
 
     async def autocomplete(self, interaction: Interaction, value: str) -> list[Choice[str]]:
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.user
-        cog = interaction.client.get_cog("Submission")
-        ocs: dict[int, Character] = {oc.id: oc for oc in cog.ocs.values() if oc.author == member.id}
+        ocs = {oc.id: oc async for x in db.find({"author": member.id}) if (oc := Character.from_mongo_dict(x))}
         if value.isdigit() and (oc := ocs.get(int(value))):
             options = [oc]
         elif options := process.extract(

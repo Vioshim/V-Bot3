@@ -427,14 +427,10 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         view = View()
 
-        cog = self.bot.get_cog("Submission")
-        if value := cog.oc_list.get(member.id):
-            view.add_item(
-                Button(
-                    label="Characters",
-                    url=f"https://discord.com/channels/{member.guild.id}/{value}",
-                )
-            )
+        db1 = self.bot.mongo_db("Roleplayers")
+        if item := await db1.find_one({"user": member.id}):
+            url = f"https://discord.com/channels/{guild.id}/{item['id']}"
+            view.add_item(Button(label="Characters", url=url))
 
         db = self.bot.mongo_db("Custom Role")
         if data := await db.find_one({"author": member.id}):
@@ -478,14 +474,11 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(member.created_at, style="R"))
             view = View()
-            cog = self.bot.get_cog("Submission")
-            if value := cog.oc_list.get(member.id):
-                view.add_item(
-                    Button(
-                        label="Characters",
-                        url=f"https://discord.com/channels/{member.guild.id}/{value}",
-                    )
-                )
+            db1 = self.bot.mongo_db("Roleplayers")
+            if item := await db1.find_one({"user": member.id}):
+                url = f"https://discord.com/channels/{member.guild.id}/{item['id']}"
+                view.add_item(Button(label="Characters", url=url))
+
             await log.send(
                 embed=embed,
                 file=file,
@@ -556,14 +549,11 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
             view = View()
-            cog = self.bot.get_cog("Submission")
-            if value := cog.oc_list.get(user.id):
-                view.add_item(
-                    Button(
-                        label="Characters",
-                        url=f"https://discord.com/channels/{guild.id}/{value}",
-                    )
-                )
+            db1 = self.bot.mongo_db("Roleplayers")
+            if item := await db1.find_one({"user": user.id}):
+                url = f"https://discord.com/channels/{guild.id}/{item['id']}"
+                view.add_item(Button(label="Characters", url=url))
+
             await log.send(
                 embed=embed,
                 file=file,
@@ -963,15 +953,11 @@ class Information(commands.Cog):
         if file := await self.bot.get_file(asset.url, filename="image"):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
+            db1 = self.bot.mongo_db("Roleplayers")
             view = View()
-            cog = self.bot.get_cog("Submission")
-            if value := cog.oc_list.get(user.id):
-                view.add_item(
-                    Button(
-                        label="Characters",
-                        url=f"https://discord.com/channels/{guild.id}/{value}",
-                    )
-                )
+            if item := await db1.find_one({"user": user.id}):
+                url = f"https://discord.com/channels/{guild.id}/{item['id']}"
+                view.add_item(Button(label="Characters", url=url))
             await log.send(
                 embed=embed,
                 file=file,

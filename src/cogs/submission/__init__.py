@@ -129,8 +129,6 @@ class Submission(commands.Cog):
         self.bot = bot
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
-        self.ocs: dict[int, Character] = {}
-        self.oc_list: dict[int, int] = {}
         guild_ids = [719343092963999804]
         self.ctx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
@@ -146,7 +144,6 @@ class Submission(commands.Cog):
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.ctx_menu1)
         self.bot.tree.add_command(self.ctx_menu2)
-        await self.load_characters()
         await self.load_submssions()
 
     async def cog_unload(self) -> None:
@@ -159,7 +156,9 @@ class Submission(commands.Cog):
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         moves: list[SpAbility | Ability | Move] = []
-        if oc := self.ocs.get(message.id):
+        db = self.bot.mongo_db("Characters")
+        if data := await db.find_one({"id": message.id}):
+            oc = Character.from_mongo_dict(data)
             moves = list(oc.moveset) + list(oc.abilities)
             if sp_ability := oc.sp_ability:
                 moves.append(sp_ability)
@@ -189,7 +188,9 @@ class Submission(commands.Cog):
         if isinstance(ctx.channel, Thread) and ctx.channel.archived:
             await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
-        ocs = [oc for oc in self.ocs.values() if oc.author == member.id]
+        Character.from_mongo_dict
+        db = self.bot.mongo_db("Characters")
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
         view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
         embed = view.embed
         embed.color = member.color
@@ -282,8 +283,10 @@ class Submission(commands.Cog):
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
 
-            former = self.ocs.pop(oc.id, None)
-            self.ocs[oc.id] = oc
+            db = self.bot.mongo_db("Characters")
+            if former := await db.find_one({"id": oc.id}):
+                former = Character.from_mongo_dict(former)
+
             self.bot.logger.info(
                 "Character has been %s! > %s > %s > %s",
                 word,
@@ -292,11 +295,7 @@ class Submission(commands.Cog):
                 oc.document_url or "Manual",
             )
 
-            await self.bot.mongo_db("Characters").replace_one(
-                {"id": reference_id},
-                oc.to_mongo_dict(),
-                upsert=True,
-            )
+            await db.replace_one({"id": reference_id}, oc.to_mongo_dict(), upsert=True)
 
             try:
                 if former:
@@ -342,12 +341,18 @@ class Submission(commands.Cog):
         embeds = oc.embeds
         embeds[0].set_image(url="attachment://image.png")
         guild = self.bot.get_guild(oc.server)
-        thread_id = self.oc_list.get(oc.author, oc.thread)
-        channel = await guild.fetch_channel(thread_id)
-        msg = PartialMessage(channel=channel, id=oc.id)
+        db = self.bot.mongo_db("Roleplayers")
+        if item := await db.find_one({"user": oc.author}):
+            thread = await guild.fetch_channel(item["id"])
+        elif thread_id := oc.thread:
+            thread = await guild.fetch_channel(thread_id)
+        else:
+            thread = await self.list_update(oc.author)
+
+        msg = PartialMessage(channel=thread, id=oc.id)
         try:
-            if channel.archived:
-                await channel.edit(archived=False)
+            if thread.archived:
+                await thread.edit(archived=False)
             await msg.edit(embeds=embeds)
         except NotFound:
             await self.register_oc(oc)
@@ -399,7 +404,8 @@ class Submission(commands.Cog):
         if "Npc" in author or "Narrator" in author:
             return
 
-        if ocs := [item for item in self.ocs.values() if item.author == member_id]:
+        db = self.bot.mongo_db("Characters")
+        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member_id})]:
             if item := process.extractOne(
                 author,
                 choices=ocs,
@@ -464,12 +470,6 @@ class Submission(commands.Cog):
         with suppress(AsyncTimeoutError):
             msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
             await self.on_message_tupper(msg, message.author.id)
-
-    async def load_characters(self):
-        self.bot.logger.info("Loading all Characters.")
-        data: list[dict] = [x async for x in self.bot.mongo_db("Characters").find({})]
-        self.ocs = {oc.id: oc for oc in map(Character.from_mongo_dict, data)}
-        self.bot.logger.info("Finished loading all characters")
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
@@ -627,22 +627,11 @@ class Submission(commands.Cog):
         """
         if payload.parent_id != 919277769735680050:
             return
-        ocs = [oc for oc in self.ocs.values() if oc.thread == payload.thread_id]
 
-        if not ocs:
-            return
-
-        self.oc_list.pop(ocs[0].author, None)
-        db = self.bot.mongo_db("Characters")
-        for oc in ocs:
-            self.ocs.pop(oc.id, None)
-            self.bot.logger.info(
-                "Character Removed as Thread was removed! > %s - %s > %s",
-                oc.name,
-                repr(oc),
-                oc.document_url or "None",
-            )
-            await db.delete_one({"id": oc.id})
+        db = self.bot.mongo_db("Roleplayers")
+        db2 = self.bot.mongo_db("Characters")
+        await db.delete_one({"id": payload.thread_id})
+        await db2.delete_many({"thread": payload.thread_id})
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
@@ -653,22 +642,10 @@ class Submission(commands.Cog):
         payload : RawMessageDeleteEvent
             Information
         """
-        ocs = []
-        message = "Character Removed as message was removed! > %s - %s > %s"
-        if oc := self.ocs.get(payload.message_id):
-            ocs.append(oc)
-        elif payload.message_id in self.oc_list.values():
-            author_id: int = [k for k, v in self.oc_list.items() if v == payload.message_id][0]
-            del self.oc_list[author_id]
-            ocs = [oc for oc in self.ocs.values() if oc.author == author_id]
-            message = "Character Removed as Thread was removed! > %s - %s > %s"
-        if not ocs:
-            return
-        db = self.bot.mongo_db("Characters")
-        for oc in ocs:
-            self.ocs.pop(oc.id, None)
-            self.bot.logger.info(message, oc.name, repr(oc), oc.document_url or "None")
-            await db.delete_one({"id": oc.id})
+        db = self.bot.mongo_db("Roleplayers")
+        db2 = self.bot.mongo_db("Characters")
+        await db.delete_one({"id": payload.message_id})
+        await db2.delete_many({"$or": [{"id": payload.message_id}, {"thread": payload.message_id}]})
 
     @commands.command()
     @commands.guild_only()
@@ -676,12 +653,13 @@ class Submission(commands.Cog):
         async with ctx.typing():
             data = [x for x in ctx.message.attachments if x.content_type.startswith("image/")]
             image = data[0].proxy_url if data else None
-            ocs = [self.ocs[x] for x in oc_ids if x in self.ocs]
-            url = Character.collage(ocs, background=image, font=font)
-            if file := await self.bot.get_file(url):
-                await ctx.reply(file=file)
-            else:
-                await ctx.reply(content=url)
+            db = self.bot.mongo_db("Characters")
+            if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
+                url = Character.collage(ocs, background=image, font=font)
+                if file := await self.bot.get_file(url):
+                    await ctx.reply(file=file)
+                else:
+                    await ctx.reply(content=url)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
@@ -714,7 +692,8 @@ class Submission(commands.Cog):
                 await ctx.followup.send(embeds=character.embeds, view=view, ephemeral=True)
             return
 
-        if ocs := [oc for oc in self.ocs.values() if oc.author == member.id]:
+        db = self.bot.mongo_db("Characters")
+        if ocs := [Character.from_mongo_dict(item) async for item in db.find({"author": member.id})]:
             ocs.sort(key=lambda x: x.name)
             view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
             embed = view.embed
