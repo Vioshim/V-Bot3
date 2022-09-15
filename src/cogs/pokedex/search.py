@@ -433,11 +433,10 @@ class OCGroupBySpecies(OCGroupBy):
 
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        data = {x.name: frozenset() for x in Kind if x not in STANDARD}
-        total = cls.total_data(ctx)
         ocs = sorted(ocs, key=lambda x: x.kind.name)
+        data = {k.name: frozenset(o) for k in Kind if k not in STANDARD and (o := {x for x in ocs if x.kind == k})}
+        total = cls.total_data(ctx)
         data |= {k.name: frozenset({x for x in ocs if getattr(x.species, "base", x.species) == k}) for k in total}
-        data |= {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind) if k not in STANDARD}
         return data
 
 
@@ -531,10 +530,8 @@ class OCGroupByMember(OCGroupBy):
 class OCGroupByHiddenPower(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        data = {k.name: frozenset() for k in TypingEnum}
-        ocs = sorted(ocs, key=lambda x: x.hidden_power.name if x.hidden_power else "Unknown")
-        for k, v in groupby(ocs, key=lambda x: x.hidden_power.name if x.hidden_power else "Unknown"):
-            data[k] = frozenset(v)
+        data = {k.name: frozenset({x for x in ocs if x.hidden_power == k}) for k in TypingEnum}
+        data["Unknown"] = frozenset({x for x in ocs if x.hidden_power is None})
         return data
 
 
