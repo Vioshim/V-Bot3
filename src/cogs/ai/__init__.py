@@ -15,12 +15,14 @@
 
 from discord import (
     Embed,
+    Interaction,
     Message,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     TextChannel,
     Thread,
+    app_commands,
 )
 from discord.ext import commands
 from openai import Completion
@@ -133,23 +135,30 @@ class AiCog(commands.Cog):
             self.cache.pop(item, None)
             self.msg_cache.pop(item, None)
 
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_any_role("Booster", "Moderation")
-    async def ai(self, ctx: commands.Context, *, text: str):
-        """OpenAI Generator
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    async def ai(self, ctx: Interaction, text: str, ephemeral: bool = True):
+        """Open AI Generator
 
         Parameters
         ----------
-        ctx : commands.Context
-            Context
+        ctx : Interaction
+            Interaction
         text : str
             Text
+        ephemeral : bool, optional
+            If invisible, by default True
         """
-        if len(text := await self.bot.loop.run_in_executor(None, ai_completition, text)) <= 2000:
-            await ctx.reply(content=text or "\u200b")
+        req = ["Booster", "Moderation"]
+        if not ephemeral and not any([x.name in req for x in ctx.user.roles]):
+            embed = Embed(title="Needs any of the following roles", description=", ".join(req))
+            await ctx.response.send_message(embed=embed, ephemeral=True)
         else:
-            await ctx.reply(embed=Embed(description=text[:4096]))
+            await ctx.response.defer(ephemeral=ephemeral, thinking=True)
+            if len(text := await self.bot.loop.run_in_executor(None, ai_completition, text)) <= 2000:
+                await ctx.followup.send(text or "\u200b", ephemeral=ephemeral)
+            else:
+                await ctx.followup.send(embed=Embed(description=text[:4096]), ephemeral=ephemeral)
 
 
 async def setup(bot: CustomBot) -> None:
