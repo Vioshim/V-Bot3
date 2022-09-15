@@ -434,15 +434,10 @@ class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         data = {x.name: frozenset() for x in Kind if x not in STANDARD}
-        data |= {x.name: frozenset() for x in cls.total_data(ctx)}
-        data |= {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind) if k not in STANDARD}
+        total = cls.total_data(ctx)
         ocs = sorted(ocs, key=lambda x: x.kind.name)
-        ocs.sort(key=lambda x: getattr(x.species, "base", x.species).name)
-        data |= {
-            k.name: frozenset(v)
-            for k, v in groupby(ocs, key=lambda x: getattr(x.species, "base", x.species))
-            if any(x.from_class(k) for x in STANDARD)
-        }
+        data |= {k.name: frozenset({x for x in ocs if getattr(x.species, "base", x.species) == k}) for k in total}
+        data |= {k.name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind) if k not in STANDARD}
         return data
 
 
@@ -462,27 +457,24 @@ class OCGroupByEvoLine(OCGroupBy):
 
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        data = {x.name: set() for x in cls.total_data(ctx)}
+        total = cls.total_data(ctx)
+        data = {x.name: set() for x in total}
 
         for oc in ocs:
             if isinstance(species := oc.species, (Fusion, Chimera)):
-                for mon in species.bases:
+                for mon in filter(lambda x: x in total, species.bases):
                     mon = mon.first_evo.name
-                    data.setdefault(mon, set())
                     data[mon].add(oc)
             elif species:
                 mon = species
                 if isinstance(species, (CustomMega, Variant)):
                     mon = species.base.first_evo
                 elif isinstance(species, Fakemon):
-                    if mon := species.species_evolves_from:
-                        mon = mon.first_evo
-                    else:
-                        continue
+                    mon = species.species_evolves_from
                 else:
                     mon = mon.first_evo
-                data.setdefault(mon.name, set())
-                data[mon.name].add(oc)
+                if mon and mon in total:
+                    data[mon.name].add(oc)
 
         return data
 
