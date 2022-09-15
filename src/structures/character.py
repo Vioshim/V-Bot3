@@ -47,7 +47,7 @@ from src.structures.species import (
     UltraBeast,
     Variant,
 )
-from src.utils.functions import common_pop_get, int_check
+from src.utils.functions import common_pop_get, fix, int_check
 from src.utils.imagekit import Fonts, ImageKit
 
 __all__ = ("Character", "CharacterArg", "Kind")
@@ -147,14 +147,14 @@ class Kind(Enum):
 
     @classmethod
     def associated(cls, name: str) -> Optional[Kind]:
-        match name:
+        match fix(name):
             case "COMMON":
                 return cls.Common
             case "LEGENDARY":
                 return cls.Legendary
             case "MYTHICAL":
                 return cls.Mythical
-            case "ULTRA BEAST":
+            case "ULTRABEAST":
                 return cls.UltraBeast
             case "FAKEMON":
                 return cls.Fakemon
@@ -164,7 +164,7 @@ class Kind(Enum):
                 return cls.Mega
             case "FUSION":
                 return cls.Fusion
-            case "CUSTOM MEGA":
+            case "CUSTOMMEGA":
                 return cls.CustomMega
             case "CHIMERA":
                 return cls.Chimera
