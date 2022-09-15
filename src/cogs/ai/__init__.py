@@ -147,7 +147,7 @@ class AiCog(commands.Cog):
             Text
         """
         if len(text := await self.bot.loop.run_in_executor(None, ai_completition, text)) <= 2000:
-            await ctx.reply(content=text)
+            await ctx.reply(content=text or "\u200b")
         else:
             await ctx.reply(embed=Embed(description=text[:4096]))
 
