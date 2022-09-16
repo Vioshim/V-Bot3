@@ -301,7 +301,7 @@ class Submission(commands.Cog):
 
             try:
                 if former:
-                    log = await self.bot.webhook(1001125143071965204, reason="Logging")
+                    log = await self.bot.webhook(1020151767532580934, reason="Logging")
                     if isinstance(user, (User, Member)):
                         username, avatar_url = user.display_name, user.display_avatar.url
                     else:
@@ -329,7 +329,7 @@ class Submission(commands.Cog):
                         await log.send(
                             embeds=embeds,
                             files=files,
-                            thread=Object(id=1001125684476915852),
+                            thread=Object(id=1020153309425836122),
                             username=username,
                             avatar_url=avatar_url,
                             view=view,
