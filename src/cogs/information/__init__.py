@@ -445,13 +445,13 @@ class Information(commands.Cog):
         asset = member.display_avatar.replace(format="png", size=4096)
         if file := await self.bot.get_file(asset.url, filename=str(member.id)):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
-            log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
+            log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
             await log.send(
                 file=file,
                 embed=embed,
                 view=view,
                 username=member.display_name,
-                thread=Object(id=1001125677061390477),
+                thread=Object(id=1020153313242665022),
                 avatar_url=member.display_avatar.url,
             )
 
@@ -469,7 +469,7 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {member.id}")
         asset = member.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
         if file := await self.bot.get_file(asset.url, filename="image"):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(member.created_at, style="R"))
@@ -483,7 +483,7 @@ class Information(commands.Cog):
                 embed=embed,
                 file=file,
                 view=view,
-                thread=Object(id=1001125675220074586),
+                thread=Object(id=1020153315255922738),
                 username=member.display_name,
                 avatar_url=member.display_avatar.url,
             )
@@ -521,11 +521,11 @@ class Information(commands.Cog):
         embed.set_thumbnail(url=asset.url)
         embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
 
-        log = await self.bot.webhook(1001125143071965204, reason="Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Logging")
         await log.send(
             content=now.mention,
             embed=embed,
-            thread=Object(id=1001125679405993985),
+            thread=Object(id=1020153311200022528),
             username=now.display_name,
             avatar_url=now.display_avatar.url,
         )
@@ -544,7 +544,7 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {user.id}")
         asset = user.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
         if file := await self.bot.get_file(asset.url, filename="image"):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
@@ -558,7 +558,7 @@ class Information(commands.Cog):
                 embed=embed,
                 file=file,
                 view=view,
-                thread=Object(id=1008600382655696907),
+                thread=Object(id=1020153286285865000),
                 username=user.display_name,
                 avatar_url=user.display_avatar.url,
             )
@@ -582,8 +582,8 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=icon)
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=role.guild.name, icon_url=role.guild.icon)
-        log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
-        await log.send(embed=embed, thread=Object(id=1008593211473805443))
+        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+        await log.send(embed=embed, thread=Object(id=1020153288617906256))
 
     @commands.Cog.listener()
     async def on_role_delete(self, role: Role):
@@ -606,8 +606,8 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=role.guild.name, icon_url=role.guild.icon)
-        log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
-        await log.send(embed=embed, files=files, thread=Object(id=1008593211473805443))
+        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+        await log.send(embed=embed, files=files, thread=Object(id=1020153288617906256))
 
     @commands.Cog.listener()
     async def on_role_update(self, before: Role, after: Role):
@@ -665,11 +665,11 @@ class Information(commands.Cog):
         if not condition:
             return
 
-        log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
         await log.send(
             embeds=embeds,
             files=files,
-            thread=Object(id=1008593211473805443),
+            thread=Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
@@ -707,8 +707,8 @@ class Information(commands.Cog):
             e.set_image(url=WHITE_BAR)
             e.set_footer(text=f"ID: {item.id}")
 
-        log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
-        await log.send(embeds=embeds, thread=Object(id=1008593211473805443))
+        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
+        await log.send(embeds=embeds, thread=Object(id=1020153288617906256))
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel):
@@ -760,11 +760,11 @@ class Information(commands.Cog):
         embed.set_footer(text=f"Category: {cat_name}")
         view.add_item(Button(emoji=emoji, label=name, url=channel.jump_url))
 
-        log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
         await log.send(
             embed=embed,
             view=view,
-            thread=Object(id=1008593211473805443),
+            thread=Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
@@ -821,11 +821,11 @@ class Information(commands.Cog):
             embed.set_footer(text="No Category")
             view.add_item(Button(emoji=emoji, label=name, url=channel.jump_url))
 
-        log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
         await log.send(
             embed=embed,
             view=view,
-            thread=Object(id=1008593211473805443),
+            thread=Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
@@ -928,11 +928,11 @@ class Information(commands.Cog):
             cat_name2 = getattr(after.category, "name", "No Category")
             embeds[-1].set_footer(text=f"Category: {cat_name1} -> {cat_name2}")
 
-        log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
         await log.send(
             embeds=embeds,
             view=view,
-            thread=Object(id=1008593211473805443),
+            thread=Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
@@ -949,7 +949,7 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {user.id}")
         asset = user.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(1001125143071965204, reason="Join Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
         if file := await self.bot.get_file(asset.url, filename="image"):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
@@ -962,7 +962,7 @@ class Information(commands.Cog):
                 embed=embed,
                 file=file,
                 view=view,
-                thread=Object(id=1008600382655696907),
+                thread=Object(id=1020153286285865000),
                 username=user.display_name,
                 avatar_url=user.display_avatar.url,
             )
@@ -1081,14 +1081,14 @@ class Information(commands.Cog):
         view = View()
         view.add_item(Button(emoji=emoji, label=name, url=after.jump_url))
 
-        log = await self.bot.webhook(1001125143071965204, reason="Edit Logging")
+        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
         await log.send(
             username=member.display_name,
             avatar_url=member.display_avatar,
             files=files,
             embeds=embeds,
             view=view,
-            thread=Object(id=1008588148621709414),
+            thread=Object(id=1020153290471772200),
         )
 
     @commands.Cog.listener()
@@ -1107,7 +1107,7 @@ class Information(commands.Cog):
             return
 
         user: Member = ctx.author
-        w = await self.bot.webhook(1001125143071965204, reason="Raw Message delete logging")
+        w = await self.bot.webhook(1020151767532580934, reason="Raw Message delete logging")
         if (
             not ctx.guild
             or ctx.webhook_id == w.id
@@ -1121,7 +1121,7 @@ class Information(commands.Cog):
             if not ctx.webhook_id:
                 kwargs["content"] = ctx.author.mention
                 kwargs["allowed_mentions"] = AllowedMentions.none()
-            await w.send(**kwargs, thread=Object(id=1001125373372809216))
+            await w.send(**kwargs, thread=Object(id=1020153332481937518))
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
@@ -1152,7 +1152,7 @@ class Information(commands.Cog):
         if not msg.guild or msg.guild.id != 719343092963999804:
             return
 
-        w = await self.bot.webhook(1001125143071965204, reason="Bulk delete logging")
+        w = await self.bot.webhook(1020151767532580934, reason="Bulk delete logging")
 
         if (messages := [x for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]) and (
             paste := await self.bot.m_bin.create_paste(
@@ -1186,7 +1186,7 @@ class Information(commands.Cog):
             view = View()
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
             view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
-            await w.send(embed=embed, view=view, thread=Object(id=1001125665128579142))
+            await w.send(embed=embed, view=view, thread=Object(id=1020153317889953833))
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
