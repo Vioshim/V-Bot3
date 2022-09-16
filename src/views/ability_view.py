@@ -138,7 +138,7 @@ class SPAbilityView(Basic):
     def __init__(self, target: Interaction, member: Member, oc: Character):
         super(SPAbilityView, self).__init__(target=target, member=member, timeout=None)
         self.embed.title = "Special Ability Settings"
-        self.sp_ability: Optional[SpAbility] = None
+        self.sp_ability: Optional[SpAbility] = oc.sp_ability
         self.member = member
         self.oc = oc
 
@@ -220,6 +220,5 @@ class SPAbilityView(Basic):
 
     async def cancel(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        self.sp_ability = SpAbility()
         self.embed.description = "Process concluded"
         await resp.edit_message(embed=self.embed, view=None)
