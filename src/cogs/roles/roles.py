@@ -27,6 +27,7 @@ from discord import (
     Color,
     DiscordException,
     Embed,
+    ForumChannel,
     Guild,
     Interaction,
     InteractionResponse,
@@ -396,7 +397,7 @@ class RoleSelect(View):
         placeholder="Select RP Search Roles",
         custom_id="rp-search",
         min_values=0,
-        max_values=len(RP_SEARCH_ROLES),
+        max_values=5,
         options=[
             SelectOption(
                 label=f"{key} RP Search",
@@ -427,6 +428,15 @@ class RoleSelect(View):
             )
         else:
             await self.choice(ctx, sct)
+            db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
+            if item := await db.find_one({"user": member.id}):
+                if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
+                    channel: Thread = await ctx.guild.fetch_channel(item["id"])
+                forum: ForumChannel = channel.parent
+                data = {get(ctx.guild.roles, name=x.name): x for x in forum.available_tags}
+                tags = [data[x] for x in ctx.user.roles if x in data]
+                if set(channel.applied_tags) != set(tags):
+                    await channel.edit(archived=False, applied_tags=tags[:5])
 
     @select(
         placeholder="AFK Schedule (No timezone)",
