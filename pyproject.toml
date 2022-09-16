@@ -7,8 +7,8 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.10.6"
-discord-py = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
+python = "3.10.7"
+"discord.py" = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
     "speed",
     "voice",
 ] }
