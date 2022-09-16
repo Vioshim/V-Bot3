@@ -38,13 +38,13 @@ logger = getLogger(__name__)
 load_dotenv()
 
 try:
-    from uvloop import EventLoopPolicy  # type: ignore
-except ModuleNotFoundError:
-    logger.error("Not using uvloop")
-else:
     from asyncio import set_event_loop_policy
 
+    from uvloop import EventLoopPolicy  # type: ignore
+
     set_event_loop_policy(EventLoopPolicy())
+except ModuleNotFoundError:
+    logger.error("Not using uvloop")
 
 
 async def init_connection(conn: Connection):
