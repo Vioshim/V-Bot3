@@ -272,12 +272,12 @@ class Submission(commands.Cog):
                     msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                     word = "modified"
                 except NotFound:
-                    if attachments := kwargs.get("attachments", []):
+                    if attachments := kwargs.pop("attachments", []):
                         kwargs["files"] = attachments
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
             else:
-                if attachments := kwargs.get("attachments", []):
+                if attachments := kwargs.pop("attachments", []):
                     kwargs["files"] = attachments
                 if msg_oc := await thread.send(**kwargs):
                     reference_id = msg_oc.id
