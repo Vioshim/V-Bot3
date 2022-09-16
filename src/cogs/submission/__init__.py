@@ -221,9 +221,14 @@ class Submission(commands.Cog):
             if isinstance(member, Object):
                 member = channel.guild.get_member(member.id) or member
             if isinstance(member, (User, Member)):
-                tags = []
                 if isinstance(member, Member):
-                    tags.extend(o for x in member.roles if (o := get(channel.available_tags, name=x)))
+                    tags = [
+                        o
+                        for x in map(lambda x: x.name.removesuffix(" RP Search"), member.roles)
+                        if (o := get(channel.available_tags, name=x))
+                    ]
+                else:
+                    tags = MISSING
                 file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
