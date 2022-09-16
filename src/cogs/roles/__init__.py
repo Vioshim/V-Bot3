@@ -139,19 +139,22 @@ class Roles(commands.Cog):
             msg = PartialMessage(channel=channel, id=payload.message_id)
 
             webhook = await self.bot.webhook(958122815171756042, reason="Ping")
-            embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=member.color)
-            embed.set_image(url=WHITE_BAR)
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             view = View()
-            url = "https://discord.com/channels/{0.guild_id}/{0.message_id}".format(payload)
+            url = f"https://discord.com/channels/{payload.guild_id}/{payload.message_id}"
             view.add_item(Button(label="Your OCs", url=url))
             if item2 := await db.find_one({"user": member.id}):
-                view.add_item(Button(label="User's OCs", url=url.replace(str(payload.message_id), str(item2["id"]))))
+                url = f"https://discord.com/channels/{payload.guild_id}/{item2['id']}"
+                view.add_item(Button(label="User's OCs", url=url))
 
             if (author := guild.get_member(item["user"])) and author != member:
-                embed.description = (
-                    f"Hello {author.display_name}\n\n{member.display_name} is interested on Rping with your characters."
+                embed = Embed(
+                    title=f"Hello {author.display_name}",
+                    description=f"{member.display_name} is interested on Rping with your characters.",
+                    timestamp=utcnow(),
+                    color=member.color,
                 )
+                embed.set_image(url=WHITE_BAR)
+                embed.set_footer(text=guild.name, icon_url=guild.icon)
                 msg = await webhook.send(
                     avatar_url=member.display_avatar.url,
                     username=member.display_name,
