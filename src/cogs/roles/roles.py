@@ -433,7 +433,7 @@ class RoleSelect(View):
                 if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
                     channel: Thread = await ctx.guild.fetch_channel(item["id"])
                 forum: ForumChannel = channel.parent
-                data = {get(ctx.guild.roles, name=x.name): x for x in forum.available_tags}
+                data = {get(ctx.guild.roles, name=f"{x.name} RP Search"): x for x in forum.available_tags}
                 tags = [data[x] for x in ctx.user.roles if x in data]
                 if set(channel.applied_tags) != set(tags):
                     await channel.edit(archived=False, applied_tags=tags[:5])
