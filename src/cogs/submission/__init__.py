@@ -41,7 +41,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.utils import MISSING
+from discord.utils import MISSING, get
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
@@ -221,11 +221,15 @@ class Submission(commands.Cog):
             if isinstance(member, Object):
                 member = channel.guild.get_member(member.id) or member
             if isinstance(member, (User, Member)):
+                tags = []
+                if isinstance(member, Member):
+                    tags.extend(o for x in member.roles if (o := get(channel.available_tags, name=x)))
                 file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
                     content=member.mention,
                     file=file,
+                    applied_tags=sorted(tags[:5], key=lambda x: x.name),
                     allowed_mentions=AllowedMentions(users=True),
                 )
             else:
