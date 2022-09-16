@@ -38,8 +38,6 @@ from discord.utils import MISSING
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
-DEFAULT_IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/995333199280472064/unknown.png"
-
 
 class ReminderModal(Modal, title="Reminder"):
     due = TextInput(
@@ -123,7 +121,7 @@ class Reminder(commands.Cog):
                 msg = await webhook.send(
                     content=member.mention,
                     username="Fennekin Reminder",
-                    avatar_url=DEFAULT_IMAGE,
+                    avatar_url="https://hmp.me/dx4e",
                     embed=embed,
                     thread=thread,
                     allowed_mentions=AllowedMentions(users=True),
