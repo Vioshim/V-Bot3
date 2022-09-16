@@ -306,6 +306,8 @@ class RoleSelect(View):
 
         await ctx.followup.send(embed=embed, ephemeral=True)
 
+        return set(member.roles) | add - remove
+
     @select(
         placeholder="Select Pronoun Roles",
         custom_id="pronouns",
@@ -427,19 +429,14 @@ class RoleSelect(View):
                 ephemeral=True,
             )
         else:
-            await self.choice(ctx, sct)
+            roles = await self.choice(ctx, sct)
+            roles = [x.name.removesuffix(" RP Search") for x in roles]
             db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
             if item := await db.find_one({"user": member.id}):
                 if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
                     channel: Thread = await ctx.guild.fetch_channel(item["id"])
                 forum: ForumChannel = channel.parent
-                tags = [
-                    o
-                    for x in ctx.user.roles
-                    if (o := get(forum.available_tags, name=x.name.removesuffix(" RP Search")))
-                ][:5]
-                print("Applied", ", ".join(sorted(x.name for x in channel.applied_tags)))
-                print("Modified", ", ".join(sorted(x.name for x in tags)))
+                tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
                 if set(channel.applied_tags) != set(tags):
                     await channel.edit(archived=False, applied_tags=tags)
 
