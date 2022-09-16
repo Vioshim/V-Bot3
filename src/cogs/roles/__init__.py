@@ -124,7 +124,7 @@ class Roles(commands.Cog):
         if not all(
             (
                 payload.guild_id,
-                str(payload.emoji) == "\N{SPEAKER WITH THREE SOUND WAVES}",
+                str(payload.emoji) == "\N{PUBLIC ADDRESS LOUDSPEAKER}",
                 not member.bot,
             )
         ):
