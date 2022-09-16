@@ -487,18 +487,16 @@ class SpeciesField(TemplateField):
         if species.banned:
             return f"{species.name} as species are banned."
 
-        CORE = (Legendary, Mythical, Mega, UltraBeast)
-
         if isinstance(species, (Variant, CustomMega)) and isinstance(species.base, Mega):
             return "This kind of Pokemon can't have variants."
         if isinstance(species, Fakemon) and isinstance(species.evolves_from, Mega):
             return "Fakemon evolutions from this kind of Pokemon aren't possible."
-        if isinstance(species, Fusion) and all(isinstance(x, CORE) for x in species.bases):
-            return "Fusions require at least one common Pokemon."
+        if isinstance(species, Fusion) and all(isinstance(x, Mega) for x in species.bases):
+            return "Fusions can't work with all being mega."
         if isinstance(species, Chimera):
             if not (1 <= len(species.bases) <= 3):
                 return "Chimeras require to have 1-3 species."
-            if any(isinstance(x, CORE) for x in species.bases):
+            if any(isinstance(x, (Legendary, Mythical, Mega, UltraBeast)) for x in species.bases):
                 return "Chimeras from this kind of Pokemon aren't possible."
 
     @classmethod
