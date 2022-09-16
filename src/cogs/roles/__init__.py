@@ -29,6 +29,7 @@ from discord import (
     Object,
     PartialMessage,
     RawMessageDeleteEvent,
+    RawReactionActionEvent,
     Role,
     Thread,
     User,
@@ -37,7 +38,7 @@ from discord import (
 from discord.app_commands import Choice
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.utils import MISSING, find, format_dt, snowflake_time
+from discord.utils import MISSING, find, format_dt, snowflake_time, utcnow
 
 from src.cogs.roles.roles import (
     RP_SEARCH_ROLES,
@@ -116,6 +117,46 @@ class Roles(commands.Cog):
                     self.ref_msg = await msg.edit(embed=IMAGE_EMBED, view=self.view)
                 else:
                     self.ref_msg = await channel.send(embed=IMAGE_EMBED, view=self.view)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+
+        if not all(
+            (
+                payload.guild_id,
+                str(payload.emoji) == "\N{SPEAKER WITH THREE SOUND WAVES}",
+                not payload.member.bot,
+            )
+        ):
+            return
+
+        db = self.bot.mongo_db("Roleplayers")
+
+        if item := await db.find_one({"id": payload.message_id}):
+            guild = payload.member.guild
+            if not (channel := guild.get_channel_or_thread(payload.channel_id)):
+                channel = await guild.fetch_channel(payload.channel_id)
+            msg = PartialMessage(channel=channel, id=payload.message_id)
+
+            webhook = await self.bot.webhook(740568087820238919, reason="Ping")
+            embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=payload.member.color)
+            embed.set_author(name=payload.member.display_name, icon_url=payload.member.display_avatar.url)
+            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+            view = View()
+            url = "https://discord.com/channels/{0.guild}/{0.message_id}".format(payload)
+            view.add_item(Button(label="Your OCs", url=url))
+            if item2 := await db.find_one({"user": payload.member.id}):
+                view.add_item(Button(label="User's OCs", url=url.replace(str(payload.message_id), str(item2["id"]))))
+
+            if (author := guild.get_member(item["user"])) and author != payload.member:
+                await webhook.send(
+                    f"Hello {author.mention}\n\n{payload.member.mention} is interested on Rping with your characters.",
+                    embed=embed,
+                    view=view,
+                    allowed_mentions=AllowedMentions(users=True),
+                )
+
+            await msg.remove_reaction(emoji=payload.emoji, member=payload.member)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
