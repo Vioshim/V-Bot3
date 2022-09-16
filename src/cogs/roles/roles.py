@@ -226,8 +226,7 @@ class AFKModal(Modal, title="Current Time"):
         self.add_item(data)
 
     async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
-        log = interaction.client.logger
-        log.error("Ignoring exception in modal %r", self, exc_info=error)
+        logger.error("Ignoring exception in modal %r", self, exc_info=error)
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
@@ -272,8 +271,7 @@ class AFKModal(Modal, title="Current Time"):
 
 class RoleSelect(View):
     async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
-        log = interaction.client.logger
-        log.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+        logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
     async def choice(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
@@ -566,6 +564,9 @@ class RPModal(Modal):
                     item.max_values = len(characters)
                     self.add_item(item)
 
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        logger.error("Ignoring exception in Modal %r", self, exc_info=error)
+
     async def check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Roles")
@@ -677,7 +678,7 @@ class RPModal(Modal):
             embed.set_image(url=f"attachment://{file.filename}")
             await msg1.edit(embed=embed, attachments=[file])
         elif text := ", ".join(str(x.id) for x in items):
-            interaction.client.logger.info("Error Image Parsing OCs: %s", text)
+            logger.info("Error Image Parsing OCs: %s", text)
         self.stop()
 
 
@@ -756,7 +757,7 @@ class RPRolesView(View):
         self.current = current or {}
 
     async def on_error(self, interaction: Interaction, error: Exception, item) -> None:
-        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+        logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
     @select(
         placeholder="Make a new Ping",
