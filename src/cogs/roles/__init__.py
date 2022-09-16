@@ -143,7 +143,7 @@ class Roles(commands.Cog):
             embed.set_author(name=payload.member.display_name, icon_url=payload.member.display_avatar.url)
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             view = View()
-            url = "https://discord.com/channels/{0.guild}/{0.message_id}".format(payload)
+            url = "https://discord.com/channels/{0.guild_id}/{0.message_id}".format(payload)
             view.add_item(Button(label="Your OCs", url=url))
             if item2 := await db.find_one({"user": payload.member.id}):
                 view.add_item(Button(label="User's OCs", url=url.replace(str(payload.message_id), str(item2["id"]))))
