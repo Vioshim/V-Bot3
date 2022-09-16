@@ -40,7 +40,7 @@ trio_asks = ["asks", "trio"]
 [package.source]
 type = "git"
 url = "https://github.com/omarryhan/aiogoogle.git"
-reference = "HEAD"
+reference = "master"
 resolved_reference = "7ef2e9ec664aedee225cb5aff19782b797b101b3"
 
 [[package]]
@@ -120,7 +120,7 @@ test = ["asyncmy (>=0.2.5)", "asyncpg (>=0.20)", "cbor2 (>=5.0)", "coverage", "f
 [package.source]
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
-reference = "HEAD"
+reference = "master"
 resolved_reference = "49344e6954559259beb336436a45698d62eed5b4"
 
 [[package]]
@@ -1377,7 +1377,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.6"
-content-hash = "92cb21618ab60fb5723824c13f43459878d1bdd66718ee8efd2e74d7f7437099"
+content-hash = "fd92186a270e99d732c1542a43d375ac709b34dbe3d9ed4e5fff07e5e766723f"
 
 [metadata.files]
 aiodns = [
