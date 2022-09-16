@@ -236,6 +236,7 @@ class Submission(commands.Cog):
                 )
 
             thread = x.thread
+            await db.replace_one({"user": member.id}, {"id": thread.id, "user": member.id}, upsert=True)
 
         return thread
 
@@ -276,12 +277,9 @@ class Submission(commands.Cog):
                         kwargs["files"] = attachments
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
-            else:
-                if attachments := kwargs.pop("attachments", []):
-                    kwargs["files"] = attachments
-                if msg_oc := await thread.send(**kwargs):
-                    reference_id = msg_oc.id
-                    word = "registered"
+            elif msg_oc := await thread.send(**kwargs):
+                reference_id = msg_oc.id
+                word = "registered"
 
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
