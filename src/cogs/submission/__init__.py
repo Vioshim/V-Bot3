@@ -272,11 +272,16 @@ class Submission(commands.Cog):
                     msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
                     word = "modified"
                 except NotFound:
+                    if attachments := kwargs.get("attachments", []):
+                        kwargs["files"] = attachments
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
-            elif msg_oc := await thread.send(**kwargs):
-                reference_id = msg_oc.id
-                word = "registered"
+            else:
+                if attachments := kwargs.get("attachments", []):
+                    kwargs["files"] = attachments
+                if msg_oc := await thread.send(**kwargs):
+                    reference_id = msg_oc.id
+                    word = "registered"
 
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
