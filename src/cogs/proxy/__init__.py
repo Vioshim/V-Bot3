@@ -42,7 +42,7 @@ __all__ = ("Proxy", "setup")
 
 class NPC(NamedTuple):
     name: str = "Narrator"
-    avatar: str = "https://cdn.discordapp.com/attachments/748384705098940426/986339510646370344/unknown.png"
+    avatar: str = "https://hmp.me/dx4a"
 
 
 class NameModal(Modal, title="NPC Name"):

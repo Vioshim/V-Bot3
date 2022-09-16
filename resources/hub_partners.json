@@ -9,16 +9,10 @@
 	},
 	"The Simple Roleplay Hub": {
 		"image": {
-			"width": 400,
-			"url": "https://cdn.discordapp.com/attachments/748384705098940426/1001229327188365423/line.png",
-			"proxy_url": "https://media.discordapp.net/attachments/748384705098940426/1001229327188365423/line.png",
-			"height": 2
+			"url": "https://dummyimage.com/500x5/FFFFFF/000000&text=%20"
 		},
 		"thumbnail": {
-			"width": 720,
-			"url": "https://cdn.discordapp.com/icons/611716723606945805/cc714b894b22e7e2e3266ea8a9786e06.webp?size=1024",
-			"proxy_url": "https://images-ext-2.discordapp.net/external/fA03m-828yZ3QMjnoA8XtP8CMctnBrh74A9v5Rdb4GA/%3Fsize%3D1024/https/cdn.discordapp.com/icons/611716723606945805/cc714b894b22e7e2e3266ea8a9786e06.webp",
-			"height": 720
+			"url": "https://cdn.discordapp.com/icons/611716723606945805/cc714b894b22e7e2e3266ea8a9786e06.webp?size=1024"
 		},
 		"fields": [
 			{
@@ -35,10 +29,7 @@
 	},
 	"〚🌙 〛𝐂𝐫𝐞𝐬𝐜𝐞𝐧𝐭 𝐑𝐨𝐥𝐞𝐩𝐥𝐚𝐲 𝐇𝐮𝐛 〚🌙 〛": {
 		"image": {
-			"width": 640,
-			"url": "https://cdn.discordapp.com/attachments/742602526326521926/899746669824978984/MOSHED-2021-10-18-14-48-32.gif",
-			"proxy_url": "https://media.discordapp.net/attachments/742602526326521926/899746669824978984/MOSHED-2021-10-18-14-48-32.gif",
-			"height": 360
+			"url": "https://cdn.discordapp.com/attachments/742602526326521926/899746669824978984/MOSHED-2021-10-18-14-48-32.gif"
 		},
 		"fields": [
 			{

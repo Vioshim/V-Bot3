@@ -1350,7 +1350,7 @@ class SubmissionView(View):
         await resp.defer(ephemeral=True, thinking=True)
         embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
         template = Template[sct.values[0]]
-        embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/957468209597018142/image.png")
+        embed.set_image(url="https://hmp.me/dx38")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
 

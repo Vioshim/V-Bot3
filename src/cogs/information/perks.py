@@ -115,11 +115,11 @@ class CustomRoleModal(Modal, title="Custom Role"):
             )
             self.role = role
 
-        w: Webhook = await ctx.client.webhook(1001125143071965204)
+        w: Webhook = await ctx.client.webhook(1020151767532580934)
 
         await w.send(
             embed=embed,
-            thread=Object(id=1001125679405993985),
+            thread=Object(id=1020153311200022528),
             username=ctx.user.display_name,
             avatar_url=ctx.user.display_avatar.url,
         )
@@ -155,20 +155,20 @@ class RPSearchBannerPerk(Perk):
         key = {"author": ctx.user.id}
         embed = Embed(title="RP Search Banner", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        w: Webhook = await ctx.client.webhook(1001125143071965204)
+        w: Webhook = await ctx.client.webhook(1020151767532580934)
 
         if img:
             url = f"attachment://{img.filename}"
             file = await img.to_file()
         else:
-            url = "https://cdn.discordapp.com/attachments/748384705098940426/1004014765909229598/unknown.png"
+            url = "https://cdn.discordapp.com/attachments/823629617629495386/1020175863037317150/unknown.png"
             file = MISSING
 
         embed.set_image(url=url)
         m = await w.send(
             embed=embed,
             file=file,
-            thread=Object(id=1001125679405993985),
+            thread=Object(id=1020153311200022528),
             wait=True,
             username=ctx.user.display_name,
             avatar_url=ctx.user.display_avatar.url,
@@ -188,9 +188,9 @@ class OCBackgroundPerk(Perk):
         key = {"author": ctx.user.id}
         embed = Embed(title="OC Background", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        embed.set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/1004016803317563402/unknown.png")
+        embed.set_image(url="https://hmp.me/dx4c")
         file = MISSING
-        w: Webhook = await ctx.client.webhook(1001125143071965204)
+        w: Webhook = await ctx.client.webhook(1020151767532580934)
 
         if img:
             embed.set_image(url=f"attachment://{img.filename}")
@@ -199,7 +199,7 @@ class OCBackgroundPerk(Perk):
         m = await w.send(
             embed=embed,
             file=file,
-            thread=Object(id=1001125679405993985),
+            thread=Object(id=1020153311200022528),
             wait=True,
             username=ctx.user.display_name,
             avatar_url=ctx.user.display_avatar.url,

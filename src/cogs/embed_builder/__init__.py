@@ -45,7 +45,7 @@ from discord.utils import MISSING, utcnow
 from src.cogs.information import Information
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
-from src.utils.etc import RAINBOW, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import discord_url_msg, embed_handler
 
 PLAYER_FINDER = compile(r"\|raw\|(.*)'s rating: \d+ &rarr; <strong>\d+</strong><br />\((.*)\)")
@@ -976,7 +976,7 @@ class EmbedBuilder(commands.Cog):
             commands.Context
         """
         async with self.edit(ctx) as embed:
-            embed.set_image(url=RAINBOW)
+            embed.set_image(url="https://hmp.me/dx4d")
 
     @embed_image.command(name="whitebar")
     async def embed_image_whitebar(self, ctx: commands.Context, x: int = 500, y: int = 5):

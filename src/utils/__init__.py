@@ -18,7 +18,6 @@ from src.utils.etc import (
     DICE_NUMBERS,
     MAP_ELEMENTS,
     MAP_ELEMENTS2,
-    RAINBOW,
     RP_CATEGORIES,
     WHITE_BAR,
 )
@@ -57,7 +56,6 @@ __all__ = (
     "DICE_NUMBERS",
     "MAP_ELEMENTS",
     "MAP_ELEMENTS2",
-    "RAINBOW",
     "RP_CATEGORIES",
     "WHITE_BAR",
     "fix",

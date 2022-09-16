@@ -20,9 +20,7 @@ from enum import Enum
 from discord import PartialEmoji
 
 __all__ = (
-    "RAINBOW",
     "WHITE_BAR",
-    "MAP_URL",
     "DICE_NUMBERS",
     "RP_CATEGORIES",
     "MAP_ELEMENTS",
@@ -30,7 +28,6 @@ __all__ = (
     "STICKER_EMOJI",
     "SETTING_EMOJI",
     "LOADING_EMOJI",
-    "REGISTERED_IMG",
     "THUMBS_UP_EMOJI",
     "THUMBS_DOWN_EMOJI",
     "DEFAULT_TIMEZONE",
@@ -39,10 +36,7 @@ __all__ = (
     "RTFMPages",
 )
 DEFAULT_TIMEZONE = timezone(name="GMT-5", offset=timedelta(hours=-5))
-REGISTERED_IMG = "https://cdn.discordapp.com/attachments/797618220382027839/867427444579106856/registered_1.png"
-RAINBOW = "https://cdn.discordapp.com/attachments/748384705098940426/863415224626184192/image.gif"
-WHITE_BAR = "https://cdn.discordapp.com/attachments/748384705098940426/1001229327188365423/line.png"
-MAP_URL = "https://cdn.discordapp.com/attachments/748384705098940426/980675600664653844/unknown.png"
+WHITE_BAR = "https://dummyimage.com/500x5/FFFFFF/000000&text=%20"
 STICKER_EMOJI = PartialEmoji(name="MessageSticker", id=753338258963824801)
 RICH_PRESENCE_EMOJI = PartialEmoji(name="StatusRichPresence", id=842328614883295232)
 MOBILE_EMOJI = PartialEmoji(name="StatusMobileOld", id=716828817796104263)

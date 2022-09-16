@@ -18,4 +18,4 @@
 -   Wiki, OC directories integrated within discord for ease of use.
 -   RP Guidelines that are defined by community discussion.
 
-![image](https://cdn.discordapp.com/attachments/748384705098940426/909988411199348767/unknown.png)
+![image](http://i.hmp.me/m/a9600edaa7c78eef11ed9c34c4561740.png)
