@@ -140,7 +140,7 @@ class Roles(commands.Cog):
 
             webhook = await self.bot.webhook(740568087820238919, reason="Ping")
             embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=payload.member.color)
-            embed.set_author(name=payload.member.display_name, icon_url=payload.member.display_avatar.url)
+            embed.set_image(url=WHITE_BAR)
             embed.set_footer(text=guild.name, icon_url=guild.icon.url)
             view = View()
             url = "https://discord.com/channels/{0.guild_id}/{0.message_id}".format(payload)
@@ -149,8 +149,11 @@ class Roles(commands.Cog):
                 view.add_item(Button(label="User's OCs", url=url.replace(str(payload.message_id), str(item2["id"]))))
 
             if (author := guild.get_member(item["user"])) and author != payload.member:
+                embed.description = f"Hello {author.display_name}\n\n{payload.member.display_name} is interested on Rping with your characters."
                 await webhook.send(
-                    f"Hello {author.mention}\n\n{payload.member.mention} is interested on Rping with your characters.",
+                    f"Pinging {author.mention}\n\nBy: {payload.member.mention}",
+                    avatar_url=payload.member.display_avatar.url,
+                    username=payload.member.display_name,
                     embed=embed,
                     view=view,
                     allowed_mentions=AllowedMentions(users=True),
