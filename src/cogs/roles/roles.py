@@ -433,6 +433,7 @@ class RoleSelect(View):
                     channel: Thread = await ctx.guild.fetch_channel(item["id"])
                 forum: ForumChannel = channel.parent
                 tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
+                tags.sort(key=lambda x: x.name)
                 if set(channel.applied_tags) != set(tags):
                     await channel.edit(archived=False, applied_tags=tags)
 
@@ -674,7 +675,7 @@ class RPModal(Modal):
         if img := await db.find_one({"author": self.user.id}):
             img = img["image"]
 
-        if file := await interaction.client.get_file(Character.collage(list(items)[:6], background=img)):
+        if file := await interaction.client.get_file(Character.collage(items, background=img)):
             embed.set_image(url=f"attachment://{file.filename}")
             await msg1.edit(embed=embed, attachments=[file])
         elif text := ", ".join(str(x.id) for x in items):
