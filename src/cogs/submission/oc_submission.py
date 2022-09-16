@@ -1045,6 +1045,11 @@ class CreationOCView(Basic):
                 emoji = "\N{CROSS MARK}"
             self.fields.add_option(label=item.name, description=description[:100], emoji=emoji)
 
+        if count := sum(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options):
+            self.fields.placeholder = f"Click here to continue ({count} needed changes)."
+        else:
+            self.fields.placeholder = "Click here to continue."
+
         self.fields.options.sort(key=lambda x: str(x.emoji) != "\N{CROSS MARK}")
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
