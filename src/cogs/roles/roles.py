@@ -283,8 +283,6 @@ class RoleSelect(View):
         roles: set[Role] = set(get_role(sct.values, guild))
         total: set[Role] = set(get_role(sct.options, guild))
 
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
 
         embed = Embed(
@@ -306,7 +304,7 @@ class RoleSelect(View):
 
         await ctx.followup.send(embed=embed, ephemeral=True)
 
-        return set(member.roles) | add - remove
+        return roles
 
     @select(
         placeholder="Select Pronoun Roles",
@@ -478,8 +476,6 @@ class RPSearchManage(View):
     )
     async def check_ocs(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         if not (
@@ -586,9 +582,6 @@ class RPModal(Modal):
 
     async def on_submit(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-            await interaction.channel.edit(archived=True)
-
         await resp.defer(ephemeral=True, thinking=True)
 
         items = [

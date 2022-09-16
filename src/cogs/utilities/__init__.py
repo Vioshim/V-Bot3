@@ -221,8 +221,6 @@ class Utilities(commands.Cog):
             Query to look for
         """
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         await self.do_rtfm(ctx, key or RTFMPages.Discord, query)
 
@@ -320,19 +318,6 @@ class Utilities(commands.Cog):
             self.bot.logger.exception("Error while rolling dice.", exc_info=e)
         finally:
             await ctx.followup.send(embed=embed, ephemeral=hidden)
-
-    @commands.command()
-    async def archive(self, ctx: commands.Context):
-        """Command to archive threads
-
-        Parameters
-        ----------
-        ctx : commands.Context
-            Context
-        """
-        await ctx.message.delete(delay=0)
-        if isinstance(thread := ctx.channel, Thread) and thread.permissions_for(ctx.author).manage_threads:
-            await thread.edit(archived=True, reason=f"Archived by {ctx.author}")
 
 
 async def setup(bot: CustomBot) -> None:

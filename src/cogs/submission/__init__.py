@@ -152,8 +152,6 @@ class Submission(commands.Cog):
 
     async def info_checker(self, ctx: Interaction, message: Message):
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         moves: list[SpAbility | Ability | Move] = []
         db = self.bot.mongo_db("Characters")
@@ -185,8 +183,6 @@ class Submission(commands.Cog):
 
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         Character.from_mongo_dict
         db = self.bot.mongo_db("Characters")
@@ -679,8 +675,6 @@ class Submission(commands.Cog):
             Search by name, directly
         """
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         if member is None:
             member = ctx.user
@@ -724,8 +718,6 @@ class Submission(commands.Cog):
             Member, if not provided, it's current user.
         """
         resp: InteractionResponse = ctx.response
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         if member is None or ctx.user == member:
             self.bot.supporting.pop(ctx.user, None)

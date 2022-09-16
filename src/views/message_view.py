@@ -29,7 +29,6 @@ from discord import (
     NotFound,
     PartialEmoji,
     SelectOption,
-    Thread,
 )
 from discord.abc import Messageable
 from discord.ui import Select, View, select
@@ -99,8 +98,6 @@ class MessagePaginator(Complex[Message]):
         response: InteractionResponse = ctx.response
         if item := self.current_choice:
             view = View.from_message(item)
-            if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-                await ctx.channel.edit(archived=True)
             await response.defer(thinking=True, ephemeral=True)
             files = []
             embeds = item.embeds

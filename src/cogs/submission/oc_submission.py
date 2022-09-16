@@ -31,7 +31,6 @@ from discord import (
     PartialMessage,
     SelectOption,
     TextStyle,
-    Thread,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import MISSING, get
@@ -1266,8 +1265,6 @@ class SubmissionModal(Modal):
                         await view.send(ephemeral=False)
         except Exception as e:
             if not resp.is_done():
-                if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-                    await interaction.channel.edit(archived=True)
                 await resp.defer(ephemeral=True, thinking=True)
             await interaction.followup.send(str(e), ephemeral=True)
             interaction.client.logger.exception(
@@ -1378,8 +1375,6 @@ class SubmissionView(View):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         member = ctx.client.supporting.get(member, member)
         values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]

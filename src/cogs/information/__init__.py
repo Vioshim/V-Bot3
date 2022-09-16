@@ -44,7 +44,6 @@ from discord import (
     Role,
     TextChannel,
     TextStyle,
-    Thread,
     User,
     Webhook,
     app_commands,
@@ -170,8 +169,6 @@ class AnnouncementModal(Modal):
 
     async def on_submit(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
-        if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-            await interaction.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         webhook: Webhook = await interaction.client.webhook(interaction.channel)
         embeds: list[Embed] = self.kwargs.get("embeds")
@@ -1435,9 +1432,6 @@ class Information(commands.Cog):
 
         with suppress(NotFound):
             if not resp.is_done():
-                ch = interaction.channel
-                if isinstance(ch, Thread) and ch.archived:
-                    await ch.edit(archived=True)
                 await resp.defer(thinking=True, ephemeral=True)
 
         embed = Embed(color=Colour.red(), timestamp=interaction.created_at)

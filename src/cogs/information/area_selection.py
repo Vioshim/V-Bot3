@@ -113,8 +113,6 @@ class RegionViewComplex(Complex[MapPair]):
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         try:
             resp: InteractionResponse = interaction.response
-            if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-                await interaction.channel.edit(archived=True)
             await resp.defer(ephemeral=True, thinking=True)
             info = self.current_choice
             cat = interaction.guild.get_channel(info.category)

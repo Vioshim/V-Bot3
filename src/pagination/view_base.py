@@ -35,7 +35,6 @@ from discord import (
     PartialEmoji,
     PartialMessage,
     StickerItem,
-    Thread,
     User,
     Webhook,
 )
@@ -264,8 +263,6 @@ class Basic(View):
                 return
 
             if not resp.is_done():
-                if isinstance(target, Thread) and target.archived:
-                    await target.edit(archived=True)
                 await resp.defer(ephemeral=ephemeral, thinking=thinking)
             try:
                 self.message = await target.followup.send(**data, wait=True)

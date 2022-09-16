@@ -140,8 +140,6 @@ class Pokedex(commands.Cog):
             timestamp=utcnow(),
         )
         embed.set_image(url=WHITE_BAR)
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
 
         mons = {species, fused, chimera}
@@ -273,8 +271,6 @@ class Pokedex(commands.Cog):
         resp: InteractionResponse = ctx.response
         text: str = ""
         guild: Guild = ctx.guild
-        if isinstance(ctx.channel, Thread) and ctx.channel.archived:
-            await ctx.channel.edit(archived=True)
         await resp.defer(ephemeral=True, thinking=True)
         embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=utcnow())
         embed.set_image(url=WHITE_BAR)
