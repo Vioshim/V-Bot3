@@ -35,7 +35,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Select, View, button, select
-from discord.utils import find, get, utcnow
+from discord.utils import get, utcnow
 
 from src.cogs.inviter.classifier import InviterView
 from src.pagination.complex import Complex
@@ -251,8 +251,8 @@ class Inviter(commands.Cog):
         if not isinstance(invite_guild := invite.guild, PartialInviteGuild) or invite_guild == guild:
             return
 
-        if not (mod_ch := find(lambda x: "mod-chat" in x.name, guild.channels)):
-            return
+        if not (mod_ch := guild.get_channel_or_thread(1020157013126283284)):
+            mod_ch = await guild.fetch_channel(1020157013126283284)
 
         generator = Embed(
             title=f"__**{guild.name} is now officially partnered with {invite_guild.name}**__",

@@ -52,7 +52,7 @@ from discord import (
 from discord.abc import GuildChannel
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import find, format_dt, get, utcnow
+from discord.utils import format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from yaml import dump
 
@@ -307,11 +307,13 @@ class TicketModal(Modal, title="Ticket"):
             view=view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI)),
         )
         await thread.add_user(member)
-        if mod_channel := find(lambda x: "mod-chat" in x.name, interaction.guild.channels):
-            embed = Embed(title=f"Ticket {name}"[:256], color=member.color, timestamp=utcnow())
-            embed.set_thumbnail(url=member.display_avatar.url)
-            embed.set_image(url=WHITE_BAR)
-            await mod_channel.send(embed=embed, view=view)
+        if not (mod_channel := interaction.guild.get_channel_or_thread(1020157013126283284)):
+            mod_channel = await interaction.guild.fetch_channel(1020157013126283284)
+
+        embed = Embed(title=f"Ticket {name}"[:256], color=member.color, timestamp=utcnow())
+        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_image(url=WHITE_BAR)
+        await mod_channel.send(embed=embed, view=view)
         self.stop()
 
 
