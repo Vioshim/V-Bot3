@@ -416,6 +416,14 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Characters")
         if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member_id})]:
+
+            if isinstance(channel := message.channel, Thread):
+                if isinstance(channel.parent, ForumChannel):
+                    return
+                thread_id, channel_id = channel.id, channel.parent_id
+            else:
+                thread_id, channel_id = None, channel.id
+
             if item := process.extractOne(
                 author,
                 choices=ocs,
@@ -427,11 +435,6 @@ class Submission(commands.Cog):
                 oc = ocs[0]
             else:
                 return
-
-            if isinstance(channel := message.channel, Thread):
-                thread_id, channel_id = channel.id, channel.parent_id
-            else:
-                thread_id, channel_id = None, channel.id
 
             await self.bot.mongo_db("RP Samples").replace_one(
                 {"id": message.id},
@@ -605,7 +608,6 @@ class Submission(commands.Cog):
             and tupper.status == Status.online
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
-            and "\N{RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK}" not in message.channel.name
         ):
             if tupper == message.author:
                 self.bot.msg_cache_add(message)
