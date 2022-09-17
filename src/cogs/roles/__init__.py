@@ -131,7 +131,6 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("Roleplayers")
-
         if item := await db.find_one({"id": payload.message_id}):
             guild = member.guild
             if not (channel := guild.get_channel_or_thread(payload.channel_id)):
@@ -219,7 +218,7 @@ class Roles(commands.Cog):
         db = self.bot.mongo_db("AFK")
         if msg.mentions and (
             afk_members := [
-                f"• {user.mention}"
+                f"• {user.mention} ({user.display_name})"
                 async for item in db.find(
                     {
                         "user": {
@@ -228,7 +227,7 @@ class Roles(commands.Cog):
                     }
                 )
                 if (user := msg.guild.get_member(item["user"]))
-                and ((msg.created_at + timedelta(seconds=item["offset"])).hour in item["hours"])
+                and ((msg.created_at + timedelta(hours=item["offset"])).hour in item["hours"])
             ]
         ):
             embed = Embed(

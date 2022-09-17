@@ -233,30 +233,32 @@ class Moderation(commands.Cog):
     @app_commands.checks.has_role("Registered")
     async def vote(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
         resp: InteractionResponse = interaction.response
+        await resp.defer(ephemeral=True, thinking=True)
+
         if not isinstance(member, Member):
             member = interaction.guild.get_member(member)
 
         if not member:
-            await resp.send_message(content="Command failed as member was not found", ephemeral=True)
+            await interaction.followup.send(content="Command failed as member was not found", ephemeral=True)
             return
         if member == interaction.user:
-            await resp.send_message(content="You can't report yourself. Tool isn't a joke", ephemeral=True)
+            await interaction.followup.send(content="You can't report yourself. Tool isn't a joke", ephemeral=True)
             return
         if member.bot:
-            await resp.send_message(content="That's a bot, if it's here was added by staff.", ephemeral=True)
+            await interaction.followup.send(content="That's a bot, if it's here was added by staff.", ephemeral=True)
             return
         moderation: Role = get(interaction.guild.roles, name="Moderation")
         if member.top_role >= interaction.user.top_role:
-            await resp.send_message(content="Member has a higher or same role than yours.", ephemeral=True)
+            await interaction.followup.send(content="Member has a higher or same role than yours.", ephemeral=True)
             return
         view = Meeting(reporter=interaction.user, imposter=member, reason=reason)
         time = format_dt(utcnow() + timedelta(seconds=60), style="R")
-        await resp.send_message(
+        msg = await interaction.followup.send(
             content=f"{moderation.mention}  -  {time}",
             embed=view.embed,
             allowed_mentions=AllowedMentions(roles=True),
+            wait=True,
         )
-        msg = await interaction.original_message()
         thread = await msg.create_thread(name=f"Discuss {member.id}")
         await thread.add_user(interaction.user)
         view.message = msg

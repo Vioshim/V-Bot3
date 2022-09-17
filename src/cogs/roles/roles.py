@@ -218,7 +218,7 @@ class AFKModal(Modal, title="Current Time"):
             max_length=8,
             placeholder="01:00 PM",
         )
-        self.hours = [*map(int, hours)] if hours else []
+        self.hours = [*map(int, hours or [])]
         self.hours.sort()
         data.placeholder = data.default = utcnow().strftime("%I:00 %p")
         self.offset: int = 0
