@@ -390,7 +390,8 @@ class Pokedex(commands.Cog):
             view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
 
         async with view.send(ephemeral=True, embeds=embeds, content=text):
-            self.bot.logger.info("%s is reading /find %s", str(ctx.user), repr(ctx.namespace))
+            namespace = " ".join(f"{k}={v}" for k, v in ctx.namespace)
+            self.bot.logger.info("%s is reading /find %s", str(ctx.user), namespace)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)

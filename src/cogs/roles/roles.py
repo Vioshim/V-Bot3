@@ -129,7 +129,7 @@ RP_SEARCH_ROLES = dict(
 )
 
 
-def get_role(items: Iterable, guild: Guild):
+def get_role(items: Iterable[SelectOption | str], guild: Guild):
     for x in items:
         if isinstance(x, SelectOption):
             x = x.value

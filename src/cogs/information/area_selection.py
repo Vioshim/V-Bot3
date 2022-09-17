@@ -88,7 +88,7 @@ class AreaSelection(Complex[TextChannel]):
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
             embed.set_footer(text=f"There's {len(ocs):02d} OCs here.")
             await view.simple_send(ephemeral=True, embed=embed)
-            interaction.client.logger.info("%s user is checking ocs at %s", str(interaction.user), channel.name)
+            interaction.client.logger.info("%s user is checking ocs at %s", interaction.user, channel.name)
         except Exception as e:
             interaction.client.logger.exception("Error in location view", exc_info=e)
         finally:
@@ -121,11 +121,7 @@ class RegionViewComplex(Complex[MapPair]):
             db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
             ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
             view = AreaSelection(target=interaction, cat=cat, ocs=ocs)
-            interaction.client.logger.info(
-                "%s is reading Map Information of %s",
-                str(interaction.user),
-                cat.name,
-            )
+            interaction.client.logger.info("%s is reading Map Information of %s", interaction.user, cat.name)
             registered = interaction.guild.get_role(719642423327719434)
             if registered not in interaction.user.roles:
                 embed.add_field(name="Note", value="Go to <#852180971985043466> in order to get access to the RP.")
