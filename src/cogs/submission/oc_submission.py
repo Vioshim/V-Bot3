@@ -560,7 +560,7 @@ class PreEvoSpeciesField(TemplateField):
 
 class TypesField(TemplateField):
     name = "Types"
-    escription = "Fill the OC's Types"
+    description = "Fill the OC's Types"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
