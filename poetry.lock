@@ -359,7 +359,7 @@ calendars = ["convertdate", "hijri-converter", "convertdate"]
 
 [[package]]
 name = "discord.py"
-version = "2.1.0a4593+gb5dc9e54"
+version = "2.1.0a4597+g46d194df"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -383,7 +383,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "b5dc9e54a0e0d3d61647c8940a9ed0d731f34759"
+resolved_reference = "46d194df5745885fe0d7791f13f49bab6f9d59b4"
 
 [[package]]
 name = "distlib"
