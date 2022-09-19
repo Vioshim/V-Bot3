@@ -1094,20 +1094,23 @@ class CreationOCView(Basic):
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             self.stop()
 
-    async def upload(self):
+    async def upload(self, new_id: int = None):
+        data = dict(
+            template=self.ref_template.name,
+            author=self.user.id,
+            character=self.oc.to_mongo_dict(),
+            progress=list(self.progress),
+        )
+        db = self.bot.mongo_db("OC Creation")
         if m := self.message:
-            db = self.bot.mongo_db("OC Creation")
-            await db.replace_one(
-                dict(id=m.id),
-                dict(
-                    id=m.id,
-                    template=self.ref_template.name,
-                    author=self.user.id,
-                    character=self.oc.to_mongo_dict(),
-                    progress=list(self.progress),
-                ),
-                upsert=True,
-            )
+            data["id"] = new_id or m.id
+            await db.replace_one(dict(id=m.id), data, upsert=True)
+        elif new_id:
+            data["id"] = new_id
+            await db.replace_one(dict(id=new_id), data, upsert=True)
+        else:
+            data["id"] = None
+            await db.insert_one(data)
 
     async def update(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -1137,7 +1140,7 @@ class CreationOCView(Basic):
                 self.setup(embed_update=False)
                 m = await m.edit(view=self)
 
-            await self.upload()
+            await self.upload(m.id)
             self.message = m
 
     async def send(self, *, ephemeral: bool = False):
@@ -1145,7 +1148,7 @@ class CreationOCView(Basic):
         if not ephemeral:
             self.remove_item(self.help)
         m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
-        await self.upload()
+        await self.upload(m.id)
         return m
 
     @select(placeholder="Click here!", row=1)
@@ -1195,7 +1198,7 @@ class CreationOCView(Basic):
             message = await view.message.edit(attachments=attachments, embeds=embeds)
             if image := message.embeds[0].image:
                 self.oc.image = image.url
-                await view.upload()
+                await view.upload(message.id)
 
         await self.delete(ctx)
 
