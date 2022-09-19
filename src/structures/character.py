@@ -243,7 +243,7 @@ class Character:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
-        species: Optional[dict[str, Any]] = dct.pop("species", None)
+        species: Optional[dict[str, Any]] = dct.get("species", None)
         if isinstance(species, dict):
             if chimera := species.pop("chimera", []):
                 species["bases"] = chimera

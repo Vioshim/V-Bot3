@@ -221,7 +221,6 @@ class SpeciesTransformer(Transformer):
             filters.append(lambda x: move in x.moveset if isinstance(x, Character) else True)
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
-        print(value or "", values)
         if data := process.extract(value or "", choices=values, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in data]
         elif not value:
