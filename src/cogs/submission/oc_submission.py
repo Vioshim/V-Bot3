@@ -1089,7 +1089,7 @@ class CreationOCView(Basic):
             self.stop()
 
     async def upload(self):
-        if (m := self.message) and not m.flags.ephemeral:
+        if m := self.message:
             db = self.bot.mongo_db("OC Creation")
             await db.replace_one(
                 dict(id=m.id),
@@ -1357,16 +1357,70 @@ class SubmissionView(View):
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         cog = ctx.client.get_cog("Submission")
-        user = ctx.client.supporting.get(ctx.user, ctx.user)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Creation")
+        user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         resp: InteractionResponse = ctx.response
         ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
         await resp.defer(ephemeral=ephemeral, thinking=True)
         users = {ctx.user.id, user.id}
         try:
             cog.ignore |= users
-            view = CreationOCView(ctx.client, ctx, user)
-            await view.send(ephemeral=ephemeral)
-            await view.wait()
+            if not (items := [data async for data in db.find({"author": {"$in": list(users)}})]):
+                items.append(
+                    dict(
+                        id=0,
+                        template=Template.Pokemon,
+                        author=user,
+                        character=Character(
+                            server=ctx.guild_id,
+                            author=user.id,
+                        ),
+                        progress=[],
+                    )
+                )
+            for data in items:
+                msg_id, template, author, character, progress = (
+                    data["id"],
+                    data["template"],
+                    data["author"],
+                    data["character"],
+                    data["progress"],
+                )
+                character = Character.from_mongo_dict(character)
+
+                if not (member := ctx.guild.get_member(author)):
+                    member = await ctx.client.fetch_user(author)
+
+                message = PartialMessage(channel=ctx.channel, id=msg_id)
+
+                view = CreationOCView(
+                    bot=ctx.client,
+                    ctx=message,
+                    user=member,
+                    oc=character,
+                    template=template,
+                    progress=progress,
+                )
+
+                try:
+                    msg = await message.fetch()
+                except DiscordException:
+                    pass
+                else:
+                    view.message = message
+                    if not character.image_url and (image := msg.embeds[0].image):
+                        character.image_url = image.url
+                    await msg.delete(delay=0)
+                finally:
+                    try:
+                        message = await ctx.followup.send(view=view, embeds=view.embeds, ephemeral=True)
+                    except DiscordException:
+                        message = await ctx.channel.send(view=view, embeds=view.embeds)
+                    finally:
+                        view.message = message
+                        await db.replace_one(data, data | {"id": message.id})
+                        await view.wait()
+
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
