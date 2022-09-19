@@ -352,10 +352,10 @@ class Submission(commands.Cog):
         embeds[0].set_image(url="attachment://image.png")
         guild = self.bot.get_guild(oc.server)
         db = self.bot.mongo_db("Roleplayers")
-        if item := await db.find_one({"user": oc.author}):
-            thread = await guild.fetch_channel(item["id"])
-        elif thread_id := oc.thread:
-            thread = await guild.fetch_channel(thread_id)
+        if (item := await db.find_one({"user": oc.author})) or oc.thread:
+            item_id = item["id"] if item else oc.thread
+            if not (thread := guild.get_channel_or_thread(item_id)):
+                thread = await guild.fetch_channel(item_id)
         else:
             thread = await self.list_update(oc.author)
 
@@ -494,54 +494,33 @@ class Submission(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
-        if not (channel := self.bot.get_channel(1019686568644059136)):
-            channel: ForumChannel = await self.bot.fetch_channel(1019686568644059136)
-
         db = self.bot.mongo_db("Roleplayers")
 
         thread = None
-        if item := await db.find_one({"user": member.id}):
-            try:
-                msg = await PartialMessage(channel=channel, id=item["id"]).fetch()
-            except DiscordException:
-                await db.delete_one(item)
-            else:
-                file = await member.display_avatar.to_file()
-                await msg.edit(attachments=[file])
-                thread = await self.list_update(member)
-                await thread.edit(
-                    name=member.display_name if thread.name != member.display_name else MISSING,
-                    reason=f"{thread.name} -> {member.display_name}",
-                    archived=False,
-                )
+        if await db.find_one({"user": member.id}):
+            file = await member.display_avatar.to_file()
+            thread = await self.list_update(member)
+            await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
+            await thread.edit(
+                name=member.display_name if thread.name != member.display_name else MISSING,
+                reason=f"{thread.name} -> {member.display_name}",
+                archived=False,
+            )
 
     @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
         if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
             return
-
-        if not (channel := self.bot.get_channel(1019686568644059136)):
-            channel: ForumChannel = await self.bot.fetch_channel(1019686568644059136)
-
         db = self.bot.mongo_db("Roleplayers")
         thread = None
-        if item := await db.find_one({"user": now.id}):
-            try:
-                msg = await PartialMessage(channel=channel, id=item["id"]).fetch()
-            except DiscordException:
-                await db.delete_one(item)
-            else:
-                if past.display_avatar != now.display_avatar:
-                    file = await now.display_avatar.to_file()
-                    await msg.edit(attachments=[file])
+        if await db.find_one({"user": now.id}):
+            thread = await self.list_update(now)
+            if past.display_avatar != now.display_avatar:
+                file = await now.display_avatar.to_file()
+                await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
 
-                if past.display_name != now.display_name:
-                    thread = await self.list_update(now)
-                    if thread.name != now.display_name:
-                        await thread.edit(
-                            name=now.display_name,
-                            reason=f"{past.name} -> {now.display_name}",
-                        )
+            if past.display_name != now.display_name and thread.name != now.display_name:
+                await thread.edit(name=now.display_name, reason=f"{thread.name} -> {now.display_name}")
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
