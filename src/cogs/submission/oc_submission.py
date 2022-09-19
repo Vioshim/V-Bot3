@@ -1198,7 +1198,7 @@ class CreationOCView(Basic):
             message = await view.message.edit(attachments=attachments, embeds=embeds)
             if image := message.embeds[0].image:
                 self.oc.image = image.url
-                await view.upload(message.id)
+                await view.upload()
 
         await self.delete(ctx)
 
