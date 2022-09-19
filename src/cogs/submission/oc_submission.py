@@ -1150,7 +1150,7 @@ class CreationOCView(Basic):
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
-        if (m := self.message) and not m.flags.ephemeral:
+        if m := self.message:
             await db.delete_one({"id": m.id})
         return await super(CreationOCView, self).delete(ctx)
 
