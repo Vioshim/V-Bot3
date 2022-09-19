@@ -492,54 +492,6 @@ class Submission(commands.Cog):
         await PartialMessage(channel=channel, id=1005387453055639612).edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
-    async def load_saved_submissions(self):
-        self.bot.logger.info("Loading saved submission menu")
-        db = self.bot.mongo_db("OC Creation")
-        channel = self.bot.get_channel(852180971985043466)
-        for data in await db.find({}).to_list(length=None):
-            msg_id, template, author, character, progress = (
-                data["id"],
-                data["template"],
-                data["author"],
-                data["character"],
-                data["progress"],
-            )
-            character = Character.from_mongo_dict(character)
-
-            if not (member := channel.guild.get_member(author)):
-                member = await self.bot.fetch_user(author)
-
-            message = PartialMessage(channel=channel, id=msg_id)
-
-            view = CreationOCView(
-                bot=self.bot,
-                ctx=message,
-                user=member,
-                oc=character,
-                template=template,
-                progress=progress,
-            )
-
-            try:
-                message = await message.edit(view=view, embeds=view.embeds)
-                view.message = message
-                if not character.image_url and (image := message.embeds[0].image):
-                    character.image_url = image.url
-            except NotFound:
-                view.message = message = await channel.send(
-                    member.mention,
-                    view=view,
-                    embeds=view.embeds,
-                    allowed_mentions=AllowedMentions(users=True),
-                )
-                await db.replace_one(data, data | {"id": message.id})
-
-        self.bot.logger.info("Finished loading saved submission menu")
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        await self.load_saved_submissions()
-
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
         if not (channel := self.bot.get_channel(1019686568644059136)):
