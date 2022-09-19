@@ -34,6 +34,7 @@ from discord import (
     PartialMessage,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
+    Role,
     Status,
     Thread,
     User,
@@ -218,17 +219,20 @@ class Submission(commands.Cog):
                 thread = None
 
         if not thread:
+
             if isinstance(member, Object):
-                member = channel.guild.get_member(member.id) or member
-            if isinstance(member, (User, Member)):
-                if isinstance(member, Member):
-                    tags = [
-                        o
-                        for x in map(lambda x: x.name.removesuffix(" RP Search"), member.roles)
-                        if (o := get(channel.available_tags, name=x))
-                    ]
+                if member_info := channel.guild.get_member(member.id) or self.bot.get_user(member.id):
+                    member = member_info
                 else:
-                    tags = MISSING
+                    member = await self.bot.fetch_user(member.id)
+
+            if isinstance(member, (User, Member)):
+                roles: list[Role] = getattr(member, "roles", [])
+                tags = [
+                    o
+                    for x in map(lambda x: x.name.removesuffix(" RP Search"), roles)
+                    if (o := get(channel.available_tags, name=x))
+                ]
                 file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
@@ -237,15 +241,16 @@ class Submission(commands.Cog):
                     applied_tags=sorted(tags[:5], key=lambda x: x.name),
                     allowed_mentions=AllowedMentions(users=True),
                 )
-            else:
-                x = await channel.create_thread(
-                    content=f"<@{member.id}>",
-                    allowed_mentions=AllowedMentions(users=True),
-                    name=f"{member.id}",
+                thread = x.thread
+                await db.replace_one(
+                    {"user": member.id},
+                    {
+                        "id": thread.id,
+                        "user": member.id,
+                        "server": thread.guild.id,
+                    },
+                    upsert=True,
                 )
-
-            thread = x.thread
-            await db.replace_one({"user": member.id}, {"id": thread.id, "user": member.id}, upsert=True)
 
         return thread
 
@@ -506,6 +511,19 @@ class Submission(commands.Cog):
                 reason=f"{thread.name} -> {member.display_name}",
                 archived=False,
             )
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: Member):
+        db = self.bot.mongo_db("Roleplayers")
+        if await db.find_one({"user": member.id, "server": member.guild.id}):
+            file = await member.display_avatar.to_file()
+            thread = await self.list_update(member)
+            await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
+            if thread.name == member.display_name:
+                await thread.edit(reason="Member left", archived=True)
+            else:
+                reason = f"Member left: {member.display_name}"
+                await thread.edit(name=member.display_name, reason=reason, archived=True)
 
     @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
