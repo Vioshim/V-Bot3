@@ -1094,14 +1094,13 @@ class CreationOCView(Basic):
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             self.stop()
 
-    async def upload(self, new_id: int = None):
+    async def upload(self):
         db = self.bot.mongo_db("OC Creation")
         if m := self.message:
-            print(m.id, new_id)
             await db.replace_one(
                 dict(id=m.id, server=self.oc.server),
                 dict(
-                    id=new_id or m.id,
+                    id=m.id,
                     template=self.ref_template.name,
                     author=self.user.id,
                     character=self.oc.to_mongo_dict(),
@@ -1139,7 +1138,7 @@ class CreationOCView(Basic):
                 self.setup(embed_update=False)
                 m = await m.edit(view=self)
 
-            await self.upload(m.id)
+            await self.upload()
             self.message = m
 
     async def send(self, *, ephemeral: bool = False):
@@ -1147,7 +1146,7 @@ class CreationOCView(Basic):
         if not ephemeral:
             self.remove_item(self.help)
         m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
-        await self.upload(m.id)
+        await self.upload()
         return m
 
     @select(placeholder="Click here!", row=1)
@@ -1397,6 +1396,9 @@ class SubmissionView(View):
                     template=template,
                     progress=progress,
                 )
+
+                if msg_id:
+                    await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
 
                 try:
                     message = PartialMessage(channel=ctx.channel, id=msg_id)
