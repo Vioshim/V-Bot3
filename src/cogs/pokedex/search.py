@@ -184,7 +184,7 @@ class SpeciesTransformer(Transformer):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
         guild: Guild = ctx.guild
-        mons: set[Character | Species] = set(ocs) | set(Species.all())
+        mons: set[Character | Species] = {x for x in ocs if x.species} | set(Species.all())
         filters: list[Callable[[Character | Species], bool]] = []
         if fused := Species.from_ID(ctx.namespace.fused):
             mons = {

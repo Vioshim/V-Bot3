@@ -162,16 +162,8 @@ class Submission(commands.Cog):
             if sp_ability := oc.sp_ability:
                 moves.append(sp_ability)
         elif text := message.content:
-            items = Move.all() | Ability.all()
-            moves = [
-                x[0]
-                for x in process.extract(
-                    text.title(),
-                    choices=items,
-                    processor=lambda x: getattr(x, "name", x),
-                    score_cutoff=60,
-                )
-            ]
+            items = {x.name: x for x in Move.all() | Ability.all()}
+            moves = [x[0] for x in process.extract(text.title(), choices=items, score_cutoff=60)]
 
         moves.sort(key=lambda x: x.name)
         view = MoveView(member=ctx.user, moves=moves, target=ctx, keep_working=True)
