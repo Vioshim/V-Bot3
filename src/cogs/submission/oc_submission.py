@@ -1145,8 +1145,8 @@ class CreationOCView(Basic):
     @select(placeholder="Click here!", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         if item := TemplateField.get(name=sct.values[0]):
-            ephemeral = ctx.message.flags.ephemeral or self.ephemeral
-            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, ephemeral)
+            self.ephemeral = ctx.message.flags.ephemeral or self.ephemeral
+            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
         await self.update(ctx)
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
@@ -1380,11 +1380,9 @@ class SubmissionView(View):
                 if not (member := ctx.guild.get_member(author)):
                     member = await ctx.client.fetch_user(author)
 
-                message = PartialMessage(channel=ctx.channel, id=msg_id)
-
                 view = CreationOCView(
                     bot=ctx.client,
-                    ctx=message,
+                    ctx=ctx,
                     user=member,
                     oc=character,
                     template=template,
@@ -1392,23 +1390,20 @@ class SubmissionView(View):
                 )
 
                 try:
-                    msg = await message.fetch()
+                    message = PartialMessage(channel=ctx.channel, id=msg_id)
+                    message = await message.fetch()
                 except DiscordException:
-                    pass
+                    await view.send(ephemeral=ephemeral)
                 else:
                     view.message = message
-                    if not character.image_url and (image := msg.embeds[0].image):
+                    if not character.image_url and (image := message.embeds[0].image):
                         character.image_url = image.url
-                    await msg.delete(delay=0)
+                    await message.delete(delay=0)
+                    await view.send(ephemeral=ephemeral)
+                    view.message = message
+                    await db.replace_one(data, data | {"id": message.id})
                 finally:
-                    try:
-                        message = await ctx.followup.send(view=view, embeds=view.embeds, ephemeral=True)
-                    except DiscordException:
-                        message = await ctx.channel.send(view=view, embeds=view.embeds)
-                    finally:
-                        view.message = message
-                        await db.replace_one(data, data | {"id": message.id})
-                        await view.wait()
+                    await view.wait()
 
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
