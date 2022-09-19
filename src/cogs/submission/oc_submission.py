@@ -1099,14 +1099,14 @@ class CreationOCView(Basic):
         if m := self.message:
             print(m.id, new_id)
             await db.replace_one(
-                dict(id=m.id),
+                dict(id=m.id, server=self.oc.server),
                 dict(
                     id=new_id or m.id,
                     template=self.ref_template.name,
                     author=self.user.id,
                     character=self.oc.to_mongo_dict(),
                     progress=list(self.progress),
-                    server=m.guild.id,
+                    server=self.oc.server,
                 ),
                 upsert=True,
             )
