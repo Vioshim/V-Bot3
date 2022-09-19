@@ -160,7 +160,7 @@ class ABCTransformer(Transformer):
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         items = await self.on_submit(ctx, value)
         if options := process.extract(
-            value,
+            value or "",
             choices=items,
             limit=25,
             processor=lambda x: x.name,
@@ -182,7 +182,7 @@ class SpeciesTransformer(Transformer):
 
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
         guild: Guild = ctx.guild
         mons = set[Character](ocs) | set(Species.all())
         filters: list[Callable[[Character | Species], bool]] = []
@@ -222,7 +222,7 @@ class SpeciesTransformer(Transformer):
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
         options = []
-        if data := process.extract(value, choices=values, limit=25, processor=item_name, score_cutoff=60):
+        if data := process.extract(value or "", choices=values, limit=25, processor=item_name, score_cutoff=60):
             options.extend(x[0] for x in data)
         elif not value:
             options = list(values)[:25]
@@ -256,7 +256,7 @@ class DefaultSpeciesTransformer(Transformer):
                 }
             )
 
-        if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
+        if options := process.extract(value or "", choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:
             options = items
@@ -276,7 +276,7 @@ class AbilityTransformer(Transformer):
 
     async def autocomplete(self, _: Interaction, value: str) -> list[Choice[str]]:
         items = list(Ability.all())
-        if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
+        if options := process.extract(value or "", choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:
             options = items[:25]
@@ -293,7 +293,7 @@ class FakemonTransformer(Transformer):
         if value.isdigit() and (item := await db.find_one({"id": int(value)})):
             oc = Character.from_mongo_dict(item)
         elif ocs := process.extractOne(
-            value,
+            value or "",
             choices=[
                 Character.from_mongo_dict(x)
                 async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
@@ -314,7 +314,7 @@ class FakemonTransformer(Transformer):
             async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
             if guild.get_member(x["author"])
         ]
-        if options := process.extract(value, choices=mons, limit=25, processor=item_name, score_cutoff=60):
+        if options := process.extract(value or "", choices=mons, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:
             options = mons[:25]
