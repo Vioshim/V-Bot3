@@ -1145,7 +1145,8 @@ class CreationOCView(Basic):
     @select(placeholder="Click here!", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
         if item := TemplateField.get(name=sct.values[0]):
-            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
+            ephemeral = ctx.message.flags.ephemeral or self.ephemeral
+            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, ephemeral)
         await self.update(ctx)
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
