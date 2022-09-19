@@ -248,12 +248,15 @@ class Template(TemplateItem, Enum):
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
             case self.Chimera:
-                oc.species = Chimera(choices)
+                if choices:
+                    oc.species = Chimera(choices)
             case self.Fusion:
-                oc.species = Fusion(*choices)
+                if len(choices) == 2:
+                    oc.species = Fusion(*choices)
             case self.Legendary | self.Mythical | self.UltraBeast | self.Mega:
-                oc.species = choices[0]
-                oc.abilities = choices[0].abilities.copy()
+                if choices:
+                    oc.species = choices[0]
+                    oc.abilities = choices[0].abilities.copy()
             case _:
                 if choices:
                     oc.species = choices[0]
