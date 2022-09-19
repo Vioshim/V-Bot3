@@ -184,7 +184,7 @@ class SpeciesTransformer(Transformer):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
         guild: Guild = ctx.guild
-        mons = set[Character](ocs) | set(Species.all())
+        mons: set[Character | Species] = set(ocs) | set(Species.all())
         filters: list[Callable[[Character | Species], bool]] = []
         if fused := Species.from_ID(ctx.namespace.fused):
             mons = {
@@ -221,9 +221,9 @@ class SpeciesTransformer(Transformer):
             filters.append(lambda x: move in x.moveset if isinstance(x, Character) else True)
 
         values = {mon for mon in mons if all(i(mon) for i in filters)}
-        options = []
+        print(value or "", values)
         if data := process.extract(value or "", choices=values, limit=25, processor=item_name, score_cutoff=60):
-            options.extend(x[0] for x in data)
+            options = [x[0] for x in data]
         elif not value:
             options = list(values)[:25]
 
@@ -241,7 +241,6 @@ class DefaultSpeciesTransformer(Transformer):
         return item
 
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
-        items = list(Species.all())
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
             db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
             items = list(
@@ -255,7 +254,8 @@ class DefaultSpeciesTransformer(Transformer):
                     and ctx.guild.get_member(oc.author)
                 }
             )
-
+        else:
+            items = list(Species.all())
         if options := process.extract(value or "", choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:
