@@ -1095,22 +1095,21 @@ class CreationOCView(Basic):
             self.stop()
 
     async def upload(self, new_id: int = None):
-        data = dict(
-            template=self.ref_template.name,
-            author=self.user.id,
-            character=self.oc.to_mongo_dict(),
-            progress=list(self.progress),
-        )
         db = self.bot.mongo_db("OC Creation")
         if m := self.message:
-            data["id"] = new_id or m.id
-            await db.replace_one(dict(id=m.id), data, upsert=True)
-        elif new_id:
-            data["id"] = new_id
-            await db.replace_one(dict(id=new_id), data, upsert=True)
-        else:
-            data["id"] = None
-            await db.insert_one(data)
+            print(m.id, new_id)
+            await db.replace_one(
+                dict(id=m.id),
+                dict(
+                    id=new_id or m.id,
+                    template=self.ref_template.name,
+                    author=self.user.id,
+                    character=self.oc.to_mongo_dict(),
+                    progress=list(self.progress),
+                    server=m.guild.id,
+                ),
+                upsert=True,
+            )
 
     async def update(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -1161,7 +1160,7 @@ class CreationOCView(Basic):
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
         if m := self.message:
-            await db.delete_one({"id": m.id})
+            await db.delete_one({"id": m.id, "server": m.guild.id})
         return await super(CreationOCView, self).delete(ctx)
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
