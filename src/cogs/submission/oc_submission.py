@@ -1365,26 +1365,14 @@ class SubmissionView(View):
         users = {ctx.user.id, user.id}
         try:
             cog.ignore |= users
-            if not (items := [data async for data in db.find({"author": {"$in": list(users)}})]):
-                items.append(
-                    dict(
-                        id=0,
-                        template=Template.Pokemon,
-                        author=user,
-                        character=Character(
-                            server=ctx.guild_id,
-                            author=user.id,
-                        ),
-                        progress=[],
-                    )
-                )
+            items = [data async for data in db.find({"author": {"$in": list(users)}})] or [{}]
             for data in items:
                 msg_id, template, author, character, progress = (
-                    data["id"],
-                    data["template"],
-                    data["author"],
-                    data["character"],
-                    data["progress"],
+                    data.get("id", 0),
+                    data.get("template", Template.Pokemon),
+                    data.get("author", user.id),
+                    data.get("character", {}),
+                    data.get("progress", []),
                 )
                 character = Character.from_mongo_dict(character)
 
