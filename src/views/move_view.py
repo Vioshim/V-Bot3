@@ -94,7 +94,13 @@ class MoveComplex(Complex[Move]):
     def menu_format(self) -> None:
         self.select_types.options.clear()
         elements = self.generate_elements()
-        values = [(k, o) for element in elements for k, v in element if (o := set(v))]
+        try:
+            values = [(k, o) for element in elements for k, v in element if (o := set(v))]
+        except ValueError as e:
+            print(e)
+            print(elements)
+            values = []
+
         values.sort(key=lambda x: len(x[1]), reverse=True)
 
         for k, items in values:
