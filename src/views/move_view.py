@@ -29,7 +29,8 @@ from discord.abc import Messageable
 from discord.ui import Button, Select, TextInput, View, button, select
 
 from src.pagination.complex import Complex, DefaultModal
-from src.structures.move import Move
+from src.structures.mon_typing import TypingEnum
+from src.structures.move import Category, Move
 from src.structures.movepool import Movepool
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
@@ -46,10 +47,7 @@ class MoveComplex(Complex[Move]):
         max_values: int = 6,
         choices: set[Move] = None,
     ):
-        total = sorted(
-            moves,
-            key=lambda x: x.type.name if isinstance(x, Move) else getattr(x, "name", str(x)),
-        )
+        total = sorted(moves, key=lambda x: getattr(x, "name", str(x)))
         max_values = min(max_values, len(total))
         super(MoveComplex, self).__init__(
             member=member,
@@ -77,33 +75,30 @@ class MoveComplex(Complex[Move]):
         self.data = {}
         self.menu_format()
 
-    def generate_elements(self):
+    def generate_elements(self) -> list[tuple[Category | TypingEnum | str, list[Move]]]:
         moves: set[Move] = set(self.total) - self.choices
         moves1 = {x for x in moves if isinstance(x, Move)}
-        items: list[tuple[str, list[Move]]] = []
+        items = []
         if moves2 := {x for x in moves if not isinstance(x, Move)}:
             items.append(("Abilities", list(moves2)))
         items.extend(
-            [(k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)]
+            (k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)
         )
-        items.extend(
-            [(k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type)]
-        )
+        items.extend((k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type))
+        items.sort(key=lambda x: len(x[1]), reverse=True)
+        items = items[:25]
+        self.select_types.max_values = len(items)
         return items
 
     def menu_format(self) -> None:
         self.select_types.options.clear()
         values = self.generate_elements()
-        values.sort(key=lambda x: len(x[1]), reverse=True)
-
         for k, items in values:
             label = getattr(k, "name", str(k)).title()
             self.data[label] = items
-            self.select_types.add_option(
-                label=label,
-                emoji=getattr(k, "emoji", LIST_EMOJI),
-                description=f"Has {len(items)} items.",
-            )
+            emoji = getattr(k, "emoji", LIST_EMOJI)
+            description = f"Has {len(items)} items."
+            self.select_types.add_option(label=label, emoji=emoji, description=description)
 
         if not self.choices:
             self.remove_item(self.move_remove)
@@ -230,25 +225,14 @@ class MovepoolMoveComplex(MoveComplex):
         choices: set[Move] = None,
     ):
         self.movepool = movepool
-        super(MovepoolMoveComplex, self).__init__(member, movepool(), target, keep_working, max_values, choices)
-
-    def generate_elements(self) -> list[list[Move]]:
-        data: dict[str, list[Move]] = self.movepool.to_dict(allow_empty=False, flatten_levels=True)
-        moves = {x for x in (set(self.total) - self.choices) if isinstance(x, Move)}
-
-        items1 = [*data.items()]
-        items2 = [(k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.type.name), key=lambda x: x.type)]
-        items3 = [
-            (k, list(v)) for k, v in groupby(sorted(moves, key=lambda x: x.category.name), key=lambda x: x.category)
-        ]
-        items = [items1, items2]
-
-        if len(items1) + len(items2) <= 25 - len(items3):
-            items.append(items3)
-
-        self.select_types.max_values = len(items)
-
-        return items
+        super(MovepoolMoveComplex, self).__init__(
+            member,
+            movepool(),
+            target,
+            keep_working,
+            max_values,
+            choices,
+        )
 
 
 class MovepoolView(MoveView, MovepoolMoveComplex):
