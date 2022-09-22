@@ -195,17 +195,17 @@ class Pokedex(commands.Cog):
                     species.SPD,
                     species.SPE,
                 )
-                HP = cHP = 1
+                cHP = 1
                 cATK, cDEF, cSPA, cSPD, cSPE = (
-                    int((ivs + 2) * ATK + evs // 4) + 5,
-                    int((ivs + 2) * DEF + evs // 4) + 5,
-                    int((ivs + 2) * SPA + evs // 4) + 5,
-                    int((ivs + 2) * SPD + evs // 4) + 5,
-                    int((ivs + 2) * SPE + evs // 4) + 5,
+                    int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
                 )
 
-                if Ability.from_ID("WONDERGUARD") in species.abilities:
-                    cHP = HP = int((ivs + 2 * HP + evs // 4) * level / 100) + 10 + level
+                if Ability.from_ID("WONDERGUARD") not in species.abilities:
+                    cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
 
                 embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
                 embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
