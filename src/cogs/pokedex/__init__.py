@@ -209,7 +209,7 @@ class Pokedex(commands.Cog):
                 embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
                 embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
 
-                embed.description = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                embed.description = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id))
                 if embed.description:
                     embed.title = f"{species.name} learns {move_id.name} by"
                 else:
