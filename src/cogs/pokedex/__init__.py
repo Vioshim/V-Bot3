@@ -54,6 +54,7 @@ from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
+from structures.ability import Ability
 
 __all__ = ("Pokedex", "setup")
 
@@ -114,6 +115,9 @@ class Pokedex(commands.Cog):
         chimera: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
         move_id: Optional[MoveArg],
+        level: Optional[int] = 100,
+        ivs: Optional[int] = 31,
+        evs: Optional[int] = 252,
     ):
         """Check for Movepool information
 
@@ -131,6 +135,12 @@ class Pokedex(commands.Cog):
             Search fakemon species
         move_id : Optional[MoveArg]
             Move to lookup
+        level : Optional[int]
+            Level to calculate stats for
+        ivs : Optional[int]
+            IVs to calculate stats for
+        evs : Optional[int]
+            EVs to calculate stats for
         """
         resp: InteractionResponse = ctx.response
         embed = Embed(
@@ -172,6 +182,33 @@ class Pokedex(commands.Cog):
             if move_id is None:
                 view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
             elif species:
+                HP, ATK, DEF, SPA, SPD, SPE = (
+                    species.HP,
+                    species.ATK,
+                    species.DEF,
+                    species.SPA,
+                    species.SPD,
+                    species.SPE,
+                )
+                HP, cHP = 1
+                cATK, cDEF, cSPA, cSPD, cSPE = (
+                    int((ivs + 2) * ATK + evs // 4) + 5,
+                    int((ivs + 2) * DEF + evs // 4) + 5,
+                    int((ivs + 2) * SPA + evs // 4) + 5,
+                    int((ivs + 2) * SPD + evs // 4) + 5,
+                    int((ivs + 2) * SPE + evs // 4) + 5,
+                )
+
+                if Ability.from_ID("WONDERGUARD") in species.abilities:
+                    cHP = HP = int((ivs + 2 * HP + evs // 4) * level / 100) + 10 + level
+
+                embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
+                embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
+                embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
+                embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
+                embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
+                embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
+
                 if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
                     embed.title = f"{species.name} learns {move_id.name} by"
                     embed.description = methods
