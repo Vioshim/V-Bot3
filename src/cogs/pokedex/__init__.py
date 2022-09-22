@@ -187,32 +187,34 @@ class Pokedex(commands.Cog):
                 if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
                     embed.set_footer(text=f"Possible Types:\n\n{possible_types}")
 
-                HP, ATK, DEF, SPA, SPD, SPE = (
-                    species.HP,
-                    species.ATK,
-                    species.DEF,
-                    species.SPA,
-                    species.SPD,
-                    species.SPE,
-                )
-                cHP = 1
-                cATK, cDEF, cSPA, cSPD, cSPE = (
-                    int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
-                    int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
-                    int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
-                    int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
-                    int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
-                )
+                if isinstance(species, Species):
+                    HP, ATK, DEF, SPA, SPD, SPE = (
+                        species.HP,
+                        species.ATK,
+                        species.DEF,
+                        species.SPA,
+                        species.SPD,
+                        species.SPE,
+                    )
+                    cHP = 1
+                    cATK, cDEF, cSPA, cSPD, cSPE = (
+                        int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
+                    )
 
-                if Ability.from_ID("WONDERGUARD") not in species.abilities:
-                    cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
+                    if Ability.from_ID("WONDERGUARD") not in species.abilities:
+                        cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
 
-                embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
-                embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
-                embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
-                embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
-                embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
-                embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
+                    embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
+                    embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
+                    embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
+                    embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
+                    embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
+                    embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
+
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             db = self.bot.mongo_db("Characters")
