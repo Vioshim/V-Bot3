@@ -44,6 +44,7 @@ from src.cogs.pokedex.search import (
     MoveArg,
     SpeciesArg,
 )
+from src.structures.ability import Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Kind
 from src.structures.mon_typing import TypingEnum
@@ -54,7 +55,6 @@ from src.utils.etc import WHITE_BAR
 from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
-from structures.ability import Ability
 
 __all__ = ("Pokedex", "setup")
 
@@ -209,12 +209,11 @@ class Pokedex(commands.Cog):
                 embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
                 embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
 
-                if methods := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                embed.description = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                if embed.description:
                     embed.title = f"{species.name} learns {move_id.name} by"
-                    embed.description = methods
                 else:
                     embed.title = f"{species.name} can not learn {move_id.name}."
-                    embed.description = None
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             db = self.bot.mongo_db("Characters")
