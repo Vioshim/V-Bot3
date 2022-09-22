@@ -195,7 +195,7 @@ class Pokedex(commands.Cog):
                     species.SPD,
                     species.SPE,
                 )
-                HP, cHP = 1
+                HP = cHP = 1
                 cATK, cDEF, cSPA, cSPD, cSPE = (
                     int((ivs + 2) * ATK + evs // 4) + 5,
                     int((ivs + 2) * DEF + evs // 4) + 5,
