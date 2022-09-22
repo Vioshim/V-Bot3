@@ -80,17 +80,15 @@ class MoveComplex(Complex[Move]):
     def generate_elements(self):
         moves: set[Move] = set(self.total) - self.choices
         moves1 = {x for x in moves if isinstance(x, Move)}
-        items = []
+        items: list[tuple[str, list[Move]]] = []
         if moves2 := {x for x in moves if not isinstance(x, Move)}:
-            items.append(("Abilities", moves2))
-        if moves_cat := [
-            (k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)
-        ]:
-            items.append(moves_cat)
-        if moves_type := [
-            (k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type)
-        ]:
-            items.append(moves_type)
+            items.append(("Abilities", list(moves2)))
+        items.extend(
+            [(k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)]
+        )
+        items.extend(
+            [(k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type)]
+        )
         return items
 
     def menu_format(self) -> None:
