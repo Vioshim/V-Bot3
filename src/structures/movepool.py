@@ -426,9 +426,6 @@ class Movepool:
             return frozenset(items)
 
         level = {k: foo(v) for k, v in sorted(self.level.items())}
-
-        level = {k: foo(v) for k, v in sorted(self.level.items())}
-
         return Movepool(
             level=frozendict(level),
             tm=foo(self.tm),
