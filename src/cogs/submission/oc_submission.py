@@ -1374,7 +1374,7 @@ class SubmissionView(View):
         users = {ctx.user.id, user.id}
         try:
             cog.ignore |= users
-            items = [data async for data in db.find({"author": {"$in": list(users)}})] or [{}]
+            items = [data async for data in db.find({"server": ctx.guild_id, "author": {"$in": list(users)}})] or [{}]
             for data in items:
                 msg_id, template, author, character, progress = (
                     data.get("id", 0),
