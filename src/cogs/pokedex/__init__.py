@@ -161,14 +161,7 @@ class Pokedex(commands.Cog):
             else:
                 mon = mons.pop()
 
-            embed.title = f"See {mon.name}'s movepool (Possible Types below)"
-            embed.description = "\n".join(
-                "• {} {}".format(
-                    " ".join(str(i.emoji) for i in x),
-                    "/".join(i.name for i in x),
-                )
-                for x in mon.possible_types
-            )
+            species = mon
             movepool = mon.total_movepool
         elif fakemon:
             species = fakemon
@@ -179,9 +172,17 @@ class Pokedex(commands.Cog):
 
         view = None
         if isinstance(movepool, Movepool):
-            if move_id is None:
-                view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
-            elif species:
+            if species:
+                embed.title = f"See {species.name}'s movepool (Possible Types below)"
+                embed.description = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id))
+                if embed.description:
+                    embed.title = f"{species.name} learns {move_id.name} by"
+                else:
+                    embed.title = f"{species.name} can not learn {move_id.name}."
+
+                if possible_types := "\n".join("• {}".format("/".join(i.name for i in x)) for x in mon.possible_types):
+                    embed.set_footer(text=f"Possible Types: {possible_types}")
+
                 HP, ATK, DEF, SPA, SPD, SPE = (
                     species.HP,
                     species.ATK,
@@ -209,11 +210,9 @@ class Pokedex(commands.Cog):
                 embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
                 embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
 
-                embed.description = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id))
-                if embed.description:
-                    embed.title = f"{species.name} learns {move_id.name} by"
-                else:
-                    embed.title = f"{species.name} can not learn {move_id.name}."
+            if move_id is None:
+                view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
+
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             db = self.bot.mongo_db("Characters")
