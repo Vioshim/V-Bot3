@@ -185,7 +185,7 @@ class Pokedex(commands.Cog):
                         embed.title = f"{species.name} can not learn {move_id.name}."
 
                 if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
-                    embed.set_footer(text=f"Possible Types:\n\n{possible_types}")
+                    embed.set_footer(text=f"Possible Types:\n{possible_types}")
 
                 if isinstance(species, Species):
                     HP, ATK, DEF, SPA, SPD, SPE = (

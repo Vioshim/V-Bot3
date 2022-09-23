@@ -524,7 +524,6 @@ class TypingEnum(Typing, Enum):
             return data[0]
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce_many(cls, *elems: str | TypingEnum):
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
@@ -547,7 +546,6 @@ class TypingEnum(Typing, Enum):
 
         return frozenset(items)
 
-    @lru_cache(maxsize=None)
     def when_attacked_by(self, *others: Typing | str, inverse: bool = False) -> float:
         """method to determine multiplier
 
@@ -559,7 +557,6 @@ class TypingEnum(Typing, Enum):
         data = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else TypingEnum(x))]
         return super().when_attacked_by(*data, inverse=inverse)
 
-    @lru_cache(maxsize=None)
     def when_attacking(self, *others: Typing | str, inverse: bool = False) -> float:
         """method to determine multiplier
 
