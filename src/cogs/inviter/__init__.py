@@ -198,7 +198,7 @@ class Inviter(commands.Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         else:
             attachments, embed = await self.bot.embed_raw(reference.embeds[0])
-        embed.title = f"__**{guild.name} is now officially partnered with {guild.name}**__"
+        embed.title = f"__**{ctx.guild.name} is now officially partnered with {guild.name}**__"
         embed.description = INVITE.sub(invite.url, embed.description)
         if (not embed.image or embed.image.url == WHITE_BAR) and (icon_banner := guild.splash or guild.banner):
             file = await icon_banner.with_size(4096).to_file()
