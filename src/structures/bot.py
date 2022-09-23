@@ -290,7 +290,7 @@ class CustomBot(Bot):
         Optional[File]
             File for discord usage
         """
-        try:
+        with suppress(Exception):
             async with self.session.get(str(url)) as resp:
                 if resp.status == 200:
                     data = await resp.read()
@@ -301,8 +301,6 @@ class CustomBot(Bot):
                     if not filename:
                         filename = ".".join(text)
                     return File(fp=fp, filename=filename, spoiler=spoiler)
-        except Exception:
-            return None
 
     @asynccontextmanager
     async def database(

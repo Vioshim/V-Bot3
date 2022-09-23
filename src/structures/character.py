@@ -317,7 +317,7 @@ class Character:
     @property
     def image_url(self):
         if isinstance(self.image, int) and self.thread:
-            return f"https://cdn.discordapp.com/attachments/{self.thread}/{self.image}/image.png"
+            return f"https://media.discordapp.net/attachments/{self.thread}/{self.image}/image.png"
 
     @image_url.setter
     def image_url(self, url: str):

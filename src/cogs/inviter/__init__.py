@@ -204,7 +204,6 @@ class Inviter(commands.Cog):
             file = await icon_banner.with_size(4096).to_file()
             embed.set_image(url=f"attachment://{file.filename}")
             attachments.append(file)
-
         msgs = [x for x in self.view.messages if x.id != reference.id]
         msgs.append(reference)
         self.view.messages = msgs
