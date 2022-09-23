@@ -324,7 +324,7 @@ class Character:
         if isinstance(url, str) and self.thread:
 
             if find := re_match(
-                rf"https:\/\/cdn\.discordapp\.com\/attachments\/{self.thread}\/(\d+)\/image\.png",
+                rf"https:\/\/\w+\.discordapp\.\w+\/attachments\/{self.thread}\/(\d+)\/image\.png",
                 string=url,
             ):
                 url = int(find.group(1))
