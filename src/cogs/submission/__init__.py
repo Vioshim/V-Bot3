@@ -288,6 +288,8 @@ class Submission(commands.Cog):
                 except NotFound:
                     if attachments := kwargs.pop("attachments", []):
                         kwargs["files"] = attachments
+                    elif (img := oc.image_url) and (file := await self.bot.get_file(img, filename="image")):
+                        kwargs["file"] = file
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
             elif msg_oc := await thread.send(**kwargs):

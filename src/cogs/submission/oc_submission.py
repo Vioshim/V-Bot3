@@ -1412,7 +1412,9 @@ class SubmissionView(View):
                     await message.delete(delay=0)
                     await view.send(ephemeral=ephemeral)
                     view.message = message
-                    await db.replace_one(data, data | {"id": message.id})
+                    aux_data = data.copy()
+                    aux_data["id"] = message.id
+                    await db.replace_one(data, aux_data, upsert=True)
                 finally:
                     await view.wait()
 
