@@ -506,7 +506,7 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Roleplayers")
 
         thread = None
-        if await db.find_one({"user": member.id}):
+        if await db.find_one({"user": member.id, "server": member.guild.id}):
             file = await member.display_avatar.to_file()
             thread = await self.list_update(member)
             await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
@@ -535,7 +535,7 @@ class Submission(commands.Cog):
             return
         db = self.bot.mongo_db("Roleplayers")
         thread = None
-        if await db.find_one({"user": now.id}):
+        if await db.find_one({"user": now.id, "server": now.guild.id}):
             thread = await self.list_update(now)
             if past.display_avatar != now.display_avatar:
                 file = await now.display_avatar.to_file()
@@ -591,15 +591,20 @@ class Submission(commands.Cog):
         payload : RawThreadUpdateEvent
             Information
         """
-        if not payload.data.data["thread_metadata"]["archived"]:
-            return
-        db = self.bot.mongo_db("Roleplayers")
-        key = dict(server=payload.guild_id, id=payload.thread_id)
-        guild = self.bot.get_guild(payload.guild_id)
-        if (data := await db.find_one(key)) and guild.get_member(data["user"]):
-            if not (thread := payload.thread or guild.get_channel_or_thread(payload.thread_id)):
-                thread: Thread = await guild.fetch_channel(payload.thread_id)
-            await thread.edit(archived=False)
+        try:
+            if payload.data.data["thread_metadata"]["archived"]:
+                db = self.bot.mongo_db("Roleplayers")
+                key = dict(server=payload.guild_id, id=payload.thread_id)
+                if (
+                    (guild := self.bot.get_guild(payload.guild_id))
+                    and (data := await db.find_one(key))
+                    and guild.get_member(data["user"])
+                ):
+                    if not (thread := payload.thread or guild.get_channel_or_thread(payload.thread_id)):
+                        thread: Thread = await guild.fetch_channel(payload.thread_id)
+                    await thread.edit(archived=False)
+        except Exception as e:
+            self.bot.logger.exception("Error", exc_info=e)
 
     @commands.Cog.listener()
     async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent) -> None:
