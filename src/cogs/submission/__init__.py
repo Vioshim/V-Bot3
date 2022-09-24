@@ -591,7 +591,7 @@ class Submission(commands.Cog):
         payload : RawThreadUpdateEvent
             Information
         """
-        if not payload.data.get("archived"):
+        if not payload.data.data.get("archived"):
             return
         db = self.bot.mongo_db("Roleplayers")
         key = dict(server=payload.guild_id, id=payload.thread_id)
@@ -615,8 +615,18 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Roleplayers")
         db2 = self.bot.mongo_db("Characters")
-        await db.delete_one({"id": payload.thread_id})
-        await db2.delete_many({"thread": payload.thread_id})
+        await db.delete_one(
+            {
+                "id": payload.thread_id,
+                "server": payload.guild_id,
+            }
+        )
+        await db2.delete_many(
+            {
+                "thread": payload.thread_id,
+                "server": payload.guild_id,
+            }
+        )
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
@@ -629,8 +639,21 @@ class Submission(commands.Cog):
         """
         db = self.bot.mongo_db("Roleplayers")
         db2 = self.bot.mongo_db("Characters")
-        await db.delete_one({"id": payload.message_id})
-        await db2.delete_many({"$or": [{"id": payload.message_id}, {"thread": payload.message_id}]})
+        await db.delete_one(
+            {
+                "id": payload.message_id,
+                "server": payload.guild_id,
+            }
+        )
+        await db2.delete_many(
+            {
+                "server": payload.guild_id,
+                "$or": [
+                    {"id": payload.message_id},
+                    {"thread": payload.message_id},
+                ],
+            }
+        )
 
     @commands.command()
     @commands.guild_only()
