@@ -34,6 +34,7 @@ from discord import (
     PartialMessage,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
+    RawThreadUpdateEvent,
     Role,
     Status,
     Thread,
@@ -580,6 +581,29 @@ class Submission(commands.Cog):
         """
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
+
+    @commands.Cog.listener()
+    async def on_raw_thread_update(self, payload: RawThreadUpdateEvent):
+        """Detects if threads were archived
+
+        Parameters
+        ----------
+        payload : RawThreadUpdateEvent
+            Information
+        """
+        if payload.parent_id != 1019686568644059136:
+            return
+
+        db = self.bot.mongo_db("Roleplayers")
+        if (
+            (guild := self.bot.get_guild(payload.guild_id))
+            and payload.data.get("archived")
+            and (data := await db.find_one({"server": payload.guild_id, "id": payload.thread_id}))
+            and guild.get_member(data["user"])
+        ):
+            if not (thread := guild.get_channel_or_thread(payload.thread_id)):
+                thread: Thread = await guild.fetch_channel(payload.thread_id)
+            await thread.edit(archived=False)
 
     @commands.Cog.listener()
     async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent) -> None:
