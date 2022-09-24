@@ -591,7 +591,7 @@ class Submission(commands.Cog):
         payload : RawThreadUpdateEvent
             Information
         """
-        if not payload.data.data.get("archived"):
+        if not payload.data.data["thread_metadata"]["archived"]:
             return
         db = self.bot.mongo_db("Roleplayers")
         key = dict(server=payload.guild_id, id=payload.thread_id)
