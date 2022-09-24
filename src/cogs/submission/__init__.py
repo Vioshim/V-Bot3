@@ -591,17 +591,13 @@ class Submission(commands.Cog):
         payload : RawThreadUpdateEvent
             Information
         """
-        if payload.parent_id != 1019686568644059136:
+        if not payload.data.get("archived"):
             return
-
         db = self.bot.mongo_db("Roleplayers")
-        if (
-            (guild := self.bot.get_guild(payload.guild_id))
-            and payload.data.get("archived")
-            and (data := await db.find_one({"server": payload.guild_id, "id": payload.thread_id}))
-            and guild.get_member(data["user"])
-        ):
-            if not (thread := guild.get_channel_or_thread(payload.thread_id)):
+        key = dict(server=payload.guild_id, id=payload.thread_id)
+        guild = self.bot.get_guild(payload.guild_id)
+        if (data := await db.find_one(key)) and guild.get_member(data["user"]):
+            if not (thread := payload.thread or guild.get_channel_or_thread(payload.thread_id)):
                 thread: Thread = await guild.fetch_channel(payload.thread_id)
             await thread.edit(archived=False)
 
