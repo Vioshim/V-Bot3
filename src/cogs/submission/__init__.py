@@ -591,21 +591,22 @@ class Submission(commands.Cog):
         payload : RawThreadUpdateEvent
             Information
         """
-        try:
-            if payload.data["thread_metadata"]["archived"]:
-                db = self.bot.mongo_db("Roleplayers")
-                key = dict(server=payload.guild_id, id=payload.thread_id)
-                if (
-                    (guild := self.bot.get_guild(payload.guild_id))
-                    and (data := await db.find_one(key))
-                    and guild.get_member(data["user"])
-                ):
-                    if not (thread := payload.thread or guild.get_channel_or_thread(payload.thread_id)):
-                        thread: Thread = await guild.fetch_channel(payload.thread_id)
-                    await thread.edit(archived=False)
-        except Exception as e:
-            print(payload.data)
-            self.bot.logger.exception("Error", exc_info=e)
+        if not payload.data["thread_metadata"]["archived"]:
+            return
+
+        db = self.bot.mongo_db("Roleplayers")
+        key = dict(server=payload.guild_id, id=payload.thread_id)
+        if (
+            (guild := self.bot.get_guild(payload.guild_id))
+            and (data := await db.find_one(key))
+            and guild.get_member(data["user"])
+        ):
+            try:
+                if not (thread := payload.thread or guild.get_channel_or_thread(payload.thread_id)):
+                    thread: Thread = await guild.fetch_channel(payload.thread_id)
+                await thread.edit(archived=False)
+            except NotFound:
+                await db.delete_one(key)
 
     @commands.Cog.listener()
     async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent) -> None:
