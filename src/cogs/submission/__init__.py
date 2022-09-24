@@ -592,7 +592,7 @@ class Submission(commands.Cog):
             Information
         """
         try:
-            if payload.data.data["thread_metadata"]["archived"]:
+            if payload.data["thread_metadata"]["archived"]:
                 db = self.bot.mongo_db("Roleplayers")
                 key = dict(server=payload.guild_id, id=payload.thread_id)
                 if (
@@ -604,6 +604,7 @@ class Submission(commands.Cog):
                         thread: Thread = await guild.fetch_channel(payload.thread_id)
                     await thread.edit(archived=False)
         except Exception as e:
+            print(payload.data)
             self.bot.logger.exception("Error", exc_info=e)
 
     @commands.Cog.listener()
