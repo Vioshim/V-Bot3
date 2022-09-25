@@ -304,6 +304,8 @@ class RoleSelect(View):
 
         return roles
 
+
+class BasicRoleSelect(RoleSelect):
     @select(
         placeholder="Select Pronoun Roles",
         custom_id="pronouns",
@@ -392,52 +394,6 @@ class RoleSelect(View):
         await self.choice(ctx, sct)
 
     @select(
-        placeholder="Select RP Search Roles",
-        custom_id="rp-search",
-        min_values=0,
-        max_values=5,
-        options=[
-            SelectOption(
-                label=f"{key} RP Search",
-                emoji="💠",
-                value=str(item),
-                description=desc,
-            )
-            for key, (desc, item) in RP_SEARCH_ROLES.items()
-        ],
-    )
-    async def rp_search_choice(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
-        role = get(ctx.guild.roles, name="Registered")
-        if role and role not in member.roles:
-            view = View()
-            view.add_item(
-                Button(
-                    label="OC Submissions",
-                    url="https://canary.discord.com/channels/719343092963999804/852180971985043466/1005387453055639612",
-                    emoji="\N{OPEN BOOK}",
-                )
-            )
-            await resp.send_message(
-                f"In order to use this function, you need to have {role.mention}",
-                view=view,
-                ephemeral=True,
-            )
-        else:
-            roles = await self.choice(ctx, sct)
-            roles = [x.name.removesuffix(" RP Search") for x in roles]
-            db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
-            if item := await db.find_one({"user": member.id}):
-                if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
-                    channel: Thread = await ctx.guild.fetch_channel(item["id"])
-                forum: ForumChannel = channel.parent
-                tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
-                tags.sort(key=lambda x: x.name)
-                if set(channel.applied_tags) != set(tags):
-                    await channel.edit(archived=False, applied_tags=tags)
-
-    @select(
         placeholder="AFK Schedule (No timezone)",
         custom_id="afk",
         min_values=0,
@@ -456,6 +412,87 @@ class RoleSelect(View):
         resp: InteractionResponse = ctx.response
         modal = AFKModal(hours=sct.values)
         await resp.send_modal(modal)
+
+
+class RegisteredRoleSelect(RoleSelect):
+    async def interaction_check(self, interaction: Interaction, /) -> bool:
+        resp: InteractionResponse = interaction.response
+        role = get(interaction.guild.roles, name="Registered")
+        if role and role not in interaction.user.roles:
+            view = View()
+            view.add_item(
+                Button(
+                    label="OC Submissions",
+                    url="https://canary.discord.com/channels/719343092963999804/852180971985043466/1005387453055639612",
+                    emoji="\N{OPEN BOOK}",
+                )
+            )
+            await resp.send_message(
+                f"In order to use this function, you need to have {role.mention}",
+                view=view,
+                ephemeral=True,
+            )
+            return False
+        return True
+
+    @select(
+        placeholder="Select Location Roles",
+        custom_id="location",
+        min_values=0,
+        max_values=19,
+        options=[
+            SelectOption(label="Ashouria", emoji="🔥", value="1023694601988612208"),
+            SelectOption(label="Athar", emoji="🎇", value="1023694608896626729"),
+            SelectOption(label="Brevania", emoji="👻", value="1023694613099331584"),
+            SelectOption(label="Broxburn", emoji="🏕", value="1023694616903561246"),
+            SelectOption(label="Chandra Nur", emoji="🥊", value="1023694621227876382"),
+            SelectOption(label="Estelia", emoji="🎥", value="1023694630161760377"),
+            SelectOption(label="Lougy", emoji="🎌", value="1023694635111039096"),
+            SelectOption(label="Muzatoorah", emoji="🌵", value="1023694638592299048"),
+            SelectOption(label="Norwich", emoji="🏡", value="1023694641956139139"),
+            SelectOption(label="Parvi", emoji="🔮", value="1023694646033010741"),
+            SelectOption(label="Pixy Foundation", emoji="🥼", value="1023694656015441991"),
+            SelectOption(label="Richmond", emoji="🐜", value="1023694659739983952"),
+            SelectOption(label="Sashi", emoji="🍹", value="1023694664227893259"),
+            SelectOption(label="Schalzburg", emoji="❄", value="1023694667516223528"),
+            SelectOption(label="Shiey Shea", emoji="🏛", value="1023694671257546884"),
+            SelectOption(label="Shouhead Peaks", emoji="🥌", value="1023694681256771686"),
+            SelectOption(label="Tomalia", emoji="🐲", value="1023694685895675964"),
+            SelectOption(label="Upria", emoji="🧊", value="1023694690702344242"),
+            SelectOption(label="Wilderness", emoji="🌲", value="1023694697731985459"),
+        ],
+    )
+    async def location_roles(self, ctx: Interaction, sct: Select):
+        await self.choice(ctx, sct)
+
+    @select(
+        placeholder="Select RP Search Roles",
+        custom_id="rp-search",
+        min_values=0,
+        max_values=5,
+        options=[
+            SelectOption(
+                label=f"{key} RP Search",
+                emoji="💠",
+                value=str(item),
+                description=desc,
+            )
+            for key, (desc, item) in RP_SEARCH_ROLES.items()
+        ],
+    )
+    async def rp_search_choice(self, ctx: Interaction, sct: Select):
+        member: Member = ctx.user
+        roles = await self.choice(ctx, sct)
+        roles = [x.name.removesuffix(" RP Search") for x in roles]
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
+        if item := await db.find_one({"user": member.id}):
+            if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
+                channel: Thread = await ctx.guild.fetch_channel(item["id"])
+            forum: ForumChannel = channel.parent
+            tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
+            tags.sort(key=lambda x: x.name)
+            if set(channel.applied_tags) != set(tags):
+                await channel.edit(archived=False, applied_tags=tags)
 
 
 class RPSearchManage(View):

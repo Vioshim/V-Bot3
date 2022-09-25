@@ -321,7 +321,7 @@ class InformationView(View):
             Button(
                 label="Self Roles",
                 emoji="\N{CHEERING MEGAPHONE}",
-                url="https://canary.discord.com/channels/719343092963999804/719709333369258015/992522335808671854",
+                url="https://canary.discord.com/channels/719343092963999804/719709333369258015/1023688500182261850",
                 row=0,
             )
         )
@@ -337,7 +337,7 @@ class InformationView(View):
             Button(
                 label="OC Submission",
                 emoji="\N{OPEN BOOK}",
-                url="https://canary.discord.com/channels/719343092963999804/852180971985043466/961345742222536744",
+                url="https://canary.discord.com/channels/719343092963999804/852180971985043466/1005387453055639612",
                 row=0,
             )
         )
