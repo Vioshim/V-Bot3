@@ -329,7 +329,7 @@ class InformationView(View):
             Button(
                 label="Lore",
                 emoji="\N{SCROLL}",
-                url="https://canary.discord.com/channels/719343092963999804/1020286550753427478",
+                url="https://canary.discord.com/channels/719343092963999804/1020286550753427478/1020286550753427478",
                 row=0,
             )
         )
