@@ -37,6 +37,7 @@ from discord import (
     NotFound,
     Object,
     PartialEmoji,
+    PartialMessage,
     PermissionOverwrite,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
@@ -84,7 +85,6 @@ channels = {
     740606964727546026: "Question",
     908498210211909642: "Mission",
     836726822166593598: "To-Do",
-    860590339327918100: "Information",
 }
 
 roles = {
@@ -1004,11 +1004,6 @@ class Information(commands.Cog):
         await view.wait()
         await message.delete(delay=0)
 
-        if channel.id == 860590339327918100 and self.message:
-            m = await channel.send(embeds=self.message.embeds, view=InformationView())
-            await self.message.delete(delay=0)
-            self.message = m
-
     @commands.Cog.listener()
     async def on_message_edit(self, before: Message, after: Message):
         """Bump handler for message editing bots
@@ -1517,15 +1512,7 @@ class Information(commands.Cog):
             view = PollView.from_mongo(item)
             self.bot.add_view(view, message_id=item["id"])
 
-        view = InformationView()
-        async for message in channel.history(limit=None, oldest_first=True):
-            if self.message:
-                m = await channel.send(embeds=self.message.embeds, view=view)
-                await self.message.delete(delay=0)
-                self.message = m
-            elif message.author == self.bot.user:
-                self.message = await message.edit(view=view)
-
+        await PartialMessage(channel=channel, id=1023703599538257940).edit(view=InformationView())
         self.ready = True
 
 
