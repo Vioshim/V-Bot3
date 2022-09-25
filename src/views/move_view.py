@@ -75,16 +75,16 @@ class MoveComplex(Complex[Move]):
         self.data = {}
         self.menu_format()
 
-    def generate_elements(self) -> list[tuple[Category | TypingEnum | str, list[Move]]]:
+    def generate_elements(self) -> list[tuple[Category | TypingEnum | str, set[Move]]]:
         moves: set[Move] = set(self.total) - self.choices
         moves1 = {x for x in moves if isinstance(x, Move)}
         items = []
         if moves2 := {x for x in moves if not isinstance(x, Move)}:
-            items.append(("Abilities", list(moves2)))
+            items.append(("Abilities", moves2))
         items.extend(
-            (k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)
+            (k, set(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.category.name), key=lambda x: x.category)
         )
-        items.extend((k, list(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type))
+        items.extend((k, set(v)) for k, v in groupby(sorted(moves1, key=lambda x: x.type.name), key=lambda x: x.type))
         items.sort(key=lambda x: len(x[1]), reverse=True)
         items = items[:25]
         self.select_types.max_values = len(items)
@@ -234,11 +234,11 @@ class MovepoolMoveComplex(MoveComplex):
             choices,
         )
 
-    def generate_elements(self) -> list[list[Move]]:
+    def generate_elements(self) -> list[set[Move]]:
         items = super(MovepoolMoveComplex, self).generate_elements()
         movepool = self.movepool.without_moves(self.choices)
         data: dict[str, list[Move]] = movepool.to_dict(allow_empty=False, flatten_levels=True)
-        items.extend((k, v) for k, v in data.items())
+        items.extend((k, set(v)) for k, v in data.items())
         items.sort(key=lambda x: len(x[1]), reverse=True)
         items = items[:25]
         self.select_types.max_values = len(items)
