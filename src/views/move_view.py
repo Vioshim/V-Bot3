@@ -134,7 +134,7 @@ class MoveComplex(Complex[Move]):
         if len(sct.values) == 0:
             self.values = self.total
             await self.edit(interaction=interaction, page=0)
-        elif items := set.intersection(*[self.data[value] for value in sct.values]):
+        elif items := set.intersection(*[set(self.data.get(value, [])) for value in sct.values]):
             self.values = items
             await self.edit(interaction=interaction, page=0)
         else:
