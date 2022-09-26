@@ -140,8 +140,8 @@ class AiCog(commands.Cog):
         """
         await ctx.response.defer(ephemeral=ephemeral, thinking=True)
         answer = await self.bot.loop.run_in_executor(None, ai_completition, text)
-        embed1 = Embed(title="Prompt", description=text, color=ctx.user.color, timestamp=ctx.created_at)
-        embed2, embed2.title, embed2.description = embed1.copy(), "Completition", answer
+        embed1 = Embed(description=text, color=ctx.user.color)
+        embed2, embed2.description = embed1.copy(), answer
         embeds = [embed1, embed2]
         message = await ctx.followup.send(embeds=embeds, ephemeral=ephemeral, wait=True)
         w = await self.bot.webhook(1020151767532580934)
