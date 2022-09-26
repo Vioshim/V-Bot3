@@ -939,7 +939,7 @@ class Character:
         type_info = common_pop_get(data, "types", "type")
         ability_info = common_pop_get(data, "abilities", "ability")
         movepool = Movepool.from_dict(**data.pop("movepool", dict(event=data.get("moveset", set()))))
-        data["sp_ability"] = data.pop("spability", None)
+        data["sp_ability"] = common_pop_get(data, "spability", "sp_ability")
 
         if not species:
             data.pop("moveset", None)
