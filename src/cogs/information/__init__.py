@@ -291,9 +291,9 @@ class TicketModal(Modal, title="Ticket"):
         await resp.defer(ephemeral=True, thinking=True)
         member: Member = interaction.user
         data = interaction.created_at.astimezone(tz=DEFAULT_TIMEZONE)
-        name = f"{member.display_name} {data.strftime('%B %d, %Y')}"
-        thread = await interaction.channel.create_thread(name=name, type=ChannelType.private_thread)
-        webhook: Webhook = await interaction.client.webhook(interaction.channel)
+        name = data.strftime("%B %d, %Y")
+        webhook: Webhook = await interaction.client.webhook(719343092963999807)
+        thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread)
         embed = Embed(title="Ticket", description=self.content.value, timestamp=data, color=member.color)
         embed.set_footer(text="If you ping users in the thread, they will be added to it.")
         msg = await webhook.send(thread=thread, wait=True, embed=embed)
