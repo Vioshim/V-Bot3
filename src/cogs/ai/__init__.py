@@ -17,6 +17,7 @@ from discord import (
     Embed,
     Interaction,
     Message,
+    Object,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
@@ -25,22 +26,12 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
+from discord.ui import Button, View
 from openai import Completion
 from rapidfuzz import process
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-
-IDS = [
-    788172543273598976,
-    719663307526504468,
-    740550068922220625,
-    740552350703550545,
-    720107294838227034,
-    974362077445640252,
-    719343092963999805,
-    740567496721039401,
-]
 
 
 def ai_completition(prompt: str):
@@ -147,16 +138,21 @@ class AiCog(commands.Cog):
         ephemeral : bool, optional
             If invisible, by default True
         """
-        req = ["Booster", "Moderation"]
-        if not ephemeral and not any([x.name in req for x in ctx.user.roles]):
-            embed = Embed(title="Needs any of the following roles", description=", ".join(req))
-            await ctx.response.send_message(embed=embed, ephemeral=True)
-        else:
-            await ctx.response.defer(ephemeral=ephemeral, thinking=True)
-            if len(text := await self.bot.loop.run_in_executor(None, ai_completition, text)) <= 2000:
-                await ctx.followup.send(text or "\u200b", ephemeral=ephemeral)
-            else:
-                await ctx.followup.send(embed=Embed(description=text[:4096]), ephemeral=ephemeral)
+        await ctx.response.defer(ephemeral=ephemeral, thinking=True)
+        answer = await self.bot.loop.run_in_executor(None, ai_completition, text)
+        embed1 = Embed(title="Prompt", description=text, color=ctx.user.color, timestamp=ctx.created_at)
+        embed2, embed2.title, embed2.description = embed1.copy(), "Completition", answer
+        embeds = [embed1, embed2]
+        message = await ctx.followup.send(embeds=embeds, ephemeral=ephemeral, wait=True)
+        w = await self.bot.webhook(1020151767532580934)
+        view = View()
+        view.add_item(Button(label="Jump URL", url=message.jump_url))
+        await w.send(
+            embeds=embeds,
+            username=ctx.user.display_name,
+            avatar_url=ctx.user.display_avatar.url,
+            thread=Object(id=1020153295622373437),
+        )
 
 
 async def setup(bot: CustomBot) -> None:
