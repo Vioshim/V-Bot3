@@ -293,17 +293,15 @@ class TicketModal(Modal, title="Ticket"):
         data = interaction.created_at.astimezone(tz=DEFAULT_TIMEZONE)
         name = data.strftime("%B %d, %Y")
         webhook: Webhook = await interaction.client.webhook(719343092963999807)
-        thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread)
+        thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
         embed = Embed(title="Ticket", description=self.content.value, timestamp=data, color=member.color)
-        embed.set_footer(text="If you ping users in the thread, they will be added to it.")
         msg = await webhook.send(thread=thread, wait=True, embed=embed)
+
         view = View()
-        await interaction.followup.send(
-            "Ticket created successfully",
-            ephemeral=True,
-            view=view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI)),
-        )
+        view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
+        await interaction.followup.send("Ticket created successfully", ephemeral=True, view=view)
         await thread.add_user(member)
+
         if not (mod_channel := interaction.guild.get_channel_or_thread(1020157013126283284)):
             mod_channel = await interaction.guild.fetch_channel(1020157013126283284)
 
