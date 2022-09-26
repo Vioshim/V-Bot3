@@ -151,6 +151,7 @@ class AiCog(commands.Cog):
             embeds=embeds,
             username=ctx.user.display_name,
             avatar_url=ctx.user.display_avatar.url,
+            view=view,
             thread=Object(id=1020153295622373437),
         )
 
