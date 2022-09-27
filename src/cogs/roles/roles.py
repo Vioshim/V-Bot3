@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
@@ -493,6 +494,27 @@ class RegisteredRoleSelect(RoleSelect):
             tags.sort(key=lambda x: x.name)
             if set(channel.applied_tags) != set(tags):
                 await channel.edit(archived=False, applied_tags=tags)
+
+    @button(
+        label="Taking a Break (Removes Registered Role)",
+        custom_id="remove_registered",
+        style=ButtonStyle.red,
+        emoji="\N{WARNING SIGN}",
+    )
+    async def take_break(self, ctx: Interaction, btn: Button):
+        await ctx.response.send_message(
+            "To recover the role, open a ticket at <#860590339327918100>",
+            ephemeral=True,
+        )
+        role = get(ctx.guild.roles, name="Registered")
+        await ctx.user.remove_roles(role, reason=btn.label)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
+        key = dict(server=ctx.guild_id, user=ctx.user.id)
+        if data := await db.find_one_and_delete(key):
+            with suppress(DiscordException):
+                if not (thread := ctx.guild.get_channel_or_thread(data["id"])):
+                    thread: Thread = await ctx.guild.fetch_channel(data["id"])
+                await thread.edit(archived=True)
 
 
 class RPSearchManage(View):
