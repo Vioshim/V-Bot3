@@ -82,6 +82,9 @@ class AIModal(Modal):
         super().__init__(title="Open AI", timeout=None)
         self.ephemeral = ephemeral
 
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
+
     @classmethod
     async def send(cls, interaction: Interaction, text: str, ephemeral: bool = False):
         await interaction.response.defer(ephemeral=ephemeral, thinking=True)

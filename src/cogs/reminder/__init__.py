@@ -49,6 +49,9 @@ class ReminderModal(Modal, title="Reminder"):
         placeholder="This is what I'll be reminding you of.",
     )
 
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
+
     @classmethod
     async def send(cls, interaction: Interaction, date: Optional[str], message: str):
         bot: CustomBot = interaction.client
