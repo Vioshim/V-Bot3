@@ -37,23 +37,25 @@ from src.structures.character import Character
 
 
 def ai_completition(prompt: str):
-    resp = Completion.create(
-        prompt=prompt,
-        engine="text-davinci-002",
-        max_tokens=4000 - len(prompt),
-        temperature=0.7,
-        top_p=1,
-        stop=None,
-        presence_penalty=0,
-        frequency_penalty=0,
-        echo=False,
-        n=1,
-        stream=False,
-        logprobs=None,
-        best_of=1,
-        logit_bias={},
+    return "\n".join(
+        choice.text
+        for choice in Completion.create(
+            prompt=prompt,
+            engine="text-davinci-002",
+            max_tokens=4000 - len(prompt),
+            temperature=0.7,
+            top_p=1,
+            stop=None,
+            presence_penalty=0,
+            frequency_penalty=0,
+            echo=False,
+            n=1,
+            stream=False,
+            logprobs=None,
+            best_of=1,
+            logit_bias={},
+        ).choices
     )
-    return "\n".join(choice.text.strip() for choice in resp.choices)
 
 
 def message_parse(message: Message):
