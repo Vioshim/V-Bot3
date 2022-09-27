@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-from typing import Optional
-
 from discord import (
     Embed,
     Interaction,
@@ -168,14 +166,14 @@ class AiCog(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def ai(self, interaction: Interaction, text: Optional[str] = None, ephemeral: bool = True):
+    async def ai(self, interaction: Interaction, text: str, ephemeral: bool = True):
         """Open AI Generator
 
         Parameters
         ----------
         interaction : Interaction
             Interaction
-        text : Optional[str], optional
+        text : str
             Text
         ephemeral : bool, optional
             If invisible, by default True
