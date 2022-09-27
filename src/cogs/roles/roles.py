@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
@@ -510,11 +509,13 @@ class RegisteredRoleSelect(RoleSelect):
         await ctx.user.remove_roles(role, reason=btn.label)
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
         key = dict(server=ctx.guild_id, user=ctx.user.id)
-        if data := await db.find_one_and_delete(key):
-            with suppress(DiscordException):
+        if data := await db.find_one(key):
+            try:
                 if not (thread := ctx.guild.get_channel_or_thread(data["id"])):
                     thread: Thread = await ctx.guild.fetch_channel(data["id"])
                 await thread.edit(archived=True)
+            except DiscordException:
+                await db.delete_one(data)
 
 
 class RPSearchManage(View):
