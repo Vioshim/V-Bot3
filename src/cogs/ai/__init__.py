@@ -76,11 +76,11 @@ def message_parse(message: Message):
 
 
 class AIModal(Modal):
-    description = TextInput(label="Description", style=TextStyle.paragraph)
-
     def __init__(self, ephemeral: bool = True) -> None:
         super().__init__(title="Open AI", timeout=None)
         self.ephemeral = ephemeral
+        self.description = TextInput(label="Description", style=TextStyle.paragraph)
+        self.add_item(self.description)
 
     async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
         interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
@@ -88,7 +88,6 @@ class AIModal(Modal):
     @classmethod
     async def send(cls, interaction: Interaction, text: str, ephemeral: bool = False):
         answer = await interaction.client.loop.run_in_executor(None, ai_completition, text)
-
         if len(text) <= 256:
             embeds = [Embed(title=text, description=answer, color=interaction.user.color)]
         else:
@@ -110,7 +109,7 @@ class AIModal(Modal):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         await interaction.response.defer(ephemeral=self.ephemeral, thinking=True)
-        await self.send(interaction, self.description.value, self.ephemeral)
+        await self.send(interaction, text=self.description.value, ephemeral=self.ephemeral)
         self.stop()
 
 
