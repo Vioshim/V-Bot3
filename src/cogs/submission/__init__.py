@@ -534,15 +534,13 @@ class Submission(commands.Cog):
         if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
             return
         db = self.bot.mongo_db("Roleplayers")
-        thread = None
         if await db.find_one({"user": now.id, "server": now.guild.id}):
             thread = await self.list_update(now)
-            if past.display_avatar != now.display_avatar:
-                file = await now.display_avatar.to_file()
-                await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
-
             if past.display_name != now.display_name and thread.name != now.display_name:
                 await thread.edit(name=now.display_name, reason=f"{thread.name} -> {now.display_name}")
+            elif get(now.roles, name="Registered"):
+                file = await now.display_avatar.to_file()
+                await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
