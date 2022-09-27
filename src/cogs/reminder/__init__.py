@@ -24,7 +24,6 @@ from discord import (
     DiscordException,
     Embed,
     Interaction,
-    InteractionResponse,
     Object,
     TextStyle,
     Thread,
@@ -50,19 +49,18 @@ class ReminderModal(Modal, title="Reminder"):
         placeholder="This is what I'll be reminding you of.",
     )
 
-    async def on_submit(self, interaction: Interaction) -> None:
+    @classmethod
+    async def send(cls, interaction: Interaction, date: Optional[str], message: str):
         bot: CustomBot = interaction.client
-        resp: InteractionResponse = interaction.response
-        await resp.defer(ephemeral=True)
-        date = parse(self.due.value, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
-        embed = Embed(title="Reminder Command", timestamp=date, color=Color.blurple())
+        await interaction.response.defer(ephemeral=True)
+        embed = Embed(title="Reminder Command", color=Color.blurple())
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
-        if not date:
-            embed.description = f"Invalid date, unable to identify: {self.message.value!r}"
-        elif date <= datetime.utcnow():
-            embed.description = "Only future dates can be used."
+        date = parse(date or "", settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+        if not date or date <= interaction.created_at:
+            embed.description = "Invalid date, unable to identify. Only future dates can be used."
         else:
+            embed.timestamp = date
             embed.description = "Reminder has been created successfully.!"
             channel, thread = interaction.channel, None
             if isinstance(channel, Thread):
@@ -73,11 +71,14 @@ class ReminderModal(Modal, title="Reminder"):
                     "author": interaction.user.id,
                     "channel": channel.id,
                     "thread": thread,
-                    "message": self.message.value,
+                    "message": message,
                     "due": date,
                 }
             )
         await interaction.followup.send(embed=embed, ephemeral=True)
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        await self.send(interaction, self.due.value, self.message.value)
         self.stop()
 
 
@@ -146,16 +147,11 @@ class Reminder(commands.Cog):
         due : str
             Time until notification
         """
-        resp: InteractionResponse = ctx.response
-        modal = ReminderModal(timeout=None)
-        modal.message.default = message
-        modal.due.default = due
         if message and due:
-            modal.message._value = message
-            modal.due._value = due
-            await modal.on_submit(ctx)
+            await ReminderModal.send(ctx, due, message)
         else:
-            await resp.send_modal(modal)
+            modal = ReminderModal(timeout=None)
+            await ctx.response.send_modal(modal)
 
 
 async def setup(bot: CustomBot):

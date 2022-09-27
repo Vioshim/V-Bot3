@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from typing import Optional
+
 from discord import (
     Embed,
     Interaction,
@@ -22,11 +24,13 @@ from discord import (
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     TextChannel,
+    TextStyle,
     Thread,
+    Webhook,
     app_commands,
 )
 from discord.ext import commands
-from discord.ui import Button, View
+from discord.ui import Button, Modal, TextInput, View
 from openai import Completion
 from rapidfuzz import process
 
@@ -69,6 +73,42 @@ def message_parse(message: Message):
         "server": message.guild.id,
         "created_at": message.created_at,
     }
+
+
+class AIModal(Modal):
+    description = TextInput(label="Description", style=TextStyle.paragraph)
+
+    def __init__(self, ephemeral: bool = True) -> None:
+        super().__init__(title="Open AI", timeout=None)
+        self.ephemeral = ephemeral
+
+    @classmethod
+    async def send(cls, interaction: Interaction, text: str, ephemeral: bool = False):
+        await interaction.response.defer(ephemeral=ephemeral, thinking=True)
+        answer = await interaction.client.loop.run_in_executor(None, ai_completition, text)
+
+        if len(text) <= 256:
+            embeds = [Embed(title=text, description=answer, color=interaction.user.color)]
+        else:
+            embed1 = Embed(description=text, color=interaction.user.color)
+            embed2, embed2.description = embed1.copy(), answer
+            embeds = [embed1, embed2]
+
+        message = await interaction.followup.send(embeds=embeds, ephemeral=ephemeral, wait=True)
+        w: Webhook = await interaction.client.webhook(1020151767532580934)
+        view = View()
+        view.add_item(Button(label="Jump URL", url=message.jump_url))
+        await w.send(
+            embeds=embeds,
+            username=interaction.user.display_name,
+            avatar_url=interaction.user.display_avatar.url,
+            view=view,
+            thread=Object(id=1020153295622373437),
+        )
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        await self.send(interaction, self.description.value, self.ephemeral)
+        self.stop()
 
 
 class AiCog(commands.Cog):
@@ -126,38 +166,23 @@ class AiCog(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def ai(self, ctx: Interaction, text: str, ephemeral: bool = True):
+    async def ai(self, interaction: Interaction, text: Optional[str] = None, ephemeral: bool = True):
         """Open AI Generator
 
         Parameters
         ----------
-        ctx : Interaction
+        interaction : Interaction
             Interaction
-        text : str
+        text : Optional[str], optional
             Text
         ephemeral : bool, optional
             If invisible, by default True
         """
-        await ctx.response.defer(ephemeral=ephemeral, thinking=True)
-        answer = await self.bot.loop.run_in_executor(None, ai_completition, text)
-        embed1 = Embed(description=text, color=ctx.user.color)
-        if len(text) <= 256:
-            embeds = [Embed(title=text, description=answer, color=ctx.user.color)]
+        if text:
+            await AIModal.send(interaction=interaction, text=text, ephemeral=ephemeral)
         else:
-            embed1 = Embed(description=text, color=ctx.user.color)
-            embed2, embed2.description = embed1.copy(), answer
-            embeds = [embed1, embed2]
-        message = await ctx.followup.send(embeds=embeds, ephemeral=ephemeral, wait=True)
-        w = await self.bot.webhook(1020151767532580934)
-        view = View()
-        view.add_item(Button(label="Jump URL", url=message.jump_url))
-        await w.send(
-            embeds=embeds,
-            username=ctx.user.display_name,
-            avatar_url=ctx.user.display_avatar.url,
-            view=view,
-            thread=Object(id=1020153295622373437),
-        )
+            modal = AIModal(ephemeral=ephemeral)
+            await interaction.response.send_modal(modal=modal)
 
 
 async def setup(bot: CustomBot) -> None:
