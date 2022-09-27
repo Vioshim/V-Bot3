@@ -87,7 +87,6 @@ class AIModal(Modal):
 
     @classmethod
     async def send(cls, interaction: Interaction, text: str, ephemeral: bool = False):
-        await interaction.response.defer(ephemeral=ephemeral, thinking=True)
         answer = await interaction.client.loop.run_in_executor(None, ai_completition, text)
 
         if len(text) <= 256:
@@ -110,6 +109,7 @@ class AIModal(Modal):
         )
 
     async def on_submit(self, interaction: Interaction, /) -> None:
+        await interaction.response.defer(ephemeral=self.ephemeral, thinking=True)
         await self.send(interaction, self.description.value, self.ephemeral)
         self.stop()
 
@@ -182,6 +182,7 @@ class AiCog(commands.Cog):
             If invisible, by default True
         """
         if text:
+            await interaction.response.defer(ephemeral=ephemeral, thinking=True)
             await AIModal.send(interaction=interaction, text=text, ephemeral=ephemeral)
         else:
             modal = AIModal(ephemeral=ephemeral)

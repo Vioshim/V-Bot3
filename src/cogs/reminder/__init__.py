@@ -55,7 +55,6 @@ class ReminderModal(Modal, title="Reminder"):
     @classmethod
     async def send(cls, interaction: Interaction, date: Optional[str], message: str):
         bot: CustomBot = interaction.client
-        await interaction.response.defer(ephemeral=True)
         embed = Embed(title="Reminder Command", color=Color.blurple())
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
@@ -81,6 +80,7 @@ class ReminderModal(Modal, title="Reminder"):
         await interaction.followup.send(embed=embed, ephemeral=True)
 
     async def on_submit(self, interaction: Interaction) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
         await self.send(interaction, self.due.value, self.message.value)
         self.stop()
 
@@ -151,6 +151,7 @@ class Reminder(commands.Cog):
             Time until notification
         """
         if message and due:
+            await ctx.response.defer(ephemeral=True, thinking=True)
             await ReminderModal.send(ctx, due, message)
         else:
             modal = ReminderModal(timeout=None)
