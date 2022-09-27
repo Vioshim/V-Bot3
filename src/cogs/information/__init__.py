@@ -1294,11 +1294,18 @@ class Information(commands.Cog):
             return await self.giphy_fetch(image_id)
 
     async def embed_info(self, message: Message):
-        embed = Embed(title="Message", description=message.content, color=Colour.blurple())
-        embed.set_image(url=WHITE_BAR)
         files = []
-        embeds: list[Embed] = [embed]
-
+        embeds: list[Embed] = []
+        if message.content:
+            embed = Embed(
+                title="Message",
+                description=message.content,
+                color=Colour.blurple(),
+            )
+            embed.set_image(url=WHITE_BAR)
+        else:
+            embed = Embed()
+        embeds.append(embed)
         for sticker in message.stickers:
             if embed.title == "Sticker":
                 aux = Embed(color=Colour.blurple())
@@ -1357,11 +1364,12 @@ class Information(commands.Cog):
                 extension = attachment.filename.split(".")[-1]
                 if attachment.content_type.startswith("image/"):
                     file = await attachment.to_file(use_cached=True, filename=f"img{index}.{extension}")
-                    if embed.image.url == WHITE_BAR:
+                    if embed == Embed() or embed.image.url == WHITE_BAR:
                         aux = embed
                     else:
-                        aux = Embed(color=Colour.blurple())
+                        aux = Embed()
                         embeds.append(aux)
+                    aux.color = Colour.blurple()
                     aux.set_image(url=f"attachment://{file.filename}")
                 else:
                     file = await attachment.to_file(use_cached=True)
@@ -1384,7 +1392,7 @@ class Information(commands.Cog):
         if message.author.bot and "〕" not in username:
             username = f"Bot〕{username}"
 
-        embeds = embeds[:10]
+        embeds = embeds[1:11] if embeds[0] == Embed() else embeds[:10]
         last_embed = embeds[-1]
         last_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
         last_embed.timestamp = utcnow()

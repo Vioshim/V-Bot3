@@ -141,8 +141,12 @@ class AiCog(commands.Cog):
         await ctx.response.defer(ephemeral=ephemeral, thinking=True)
         answer = await self.bot.loop.run_in_executor(None, ai_completition, text)
         embed1 = Embed(description=text, color=ctx.user.color)
-        embed2, embed2.description = embed1.copy(), answer
-        embeds = [embed1, embed2]
+        if len(text) <= 256:
+            embeds = [Embed(title=text, description=answer, color=ctx.user.color)]
+        else:
+            embed1 = Embed(description=text, color=ctx.user.color)
+            embed2, embed2.description = embed1.copy(), answer
+            embeds = [embed1, embed2]
         message = await ctx.followup.send(embeds=embeds, ephemeral=ephemeral, wait=True)
         w = await self.bot.webhook(1020151767532580934)
         view = View()
