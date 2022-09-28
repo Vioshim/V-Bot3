@@ -44,17 +44,28 @@ class Perk(ABC):
 
 
 class CustomRoleModal(Modal, title="Custom Role"):
-    name = TextInput(label="Name (Empty to Remove)", max_length=100, required=False)
-    color = TextInput(label="Color", max_length=7, min_length=7, placeholder="#000000")
-
     def __init__(self, role: Optional[Role] = None, icon: Optional[Attachment] = None) -> None:
         super(CustomRoleModal, self).__init__(timeout=None)
         self.role, self.icon = role, icon
+        self.name = TextInput(
+            label="Name (Empty to Remove)",
+            max_length=100,
+            required=False,
+        )
+        self.color = TextInput(
+            label="Color",
+            max_length=7,
+            min_length=7,
+            placeholder="#000000",
+            required=False,
+        )
         if role:
             self.name.default = role.name
             self.color.default = str(role.color)
         else:
             self.color.default = str(Colour.random())
+        self.add_item(self.name)
+        self.add_item(self.color)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -64,8 +75,7 @@ class CustomRoleModal(Modal, title="Custom Role"):
         except ValueError:
             await resp.send_message("Invalid Color", ephemeral=True)
             return False
-        else:
-            return True
+        return True
 
     async def on_submit(self, ctx: Interaction) -> None:
         resp: InteractionResponse = ctx.response
@@ -134,15 +144,13 @@ class CustomRolePerk(Perk):
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Custom Role")
         role: Optional[Role] = None
-
-        if role_data := await db.find_one({"author": ctx.user.id}):
+        if role_data := await db.find_one({"author": ctx.user.id, "server": ctx.guild_id}):
             role = ctx.guild.get_role(role_data["id"])
             if not role:
                 await db.delete_one(role_data)
             elif role not in ctx.user.roles:
                 await ctx.user.add_roles(role)
-
-        modal = CustomRoleModal(role, img)
+        modal = CustomRoleModal(role=role, icon=img)
         await resp.send_modal(modal)
 
 

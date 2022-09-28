@@ -380,12 +380,7 @@ class Information(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Booster")
-    async def perks(
-        self,
-        ctx: Interaction,
-        perk: CustomPerks,
-        icon: Optional[Attachment] = None,
-    ):
+    async def perks(self, ctx: Interaction, perk: CustomPerks, icon: Optional[Attachment] = None):
         """Custom Functions for Supporters!
 
         Parameters
@@ -399,7 +394,11 @@ class Information(commands.Cog):
         """
         resp: InteractionResponse = ctx.response
         if not icon or icon.content_type.startswith("image"):
-            await perk.method(ctx, icon)
+            try:
+                await perk.method(ctx, icon)
+            except Exception as e:
+                self.bot.logger.exception("Exception in perks", exc_info=e)
+                await resp.send_message(str(e), ephemeral=True)
         else:
             await resp.send_message("Valid File Format: image/png", ephemeral=True)
 
