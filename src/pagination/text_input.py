@@ -60,7 +60,7 @@ class ModernInput(Basic):
         self.input_text = input_text
         if input_text:
             self.embed.title = input_text.label or self.embed.title
-            self.embed.description = input_text.value or input_text.placeholder or self.embed.description
+            self.embed.description = (input_text.value or input_text.placeholder or self.embed.description or "")[:4096]
             self.empty.disabled = input_text.required
         else:
             self.remove_item(self.confirm2)

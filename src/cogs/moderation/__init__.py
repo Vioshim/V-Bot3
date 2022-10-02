@@ -259,6 +259,7 @@ class Moderation(commands.Cog):
             allowed_mentions=AllowedMentions(roles=True),
             wait=True,
         )
+        msg.guild = interaction.guild
         thread = await msg.create_thread(name=f"Discuss {member.id}")
         await thread.add_user(interaction.user)
         view.message = msg
