@@ -45,7 +45,7 @@ resolved_reference = "7ef2e9ec664aedee225cb5aff19782b797b101b3"
 
 [[package]]
 name = "aiohttp"
-version = "3.8.1"
+version = "3.8.3"
 description = "Async http client/server framework (asyncio)"
 category = "main"
 optional = false
@@ -93,7 +93,7 @@ trio = ["trio (>=0.16)"]
 
 [[package]]
 name = "APScheduler"
-version = "4.0.0a2.post7"
+version = "4.0.0a2.post23"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -114,14 +114,14 @@ doc = ["sphinx", "sphinx-autodoc-typehints", "sphinx-tabs (>=3.3.1)"]
 mongodb = ["pymongo (>=4)"]
 mqtt = ["paho-mqtt (>=1.5)"]
 redis = ["redis (>=4.0)"]
-sqlalchemy = ["sqlalchemy (>=1.4.22)"]
-test = ["asyncpg (>=0.20)", "asyncmy (>=0.2.5)", "cbor2 (>=5.0)", "coverage", "freezegun", "paho-mqtt (>=1.5)", "psycopg2", "pymongo (>=4)", "pymysql", "pytest (>=5.0)", "pytest-cov", "pytest-freezegun", "pytest-lazy-fixture", "pytest-mock", "redis[hiredis] (>=4.4.0rc1)", "sqlalchemy (>=1.4.22)", "trio", "greenlet (>=2.0.0a2)"]
+sqlalchemy = ["sqlalchemy (>=1.4.22)", "greenlet (>=2.0.0a2)"]
+test = ["apscheduler", "coverage", "freezegun", "paho-mqtt (>=1.5)", "pymongo (>=4)", "pymysql", "pytest (>=5.0)", "pytest-cov", "pytest-freezegun", "pytest-lazy-fixture", "pytest-mock", "redis[hiredis] (>=4.4.0rc1)", "sqlalchemy (>=1.4.22)", "trio", "psycopg2cffi", "apscheduler", "asyncmy (>=0.2.5)", "psycopg2"]
 
 [package.source]
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "49344e6954559259beb336436a45698d62eed5b4"
+resolved_reference = "7c7faaa69f9b84945f9eb02ce09af65c3b9d6a15"
 
 [[package]]
 name = "astunparse"
@@ -255,7 +255,7 @@ python-versions = ">=2.7"
 
 [[package]]
 name = "certifi"
-version = "2022.9.14"
+version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -359,7 +359,7 @@ calendars = ["convertdate", "hijri-converter", "convertdate"]
 
 [[package]]
 name = "discord.py"
-version = "2.1.0a4597+g46d194df"
+version = "2.1.0a4616+ga592361f"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -383,7 +383,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "46d194df5745885fe0d7791f13f49bab6f9d59b4"
+resolved_reference = "a592361f29ba31f08f43fa60ed3685905e5da329"
 
 [[package]]
 name = "distlib"
@@ -456,7 +456,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "google-auth"
-version = "2.11.0"
+version = "2.12.0"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -476,7 +476,7 @@ reauth = ["pyu2f (>=0.1.5)"]
 
 [[package]]
 name = "humanize"
-version = "4.3.0"
+version = "4.4.0"
 description = "Python humanize utilities"
 category = "main"
 optional = false
@@ -525,14 +525,6 @@ pipfile_deprecated_finder = ["pipreqs", "requirementslib"]
 requirements_deprecated_finder = ["pipreqs", "pip-api"]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
 plugins = ["setuptools"]
-
-[[package]]
-name = "jarowinkler"
-version = "1.2.1"
-description = "library for fast approximate string matching using Jaro and Jaro-Winkler similarity"
-category = "main"
-optional = false
-python-versions = ">=3.6"
 
 [[package]]
 name = "jishaku"
@@ -698,7 +690,7 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "openai"
-version = "0.23.0"
+version = "0.23.1"
 description = "Python client library for the OpenAI API"
 category = "main"
 optional = false
@@ -715,7 +707,8 @@ typing_extensions = "*"
 
 [package.extras]
 dev = ["black (>=21.6b0,<22.0.0)", "pytest (>=6.0.0,<7.0.0)"]
-embeddings = ["scikit-learn (>=1.0.2)", "tenacity (>=8.0.1)"]
+embeddings = ["scikit-learn (>=1.0.2)", "tenacity (>=8.0.1)", "matplotlib", "sklearn", "plotly"]
+wandb = ["wandb"]
 
 [[package]]
 name = "openpyxl"
@@ -749,7 +742,7 @@ pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
 
 [[package]]
 name = "pandas"
-version = "1.4.4"
+version = "1.5.0"
 description = "Powerful data structures for data analysis, time series, and statistics"
 category = "main"
 optional = false
@@ -761,11 +754,11 @@ python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
 
 [package.extras]
-test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
+test = ["pytest-xdist (>=1.31)", "pytest (>=6.0)", "hypothesis (>=5.5.3)"]
 
 [[package]]
 name = "pandas-stubs"
-version = "1.4.4.220912"
+version = "1.5.0.221003"
 description = "Type annotations for pandas"
 category = "main"
 optional = false
@@ -827,7 +820,7 @@ test = ["appdirs (==1.4.4)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)", "pytes
 
 [[package]]
 name = "plette"
-version = "0.3.0"
+version = "0.3.1"
 description = "Structured Pipfile and Pipfile.lock models."
 category = "dev"
 optional = false
@@ -1031,7 +1024,7 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "pytz"
-version = "2022.2.1"
+version = "2022.4"
 description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
@@ -1058,14 +1051,11 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "rapidfuzz"
-version = "2.9.0"
+version = "2.11.1"
 description = "rapid fuzzy string matching"
 category = "main"
 optional = false
 python-versions = ">=3.6"
-
-[package.dependencies]
-jarowinkler = ">=1.2.0,<2.0.0"
 
 [package.extras]
 full = ["numpy"]
@@ -1098,7 +1088,7 @@ use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requirementslib"
-version = "2.0.2"
+version = "2.0.3"
 description = "A tool for converting between pip-style and pipfile requirements."
 category = "dev"
 optional = false
@@ -1116,9 +1106,9 @@ tomlkit = ">=0.5.3"
 vistir = "0.6.1"
 
 [package.extras]
-tests = ["hypothesis", "coverage", "pytest-timeout", "pytest-cov", "pytest-xdist", "readme-renderer", "pytest"]
-docs = ["sphinx-rtd-theme", "sphinx"]
-dev = ["towncrier", "parver", "twine", "nox"]
+dev = ["nox", "twine", "parver", "towncrier"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+tests = ["pytest", "readme-renderer", "pytest-xdist", "pytest-cov", "pytest-timeout", "coverage", "hypothesis"]
 
 [[package]]
 name = "rsa"
@@ -1157,7 +1147,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "tenacity"
-version = "8.0.1"
+version = "8.1.0"
 description = "Retry code until it succeeds"
 category = "main"
 optional = false
@@ -1176,7 +1166,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "tomlkit"
-version = "0.11.4"
+version = "0.11.5"
 description = "Style preserving TOML library"
 category = "dev"
 optional = false
@@ -1225,7 +1215,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "tzdata"
-version = "2022.2"
+version = "2022.4"
 description = "Provider of IANA time zone data"
 category = "main"
 optional = false
@@ -1380,7 +1370,6 @@ humanize = []
 idna = []
 import-expression = []
 isort = []
-jarowinkler = []
 jishaku = []
 lark-parser = []
 line-profiler = []
