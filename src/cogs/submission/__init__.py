@@ -281,6 +281,8 @@ class Submission(commands.Cog):
                     word = "attachments" if oc.id else "files"
                     kwargs[word] = [file]
 
+            former: Optional[Character] = None
+
             if reference_id := oc.id:
                 thread = await thread.edit(archived=False)
                 try:
@@ -295,16 +297,19 @@ class Submission(commands.Cog):
                         kwargs["file"] = file
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
+                    former = oc
             elif msg_oc := await thread.send(**kwargs):
                 reference_id = msg_oc.id
                 word = "registered"
+                former = oc
 
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
 
-            db = self.bot.mongo_db("Characters")
-            if former := await db.find_one({"id": oc.id}):
-                former = Character.from_mongo_dict(former)
+            if former is None:
+                db = self.bot.mongo_db("Characters")
+                if former := await db.find_one({"id": oc.id}):
+                    former = Character.from_mongo_dict(former)
 
             self.bot.logger.info(
                 "Character has been %s! > %s > %s > %s",
