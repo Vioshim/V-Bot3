@@ -977,14 +977,17 @@ class ImageField(TemplateField):
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
             db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Background")
             if img := await db.find_one({"author": oc.author, "server": oc.server}):
-                img = await ctx.client.get_file(oc.generated_image(img["image"]))
+                url = oc.generated_image(img["image"])
+                ctx.client.logger.info(url)
+                img = await ctx.client.get_file(url)
 
             if img is None:
-                img = await ctx.client.get_file(oc.generated_image())
+                url = oc.generated_image()
+                ctx.client.logger.info(url)
+                img = await ctx.client.get_file(url)
 
             if img:
                 oc.image = img
-            ctx.client.logger.info(str(img))
 
         return None
 
