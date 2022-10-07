@@ -306,10 +306,10 @@ class Submission(commands.Cog):
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
 
-            if former is None:
-                db = self.bot.mongo_db("Characters")
-                if former := await db.find_one({"id": oc.id}):
-                    former = Character.from_mongo_dict(former)
+            db = self.bot.mongo_db("Characters")
+
+            if former is None and (former := await db.find_one({"id": oc.id})):
+                former = Character.from_mongo_dict(former)
 
             self.bot.logger.info(
                 "Character has been %s! > %s > %s > %s",
