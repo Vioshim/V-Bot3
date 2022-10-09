@@ -291,9 +291,7 @@ class Character:
         return isinstance(other, Character) and self.id == other.id
 
     def __ne__(self, other: Character) -> bool:
-        if isinstance(other, Character):
-            return other.id != self.id
-        return True
+        return isinstance(other, Character) and other.id != self.id
 
     def __hash__(self) -> int:
         return self.id >> 22
