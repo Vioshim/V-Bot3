@@ -323,7 +323,7 @@ class Roles(commands.Cog):
                 if text := data.text:
                     embed.add_field(name="In your time", value=text, inline=False)
 
-                data.offset = item["offset"]
+                data.offset = item2["offset"]
 
                 if text := data.text:
                     embed.add_field(name="In their time", value=text, inline=False)
