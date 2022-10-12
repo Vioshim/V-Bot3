@@ -314,17 +314,19 @@ class Roles(commands.Cog):
         resp: InteractionResponse = ctx.response
         db = self.bot.mongo_db("AFK")
         if item := await db.find_one({"user": ctx.user.id}):
-            offset: int = item["offset"]
             embed = Embed(title="AFK Schedule", timestamp=ctx.created_at, color=member.color)
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
 
             if item2 := await db.find_one({"user": member.id}):
-                data = AFKSchedule(item2["hours"], offset - item2["offset"])
+                data = AFKSchedule(item2["hours"], item["offset"] - item2["offset"])
 
-                embed.add_field(name="In your time", value=data.text, inline=False)
+                if text := data.text:
+                    embed.add_field(name="In your time", value=text, inline=False)
 
-                data.offset = item2["offset"]
-                embed.add_field(name="In their time", value=data.text, inline=False)
+                data.offset = item["offset"]
+
+                if text := data.text:
+                    embed.add_field(name="In their time", value=text, inline=False)
 
                 date = ctx.created_at.astimezone(data.tz)
                 text = quote_plus(date.strftime("User time %I:%M %p"))
