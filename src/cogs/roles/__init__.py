@@ -320,13 +320,16 @@ class Roles(commands.Cog):
             if item2 := await db.find_one({"user": member.id}):
                 data = AFKSchedule(item2["hours"], item["offset"] - item2["offset"])
 
-                if text := data.text:
-                    embed.add_field(name="In your time", value=text, inline=False)
+                if item["offset"] == item2["offset"]:
+                    embed.description = data.text
+                else:
+                    if text := data.text:
+                        embed.add_field(name="In your time", value=text, inline=False)
 
-                data.offset = item2["offset"] - item["offset"]
+                    data.offset = item2["offset"] - item["offset"]
 
-                if text := data.text:
-                    embed.add_field(name="In their time", value=text, inline=False)
+                    if text := data.text:
+                        embed.add_field(name="In their time", value=text, inline=False)
 
                 data.offset = item2["offset"]
                 date = ctx.created_at.astimezone(data.tz)
