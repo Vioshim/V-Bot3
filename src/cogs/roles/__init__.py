@@ -315,13 +315,7 @@ class Roles(commands.Cog):
         db = self.bot.mongo_db("AFK")
         if item := await db.find_one({"user": ctx.user.id}):
             offset: int = item["offset"]
-
-            embed = Embed(
-                title="AFK Schedule",
-                description="User has no schedule in database",
-                timestamp=ctx.created_at,
-                color=Color.blurple(),
-            )
+            embed = Embed(title="AFK Schedule", timestamp=ctx.created_at, color=member.color)
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
 
             if item2 := await db.find_one({"user": member.id}):
