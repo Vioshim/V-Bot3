@@ -323,11 +323,12 @@ class Roles(commands.Cog):
                 if text := data.text:
                     embed.add_field(name="In your time", value=text, inline=False)
 
-                data.offset = item2["offset"]
+                data.offset = item2["offset"] - item["offset"]
 
                 if text := data.text:
                     embed.add_field(name="In their time", value=text, inline=False)
 
+                data.offset = item2["offset"]
                 date = ctx.created_at.astimezone(data.tz)
                 text = quote_plus(date.strftime("User time %I:%M %p"))
                 embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
