@@ -182,19 +182,13 @@ class AFKSchedule:
         return date.astimezone(tz)
 
     @property
-    def text(self):
-        return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs())
-
-    @property
     def tz(self):
         offset = timedelta(hours=self.offset)
         return timezone(offset=offset)
 
     @property
-    def formatted_text(self):
-        reference = utcnow()
-        offset = -timedelta(hours=self.offset)
-        tz = timezone(offset=offset)
+    def text(self):
+        reference, tz = utcnow(), self.tz
 
         def method(x: time):
             return datetime.combine(reference, x).astimezone(tz)
