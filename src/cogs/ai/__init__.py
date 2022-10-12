@@ -25,7 +25,6 @@ from discord import (
     TextStyle,
     Thread,
     Webhook,
-    app_commands,
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
@@ -166,8 +165,6 @@ class AiCog(commands.Cog):
             self.cache.pop(item, None)
             self.msg_cache.pop(item, None)
 
-    @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     async def ai(self, interaction: Interaction, text: str, ephemeral: bool = True):
         """Open AI Generator
 
