@@ -335,9 +335,7 @@ class Character:
 
     @property
     def created_at(self):
-        if self.id:
-            return snowflake_time(self.id)
-        return utcnow()
+        return snowflake_time(self.id) if self.id else utcnow()
 
     @property
     def document_url(self):

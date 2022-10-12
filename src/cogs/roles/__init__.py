@@ -217,16 +217,10 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("AFK")
-        if msg.mentions and (
+        if (users := [x.id for x in msg.mentions if isinstance(x, Member) and str(x.status) == "offline"]) and (
             afk_members := [
                 f"• {user.mention} ({user.display_name})"
-                async for item in db.find(
-                    {
-                        "user": {
-                            "$in": [x.id for x in msg.mentions if isinstance(x, Member) and str(x.status) == "offline"]
-                        }
-                    }
-                )
+                async for item in db.find({"user": {"$in": users}})
                 if (user := msg.guild.get_member(item["user"]))
                 and ((msg.created_at + timedelta(hours=item["offset"])).hour in item["hours"])
             ]
@@ -335,7 +329,7 @@ class Roles(commands.Cog):
                 hours = item2["hours"]
 
                 data = AFKSchedule(hours, offset)
-
+                self.bot.logger.info("%s - %s", hours, offset)
                 embed.description = data.formatted_text
                 data.offset = item2["offset"]
                 date = ctx.created_at.astimezone(data.tz)
