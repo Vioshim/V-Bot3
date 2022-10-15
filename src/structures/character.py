@@ -513,6 +513,7 @@ class Character:
             )
 
         if hidden_power := self.hidden_power:
+            embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
             c_embed.set_footer(
                 text=f"Hidden Power: {hidden_power.name}",
                 icon_url=hidden_power.emoji.url,
@@ -538,7 +539,6 @@ class Character:
         if self.moveset:
             moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
             if hidden_power := self.hidden_power:
-                embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
                 moves_text = moves_text.replace("[Hidden Power] - Normal", f"[Hidden Power] - {hidden_power.name}")
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
