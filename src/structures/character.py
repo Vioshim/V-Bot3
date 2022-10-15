@@ -512,14 +512,8 @@ class Character:
                 inline=False,
             )
 
-        if hidden_power := self.hidden_power:
-            embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
-            c_embed.set_footer(
-                text=f"Hidden Power: {hidden_power.name}",
-                icon_url=hidden_power.emoji.url,
-            )
-
         if (sp_ability := self.sp_ability) and sp_ability.valid:
+
             if name := sp_ability.name[:100]:
                 sp_embed.title = name
 
@@ -534,7 +528,15 @@ class Character:
 
             if cons := sp_ability.cons[:600]:
                 sp_embed.add_field(name="Sp.Ability - Cons", value=cons, inline=False)
+
             embeds.append(sp_embed)
+
+        if hidden_power := self.hidden_power:
+            embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
+            c_embed.set_footer(
+                text=f"Hidden Power: {hidden_power.name}",
+                icon_url=hidden_power.emoji.url,
+            )
 
         if self.moveset:
             moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
