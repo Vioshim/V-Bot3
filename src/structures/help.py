@@ -184,7 +184,7 @@ class CustomHelp(HelpCommand):
         view = BasicStop(
             target=target,
             timeout=None,
-            embed=self.context.author,
+            member=self.context.author,
         )
         embed = view.embed
 
