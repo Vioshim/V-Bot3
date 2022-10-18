@@ -184,7 +184,7 @@ class CustomHelp(HelpCommand):
         view = BasicStop(
             target=target,
             timeout=None,
-            ember=self.context.author,
+            embed=self.context.author,
         )
         embed = view.embed
 
