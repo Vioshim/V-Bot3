@@ -196,10 +196,10 @@ class CustomHelp(HelpCommand):
             "Aliases": ", ".join(getattr(cmd, "aliases", [])),
         }
 
-        embed.description = "```yaml\n{}\n```".format(f"{k}: {v}" for k, v in entries.items())
+        embed.description = "```yaml\n{}\n```".format("\n".join(f"{k}: {v}" for k, v in entries.items()))
 
         for k, v in cmd.clean_params.items():
-            embed.add_field(name=k, value=str(v), inline=False)
+            embed.add_field(name=k, value=repr(v), inline=False)
 
         await view.send(title=f"Command {cmd.qualified_name!r}", desciption=cmd.description)
 
