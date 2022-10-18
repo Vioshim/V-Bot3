@@ -22,6 +22,7 @@ from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 from apscheduler.schedulers.async_ import AsyncScheduler
 from asyncpg import Connection, create_pool
+from discord import Streaming
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
 from orjson import loads
@@ -62,6 +63,7 @@ async def main() -> None:
             AsyncScheduler() as scheduler,
             create_pool(getenv("POSTGRES_POOL_URI"), init=init_connection) as pool,
             CustomBot(
+                activity=Streaming(name="Support V-Bot!", url="https://ko-fi.com/Vioshim"),
                 scheduler=scheduler,
                 pool=pool,
                 logger=logger,
