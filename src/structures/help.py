@@ -202,7 +202,10 @@ class CustomHelp(HelpCommand):
         for k, v in cmd.clean_params.items():
             embed.add_field(name=k.title(), value=str(v), inline=False)
 
-        await view.send(title=f"Command {cmd.qualified_name!r}", desciption=cmd.description)
+        await view.send(
+            title=f"Command {cmd.qualified_name!r}",
+            desciption=cmd.description,
+        )
 
     async def send_group_help(self, group: Group) -> None:
         """Group help
@@ -234,7 +237,11 @@ class CustomHelp(HelpCommand):
             silent_mode=True,
         )
 
-        async with view.send(title=f"Group {group.qualified_name!r}", desciption=description, single=True) as cmd:
+        async with view.send(
+            title=f"Group {group.qualified_name!r}",
+            desciption=description,
+            single=True,
+        ) as cmd:
             if isinstance(cmd, Command):
                 await self.send_command_help(cmd)
 
@@ -280,7 +287,10 @@ class CustomHelp(HelpCommand):
             entries_per_page=10,
             parser=cog_parser,
         )
-        await view.send(title=f"Cog {cog.qualified_name} - Commands", desciption="\n".join(commands) or "> No Commands")
+        await view.send(
+            title=f"Cog {cog.qualified_name} - Commands",
+            desciption="\n".join(commands) or "> No Commands",
+        )
 
     async def send_error_message(self, error: str):
         """Error sending function
