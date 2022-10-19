@@ -191,8 +191,8 @@ class CustomHelp(HelpCommand):
         entries = {
             "Description": cmd.description,
             "Short document": cmd.short_doc,
-            "Cog": cmd.short_doc,
-            "Usage": cmd.short_doc,
+            "Cog": cmd.cog_name,
+            "Usage": cmd.usage,
             "Aliases": ", ".join(getattr(cmd, "aliases", [])),
         }
 
