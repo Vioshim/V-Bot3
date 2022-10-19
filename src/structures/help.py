@@ -239,7 +239,7 @@ class CustomHelp(HelpCommand):
 
         async with view.send(
             title=f"Group {group.qualified_name!r}",
-            desciption=description,
+            description=description,
             single=True,
         ) as cmd:
             if isinstance(cmd, Command):
@@ -289,7 +289,7 @@ class CustomHelp(HelpCommand):
         )
         await view.send(
             title=f"Cog {cog.qualified_name} - Commands",
-            desciption="\n".join(commands) or "> No Commands",
+            description="\n".join(commands) or "> No Commands",
         )
 
     async def send_error_message(self, error: str):
