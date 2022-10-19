@@ -58,8 +58,8 @@ class ReminderModal(Modal, title="Reminder"):
         embed = Embed(title="Reminder Command", color=Color.blurple())
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
-        date = parse(date or "", settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
-        if not date or date <= interaction.created_at:
+        date: datetime = parse(date or "", settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+        if not date or date <= interaction.created_at.astimezone(date.tzinfo):
             embed.description = "Invalid date, unable to identify. Only future dates can be used."
         else:
             embed.timestamp = date
