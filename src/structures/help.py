@@ -231,6 +231,7 @@ class CustomHelp(HelpCommand):
             timeout=None,
             parser=lambda x: (x.name, x.short_doc),
             emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x.parent else "\N{BLACK LARGE SQUARE}",
+            silent_mode=True,
         )
 
         async with view.send(title=f"Group {group.qualified_name!r}", desciption=description, single=True) as cmd:
