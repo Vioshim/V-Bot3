@@ -14,7 +14,7 @@
 
 
 from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from dateparser import parse
@@ -59,7 +59,7 @@ class ReminderModal(Modal, title="Reminder"):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
         date: datetime = parse(date or "", settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
-        if not date or date <= interaction.created_at.astimezone(date.tzinfo):
+        if not date or date.astimezone(timezone.utc) <= interaction.created_at:
             embed.description = "Invalid date, unable to identify. Only future dates can be used."
         else:
             embed.timestamp = date
