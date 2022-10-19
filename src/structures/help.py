@@ -216,12 +216,13 @@ class CustomHelp(HelpCommand):
         entries = {
             "Description": group.description,
             "Short document": group.short_doc,
-            "Cog": group.short_doc,
-            "Usage": group.short_doc,
+            "Cog": group.cog_name,
+            "Usage": group.usage,
             "Aliases": ", ".join(getattr(group, "aliases", [])),
         }
 
-        description = "```yaml\n{}\n```".format(f"{k}: {v}" for k, v in entries.items())
+        if description := "\n".join(f"{k}: {v}" for k, v in entries.items() if v):
+            description = f"```yaml\n{description}\n```"
 
         view = Complex[Command](
             member=self.context.author,
@@ -229,6 +230,7 @@ class CustomHelp(HelpCommand):
             target=self.get_destination(),
             timeout=None,
             parser=lambda x: (x.name, x.short_doc),
+            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x.parent else "\N{BLACK LARGE SQUARE}",
         )
 
         async with view.send(title=f"Group {group.qualified_name!r}", desciption=description, single=True) as cmd:
