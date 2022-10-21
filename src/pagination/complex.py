@@ -320,11 +320,10 @@ class Complex(Simple[_T]):
         amount = self.max_values if self.real_max is None else self.real_max
         if self.keep_working or len(self.choices) < amount:
             await super(Complex, self).edit(interaction=interaction, page=page)
+        elif isinstance(self.target, Interaction):
+            await self.target.delete_original_response()
         else:
-            try:
-                await interaction.delete_original_response()
-            except DiscordException:
-                await self.delete(interaction)
+            await self.delete(interaction)
 
     @asynccontextmanager
     async def send(
