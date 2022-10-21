@@ -444,7 +444,7 @@ class RegisteredRoleSelect(RoleSelect):
             SelectOption(
                 labe=x.name,
                 value=str(x.role),
-                description=x.desc,
+                description=x.desc[:100],
                 emoji=x.emoji,
             )
             for x in MAP_ELEMENTS
