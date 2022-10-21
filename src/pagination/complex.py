@@ -318,11 +318,12 @@ class Complex(Simple[_T]):
         """
         amount = self.max_values if self.real_max is None else self.real_max
         if self.keep_working or len(self.choices) < amount:
-            await super(Complex, self).edit(interaction=interaction, page=page)
-        elif interaction.message:
-            await interaction.message.delete(delay=0)
+            return await super(Complex, self).edit(interaction=interaction, page=page)
+        if message := interaction.message:
+            await message.delete(delay=0)
         else:
             await self.delete(interaction)
+        self.stop()
 
     @asynccontextmanager
     async def send(
@@ -599,8 +600,8 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def finish(self, ctx: Interaction, btn: Button):
-        if ctx.message:
-            await ctx.message.delete(delay=0)
+        if message := ctx.message:
+            await message.delete(delay=0)
         else:
             await self.delete(ctx)
         self.stop()
