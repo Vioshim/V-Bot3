@@ -25,7 +25,6 @@ from discord import (
     AllowedMentions,
     ButtonStyle,
     Color,
-    DiscordException,
     Embed,
     Emoji,
     File,
@@ -320,8 +319,8 @@ class Complex(Simple[_T]):
         amount = self.max_values if self.real_max is None else self.real_max
         if self.keep_working or len(self.choices) < amount:
             await super(Complex, self).edit(interaction=interaction, page=page)
-        elif isinstance(self.target, Interaction):
-            await self.target.delete_original_response()
+        elif interaction.message:
+            await interaction.message.delete(delay=0)
         else:
             await self.delete(interaction)
 
@@ -600,6 +599,8 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def finish(self, ctx: Interaction, btn: Button):
-        with suppress(DiscordException):
-            await ctx.delete_original_response()
+        if ctx.message:
+            await ctx.message.delete(delay=0)
+        else:
+            await self.delete(ctx)
         self.stop()
