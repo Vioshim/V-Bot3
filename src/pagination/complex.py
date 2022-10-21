@@ -38,7 +38,6 @@ from discord import (
     PartialMessage,
     SelectOption,
     StickerItem,
-    Thread,
     User,
 )
 from discord.abc import Messageable, Snowflake
@@ -503,13 +502,10 @@ class Complex(Simple[_T]):
 
     @property
     def current_choices(self) -> set[_T]:
-        sct = self.select_choice
-        chunk = self.current_chunk
-        data = set()
-        values = [x for x in sct.values if x.isdigit()]
-        for index in values:
+        sct, chunk, data = self.select_choice, self.current_chunk, set()
+        for index in [int(x) for x in sct.values if x.isdigit()]:
             with suppress(IndexError):
-                data.add(chunk[int(index)])
+                data.add(chunk[index])
         return data
 
     @property
@@ -531,17 +527,16 @@ class Complex(Simple[_T]):
 
         if not response.is_done() and not self.silent_mode:
             member: Member | User = interaction.user
-            if isinstance(interaction.channel, Thread) and interaction.channel.archived:
-                await interaction.channel.edit(archived=False)
             await response.defer(ephemeral=True, thinking=True)
-
-            if self.current_choices:
-                text: str = "\n".join(f"> **•** {x}" for x, _ in map(self.parser, self.current_choices))
-                embed = Embed(title="Great! you have selected", description=text)
+            embed = Embed(
+                description="\n".join(f"> **•** {x}" for x, _ in map(self.parser, self.current_choices)),
+                color=Color.blurple(),
+            )
+            if embed.description:
+                embed.title = "Great! you have selected"
             else:
-                embed = Embed(title="Nothing has been selected.")
+                embed.title = "Nothing has been selected."
 
-            embed.color = Color.blurple()
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
             embed.set_image(url=WHITE_BAR)
             if guild := interaction.guild:
@@ -564,7 +559,10 @@ class Complex(Simple[_T]):
         elif "back" in sct.values or (len([x for x in sct.values if x.isdigit()]) == self.entries_per_page):
             self.pos = max(self.pos - 1, 0)
 
-        await self.edit(interaction=interaction, page=self.pos)
+        try:
+            await self.edit(interaction=interaction, page=self.pos)
+        except Exception as e:
+            logger.exception("Exception -> ", exc_info=e)
 
     @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
     async def navigate(self, interaction: Interaction, sct: Select) -> None:
