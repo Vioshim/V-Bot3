@@ -115,9 +115,7 @@ class Disboard(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        if embeds := message.embeds:
-            return "Bump done!" in embeds[0].description
-        return False
+        return message.embeds and "Bump done!" in message.embeds[0].description
 
 
 class DiscordServer(BumpBot):
@@ -130,9 +128,7 @@ class DiscordServer(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        if embeds := message.embeds:
-            return ":thumbsup:" in embeds[0].description
-        return False
+        return message.embeds and ":thumbsup:" in message.embeds[0].description
 
 
 class ListIO(BumpBot):
@@ -146,12 +142,23 @@ class ListIO(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        if embeds := message.embeds:
-            if "Your server has been bumped successfully!" in embeds[0].title:
-                return True
-            if "Server bumped!" in embeds[0].description:
-                return True
-        return False
+        return message.embeds and (
+            "Your server has been bumped successfully!" in message.embeds[0].title
+            or "Server bumped!" in message.embeds[0].description
+        )
+
+
+class Disboost(BumpBot):
+    id = 717015248170909726
+    name = "Disboost"
+    url = "https://disboost.com/server/{server}"
+    hours = 1.0
+    cmd_id = 924440973797380146
+    format_date = compile(r"has already been bumped, try again (in \d+:\d+:\d+)", IGNORECASE | MULTILINE)
+
+    @classmethod
+    def on_message(cls, message: Message) -> bool:
+        return bool(message.embeds and "You have succesfully bumped " in message.embeds[0].title)
 
 
 class PingBump(View):
