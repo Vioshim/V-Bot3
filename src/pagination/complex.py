@@ -596,3 +596,17 @@ class Complex(Simple[_T]):
             component = DefaultModal(view=self)
         await response.send_modal(component)
         await component.wait()
+
+    @button(
+        label="Finish",
+        custom_id="finish",
+        style=ButtonStyle.blurple,
+        row=4,
+    )
+    async def finish(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        if ctx.message.flags.ephemeral:
+            await resp.edit_message(view=None)
+        else:
+            await ctx.message.delete(delay=0)
+        self.stop()
