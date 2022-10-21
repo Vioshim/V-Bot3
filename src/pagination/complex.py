@@ -25,6 +25,7 @@ from discord import (
     AllowedMentions,
     ButtonStyle,
     Color,
+    DiscordException,
     Embed,
     Emoji,
     File,
@@ -320,7 +321,10 @@ class Complex(Simple[_T]):
         if self.keep_working or len(self.choices) < amount:
             await super(Complex, self).edit(interaction=interaction, page=page)
         else:
-            await self.delete(interaction)
+            try:
+                await interaction.delete_original_response()
+            except DiscordException:
+                await self.delete(interaction)
 
     @asynccontextmanager
     async def send(
@@ -597,9 +601,6 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def finish(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        if ctx.message.flags.ephemeral:
-            await resp.edit_message(view=None)
-        else:
-            await ctx.message.delete(delay=0)
+        with suppress(DiscordException):
+            await ctx.delete_original_response()
         self.stop()
