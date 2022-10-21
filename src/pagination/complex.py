@@ -542,11 +542,7 @@ class Complex(Simple[_T]):
             embed.set_image(url=WHITE_BAR)
             if guild := interaction.guild:
                 embed.set_footer(text=guild.name, icon_url=guild.icon)
-
-            try:
-                await interaction.followup.send(embed=embed, ephemeral=True)
-            except Exception as e:
-                logger.exception("Exception -> ", exc_info=e)
+            await interaction.followup.send(embed=embed, ephemeral=True)
 
         if not self.keep_working:
             self.choices |= items
@@ -563,10 +559,7 @@ class Complex(Simple[_T]):
         elif "back" in sct.values or (len([x for x in sct.values if x.isdigit()]) == self.entries_per_page):
             self.pos = max(self.pos - 1, 0)
 
-        try:
-            await self.edit(interaction=interaction, page=self.pos)
-        except Exception as e:
-            logger.exception("Exception -> ", exc_info=e)
+        await self.edit(interaction=interaction, page=self.pos)
 
     @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
     async def navigate(self, interaction: Interaction, sct: Select) -> None:

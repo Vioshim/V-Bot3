@@ -211,8 +211,8 @@ class CharactersView(Complex[Character]):
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         resp: InteractionResponse = interaction.response
-        await resp.defer(ephemeral=True, thinking=True)
         if item := self.current_choice:
+            await resp.defer(ephemeral=True, thinking=True)
             embeds = item.embeds
             guild: Guild = self.member.guild
             if author := guild.get_member(item.author):
