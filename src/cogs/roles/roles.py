@@ -442,7 +442,7 @@ class RegisteredRoleSelect(RoleSelect):
         max_values=len(MAP_ELEMENTS),
         options=[
             SelectOption(
-                labe=x.name,
+                label=x.name,
                 value=str(x.role),
                 description=x.desc[:100],
                 emoji=x.emoji,
