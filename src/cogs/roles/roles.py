@@ -47,7 +47,13 @@ from rapidfuzz import process
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import DEFAULT_TIMEZONE, MOBILE_EMOJI, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import (
+    DEFAULT_TIMEZONE,
+    MAP_ELEMENTS,
+    MOBILE_EMOJI,
+    SETTING_EMOJI,
+    WHITE_BAR,
+)
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
 
@@ -433,27 +439,15 @@ class RegisteredRoleSelect(RoleSelect):
         placeholder="Select Location Roles",
         custom_id="location",
         min_values=0,
-        max_values=19,
+        max_values=len(MAP_ELEMENTS),
         options=[
-            SelectOption(label="Ashouria", emoji="🔥", value="1023694601988612208"),
-            SelectOption(label="Athar", emoji="🎇", value="1023694608896626729"),
-            SelectOption(label="Brevania", emoji="👻", value="1023694613099331584"),
-            SelectOption(label="Broxburn", emoji="🏕", value="1023694616903561246"),
-            SelectOption(label="Chandra Nur", emoji="🥊", value="1023694621227876382"),
-            SelectOption(label="Estelia", emoji="🎥", value="1023694630161760377"),
-            SelectOption(label="Lougy", emoji="🎌", value="1023694635111039096"),
-            SelectOption(label="Muzatoorah", emoji="🌵", value="1023694638592299048"),
-            SelectOption(label="Norwich", emoji="🏡", value="1023694641956139139"),
-            SelectOption(label="Parvi", emoji="🔮", value="1023694646033010741"),
-            SelectOption(label="Pixy Foundation", emoji="🥼", value="1023694656015441991"),
-            SelectOption(label="Richmond", emoji="🐜", value="1023694659739983952"),
-            SelectOption(label="Sashi", emoji="🍹", value="1023694664227893259"),
-            SelectOption(label="Schalzburg", emoji="❄", value="1023694667516223528"),
-            SelectOption(label="Shiey Shea", emoji="🏛", value="1023694671257546884"),
-            SelectOption(label="Shouhead Peaks", emoji="🥌", value="1023694681256771686"),
-            SelectOption(label="Tomalia", emoji="🐲", value="1023694685895675964"),
-            SelectOption(label="Upria", emoji="🧊", value="1023694690702344242"),
-            SelectOption(label="Wilderness", emoji="🌲", value="1023694697731985459"),
+            SelectOption(
+                labe=x.name,
+                value=str(x.role),
+                description=x.desc,
+                emoji=x.emoji,
+            )
+            for x in MAP_ELEMENTS
         ],
     )
     async def location_roles(self, ctx: Interaction, sct: Select):
@@ -487,29 +481,6 @@ class RegisteredRoleSelect(RoleSelect):
             tags.sort(key=lambda x: x.name)
             if set(channel.applied_tags) != set(tags):
                 await channel.edit(archived=False, applied_tags=tags)
-
-    @button(
-        label="Taking a Break (Removes Registered Role)",
-        custom_id="remove_registered",
-        style=ButtonStyle.red,
-        emoji="\N{WARNING SIGN}",
-    )
-    async def take_break(self, ctx: Interaction, btn: Button):
-        await ctx.response.send_message(
-            "To recover the role, open a ticket at <#860590339327918100>",
-            ephemeral=True,
-        )
-        role = get(ctx.guild.roles, name="Registered")
-        await ctx.user.remove_roles(role, reason=btn.label)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
-        key = dict(server=ctx.guild_id, user=ctx.user.id)
-        if data := await db.find_one(key):
-            try:
-                if not (thread := ctx.guild.get_channel_or_thread(data["id"])):
-                    thread: Thread = await ctx.guild.fetch_channel(data["id"])
-                await thread.edit(archived=True)
-            except DiscordException:
-                await db.delete_one(data)
 
 
 class RPSearchManage(View):

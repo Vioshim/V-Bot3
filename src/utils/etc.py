@@ -33,6 +33,7 @@ __all__ = (
     "DEFAULT_TIMEZONE",
     "INVITE_EMOJI",
     "LIST_EMOJI",
+    "KOFI_EMOJI",
     "RTFMPages",
 )
 DEFAULT_TIMEZONE = timezone(name="GMT-5", offset=timedelta(hours=-5))
@@ -47,6 +48,7 @@ THUMBS_UP_EMOJI = PartialEmoji(name="thumbs_up", id=995303508419026954)
 THUMBS_DOWN_EMOJI = PartialEmoji(name="thumbs_down", id=995303546503311380)
 INVITE_EMOJI = PartialEmoji(name="IconInvite", id=778931752835088426)
 LIST_EMOJI = PartialEmoji(name="list", id=432986579007569922)
+KOFI_EMOJI = PartialEmoji(name="kofi", id=952523061171716097)
 DICE_NUMBERS = [
     PartialEmoji(name="one", id=952524707129868308),
     PartialEmoji(name="two", id=952524707176001546),

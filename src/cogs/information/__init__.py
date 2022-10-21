@@ -59,11 +59,10 @@ from yaml import dump
 from src.cogs.information.area_selection import RegionViewComplex
 from src.cogs.information.perks import CustomPerks
 from src.cogs.information.poll import PollView
-from src.cogs.wiki.wiki import WikiEntry
-from src.cogs.wiki.wiki_complex import WikiComplex
 from src.structures.bot import CustomBot
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
+    KOFI_EMOJI,
     LINK_EMOJI,
     SETTING_EMOJI,
     STICKER_EMOJI,
@@ -339,6 +338,14 @@ class InformationView(View):
                 row=0,
             )
         )
+        self.add_item(
+            Button(
+                label="Support V-Bot!",
+                emoji=KOFI_EMOJI,
+                url="https://ko-fi.com/Vioshim",
+                row=1,
+            )
+        )
 
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
     async def see_map(self, ctx: Interaction, _: Button):
@@ -349,25 +356,6 @@ class InformationView(View):
     async def create_ticket(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_modal(TicketModal(timeout=None))
-
-    @button(label="Read /Wiki", emoji=SETTING_EMOJI, row=1, style=ButtonStyle.blurple)
-    async def read_wiki(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Wiki")
-        entries = await db.find({}).to_list(length=None)
-        tree = WikiEntry.from_list(entries)
-        view = WikiComplex(tree=tree, target=ctx)
-        content, embeds = tree.content, tree.embeds
-        if not (content or embeds):
-            embeds = [view.embed]
-        view.message = await ctx.followup.send(
-            ephemeral=True,
-            content=content,
-            embeds=embeds,
-            view=view,
-            wait=True,
-        )
 
 
 class Information(commands.Cog):

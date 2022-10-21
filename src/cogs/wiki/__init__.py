@@ -15,15 +15,7 @@
 
 from typing import Optional
 
-from discord import (
-    Color,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    Message,
-    TextStyle,
-    app_commands,
-)
+from discord import Color, Embed, Interaction, InteractionResponse, Message, TextStyle
 from discord.ext import commands
 from discord.ui import Modal, TextInput
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -107,17 +99,6 @@ class WikiPathModal(Modal, title="Wiki Path"):
 class Wiki(commands.Cog):
     def __init__(self, bot: CustomBot) -> None:
         self.bot = bot
-        self.ctx_menu = app_commands.ContextMenu(
-            name="Add to Wiki",
-            callback=self.wiki_add,
-            guild_ids=[719343092963999804],
-        )
-
-    async def cog_load(self) -> None:
-        self.bot.tree.add_command(self.ctx_menu)
-
-    async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
     async def wiki_add(self, ctx: Interaction, msg: Message):
         resp: InteractionResponse = ctx.response
@@ -129,8 +110,6 @@ class Wiki(commands.Cog):
         await resp.send_modal(modal)
         await modal.wait()
 
-    @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     async def wiki(
         self,
         ctx: Interaction,
@@ -193,7 +172,6 @@ class Wiki(commands.Cog):
                 str(tags),
             )
 
-    @commands.command()
     async def wiki_remove(self, ctx: commands.Context, *, path: str):
         class WikiModal(Modal, title="Wiki Route"):
             def __init__(self, tree: WikiEntry) -> None:
