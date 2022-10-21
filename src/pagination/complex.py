@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from inspect import isfunction
 from logging import getLogger, setLoggerClass
 from types import TracebackType
@@ -36,6 +36,7 @@ from discord import (
     MessageReference,
     PartialEmoji,
     PartialMessage,
+    SelectOption,
     StickerItem,
     Thread,
     User,
@@ -45,6 +46,7 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 from rapidfuzz import process
 
 from src.pagination.simple import Simple
+from src.pagination.view_base import ArrowEmotes
 from src.structures.logger import ColoredLogger
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
@@ -106,7 +108,7 @@ class Complex(Simple[_T]):
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         max_values: int = 1,
-        entries_per_page: int = 25,
+        entries_per_page: int = 23,
         parser: Callable[[_T], tuple[str, str]] = None,
         emoji_parser: str | PartialEmoji | Emoji | Callable[[_T], str | PartialEmoji | Emoji] = None,
         silent_mode: bool = False,
@@ -169,10 +171,13 @@ class Complex(Simple[_T]):
             )
         await self.delete()
 
-    @property
-    def current_chunk(self) -> list[_T]:
-        amount = self.entries_per_page * self.pos
+    def chunk(self, index: int):
+        amount = self.entries_per_page * index
         return self.values[amount : amount + self.entries_per_page]
+
+    @property
+    def current_chunk(self):
+        return self.chunk(self.pos)
 
     def emoji_parser(self, item: _T) -> Optional[PartialEmoji | Emoji | str]:
         if isinstance(self._emoji_parser, (PartialEmoji, Emoji, str)):
@@ -187,7 +192,6 @@ class Complex(Simple[_T]):
 
     def menu_format(self) -> None:
         """Default Formatter"""
-        self.buttons_format()
         # First, the current stored values in each option get cleared.
         # aside of changing the placeholder text
         if not self.text_component:
@@ -272,6 +276,28 @@ class Complex(Simple[_T]):
             self.remove_item(foo)
         elif foo.options and foo not in self.children:
             self.add_item(foo)
+
+        if total_pages >= 2 and len(foo.options) <= 23:
+
+            if self.pos == 0:
+                first = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
+                last = SelectOption(label="Go to last page", value="last", emoji=ArrowEmotes.END)
+                first_index, last_index = self.pos + 1, total_pages - 1
+            elif self.pos == total_pages - 1:
+                first = SelectOption(label="Go to previous page", value="back", emoji=ArrowEmotes.BACK)
+                last = SelectOption(label="Go to first page", value="first", emoji=ArrowEmotes.START)
+                first_index, last_index = self.pos - 1, 0
+            else:
+                first = SelectOption(label="Go to previous page", value="back", emoji=ArrowEmotes.BACK)
+                last = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
+                first_index, last_index = self.pos - 1, self.pos + 1
+
+            items = [(first, self.chunk(first_index)), (last, self.chunk(last_index))]
+            for k, item in items:
+                firstname, _ = self.parser(item[0])
+                lastname, _ = self.parser(item[-1])
+                k.description = f"From {firstname} to {lastname}"[:100]
+                foo.append_option(k)
 
     async def update(self, interaction: Interaction) -> None:
         """Method used to edit the pagination
@@ -480,11 +506,10 @@ class Complex(Simple[_T]):
         sct = self.select_choice
         chunk = self.current_chunk
         data = set()
-        for index in sct.values:
-            try:
+        values = [x for x in sct.values if x.isdigit()]
+        for index in values:
+            with suppress(IndexError):
                 data.add(chunk[int(index)])
-            except IndexError:
-                continue
         return data
 
     @property
@@ -528,8 +553,16 @@ class Complex(Simple[_T]):
             self.choices |= self.current_choices
 
         self.values = set(self.values) - self.choices
-        if len(sct.values) == self.entries_per_page:
-            self.pos = max(self._pos - 1, 0)
+        max_pages = len(self.values[:: self.entries_per_page]) - 1
+
+        if "first" in sct.values:
+            self.pos = 0
+        elif "last" in sct.values:
+            self.pos = max_pages
+        elif "next" in sct.values:
+            self.pos = min(self.pos + 1, max_pages)
+        elif "back" in sct.values or (len([x for x in sct.values if x.isdigit()]) == self.entries_per_page):
+            self.pos = max(self.pos - 1, 0)
 
         await self.edit(interaction=interaction, page=self.pos)
 

@@ -15,12 +15,14 @@
 
 from src.pagination.boolean import BooleanView
 from src.pagination.complex import Complex
-from src.pagination.simple import Simple
-from src.pagination.view_base import Basic
+from src.pagination.simple import Simple, SimplePaged
+from src.pagination.view_base import ArrowEmotes, Basic
 
 __all__ = (
+    "ArrowEmotes",
     "Basic",
     "BooleanView",
     "Complex",
     "Simple",
+    "SimplePaged",
 )

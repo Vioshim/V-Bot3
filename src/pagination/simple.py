@@ -42,7 +42,7 @@ from src.pagination.view_base import ArrowEmotes, Basic
 
 _T = TypeVar("_T", bound=Sized)
 
-__all__ = ("Simple",)
+__all__ = ("Simple", "SimplePaged")
 
 
 def default_parser(item: _T) -> tuple[str, str]:
@@ -203,22 +203,8 @@ class Simple(Generic[_T], Basic):
         self._pos = 0
         self.menu_format()
 
-    def buttons_format(self) -> None:
-        """This method formats the first buttons based on the
-        current page that is being viewed..
-        """
-        self.first.disabled = self._pos == 0
-        self.previous.disabled = self._pos == 0
-        if chunks := len(self.values[:: self._entries_per_page]):
-            self.next.disabled = self._pos == chunks - 1
-            self.last.disabled = self._pos == chunks - 1
-        else:
-            self.next.disabled = True
-            self.last.disabled = True
-
     def menu_format(self):
         """Default Formatter"""
-        self.buttons_format()
         if self.entries_per_page != 1:
             self.embed.clear_fields()
         chunks = len(self.values[:: self.entries_per_page]) or (self.pos + 1)
@@ -360,6 +346,25 @@ class Simple(Generic[_T], Basic):
                         self.message = await interaction.edit_original_response(**data)
         else:
             self.message = await interaction.edit_original_response(**data)
+
+
+class SimplePaged(Simple[_T]):
+    def buttons_format(self) -> None:
+        """This method formats the first buttons based on the
+        current page that is being viewed..
+        """
+        self.first.disabled = self._pos == 0
+        self.previous.disabled = self._pos == 0
+        if chunks := len(self.values[:: self._entries_per_page]):
+            self.next.disabled = self._pos == chunks - 1
+            self.last.disabled = self._pos == chunks - 1
+        else:
+            self.next.disabled = True
+            self.last.disabled = True
+
+    def menu_format(self):
+        self.buttons_format()
+        return super(SimplePaged, self).menu_format()
 
     @button(emoji=ArrowEmotes.START, row=0, custom_id="first", style=ButtonStyle.blurple)
     async def first(self, interaction: Interaction, _: Button) -> None:

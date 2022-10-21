@@ -158,7 +158,7 @@ class Disboost(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        return bool(message.embeds and "You have succesfully bumped " in message.embeds[0].title)
+        return bool(message.embeds and "You have succesfully bumped" in message.embeds[0].description)
 
 
 class PingBump(View):

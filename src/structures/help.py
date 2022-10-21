@@ -26,7 +26,7 @@ from discord.ext.commands import Cog, Command, Context, Group, HelpCommand
 from discord.ui import Button, Select, button, select
 
 from src.pagination.complex import Complex
-from src.pagination.simple import Simple
+from src.pagination.simple import SimplePaged
 from src.pagination.view_base import BasicStop
 from src.utils.etc import WHITE_BAR
 
@@ -161,7 +161,7 @@ class CustomHelp(HelpCommand):
             text_signatures = "\n".join(commands) or "No Commands"
             return cog_name, text_signatures
 
-        view = Simple(
+        view = SimplePaged(
             timeout=None,
             member=self.context.author,
             target=target,
@@ -278,7 +278,7 @@ class CustomHelp(HelpCommand):
                 return name, "\n".join(split)
             return name, "> Not Documented"
 
-        view = Simple(
+        view = SimplePaged(
             timeout=None,
             target=target,
             member=self.context.author,
