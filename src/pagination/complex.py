@@ -525,11 +525,12 @@ class Complex(Simple[_T]):
         """
         response: InteractionResponse = interaction.response
 
+        items = self.current_choices
         if not response.is_done() and not self.silent_mode:
             member: Member | User = interaction.user
             await response.defer(ephemeral=True, thinking=True)
             embed = Embed(
-                description="\n".join(f"> **•** {x}" for x, _ in map(self.parser, self.current_choices)),
+                description="\n".join(f"> **•** {x}" for x, _ in map(self.parser, items)),
                 color=Color.blurple(),
             )
             if embed.description:
@@ -542,10 +543,13 @@ class Complex(Simple[_T]):
             if guild := interaction.guild:
                 embed.set_footer(text=guild.name, icon_url=guild.icon)
 
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            try:
+                await interaction.followup.send(embed=embed, ephemeral=True)
+            except Exception as e:
+                logger.exception("Exception -> ", exc_info=e)
 
         if not self.keep_working:
-            self.choices |= self.current_choices
+            self.choices |= items
 
         self.values = set(self.values) - self.choices
         max_pages = len(self.values[:: self.entries_per_page]) - 1
