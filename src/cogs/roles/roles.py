@@ -44,6 +44,7 @@ from discord.utils import get, time_snowflake, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
+from cogs.information.area_selection import role_gen
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
@@ -459,6 +460,10 @@ class RegisteredRoleSelect(RoleSelect):
         role = ctx.guild.get_role(1033371159426764901)
         if role not in ctx.user.roles:
             await ctx.user.add_roles(role)
+
+        if roles := {x for x in role_gen(ctx.guild) if x in ctx.user.roles}:
+            await ctx.user.remove_roles(*roles)
+
         await resp.send_message("Role has been added", ephemeral=True)
 
     @button(label="Remove Spectator Role", custom_id="spectator_remove")

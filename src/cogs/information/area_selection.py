@@ -17,6 +17,7 @@ from itertools import groupby
 from threading import Thread
 
 from discord import (
+    ButtonStyle,
     CategoryChannel,
     Embed,
     Guild,
@@ -33,7 +34,13 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
-from src.utils.etc import MAP_ELEMENTS, WHITE_BAR, MapPair
+from src.utils.etc import (
+    EMOTE_CREATE_EMOJI,
+    EMOTE_REMOVE_EMOJI,
+    MAP_ELEMENTS,
+    WHITE_BAR,
+    MapPair,
+)
 from src.views.characters_view import CharactersView
 
 __all__ = ("RegionViewComplex",)
@@ -109,7 +116,7 @@ class AreaSelection(Complex[TextChannel]):
         finally:
             await super(AreaSelection, self).select_choice(interaction=interaction, sct=sct)
 
-    @button(row=4, label="Add Role", custom_id="role_add")
+    @button(row=4, label="Add Role", custom_id="role_add", emoji=EMOTE_CREATE_EMOJI, style=ButtonStyle.blurple)
     async def add_role(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         btn.disabled = True
@@ -123,19 +130,13 @@ class AreaSelection(Complex[TextChannel]):
         elif self.role not in ctx.user.roles:
             await ctx.user.add_roles(self.role)
 
-    @button(row=4, label="Remove Role", custom_id="role_remove")
+    @button(row=4, label="Remove Role", custom_id="role_remove", emoji=EMOTE_REMOVE_EMOJI, style=ButtonStyle.blurple)
     async def remove_role(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         btn.disabled = True
         self.add_role.disabled = False
         await resp.edit_message(view=self)
-        role = ctx.guild.get_role(1033371159426764901)
-        all_roles = {x for x in role_gen(ctx.guild) if x != self.role}
-        if any(x not in ctx.user.roles for x in all_roles):
-            if role in ctx.user.roles:
-                await ctx.user.remove_roles(role)
-            await ctx.user.add_roles(*all_roles)
-        elif self.role in ctx.user.roles:
+        if self.role in ctx.user.roles:
             await ctx.user.remove_roles(self.role)
 
 
@@ -187,7 +188,7 @@ class RegionViewComplex(Complex[MapPair]):
         finally:
             await super(RegionViewComplex, self).select_choice(interaction=interaction, sct=sct)
 
-    @button(row=4, label="Add all roles", custom_id="role_add")
+    @button(row=4, label="Add Spectator", custom_id="role_add", emoji=EMOTE_CREATE_EMOJI, style=ButtonStyle.blurple)
     async def add_role(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         btn.disabled = True
@@ -198,7 +199,7 @@ class RegionViewComplex(Complex[MapPair]):
         if self.role and self.role not in ctx.user.roles:
             await ctx.user.add_roles(self.role)
 
-    @button(row=4, label="Remove all roles", custom_id="role_remove")
+    @button(row=4, label="Remove Spectator", custom_id="role_rmv", emoji=EMOTE_REMOVE_EMOJI, style=ButtonStyle.blurple)
     async def remove_role(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         btn.disabled = True

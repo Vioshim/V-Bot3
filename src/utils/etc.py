@@ -32,10 +32,16 @@ __all__ = (
     "THUMBS_DOWN_EMOJI",
     "DEFAULT_TIMEZONE",
     "INVITE_EMOJI",
+    "EMOTE_CREATE_EMOJI",
+    "EMOTE_REMOVE_EMOJI",
+    "EMOTE_UPDATE_EMOJI",
     "LIST_EMOJI",
     "KOFI_EMOJI",
     "RTFMPages",
 )
+EMOTE_CREATE_EMOJI = PartialEmoji(name="emotecreate", id=460538984263581696)
+EMOTE_REMOVE_EMOJI = PartialEmoji(name="emoteremove", id=460538983965786123)
+EMOTE_UPDATE_EMOJI = PartialEmoji(name="emoteupdate", id=460539246508507157)
 DEFAULT_TIMEZONE = timezone(name="GMT-5", offset=timedelta(hours=-5))
 WHITE_BAR = "https://dummyimage.com/500x5/FFFFFF/000000&text=%20"
 STICKER_EMOJI = PartialEmoji(name="MessageSticker", id=753338258963824801)

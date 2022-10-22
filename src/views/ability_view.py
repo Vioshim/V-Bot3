@@ -19,7 +19,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    PartialEmoji,
     SelectOption,
     TextChannel,
     TextStyle,
@@ -31,6 +30,7 @@ from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
 from src.structures.ability import Ability, SpAbility
 from src.structures.character import Character
+from src.utils.etc import EMOTE_CREATE_EMOJI, EMOTE_REMOVE_EMOJI, EMOTE_UPDATE_EMOJI
 
 __all__ = ("AbilityView", "SPAbilityModal", "SPAbilityView")
 
@@ -149,19 +149,19 @@ class SPAbilityView(Basic):
                 label="Add Sp. Ability",
                 value="add",
                 description="Provide Sp. Ability (Name, Desc, Origin, Pros, Cons)",
-                emoji=PartialEmoji(name="emotecreate", id=460538984263581696),
+                emoji=EMOTE_CREATE_EMOJI,
             ),
             SelectOption(
                 label="No Sp. Ability",
                 value="remove",
                 description="Removes Sp. Ability",
-                emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
+                emoji=EMOTE_REMOVE_EMOJI,
             ),
             SelectOption(
                 label="Keep as is",
                 value="default",
                 description="Skip this process",
-                emoji=PartialEmoji(name="emoteupdate", id=460539246508507157),
+                emoji=EMOTE_UPDATE_EMOJI,
             ),
         ],
     )
