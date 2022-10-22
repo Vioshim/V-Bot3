@@ -19,13 +19,15 @@ from threading import Thread
 from discord import (
     CategoryChannel,
     Embed,
+    Guild,
     Interaction,
     InteractionResponse,
     Member,
+    Role,
     TextChannel,
     User,
 )
-from discord.ui import Select, select
+from discord.ui import Button, Select, button, select
 from discord.utils import utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -37,11 +39,24 @@ from src.views.characters_view import CharactersView
 __all__ = ("RegionViewComplex",)
 
 
+def role_gen(guild: Guild):
+    for item in MAP_ELEMENTS:
+        if x := guild.get_role(item.role):
+            yield x
+
+
 class AreaSelection(Complex[TextChannel]):
-    def __init__(self, target: Interaction, cat: CategoryChannel, ocs: set[Character]):
+    def __init__(
+        self,
+        target: Interaction,
+        cat: CategoryChannel,
+        ocs: set[Character],
+        role: Role,
+    ):
         channels = [x for x in cat.channels if not x.name.endswith("-ooc")]
 
         self.entries: dict[str, set[Character]] = {}
+        self.role = role
 
         def foo(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
@@ -94,9 +109,38 @@ class AreaSelection(Complex[TextChannel]):
         finally:
             await super(AreaSelection, self).select_choice(interaction=interaction, sct=sct)
 
+    @button(row=4, label="Add Role", custom_id="role_add")
+    async def add_role(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        btn.disabled = True
+        self.remove_role.disabled = False
+        await resp.edit_message(view=self)
+        role = ctx.guild.get_role(1033371159426764901)
+        all_roles = set(role_gen(ctx.guild))
+        if all(x in ctx.user.roles for x in all_roles if x != self.role):
+            await ctx.user.remove_roles(all_roles)
+            await ctx.user.add_roles(role)
+        elif self.role not in ctx.user.roles:
+            await ctx.user.add_roles(self.role)
+
+    @button(row=4, label="Remove Role", custom_id="role_remove")
+    async def remove_role(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        btn.disabled = True
+        self.add_role.disabled = False
+        await resp.edit_message(view=self)
+        role = ctx.guild.get_role(1033371159426764901)
+        all_roles = {x for x in role_gen(ctx.guild) if x != self.role}
+        if any(x not in ctx.user.roles for x in all_roles):
+            if role in ctx.user.roles:
+                await ctx.user.remove_roles(role)
+            await ctx.user.add_roles(all_roles)
+        elif self.role in ctx.user.roles:
+            await ctx.user.remove_roles(self.role)
+
 
 class RegionViewComplex(Complex[MapPair]):
-    def __init__(self, *, member: Member | User, target: Interaction):
+    def __init__(self, *, member: Member | User, target: Interaction, role: Role):
         super(RegionViewComplex, self).__init__(
             member=member,
             values=MAP_ELEMENTS,
@@ -106,6 +150,7 @@ class RegionViewComplex(Complex[MapPair]):
             silent_mode=True,
             keep_working=True,
         )
+        self.role = role
         self.embed.title = "Map Selection Tool"
         self.embed.description = "Tool will also show you how many characters have been in certain areas."
 
@@ -116,11 +161,21 @@ class RegionViewComplex(Complex[MapPair]):
             await resp.defer(ephemeral=True, thinking=True)
             info = self.current_choice
             cat = interaction.guild.get_channel(info.category)
-            embed = Embed(title=info.name, description=info.desc, timestamp=utcnow(), color=interaction.user.color)
+            embed = Embed(
+                title=info.name,
+                description=info.desc,
+                timestamp=interaction.created_at,
+                color=interaction.user.color,
+            )
             embed.set_image(url=info.image or WHITE_BAR)
             db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
             ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
-            view = AreaSelection(target=interaction, cat=cat, ocs=ocs)
+            role = interaction.guild.get_role(info.role)
+            view = AreaSelection(target=interaction, cat=cat, ocs=ocs, role=role)
+
+            view.add_role.disabled = role in interaction.user.roles
+            view.remove_role.disabled = role not in interaction.user.roles
+
             interaction.client.logger.info("%s is reading Map Information of %s", interaction.user, cat.name)
             registered = interaction.guild.get_role(719642423327719434)
             if registered not in interaction.user.roles:
@@ -131,3 +186,25 @@ class RegionViewComplex(Complex[MapPair]):
             interaction.client.logger.exception("Error in region view.", exc_info=e)
         finally:
             await super(RegionViewComplex, self).select_choice(interaction=interaction, sct=sct)
+
+    @button(row=4, label="Add all roles", custom_id="role_add")
+    async def add_role(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        btn.disabled = True
+        self.remove_role.disabled = False
+        await resp.edit_message(view=self)
+        if roles := {x for x in role_gen(ctx.guild) if x not in ctx.user.roles}:
+            await ctx.user.remove_roles(roles)
+        if self.role and self.role not in ctx.user.roles:
+            await ctx.user.add_roles(self.role)
+
+    @button(row=4, label="Remove all roles", custom_id="role_remove")
+    async def remove_role(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        btn.disabled = True
+        self.add_role.disabled = False
+        await resp.edit_message(view=self)
+        roles = {x for x in role_gen(ctx.guild)}
+        if self.role:
+            roles.add(self.role)
+        await ctx.user.remove_roles(roles)

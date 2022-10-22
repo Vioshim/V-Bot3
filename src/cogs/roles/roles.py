@@ -273,12 +273,12 @@ class RoleSelect(View):
     async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
         logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
-    async def choice(self, ctx: Interaction, sct: Select):
+    async def choice(self, ctx: Interaction, sct: Select, remove_all: bool = False):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
         guild = ctx.guild
 
-        roles: set[Role] = set(get_role(sct.values, guild))
+        roles: set[Role] = set() if remove_all else set(get_role(sct.values, guild))
         total: set[Role] = set(get_role(sct.options, guild))
 
         await resp.defer(ephemeral=True, thinking=True)
@@ -451,7 +451,17 @@ class RegisteredRoleSelect(RoleSelect):
         ],
     )
     async def location_roles(self, ctx: Interaction, sct: Select):
-        await self.choice(ctx, sct)
+        remove_all = len(sct.values) == sct.max_values
+        await self.choice(ctx, sct, remove_all=remove_all)
+
+        if not (role := ctx.guild.get_role(1033371159426764901)):
+            return
+
+        if remove_all:
+            if role not in ctx.user.roles:
+                await ctx.user.add_roles(role)
+        elif role in ctx.user.roles:
+            await ctx.user.remove_roles(role)
 
     @select(
         placeholder="Select RP Search Roles",

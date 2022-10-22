@@ -86,7 +86,6 @@ class ImageView(Basic):
             await super(ImageView, self).send(file=file, **kwargs)
         except HTTPException:
             self.embed.set_image(url=None)
-            self.default_image.disabled = True
             await super(ImageView, self).send(file=file, **kwargs)
         except Exception as e:
             logger.exception(
@@ -145,9 +144,10 @@ class ImageView(Basic):
             elif file := await ctx.client.get_file(url=received.content, filename="image"):
                 await received.delete(delay=0)
                 self.received = foo = await ctx.channel.send(file=file)
-                self.text = self.received.attachments[0].proxy_url
+                if attachments := self.received.attachments:
+                    self.text = attachments[0].proxy_url
                 await foo.delete(delay=0)
-            elif image := self.message.embeds[0].image:
+            elif self.message.embeds and (image := self.message.embeds[0].image):
                 self.text = image.url
             else:
                 self.text = None
