@@ -44,7 +44,6 @@ from discord.utils import get, time_snowflake, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
-from cogs.information.area_selection import role_gen
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
@@ -70,6 +69,13 @@ __all__ = (
     "hours",
     "seconds",
 )
+
+
+def role_gen(guild: Guild):
+    for item in MAP_ELEMENTS:
+        if x := guild.get_role(item.role):
+            yield x
+
 
 INTERVAL = timedelta(hours=12)
 RP_SEARCH_EMBED = (
