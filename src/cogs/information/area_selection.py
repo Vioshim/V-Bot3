@@ -134,7 +134,7 @@ class AreaSelection(Complex[TextChannel]):
         if any(x not in ctx.user.roles for x in all_roles):
             if role in ctx.user.roles:
                 await ctx.user.remove_roles(role)
-            await ctx.user.add_roles(all_roles)
+            await ctx.user.add_roles(*all_roles)
         elif self.role in ctx.user.roles:
             await ctx.user.remove_roles(self.role)
 
