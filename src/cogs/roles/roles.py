@@ -49,6 +49,8 @@ from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
+    EMOTE_CREATE_EMOJI,
+    EMOTE_REMOVE_EMOJI,
     MAP_ELEMENTS,
     MOBILE_EMOJI,
     SETTING_EMOJI,
@@ -460,7 +462,12 @@ class RegisteredRoleSelect(RoleSelect):
     async def location_roles(self, ctx: Interaction, sct: Select):
         await self.choice(ctx, sct)
 
-    @button(label="Add Spectator Role", custom_id="spectator_add")
+    @button(
+        label="Add Spectator Role",
+        custom_id="spectator_add",
+        emoji=EMOTE_CREATE_EMOJI,
+        style=ButtonStyle.blurple,
+    )
     async def spectator_add(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         role = ctx.guild.get_role(1033371159426764901)
@@ -472,7 +479,12 @@ class RegisteredRoleSelect(RoleSelect):
 
         await resp.send_message("Role has been added", ephemeral=True)
 
-    @button(label="Remove Spectator Role", custom_id="spectator_remove")
+    @button(
+        label="Remove Spectator Role",
+        custom_id="spectator_remove",
+        emoji=EMOTE_REMOVE_EMOJI,
+        style=ButtonStyle.blurple,
+    )
     async def spectator_remove(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         role = ctx.guild.get_role(1033371159426764901)
