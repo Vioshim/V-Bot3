@@ -461,13 +461,13 @@ class RegisteredRoleSelect(RoleSelect):
             await ctx.user.add_roles(role)
         await resp.send_message("Role has been added", ephemeral=True)
 
-    @button(label="Remove Spectator Role", custom_id="spectator_add")
+    @button(label="Remove Spectator Role", custom_id="spectator_remove")
     async def spectator_remove(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         role = ctx.guild.get_role(1033371159426764901)
         if role in ctx.user.roles:
             await ctx.user.remove_roles(role)
-        await resp.send_message("Role has been added", ephemeral=True)
+        await resp.send_message("Role has been removed", ephemeral=True)
 
     @select(
         placeholder="Select RP Search Roles",
