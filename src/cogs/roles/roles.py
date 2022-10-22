@@ -451,17 +451,23 @@ class RegisteredRoleSelect(RoleSelect):
         ],
     )
     async def location_roles(self, ctx: Interaction, sct: Select):
-        remove_all = len(sct.values) == sct.max_values
-        await self.choice(ctx, sct, remove_all=remove_all)
+        await self.choice(ctx, sct)
 
-        if not (role := ctx.guild.get_role(1033371159426764901)):
-            return
+    @button(label="Add Spectator Role", custom_id="spectator_add")
+    async def spectator_add(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        role = ctx.guild.get_role(1033371159426764901)
+        if role not in ctx.user.roles:
+            await ctx.user.add_roles(role)
+        await resp.send_message("Role has been added", ephemeral=True)
 
-        if remove_all:
-            if role not in ctx.user.roles:
-                await ctx.user.add_roles(role)
-        elif role in ctx.user.roles:
+    @button(label="Remove Spectator Role", custom_id="spectator_add")
+    async def spectator_remove(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        role = ctx.guild.get_role(1033371159426764901)
+        if role in ctx.user.roles:
             await ctx.user.remove_roles(role)
+        await resp.send_message("Role has been added", ephemeral=True)
 
     @select(
         placeholder="Select RP Search Roles",
