@@ -118,7 +118,7 @@ class AreaSelection(Complex[TextChannel]):
         role = ctx.guild.get_role(1033371159426764901)
         all_roles = set(role_gen(ctx.guild))
         if all(x in ctx.user.roles for x in all_roles if x != self.role):
-            await ctx.user.remove_roles(all_roles)
+            await ctx.user.remove_roles(*all_roles)
             await ctx.user.add_roles(role)
         elif self.role not in ctx.user.roles:
             await ctx.user.add_roles(self.role)
@@ -194,7 +194,7 @@ class RegionViewComplex(Complex[MapPair]):
         self.remove_role.disabled = False
         await resp.edit_message(view=self)
         if roles := {x for x in role_gen(ctx.guild) if x not in ctx.user.roles}:
-            await ctx.user.remove_roles(roles)
+            await ctx.user.remove_roles(*roles)
         if self.role and self.role not in ctx.user.roles:
             await ctx.user.add_roles(self.role)
 
@@ -207,4 +207,4 @@ class RegionViewComplex(Complex[MapPair]):
         roles = {x for x in role_gen(ctx.guild)}
         if self.role:
             roles.add(self.role)
-        await ctx.user.remove_roles(roles)
+        await ctx.user.remove_roles(*roles)
