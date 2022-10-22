@@ -282,21 +282,21 @@ class Complex(Simple[_T]):
                 first = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
                 last = SelectOption(label="Go to last page", value="last", emoji=ArrowEmotes.END)
                 first_index, last_index = self.pos + 1, total_pages - 1
-            elif self.pos == total_pages - 1:
+            elif self.pos >= total_pages - 1:
                 first = SelectOption(label="Go to previous page", value="back", emoji=ArrowEmotes.BACK)
                 last = SelectOption(label="Go to first page", value="first", emoji=ArrowEmotes.START)
-                first_index, last_index = self.pos - 1, 0
+                first_index, last_index = min(self.pos - 1, total_pages - 1), 0
             else:
                 first = SelectOption(label="Go to previous page", value="back", emoji=ArrowEmotes.BACK)
                 last = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
                 first_index, last_index = self.pos - 1, self.pos + 1
 
             items = [(first, self.chunk(first_index)), (last, self.chunk(last_index))]
-            for k, item in items:
+            for index, (k, item) in enumerate(items):
                 firstname, _ = self.parser(item[0])
                 lastname, _ = self.parser(item[-1])
                 k.description = f"From {firstname} to {lastname}"[:100]
-                foo.append_option(k)
+                foo.options.insert(index, k)
 
     async def update(self, interaction: Interaction) -> None:
         """Method used to edit the pagination
@@ -318,12 +318,9 @@ class Complex(Simple[_T]):
         """
         amount = self.max_values if self.real_max is None else self.real_max
         if self.keep_working or len(self.choices) < amount:
-            return await super(Complex, self).edit(interaction=interaction, page=page)
-        if message := interaction.message:
-            await message.delete(delay=0)
+            await super(Complex, self).edit(interaction=interaction, page=page)
         else:
             await self.delete(interaction)
-        self.stop()
 
     @asynccontextmanager
     async def send(
@@ -600,8 +597,4 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def finish(self, ctx: Interaction, btn: Button):
-        if message := ctx.message:
-            await message.delete(delay=0)
-        else:
-            await self.delete(ctx)
-        self.stop()
+        await self.delete(ctx)

@@ -284,20 +284,17 @@ class Basic(View):
         try:
             if ctx and not ctx.response.is_done():
                 resp: InteractionResponse = ctx.response
-                if (msg := self.message) and not msg.flags.ephemeral:
+                if msg := self.message:
                     await resp.pong()
                     await msg.delete(delay=0)
                 else:
                     await resp.edit_message(view=None)
             elif msg := self.message:
-                if msg.flags.ephemeral:
-                    await msg.edit(view=None)
-                else:
-                    await msg.delete(delay=0)
+                await msg.delete(delay=0)
         except HTTPException:
             with suppress(HTTPException):
                 if isinstance(self.target, Interaction):
-                    await self.target.edit_original_response(view=None)
+                    await self.target.delete_original_response()
         finally:
             self.stop()
 
