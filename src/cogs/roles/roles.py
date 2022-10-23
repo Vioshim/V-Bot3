@@ -424,26 +424,6 @@ class BasicRoleSelect(RoleSelect):
 
 
 class RegisteredRoleSelect(RoleSelect):
-    async def interaction_check(self, interaction: Interaction, /) -> bool:
-        resp: InteractionResponse = interaction.response
-        role = get(interaction.guild.roles, name="Registered")
-        if role and role not in interaction.user.roles:
-            view = View()
-            view.add_item(
-                Button(
-                    label="OC Submissions",
-                    url="https://canary.discord.com/channels/719343092963999804/852180971985043466/1005387453055639612",
-                    emoji="\N{OPEN BOOK}",
-                )
-            )
-            await resp.send_message(
-                f"In order to use this function, you need to have {role.mention}",
-                view=view,
-                ephemeral=True,
-            )
-            return False
-        return True
-
     @select(
         placeholder="Select Location Roles",
         custom_id="location",
