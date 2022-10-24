@@ -48,12 +48,14 @@ _M = TypeVar("_M", bound=Messageable)
 
 def check(ctx: Interaction):
     def inner(message: Message):
-        if ctx.user == message.author and ctx.channel == message.channel:
-            if REGEX_URL.match(message.content or ""):
-                return True
-            if attachments := message.attachments:
-                return attachments[0].content_type.startswith("image/")
-        return False
+        return (
+            ctx.user == message.author
+            and ctx.channel == message.channel
+            and (
+                bool(REGEX_URL.match(message.content or ""))
+                or any((x.content_type or "").startswith("image/") for x in message.attachments)
+            )
+        )
 
     return inner
 

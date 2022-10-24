@@ -242,7 +242,8 @@ class AFKModal(Modal, title="Current Time"):
         await resp.defer(ephemeral=True, thinking=True)
         date1 = interaction.created_at.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
-        self.offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - abs(date1 - date2).seconds)) / 3600
+        ref = abs(date1 - date2).seconds
+        self.offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
         if date1 > date2:
             self.offset = -self.offset
 
@@ -323,7 +324,7 @@ class BasicRoleSelect(RoleSelect):
         options=[
             SelectOption(label="He", value="738230651840626708", emoji="\N{MALE SIGN}"),
             SelectOption(label="She", value="738230653916807199", emoji="\N{FEMALE SIGN}"),
-            SelectOption(label="Them", value="874721683381030973", emoji=None),
+            SelectOption(label="Them", value="874721683381030973"),
         ],
     )
     async def pronouns_choice(self, ctx: Interaction, sct: Select):
