@@ -32,7 +32,16 @@ from discord import (
     SelectOption,
     TextStyle,
 )
-from discord.ui import Button, Modal, Select, TextInput, View, button, select
+from discord.ui import (
+    Button,
+    Modal,
+    Select,
+    TextInput,
+    UserSelect,
+    View,
+    button,
+    select,
+)
 from discord.utils import MISSING, get
 from frozendict import frozendict
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -1371,6 +1380,26 @@ class SubmissionView(View):
         embed.set_image(url="https://hmp.me/dx38")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
+
+    @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0)
+    async def user_ocs(self, ctx: Interaction, sct: UserSelect):
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        resp: InteractionResponse = ctx.response
+        member: Member = sct.values[0] if sct.values else ctx.user
+        await resp.defer(ephemeral=True, thinking=True)
+        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
+        if not values:
+            await ctx.followup.send(f"{member.mention} doesn't have characters.", ephemeral=True)
+            return
+        values.sort(key=lambda x: x.name)
+        if ctx.user == member or ctx.user.guild_permissions.manage_messages:
+            view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+            view.embed.title = "Select Character to modify"
+        else:
+            view = CharactersView(member=ctx.user, target=ctx, ocs=values)
+        view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        async with view.send(single=True):
+            ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
 
     @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
