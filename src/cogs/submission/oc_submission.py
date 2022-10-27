@@ -1161,9 +1161,9 @@ class CreationOCView(Basic):
 
     async def delete(self, ctx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
-        if m := self.message:
-            guild_id = ctx.guild_id if ctx else None
-            await db.delete_one({"id": m.id, "server": guild_id or self.oc.server})
+        if m := self.message or ctx.message:
+            guild_id = ctx.guild_id if ctx else self.oc.server
+            await db.delete_one({"id": m.id, "server": guild_id})
         return await super(CreationOCView, self).delete(ctx)
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
