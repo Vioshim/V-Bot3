@@ -14,6 +14,7 @@
 
 
 from abc import ABC, abstractmethod
+from contextlib import suppress
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -1403,24 +1404,19 @@ class SubmissionView(View):
                 if msg_id:
                     await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
 
-                try:
-                    message = PartialMessage(channel=ctx.channel, id=msg_id)
+                message = PartialMessage(channel=ctx.channel, id=msg_id)
+                with suppress(DiscordException):
                     message = await message.fetch()
-                except DiscordException:
-                    await view.send(ephemeral=ephemeral)
-                else:
                     view.message = message
-                    if not character.image_url and (image := message.embeds[0].image):
-                        character.image_url = image.url
+                    embeds = message.embeds
+                    if not character.image_url and embeds and embeds[0].image:
+                        character.image_url = embeds[0].image.url
                     await message.delete(delay=0)
                     await view.send(ephemeral=ephemeral)
                     view.message = message
                     aux_data = data.copy()
                     aux_data["id"] = message.id
                     await db.replace_one(data, aux_data, upsert=True)
-                finally:
-                    await view.wait()
-
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
