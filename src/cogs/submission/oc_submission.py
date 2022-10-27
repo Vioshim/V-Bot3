@@ -1097,21 +1097,27 @@ class CreationOCView(Basic):
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             self.stop()
 
+    @property
+    def data(self):
+        data = {}
+        reference = self.message or self.oc
+        if reference and reference.id:
+            data["id"] = reference.id
+
+        return data | dict(
+            template=self.ref_template.name,
+            author=self.user.id,
+            character=self.oc.to_mongo_dict(),
+            progress=list(self.progress),
+            server=self.oc.server,
+        )
+
     async def upload(self):
         db = self.bot.mongo_db("OC Creation")
-        if m := self.message:
-            await db.replace_one(
-                dict(id=m.id, server=self.oc.server),
-                dict(
-                    id=m.id,
-                    template=self.ref_template.name,
-                    author=self.user.id,
-                    character=self.oc.to_mongo_dict(),
-                    progress=list(self.progress),
-                    server=self.oc.server,
-                ),
-                upsert=True,
-            )
+        data = self.data
+        if data_id := data.get("id"):
+            key = {"id": data_id, "server": data["server"]}
+            await db.replace_one(key, data, upsert=True)
 
     async def update(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
@@ -1416,10 +1422,9 @@ class SubmissionView(View):
                 if message and (embeds := message.embeds):
                     if not character.image_url and embeds and embeds[0].image:
                         character.image_url = embeds[0].image.url
-                    aux_data = data.copy()
+                    aux_data = view.data
                     aux_data["id"] = message.id
                     await db.replace_one(data, aux_data, upsert=True)
-
                 await view.wait()
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
