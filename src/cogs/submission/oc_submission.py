@@ -1418,6 +1418,7 @@ class SubmissionView(View):
                     aux_data = data.copy()
                     aux_data["id"] = message.id
                     await db.replace_one(data, aux_data, upsert=True)
+                await view.wait()
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
