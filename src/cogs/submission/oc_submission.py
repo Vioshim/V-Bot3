@@ -1409,7 +1409,7 @@ class SubmissionView(View):
                 message = PartialMessage(channel=ctx.channel, id=msg_id)
 
                 try:
-                    message = await message.fetch()
+                    message = await message.edit(view=view)
                 except DiscordException:
                     try:
                         message = await view.send(ephemeral=ephemeral)
