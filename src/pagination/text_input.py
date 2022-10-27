@@ -95,20 +95,20 @@ class ModernInput(Basic):
         finally:
             await aux.delete()
 
-    @button(
-        emoji=PartialEmoji(name="ChannelThread", id=816771501596344341),
-        label="Message",
-        style=ButtonStyle.blurple,
-        row=0,
-    )
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
 
-        async def foo():
-            return await interaction.client.wait_for("message", check=text_check(interaction))
-
-        done, pending = await wait([foo, self.wait], return_when=FIRST_COMPLETED)
+        done, pending = await wait(
+            [
+                interaction.client.wait_for(
+                    "message",
+                    check=text_check(interaction),
+                ),
+                self.wait,
+            ],
+            return_when=FIRST_COMPLETED,
+        )
 
         for task in pending:
             task.cancel()
