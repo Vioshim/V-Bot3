@@ -1405,10 +1405,11 @@ class SubmissionView(View):
                 try:
                     message = await message.fetch()
                 except DiscordException:
+                    if msg_id:
+                        await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
                     try:
                         message = await view.send(ephemeral=ephemeral)
                     except DiscordException:
-                        await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
                         continue
 
                 view.message = message
@@ -1418,8 +1419,6 @@ class SubmissionView(View):
                     aux_data = data.copy()
                     aux_data["id"] = message.id
                     await db.replace_one(data, aux_data, upsert=True)
-                else:
-                    await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
 
                 await view.wait()
         except Exception as e:
