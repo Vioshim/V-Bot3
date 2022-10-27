@@ -104,7 +104,10 @@ class ModernInput(Basic):
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
-        foo = interaction.client.wait_for("message", check=text_check(interaction))
+
+        async def foo():
+            return await interaction.client.wait_for("message", check=text_check(interaction))
+
         done, pending = await wait([foo, self.wait], return_when=FIRST_COMPLETED)
 
         for task in pending:
