@@ -1411,20 +1411,20 @@ class SubmissionView(View):
                 try:
                     message = await message.fetch()
                 except DiscordException:
-                    if msg_id:
-                        await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
                     try:
                         message = await view.send(ephemeral=ephemeral)
                     except DiscordException:
-                        continue
+                        message = None
 
                 view.message = message
+                aux_data = view.data
                 if message and (embeds := message.embeds):
                     if not character.image_url and embeds and embeds[0].image:
                         character.image_url = embeds[0].image.url
-                    aux_data = view.data
                     aux_data["id"] = message.id
-                    await db.replace_one(data, aux_data, upsert=True)
+
+                await db.replace_one({"id": msg_id, "server": ctx.guild_id}, aux_data, upsert=True)
+
                 await view.wait()
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
