@@ -95,6 +95,12 @@ class ModernInput(Basic):
         finally:
             await aux.delete()
 
+    @button(
+        emoji=PartialEmoji(name="ChannelThread", id=816771501596344341),
+        label="Message",
+        style=ButtonStyle.blurple,
+        row=0,
+    )
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
@@ -112,8 +118,10 @@ class ModernInput(Basic):
 
         for task in pending:
             task.cancel()
+            await task
 
         for task in done:
+            await task
             if isinstance(message := task.result(), Message):
                 self.text = message.content
                 await message.delete(delay=0)
