@@ -14,7 +14,6 @@
 
 
 from abc import ABC, abstractmethod
-from contextlib import suppress
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -1401,18 +1400,27 @@ class SubmissionView(View):
                     progress=progress,
                 )
 
+                message = PartialMessage(channel=ctx.channel, id=msg_id)
+
+                try:
+                    message = await message.fetch()
+                except DiscordException:
+                    message = await view.send(ephemeral=ephemeral)
+                    msg_id = 0
+                finally:
+                    view.message = message
+
                 if msg_id:
                     await db.delete_one(dict(id=msg_id, server=ctx.guild_id))
 
-                message = PartialMessage(channel=ctx.channel, id=msg_id)
-                with suppress(DiscordException):
-                    message = await message.fetch()
-                    view.message = message
-                    embeds = message.embeds
+                if message and (embeds := message.embeds):
                     if not character.image_url and embeds and embeds[0].image:
                         character.image_url = embeds[0].image.url
-                    await message.delete(delay=0)
-                    await view.send(ephemeral=ephemeral)
+
+                    if msg_id:
+                        await message.delete(delay=0)
+                        message = await view.send(ephemeral=ephemeral)
+
                     view.message = message
                     aux_data = data.copy()
                     aux_data["id"] = message.id
