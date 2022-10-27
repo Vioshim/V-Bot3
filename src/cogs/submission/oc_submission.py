@@ -1394,7 +1394,7 @@ class SubmissionView(View):
                 )
                 character = Character.from_mongo_dict(character)
 
-                if not (member := ctx.guild.get_member(author)):
+                if not (member := ctx.guild.get_member(author) or ctx.client.get_user(author)):
                     member = await ctx.client.fetch_user(author)
 
                 view = CreationOCView(
@@ -1415,16 +1415,13 @@ class SubmissionView(View):
                         message = await view.send(ephemeral=ephemeral)
                     except DiscordException:
                         message = None
+                finally:
+                    await db.delete_one({"id": msg_id, "server": ctx.guild_id})
 
                 view.message = message
-                aux_data = view.data
                 if message and (embeds := message.embeds):
                     if not character.image_url and embeds and embeds[0].image:
                         character.image_url = embeds[0].image.url
-                    aux_data["id"] = message.id
-
-                await db.replace_one({"id": msg_id, "server": ctx.guild_id}, aux_data, upsert=True)
-
                 await view.wait()
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
