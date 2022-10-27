@@ -1381,7 +1381,7 @@ class SubmissionView(View):
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await ctx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
 
-    @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0)
+    @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0, row=1)
     async def user_ocs(self, ctx: Interaction, sct: UserSelect):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         resp: InteractionResponse = ctx.response
@@ -1401,7 +1401,7 @@ class SubmissionView(View):
         async with view.send(single=True):
             ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
 
-    @button(label="Character Creation", emoji="\N{PENCIL}", row=1, custom_id="add-oc")
+    @button(label="Character Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         cog = ctx.client.get_cog("Submission")
         db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Creation")
@@ -1458,7 +1458,7 @@ class SubmissionView(View):
         finally:
             cog.ignore -= users
 
-    @button(label="Character Modification", emoji="\N{PENCIL}", row=1, custom_id="modify-oc")
+    @button(label="Character Modification", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
     async def oc_update(self, ctx: Interaction, _: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         resp: InteractionResponse = ctx.response
