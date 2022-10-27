@@ -1418,11 +1418,11 @@ class SubmissionView(View):
                 finally:
                     await db.delete_one({"id": msg_id, "server": ctx.guild_id})
 
-                view.message = message
                 if message and (embeds := message.embeds):
+                    view.message = message
                     if not character.image_url and embeds and embeds[0].image:
                         character.image_url = embeds[0].image.url
-                await view.wait()
+                    await view.wait()
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
