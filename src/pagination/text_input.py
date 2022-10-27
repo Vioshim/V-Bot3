@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from asyncio import FIRST_COMPLETED, wait
 from contextlib import asynccontextmanager
 from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
@@ -103,19 +104,26 @@ class ModernInput(Basic):
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
-        try:
-            message: Message = await interaction.client.wait_for("message", check=text_check(interaction))
-            self.text = message.content
-            await message.delete(delay=0)
-            await self.message.edit(
-                content="Parameter has been added.",
-                view=None,
-                embed=None,
-            )
-        except DiscordException as e:
-            logger.exception("Error editing message", exc_info=e)
-        finally:
-            self.stop()
+        done, pending = await wait(
+            [
+                interaction.client.wait_for(
+                    "message",
+                    check=text_check(interaction),
+                ),
+                self.wait,
+            ],
+            return_when=FIRST_COMPLETED,
+        )
+
+        for task in pending:
+            task.cancel()
+
+        for task in done:
+            if isinstance(message := task.result(), Message):
+                self.text = message.content
+                await message.delete(delay=0)
+
+        await self.delete(interaction)
 
     @button(
         emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
