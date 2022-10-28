@@ -57,7 +57,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.utils.etc import RP_CATEGORIES, WHITE_BAR
-from src.views.characters_view import PingView
+from src.views.characters_view import CharactersView, PingView
 from src.views.move_view import MoveView
 
 __all__ = ("Submission", "setup")
@@ -187,13 +187,19 @@ class Submission(commands.Cog):
         await resp.defer(ephemeral=True, thinking=True)
         Character.from_mongo_dict
         db = self.bot.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
-        view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
-        embed = view.embed
-        embed.color = member.color
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-        async with view.send(ephemeral=True):
-            self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
+        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
+            user = self.bot.supporting.get(ctx.user, ctx.user)
+            if ocs[0].author in [ctx.user.id, user.id]:
+                view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            else:
+                view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            embed = view.embed
+            embed.color = member.color
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            async with view.send(ephemeral=True):
+                self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
+        else:
+            await ctx.followup.send(f"{member.mention} doesn't have characters.", ephemeral=True)
 
     async def list_update(self, member: Object | User | Member):
         """This function updates an user's character list message
@@ -713,7 +719,10 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Characters")
         if ocs := [Character.from_mongo_dict(item) async for item in db.find({"author": member.id})]:
             ocs.sort(key=lambda x: x.name)
-            view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            if ocs[0].author in [ctx.user.id, user.id]:
+                view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            else:
+                view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
             embed = view.embed
             embed.color = member.color
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
