@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-import asyncio
 from contextlib import asynccontextmanager
 from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
@@ -34,7 +33,6 @@ from discord.ui import Button, Modal, TextInput, button
 
 from src.pagination.view_base import Basic
 from src.structures.logger import ColoredLogger
-from src.utils.functions import text_check
 
 setLoggerClass(ColoredLogger)
 
@@ -97,35 +95,7 @@ class ModernInput(Basic):
 
     @button(
         emoji=PartialEmoji(name="ChannelThread", id=816771501596344341),
-        label="Message",
-        style=ButtonStyle.blurple,
-        row=0,
-    )
-    async def confirm(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        await resp.edit_message(content=DEFAULT_MSG, view=None)
-
-        done, _ = await asyncio.wait(
-            [
-                interaction.client.wait_for(
-                    "message",
-                    check=text_check(interaction),
-                ),
-                self.__stopped,
-            ],
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-
-        for task in done:
-            if isinstance(message := task.result(), Message):
-                self.text = message.content
-                await message.delete(delay=0)
-
-        await self.delete(interaction)
-
-    @button(
-        emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
-        label="Modal",
+        label="Fill the Information",
         style=ButtonStyle.blurple,
         row=0,
     )
