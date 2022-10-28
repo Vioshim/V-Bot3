@@ -288,12 +288,12 @@ class Basic(View):
                     await resp.pong()
                     await msg.delete(delay=0)
                 else:
-                    await resp.edit_message(view=None)
+                    await ctx.delete_original_response()
             elif msg := self.message:
                 await msg.delete(delay=0)
         except HTTPException:
-            with suppress(HTTPException):
-                if isinstance(self.target, Interaction):
+            if isinstance(self.target, Interaction):
+                with suppress(HTTPException):
                     await self.target.delete_original_response()
         finally:
             self.stop()

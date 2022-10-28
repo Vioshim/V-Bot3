@@ -116,19 +116,15 @@ class ModernInput(Basic):
             return_when=asyncio.FIRST_COMPLETED,
         )
 
-        try:
+        for task in pending:
+            task.cancel()
 
-            for task in pending:
-                task.cancel()
+        for task in done:
+            if isinstance(message := task.result(), Message):
+                self.text = message.content
+                await message.delete(delay=0)
 
-            for task in done:
-                if isinstance(message := task.result(), Message):
-                    self.text = message.content
-                    await message.delete(delay=0)
-
-            await self.delete(interaction)
-        except Exception as e:
-            logger.exception("Exception in view", exc_info=e)
+        await self.delete(interaction)
 
     @button(
         emoji=PartialEmoji(name="StatusRichPresence", id=842328614883295232),
