@@ -83,13 +83,11 @@ class ModernInput(Basic):
                     origin = await origin.edit_original_response(content=None, embed=embed, view=aux)
                 elif isinstance(origin, Message):
                     origin = await origin.edit(content=None, embed=embed, view=aux)
-                if not aux.is_finished():
-                    await aux.wait()
+                await aux.wait()
                 await origin.edit(content="Process concluded with success.", embed=None, view=None)
             else:
                 await aux.send(ephemeral=ephemeral)
-                if not aux.is_finished():
-                    await aux.wait()
+                await aux.wait()
             yield aux.text
         except Exception as e:
             logger.exception("Exception occurred, target: %s, user: %s", str(self.target), str(self.member), exc_info=e)
@@ -107,7 +105,7 @@ class ModernInput(Basic):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
 
-        done, pending = await asyncio.wait(
+        done, _ = await asyncio.wait(
             [
                 interaction.client.wait_for(
                     "message",
@@ -117,9 +115,6 @@ class ModernInput(Basic):
             ],
             return_when=asyncio.FIRST_COMPLETED,
         )
-
-        for task in pending:
-            task.cancel()
 
         for task in done:
             if isinstance(message := task.result(), Message):
