@@ -86,9 +86,10 @@ class ModernInput(Basic):
                 if not aux.is_finished():
                     await aux.wait()
                 await origin.edit(content="Process concluded with success.", embed=None, view=None)
-            elif not aux.is_finished():
+            else:
                 await aux.send(ephemeral=ephemeral)
-                await aux.wait()
+                if not aux.is_finished():
+                    await aux.wait()
             yield aux.text
         except Exception as e:
             logger.exception("Exception occurred, target: %s, user: %s", str(self.target), str(self.member), exc_info=e)
