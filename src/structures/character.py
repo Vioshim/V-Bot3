@@ -908,8 +908,8 @@ class Character:
 
             data["species"] = species
         elif (
-            (species := Fusion.deduce(data.pop("fusion", "")))
-            or (species := Chimera.deduce(data.pop("chimera", "")))
+            (species := Fusion.deduce(",".join(data.pop("fusion", []))))
+            or (species := Chimera.deduce(",".join(data.pop("chimera", []))))
             or (
                 (aux := common_pop_get(data, "species", "pokemon"))
                 and (species := Species.any_deduce(aux, chimera=True))
