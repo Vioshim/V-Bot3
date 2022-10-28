@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from asyncio import FIRST_COMPLETED, wait
+import asyncio
 from contextlib import asynccontextmanager
 from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
@@ -105,23 +105,21 @@ class ModernInput(Basic):
         resp: InteractionResponse = interaction.response
         await resp.edit_message(content=DEFAULT_MSG, view=None)
 
-        done, pending = await wait(
+        done, pending = await asyncio.wait(
             [
                 interaction.client.wait_for(
                     "message",
                     check=text_check(interaction),
                 ),
-                self.wait,
+                self.wait(),
             ],
-            return_when=FIRST_COMPLETED,
+            return_when=asyncio.FIRST_COMPLETED,
         )
 
         for task in pending:
             task.cancel()
-            await task
 
         for task in done:
-            await task
             if isinstance(message := task.result(), Message):
                 self.text = message.content
                 await message.delete(delay=0)
