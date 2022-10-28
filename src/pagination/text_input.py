@@ -184,6 +184,7 @@ class TextModal(Modal):
         resp: InteractionResponse = interaction.response
         self.text = self.item.value or ""
         if message := interaction.message:
+            await resp.pong()
             await message.delete(delay=0)
         else:
             await resp.send_message("Parameter has been added.", ephemeral=True)
