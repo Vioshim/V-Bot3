@@ -183,5 +183,8 @@ class TextModal(Modal):
         """Runs whenever the modal is closed."""
         resp: InteractionResponse = interaction.response
         self.text = self.item.value or ""
-        await resp.send_message("Parameter has been added.", ephemeral=True)
+        if message := interaction.message:
+            await message.delete(delay=0)
+        else:
+            await resp.send_message("Parameter has been added.", ephemeral=True)
         self.stop()
