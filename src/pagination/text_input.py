@@ -111,7 +111,7 @@ class ModernInput(Basic):
                     "message",
                     check=text_check(interaction),
                 ),
-                self.wait(),
+                self.__stopped,
             ],
             return_when=asyncio.FIRST_COMPLETED,
         )
