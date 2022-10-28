@@ -942,7 +942,7 @@ class Character:
         if not species:
             data.pop("moveset", None)
         else:
-            if type_info and (types := TypingEnum.deduce_many(type_info)):
+            if type_info and (types := TypingEnum.deduce_many(*type_info)):
                 if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                     species.types = types
                 elif species.types != types:
