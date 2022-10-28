@@ -18,7 +18,6 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from functools import lru_cache
 from itertools import combinations_with_replacement
 from json import JSONDecoder, JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional, Type
@@ -230,7 +229,6 @@ class Species(metaclass=ABCMeta):
         """
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce(cls, item: str):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
@@ -285,7 +283,6 @@ class Species(metaclass=ABCMeta):
         return frozenset(items)
 
     @classmethod
-    @lru_cache(maxsize=None)
     def single_deduce(cls, item: str):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
@@ -338,7 +335,6 @@ class Species(metaclass=ABCMeta):
                 return elements[0]
 
     @classmethod
-    @lru_cache(maxsize=None)
     def any_deduce(cls, item: str, chimera: bool = False):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
@@ -364,7 +360,6 @@ class Species(metaclass=ABCMeta):
             return items.pop()
 
     @classmethod
-    @lru_cache(maxsize=None)
     def from_ID(cls, item: str):
         """This method returns the species given exact IDs
 
@@ -505,7 +500,6 @@ class Fakemon(Species):
         return _BEASTBOOST not in self.abilities
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce(cls, item: str):
         """Method deduce but filtered, (fakemon that evolved from a canon species)
 
@@ -523,7 +517,6 @@ class Fakemon(Species):
             return cls(evolves_from=mon.id)
 
     @classmethod
-    @lru_cache(maxsize=None)
     def from_ID(cls, item: str) -> Optional[Fakemon]:
         """Method from ID but filtered, (fakemon that evolved from a canon species)
 
@@ -614,7 +607,6 @@ class Chimera(Species):
         return False
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce(cls, item: str) -> Optional[Chimera]:
         """This is a function which allows to obtain the species given
         an ID or multiple values.
@@ -678,7 +670,6 @@ class CustomMega(Species):
         return True
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce(cls, item: str) -> Optional[CustomMega]:
         """Method deduce but filtered
 
@@ -696,7 +687,6 @@ class CustomMega(Species):
             return cls(base=mon)
 
     @classmethod
-    @lru_cache(maxsize=None)
     def from_ID(cls, item: str) -> Optional[CustomMega]:
         """Method from ID but filtered
 
@@ -778,7 +768,6 @@ class Variant(Species):
         return _BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce(cls, item: str) -> Optional[Variant]:
         """Method deduce but filtered
 
@@ -796,7 +785,6 @@ class Variant(Species):
             return cls(base=mon, name=f"Variant {mon.name.title()}")
 
     @classmethod
-    @lru_cache(maxsize=None)
     def from_ID(cls, item: str) -> Optional[Variant]:
         """Method from ID but filtered
 
@@ -951,7 +939,6 @@ class Fusion(Species):
         return 1
 
     @classmethod
-    @lru_cache(maxsize=None)
     def deduce(cls, item: str) -> Optional[Fusion]:
         """This is a function which allows to obtain the species given
         an ID or multiple values.
