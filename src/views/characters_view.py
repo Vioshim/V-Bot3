@@ -183,8 +183,10 @@ class PingView(View):
             return
 
         await resp.send_message("Deleted character", ephemeral=True)
-        if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
-            channel = await ctx.guild.fetch_channel(self.oc.thread)
+        channel = ctx.client.get_partial_messageable(
+            id=self.oc.thread,
+            guild_id=self.oc.server,
+        )
         msg = PartialMessage(channel=channel, id=self.oc.id)
         await msg.delete(delay=0)
         self.stop()

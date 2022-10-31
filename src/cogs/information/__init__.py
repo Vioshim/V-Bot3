@@ -293,7 +293,10 @@ class TicketModal(Modal, title="Ticket"):
         name = data.strftime("%B %d, %Y")
         webhook: Webhook = await interaction.client.webhook(719343092963999807)
         thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
-        embed = Embed(title="Ticket", description=self.content.value, timestamp=data, color=member.color)
+        embed = Embed(title=f"Ticket {name}"[:256], description=self.content.value, timestamp=data, color=member.color)
+        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_image(url=WHITE_BAR)
+
         msg = await webhook.send(thread=thread, wait=True, embed=embed)
 
         view = View()
@@ -301,12 +304,16 @@ class TicketModal(Modal, title="Ticket"):
         await interaction.followup.send("Ticket created successfully", ephemeral=True, view=view)
         await thread.add_user(member)
 
+        channel = interaction.client.get_partial_messageable(
+            id=1020157013126283284,
+            guild_id=interaction.guild.id,
+        )
+
+        await channel.send(embed=embed, view=view)
+
         if not (mod_channel := interaction.guild.get_channel_or_thread(1020157013126283284)):
             mod_channel = await interaction.guild.fetch_channel(1020157013126283284)
 
-        embed = Embed(title=f"Ticket {name}"[:256], color=member.color, timestamp=utcnow())
-        embed.set_thumbnail(url=member.display_avatar.url)
-        embed.set_image(url=WHITE_BAR)
         await mod_channel.send(embed=embed, view=view)
         self.stop()
 

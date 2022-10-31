@@ -231,7 +231,7 @@ class Proxy(commands.Cog):
             return
 
         if not (channel := guild.get_channel_or_thread(payload.channel_id)):
-            await self.bot.fetch_channel(payload.channel_id)
+            channel = await self.bot.fetch_channel(payload.channel_id)
 
         message = await channel.fetch_message(payload.message_id)
         author_id: int = entry["author"]

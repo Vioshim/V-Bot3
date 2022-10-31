@@ -250,8 +250,7 @@ class Inviter(commands.Cog):
         if not isinstance(invite_guild := invite.guild, PartialInviteGuild) or invite_guild == guild:
             return
 
-        if not (mod_ch := guild.get_channel_or_thread(1020157013126283284)):
-            mod_ch = await guild.fetch_channel(1020157013126283284)
+        mod_ch = self.bot.get_partial_messageable(id=1020157013126283284, guild_id=guild.id)
 
         generator = Embed(
             title=f"__**{guild.name} is now officially partnered with {invite_guild.name}**__",
