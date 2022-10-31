@@ -1015,7 +1015,10 @@ class CreationOCView(Basic):
         self.embed.title = "Character Creation"
         self.bot = bot
         oc = oc.copy() if oc else Character()
-        oc.author, oc.server = user.id, ctx.guild.id
+        if not oc.author:
+            oc.author = user.id
+        if not oc.server:
+            oc.server = ctx.guild_id
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
@@ -1247,6 +1250,7 @@ class ModCharactersView(CharactersView):
             if item := self.current_choice:
                 user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
                 view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
+
                 await view.send(ephemeral=True)
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
