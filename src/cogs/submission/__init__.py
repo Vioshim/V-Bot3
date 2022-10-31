@@ -31,7 +31,6 @@ from discord import (
     NotFound,
     Object,
     PartialEmoji,
-    PartialMessage,
     RawMessageDeleteEvent,
     RawThreadDeleteEvent,
     RawThreadUpdateEvent,
@@ -292,7 +291,8 @@ class Submission(commands.Cog):
             if reference_id := oc.id:
                 thread = await thread.edit(archived=False)
                 try:
-                    msg_oc = await PartialMessage(channel=thread, id=oc.id).edit(**kwargs)
+                    message = thread.get_partial_message(oc.id)
+                    msg_oc = await message.edit(**kwargs)
                     word = "modified"
                 except NotFound:
                     if attachments := kwargs.pop("attachments", []):
@@ -379,7 +379,7 @@ class Submission(commands.Cog):
         else:
             thread = await self.list_update(oc.author)
 
-        msg = PartialMessage(channel=thread, id=oc.id)
+        msg = thread.get_partial_message(oc.id)
         try:
             if thread.archived:
                 await thread.edit(archived=False)
@@ -507,9 +507,9 @@ class Submission(commands.Cog):
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
         view = SubmissionView(timeout=None)
-        if not (channel := self.bot.get_channel(852180971985043466)):
-            channel = await self.bot.fetch_channel(852180971985043466)
-        await PartialMessage(channel=channel, id=1005387453055639612).edit(view=view)
+        channel = self.bot.get_partial_messageable(id=852180971985043466, guild_id=719343092963999804)
+        message = channel.get_partial_message(1005387453055639612)
+        await message.edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
     @commands.Cog.listener()
@@ -520,7 +520,8 @@ class Submission(commands.Cog):
         if await db.find_one({"user": member.id, "server": member.guild.id}):
             file = await member.display_avatar.to_file()
             thread = await self.list_update(member)
-            await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
+            message = thread.get_partial_message(thread.id)
+            await message.edit(attachments=[file])
             await thread.edit(
                 name=member.display_name if thread.name != member.display_name else MISSING,
                 reason=f"{thread.name} -> {member.display_name}",
@@ -533,7 +534,8 @@ class Submission(commands.Cog):
         if await db.find_one({"user": member.id, "server": member.guild.id}):
             file = await member.display_avatar.to_file()
             thread = await self.list_update(member)
-            await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
+            message = thread.get_partial_message(thread.id)
+            await message.edit(attachments=[file])
             if thread.name == member.display_name:
                 await thread.edit(reason="Member left", archived=True)
             else:
@@ -546,14 +548,15 @@ class Submission(commands.Cog):
             return
         db = self.bot.mongo_db("Roleplayers")
         if await db.find_one({"user": now.id, "server": now.guild.id}):
-            if past.display_name != now.display_name:
-                thread = await self.list_update(now)
-                if thread.name != now.display_name:
-                    await thread.edit(name=now.display_name, reason=f"{thread.name} -> {now.display_name}")
-            elif get(now.roles, name="Registered"):
-                thread = await self.list_update(now)
+            thread = await self.list_update(now)
+            if past.display_name != now.display_name or thread.name != now.display_name:
+                reason = f"{thread.name} -> {now.display_name}."
+                await thread.edit(name=now.display_name, reason=reason)
+
+            if past.display_avatar != now.display_avatar:
                 file = await now.display_avatar.to_file()
-                await PartialMessage(channel=thread, id=thread.id).edit(attachments=[file])
+                message = thread.get_partial_message(thread.id)
+                await message.edit(attachments=[file])
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
