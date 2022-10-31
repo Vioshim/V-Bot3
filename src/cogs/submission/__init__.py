@@ -184,7 +184,6 @@ class Submission(commands.Cog):
     async def check_ocs(self, ctx: Interaction, member: Member):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
-        Character.from_mongo_dict
         db = self.bot.mongo_db("Characters")
         if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
             user = self.bot.supporting.get(ctx.user, ctx.user)
@@ -218,10 +217,9 @@ class Submission(commands.Cog):
 
         thread = None
         if item := await db.find_one({"user": member.id}):
-            try:
-                thread: Thread = await channel.guild.fetch_channel(item["id"])
-            except DiscordException:
-                thread = None
+            if not (thread := channel.guild.get_channel_or_thread(item["id"])):
+                with suppress(DiscordException):
+                    thread: Thread = await channel.guild.fetch_channel(item["id"])
 
         if not thread:
 
@@ -329,31 +327,43 @@ class Submission(commands.Cog):
 
             try:
                 if former:
+                    pack_embeds, pack_files = [], []
                     log = await self.bot.webhook(1020151767532580934, reason="Logging")
                     if isinstance(user, (User, Member)):
                         username, avatar_url = user.display_name, user.display_avatar.url
                     else:
                         username, avatar_url = MISSING, MISSING
 
-                    for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
-                        embeds = [embed1, embed2]
-                        files1, embed1 = await self.bot.embed_raw(embed1, "footer")
-                        files2, embed2 = await self.bot.embed_raw(embed2, "footer")
-
-                        files = files1 + files2
-                        for index, (e, f) in enumerate(zip(embeds, files)):
-                            f.filename = f"image{index}.png"
-                            e.set_image(url=f"attachment://{f.filename}")
-
-                        view = View()
+                    view = View()
+                    if jump_url := former.jump_url:
                         view.add_item(
                             Button(
-                                label="Jump URL",
-                                url=former.jump_url,
+                                label=f"{word.title()} - Jump URL",
+                                url=jump_url,
                                 emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
                             )
                         )
 
+                    if word == "modified":
+                        for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
+                            embeds = [embed1, embed2]
+                            files1, embed1 = await self.bot.embed_raw(embed1, "footer")
+                            files2, embed2 = await self.bot.embed_raw(embed2, "footer")
+
+                            files = files1 + files2
+                            for index, (e, f) in enumerate(zip(embeds, files)):
+                                f.filename = f"image{index}.png"
+                                e.set_image(url=f"attachment://{f.filename}")
+
+                            pack_embeds.append(embeds)
+                            pack_files.append(files)
+                    else:
+                        embeds = oc.embeds
+                        files, embeds[0] = await self.bot.embed_raw(embeds[0], "footer")
+                        pack_embeds.append(embeds)
+                        pack_files.append(files)
+
+                    for embeds, files in zip(pack_embeds, pack_files):
                         await log.send(
                             embeds=embeds,
                             files=files,

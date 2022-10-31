@@ -85,7 +85,7 @@ class PingModal(Modal):
 
         channel: TextChannel = interaction.guild.get_channel(channel_id)
         embed = Embed(title=self.oc.name, description=self.message.value, color=user.color)
-        embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
+        embed.set_author(name=user.display_name, icon_url=user.display_avatar.url, url=self.oc.jump_url)
         embed.set_footer(text=repr(self.oc))
         kit = ImageKit(base=self.oc.image_url, width=450, height=450, format="png")
         for index, item in enumerate(self.oc.types):
@@ -218,7 +218,11 @@ class CharactersView(Complex[Character]):
             embeds = item.embeds
             guild: Guild = self.member.guild
             if author := guild.get_member(item.author):
-                embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar.url)
+                embeds[0].set_author(
+                    name=author.display_name,
+                    url=item.jump_url,
+                    icon_url=author.display_avatar.url,
+                )
             if isinstance(self.target, Interaction):
                 target = self.target
             else:

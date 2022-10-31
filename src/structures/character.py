@@ -440,15 +440,16 @@ class Character:
             return f"<#{location}>"
 
     @property
-    def jump_url(self) -> str:
+    def jump_url(self) -> Optional[str]:
         """Message Link
 
         Returns
         -------
-        str
+        Optional[str]
             URL
         """
-        return f"https://discord.com/channels/{self.server}/{self.thread}/{self.id}"
+        if self.server and self.thread and self.id:
+            return f"https://discord.com/channels/{self.server}/{self.thread}/{self.id}"
 
     @property
     def default_image(self) -> Optional[str]:
@@ -531,17 +532,17 @@ class Character:
 
             embeds.append(sp_embed)
 
+        moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
+
         if hidden_power := self.hidden_power:
             embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
+            moves_text = moves_text.replace("[Hidden Power] - Normal", f"[Hidden Power] - {hidden_power.name}")
             c_embed.set_footer(
                 text=f"Hidden Power: {hidden_power.name}",
                 icon_url=hidden_power.emoji.url,
             )
 
-        if self.moveset:
-            moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
-            if hidden_power := self.hidden_power:
-                moves_text = moves_text.replace("[Hidden Power] - Normal", f"[Hidden Power] - {hidden_power.name}")
+        if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
         if image := self.image_url:
