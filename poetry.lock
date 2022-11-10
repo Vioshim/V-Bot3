@@ -65,11 +65,11 @@ speedups = ["aiodns", "brotli", "cchardet"]
 
 [[package]]
 name = "aiosignal"
-version = "1.2.0"
+version = "1.3.1"
 description = "aiosignal: a list of registered asynchronous callbacks"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 frozenlist = ">=1.1.0"
@@ -93,7 +93,7 @@ trio = ["trio (>=0.16,<0.22)"]
 
 [[package]]
 name = "APScheduler"
-version = "4.0.0a2.post27"
+version = "4.0.0a2.post30"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -114,14 +114,14 @@ doc = ["sphinx", "sphinx-autodoc-typehints", "sphinx-tabs (>=3.3.1)"]
 mongodb = ["pymongo (>=4)"]
 mqtt = ["paho-mqtt (>=1.5)"]
 redis = ["redis (>=4.0)"]
-sqlalchemy = ["sqlalchemy (>=1.4.22)", "greenlet (>=2.0.0a2)"]
+sqlalchemy = ["sqlalchemy (>=1.4.22)"]
 test = ["apscheduler", "coverage", "freezegun", "paho-mqtt (>=1.5)", "pymongo (>=4)", "pymysql", "pytest (>=5.0)", "pytest-cov", "pytest-freezer", "pytest-lazy-fixture", "pytest-mock", "redis[hiredis] (>=4.4.0rc1)", "sqlalchemy (>=1.4.22)", "trio", "psycopg2cffi", "apscheduler", "asyncmy (>=0.2.5)", "psycopg2"]
 
 [package.source]
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "f86c159c94412fd5639deb5be6ebd66ae9057138"
+resolved_reference = "05472f3d253a51c761575beb6fb53e2bd3bae9fb"
 
 [[package]]
 name = "astunparse"
@@ -359,7 +359,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.1.0a4630+ge92a6266"
+version = "2.1.0a4633+g3d39f70d"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -383,7 +383,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "e92a6266628d0cc99727c8eb88c2432a931138a0"
+resolved_reference = "3d39f70d305f56ce2ddff792a06783cb51231dd5"
 
 [[package]]
 name = "distlib"
@@ -448,7 +448,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "frozenlist"
-version = "1.3.1"
+version = "1.3.3"
 description = "A list-like structure which implements collections.abc.MutableSequence"
 category = "main"
 optional = false
@@ -456,7 +456,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "google-auth"
-version = "2.14.0"
+version = "2.14.1"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -471,7 +471,7 @@ six = ">=1.9.0"
 [package.extras]
 aiohttp = ["requests (>=2.20.0,<3.0.0dev)", "aiohttp (>=3.6.2,<4.0.0dev)"]
 enterprise_cert = ["cryptography (==36.0.2)", "pyopenssl (==22.0.0)"]
-pyopenssl = ["pyopenssl (>=20.0.0)"]
+pyopenssl = ["pyopenssl (>=20.0.0)", "cryptography (>=38.0.3)"]
 reauth = ["pyu2f (>=0.1.5)"]
 
 [[package]]
@@ -805,15 +805,15 @@ yarg = "*"
 
 [[package]]
 name = "platformdirs"
-version = "2.5.2"
-description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+version = "2.5.3"
+description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 
 [package.extras]
-docs = ["furo (>=2021.7.5b38)", "proselint (>=0.10.2)", "sphinx-autodoc-typehints (>=1.12)", "sphinx (>=4)"]
-test = ["appdirs (==1.4.4)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)", "pytest (>=6)"]
+docs = ["furo (>=2022.9.29)", "proselint (>=0.13)", "sphinx-autodoc-typehints (>=1.19.4)", "sphinx (>=5.3)"]
+test = ["appdirs (==1.4.4)", "pytest-cov (>=4)", "pytest-mock (>=3.10)", "pytest (>=7.2)"]
 
 [[package]]
 name = "plette"
@@ -1047,7 +1047,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "rapidfuzz"
-version = "2.13.1"
+version = "2.13.2"
 description = "rapid fuzzy string matching"
 category = "main"
 optional = false

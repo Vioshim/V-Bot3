@@ -310,11 +310,6 @@ class TicketModal(Modal, title="Ticket"):
         )
 
         await channel.send(embed=embed, view=view)
-
-        if not (mod_channel := interaction.guild.get_channel_or_thread(1020157013126283284)):
-            mod_channel = await interaction.guild.fetch_channel(1020157013126283284)
-
-        await mod_channel.send(embed=embed, view=view)
         self.stop()
 
 
