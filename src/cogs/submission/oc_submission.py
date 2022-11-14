@@ -213,6 +213,10 @@ class Template(TemplateItem, Enum):
     )
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
+        resp: InteractionResponse = ctx.response
+        if not resp.is_done():
+            with suppress(NotFound):
+                await resp.defer(ephemeral=ephemeral, thinking=True)
         choices: list[Species] = []
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
