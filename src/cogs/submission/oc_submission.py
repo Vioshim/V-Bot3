@@ -212,21 +212,20 @@ class Template(TemplateItem, Enum):
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
         choices: list[Species] = []
-        if mon_total := self.total_species:
-            db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-            ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
-            view = SpeciesComplex(
-                member=ctx.user,
-                target=ctx,
-                mon_total=mon_total,
-                max_values=self.max_values,
-                ocs=ocs,
-            )
-            async with view.send(ephemeral=ephemeral) as data:
-                if 1 <= len(data) <= self.max_values:
-                    choices.extend(data)
-                else:
-                    return
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
+        view = SpeciesComplex(
+            member=ctx.user,
+            target=ctx,
+            mon_total=self.total_species,
+            max_values=self.max_values,
+            ocs=ocs,
+        )
+        async with view.send(ephemeral=ephemeral) as data:
+            if 1 <= len(data) <= self.max_values:
+                choices.extend(data)
+            else:
+                return
 
         match self:
             case self.CustomPokemon | self.CustomLegendary | self.CustomMythical | self.CustomUltraBeast:
@@ -262,14 +261,13 @@ class Template(TemplateItem, Enum):
             case self.Fusion:
                 if len(choices) == 2:
                     oc.species = Fusion(*choices)
-            case self.Legendary | self.Mythical | self.UltraBeast | self.Mega:
-                if choices:
-                    oc.species = choices[0]
-                    oc.abilities = choices[0].abilities.copy()
             case _:
                 if choices:
-                    oc.species = choices[0]
-                    oc.abilities &= oc.species.abilities
+                    oc.species, abilities = choices[0], choices[0].abilities.copy()
+                    if len(abilities) <= oc.max_amount_abilities:
+                        oc.abilities = abilities
+                    else:
+                        oc.abilities &= abilities
 
     @property
     def max_values(self):

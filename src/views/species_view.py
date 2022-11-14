@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from functools import lru_cache
 from typing import Any, Iterable, Optional
 
 from discord import Color, Embed, Interaction, InteractionResponse, Member
@@ -43,13 +42,11 @@ class SpeciesComplex(Complex[Species]):
         self.total = mon_total = {x for x in mon_total if not x.banned}
         max_values = min(len(self.total), max_values)
 
-        self.reference1: dict[Species, int] = {}
-        self.reference2: dict[Species, int] = {}
-        self.reference3: dict[Species, int] = {}
-
         values: set[Character] = set()
         if ocs:
             values.update(ocs)
+
+        ref1, ref2, ref3 = {}, {}, {}
 
         for oc in values:
             if not target.guild.get_member(oc.author):
@@ -57,23 +54,20 @@ class SpeciesComplex(Complex[Species]):
 
             if isinstance(oc.species, (Fusion, Chimera)):
                 for mon in oc.species.bases:
-                    self.reference1.setdefault(mon, 0)
-                    self.reference1[mon] += 1
+                    ref1.setdefault(mon, 0)
+                    ref1[mon] += 1
             elif isinstance(oc.species, (Variant, CustomMega)):
                 mon = oc.species.base
-                self.reference2.setdefault(mon, 0)
-                self.reference2[mon] += 1
+                ref2.setdefault(mon, 0)
+                ref2[mon] += 1
             elif isinstance(mon := oc.species, Species):
-                self.reference3.setdefault(mon, 0)
-                self.reference3[mon] += 1
+                ref3.setdefault(mon, 0)
+                ref3[mon] += 1
 
-        @lru_cache(maxsize=None)
+        self.parse_reference = dict(Species=ref3, Fusions=ref1, Variants=ref2)
+
         def parser(x: Species):
-            data = dict(
-                Species=self.reference3.get(x, 0),
-                Fusions=self.reference1.get(x, 0),
-                Variants=self.reference2.get(x, 0),
-            )
+            data = {k: v.get(x, 0) for k, v in self.parse_reference.items()}
             if text := ", ".join(f"{x}: {y}" for x, y in data.items() if y):
                 return x.name, f"{sum(data.values())} OCs ({text})"
             return x.name, None
@@ -96,6 +90,7 @@ class SpeciesComplex(Complex[Species]):
         )
         self.embed.title = "Select Species"
         self.data = {}
+        self.parse_reference = {}
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
         data = dict(embed=self.embed)
