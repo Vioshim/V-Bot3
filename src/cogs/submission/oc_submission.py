@@ -14,7 +14,6 @@
 
 
 from abc import ABC, abstractmethod
-from contextlib import suppress
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -29,7 +28,6 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
-    NotFound,
     PartialMessage,
     SelectOption,
     TextStyle,
@@ -213,10 +211,6 @@ class Template(TemplateItem, Enum):
     )
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
-        resp: InteractionResponse = ctx.response
-        if not resp.is_done():
-            with suppress(NotFound):
-                await resp.defer(ephemeral=ephemeral, thinking=True)
         choices: list[Species] = []
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
@@ -558,10 +552,6 @@ class PreEvoSpeciesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        resp: InteractionResponse = ctx.response
-        if not resp.is_done():
-            with suppress(NotFound):
-                await resp.defer(ephemeral=ephemeral, thinking=True)
         mon_total = {x for x in Pokemon.all() if not x.banned}
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
@@ -1180,8 +1170,10 @@ class CreationOCView(Basic):
 
     @select(placeholder="Click here!", row=1)
     async def fields(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
         if item := TemplateField.get(name=sct.values[0]):
             self.ephemeral = ctx.message.flags.ephemeral or self.ephemeral
+            await resp.defer(ephemeral=self.ephemeral, thinking=True)
             await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
         await self.update(ctx)
 
