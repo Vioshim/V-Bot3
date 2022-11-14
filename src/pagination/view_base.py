@@ -32,6 +32,7 @@ from discord import (
     Member,
     Message,
     MessageReference,
+    NotFound,
     PartialEmoji,
     PartialMessage,
     StickerItem,
@@ -263,7 +264,8 @@ class Basic(View):
                 return
 
             if not resp.is_done():
-                await resp.defer(ephemeral=ephemeral, thinking=thinking)
+                with suppress(NotFound):
+                    await resp.defer(ephemeral=ephemeral, thinking=thinking)
             try:
                 self.message = await target.followup.send(**data, wait=True)
             except DiscordException as e:
