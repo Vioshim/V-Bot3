@@ -14,6 +14,7 @@
 
 
 from abc import ABC, abstractmethod
+from contextlib import suppress
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
@@ -28,6 +29,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    NotFound,
     PartialMessage,
     SelectOption,
     TextStyle,
@@ -552,9 +554,13 @@ class PreEvoSpeciesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
+        resp: InteractionResponse = ctx.response
+        if not resp.is_done():
+            with suppress(NotFound):
+                await resp.defer(ephemeral=ephemeral, thinking=True)
         mon_total = {x for x in Pokemon.all() if not x.banned}
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
         view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, ocs=ocs)
         async with view.send(
             title="Select if it has a canon Pre-Evo (Skip if not needed)",
