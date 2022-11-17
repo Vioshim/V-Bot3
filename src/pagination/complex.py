@@ -36,7 +36,6 @@ from discord import (
     MessageReference,
     PartialEmoji,
     PartialMessage,
-    SelectOption,
     StickerItem,
     User,
 )
@@ -107,7 +106,7 @@ class Complex(Simple[_T]):
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         max_values: int = 1,
-        entries_per_page: int = 20,
+        entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = None,
         emoji_parser: str | PartialEmoji | Emoji | Callable[[_T], str | PartialEmoji | Emoji] = None,
         silent_mode: bool = False,
@@ -230,13 +229,13 @@ class Complex(Simple[_T]):
         min_range = max(amount, 0) * 20
         max_range = min(min_range + 20, len(elements))
 
-        if max_range < len(elements):  # Not in Last value, [012345X]
-            if max_range + 1 < len(elements):  # [01234XX]
+        if max_range < len(elements):
+            if max_range + 1 < len(elements):
                 pages.add_option(label="Next Pages", value=str(min_range + 20), emoji=ArrowEmotes.FORWARD)
             pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=ArrowEmotes.END)
 
-        if min_range > 0:  # Not in First value, [X12345]
-            if min_range - 20 > 0:  # [XX2345]
+        if min_range > 0:
+            if min_range - 20 > 0:
                 pages.add_option(label="Previous Pages", value=str(max_range - 20), emoji=ArrowEmotes.BACK)
             pages.add_option(label="First Pages", value="0", emoji=ArrowEmotes.START)
 
@@ -289,28 +288,6 @@ class Complex(Simple[_T]):
             self.remove_item(foo)
         elif foo.options and foo not in self.children:
             self.add_item(foo)
-
-        if total_pages >= 2 and len(foo.options) <= self.entries_per_page:
-
-            if self.pos == 0:
-                first = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
-                last = SelectOption(label="Go to last page", value="last", emoji=ArrowEmotes.END)
-                first_index, last_index = self.pos + 1, total_pages - 1
-            elif self.pos >= total_pages - 1:
-                first = SelectOption(label="Go to previous page", value="back", emoji=ArrowEmotes.BACK)
-                last = SelectOption(label="Go to first page", value="first", emoji=ArrowEmotes.START)
-                first_index, last_index = min(self.pos - 1, total_pages - 1), 0
-            else:
-                first = SelectOption(label="Go to previous page", value="back", emoji=ArrowEmotes.BACK)
-                last = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
-                first_index, last_index = self.pos - 1, self.pos + 1
-
-            items = [(first, self.chunk(first_index)), (last, self.chunk(last_index))]
-            for index, (k, item) in enumerate(items):
-                firstname, _ = self.parser(item[0])
-                lastname, _ = self.parser(item[-1])
-                k.description = f"From {firstname} to {lastname}"[:100]
-                foo.options.insert(index, k)
 
     async def update(self, interaction: Interaction) -> None:
         """Method used to edit the pagination
