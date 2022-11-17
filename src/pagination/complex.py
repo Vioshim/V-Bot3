@@ -286,7 +286,7 @@ class Complex(Simple[_T]):
 
         if not foo.options:
             self.remove_item(foo)
-        elif foo.options and foo not in self.children:
+        elif foo not in self.children:
             self.add_item(foo)
 
     async def update(self, interaction: Interaction) -> None:
