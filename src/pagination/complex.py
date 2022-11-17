@@ -107,7 +107,7 @@ class Complex(Simple[_T]):
         timeout: Optional[float] = 180.0,
         embed: Embed = None,
         max_values: int = 1,
-        entries_per_page: int = 23,
+        entries_per_page: int = 20,
         parser: Callable[[_T], tuple[str, str]] = None,
         emoji_parser: str | PartialEmoji | Emoji | Callable[[_T], str | PartialEmoji | Emoji] = None,
         silent_mode: bool = False,
@@ -209,60 +209,82 @@ class Complex(Simple[_T]):
         foo.max_values = min(max(amount - len(choices), 1), self.entries_per_page)
         # Now we get the indexes that each page should start with
         indexes = self.values[:: self.entries_per_page]
-        if total_pages := len(indexes):
-            # We start to split the information in chunks
-            elements: dict[int, list[_T]] = {}
-            for index, _ in enumerate(indexes):
-                # The chunks start to get loaded keeping in mind the length of the pages
-                # the basis is pretty much the amount of elements multiplied by the page index.
-                amount = index * self.entries_per_page
-                items = self.values[amount : amount + self.entries_per_page]
-                elements[index] = items
+        total_pages = len(indexes)
 
-            # After loading the chunks, we proceed to determine the minimum and maximum range for the pagination
-            # It needs to be done in such a way so that the current page becomes the one in the middle.
-            #
-            # Example: assuming there's 4 entries per page, 100 values and user is at the page 12 in this case,
-            # the range of pages would be from page 10 to page 14
+        # We start to split the information in chunks
+        elements: dict[int, list[_T]] = {}
+        for index, _ in enumerate(indexes):
+            # The chunks start to get loaded keeping in mind the length of the pages
+            # the basis is pretty much the amount of elements multiplied by the page index.
+            amount = index * self.entries_per_page
+            items = self.values[amount : amount + self.entries_per_page]
+            elements[index] = items
 
-            min_range = max(self._pos - 5, 0)
-            max_range = min(self._pos + 5, len(elements))
+        # After loading the chunks, we proceed to determine the minimum and maximum range for the pagination
+        # It needs to be done in such a way so that the current page becomes the one in the middle.
+        #
+        # Example: assuming there's 4 entries per page, 100 values and user is at the page 12 in this case,
+        # the range of pages would be from page 10 to page 14
 
-            for index in range(min_range, max_range):
-                item = elements[index]
+        amount = self.pos // self.entries_per_page
+        min_range = max(amount, 0)
+        max_range = min(min_range + 20, len(elements))
 
-                # Now that we got the pages, we proceed to parse the start and end of each chunk
-                # that way, the page navigation can have the first and last name of the entries.
+        if max_range < len(elements):  # Not in Last value, [012345X]
+            if max_range + 1 < len(elements):  # [01234XX]
+                pages.add_option(label="Next Pages", value=str(max_range + 1), emoji=LIST_EMOJI)
+            pages.add_option(label="Last Pages", value=str(len(elements)), emoji=LIST_EMOJI)
 
-                firstname, _ = self.parser(item[0])
-                lastname, _ = self.parser(item[-1])
+        if min_range > 0:  # Not in First value, [X12345]
+            if min_range - 20 > 0:  # [XX2345]
+                pages.add_option(label="Previous Pages", value=str(min_range - 20), emoji=LIST_EMOJI)
+            pages.add_option(label="First Pages", value="0", emoji=LIST_EMOJI)
 
-                # If the page is the same, as the current, it will be default after editing.
+        for item in pages.options:
+            index = int(item.value)
+            page_text = f"Page {index + 1}/{total_pages}"
+            if len(page_text) > 100:
+                page_text = f"Page {index + 1}"
 
-                default = index == self.pos
+            item.description = page_text
 
-                # The amount of digits required get determined for formatting purpose
-                page_text = f"Page {index + 1}/{total_pages}"
-                if len(page_text) > 100:
-                    page_text = f"Page {index + 1}"
+        pages.options.sort(key=lambda x: int(x.value))
 
-                pages.add_option(
-                    label=page_text,
-                    value=f"{index}",
-                    description=f"From {firstname} to {lastname}"[:100],
-                    emoji=LIST_EMOJI,
-                    default=default,
-                )
+        for index in range(min_range, max_range):
+            item = elements[index]
 
-            # Now we start to add the information of the current page in the paginator.
-            for index, item in enumerate(elements.get(self.pos, [])):
-                # In each cycle, we proceed to convert the name and value (as we use its index)
-                # and determine the emoji, based on the current implementation of emoji_parser
-                name, value = map(lambda x: str(x).replace("\n", " ").strip()[:100] if x else None, self.parser(item))
-                emoji = self.emoji_parser(item)
-                foo.add_option(label=name, value=str(index), description=value, emoji=emoji)
-            pages.disabled = len(pages.options) == 1
+            # Now that we got the pages, we proceed to parse the start and end of each chunk
+            # that way, the page navigation can have the first and last name of the entries.
 
+            firstname, _ = self.parser(item[0])
+            lastname, _ = self.parser(item[-1])
+
+            # If the page is the same, as the current, it will be default after editing.
+
+            default = index == self.pos
+
+            # The amount of digits required get determined for formatting purpose
+            page_text = f"Page {index + 1}/{total_pages}"
+            if len(page_text) > 100:
+                page_text = f"Page {index + 1}"
+
+            pages.add_option(
+                label=page_text,
+                value=f"{index}",
+                description=f"From {firstname} to {lastname}"[:100],
+                emoji=LIST_EMOJI,
+                default=default,
+            )
+
+        # Now we start to add the information of the current page in the paginator.
+        for index, item in enumerate(elements.get(self.pos, [])):
+            # In each cycle, we proceed to convert the name and value (as we use its index)
+            # and determine the emoji, based on the current implementation of emoji_parser
+            name, value = map(lambda x: str(x).replace("\n", " ").strip()[:100] if x else None, self.parser(item))
+            emoji = self.emoji_parser(item)
+            foo.add_option(label=name, value=str(index), description=value, emoji=emoji)
+
+        pages.disabled = len(pages.options) == 1
         foo.max_values = min(foo.max_values, len(foo.options))
 
         # This is the outcome for provided values.
@@ -276,7 +298,7 @@ class Complex(Simple[_T]):
         elif foo.options and foo not in self.children:
             self.add_item(foo)
 
-        if total_pages >= 2 and len(foo.options) <= 23:
+        if total_pages >= 2 and len(foo.options) <= self.entries_per_page:
 
             if self.pos == 0:
                 first = SelectOption(label="Go to next page", value="next", emoji=ArrowEmotes.FORWARD)
