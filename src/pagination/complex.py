@@ -226,19 +226,19 @@ class Complex(Simple[_T]):
         # Example: assuming there's 4 entries per page, 100 values and user is at the page 12 in this case,
         # the range of pages would be from page 10 to page 14
 
-        amount = self.pos // self.entries_per_page
-        min_range = max(amount, 0)
+        amount = self.pos // 20
+        min_range = max(amount, 0) * 20
         max_range = min(min_range + 20, len(elements))
 
         if max_range < len(elements) - 1:  # Not in Last value, [012345X]
             if max_range + 1 < len(elements):  # [01234XX]
-                pages.add_option(label="Next Pages", value=str(min_range + 20), emoji=LIST_EMOJI)
-            pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=LIST_EMOJI)
+                pages.add_option(label="Next Pages", value=str(min_range + 20), emoji=ArrowEmotes.FORWARD)
+            pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=ArrowEmotes.END)
 
         if min_range > 0:  # Not in First value, [X12345]
             if min_range - 20 > 0:  # [XX2345]
-                pages.add_option(label="Previous Pages", value=str(max_range - 20), emoji=LIST_EMOJI)
-            pages.add_option(label="First Pages", value="0", emoji=LIST_EMOJI)
+                pages.add_option(label="Previous Pages", value=str(max_range - 20), emoji=ArrowEmotes.BACK)
+            pages.add_option(label="First Pages", value="0", emoji=ArrowEmotes.START)
 
         pages.options.sort(key=lambda x: int(x.value))
 
