@@ -230,10 +230,10 @@ class Complex(Simple[_T]):
         min_range = max(amount, 0)
         max_range = min(min_range + 20, len(elements))
 
-        if max_range < len(elements):  # Not in Last value, [012345X]
+        if max_range < len(elements) - 1:  # Not in Last value, [012345X]
             if max_range + 1 < len(elements):  # [01234XX]
                 pages.add_option(label="Next Pages", value=str(max_range + 1), emoji=LIST_EMOJI)
-            pages.add_option(label="Last Pages", value=str(len(elements)), emoji=LIST_EMOJI)
+            pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=LIST_EMOJI)
 
         if min_range > 0:  # Not in First value, [X12345]
             if min_range - 20 > 0:  # [XX2345]
@@ -548,7 +548,7 @@ class Complex(Simple[_T]):
         response: InteractionResponse = interaction.response
 
         items = self.current_choices
-        if not response.is_done() and not self.silent_mode:
+        if not response.is_done() and not self.silent_mode and all(x.isdigit() for x in sct.values):
             member: Member | User = interaction.user
             await response.defer(ephemeral=True, thinking=True)
             embed = Embed(
