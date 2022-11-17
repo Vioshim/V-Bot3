@@ -279,9 +279,9 @@ class Complex(Simple[_T]):
         foo.max_values = min(foo.max_values, len(foo.options))
 
         # This is the outcome for provided values.
-        if len(pages.options) <= 1:
+        if not pages.options:
             self.remove_item(pages)
-        elif pages.options and pages not in self.children:
+        elif pages not in self.children:
             self.add_item(pages)
 
         if not foo.options:
