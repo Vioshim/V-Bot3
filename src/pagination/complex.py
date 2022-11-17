@@ -232,21 +232,13 @@ class Complex(Simple[_T]):
 
         if max_range < len(elements) - 1:  # Not in Last value, [012345X]
             if max_range + 1 < len(elements):  # [01234XX]
-                pages.add_option(label="Next Pages", value=str(max_range + 1), emoji=LIST_EMOJI)
+                pages.add_option(label="Next Pages", value=str(min_range + 20), emoji=LIST_EMOJI)
             pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=LIST_EMOJI)
 
         if min_range > 0:  # Not in First value, [X12345]
             if min_range - 20 > 0:  # [XX2345]
-                pages.add_option(label="Previous Pages", value=str(min_range - 20), emoji=LIST_EMOJI)
+                pages.add_option(label="Previous Pages", value=str(max_range - 20), emoji=LIST_EMOJI)
             pages.add_option(label="First Pages", value="0", emoji=LIST_EMOJI)
-
-        for item in pages.options:
-            index = int(item.value)
-            page_text = f"Page {index + 1}/{total_pages}"
-            if len(page_text) > 100:
-                page_text = f"Page {index + 1}"
-
-            item.description = page_text
 
         pages.options.sort(key=lambda x: int(x.value))
 
