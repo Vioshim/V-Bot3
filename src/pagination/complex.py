@@ -231,7 +231,7 @@ class Complex(Simple[_T]):
 
         if max_range < len(elements):
             if max_range + 1 < len(elements):
-                pages.add_option(label="Next Pages", value=str(min_range + 20), emoji=ArrowEmotes.FORWARD)
+                pages.add_option(label="Next Pages", value=str(max_range + 1), emoji=ArrowEmotes.FORWARD)
             pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=ArrowEmotes.END)
 
         if min_range > 0:

@@ -214,18 +214,14 @@ class Template(TemplateItem, Enum):
         choices: list[Species] = []
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
-        view = SpeciesComplex(
-            member=ctx.user,
-            target=ctx,
-            mon_total=self.total_species,
-            max_values=self.max_values,
-            ocs=ocs,
-        )
-        async with view.send(ephemeral=ephemeral) as data:
-            if 1 <= len(data) <= self.max_values:
-                choices.extend(data)
-            else:
-                return
+
+        if mons := self.total_species:
+            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
+            async with view.send(ephemeral=ephemeral) as data:
+                if 1 <= len(data) <= self.max_values:
+                    choices.extend(data)
+                else:
+                    return
 
         match self:
             case self.CustomPokemon | self.CustomLegendary | self.CustomMythical | self.CustomUltraBeast:
