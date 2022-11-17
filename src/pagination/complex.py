@@ -230,7 +230,7 @@ class Complex(Simple[_T]):
         min_range = max(amount, 0) * 20
         max_range = min(min_range + 20, len(elements))
 
-        if max_range < len(elements) - 1:  # Not in Last value, [012345X]
+        if max_range < len(elements):  # Not in Last value, [012345X]
             if max_range + 1 < len(elements):  # [01234XX]
                 pages.add_option(label="Next Pages", value=str(min_range + 20), emoji=ArrowEmotes.FORWARD)
             pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=ArrowEmotes.END)
