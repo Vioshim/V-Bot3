@@ -449,29 +449,29 @@ class OCGroupByEvoLine(OCGroupBy):
             items = [x for x in items if item_ability in x.abilities]
         if item_move := Move.deduce(ctx.namespace.move):
             items = [x for x in items if item_move in x.total_movepool]
-        if item_kind := Kind.associated(ctx.namespace.kind):
+        if (item_kind := Kind.associated(ctx.namespace.kind)) and item_kind != Kind.Fusion:
             items = [x for x in items if isinstance(x, item_kind.value)]
         return items
 
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        total = cls.total_data(ctx)
-        data = {x.name: set() for x in total}
-
+        data = {x.name: set() for x in cls.total_data(ctx)}
         for oc in ocs:
             if isinstance(species := oc.species, (Fusion, Chimera)):
-                for mon in filter(lambda x: x in total, species.bases):
-                    mon = mon.first_evo.name
-                    data[mon].add(oc)
-            elif species:
-                mon = species
+                for mon in species.bases:
+                    mon = mon.first_evo
+                    data.setdefault(mon.name, set())
+                    data[mon.name].add(oc)
+            elif mon := species:
                 if isinstance(species, (CustomMega, Variant)):
                     mon = species.base.first_evo
                 elif isinstance(species, Fakemon):
                     mon = species.species_evolves_from
                 else:
                     mon = mon.first_evo
-                if mon and mon in total:
+
+                if mon:
+                    data.setdefault(mon.name, set())
                     data[mon.name].add(oc)
 
         return data
