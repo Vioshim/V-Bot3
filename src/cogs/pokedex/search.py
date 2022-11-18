@@ -419,16 +419,18 @@ class OCGroupByAge(OCGroupBy):
 class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def total_data(cls, ctx: Interaction) -> list[Species]:
-        items = [x for x in Species.all()]
+        filters: list[Callable[[Species], bool]] = []
+
         if item_type := TypingEnum.deduce(ctx.namespace.type):
-            items = [x for x in items if item_type in x.types]
+            filters.append(lambda x: item_type in x.types)
         if item_ability := Ability.deduce(ctx.namespace.ability):
-            items = [x for x in items if item_ability in x.abilities]
+            filters.append(lambda x: item_ability in x.abilities)
         if item_move := Move.deduce(ctx.namespace.move):
-            items = [x for x in items if item_move in x.total_movepool]
+            filters.append(lambda x: item_move in x.total_movepool)
         if item_kind := Kind.associated(ctx.namespace.kind):
-            items = [x for x in items if isinstance(x, item_kind.value)]
-        return items
+            filters.append(lambda x: isinstance(x, item_kind.value))
+
+        return [x for x in Species.all() if all(i(x) for i in filters)]
 
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
