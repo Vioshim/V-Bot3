@@ -427,7 +427,7 @@ class OCGroupBySpecies(OCGroupBy):
             filters.append(lambda x: item_ability in x.abilities)
         if item_move := Move.deduce(ctx.namespace.move):
             filters.append(lambda x: item_move in x.total_movepool)
-        if item_kind := Kind.associated(ctx.namespace.kind):
+        if (item_kind := Kind.associated(ctx.namespace.kind)) and item_kind not in [Kind.Fusion, Kind.Chimera]:
             filters.append(lambda x: isinstance(x, item_kind.value))
 
         return [x for x in Species.all() if all(i(x) for i in filters)]
@@ -444,7 +444,7 @@ class OCGroupBySpecies(OCGroupBy):
 class OCGroupByEvoLine(OCGroupBy):
     @classmethod
     def total_data(cls, ctx: Interaction) -> list[Species]:
-        filters: list[Callable[[Species], bool]] = [lambda x: x.evolves_from is None]
+        filters: list[Callable[[Species], bool]] = []
 
         if item_type := TypingEnum.deduce(ctx.namespace.type):
             filters.append(lambda x: item_type in x.types)
@@ -455,7 +455,7 @@ class OCGroupByEvoLine(OCGroupBy):
         if (item_kind := Kind.associated(ctx.namespace.kind)) and item_kind not in [Kind.Fusion, Kind.Chimera]:
             filters.append(lambda x: isinstance(x, item_kind.value))
 
-        return [x for x in Species.all() if all(i(x) for i in filters)]
+        return [x for x in Species.all() if x.evolves_from is None and all(i(x) for i in filters)]
 
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):

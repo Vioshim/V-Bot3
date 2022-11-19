@@ -359,7 +359,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.2.0"
+version = "2.2.0a4641+g436d0849"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -381,9 +381,9 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 
 [package.source]
 type = "git"
-url = "https://github.com/Rapptz/discord.py.git"
+url = "https://github.com/sgtlaggy/discord.py.git"
 reference = "master"
-resolved_reference = "24bdb44d54686448a336ea6d72b1bf8600ef7220"
+resolved_reference = "436d0849d94a830b5c98553295bab9f8c34f6803"
 
 [[package]]
 name = "distlib"
@@ -561,21 +561,21 @@ regex = ["regex"]
 
 [[package]]
 name = "line-profiler"
-version = "4.0.0"
+version = "4.0.1"
 description = "Line-by-line profiler"
 category = "main"
 optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-all = ["cython", "cmake", "coverage", "ninja", "pytest", "pytest-cov", "scikit-build", "ubelt", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "ipython", "ipython"]
-all-strict = ["Cython (==3.0.0a11)", "cmake (==3.21.2)", "coverage[toml] (==5.3)", "ninja (==1.10.2)", "pytest-cov (==2.10.1)", "pytest (==4.6.11)", "scikit-build (==0.11.1)", "ubelt (==1.0.1)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.8.1)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "IPython (==0.13)", "IPython (==0.13)"]
-build = ["cython", "cmake", "ninja", "scikit-build", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel"]
-build-strict = ["Cython (==3.0.0a11)", "cmake (==3.21.2)", "ninja (==1.10.2)", "scikit-build (==0.11.1)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.8.1)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)"]
+all = ["pytest", "pytest-cov", "coverage", "ubelt", "cython", "scikit-build", "cmake", "ninja", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "ipython", "ipython"]
+all-strict = ["pytest (==4.6.11)", "pytest-cov (==2.10.1)", "coverage[toml] (==5.3)", "ubelt (==1.0.1)", "Cython (==3.0.0a11)", "scikit-build (==0.11.1)", "cmake (==3.21.2)", "ninja (==1.10.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.8.1)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "IPython (==0.13)", "IPython (==0.13)"]
+build = ["cython", "scikit-build", "cmake", "ninja", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel", "cibuildwheel"]
+build-strict = ["Cython (==3.0.0a11)", "scikit-build (==0.11.1)", "cmake (==3.21.2)", "ninja (==1.10.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.8.1)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)", "cibuildwheel (==2.11.2)"]
 ipython-strict = ["IPython (==0.13)", "IPython (==0.13)"]
 ipython = ["ipython", "ipython"]
-tests = ["coverage", "pytest", "pytest-cov", "ubelt", "ipython", "ipython"]
-tests-strict = ["coverage[toml] (==5.3)", "pytest-cov (==2.10.1)", "pytest (==4.6.11)", "ubelt (==1.0.1)", "IPython (==0.13)", "IPython (==0.13)"]
+tests = ["pytest", "pytest-cov", "coverage", "ubelt", "ipython", "ipython"]
+tests-strict = ["pytest (==4.6.11)", "pytest-cov (==2.10.1)", "coverage[toml] (==5.3)", "ubelt (==1.0.1)", "IPython (==0.13)", "IPython (==0.13)"]
 
 [[package]]
 name = "loguru"
@@ -924,7 +924,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pymongo"
-version = "4.3.2"
+version = "4.3.3"
 description = "Python driver for MongoDB <http://www.mongodb.org>"
 category = "main"
 optional = false
@@ -935,7 +935,7 @@ dnspython = ">=1.16.0,<3.0.0"
 
 [package.extras]
 aws = ["pymongo-auth-aws (<2.0.0)"]
-encryption = ["pymongocrypt (>=1.3.0,<2.0.0)"]
+encryption = ["pymongocrypt (>=1.3.0,<2.0.0)", "pymongo-auth-aws (<2.0.0)"]
 gssapi = ["pykerberos"]
 ocsp = ["pyopenssl (>=17.2.0)", "requests (<3.0.0)", "service-identity (>=18.1.0)", "certifi"]
 snappy = ["python-snappy"]
@@ -1326,7 +1326,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.7"
-content-hash = "0d15b1b24dc20b1e726c1ebee59472f55f0d3e2d3e0eba8921d7355bf5a972a5"
+content-hash = "397520b82a401f0cd8804a3e278e69802062be58620ac0d715f6f4d999b55ec0"
 
 [metadata.files]
 aiodns = []
