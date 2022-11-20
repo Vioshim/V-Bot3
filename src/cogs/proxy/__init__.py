@@ -180,6 +180,33 @@ class Proxy(commands.Cog):
             npc = NPC(name=pokemon)
         await self.proxy_handler(npc=npc, message=ctx.message, text=text)
 
+    @commands.command(name="pc")
+    @commands.guild_only()
+    async def cmd_pc(self, ctx: commands.Context, pokemon: str, *, text: str = None):
+        """Inplace PC Narration
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            _description_
+        text : str, optional
+            _description_, by default None
+        """
+        db = self.bot.mongo_db("Characters")
+        member = self.bot.supporting.get(ctx.author, ctx.author)
+        if (ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]) and (
+            options := process.extractOne(
+                pokemon, choices=ocs, score_cutoff=60, processor=lambda x: getattr(x, "name", x)
+            )
+        ):
+            oc = options[0]
+            npc = NPC(name=oc.name, avatar=oc.image_url)
+        elif mon := Species.single_deduce(pokemon):
+            npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
+        else:
+            npc = NPC(name=pokemon)
+        await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+
     @commands.command(name="npci")
     @commands.guild_only()
     async def cmd_npci(self, ctx: commands.Context, *, text: str = None):

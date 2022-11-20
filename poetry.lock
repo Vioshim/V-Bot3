@@ -683,7 +683,7 @@ docs = ["sphinx (>=4.0.0,<5.0.0)", "sphinxcontrib-trio", "furo"]
 
 [[package]]
 name = "numpy"
-version = "1.23.4"
+version = "1.23.5"
 description = "NumPy is the fundamental package for array computing with Python."
 category = "main"
 optional = false
@@ -1088,7 +1088,7 @@ use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requirementslib"
-version = "2.1.0"
+version = "2.2.0"
 description = "A tool for converting between pip-style and pipfile requirements."
 category = "dev"
 optional = false
@@ -1103,12 +1103,12 @@ platformdirs = "*"
 plette = {version = "*", extras = ["validation"]}
 requests = "*"
 tomlkit = ">=0.5.3"
-vistir = "0.6.1"
+vistir = "0.7.4"
 
 [package.extras]
-tests = ["hypothesis", "coverage", "pytest-timeout", "pytest-cov", "pytest-xdist", "readme-renderer", "pytest"]
-docs = ["sphinx-rtd-theme", "sphinx"]
-dev = ["towncrier", "parver", "twine", "nox"]
+dev = ["nox", "twine", "parver", "towncrier"]
+docs = ["sphinx", "sphinx-rtd-theme"]
+tests = ["pytest", "readme-renderer", "pytest-xdist", "pytest-cov", "pytest-timeout", "coverage", "hypothesis"]
 
 [[package]]
 name = "rsa"
@@ -1265,21 +1265,21 @@ test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<
 
 [[package]]
 name = "vistir"
-version = "0.6.1"
+version = "0.7.4"
 description = "Miscellaneous utilities for dealing with filesystems, paths, projects, subprocesses, and more."
 category = "dev"
 optional = false
-python-versions = "!=3.0,!=3.1,!=3.2,!=3.3,>=3.7"
+python-versions = ">=3.7"
 
 [package.dependencies]
 colorama = ">=0.3.4,<0.4.2 || >0.4.2"
 
 [package.extras]
-typing = ["typed-ast", "mypytools", "mypy-extensions", "mypy", "typing"]
-tests = ["mock", "twine", "readme-renderer", "pytest-timeout", "pytest-xdist", "pytest-rerunfailures (<9.0)", "pytest (==4.6.10)", "hypothesis-fspaths", "hypothesis"]
-spinner = ["yaspin"]
+dev = ["pre-commit", "coverage", "isort", "flake8", "rope", "invoke", "parver", "sphinx", "sphinx-rtd-theme", "flake8-bugbear", "black"]
 requests = ["requests"]
-dev = ["black", "flake8-bugbear", "sphinx-rtd-theme", "sphinx", "parver", "invoke", "rope", "flake8", "isort", "coverage", "pre-commit"]
+spinner = ["yaspin"]
+tests = ["hypothesis", "hypothesis-fspaths", "pytest (==4.6.10)", "pytest-rerunfailures (<9.0)", "pytest-xdist", "pytest-timeout", "readme-renderer", "twine"]
+typing = ["mypy", "mypy-extensions", "mypytools", "typed-ast"]
 
 [[package]]
 name = "wcwidth"
