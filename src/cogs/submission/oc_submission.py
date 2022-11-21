@@ -79,6 +79,10 @@ from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
+DEFAULT_MOVES = {
+    "tm": ["TERABLAST"],
+}
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class TemplateItem:
@@ -659,7 +663,8 @@ class MovesetField(TemplateField):
             )
         ):
             moves = oc.total_movepool()
-            if items := ", ".join(x.name for x in oc.moveset if x not in moves):
+            aux = Movepool.from_dict(**DEFAULT_MOVES)
+            if items := ", ".join(x.name for x in oc.moveset if x not in moves and x not in aux):
                 value += f"Not in Movepool: {items}"
 
         return value or None
@@ -696,6 +701,8 @@ class MovesetField(TemplateField):
             moveset = oc.moveset
         else:
             movepool = oc.total_movepool
+
+        movepool += Movepool.from_dict(**DEFAULT_MOVES)
 
         view = MovepoolMoveComplex(
             member=ctx.user,
