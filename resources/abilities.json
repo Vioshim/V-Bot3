@@ -1,2114 +1,2362 @@
 [
-    {
-        "id": "ADAPTABILITY",
-        "name": "Adaptability",
-        "description": "This Pokemon's same-type attack bonus (STAB) is 2 instead of 1.5.",
-        "battle": "The pokemon's energies allow the pokemon to grow slightly stronger, allowing them to hit harder. The boost may not be as strong as how it is in main games, but it's decent enough for changing the odds in a battle. Example: An eevee using Swift, it's assumed to be more likely to hit through blocking obstacles, less likely to get thrown away but also bit more hamrful than the usual.",
-        "outside": "It allows the pokemon to use its typings in clever ways, trying to adapt to the situations for problem solving, for example, If this ability is being worn by a fire type, it'd be assumed that its likely to use fire without a move, in order to adapt to the circumstances and do something in specific.",
-        "random_fact": "Moves casted by this ability tend to look slightly more brilliant than the usual due to them being an overload of typing energy."
-    },
-    {
-        "id": "AERILATE",
-        "name": "Aerilate",
-        "description": "This Pokemon's Normal-type moves become Flying type and have 1.2x power.",
-        "battle": "As expected, this ability turns Normal type moves in Flying type, they are stronger that's for sure, but due to the flying waves it keeps sending, they are unable to hit ground types with it.",
-        "outside": "This pokemon is quite able to use its ability to generate wind for its daily activities, such as being able to carry a light object with it, or even blew off someone's card castle.",
-        "random_fact": ""
-    },
-    {
-        "id": "AFTERMATH",
-        "name": "Aftermath",
-        "description": "If this Pokemon is KOed with a contact move, that move's user loses 1/4 its max HP.",
-        "battle": "In battle, as expected, this ability causes collateral damage to the one that defeated him, this only happens if the pokemon was quite close to the individual during it. And this damage may spread to allies if they are in range.",
-        "outside": "Outside of battle, this ability doesn't really have much use, but it's known by many that they are able to resist diseases given to their property of harming entities that kill its cells (In summary, its hp reduction applies in a cell level as well)",
-        "random_fact": "This ability is often skill swapped in hospitals to help fight diseases."
-    },
-    {
-        "id": "AIRLOCK",
-        "name": "Air Lock",
-        "description": "While this Pokemon is active, the effects of weather conditions are disabled.",
-        "battle": "When a battle occurs, the weather can't be used against the pokemon and its allies, it simply right away can't be used, its energies oppose with the move or abilities that cast those.",
-        "outside": "As expected, this ability can always be disabled by the pokemon voluntarily.",
-        "random_fact": "Air lock is quite popular among the people in Estelia, given the fact it was the name of a popular Album during the 80s."
-    },
-    {
-        "id": "ANALYTIC",
-        "name": "Analytic",
-        "description": "This Pokemon's attacks have 1.3x power if it is the last to move in a turn.",
-        "battle": "This ability only benefits if the pokemon doesn't dodge nor evade in the turn, as stated it has to be the last to move in a turn, which means that after taking a hit, it analyzes its advantage with the pokemon and attacks such weak spot during the turn, which allows the character to hit harder.",
-        "outside": "The perception is very high, being more likely to detect details in the overworld and allows to have a high precision in writing.",
-        "random_fact": "Having this ability is usually a safe way to get hired for any judge-related job."
-    },
-    {
-        "id": "ANGERPOINT",
-        "name": "Anger Point",
-        "description": "If this Pokemon (not its substitute) takes a critical hit, its Attack is raised to 10+ stages.",
-        "battle": "When someone hits the Pokemon by taking advantage of its weak spots, it gets upset, adrenaline makes the pokemon get angered which causes it to attack twice as strong.",
-        "outside": "This ability doesn't necessarily trigger by being hit with a critical hit, sometimes it can trigger if the character is feeling way angry and frustrated, making it be twice as strong, allowing them to break a rock or something.",
-        "random_fact": "Anger isn't healthy, if used frequently the character may have to go to the hospital."
-    },
-    {
-        "id": "ANTICIPATION",
-        "name": "Anticipation",
-        "description": "On switch-in, this Pokemon shudders if any foe has a supereffective or OHKO move.",
-        "battle": "When a battle starts, the pokemon is able to tell when a move its harmful for them, this is very useful before starting the battle, because that way your character can know if it's worth battling or escaping.",
-        "outside": "This anticipation also works like a sense of doing the right thing to do for them, plus it really helps them to notice whoever is looking at them or listening their conversation.",
-        "random_fact": "Guaranteed job as guard or police, being able to spot things wrong is a very useful skill in jobs, even more in political related ones."
-    },
-    {
-        "id": "ARENATRAP",
-        "name": "Arena Trap",
-        "description": "Prevents adjacent foes from choosing to switch unless they are airborne.",
-        "battle": "A circle with 30ft of diameter around the pokemon cause anyone that go near to struggle for escaping, it will most likely have a hard time to escape or approach if they just wanna mindlessly attack ",
-        "outside": "Well, the pokemon is pretty much able to control the area on the ground as long as there's sand. It can use it to even make temporary forts, or even making a hammer out of sand to hit someone that is way way too close.",
-        "random_fact": ""
-    },
-    {
-        "id": "AROMAVEIL",
-        "name": "Aroma Veil",
-        "description": "Protects user/allies from Attract, Disable, Encore, Heal Block, Taunt, and Torment.",
-        "battle": "A support role takes place in battle, any abilities or special abilities that work in a similar way to the moves stated above, will simply not work as the pokemon is determined.",
-        "outside": "The pokemon can use this ability to help others feel better and even prevent disturbs",
-        "random_fact": "Most Police teams tend to have at least one of them to prevent effects on them."
-    },
-    {
-        "id": "AURABREAK",
-        "name": "Aura Break",
-        "description": "While this Pokemon is active, the Dark Aura and Fairy Aura power modifier is 0.75x.",
-        "battle": "This ability tends to decrease the harm of aura oriented energies, it affects the moves as stated.",
-        "outside": "It's known that this affects Lucarios and Riolus, making them unable to read energies or have aura usage.",
-        "random_fact": "It's not noticieable for the pokemon when this ability is used, which can give the impression of something going wrong."
-    },
-    {
-        "id": "BADDREAMS",
-        "name": "Bad Dreams",
-        "description": "Causes sleeping adjacent foes to lose 1/8 of their max HP at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "BALLFETCH",
-        "name": "Ball Fetch",
-        "description": "The pokemon can return a thrown pokeball if it failed.",
-        "battle": "This ability in battle works as Counter to moves that are affected by Bulletproof, the pokemon after getting hit by the damaging attack, it can keep holding the move's energy in its mouth and then throw it back. Not guaranteed to hit.",
-        "outside": "The pokemon is more eager to use its mouth to hold things firmly, even if it's a cold or hot item.",
-        "random_fact": "Yes-- People with the ability are known for being great at ball related sports."
-    },
-    {
-        "id": "BATTERY",
-        "name": "Battery",
-        "description": "This Pokemon's allies have the power of their special attacks multiplied by 1.3.",
-        "battle": "As stated, it is a living battery, its energy is used to fill the typing of people, which increases their attack",
-        "outside": "Increasing people's typing energy can help for non battling purposes as well.",
-        "random_fact": "It's known for also helping with Magic, like any energy typing increase."
-    },
-    {
-        "id": "BATTLEARMOR",
-        "name": "Battle Armor",
-        "description": "This Pokemon cannot be struck by a critical hit.",
-        "battle": "There's literally no way to find weak spots in this pokemon, if you're gonna try to hit them point blank, they'll always be able to try to reduce the impact or protect themselves in a way it makes less damage.",
-        "outside": "This boosts their perception, so when they are gonna get hit by something as result of their clumsyness, the ability triggers and moves their body in such the damage is decreased.",
-        "random_fact": "Not much to add here other than the cliche of people referring to it as plot armor"
-    },
-    {
-        "id": "BEASTBOOST",
-        "name": "Beast Boost",
-        "description": "This Pokemon's highest stat is raised by 1 if it attacks and KOes another Pokemon.",
-        "battle": "As soon as they defeat someone, a monster or a npc, they get stronger.",
-        "outside": "It allows to safely breathe in the ultra worm holes and be able to move within them.",
-        "random_fact": "All UltraBeast have this ability and only have this one."
-    },
-    {
-        "id": "BERSERK",
-        "name": "Berserk",
-        "description": "This Pokemon's Sp. Atk is raised by 1 when it reaches 1/2 or less of its max HP.",
-        "battle": "When the pokemon have received hits for a while, its heart proceeds to accelerate, giving an increse of a 25%.",
-        "outside": "It can also trigger when frustrated or angry",
-        "random_fact": "Repeated use of this ability may require a visit to the hospital."
-    },
-    {
-        "id": "BIGPECKS",
-        "name": "Big Pecks",
-        "description": "Prevents other Pokemon from lowering this Pokemon's Defense stat stage.",
-        "battle": "They rely on their own body rather than the typing energy, which makes defense drops useless.",
-        "outside": "Strength, not much else to say.",
-        "random_fact": "It's a good ability to have in physicial oriented jobs"
-    },
-    {
-        "id": "BLAZE",
-        "name": "Blaze",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Fire attacks.",
-        "battle": "Heart is beating, tries to accelerate given the circumstances and the Fire is increased",
-        "outside": "When feeling depressed or sad, fire may lower, and if feeling too angry, it can be activated",
-        "random_fact": "Activating it often, may require a visit to the hospital"
-    },
-    {
-        "id": "BULLETPROOF",
-        "name": "Bulletproof",
-        "description": "Makes user immune to ballistic moves (Shadow Ball, Sludge Bomb, Focus Blast, etc).",
-        "battle": "The skin of the character protects the pokemon very well, making them not get hurt and continue using that turn in advantage",
-        "outside": "It can protect with thrown projectiles.",
-        "random_fact": "Police tends to have at least one of them in their teams."
-    },
-    {
-        "id": "CHEEKPOUCH",
-        "name": "Cheek Pouch",
-        "description": "If this Pokemon eats a Berry, it restores 1/3 of its max HP after the Berry's effect.",
-        "battle": "Berries will always heal the pokemon, regardless of the Berry's effect, however it takes them a while to eat due to the way they eat (wait 1 turn)",
-        "outside": "It allows the pokemon to easily store berries in its cheeks",
-        "random_fact": "Not much to add here aside of having big cheeks."
-    },
-    {
-        "id": "CHILLINGNEIGH",
-        "name": "Chilling Neigh",
-        "description": "This Pokemon's Attack is raised by 1 stage if it attacks and KOes another Pokemon.",
-        "battle": "As soon as they defeat someone, a monster or a npc, they get stronger.",
-        "outside": "Getting angry or too emotive can trigger the ability",
-        "random_fact": ""
-    },
-    {
-        "id": "CHLOROPHYLL",
-        "name": "Chlorophyll",
-        "description": "If Sunny Day is active, this Pokemon's Speed is doubled.",
-        "battle": "This speed allows the pokemon to be able to react to the things that are being used against them more easily.",
-        "outside": "Speed affects travel, and can trigger if there's harsh sunlight.",
-        "random_fact": "It's way too popular for most NPCs"
-    },
-    {
-        "id": "CLEARBODY",
-        "name": "Clear Body",
-        "description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
-        "battle": "The pokemon's body works fully by itself, being unreliant in Type energies, making decreases impossible to happen",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "CLOUDNINE",
-        "name": "Cloud Nine",
-        "description": "While this Pokemon is active, the effects of weather conditions are disabled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "COLORCHANGE",
-        "name": "Color Change",
-        "description": "This Pokemon's type changes to the type of a move it's hit by, unless it has the type.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "COMATOSE",
-        "name": "Comatose",
-        "description": "This Pokemon cannot be statused, and is considered to be asleep.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "COMPETITIVE",
-        "name": "Competitive",
-        "description": "This Pokemon's Sp. Atk is raised by 2 for each of its stats that is lowered by a foe.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "COMPOUNDEYES",
-        "name": "Compound Eyes",
-        "description": "This Pokemon's moves have their accuracy multiplied by 1.3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "CONTRARY",
-        "name": "Contrary",
-        "description": "If this Pokemon has a stat stage raised it is lowered instead, and vice versa.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "CORROSION",
-        "name": "Corrosion",
-        "description": "This Pokemon can poison or badly poison other Pokemon regardless of their typing.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "COTTONDOWN",
-        "name": "Cotton Down",
-        "description": "If this Pokemon is hit, it lowers the Speed of all other Pokemon on the field 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "CURIOUSMEDICINE",
-        "name": "Curious Medicine",
-        "description": "On switch-in, this Pokemon's allies have their stat stages reset to 0.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "CURSEDBODY",
-        "name": "Cursed Body",
-        "description": "If this Pokemon is hit by an attack, there is a 30% chance that move gets disabled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "CUTECHARM",
-        "name": "Cute Charm",
-        "description": "30% chance of infatuating Pokemon of the opposite gender if they make contact.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DAMP",
-        "name": "Damp",
-        "description": "Prevents Explosion/Mind Blown/Misty Explosion/Self-Destruct/Aftermath while active.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DANCER",
-        "name": "Dancer",
-        "description": "After another Pokemon uses a dance move, this Pokemon uses the same move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DARKAURA",
-        "name": "Dark Aura",
-        "description": "While this Pokemon is active, a Dark move used by any Pokemon has 1.33x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DAUNTLESSSHIELD",
-        "name": "Dauntless Shield",
-        "description": "On switch-in, this Pokemon's Defense is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DAZZLING",
-        "name": "Dazzling",
-        "description": "While this Pokemon is active, allies are protected from opposing priority moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DEFEATIST",
-        "name": "Defeatist",
-        "description": "While this Pokemon has 1/2 or less of its max HP, its Attack and Sp. Atk are halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DEFIANT",
-        "name": "Defiant",
-        "description": "This Pokemon's Attack is raised by 2 for each of its stats that is lowered by a foe.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DELTASTREAM",
-        "name": "Delta Stream",
-        "description": "On switch-in, strong winds begin until this Ability is not active in battle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DESOLATELAND",
-        "name": "Desolate Land",
-        "description": "On switch-in, extremely harsh sunlight begins until this Ability is not active in battle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DISGUISE",
-        "name": "Disguise",
-        "description": "(Mimikyu only) The first hit it takes is blocked, and it takes 1/8 HP damage instead.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DOWNLOAD",
-        "name": "Download",
-        "description": "On switch-in, Attack or Sp. Atk is raised 1 stage based on the foes' weaker Defense.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DRAGONSMAW",
-        "name": "Dragon's Maw",
-        "description": "This Pokemon's attacking stat is multiplied by 1.5 while using a Dragon-type attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DRIZZLE",
-        "name": "Drizzle",
-        "description": "On switch-in, this Pokemon summons Rain Dance.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DROUGHT",
-        "name": "Drought",
-        "description": "On switch-in, this Pokemon summons Sunny Day.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "DRYSKIN",
-        "name": "Dry Skin",
-        "description": "This Pokemon is healed 1/4 by Water, 1/8 by Rain; is hurt 1.25x by Fire, 1/8 by Sun.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "EARLYBIRD",
-        "name": "Early Bird",
-        "description": "This Pokemon's sleep counter drops by 2 instead of 1.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "EFFECTSPORE",
-        "name": "Effect Spore",
-        "description": "30% chance of poison/paralysis/sleep on others making contact with this Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ELECTRICSURGE",
-        "name": "Electric Surge",
-        "description": "On switch-in, this Pokemon summons Electric Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "EMERGENCYEXIT",
-        "name": "Emergency Exit",
-        "description": "This Pokemon switches out when it reaches 1/2 or less of its maximum HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FAIRYAURA",
-        "name": "Fairy Aura",
-        "description": "While this Pokemon is active, a Fairy move used by any Pokemon has 1.33x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FILTER",
-        "name": "Filter",
-        "description": "This Pokemon receives 3/4 damage from supereffective attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FLAMEBODY",
-        "name": "Flame Body",
-        "description": "30% chance a Pokemon making contact with this Pokemon will be burned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FLAREBOOST",
-        "name": "Flare Boost",
-        "description": "While this Pokemon is burned, its special attacks have 1.5x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FLASHFIRE",
-        "name": "Flash Fire",
-        "description": "This Pokemon's Fire attacks do 1.5x damage if hit by one Fire move; Fire immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FLOWERGIFT",
-        "name": "Flower Gift",
-        "description": "If user is Cherrim and Sunny Day is active, it and allies' Attack and Sp. Def are 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FLOWERVEIL",
-        "name": "Flower Veil",
-        "description": "This side's Grass types can't have stats lowered or status inflicted by other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FLUFFY",
-        "name": "Fluffy",
-        "description": "This Pokemon takes 1/2 damage from contact moves, 2x damage from Fire moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FORECAST",
-        "name": "Forecast",
-        "description": "Castform's type changes to the current weather condition's type, except Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FOREWARN",
-        "name": "Forewarn",
-        "description": "On switch-in, this Pokemon is alerted to the foes' move with the highest power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FRIENDGUARD",
-        "name": "Friend Guard",
-        "description": "This Pokemon's allies receive 3/4 damage from other Pokemon's attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FRISK",
-        "name": "Frisk",
-        "description": "On switch-in, this Pokemon identifies the held items of all opposing Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FULLMETALBODY",
-        "name": "Full Metal Body",
-        "description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "FURCOAT",
-        "name": "Fur Coat",
-        "description": "This Pokemon's Defense is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GALEWINGS",
-        "name": "Gale Wings",
-        "description": "If this Pokemon is at full HP, its Flying-type moves have their priority increased by 1.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GALVANIZE",
-        "name": "Galvanize",
-        "description": "This Pokemon's Normal-type moves become Electric type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GLUTTONY",
-        "name": "Gluttony",
-        "description": "When this Pokemon has 1/2 or less of its maximum HP, it uses certain Berries early.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GOOEY",
-        "name": "Gooey",
-        "description": "Pokemon making contact with this Pokemon have their Speed lowered by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GORILLATACTICS",
-        "name": "Gorilla Tactics",
-        "description": "This Pokemon's Attack is 1.5x, but it can only select the first move it executes.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GRASSPELT",
-        "name": "Grass Pelt",
-        "description": "If Grassy Terrain is active, this Pokemon's Defense is multiplied by 1.5.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GRASSYSURGE",
-        "name": "Grassy Surge",
-        "description": "On switch-in, this Pokemon summons Grassy Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GRIMNEIGH",
-        "name": "Grim Neigh",
-        "description": "This Pokemon's Sp. Atk is raised by 1 stage if it attacks and KOes another Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GULPMISSILE",
-        "name": "Gulp Missile",
-        "description": "When hit after Surf/Dive, attacker takes 1/4 max HP and -1 Defense or paralysis.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "GUTS",
-        "name": "Guts",
-        "description": "If this Pokemon is statused, its Attack is 1.5x; ignores burn halving physical damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HARVEST",
-        "name": "Harvest",
-        "description": "If last item used is a Berry, 50% chance to restore it each end of turn. 100% in Sun.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HEALER",
-        "name": "Healer",
-        "description": "30% chance of curing an adjacent ally's status at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HEATPROOF",
-        "name": "Heatproof",
-        "description": "The power of Fire-type attacks against this Pokemon is halved; burn damage halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HEAVYMETAL",
-        "name": "Heavy Metal",
-        "description": "This Pokemon's weight is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HONEYGATHER",
-        "name": "Honey Gather",
-        "description": "No competitive use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HUGEPOWER",
-        "name": "Huge Power",
-        "description": "This Pokemon's Attack is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HUNGERSWITCH",
-        "name": "Hunger Switch",
-        "description": "If Morpeko, it changes between Full Belly and Hangry Mode at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HUSTLE",
-        "name": "Hustle",
-        "description": "This Pokemon's Attack is 1.5x and accuracy of its physical attacks is 0.8x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HYDRATION",
-        "name": "Hydration",
-        "description": "This Pokemon has its status cured at the end of each turn if Rain Dance is active.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HYPERCUTTER",
-        "name": "Hyper Cutter",
-        "description": "Prevents other Pokemon from lowering this Pokemon's Attack stat stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ICEBODY",
-        "name": "Ice Body",
-        "description": "If Hail is active, this Pokemon heals 1/16 of its max HP each turn; immunity to Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ICEFACE",
-        "name": "Ice Face",
-        "description": "If Eiscue, the first physical hit it takes deals 0 damage. This effect is restored in Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ICESCALES",
-        "name": "Ice Scales",
-        "description": "This Pokemon receives 1/2 damage from special attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ILLUMINATE",
-        "name": "Illuminate",
-        "description": "No competitive use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ILLUSION",
-        "name": "Illusion",
-        "description": "This Pokemon appears as the last Pokemon in the party until it takes direct damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "IMMUNITY",
-        "name": "Immunity",
-        "description": "This Pokemon cannot be poisoned. Gaining this Ability while poisoned cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "IMPOSTER",
-        "name": "Imposter",
-        "description": "On switch-in, this Pokemon Transforms into the opposing Pokemon that is facing it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "INFILTRATOR",
-        "name": "Infiltrator",
-        "description": "Moves ignore substitutes and foe's Reflect/Light Screen/Safeguard/Mist/Aurora Veil.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "INNARDSOUT",
-        "name": "Innards Out",
-        "description": "If this Pokemon is KOed with a move, that move's user loses an equal amount of HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "INNERFOCUS",
-        "name": "Inner Focus",
-        "description": "This Pokemon cannot be made to flinch. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "INSOMNIA",
-        "name": "Insomnia",
-        "description": "This Pokemon cannot fall asleep. Gaining this Ability while asleep cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "INTIMIDATE",
-        "name": "Intimidate",
-        "description": "On switch-in, this Pokemon lowers the Attack of adjacent opponents by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "INTREPIDSWORD",
-        "name": "Intrepid Sword",
-        "description": "On switch-in, this Pokemon's Attack is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "IRONBARBS",
-        "name": "Iron Barbs",
-        "description": "Pokemon making contact with this Pokemon lose 1/8 of their max HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "IRONFIST",
-        "name": "Iron Fist",
-        "description": "This Pokemon's punch-based attacks have 1.2x power. Sucker Punch is not boosted.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "JUSTIFIED",
-        "name": "Justified",
-        "description": "This Pokemon's Attack is raised by 1 stage after it is damaged by a Dark-type move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "KEENEYE",
-        "name": "Keen Eye",
-        "description": "This Pokemon's accuracy can't be lowered by others; ignores their evasiveness stat.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "KLUTZ",
-        "name": "Klutz",
-        "description": "This Pokemon's held item has no effect, except Macho Brace. Fling cannot be used.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LEAFGUARD",
-        "name": "Leaf Guard",
-        "description": "If Sunny Day is active, this Pokemon cannot be statused and Rest will fail for it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LEVITATE",
-        "name": "Levitate",
-        "description": "This Pokemon is immune to Ground; Gravity/Ingrain/Smack Down/Iron Ball nullify it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LIBERO",
-        "name": "Libero",
-        "description": "This Pokemon's type changes to match the type of the move it is about to use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LIGHTMETAL",
-        "name": "Light Metal",
-        "description": "This Pokemon's weight is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LIGHTNINGROD",
-        "name": "Lightning Rod",
-        "description": "This Pokemon draws Electric moves to itself to raise Sp. Atk by 1; Electric immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LIMBER",
-        "name": "Limber",
-        "description": "This Pokemon cannot be paralyzed. Gaining this Ability while paralyzed cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LIQUIDOOZE",
-        "name": "Liquid Ooze",
-        "description": "This Pokemon damages those draining HP from it for as much as they would heal.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LIQUIDVOICE",
-        "name": "Liquid Voice",
-        "description": "This Pokemon's sound-based moves become Water type.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "LONGREACH",
-        "name": "Long Reach",
-        "description": "This Pokemon's attacks do not make contact with the target.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MAGICBOUNCE",
-        "name": "Magic Bounce",
-        "description": "This Pokemon blocks certain status moves and bounces them back to the user.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MAGICGUARD",
-        "name": "Magic Guard",
-        "description": "This Pokemon can only be damaged by direct attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MAGICIAN",
-        "name": "Magician",
-        "description": "If this Pokemon has no item, it steals the item off a Pokemon it hits with an attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MAGMAARMOR",
-        "name": "Magma Armor",
-        "description": "This Pokemon cannot be frozen. Gaining this Ability while frozen cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MAGNETPULL",
-        "name": "Magnet Pull",
-        "description": "Prevents adjacent Steel-type foes from choosing to switch.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MARVELSCALE",
-        "name": "Marvel Scale",
-        "description": "If this Pokemon is statused, its Defense is 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MEGALAUNCHER",
-        "name": "Mega Launcher",
-        "description": "This Pokemon's pulse moves have 1.5x power. Heal Pulse heals 3/4 target's max HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MERCILESS",
-        "name": "Merciless",
-        "description": "This Pokemon's attacks are critical hits if the target is poisoned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MIMICRY",
-        "name": "Mimicry",
-        "description": "This Pokemon's type changes to match the Terrain. Type reverts when Terrain ends.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MINUS",
-        "name": "Minus",
-        "description": "If an active ally has this Ability or the Plus Ability, this Pokemon's Sp. Atk is 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MIRRORARMOR",
-        "name": "Mirror Armor",
-        "description": "If this Pokemon's stat stages would be lowered, the attacker's are lowered instead.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MISTYSURGE",
-        "name": "Misty Surge",
-        "description": "On switch-in, this Pokemon summons Misty Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MOLDBREAKER",
-        "name": "Mold Breaker",
-        "description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MOODY",
-        "name": "Moody",
-        "description": "Boosts a random stat (except accuracy/evasion) +2 and another stat -1 every turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MOTORDRIVE",
-        "name": "Motor Drive",
-        "description": "This Pokemon's Speed is raised 1 stage if hit by an Electric move; Electric immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MOXIE",
-        "name": "Moxie",
-        "description": "This Pokemon's Attack is raised by 1 stage if it attacks and KOes another Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MULTISCALE",
-        "name": "Multiscale",
-        "description": "If this Pokemon is at full HP, damage taken from attacks is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MULTITYPE",
-        "name": "Multitype",
-        "description": "If this Pokemon is an Arceus, its type changes to match its held Plate or Z-Crystal.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "MUMMY",
-        "name": "Mummy",
-        "description": "Pokemon making contact with this Pokemon have their Ability changed to Mummy.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "NATURALCURE",
-        "name": "Natural Cure",
-        "description": "This Pokemon has its non-volatile status condition cured when it switches out.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "NEUROFORCE",
-        "name": "Neuroforce",
-        "description": "This Pokemon's attacks that are super effective against the target do 1.25x damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "NEUTRALIZINGGAS",
-        "name": "Neutralizing Gas",
-        "description": "While this Pokemon is active, Abilities have no effect.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "NOGUARD",
-        "name": "No Guard",
-        "description": "Every move used by or against this Pokemon will always hit.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "NORMALIZE",
-        "name": "Normalize",
-        "description": "This Pokemon's moves are changed to be Normal type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "OBLIVIOUS",
-        "name": "Oblivious",
-        "description": "This Pokemon cannot be infatuated or taunted. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "OVERCOAT",
-        "name": "Overcoat",
-        "description": "This Pokemon is immune to powder moves and damage from Sandstorm or Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "OVERGROW",
-        "name": "Overgrow",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Grass attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "OWNTEMPO",
-        "name": "Own Tempo",
-        "description": "This Pokemon cannot be confused. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PARENTALBOND",
-        "name": "Parental Bond",
-        "description": "This Pokemon's damaging moves hit twice. The second hit has its damage quartered.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PASTELVEIL",
-        "name": "Pastel Veil",
-        "description": "This Pokemon and its allies cannot be poisoned. On switch-in, cures poisoned allies.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PERISHBODY",
-        "name": "Perish Body",
-        "description": "Making contact with this Pokemon starts the Perish Song effect for it and the attacker.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PICKPOCKET",
-        "name": "Pickpocket",
-        "description": "If this Pokemon has no item and is hit by a contact move, it steals the attacker's item.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PICKUP",
-        "name": "Pickup",
-        "description": "If this Pokemon has no item, it finds one used by an adjacent Pokemon this turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PIXILATE",
-        "name": "Pixilate",
-        "description": "This Pokemon's Normal-type moves become Fairy type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PLUS",
-        "name": "Plus",
-        "description": "If an active ally has this Ability or the Minus Ability, this Pokemon's Sp. Atk is 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POISONHEAL",
-        "name": "Poison Heal",
-        "description": "This Pokemon is healed by 1/8 of its max HP each turn when poisoned; no HP loss.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POISONPOINT",
-        "name": "Poison Point",
-        "description": "30% chance a Pokemon making contact with this Pokemon will be poisoned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POISONTOUCH",
-        "name": "Poison Touch",
-        "description": "This Pokemon's contact moves have a 30% chance of poisoning.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POWERCONSTRUCT",
-        "name": "Power Construct",
-        "description": "If Zygarde 10%/50%, changes to Complete if at 1/2 max HP or less at end of turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POWEROFALCHEMY",
-        "name": "Power of Alchemy",
-        "description": "This Pokemon copies the Ability of an ally that faints.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POWERSPOT",
-        "name": "Power Spot",
-        "description": "This Pokemon's allies have the power of their moves multiplied by 1.3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PRANKSTER",
-        "name": "Prankster",
-        "description": "This Pokemon's Status moves have priority raised by 1, but Dark types are immune.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PRESSURE",
-        "name": "Pressure",
-        "description": "If this Pokemon is the target of a foe's move, that move loses one additional PP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PRIMORDIALSEA",
-        "name": "Primordial Sea",
-        "description": "On switch-in, heavy rain begins until this Ability is not active in battle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PRISMARMOR",
-        "name": "Prism Armor",
-        "description": "This Pokemon receives 3/4 damage from supereffective attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PROPELLERTAIL",
-        "name": "Propeller Tail",
-        "description": "This Pokemon's moves cannot be redirected to a different target by any effect.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PROTEAN",
-        "name": "Protean",
-        "description": "This Pokemon's type changes to match the type of the move it is about to use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PSYCHICSURGE",
-        "name": "Psychic Surge",
-        "description": "On switch-in, this Pokemon summons Psychic Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PUNKROCK",
-        "name": "Punk Rock",
-        "description": "This Pokemon receives 1/2 damage from sound moves. Its own have 1.3x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "PUREPOWER",
-        "name": "Pure Power",
-        "description": "This Pokemon's Attack is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "QUEENLYMAJESTY",
-        "name": "Queenly Majesty",
-        "description": "While this Pokemon is active, allies are protected from opposing priority moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "QUICKDRAW",
-        "name": "Quick Draw",
-        "description": "This Pokemon has a 30% chance to move first in its priority bracket with attacking moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "QUICKFEET",
-        "name": "Quick Feet",
-        "description": "If this Pokemon is statused, its Speed is 1.5x; ignores Speed drop from paralysis.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RAINDISH",
-        "name": "Rain Dish",
-        "description": "If Rain Dance is active, this Pokemon heals 1/16 of its max HP each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RATTLED",
-        "name": "Rattled",
-        "description": "Speed is raised 1 stage if hit by a Bug-, Dark-, or Ghost-type attack, or Intimidated.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RECEIVER",
-        "name": "Receiver",
-        "description": "This Pokemon copies the Ability of an ally that faints.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RECKLESS",
-        "name": "Reckless",
-        "description": "This Pokemon's attacks with recoil or crash damage have 1.2x power; not Struggle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "REFRIGERATE",
-        "name": "Refrigerate",
-        "description": "This Pokemon's Normal-type moves become Ice type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "REGENERATOR",
-        "name": "Regenerator",
-        "description": "This Pokemon restores 1/3 of its maximum HP, rounded down, when it switches out.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RIPEN",
-        "name": "Ripen",
-        "description": "When this Pokemon eats a Berry, its effect is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RIVALRY",
-        "name": "Rivalry",
-        "description": "This Pokemon's attacks do 1.25x on same gender targets; 0.75x on opposite gender.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RKSSYSTEM",
-        "name": "RKS System",
-        "description": "If this Pokemon is a Silvally, its type changes to match its held Memory.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ROCKHEAD",
-        "name": "Rock Head",
-        "description": "This Pokemon does not take recoil damage besides Struggle/Life Orb/crash damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ROUGHSKIN",
-        "name": "Rough Skin",
-        "description": "Pokemon making contact with this Pokemon lose 1/8 of their max HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "RUNAWAY",
-        "name": "Run Away",
-        "description": "No competitive use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SANDFORCE",
-        "name": "Sand Force",
-        "description": "This Pokemon's Ground/Rock/Steel attacks do 1.3x in Sandstorm; immunity to it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SANDRUSH",
-        "name": "Sand Rush",
-        "description": "If Sandstorm is active, this Pokemon's Speed is doubled; immunity to Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SANDSPIT",
-        "name": "Sand Spit",
-        "description": "When this Pokemon is hit, Sandstorm begins.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SANDSTREAM",
-        "name": "Sand Stream",
-        "description": "On switch-in, this Pokemon summons Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SANDVEIL",
-        "name": "Sand Veil",
-        "description": "If Sandstorm is active, this Pokemon's evasiveness is 1.25x; immunity to Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SAPSIPPER",
-        "name": "Sap Sipper",
-        "description": "This Pokemon's Attack is raised 1 stage if hit by a Grass move; Grass immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SCHOOLING",
-        "name": "Schooling",
-        "description": "If user is Wishiwashi, changes to School Form if it has > 1/4 max HP, else Solo Form.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SCRAPPY",
-        "name": "Scrappy",
-        "description": "Fighting, Normal moves hit Ghost. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SCREENCLEANER",
-        "name": "Screen Cleaner",
-        "description": "On switch-in, the effects of Aurora Veil, Light Screen, and Reflect end for both sides.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SERENEGRACE",
-        "name": "Serene Grace",
-        "description": "This Pokemon's moves have their secondary effect chance doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHADOWSHIELD",
-        "name": "Shadow Shield",
-        "description": "If this Pokemon is at full HP, damage taken from attacks is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHADOWTAG",
-        "name": "Shadow Tag",
-        "description": "Prevents adjacent foes from choosing to switch unless they also have this Ability.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHEDSKIN",
-        "name": "Shed Skin",
-        "description": "This Pokemon has a 33% chance to have its status cured at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHEERFORCE",
-        "name": "Sheer Force",
-        "description": "This Pokemon's attacks with secondary effects have 1.3x power; nullifies the effects.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHELLARMOR",
-        "name": "Shell Armor",
-        "description": "This Pokemon cannot be struck by a critical hit.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHIELDDUST",
-        "name": "Shield Dust",
-        "description": "This Pokemon is not affected by the secondary effect of another Pokemon's attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SHIELDSDOWN",
-        "name": "Shields Down",
-        "description": "If Minior, switch-in/end of turn it changes to Core at 1/2 max HP or less, else Meteor.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SIMPLE",
-        "name": "Simple",
-        "description": "When this Pokemon's stat stages are raised or lowered, the effect is doubled instead.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SKILLLINK",
-        "name": "Skill Link",
-        "description": "This Pokemon's multi-hit attacks always hit the maximum number of times.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SLOWSTART",
-        "name": "Slow Start",
-        "description": "On switch-in, this Pokemon's Attack and Speed are halved for 5 turns.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SLUSHRUSH",
-        "name": "Slush Rush",
-        "description": "If Hail is active, this Pokemon's Speed is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SNIPER",
-        "name": "Sniper",
-        "description": "If this Pokemon strikes with a critical hit, the damage is multiplied by 1.5.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SNOWCLOAK",
-        "name": "Snow Cloak",
-        "description": "If Hail is active, this Pokemon's evasiveness is 1.25x; immunity to Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SNOWWARNING",
-        "name": "Snow Warning",
-        "description": "On switch-in, this Pokemon summons Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SOLARPOWER",
-        "name": "Solar Power",
-        "description": "If Sunny Day is active, this Pokemon's Sp. Atk is 1.5x; loses 1/8 max HP per turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SOLIDROCK",
-        "name": "Solid Rock",
-        "description": "This Pokemon receives 3/4 damage from supereffective attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SOULHEART",
-        "name": "Soul-Heart",
-        "description": "This Pokemon's Sp. Atk is raised by 1 stage when another Pokemon faints.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SOUNDPROOF",
-        "name": "Soundproof",
-        "description": "This Pokemon is immune to sound-based moves, including Heal Bell.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SPEEDBOOST",
-        "name": "Speed Boost",
-        "description": "This Pokemon's Speed is raised 1 stage at the end of each full turn on the field.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STAKEOUT",
-        "name": "Stakeout",
-        "description": "This Pokemon's attacking stat is doubled against a target that switched in this turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STALL",
-        "name": "Stall",
-        "description": "This Pokemon moves last among Pokemon using the same or greater priority moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STALWART",
-        "name": "Stalwart",
-        "description": "This Pokemon's moves cannot be redirected to a different target by any effect.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STAMINA",
-        "name": "Stamina",
-        "description": "This Pokemon's Defense is raised by 1 stage after it is damaged by a move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STANCECHANGE",
-        "name": "Stance Change",
-        "description": "If Aegislash, changes Forme to Blade before attacks and Shield before King's Shield.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STATIC",
-        "name": "Static",
-        "description": "30% chance a Pokemon making contact with this Pokemon will be paralyzed.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STEADFAST",
-        "name": "Steadfast",
-        "description": "If this Pokemon flinches, its Speed is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STEAMENGINE",
-        "name": "Steam Engine",
-        "description": "This Pokemon's Speed is raised by 6 stages after it is damaged by Fire/Water moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STEELWORKER",
-        "name": "Steelworker",
-        "description": "This Pokemon's attacking stat is multiplied by 1.5 while using a Steel-type attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STEELYSPIRIT",
-        "name": "Steely Spirit",
-        "description": "This Pokemon and its allies' Steel-type moves have their power multiplied by 1.5.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STENCH",
-        "name": "Stench",
-        "description": "This Pokemon's attacks without a chance to flinch gain a 10% chance to flinch.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STICKYHOLD",
-        "name": "Sticky Hold",
-        "description": "This Pokemon cannot lose its held item due to another Pokemon's attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STORMDRAIN",
-        "name": "Storm Drain",
-        "description": "This Pokemon draws Water moves to itself to raise Sp. Atk by 1; Water immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STRONGJAW",
-        "name": "Strong Jaw",
-        "description": "This Pokemon's bite-based attacks have 1.5x power. Bug Bite is not boosted.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "STURDY",
-        "name": "Sturdy",
-        "description": "If this Pokemon is at full HP, it survives one hit with at least 1 HP. Immune to OHKO.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SUCTIONCUPS",
-        "name": "Suction Cups",
-        "description": "This Pokemon cannot be forced to switch out by another Pokemon's attack or item.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SUPERLUCK",
-        "name": "Super Luck",
-        "description": "This Pokemon's critical hit ratio is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SURGESURFER",
-        "name": "Surge Surfer",
-        "description": "If Electric Terrain is active, this Pokemon's Speed is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SWARM",
-        "name": "Swarm",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Bug attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SWEETVEIL",
-        "name": "Sweet Veil",
-        "description": "This Pokemon and its allies cannot fall asleep.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SWIFTSWIM",
-        "name": "Swift Swim",
-        "description": "If Rain Dance is active, this Pokemon's Speed is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SYMBIOSIS",
-        "name": "Symbiosis",
-        "description": "If an ally uses its item, this Pokemon gives its item to that ally immediately.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SYNCHRONIZE",
-        "name": "Synchronize",
-        "description": "If another Pokemon burns/poisons/paralyzes this Pokemon, it also gets that status.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TANGLEDFEET",
-        "name": "Tangled Feet",
-        "description": "This Pokemon's evasiveness is doubled as long as it is confused.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TANGLINGHAIR",
-        "name": "Tangling Hair",
-        "description": "Pokemon making contact with this Pokemon have their Speed lowered by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TECHNICIAN",
-        "name": "Technician",
-        "description": "This Pokemon's moves of 60 power or less have 1.5x power. Includes Struggle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TELEPATHY",
-        "name": "Telepathy",
-        "description": "This Pokemon does not take damage from attacks made by its allies.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TERAVOLT",
-        "name": "Teravolt",
-        "description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "THICKFAT",
-        "name": "Thick Fat",
-        "description": "Fire/Ice-type moves against this Pokemon deal damage with a halved attacking stat.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TINTEDLENS",
-        "name": "Tinted Lens",
-        "description": "This Pokemon's attacks that are not very effective on a target deal double damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TORRENT",
-        "name": "Torrent",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Water attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TOUGHCLAWS",
-        "name": "Tough Claws",
-        "description": "This Pokemon's contact moves have their power multiplied by 1.3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TOXICBOOST",
-        "name": "Toxic Boost",
-        "description": "While this Pokemon is poisoned, its physical attacks have 1.5x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TRACE",
-        "name": "Trace",
-        "description": "On switch-in, or when it can, this Pokemon copies a random adjacent foe's Ability.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TRANSISTOR",
-        "name": "Transistor",
-        "description": "This Pokemon's attacking stat is multiplied by 1.5 while using an Electric-type attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TRIAGE",
-        "name": "Triage",
-        "description": "This Pokemon's healing moves have their priority increased by 3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TRUANT",
-        "name": "Truant",
-        "description": "This Pokemon skips every other turn instead of using a move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TURBOBLAZE",
-        "name": "Turboblaze",
-        "description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "UNAWARE",
-        "name": "Unaware",
-        "description": "This Pokemon ignores other Pokemon's stat stages when taking or doing damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "UNBURDEN",
-        "name": "Unburden",
-        "description": "Speed is doubled on held item loss; boost is lost if it switches, gets new item/Ability.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "UNNERVE",
-        "name": "Unnerve",
-        "description": "While this Pokemon is active, it prevents opposing Pokemon from using their Berries.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "UNSEENFIST",
-        "name": "Unseen Fist",
-        "description": "All contact moves hit through protection.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "VICTORYSTAR",
-        "name": "Victory Star",
-        "description": "This Pokemon and its allies' moves have their accuracy multiplied by 1.1.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "VITALSPIRIT",
-        "name": "Vital Spirit",
-        "description": "This Pokemon cannot fall asleep. Gaining this Ability while asleep cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "VOLTABSORB",
-        "name": "Volt Absorb",
-        "description": "This Pokemon heals 1/4 of its max HP when hit by Electric moves; Electric immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WANDERINGSPIRIT",
-        "name": "Wandering Spirit",
-        "description": "Pokemon making contact with this Pokemon have their Ability swapped with this one.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WATERABSORB",
-        "name": "Water Absorb",
-        "description": "This Pokemon heals 1/4 of its max HP when hit by Water moves; Water immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WATERBUBBLE",
-        "name": "Water Bubble",
-        "description": "This Pokemon's Water power is 2x; it can't be burned; Fire power against it is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WATERCOMPACTION",
-        "name": "Water Compaction",
-        "description": "This Pokemon's Defense is raised 2 stages after it is damaged by a Water-type move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WATERVEIL",
-        "name": "Water Veil",
-        "description": "This Pokemon cannot be burned. Gaining this Ability while burned cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WEAKARMOR",
-        "name": "Weak Armor",
-        "description": "If a physical attack hits this Pokemon, Defense is lowered by 1, Speed is raised by 2.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WHITESMOKE",
-        "name": "White Smoke",
-        "description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WIMPOUT",
-        "name": "Wimp Out",
-        "description": "This Pokemon switches out when it reaches 1/2 or less of its maximum HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WONDERGUARD",
-        "name": "Wonder Guard",
-        "description": "This Pokemon can only be damaged by supereffective moves and indirect damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WONDERSKIN",
-        "name": "Wonder Skin",
-        "description": "Status moves with accuracy checks are 50% accurate when used on this Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ZENMODE",
-        "name": "Zen Mode",
-        "description": "If Darmanitan, at end of turn changes Mode to Standard if > 1/2 max HP, else Zen.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    }
+	{
+		"id": "ADAPTABILITY",
+		"name": "Adaptability",
+		"description": "This Pokemon's same-type attack bonus (STAB) is 2 instead of 1.5.",
+		"battle": "The pokemon's energies allow the pokemon to grow slightly stronger, allowing them to hit harder. The boost may not be as strong as how it is in main games, but it's decent enough for changing the odds in a battle. Example: An eevee using Swift, it's assumed to be more likely to hit through blocking obstacles, less likely to get thrown away but also bit more hamrful than the usual.",
+		"outside": "It allows the pokemon to use its typings in clever ways, trying to adapt to the situations for problem solving, for example, If this ability is being worn by a fire type, it'd be assumed that its likely to use fire without a move, in order to adapt to the circumstances and do something in specific.",
+		"random_fact": "Moves casted by this ability tend to look slightly more brilliant than the usual due to them being an overload of typing energy."
+	},
+	{
+		"id": "AERILATE",
+		"name": "Aerilate",
+		"description": "This Pokemon's Normal-type moves become Flying type and have 1.2x power.",
+		"battle": "As expected, this ability turns Normal type moves in Flying type, they are stronger that's for sure, but due to the flying waves it keeps sending, they are unable to hit ground types with it.",
+		"outside": "This pokemon is quite able to use its ability to generate wind for its daily activities, such as being able to carry a light object with it, or even blew off someone's card castle.",
+		"random_fact": ""
+	},
+	{
+		"id": "AFTERMATH",
+		"name": "Aftermath",
+		"description": "If this Pokemon is KOed with a contact move, that move's user loses 1/4 its max HP.",
+		"battle": "In battle, as expected, this ability causes collateral damage to the one that defeated him, this only happens if the pokemon was quite close to the individual during it. And this damage may spread to allies if they are in range.",
+		"outside": "Outside of battle, this ability doesn't really have much use, but it's known by many that they are able to resist diseases given to their property of harming entities that kill its cells (In summary, its hp reduction applies in a cell level as well)",
+		"random_fact": "This ability is often skill swapped in hospitals to help fight diseases."
+	},
+	{
+		"id": "AIRLOCK",
+		"name": "Air Lock",
+		"description": "While this Pokemon is active, the effects of weather conditions are disabled.",
+		"battle": "When a battle occurs, the weather can't be used against the pokemon and its allies, it simply right away can't be used, its energies oppose with the move or abilities that cast those.",
+		"outside": "As expected, this ability can always be disabled by the pokemon voluntarily.",
+		"random_fact": "Air lock is quite popular among the people in Estelia, given the fact it was the name of a popular Album during the 80s."
+	},
+	{
+		"id": "ANALYTIC",
+		"name": "Analytic",
+		"description": "This Pokemon's attacks have 1.3x power if it is the last to move in a turn.",
+		"battle": "This ability only benefits if the pokemon doesn't dodge nor evade in the turn, as stated it has to be the last to move in a turn, which means that after taking a hit, it analyzes its advantage with the pokemon and attacks such weak spot during the turn, which allows the character to hit harder.",
+		"outside": "The perception is very high, being more likely to detect details in the overworld and allows to have a high precision in writing.",
+		"random_fact": "Having this ability is usually a safe way to get hired for any judge-related job."
+	},
+	{
+		"id": "ANGERPOINT",
+		"name": "Anger Point",
+		"description": "If this Pokemon (not its substitute) takes a critical hit, its Attack is raised to 10+ stages.",
+		"battle": "When someone hits the Pokemon by taking advantage of its weak spots, it gets upset, adrenaline makes the pokemon get angered which causes it to attack twice as strong.",
+		"outside": "This ability doesn't necessarily trigger by being hit with a critical hit, sometimes it can trigger if the character is feeling way angry and frustrated, making it be twice as strong, allowing them to break a rock or something.",
+		"random_fact": "Anger isn't healthy, if used frequently the character may have to go to the hospital."
+	},
+	{
+		"id": "ANTICIPATION",
+		"name": "Anticipation",
+		"description": "On switch-in, this Pokemon shudders if any foe has a supereffective or OHKO move.",
+		"battle": "When a battle starts, the pokemon is able to tell when a move its harmful for them, this is very useful before starting the battle, because that way your character can know if it's worth battling or escaping.",
+		"outside": "This anticipation also works like a sense of doing the right thing to do for them, plus it really helps them to notice whoever is looking at them or listening their conversation.",
+		"random_fact": "Guaranteed job as guard or police, being able to spot things wrong is a very useful skill in jobs, even more in political related ones."
+	},
+	{
+		"id": "ARENATRAP",
+		"name": "Arena Trap",
+		"description": "Prevents adjacent foes from choosing to switch unless they are airborne.",
+		"battle": "A circle with 30ft of diameter around the pokemon cause anyone that go near to struggle for escaping, it will most likely have a hard time to escape or approach if they just wanna mindlessly attack ",
+		"outside": "Well, the pokemon is pretty much able to control the area on the ground as long as there's sand. It can use it to even make temporary forts, or even making a hammer out of sand to hit someone that is way way too close.",
+		"random_fact": ""
+	},
+	{
+		"id": "AROMAVEIL",
+		"name": "Aroma Veil",
+		"description": "Protects user/allies from Attract, Disable, Encore, Heal Block, Taunt, and Torment.",
+		"battle": "A support role takes place in battle, any abilities or special abilities that work in a similar way to the moves stated above, will simply not work as the pokemon is determined.",
+		"outside": "The pokemon can use this ability to help others feel better and even prevent disturbs",
+		"random_fact": "Most Police teams tend to have at least one of them to prevent effects on them."
+	},
+	{
+		"id": "AURABREAK",
+		"name": "Aura Break",
+		"description": "While this Pokemon is active, the Dark Aura and Fairy Aura power modifier is 0.75x.",
+		"battle": "This ability tends to decrease the harm of aura oriented energies, it affects the moves as stated.",
+		"outside": "It's known that this affects Lucarios and Riolus, making them unable to read energies or have aura usage.",
+		"random_fact": "It's not noticieable for the pokemon when this ability is used, which can give the impression of something going wrong."
+	},
+	{
+		"id": "BADDREAMS",
+		"name": "Bad Dreams",
+		"description": "Causes sleeping adjacent foes to lose 1/8 of their max HP at the end of each turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "BALLFETCH",
+		"name": "Ball Fetch",
+		"description": "The pokemon can return a thrown pokeball if it failed.",
+		"battle": "This ability in battle works as Counter to moves that are affected by Bulletproof, the pokemon after getting hit by the damaging attack, it can keep holding the move's energy in its mouth and then throw it back. Not guaranteed to hit.",
+		"outside": "The pokemon is more eager to use its mouth to hold things firmly, even if it's a cold or hot item.",
+		"random_fact": "Yes-- People with the ability are known for being great at ball related sports."
+	},
+	{
+		"id": "BATTERY",
+		"name": "Battery",
+		"description": "This Pokemon's allies have the power of their special attacks multiplied by 1.3.",
+		"battle": "As stated, it is a living battery, its energy is used to fill the typing of people, which increases their attack",
+		"outside": "Increasing people's typing energy can help for non battling purposes as well.",
+		"random_fact": "It's known for also helping with Magic, like any energy typing increase."
+	},
+	{
+		"id": "BATTLEARMOR",
+		"name": "Battle Armor",
+		"description": "This Pokemon cannot be struck by a critical hit.",
+		"battle": "There's literally no way to find weak spots in this pokemon, if you're gonna try to hit them point blank, they'll always be able to try to reduce the impact or protect themselves in a way it makes less damage.",
+		"outside": "This boosts their perception, so when they are gonna get hit by something as result of their clumsyness, the ability triggers and moves their body in such the damage is decreased.",
+		"random_fact": "Not much to add here other than the cliche of people referring to it as plot armor"
+	},
+	{
+		"id": "BEASTBOOST",
+		"name": "Beast Boost",
+		"description": "This Pokemon's highest stat is raised by 1 if it attacks and KOes another Pokemon.",
+		"battle": "As soon as they defeat someone, a monster or a npc, they get stronger.",
+		"outside": "It allows to safely breathe in the ultra worm holes and be able to move within them.",
+		"random_fact": "All UltraBeast have this ability and only have this one."
+	},
+	{
+		"id": "BERSERK",
+		"name": "Berserk",
+		"description": "This Pokemon's Sp. Atk is raised by 1 when it reaches 1/2 or less of its max HP.",
+		"battle": "When the pokemon have received hits for a while, its heart proceeds to accelerate, giving an increse of a 25%.",
+		"outside": "It can also trigger when frustrated or angry",
+		"random_fact": "Repeated use of this ability may require a visit to the hospital."
+	},
+	{
+		"id": "BIGPECKS",
+		"name": "Big Pecks",
+		"description": "Prevents other Pokemon from lowering this Pokemon's Defense stat stage.",
+		"battle": "They rely on their own body rather than the typing energy, which makes defense drops useless.",
+		"outside": "Strength, not much else to say.",
+		"random_fact": "It's a good ability to have in physicial oriented jobs"
+	},
+	{
+		"id": "BLAZE",
+		"name": "Blaze",
+		"description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Fire attacks.",
+		"battle": "Heart is beating, tries to accelerate given the circumstances and the Fire is increased",
+		"outside": "When feeling depressed or sad, fire may lower, and if feeling too angry, it can be activated",
+		"random_fact": "Activating it often, may require a visit to the hospital"
+	},
+	{
+		"id": "BULLETPROOF",
+		"name": "Bulletproof",
+		"description": "Makes user immune to ballistic moves (Shadow Ball, Sludge Bomb, Focus Blast, etc).",
+		"battle": "The skin of the character protects the pokemon very well, making them not get hurt and continue using that turn in advantage",
+		"outside": "It can protect with thrown projectiles.",
+		"random_fact": "Police tends to have at least one of them in their teams."
+	},
+	{
+		"id": "CHEEKPOUCH",
+		"name": "Cheek Pouch",
+		"description": "If this Pokemon eats a Berry, it restores 1/3 of its max HP after the Berry's effect.",
+		"battle": "Berries will always heal the pokemon, regardless of the Berry's effect, however it takes them a while to eat due to the way they eat (wait 1 turn)",
+		"outside": "It allows the pokemon to easily store berries in its cheeks",
+		"random_fact": "Not much to add here aside of having big cheeks."
+	},
+	{
+		"id": "CHILLINGNEIGH",
+		"name": "Chilling Neigh",
+		"description": "This Pokemon's Attack is raised by 1 stage if it attacks and KOes another Pokemon.",
+		"battle": "As soon as they defeat someone, a monster or a npc, they get stronger.",
+		"outside": "Getting angry or too emotive can trigger the ability",
+		"random_fact": ""
+	},
+	{
+		"id": "CHLOROPHYLL",
+		"name": "Chlorophyll",
+		"description": "If Sunny Day is active, this Pokemon's Speed is doubled.",
+		"battle": "This speed allows the pokemon to be able to react to the things that are being used against them more easily.",
+		"outside": "Speed affects travel, and can trigger if there's harsh sunlight.",
+		"random_fact": "It's way too popular for most NPCs"
+	},
+	{
+		"id": "CLEARBODY",
+		"name": "Clear Body",
+		"description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
+		"battle": "The pokemon's body works fully by itself, being unreliant in Type energies, making decreases impossible to happen",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CLOUDNINE",
+		"name": "Cloud Nine",
+		"description": "While this Pokemon is active, the effects of weather conditions are disabled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COLORCHANGE",
+		"name": "Color Change",
+		"description": "This Pokemon's type changes to the type of a move it's hit by, unless it has the type.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COMATOSE",
+		"name": "Comatose",
+		"description": "This Pokemon cannot be statused, and is considered to be asleep.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COMPETITIVE",
+		"name": "Competitive",
+		"description": "This Pokemon's Sp. Atk is raised by 2 for each of its stats that is lowered by a foe.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COMPOUNDEYES",
+		"name": "Compound Eyes",
+		"description": "This Pokemon's moves have their accuracy multiplied by 1.3.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CONTRARY",
+		"name": "Contrary",
+		"description": "If this Pokemon has a stat stage raised it is lowered instead, and vice versa.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CORROSION",
+		"name": "Corrosion",
+		"description": "This Pokemon can poison or badly poison other Pokemon regardless of their typing.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COTTONDOWN",
+		"name": "Cotton Down",
+		"description": "If this Pokemon is hit, it lowers the Speed of all other Pokemon on the field 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CURIOUSMEDICINE",
+		"name": "Curious Medicine",
+		"description": "On switch-in, this Pokemon's allies have their stat stages reset to 0.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CURSEDBODY",
+		"name": "Cursed Body",
+		"description": "If this Pokemon is hit by an attack, there is a 30% chance that move gets disabled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CUTECHARM",
+		"name": "Cute Charm",
+		"description": "30% chance of infatuating Pokemon of the opposite gender if they make contact.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DAMP",
+		"name": "Damp",
+		"description": "Prevents Explosion/Mind Blown/Misty Explosion/Self-Destruct/Aftermath while active.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DANCER",
+		"name": "Dancer",
+		"description": "After another Pokemon uses a dance move, this Pokemon uses the same move.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DARKAURA",
+		"name": "Dark Aura",
+		"description": "While this Pokemon is active, a Dark move used by any Pokemon has 1.33x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DAUNTLESSSHIELD",
+		"name": "Dauntless Shield",
+		"description": "On switch-in, this Pokemon's Defense is raised by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DAZZLING",
+		"name": "Dazzling",
+		"description": "While this Pokemon is active, allies are protected from opposing priority moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DEFEATIST",
+		"name": "Defeatist",
+		"description": "While this Pokemon has 1/2 or less of its max HP, its Attack and Sp. Atk are halved.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DEFIANT",
+		"name": "Defiant",
+		"description": "This Pokemon's Attack is raised by 2 for each of its stats that is lowered by a foe.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DELTASTREAM",
+		"name": "Delta Stream",
+		"description": "On switch-in, strong winds begin until this Ability is not active in battle.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DESOLATELAND",
+		"name": "Desolate Land",
+		"description": "On switch-in, extremely harsh sunlight begins until this Ability is not active in battle.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DISGUISE",
+		"name": "Disguise",
+		"description": "(Mimikyu only) The first hit it takes is blocked, and it takes 1/8 HP damage instead.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DOWNLOAD",
+		"name": "Download",
+		"description": "On switch-in, Attack or Sp. Atk is raised 1 stage based on the foes' weaker Defense.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DRAGONSMAW",
+		"name": "Dragon's Maw",
+		"description": "This Pokemon's attacking stat is multiplied by 1.5 while using a Dragon-type attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DRIZZLE",
+		"name": "Drizzle",
+		"description": "On switch-in, this Pokemon summons Rain Dance.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DROUGHT",
+		"name": "Drought",
+		"description": "On switch-in, this Pokemon summons Sunny Day.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "DRYSKIN",
+		"name": "Dry Skin",
+		"description": "This Pokemon is healed 1/4 by Water, 1/8 by Rain; is hurt 1.25x by Fire, 1/8 by Sun.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "EARLYBIRD",
+		"name": "Early Bird",
+		"description": "This Pokemon's sleep counter drops by 2 instead of 1.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "EFFECTSPORE",
+		"name": "Effect Spore",
+		"description": "30% chance of poison/paralysis/sleep on others making contact with this Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ELECTRICSURGE",
+		"name": "Electric Surge",
+		"description": "On switch-in, this Pokemon summons Electric Terrain.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "EMERGENCYEXIT",
+		"name": "Emergency Exit",
+		"description": "This Pokemon switches out when it reaches 1/2 or less of its maximum HP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FAIRYAURA",
+		"name": "Fairy Aura",
+		"description": "While this Pokemon is active, a Fairy move used by any Pokemon has 1.33x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FILTER",
+		"name": "Filter",
+		"description": "This Pokemon receives 3/4 damage from supereffective attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FLAMEBODY",
+		"name": "Flame Body",
+		"description": "30% chance a Pokemon making contact with this Pokemon will be burned.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FLAREBOOST",
+		"name": "Flare Boost",
+		"description": "While this Pokemon is burned, its special attacks have 1.5x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FLASHFIRE",
+		"name": "Flash Fire",
+		"description": "This Pokemon's Fire attacks do 1.5x damage if hit by one Fire move; Fire immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FLOWERGIFT",
+		"name": "Flower Gift",
+		"description": "If user is Cherrim and Sunny Day is active, it and allies' Attack and Sp. Def are 1.5x.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FLOWERVEIL",
+		"name": "Flower Veil",
+		"description": "This side's Grass types can't have stats lowered or status inflicted by other Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FLUFFY",
+		"name": "Fluffy",
+		"description": "This Pokemon takes 1/2 damage from contact moves, 2x damage from Fire moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FORECAST",
+		"name": "Forecast",
+		"description": "Castform's type changes to the current weather condition's type, except Sandstorm.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FOREWARN",
+		"name": "Forewarn",
+		"description": "On switch-in, this Pokemon is alerted to the foes' move with the highest power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FRIENDGUARD",
+		"name": "Friend Guard",
+		"description": "This Pokemon's allies receive 3/4 damage from other Pokemon's attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FRISK",
+		"name": "Frisk",
+		"description": "On switch-in, this Pokemon identifies the held items of all opposing Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FULLMETALBODY",
+		"name": "Full Metal Body",
+		"description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "FURCOAT",
+		"name": "Fur Coat",
+		"description": "This Pokemon's Defense is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GALEWINGS",
+		"name": "Gale Wings",
+		"description": "If this Pokemon is at full HP, its Flying-type moves have their priority increased by 1.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GALVANIZE",
+		"name": "Galvanize",
+		"description": "This Pokemon's Normal-type moves become Electric type and have 1.2x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GLUTTONY",
+		"name": "Gluttony",
+		"description": "When this Pokemon has 1/2 or less of its maximum HP, it uses certain Berries early.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GOOEY",
+		"name": "Gooey",
+		"description": "Pokemon making contact with this Pokemon have their Speed lowered by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GORILLATACTICS",
+		"name": "Gorilla Tactics",
+		"description": "This Pokemon's Attack is 1.5x, but it can only select the first move it executes.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GRASSPELT",
+		"name": "Grass Pelt",
+		"description": "If Grassy Terrain is active, this Pokemon's Defense is multiplied by 1.5.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GRASSYSURGE",
+		"name": "Grassy Surge",
+		"description": "On switch-in, this Pokemon summons Grassy Terrain.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GRIMNEIGH",
+		"name": "Grim Neigh",
+		"description": "This Pokemon's Sp. Atk is raised by 1 stage if it attacks and KOes another Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GULPMISSILE",
+		"name": "Gulp Missile",
+		"description": "When hit after Surf/Dive, attacker takes 1/4 max HP and -1 Defense or paralysis.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GUTS",
+		"name": "Guts",
+		"description": "If this Pokemon is statused, its Attack is 1.5x; ignores burn halving physical damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HARVEST",
+		"name": "Harvest",
+		"description": "If last item used is a Berry, 50% chance to restore it each end of turn. 100% in Sun.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HEALER",
+		"name": "Healer",
+		"description": "30% chance of curing an adjacent ally's status at the end of each turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HEATPROOF",
+		"name": "Heatproof",
+		"description": "The power of Fire-type attacks against this Pokemon is halved; burn damage halved.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HEAVYMETAL",
+		"name": "Heavy Metal",
+		"description": "This Pokemon's weight is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HONEYGATHER",
+		"name": "Honey Gather",
+		"description": "No competitive use.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HUGEPOWER",
+		"name": "Huge Power",
+		"description": "This Pokemon's Attack is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HUNGERSWITCH",
+		"name": "Hunger Switch",
+		"description": "If Morpeko, it changes between Full Belly and Hangry Mode at the end of each turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HUSTLE",
+		"name": "Hustle",
+		"description": "This Pokemon's Attack is 1.5x and accuracy of its physical attacks is 0.8x.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HYDRATION",
+		"name": "Hydration",
+		"description": "This Pokemon has its status cured at the end of each turn if Rain Dance is active.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HYPERCUTTER",
+		"name": "Hyper Cutter",
+		"description": "Prevents other Pokemon from lowering this Pokemon's Attack stat stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ICEBODY",
+		"name": "Ice Body",
+		"description": "If Hail is active, this Pokemon heals 1/16 of its max HP each turn; immunity to Hail.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ICEFACE",
+		"name": "Ice Face",
+		"description": "If Eiscue, the first physical hit it takes deals 0 damage. This effect is restored in Hail.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ICESCALES",
+		"name": "Ice Scales",
+		"description": "This Pokemon receives 1/2 damage from special attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ILLUMINATE",
+		"name": "Illuminate",
+		"description": "No competitive use.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ILLUSION",
+		"name": "Illusion",
+		"description": "This Pokemon appears as the last Pokemon in the party until it takes direct damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "IMMUNITY",
+		"name": "Immunity",
+		"description": "This Pokemon cannot be poisoned. Gaining this Ability while poisoned cures it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "IMPOSTER",
+		"name": "Imposter",
+		"description": "On switch-in, this Pokemon Transforms into the opposing Pokemon that is facing it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "INFILTRATOR",
+		"name": "Infiltrator",
+		"description": "Moves ignore substitutes and foe's Reflect/Light Screen/Safeguard/Mist/Aurora Veil.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "INNARDSOUT",
+		"name": "Innards Out",
+		"description": "If this Pokemon is KOed with a move, that move's user loses an equal amount of HP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "INNERFOCUS",
+		"name": "Inner Focus",
+		"description": "This Pokemon cannot be made to flinch. Immune to Intimidate.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "INSOMNIA",
+		"name": "Insomnia",
+		"description": "This Pokemon cannot fall asleep. Gaining this Ability while asleep cures it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "INTIMIDATE",
+		"name": "Intimidate",
+		"description": "On switch-in, this Pokemon lowers the Attack of adjacent opponents by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "INTREPIDSWORD",
+		"name": "Intrepid Sword",
+		"description": "On switch-in, this Pokemon's Attack is raised by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "IRONBARBS",
+		"name": "Iron Barbs",
+		"description": "Pokemon making contact with this Pokemon lose 1/8 of their max HP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "IRONFIST",
+		"name": "Iron Fist",
+		"description": "This Pokemon's punch-based attacks have 1.2x power. Sucker Punch is not boosted.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "JUSTIFIED",
+		"name": "Justified",
+		"description": "This Pokemon's Attack is raised by 1 stage after it is damaged by a Dark-type move.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "KEENEYE",
+		"name": "Keen Eye",
+		"description": "This Pokemon's accuracy can't be lowered by others; ignores their evasiveness stat.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "KLUTZ",
+		"name": "Klutz",
+		"description": "This Pokemon's held item has no effect, except Macho Brace. Fling cannot be used.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LEAFGUARD",
+		"name": "Leaf Guard",
+		"description": "If Sunny Day is active, this Pokemon cannot be statused and Rest will fail for it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LEVITATE",
+		"name": "Levitate",
+		"description": "This Pokemon is immune to Ground; Gravity/Ingrain/Smack Down/Iron Ball nullify it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LIBERO",
+		"name": "Libero",
+		"description": "This Pokemon's type changes to match the type of the move it is about to use.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LIGHTMETAL",
+		"name": "Light Metal",
+		"description": "This Pokemon's weight is halved.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LIGHTNINGROD",
+		"name": "Lightning Rod",
+		"description": "This Pokemon draws Electric moves to itself to raise Sp. Atk by 1; Electric immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LIMBER",
+		"name": "Limber",
+		"description": "This Pokemon cannot be paralyzed. Gaining this Ability while paralyzed cures it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LIQUIDOOZE",
+		"name": "Liquid Ooze",
+		"description": "This Pokemon damages those draining HP from it for as much as they would heal.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LIQUIDVOICE",
+		"name": "Liquid Voice",
+		"description": "This Pokemon's sound-based moves become Water type.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LONGREACH",
+		"name": "Long Reach",
+		"description": "This Pokemon's attacks do not make contact with the target.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MAGICBOUNCE",
+		"name": "Magic Bounce",
+		"description": "This Pokemon blocks certain status moves and bounces them back to the user.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MAGICGUARD",
+		"name": "Magic Guard",
+		"description": "This Pokemon can only be damaged by direct attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MAGICIAN",
+		"name": "Magician",
+		"description": "If this Pokemon has no item, it steals the item off a Pokemon it hits with an attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MAGMAARMOR",
+		"name": "Magma Armor",
+		"description": "This Pokemon cannot be frozen. Gaining this Ability while frozen cures it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MAGNETPULL",
+		"name": "Magnet Pull",
+		"description": "Prevents adjacent Steel-type foes from choosing to switch.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MARVELSCALE",
+		"name": "Marvel Scale",
+		"description": "If this Pokemon is statused, its Defense is 1.5x.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MEGALAUNCHER",
+		"name": "Mega Launcher",
+		"description": "This Pokemon's pulse moves have 1.5x power. Heal Pulse heals 3/4 target's max HP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MERCILESS",
+		"name": "Merciless",
+		"description": "This Pokemon's attacks are critical hits if the target is poisoned.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MIMICRY",
+		"name": "Mimicry",
+		"description": "This Pokemon's type changes to match the Terrain. Type reverts when Terrain ends.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MINUS",
+		"name": "Minus",
+		"description": "If an active ally has this Ability or the Plus Ability, this Pokemon's Sp. Atk is 1.5x.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MIRRORARMOR",
+		"name": "Mirror Armor",
+		"description": "If this Pokemon's stat stages would be lowered, the attacker's are lowered instead.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MISTYSURGE",
+		"name": "Misty Surge",
+		"description": "On switch-in, this Pokemon summons Misty Terrain.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MOLDBREAKER",
+		"name": "Mold Breaker",
+		"description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MOODY",
+		"name": "Moody",
+		"description": "Boosts a random stat (except accuracy/evasion) +2 and another stat -1 every turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MOTORDRIVE",
+		"name": "Motor Drive",
+		"description": "This Pokemon's Speed is raised 1 stage if hit by an Electric move; Electric immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MOXIE",
+		"name": "Moxie",
+		"description": "This Pokemon's Attack is raised by 1 stage if it attacks and KOes another Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MULTISCALE",
+		"name": "Multiscale",
+		"description": "If this Pokemon is at full HP, damage taken from attacks is halved.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MULTITYPE",
+		"name": "Multitype",
+		"description": "If this Pokemon is an Arceus, its type changes to match its held Plate or Z-Crystal.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MUMMY",
+		"name": "Mummy",
+		"description": "Pokemon making contact with this Pokemon have their Ability changed to Mummy.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "NATURALCURE",
+		"name": "Natural Cure",
+		"description": "This Pokemon has its non-volatile status condition cured when it switches out.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "NEUROFORCE",
+		"name": "Neuroforce",
+		"description": "This Pokemon's attacks that are super effective against the target do 1.25x damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "NEUTRALIZINGGAS",
+		"name": "Neutralizing Gas",
+		"description": "While this Pokemon is active, Abilities have no effect.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "NOGUARD",
+		"name": "No Guard",
+		"description": "Every move used by or against this Pokemon will always hit.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "NORMALIZE",
+		"name": "Normalize",
+		"description": "This Pokemon's moves are changed to be Normal type and have 1.2x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "OBLIVIOUS",
+		"name": "Oblivious",
+		"description": "This Pokemon cannot be infatuated or taunted. Immune to Intimidate.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "OVERCOAT",
+		"name": "Overcoat",
+		"description": "This Pokemon is immune to powder moves and damage from Sandstorm or Hail.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "OVERGROW",
+		"name": "Overgrow",
+		"description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Grass attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "OWNTEMPO",
+		"name": "Own Tempo",
+		"description": "This Pokemon cannot be confused. Immune to Intimidate.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PARENTALBOND",
+		"name": "Parental Bond",
+		"description": "This Pokemon's damaging moves hit twice. The second hit has its damage quartered.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PASTELVEIL",
+		"name": "Pastel Veil",
+		"description": "This Pokemon and its allies cannot be poisoned. On switch-in, cures poisoned allies.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PERISHBODY",
+		"name": "Perish Body",
+		"description": "Making contact with this Pokemon starts the Perish Song effect for it and the attacker.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PICKPOCKET",
+		"name": "Pickpocket",
+		"description": "If this Pokemon has no item and is hit by a contact move, it steals the attacker's item.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PICKUP",
+		"name": "Pickup",
+		"description": "If this Pokemon has no item, it finds one used by an adjacent Pokemon this turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PIXILATE",
+		"name": "Pixilate",
+		"description": "This Pokemon's Normal-type moves become Fairy type and have 1.2x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PLUS",
+		"name": "Plus",
+		"description": "If an active ally has this Ability or the Minus Ability, this Pokemon's Sp. Atk is 1.5x.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "POISONHEAL",
+		"name": "Poison Heal",
+		"description": "This Pokemon is healed by 1/8 of its max HP each turn when poisoned; no HP loss.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "POISONPOINT",
+		"name": "Poison Point",
+		"description": "30% chance a Pokemon making contact with this Pokemon will be poisoned.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "POISONTOUCH",
+		"name": "Poison Touch",
+		"description": "This Pokemon's contact moves have a 30% chance of poisoning.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "POWERCONSTRUCT",
+		"name": "Power Construct",
+		"description": "If Zygarde 10%/50%, changes to Complete if at 1/2 max HP or less at end of turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "POWEROFALCHEMY",
+		"name": "Power of Alchemy",
+		"description": "This Pokemon copies the Ability of an ally that faints.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "POWERSPOT",
+		"name": "Power Spot",
+		"description": "This Pokemon's allies have the power of their moves multiplied by 1.3.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PRANKSTER",
+		"name": "Prankster",
+		"description": "This Pokemon's Status moves have priority raised by 1, but Dark types are immune.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PRESSURE",
+		"name": "Pressure",
+		"description": "If this Pokemon is the target of a foe's move, that move loses one additional PP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PRIMORDIALSEA",
+		"name": "Primordial Sea",
+		"description": "On switch-in, heavy rain begins until this Ability is not active in battle.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PRISMARMOR",
+		"name": "Prism Armor",
+		"description": "This Pokemon receives 3/4 damage from supereffective attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PROPELLERTAIL",
+		"name": "Propeller Tail",
+		"description": "This Pokemon's moves cannot be redirected to a different target by any effect.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PROTEAN",
+		"name": "Protean",
+		"description": "This Pokemon's type changes to match the type of the move it is about to use.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PSYCHICSURGE",
+		"name": "Psychic Surge",
+		"description": "On switch-in, this Pokemon summons Psychic Terrain.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PUNKROCK",
+		"name": "Punk Rock",
+		"description": "This Pokemon receives 1/2 damage from sound moves. Its own have 1.3x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PUREPOWER",
+		"name": "Pure Power",
+		"description": "This Pokemon's Attack is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "QUEENLYMAJESTY",
+		"name": "Queenly Majesty",
+		"description": "While this Pokemon is active, allies are protected from opposing priority moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "QUICKDRAW",
+		"name": "Quick Draw",
+		"description": "This Pokemon has a 30% chance to move first in its priority bracket with attacking moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "QUICKFEET",
+		"name": "Quick Feet",
+		"description": "If this Pokemon is statused, its Speed is 1.5x; ignores Speed drop from paralysis.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RAINDISH",
+		"name": "Rain Dish",
+		"description": "If Rain Dance is active, this Pokemon heals 1/16 of its max HP each turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RATTLED",
+		"name": "Rattled",
+		"description": "Speed is raised 1 stage if hit by a Bug-, Dark-, or Ghost-type attack, or Intimidated.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RECEIVER",
+		"name": "Receiver",
+		"description": "This Pokemon copies the Ability of an ally that faints.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RECKLESS",
+		"name": "Reckless",
+		"description": "This Pokemon's attacks with recoil or crash damage have 1.2x power; not Struggle.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "REFRIGERATE",
+		"name": "Refrigerate",
+		"description": "This Pokemon's Normal-type moves become Ice type and have 1.2x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "REGENERATOR",
+		"name": "Regenerator",
+		"description": "This Pokemon restores 1/3 of its maximum HP, rounded down, when it switches out.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RIPEN",
+		"name": "Ripen",
+		"description": "When this Pokemon eats a Berry, its effect is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RIVALRY",
+		"name": "Rivalry",
+		"description": "This Pokemon's attacks do 1.25x on same gender targets; 0.75x on opposite gender.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RKSSYSTEM",
+		"name": "RKS System",
+		"description": "If this Pokemon is a Silvally, its type changes to match its held Memory.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ROCKHEAD",
+		"name": "Rock Head",
+		"description": "This Pokemon does not take recoil damage besides Struggle/Life Orb/crash damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ROUGHSKIN",
+		"name": "Rough Skin",
+		"description": "Pokemon making contact with this Pokemon lose 1/8 of their max HP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "RUNAWAY",
+		"name": "Run Away",
+		"description": "No competitive use.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SANDFORCE",
+		"name": "Sand Force",
+		"description": "This Pokemon's Ground/Rock/Steel attacks do 1.3x in Sandstorm; immunity to it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SANDRUSH",
+		"name": "Sand Rush",
+		"description": "If Sandstorm is active, this Pokemon's Speed is doubled; immunity to Sandstorm.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SANDSPIT",
+		"name": "Sand Spit",
+		"description": "When this Pokemon is hit, Sandstorm begins.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SANDSTREAM",
+		"name": "Sand Stream",
+		"description": "On switch-in, this Pokemon summons Sandstorm.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SANDVEIL",
+		"name": "Sand Veil",
+		"description": "If Sandstorm is active, this Pokemon's evasiveness is 1.25x; immunity to Sandstorm.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SAPSIPPER",
+		"name": "Sap Sipper",
+		"description": "This Pokemon's Attack is raised 1 stage if hit by a Grass move; Grass immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SCHOOLING",
+		"name": "Schooling",
+		"description": "If user is Wishiwashi, changes to School Form if it has > 1/4 max HP, else Solo Form.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SCRAPPY",
+		"name": "Scrappy",
+		"description": "Fighting, Normal moves hit Ghost. Immune to Intimidate.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SCREENCLEANER",
+		"name": "Screen Cleaner",
+		"description": "On switch-in, the effects of Aurora Veil, Light Screen, and Reflect end for both sides.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SERENEGRACE",
+		"name": "Serene Grace",
+		"description": "This Pokemon's moves have their secondary effect chance doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHADOWSHIELD",
+		"name": "Shadow Shield",
+		"description": "If this Pokemon is at full HP, damage taken from attacks is halved.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHADOWTAG",
+		"name": "Shadow Tag",
+		"description": "Prevents adjacent foes from choosing to switch unless they also have this Ability.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHEDSKIN",
+		"name": "Shed Skin",
+		"description": "This Pokemon has a 33% chance to have its status cured at the end of each turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHEERFORCE",
+		"name": "Sheer Force",
+		"description": "This Pokemon's attacks with secondary effects have 1.3x power; nullifies the effects.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHELLARMOR",
+		"name": "Shell Armor",
+		"description": "This Pokemon cannot be struck by a critical hit.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHIELDDUST",
+		"name": "Shield Dust",
+		"description": "This Pokemon is not affected by the secondary effect of another Pokemon's attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHIELDSDOWN",
+		"name": "Shields Down",
+		"description": "If Minior, switch-in/end of turn it changes to Core at 1/2 max HP or less, else Meteor.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SIMPLE",
+		"name": "Simple",
+		"description": "When this Pokemon's stat stages are raised or lowered, the effect is doubled instead.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SKILLLINK",
+		"name": "Skill Link",
+		"description": "This Pokemon's multi-hit attacks always hit the maximum number of times.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SLOWSTART",
+		"name": "Slow Start",
+		"description": "On switch-in, this Pokemon's Attack and Speed are halved for 5 turns.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SLUSHRUSH",
+		"name": "Slush Rush",
+		"description": "If Hail is active, this Pokemon's Speed is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SNIPER",
+		"name": "Sniper",
+		"description": "If this Pokemon strikes with a critical hit, the damage is multiplied by 1.5.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SNOWCLOAK",
+		"name": "Snow Cloak",
+		"description": "If Hail is active, this Pokemon's evasiveness is 1.25x; immunity to Hail.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SNOWWARNING",
+		"name": "Snow Warning",
+		"description": "On switch-in, this Pokemon summons Hail.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SOLARPOWER",
+		"name": "Solar Power",
+		"description": "If Sunny Day is active, this Pokemon's Sp. Atk is 1.5x; loses 1/8 max HP per turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SOLIDROCK",
+		"name": "Solid Rock",
+		"description": "This Pokemon receives 3/4 damage from supereffective attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SOULHEART",
+		"name": "Soul-Heart",
+		"description": "This Pokemon's Sp. Atk is raised by 1 stage when another Pokemon faints.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SOUNDPROOF",
+		"name": "Soundproof",
+		"description": "This Pokemon is immune to sound-based moves, including Heal Bell.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SPEEDBOOST",
+		"name": "Speed Boost",
+		"description": "This Pokemon's Speed is raised 1 stage at the end of each full turn on the field.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STAKEOUT",
+		"name": "Stakeout",
+		"description": "This Pokemon's attacking stat is doubled against a target that switched in this turn.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STALL",
+		"name": "Stall",
+		"description": "This Pokemon moves last among Pokemon using the same or greater priority moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STALWART",
+		"name": "Stalwart",
+		"description": "This Pokemon's moves cannot be redirected to a different target by any effect.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STAMINA",
+		"name": "Stamina",
+		"description": "This Pokemon's Defense is raised by 1 stage after it is damaged by a move.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STANCECHANGE",
+		"name": "Stance Change",
+		"description": "If Aegislash, changes Forme to Blade before attacks and Shield before King's Shield.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STATIC",
+		"name": "Static",
+		"description": "30% chance a Pokemon making contact with this Pokemon will be paralyzed.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STEADFAST",
+		"name": "Steadfast",
+		"description": "If this Pokemon flinches, its Speed is raised by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STEAMENGINE",
+		"name": "Steam Engine",
+		"description": "This Pokemon's Speed is raised by 6 stages after it is damaged by Fire/Water moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STEELWORKER",
+		"name": "Steelworker",
+		"description": "This Pokemon's attacking stat is multiplied by 1.5 while using a Steel-type attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STEELYSPIRIT",
+		"name": "Steely Spirit",
+		"description": "This Pokemon and its allies' Steel-type moves have their power multiplied by 1.5.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STENCH",
+		"name": "Stench",
+		"description": "This Pokemon's attacks without a chance to flinch gain a 10% chance to flinch.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STICKYHOLD",
+		"name": "Sticky Hold",
+		"description": "This Pokemon cannot lose its held item due to another Pokemon's attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STORMDRAIN",
+		"name": "Storm Drain",
+		"description": "This Pokemon draws Water moves to itself to raise Sp. Atk by 1; Water immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STRONGJAW",
+		"name": "Strong Jaw",
+		"description": "This Pokemon's bite-based attacks have 1.5x power. Bug Bite is not boosted.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "STURDY",
+		"name": "Sturdy",
+		"description": "If this Pokemon is at full HP, it survives one hit with at least 1 HP. Immune to OHKO.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SUCTIONCUPS",
+		"name": "Suction Cups",
+		"description": "This Pokemon cannot be forced to switch out by another Pokemon's attack or item.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SUPERLUCK",
+		"name": "Super Luck",
+		"description": "This Pokemon's critical hit ratio is raised by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SURGESURFER",
+		"name": "Surge Surfer",
+		"description": "If Electric Terrain is active, this Pokemon's Speed is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SWARM",
+		"name": "Swarm",
+		"description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Bug attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SWEETVEIL",
+		"name": "Sweet Veil",
+		"description": "This Pokemon and its allies cannot fall asleep.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SWIFTSWIM",
+		"name": "Swift Swim",
+		"description": "If Rain Dance is active, this Pokemon's Speed is doubled.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SYMBIOSIS",
+		"name": "Symbiosis",
+		"description": "If an ally uses its item, this Pokemon gives its item to that ally immediately.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SYNCHRONIZE",
+		"name": "Synchronize",
+		"description": "If another Pokemon burns/poisons/paralyzes this Pokemon, it also gets that status.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TANGLEDFEET",
+		"name": "Tangled Feet",
+		"description": "This Pokemon's evasiveness is doubled as long as it is confused.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TANGLINGHAIR",
+		"name": "Tangling Hair",
+		"description": "Pokemon making contact with this Pokemon have their Speed lowered by 1 stage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TECHNICIAN",
+		"name": "Technician",
+		"description": "This Pokemon's moves of 60 power or less have 1.5x power. Includes Struggle.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TELEPATHY",
+		"name": "Telepathy",
+		"description": "This Pokemon does not take damage from attacks made by its allies.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TERAVOLT",
+		"name": "Teravolt",
+		"description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "THICKFAT",
+		"name": "Thick Fat",
+		"description": "Fire/Ice-type moves against this Pokemon deal damage with a halved attacking stat.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TINTEDLENS",
+		"name": "Tinted Lens",
+		"description": "This Pokemon's attacks that are not very effective on a target deal double damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TORRENT",
+		"name": "Torrent",
+		"description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Water attacks.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TOUGHCLAWS",
+		"name": "Tough Claws",
+		"description": "This Pokemon's contact moves have their power multiplied by 1.3.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TOXICBOOST",
+		"name": "Toxic Boost",
+		"description": "While this Pokemon is poisoned, its physical attacks have 1.5x power.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TRACE",
+		"name": "Trace",
+		"description": "On switch-in, or when it can, this Pokemon copies a random adjacent foe's Ability.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TRANSISTOR",
+		"name": "Transistor",
+		"description": "This Pokemon's attacking stat is multiplied by 1.5 while using an Electric-type attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TRIAGE",
+		"name": "Triage",
+		"description": "This Pokemon's healing moves have their priority increased by 3.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TRUANT",
+		"name": "Truant",
+		"description": "This Pokemon skips every other turn instead of using a move.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TURBOBLAZE",
+		"name": "Turboblaze",
+		"description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "UNAWARE",
+		"name": "Unaware",
+		"description": "This Pokemon ignores other Pokemon's stat stages when taking or doing damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "UNBURDEN",
+		"name": "Unburden",
+		"description": "Speed is doubled on held item loss; boost is lost if it switches, gets new item/Ability.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "UNNERVE",
+		"name": "Unnerve",
+		"description": "While this Pokemon is active, it prevents opposing Pokemon from using their Berries.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "UNSEENFIST",
+		"name": "Unseen Fist",
+		"description": "All contact moves hit through protection.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "VICTORYSTAR",
+		"name": "Victory Star",
+		"description": "This Pokemon and its allies' moves have their accuracy multiplied by 1.1.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "VITALSPIRIT",
+		"name": "Vital Spirit",
+		"description": "This Pokemon cannot fall asleep. Gaining this Ability while asleep cures it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "VOLTABSORB",
+		"name": "Volt Absorb",
+		"description": "This Pokemon heals 1/4 of its max HP when hit by Electric moves; Electric immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WANDERINGSPIRIT",
+		"name": "Wandering Spirit",
+		"description": "Pokemon making contact with this Pokemon have their Ability swapped with this one.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WATERABSORB",
+		"name": "Water Absorb",
+		"description": "This Pokemon heals 1/4 of its max HP when hit by Water moves; Water immunity.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WATERBUBBLE",
+		"name": "Water Bubble",
+		"description": "This Pokemon's Water power is 2x; it can't be burned; Fire power against it is halved.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WATERCOMPACTION",
+		"name": "Water Compaction",
+		"description": "This Pokemon's Defense is raised 2 stages after it is damaged by a Water-type move.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WATERVEIL",
+		"name": "Water Veil",
+		"description": "This Pokemon cannot be burned. Gaining this Ability while burned cures it.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WEAKARMOR",
+		"name": "Weak Armor",
+		"description": "If a physical attack hits this Pokemon, Defense is lowered by 1, Speed is raised by 2.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WHITESMOKE",
+		"name": "White Smoke",
+		"description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WIMPOUT",
+		"name": "Wimp Out",
+		"description": "This Pokemon switches out when it reaches 1/2 or less of its maximum HP.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WONDERGUARD",
+		"name": "Wonder Guard",
+		"description": "This Pokemon can only be damaged by supereffective moves and indirect damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WONDERSKIN",
+		"name": "Wonder Skin",
+		"description": "Status moves with accuracy checks are 50% accurate when used on this Pokemon.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ZENMODE",
+		"name": "Zen Mode",
+		"description": "If Darmanitan, at end of turn changes Mode to Standard if > 1/2 max HP, else Zen.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ANGERSHELL",
+		"name": "Anger Shell",
+		"description": "When an attack causes its HP to drop to half or less, the Pokémon gets angry. This lowers its Defense and Sp. Def stats but boosts its Attack, Sp. Atk, and Speed stats.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ARMORTAIL",
+		"name": "Armor Tail",
+		"description": "The mysterious tail covering the Pokémon's head makes opponents unable to use priority moves against the Pokémon or its allies.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "BEADSOFRUIN",
+		"name": "Beads of Ruin",
+		"description": "The power of the Pokémon's ruinous beads lowers the Sp. Def stats of all Pokémon except itself.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COMMANDER",
+		"name": "Commander",
+		"description": "When the Pokémon enters a battle, it goes inside the mouth of an ally Dondozo if one is on the field. The Pokémon then issues commands from there.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "COSTAR",
+		"name": "Costar",
+		"description": "When the Pokémon enters a battle, it copies an ally's stat changes.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "CUDCHEW",
+		"name": "Cud Chew",
+		"description": "When the Pokémon eats a Berry, it will regurgitate that Berry at the end of the next turn and eat it one more time.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "EARTHEATER",
+		"name": "Earth Eater",
+		"description": "If hit by a Ground-type move, the Pokémon has its HP restored instead of taking damage.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ELECTROMORPHOSIS",
+		"name": "Electromorphosis",
+		"description": "The Pokémon becomes charged when it takes damage, boosting the power of the next Electric-type move the Pokémon uses.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GOODASGOLD",
+		"name": "Good as Gold",
+		"description": "A body of pure, solid gold gives the Pokémon full immunity to other Pokémon's status moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "GUARDDOG",
+		"name": "Guard Dog",
+		"description": "Boosts the Pokémon's Attack stat if intimidated. Moves and items that would force the Pokémon to switch out also fail to work.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "HADRONENGINE",
+		"name": "Hadron Engine",
+		"description": "Turns the ground into Electric Terrain when the Pokémon enters a battle. The futuristic engine within the Pokémon also boosts its Sp. Atk stat on Electric Terrain.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "LINGERINGAROMA",
+		"name": "Lingering Aroma",
+		"description": "Contact with the Pokémon changes the attacker's Ability to Lingering Aroma.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "MYCELIUMMIGHT",
+		"name": "Mycelium Might",
+		"description": "The Pokémon will always act more slowly when using status moves, but these moves will be unimpeded by the Ability of the target.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "OPPORTUNIST",
+		"name": "Opportunist",
+		"description": "If an opponent's stat is boosted, the Pokémon seizes the opportunity to boost the same stat for itself.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ORICHALCUMPULSE",
+		"name": "Orichalcum Pulse",
+		"description": "Turns the sunlight harsh when the Pokémon enters a battle. The ancient pulse thrumming through the Pokémon also boosts its Attack stat in harsh sunlight.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PROTOSYNTHESIS",
+		"name": "Protosynthesis",
+		"description": "Boosts the Pokémon's most proficient stat in harsh sunlight or if the Pokémon is holding Booster Energy.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "PURIFYINGSALT",
+		"name": "Purifying Salt",
+		"description": "The Pokémon's pure salt protects it from status conditions and halves the damage taken from Ghost-type moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "QUARKDRIVE",
+		"name": "Quark Drive",
+		"description": "Boosts the Pokémon's most proficient stat on Electric Terrain or if the Pokémon is holding Booster Energy.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ROCKYPAYLOAD",
+		"name": "Rocky Payload",
+		"description": "Powers up Rock-type moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SEEDSOWER",
+		"name": "Seed Sower",
+		"description": "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SHARPNESS",
+		"name": "Sharpness",
+		"description": "Powers up slicing moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SUPREMEOVERLORD",
+		"name": "Supreme Overlord",
+		"description": "When the Pokémon enters a battle, its Attack and Sp. Atk stats are slightly boosted for each of the allies in its party that have already been defeated.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "SWORDOFRUIN",
+		"name": "Sword of Ruin",
+		"description": "The power of the Pokémon's ruinous sword lowers the Defense stats of all Pokémon except itself.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TABLETSOFRUIN",
+		"name": "Tablets of Ruin",
+		"description": "The power of the Pokémon's ruinous wooden tablets lowers the Attack stats of all Pokémon except itself.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "THERMALEXCHANGE",
+		"name": "Thermal Exchange",
+		"description": "Boosts the Attack stat when the Pokémon is hit by a Fire-type move. The Pokémon also cannot be burned.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "TOXICDEBRIS",
+		"name": "Toxic Debris",
+		"description": "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "VESSELOFRUIN",
+		"name": "Vessel of Ruin",
+		"description": "The power of the Pokémon's ruinous vessel lowers the Sp. Atk stats of all Pokémon except itself.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WELLBAKEDBODY",
+		"name": "Well-Baked Body",
+		"description": "The Pokémon takes no damage when hit by Fire-type moves. Instead, its Defense stat is sharply boosted.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WINDPOWER",
+		"name": "Wind Power",
+		"description": "The Pokémon becomes charged when it is hit by a wind move, boosting the power of the next Electric-type move the Pokémon uses.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "WINDRIDER",
+		"name": "Wind Rider",
+		"description": "Boosts the Pokémon's Attack stat if Tailwind takes effect or if the Pokémon is hit by a wind move. The Pokémon also takes no damage from wind moves.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
+		"id": "ZEROTOHERO",
+		"name": "Zero to Hero",
+		"description": "The Pokémon transforms into its Hero Form when it switches out.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	}
 ]
