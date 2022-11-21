@@ -39,7 +39,7 @@ class SpeciesComplex(Complex[Species]):
         ocs: set[Character] = None,
     ):
 
-        self.total = mon_total = {x for x in mon_total if not x.banned}
+        self.total = mon_total = sorted({x for x in mon_total if not x.banned}, key=lambda x: x.name)
         max_values = min(len(self.total), max_values)
 
         self.reference1: dict[Species, int] = {}
@@ -119,7 +119,7 @@ class SpeciesComplex(Complex[Species]):
                 data.setdefault(t, set())
                 data[t].add(item)
 
-        items = [("No Filter", total)]
+        items = [("No Filter", set(total))]
         items.extend(sorted(data.items(), key=lambda x: x[0].name))
         for k, items in items:
             if items:

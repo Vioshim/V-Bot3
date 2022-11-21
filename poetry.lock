@@ -19,7 +19,7 @@ python-versions = ">=3.7,<4.0"
 
 [[package]]
 name = "aiogoogle"
-version = "4.3.0"
+version = "4.4.0"
 description = "Async Google API client"
 category = "main"
 optional = false
@@ -41,7 +41,7 @@ trio_asks = ["asks", "trio"]
 type = "git"
 url = "https://github.com/omarryhan/aiogoogle.git"
 reference = "master"
-resolved_reference = "7806abdcf073f08ae3596baa2cd4fec56bcd74c2"
+resolved_reference = "a1de9e78802ffe4979d570c2190be8a86f37f981"
 
 [[package]]
 name = "aiohttp"
@@ -724,7 +724,7 @@ et-xmlfile = "*"
 
 [[package]]
 name = "orjson"
-version = "3.8.1"
+version = "3.8.2"
 description = "Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
 category = "main"
 optional = false
