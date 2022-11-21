@@ -338,8 +338,9 @@ class Movepool:
             moves = frozenset({data for item in value if (data := Move.deduce(item))})
             match key:
                 case "LEVEL":
-                    self.level.setdefault(1, frozenset())
-                    self.level[1] |= moves
+                    pass
+                    # self.level.setdefault(1, frozenset())
+                    # self.level[1] |= moves
                 case "TM":
                     self.tm |= moves
                 case "EVENT":
