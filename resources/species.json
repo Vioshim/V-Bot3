@@ -8982,7 +8982,7 @@
 		"SPE": 70,
 		"banned": false,
 		"evolves_from": "PAWNIARD",
-		"evolves_to": [],
+		"evolves_to": ["KINGAMBIT"],
 		"movepool": {
 			"level": {
 				"1": [
@@ -29941,7 +29941,7 @@
 		"SPE": 45,
 		"banned": false,
 		"evolves_from": null,
-		"evolves_to": [],
+		"evolves_to": ["DUDUNSPARCE"],
 		"movepool": {
 			"level": {
 				"1": ["DEFENSECURL", "FLAIL", "RAGE"],
@@ -41593,7 +41593,7 @@
 		"SPE": 85,
 		"banned": false,
 		"evolves_from": null,
-		"evolves_to": [],
+		"evolves_to": ["FARIGIRAF"],
 		"movepool": {
 			"level": {
 				"1": [
@@ -91852,7 +91852,7 @@
 		"SPE": 95,
 		"banned": false,
 		"evolves_from": "MANKEY",
-		"evolves_to": [],
+		"evolves_to": ["ANNIHILAPE"],
 		"movepool": {
 			"level": {
 				"1": [
@@ -137878,6 +137878,8 @@
 		"SPD": 45,
 		"SPE": 65,
 		"kind": "Pokemon",
+		"evolves_to": ["FLORAGATO"],
+		"evolves_from": null,
 		"movepool": {
 			"level": {
 				"1": ["LEAFAGE", "SCRATCH", "TAILWHIP"],
@@ -137953,6 +137955,8 @@
 		"SPD": 63,
 		"SPE": 83,
 		"kind": "Pokemon",
+		"evolves_to": ["MEOWSCARADA"],
+		"evolves_from": "SPRIGATITO",
 		"movepool": {
 			"level": {
 				"1": ["LEAFAGE", "SCRATCH", "TAILWHIP"],
@@ -138026,6 +138030,8 @@
 		"SPA": 81,
 		"SPD": 70,
 		"SPE": 123,
+		"evolves_to": [],
+		"evolves_from": "FLORAGATO",
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -138173,6 +138179,8 @@
 				"ZENHEADBUTT"
 			]
 		},
+		"evolves_to": ["CROCALOR"],
+		"evolves_from": null,
 		"height": 0.4,
 		"weight": 9.8
 	},
@@ -138192,6 +138200,8 @@
 		"SPD": 58,
 		"SPE": 49,
 		"kind": "Pokemon",
+		"evolves_to": ["SKELEDIRGE"],
+		"evolves_from": "FUECOCO",
 		"movepool": {
 			"level": {
 				"1": ["EMBER", "LEER", "TACKLE"],
@@ -138261,6 +138271,8 @@
 		"SPD": 75,
 		"SPE": 66,
 		"kind": "Pokemon",
+		"evolves_to": [],
+		"evolves_from": "CROCALOR",
 		"movepool": {
 			"level": {
 				"1": ["EMBER", "LEER", "TACKLE"],
@@ -138388,6 +138400,8 @@
 				"WATERPLEDGE"
 			]
 		},
+		"evolves_to": ["QUAXWELL"],
+		"evolves_from": null,
 		"height": 0.5,
 		"weight": 6.1
 	},
@@ -138407,6 +138421,8 @@
 		"SPD": 60,
 		"SPE": 65,
 		"kind": "Pokemon",
+		"evolves_to": ["QUAQUAVAL"],
+		"evolves_from": "QUAXLY",
 		"movepool": {
 			"level": {
 				"1": ["DOUBLEHIT", "GROWL", "POUND", "WATERGUN"],
@@ -138470,6 +138486,8 @@
 		"SPD": 75,
 		"SPE": 85,
 		"kind": "Pokemon",
+		"evolves_to": [],
+		"evolves_from": "QUAXWELL",
 		"movepool": {
 			"level": {
 				"1": ["DOUBLEHIT", "GROWL", "POUND", "WATERGUN"],
@@ -138553,6 +138571,8 @@
 		"SPA": 35,
 		"SPD": 45,
 		"SPE": 35,
+		"evolves_to": ["OINKOLOGNE"],
+		"evolves_from": null,
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -138613,8 +138633,8 @@
 		"name": "Oinkologne",
 		"base_image": "https://www.serebii.net/scarletviolet/pokemon/916.png",
 		"base_image_shiny": "https://www.serebii.net/Shiny/SV/916.png",
-		"female_image": "https://www.serebii.net/scarletviolet/pokemon/916.png",
-		"female_image_shiny": "https://www.serebii.net/Shiny/SV/916.png",
+		"female_image": "https://www.serebii.net/scarletviolet/pokemon/916-f.png",
+		"female_image_shiny": "https://www.serebii.net/Shiny/SV/916-f.png",
 		"types": ["NORMAL"],
 		"abilities": ["LINGERINGAROMA", "GLUTTONY", "THICKFAT"],
 		"HP": 110,
@@ -138624,6 +138644,8 @@
 		"SPD": 80,
 		"SPE": 65,
 		"kind": "Pokemon",
+		"evolves_to": [],
+		"evolves_from": "LECHONK",
 		"movepool": {
 			"level": {
 				"1": ["TACKLE", "TAILWHIP"],
@@ -138694,6 +138716,8 @@
 		"SPA": 85,
 		"SPD": 75,
 		"SPE": 55,
+		"evolves_to": [],
+		"evolves_from": "DUNSPARCE",
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -138795,6 +138819,8 @@
 		"SPD": 40,
 		"SPE": 20,
 		"kind": "Pokemon",
+		"evolves_to": ["SPIDOPS"],
+		"evolves_from": null,
 		"movepool": {
 			"level": {
 				"1": ["STRINGSHOT", "TACKLE"],
@@ -138853,6 +138879,8 @@
 		"female_image_shiny": "https://www.serebii.net/Shiny/SV/919.png",
 		"types": ["BUG"],
 		"abilities": ["INSOMNIA", "STAKEOUT"],
+		"evolves_to": [],
+		"evolves_from": "TAROUNTULA",
 		"HP": 60,
 		"ATK": 79,
 		"DEF": 92,
@@ -138935,6 +138963,8 @@
 		"SPD": 25,
 		"SPE": 45,
 		"kind": "Pokemon",
+		"evolves_to": ["LOKIX"],
+		"evolves_from": null,
 		"movepool": {
 			"level": {
 				"1": ["LEER", "TACKLE"],
@@ -138991,6 +139021,8 @@
 		"SPA": 52,
 		"SPD": 55,
 		"SPE": 92,
+		"evolves_to": [],
+		"evolves_from": "NYMBLE",
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -139063,6 +139095,8 @@
 		"SPD": 58,
 		"SPE": 30,
 		"kind": "Pokemon",
+		"evolves_to": ["RELLOR"],
+		"evolves_from": null,
 		"movepool": {
 			"level": {
 				"1": ["DEFENSECURL", "TACKLE"],
@@ -139119,6 +139153,8 @@
 		"SPA": 115,
 		"SPD": 100,
 		"SPE": 45,
+		"evolves_to": [],
+		"evolves_from": "RELLOR",
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -139206,6 +139242,8 @@
 		"SPD": 55,
 		"SPE": 34,
 		"kind": "Pokemon",
+		"evolves_to": ["HOUNDSTONE"],
+		"evolves_from": null,
 		"movepool": {
 			"level": {
 				"1": ["GROWL", "TACKLE"],
@@ -139286,6 +139324,8 @@
 		"SPD": 97,
 		"SPE": 68,
 		"kind": "Pokemon",
+		"evolves_to": [],
+		"evolves_from": "GREAVARD",
 		"movepool": {
 			"level": {
 				"1": ["GROWL", "TACKLE"],
@@ -139362,6 +139402,8 @@
 		"SPD": 30,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_to": ["ESPATHRA"],
+		"evolves_from": null,
 		"movepool": {
 			"level": {
 				"1": ["GROWL", "PECK"],
@@ -139431,6 +139473,8 @@
 		"SPA": 101,
 		"SPD": 60,
 		"SPE": 105,
+		"evolves_to": [],
+		"evolves_from": "FLITTLE",
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -139518,6 +139562,8 @@
 		"SPD": 70,
 		"SPE": 60,
 		"kind": "Pokemon",
+		"evolves_from": "GIRAFARIG",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "GROWL", "GUARDSWAP", "POWERSWAP", "TACKLE"],
@@ -139608,6 +139654,8 @@
 		"SPD": 25,
 		"SPE": 95,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["WUGTRIO"],
 		"movepool": {
 			"level": {
 				"1": ["SANDATTACK", "WATERGUN"],
@@ -139671,6 +139719,8 @@
 		"SPD": 70,
 		"SPE": 120,
 		"kind": "Pokemon",
+		"evolves_from": "WIGLETT",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["MUDSLAP", "SANDATTACK", "WATERGUN", "WRAP"],
@@ -139735,6 +139785,8 @@
 		"SPD": 65,
 		"SPE": 35,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["SUPERSONIC", "TACKLE", "WATERGUN"],
@@ -139805,6 +139857,8 @@
 		"SPD": 65,
 		"SPE": 70,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["AQUAJET", "TACKLE"],
@@ -139873,6 +139927,8 @@
 		"SPD": 40,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["PALAFIN"],
 		"movepool": {
 			"level": {
 				"1": ["SUPERSONIC", "WATERGUN"],
@@ -139939,6 +139995,8 @@
 		"SPA": 53,
 		"SPD": 62,
 		"SPE": 100,
+		"evolves_from": "FINIZEN",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -140023,6 +140081,8 @@
 		"SPD": 51,
 		"SPE": 30,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["DOLLIV"],
 		"movepool": {
 			"level": {
 				"1": ["SWEETSCENT", "TACKLE"],
@@ -140083,6 +140143,8 @@
 		"SPD": 78,
 		"SPE": 33,
 		"kind": "Pokemon",
+		"evolves_from": "SMOLIV",
+		"evolves_to": ["ARBOLIVA"],
 		"movepool": {
 			"level": {
 				"1": ["SWEETSCENT", "TACKLE"],
@@ -140142,6 +140204,8 @@
 		"SPD": 109,
 		"SPE": 39,
 		"kind": "Pokemon",
+		"evolves_from": "DOLLIV",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["MIRRORCOAT", "SAFEGUARD", "SWEETSCENT", "TACKLE"],
@@ -140213,6 +140277,8 @@
 		"SPD": 40,
 		"SPE": 50,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["SCOVILLAIN"],
 		"movepool": {
 			"level": {
 				"1": ["LEAFAGE", "LEER"],
@@ -140281,6 +140347,8 @@
 		"SPD": 65,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_from": "CAPSAKID",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["FIREFANG", "LEAFAGE", "LEER"],
@@ -140352,6 +140420,8 @@
 		"SPD": 35,
 		"SPE": 45,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["BELLIBOLT"],
 		"movepool": {
 			"level": {
 				"1": ["MUDSLAP", "TACKLE"],
@@ -140415,6 +140485,8 @@
 		"SPA": 103,
 		"SPD": 83,
 		"SPE": 45,
+		"evolves_from": "TADBULB",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -140481,6 +140553,8 @@
 		"SPD": 45,
 		"SPE": 47,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["REVAVROOM"],
 		"movepool": {
 			"level": {
 				"1": ["LICK", "POISONGAS"],
@@ -140547,6 +140621,8 @@
 		"SPD": 67,
 		"SPE": 90,
 		"kind": "Pokemon",
+		"evolves_from": "VAROOM",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["LICK", "MAGNETRISE", "POISONGAS"],
@@ -140618,6 +140694,8 @@
 		"SPD": 55,
 		"SPE": 65,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["HARDEN", "TACKLE", "WRAP"],
@@ -140687,6 +140765,8 @@
 		"SPD": 45,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["MAUSHOLD"],
 		"movepool": {
 			"level": {
 				"1": ["BABYDOLLEYES", "POUND"],
@@ -140768,6 +140848,8 @@
 		"SPD": 75,
 		"SPE": 111,
 		"kind": "Pokemon",
+		"evolves_from": "TANDEMAUS",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["BABYDOLLEYES", "FOLLOWME", "POUND", "TIDYUP"],
@@ -140844,6 +140926,8 @@
 		"SPD": 40,
 		"SPE": 43,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["CETITAN"],
 		"movepool": {
 			"level": {
 				"1": ["POWDERSNOW", "TACKLE"],
@@ -140920,6 +141004,8 @@
 		"SPA": 45,
 		"SPD": 55,
 		"SPE": 73,
+		"evolves_from": "CETODDLE",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -140993,6 +141079,8 @@
 		"SPD": 45,
 		"SPE": 55,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["ARCTIBAX"],
 		"movepool": {
 			"level": {
 				"1": ["DRAGONTAIL", "LEER", "TACKLE"],
@@ -141055,6 +141143,8 @@
 		"SPD": 65,
 		"SPE": 62,
 		"kind": "Pokemon",
+		"evolves_from": "FRIGIBAX",
+		"evolves_to": ["BAXCALIBUR"],
 		"movepool": {
 			"level": {
 				"1": ["DRAGONTAIL", "LEER", "TACKLE"],
@@ -141119,6 +141209,8 @@
 		"SPD": 86,
 		"SPE": 87,
 		"kind": "Pokemon",
+		"evolves_from": "ARCTIBAX",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": [
@@ -141410,6 +141502,8 @@
 		"SPD": 40,
 		"SPE": 85,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["PAWMOT"],
 		"movepool": {
 			"level": {
 				"1": ["GROWL", "SCRATCH"],
@@ -141485,6 +141579,8 @@
 		"SPD": 60,
 		"SPE": 105,
 		"kind": "Pokemon",
+		"evolves_from": "PAWMO",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["GROWL", "SCRATCH", "WILDCHARGE"],
@@ -141575,6 +141671,8 @@
 		"SPD": 40,
 		"SPE": 70,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["KILOWATTREL"],
 		"movepool": {
 			"level": {
 				"1": ["GROWL", "PECK"],
@@ -141646,6 +141744,8 @@
 		"SPA": 105,
 		"SPD": 60,
 		"SPE": 125,
+		"evolves_from": "WATTREL",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -141715,6 +141815,8 @@
 		"SPA": 60,
 		"SPD": 85,
 		"SPE": 82,
+		"evolves_from": null,
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -141797,6 +141899,8 @@
 		"SPA": 45,
 		"SPD": 51,
 		"SPE": 92,
+		"evolves_from": null,
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -141867,6 +141971,8 @@
 		"SPD": 64,
 		"SPE": 90,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["COPYCAT", "PECK"],
@@ -141940,6 +142046,8 @@
 		"SPD": 55,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ROCKTHROW", "VISEGRIP"],
@@ -142018,6 +142126,8 @@
 		"SPD": 35,
 		"SPE": 25,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["NACLSTACK"],
 		"movepool": {
 			"level": {
 				"1": ["HARDEN", "TACKLE"],
@@ -142084,6 +142194,8 @@
 		"SPA": 35,
 		"SPD": 65,
 		"SPE": 35,
+		"evolves_from": "NACLI",
+		"evolves_to": ["GARGANACL"],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -142155,6 +142267,8 @@
 		"SPD": 90,
 		"SPE": 35,
 		"kind": "Pokemon",
+		"evolves_from": "NACLSTACK",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["BLOCK", "HARDEN", "ROCKBLAST", "TACKLE", "WIDEGUARD"],
@@ -142234,6 +142348,8 @@
 		"SPD": 60,
 		"SPE": 60,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["GLIMMORA"],
 		"movepool": {
 			"level": {
 				"1": ["HARDEN", "ROCKTHROW", "SMACKDOWN"],
@@ -142300,6 +142416,8 @@
 		"SPD": 81,
 		"SPE": 86,
 		"kind": "Pokemon",
+		"evolves_from": "GLIMMET",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": [
@@ -142378,6 +142496,8 @@
 		"SPD": 35,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["GRAFAIAI"],
 		"movepool": {
 			"level": {
 				"1": ["LEER", "SCRATCH"],
@@ -142515,6 +142635,8 @@
 			],
 			"levelup": ["DOODLE"]
 		},
+		"evolves_to": [],
+		"evolves_from": "SHROODLE",
 		"height": 0.7,
 		"weight": 27.2
 	},
@@ -142584,6 +142706,8 @@
 				"TRAILBLAZE"
 			]
 		},
+		"evolves_from": null,
+		"evolves_to": ["DACHSBUN"],
 		"height": 0.3,
 		"weight": 10.9
 	},
@@ -142602,6 +142726,8 @@
 		"SPA": 50,
 		"SPD": 80,
 		"SPE": 95,
+		"evolves_from": "FIDOUGH",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -142675,6 +142801,8 @@
 		"SPA": 40,
 		"SPD": 51,
 		"SPE": 51,
+		"evolves_from": null,
+		"evolves_to": ["MABOSSTIFF"],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -142742,6 +142870,8 @@
 		"SPA": 60,
 		"SPD": 70,
 		"SPE": 85,
+		"evolves_from": "MASCHIFF",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -142816,6 +142946,8 @@
 		"SPD": 35,
 		"SPE": 60,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["BRAMBLEGHAST"],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "DEFENSECURL", "ROLLOUT"],
@@ -142886,6 +143018,8 @@
 		"SPD": 70,
 		"SPE": 90,
 		"kind": "Pokemon",
+		"evolves_from": "BRAMBLIN",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "DEFENSECURL", "ROLLOUT"],
@@ -142951,6 +143085,8 @@
 		"SPD": 70,
 		"SPE": 10,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": { "1": ["ASTONISH", "TACKLE"] },
 			"tm": [
@@ -142991,6 +143127,8 @@
 		"SPD": 91,
 		"SPE": 84,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "TACKLE"],
@@ -143057,6 +143195,8 @@
 		"female_image_shiny": "https://www.serebii.net/Shiny/SV/978.png",
 		"types": ["GROUND", "FIGHTING"],
 		"abilities": ["PROTOSYNTHESIS"],
+		"evolves_from": null,
+		"evolves_to": [],
 		"HP": 115,
 		"ATK": 131,
 		"DEF": 131,
@@ -143145,6 +143285,8 @@
 		"SPD": 99,
 		"SPE": 55,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ABSORB", "ASTONISH", "GROWTH"],
@@ -144730,6 +144872,8 @@
 		"SPD": 64,
 		"SPE": 58,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["TINKATUFF"],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "FAIRYWIND"],
@@ -144800,6 +144944,8 @@
 		"SPD": 82,
 		"SPE": 78,
 		"kind": "Pokemon",
+		"evolves_from": "TINKATINK",
+		"evolves_to": ["TINKATON"],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "FAIRYWIND"],
@@ -144870,6 +145016,8 @@
 		"SPD": 105,
 		"SPE": 94,
 		"kind": "Pokemon",
+		"evolves_from": "TINKATUFF",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "FAIRYWIND"],
@@ -144943,6 +145091,8 @@
 		"SPD": 40,
 		"SPE": 35,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["ARMOURAGE", "CERULEDGE"],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "EMBER", "LEER"],
@@ -144996,6 +145146,8 @@
 		"SPD": 80,
 		"SPE": 75,
 		"kind": "Pokemon",
+		"evolves_from": "CHARCADET",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "EMBER", "LEER", "MYSTICALFIRE", "WIDEGUARD"],
@@ -145077,6 +145229,8 @@
 		"SPD": 100,
 		"SPE": 85,
 		"kind": "Pokemon",
+		"evolves_from": "CHARCADET",
+		"evolves_to": [],
 		"movepool": {
 			"level": {
 				"1": ["ASTONISH", "EMBER", "LEER"],
@@ -145156,6 +145310,8 @@
 		"SPD": 100,
 		"SPE": 70,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["TOEDSCRUEL"],
 		"movepool": {
 			"level": {
 				"1": ["MUDSLAP", "WRAP"],
@@ -145242,6 +145398,8 @@
 		"SPD": 120,
 		"SPE": 100,
 		"kind": "Pokemon",
+		"evolves_from": null,
+		"evolves_to": ["TOEDSCOOL"],
 		"movepool": {
 			"level": {
 				"1": ["MUDSLAP", "REFLECTTYPE", "WRAP"],
@@ -145319,6 +145477,8 @@
 		"SPA": 60,
 		"SPD": 85,
 		"SPE": 50,
+		"evolves_from": "BISHARP",
+		"evolves_to": [],
 		"kind": "Pokemon",
 		"movepool": {
 			"level": {
@@ -145490,6 +145650,7 @@
 		"SPD": 90,
 		"SPE": 90,
 		"kind": "Pokemon",
+		"evolves_from": "PRIMEAPE",
 		"movepool": {
 			"level": {
 				"1": ["COUNTER", "FLING", "FOCUSENERGY", "LEER", "SCRATCH"],
