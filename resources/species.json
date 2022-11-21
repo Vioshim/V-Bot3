@@ -43557,6 +43557,7 @@
 		"SPD": 71,
 		"SPE": 122,
 		"evolves_from": "FROGADIER",
+		"evolves_to": ["GRENINJABATTLEBOND"],
 		"movepool": {
 			"level": {
 				"1": [
@@ -43662,6 +43663,27 @@
 			"levelup": ["WATERSHURIKEN"]
 		},
 		"abilities": ["PROTEAN", "TORRENT"],
+		"kind": "Pokemon"
+	},
+	{
+		"id": "GRENINJABATTLEBOND",
+		"name": "Greninja Battle Bond",
+		"shape": "Bipedal",
+		"base_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0658_002_mo_n_00000000_f_n.png",
+		"base_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0658_002_mo_n_00000000_f_r.png",
+		"female_image": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0658_002_mo_n_00000000_f_n.png",
+		"female_image_shiny": "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0658_002_mo_n_00000000_f_r.png",
+		"types": ["DARK", "WATER"],
+		"height": 1.5,
+		"weight": 40,
+		"HP": 72,
+		"ATK": 95,
+		"DEF": 67,
+		"SPA": 103,
+		"SPD": 71,
+		"SPE": 122,
+		"evolves_from": "GRENINJA",
+		"abilities": ["BATTLEBOND"],
 		"kind": "Pokemon"
 	},
 	{
