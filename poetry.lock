@@ -340,26 +340,26 @@ lark-parser = ">=0.9.0,<0.10.0"
 
 [[package]]
 name = "dateparser"
-version = "1.1.3"
+version = "1.1.4"
 description = "Date parsing library designed to parse dates from HTML pages"
 category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.7"
 
 [package.dependencies]
 python-dateutil = "*"
 pytz = "*"
-regex = "<2019.02.19 || >2019.02.19,<2021.8.27 || >2021.8.27,<2022.3.15"
+regex = "<2019.02.19 || >2019.02.19,<2021.8.27 || >2021.8.27"
 tzlocal = "*"
 
 [package.extras]
-calendars = ["convertdate", "hijri-converter", "convertdate"]
+calendars = ["hijri-converter", "convertdate"]
 fasttext = ["fasttext"]
 langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.2.0a4641+g436d0849"
+version = "2.2.0a4643+g66d85007"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -381,9 +381,9 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 
 [package.source]
 type = "git"
-url = "https://github.com/sgtlaggy/discord.py.git"
+url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "436d0849d94a830b5c98553295bab9f8c34f6803"
+resolved_reference = "66d85007b7727403b6d7cacf8be9e2fc38b72c24"
 
 [[package]]
 name = "distlib"
@@ -1062,7 +1062,7 @@ full = ["numpy"]
 
 [[package]]
 name = "regex"
-version = "2022.3.2"
+version = "2022.10.31"
 description = "Alternative regular expression module, to replace re."
 category = "main"
 optional = false
@@ -1326,7 +1326,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.7"
-content-hash = "397520b82a401f0cd8804a3e278e69802062be58620ac0d715f6f4d999b55ec0"
+content-hash = "0d15b1b24dc20b1e726c1ebee59472f55f0d3e2d3e0eba8921d7355bf5a972a5"
 
 [metadata.files]
 aiodns = []

@@ -56,7 +56,10 @@ from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
 
 __all__ = ("Roles", "setup")
 
-IMAGE_EMBED = Embed(color=Color.blurple()).set_image(url="https://hmp.me/dx39")
+IMAGE_EMBED = Embed(color=Color.blurple())
+IMAGE_EMBED.set_image(
+    url="https://cdn.discordapp.com/attachments/748384705098940426/1044639175271518299/ezgif.com-gif-maker_35.gif"
+)
 
 
 class Roles(commands.Cog):
