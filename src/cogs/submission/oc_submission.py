@@ -238,7 +238,13 @@ class Template(TemplateItem, Enum):
                     return
 
         match self:
-            case self.CustomPokemon | self.CustomLegendary | self.CustomMythical | self.CustomUltraBeast:
+            case (
+                self.CustomPokemon
+                | self.CustomLegendary
+                | self.CustomMythical
+                | self.CustomUltraBeast
+                | self.CustomParadox
+            ):
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="Character's Species.",
                     required=True,
