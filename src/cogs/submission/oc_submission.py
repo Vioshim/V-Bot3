@@ -1076,7 +1076,8 @@ class CreationOCView(Basic):
     def setup(self, embed_update: bool = True):
         self.kind.options = [
             SelectOption(
-                label=x.name,
+                label=x.title,
+                value=x.name,
                 emoji="\N{MEMO}",
                 default=x == self.ref_template,
             )
