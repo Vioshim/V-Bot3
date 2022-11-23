@@ -42,6 +42,7 @@ from src.structures.species import (
     Legendary,
     Mega,
     Mythical,
+    Paradox,
     Pokemon,
     Species,
     UltraBeast,
@@ -118,6 +119,7 @@ class Kind(Enum):
     Variant = Variant
     Mega = Mega
     Fusion = Fusion
+    Paradox = Paradox
     CustomMega = CustomMega
     Chimera = Chimera
 
@@ -136,6 +138,8 @@ class Kind(Enum):
                 return "FAKEMON"
             case self.Variant:
                 return "VARIANT"
+            case self.Paradox:
+                return "PARADOX"
             case self.Mega:
                 return "MEGA"
             case self.Fusion:
@@ -160,6 +164,8 @@ class Kind(Enum):
                 return cls.Fakemon
             case "VARIANT":
                 return cls.Variant
+            case "PARADOX":
+                return cls.Paradox
             case "MEGA":
                 return cls.Mega
             case "FUSION":

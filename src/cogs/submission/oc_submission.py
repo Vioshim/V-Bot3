@@ -58,7 +58,6 @@ from src.structures.move import Move
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    _BEASTBOOST,
     Chimera,
     CustomMega,
     Fakemon,
@@ -66,6 +65,7 @@ from src.structures.species import (
     Legendary,
     Mega,
     Mythical,
+    Paradox,
     Pokemon,
     Species,
     UltraBeast,
@@ -134,6 +134,10 @@ class Template(TemplateItem, Enum):
         description="Ultra Beasts that came from other world which want a new home/purpose.",
         docs={"Standard": "1Xi25gAj6qoh14xYSXsinfMZ3-6loJ_CTCdrRdPlEhW8"},
     )
+    Paradox = dict(
+        description="From distant past/future, these kind of pokemon ended up here somehow.",
+        docs={"Standard": "1oe-W2uTJBHPuCje5zjMf2KVxWbomjuTgF1kX6UuAhbk"},
+    )
     Mega = dict(
         description="People that mega evolved and kept stuck like this.",
         exclude=["Abilities", "Types"],
@@ -149,6 +153,21 @@ class Template(TemplateItem, Enum):
             "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04",
             "w/Sp. Ability": "1l_fQ2i2By63CgCco29XvkZiAdEpWgs4xkDMunwceLHM",
         },
+        custom=True,
+    )
+    Variant = dict(
+        description="Community created variants of canon species",
+        modifier={"Species": ("Variant", "Variant Species")},
+        docs={
+            "Standard": "1zLNd_5QZ39aBuDEHt3RC4cmymBjRlFmxuesbfSDgDbA",
+            "w/Sp. Ability": "12MwUc3uDUOAobHo-fyiwXxh-jI6Tfj5zimOmQHJUWTc",
+        },
+        custom=True,
+    )
+    Chimera = dict(
+        description="Pokemon created by nature or science, three way fusions.",
+        modifier={"Species": ("Chimera", "Species, Species, Species, ...")},
+        docs={"Standard": "1MbaUTR2NDOpsifRO2lVw6t0eAUKFGaOOIOHD0nXC2aA"},
         custom=True,
     )
     CustomPokemon = dict(
@@ -198,19 +217,10 @@ class Template(TemplateItem, Enum):
         docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
         custom=True,
     )
-    Variant = dict(
-        description="Community created variants of canon species",
-        modifier={"Species": ("Variant", "Variant Species")},
-        docs={
-            "Standard": "1zLNd_5QZ39aBuDEHt3RC4cmymBjRlFmxuesbfSDgDbA",
-            "w/Sp. Ability": "12MwUc3uDUOAobHo-fyiwXxh-jI6Tfj5zimOmQHJUWTc",
-        },
-        custom=True,
-    )
-    Chimera = dict(
-        description="Pokemon created by science, either by the Pixy foundation's research in current times or by clandestine researchers.",
-        modifier={"Species": ("Chimera", "Species, Species, Species, ...")},
-        docs={"Standard": "1MbaUTR2NDOpsifRO2lVw6t0eAUKFGaOOIOHD0nXC2aA"},
+    CustomParadox = dict(
+        description="Community created species which are assumed to be foreigners",
+        modifier={"Species": ("Fakemon", "Paradox Species")},
+        docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
         custom=True,
     )
 
@@ -296,6 +306,8 @@ class Template(TemplateItem, Enum):
                 mon_total = Mega.all()
             case self.Fusion:
                 mon_total = Species.all()
+            case self.Paradox:
+                mon_total = Paradox.all()
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
@@ -506,7 +518,7 @@ class SpeciesField(TemplateField):
         if isinstance(species, Chimera):
             if not (1 <= len(species.bases) <= 3):
                 return "Chimeras require to have 1-3 species."
-            if any(isinstance(x, (Legendary, Mythical, Mega, UltraBeast)) for x in species.bases):
+            if any(isinstance(x, (Legendary, Mythical, Mega, UltraBeast, Paradox)) for x in species.bases):
                 return "Chimeras from this kind of Pokemon aren't possible."
 
     @classmethod
@@ -776,7 +788,11 @@ class AbilitiesField(TemplateField):
     ):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities = oc.species.abilities
-        if isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
+        if template == Template.CustomUltraBeast:
+            abilities = {Ability.get(name="Beast Boost")}
+        elif template == Template.CustomParadox:
+            abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
+        elif isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
             abilities = ALL_ABILITIES.values()
         view = Complex[Ability](
             member=ctx.user,
@@ -1032,8 +1048,11 @@ class CreationOCView(Basic):
                 name = type(oc.species).__name__
 
             name = name.replace("Fakemon", "CustomPokemon")
-            if _BEASTBOOST in oc.abilities and name == "CustomPokemon":
-                name = "CustomUltraBeast"
+            if name == "CustomPokemon":
+                if get(oc.abilities, name="Beast Boost"):
+                    name = "CustomUltraBeast"
+                elif get(oc.abilities, name="Protosynthesis") or get(oc.abilities, name="Quark Drive"):
+                    name = "CustomParadox"
 
             try:
                 template = Template[name]
@@ -1095,15 +1114,21 @@ class CreationOCView(Basic):
                     Template.Legendary
                     | Template.Mythical
                     | Template.UltraBeast
+                    | Template.Chimera
+                    | Template.Paradox
                     | Template.CustomLegendary
                     | Template.CustomMythical
                     | Template.CustomUltraBeast
-                    | Template.Chimera
+                    | Template.CustomParadox
                 ):
                     self.progress -= {"Special Ability"}
                     self.oc.sp_ability = None
                     if self.ref_template == Template.CustomUltraBeast:
-                        self.oc.abilities = frozenset({_BEASTBOOST})
+                        self.oc.abilities = frozenset({Ability.get(name="Beast Boost")})
+                    elif self.ref_template == Template.CustomParadox:
+                        ab1, ab2 = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
+                        if not (self.oc.abilities == {ab1} or self.oc.abilities == {ab2}):
+                            self.oc.abilities = frozenset()
 
             await self.update(ctx)
         except Exception as e:

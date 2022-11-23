@@ -26,6 +26,7 @@ from src.structures.species import (
     Legendary,
     Mega,
     Mythical,
+    Paradox,
     Pokemon,
     Species,
     UltraBeast,
@@ -51,6 +52,7 @@ __all__ = (
     "Pokemon",
     "Species",
     "UltraBeast",
+    "Paradox",
     "Variant",
     "ABCTransformer",
 )

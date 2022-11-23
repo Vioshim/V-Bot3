@@ -65,7 +65,7 @@ class Colors(Enum):
 
 ALL_SPECIES = frozendict()
 SPECIES_BY_NAME = frozendict()
-_BEASTBOOST = Ability.from_ID(item="BEASTBOOST")
+_BEASTBOOST = Ability.get(name="Beast Boost")
 PHRASES = {
     "GALAR": "Galarian",
     "HISUI": "Hisuian",
@@ -440,7 +440,7 @@ class Mythical(Species):
 @dataclass(unsafe_hash=True, slots=True)
 class Mega(Species):
     """
-    This class Represents a legendary
+    This class Represents a Mega
     """
 
     @property
@@ -459,7 +459,26 @@ class Mega(Species):
 @dataclass(unsafe_hash=True, slots=True)
 class UltraBeast(Species):
     """
-    This class Represents a legendary
+    This class Represents an UltraBeast
+    """
+
+    @property
+    def requires_image(self) -> bool:
+        return False
+
+    @property
+    def can_have_special_abilities(self):
+        return False
+
+    @property
+    def max_amount_abilities(self) -> int:
+        return 1
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class Paradox(Species):
+    """
+    This class Represents a Paradox
     """
 
     @property
@@ -1015,6 +1034,8 @@ class SpeciesDecoder(JSONDecoder):
                     return UltraBeast(**dct)
                 case "Mega":
                     return Mega(**dct)
+                case "Paradox":
+                    return Paradox(**dct)
                 case _:
                     return Pokemon(**dct)
         return dct
