@@ -331,11 +331,14 @@ class GroupByComplex(Complex[str]):
             elements = self.data.get(item, [])
             return item, f"Group has {len(elements):02d} OCs."
 
+        values = list(data.keys())
+        values.sort(key=lambda x: (-len(data.get(x, [])), x))
+
         super(GroupByComplex, self).__init__(
             member=member,
             target=target,
             parser=inner_parser,
-            values=list(data.keys()),
+            values=values,
             keep_working=True,
         )
 
@@ -369,11 +372,12 @@ class OCGroupBy(ABC):
 
     @classmethod
     def generate(cls, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
-        items = {
-            k: sorted(v, key=lambda x: x.name)
-            for k, v in sorted(cls.method(ctx, ocs).items(), key=lambda x: (-len(x[1]), x[0]))
-            if amount_parser(amount, v)
-        }
+        if member := ctx.namespace.kind.member:
+            ocs = [x for x in ocs if x.author == member.id]
+        else:
+            ocs = [x for x in ocs if ctx.guild.get_member(x.author)]
+        values = sorted(cls.method(ctx, ocs).items(), key=lambda x: (-len(x[1]), x[0]))
+        items = {k: sorted(v, key=lambda x: x.name) for k, v in values if amount_parser(amount, v)}
         return GroupByComplex(member=ctx.user, target=ctx, data=items)
 
 
@@ -394,18 +398,18 @@ class OCGroupByShape(OCGroupBy):
                     data[mon.shape].add(oc)
             elif mon := species:
                 if isinstance(species, (CustomMega, Variant)):
-                    mon = species.base.shape
+                    shape = species.base.shape
                 elif isinstance(species, Fakemon):
                     if mon := species.species_evolves_from:
-                        mon = mon.shape
+                        shape = mon.shape
                     else:
                         continue
                 else:
-                    mon = mon.shape
+                    shape = mon.shape
 
-                if mon:
-                    data.setdefault(mon, set())
-                    data[mon].add(oc)
+                if shape:
+                    data.setdefault(shape, set())
+                    data[shape].add(oc)
 
         return data
 
@@ -510,14 +514,18 @@ class OCGroupByLocation(OCGroupBy):
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         guild: Guild = ctx.guild
         aux: dict[TextChannel, set[Character]] = {}
+        unknown = set()
         for oc in ocs:
             if ch := guild.get_channel_or_thread(oc.location):
                 if isinstance(ch, Thread):
                     ch = ch.parent
                 aux.setdefault(ch, set())
                 aux[ch].add(oc)
-
-        return {k.name.replace("-", " ").title(): frozenset(v) for k, v in aux.items()}
+            else:
+                unknown.add(oc)
+        data = {k.name.replace("-", " ").title(): frozenset(v) for k, v in aux.items()}
+        data["Unknown"] = unknown
+        return data
 
 
 class OCGroupByMember(OCGroupBy):
