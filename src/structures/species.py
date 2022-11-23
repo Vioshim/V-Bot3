@@ -65,7 +65,7 @@ class Colors(Enum):
 
 ALL_SPECIES = frozendict()
 SPECIES_BY_NAME = frozendict()
-_BEASTBOOST = Ability.get(name="Beast Boost")
+ABILITIES_DEFINING = ["Beast Boost", "Protosynthesis", "Quark Drive"]
 PHRASES = {
     "GALAR": "Galarian",
     "HISUI": "Hisuian",
@@ -512,11 +512,11 @@ class Fakemon(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if _BEASTBOOST in self.abilities else 2
+        return 1 if any(x.name in ABILITIES_DEFINING for x in self.abilities) else 2
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return _BEASTBOOST not in self.abilities
+        return not any(x.name in ABILITIES_DEFINING for x in self.abilities)
 
     @classmethod
     def deduce(cls, item: str):
@@ -780,11 +780,11 @@ class Variant(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if _BEASTBOOST in self.abilities else 2
+        return 1 if any(x.name in ABILITIES_DEFINING for x in self.abilities) else 2
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return _BEASTBOOST not in self.abilities and self.base.can_have_special_abilities
+        return not any(x.name in ABILITIES_DEFINING for x in self.abilities) and self.base.can_have_special_abilities
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Variant]:

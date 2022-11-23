@@ -787,19 +787,21 @@ class AbilitiesField(TemplateField):
         ephemeral: bool = False,
     ):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
-        abilities = oc.species.abilities
+        abilities, amount = oc.species.abilities, 1
         if template == Template.CustomUltraBeast:
             abilities = {Ability.get(name="Beast Boost")}
         elif template == Template.CustomParadox:
             abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
         elif isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
             abilities = ALL_ABILITIES.values()
+            amount = oc.max_amount_abilities
+
         view = Complex[Ability](
             member=ctx.user,
             values=abilities,
             timeout=None,
             target=ctx,
-            max_values=oc.max_amount_abilities,
+            max_values=amount,
             parser=lambda x: (x.name, x.description),
             text_component=TextInput(
                 label="Ability",
@@ -809,12 +811,14 @@ class AbilitiesField(TemplateField):
             silent_mode=True,
         )
         view.embed.title = "Select the abilities. Current ones below"
+
         for index, item in enumerate(oc.abilities, start=1):
             view.embed.add_field(
                 name=f"Ability {index} - {item.name}",
                 value=item.description,
                 inline=False,
             )
+
         async with view.send(ephemeral=ephemeral) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
