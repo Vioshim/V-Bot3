@@ -227,9 +227,9 @@ class Template(TemplateItem, Enum):
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
         choices: list[Species] = []
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
 
         if mons := self.total_species:
+            ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
             async with view.send(ephemeral=ephemeral) as data:
                 if 1 <= len(data) <= self.max_values:
@@ -238,28 +238,13 @@ class Template(TemplateItem, Enum):
                     return
 
         match self:
-            case (
-                self.CustomPokemon
-                | self.CustomLegendary
-                | self.CustomMythical
-                | self.CustomUltraBeast
-                | self.CustomParadox
-            ):
-                async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label="Character's Species.",
-                    required=True,
-                    ephemeral=ephemeral,
-                ) as answer:
-                    if isinstance(answer, str) and answer:
-                        if isinstance(oc.species, Fakemon):
-                            oc.species.name = answer
-                        else:
-                            oc.species = Fakemon(
-                                name=answer,
-                                abilities=oc.abilities,
-                                base_image=oc.image_url,
-                                movepool=Movepool(other=oc.moveset.copy()),
-                            )
+            case self.Pokemon | self.Legendary | self.Mythical | self.UltraBeast | self.Paradox | self.Mega:
+                if choices:
+                    oc.species, abilities = choices[0], choices[0].abilities.copy()
+                    if len(abilities) <= oc.max_amount_abilities:
+                        oc.abilities = abilities
+                    else:
+                        oc.abilities &= abilities
             case self.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"{choices[0].name} Variant"[:45],
@@ -278,12 +263,21 @@ class Template(TemplateItem, Enum):
                 if len(choices) == 2:
                     oc.species = Fusion(*choices)
             case _:
-                if choices:
-                    oc.species, abilities = choices[0], choices[0].abilities.copy()
-                    if len(abilities) <= oc.max_amount_abilities:
-                        oc.abilities = abilities
-                    else:
-                        oc.abilities &= abilities
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label="Character's Species.",
+                    required=True,
+                    ephemeral=ephemeral,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        if isinstance(oc.species, Fakemon):
+                            oc.species.name = answer
+                        else:
+                            oc.species = Fakemon(
+                                name=answer,
+                                abilities=oc.abilities,
+                                base_image=oc.image_url,
+                                movepool=Movepool(other=oc.moveset.copy()),
+                            )
 
     @property
     def max_values(self):
