@@ -37,6 +37,7 @@ __all__ = (
 )
 
 ALL_ABILITIES = frozendict()
+ABILITIES_DEFINING = ["Beast Boost", "Protosynthesis", "Quark Drive"]
 
 
 @dataclass(unsafe_hash=True, slots=True)

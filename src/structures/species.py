@@ -27,7 +27,7 @@ from discord.utils import find, get
 from frozendict import frozendict
 from rapidfuzz import process
 
-from src.structures.ability import Ability
+from src.structures.ability import ABILITIES_DEFINING, Ability
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -65,12 +65,12 @@ class Colors(Enum):
 
 ALL_SPECIES = frozendict()
 SPECIES_BY_NAME = frozendict()
-ABILITIES_DEFINING = ["Beast Boost", "Protosynthesis", "Quark Drive"]
 PHRASES = {
     "GALAR": "Galarian",
     "HISUI": "Hisuian",
     "ALOLA": "Alolan",
     "KANTO": "Kantoian",
+    "PALDEA": "Paldean",
 }
 
 

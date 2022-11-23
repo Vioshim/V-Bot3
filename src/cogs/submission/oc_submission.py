@@ -50,7 +50,7 @@ from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, Ability
+from src.structures.ability import ABILITIES_DEFINING, ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character
 from src.structures.mon_typing import TypingEnum
@@ -764,8 +764,10 @@ class AbilitiesField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if not (1 <= len(oc.abilities) <= oc.max_amount_abilities):
-            return f"Abilities, Min: 1, Max: {oc.max_amount_abilities}"
+        amount = 1 if any(x.name in ABILITIES_DEFINING for x in oc.abilities) else oc.max_amount_abilities
+
+        if not (1 <= len(oc.abilities) <= amount):
+            return f"Abilities, Min: 1, Max: {amount}"
 
         if isinstance(oc.species, (Fakemon, Variant, CustomMega)):
             return None
