@@ -1080,6 +1080,7 @@ class CreationOCView(Basic):
                 value=x.name,
                 emoji="\N{MEMO}",
                 default=x == self.ref_template,
+                description=x.description[:100],
             )
             for x in Template
         ]
