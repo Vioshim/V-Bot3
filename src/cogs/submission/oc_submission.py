@@ -89,12 +89,10 @@ class TemplateItem:
     description: str = ""
     fields: frozendict[str, str] = field(default_factory=frozendict)
     docs: frozendict[str, str] = field(default_factory=frozendict)
-    custom: bool = False
 
     def __init__(self, data: dict[str, str]) -> None:
         self.description = data.get("description", "")
         modifier = data.get("modifier", {})
-        self.custom = data.get("custom", False)
         default = dict(
             Name="Name",
             Species="Species",
@@ -113,7 +111,7 @@ class TemplateItem:
 
 class Template(TemplateItem, Enum):
     Pokemon = dict(
-        description="The residents of this world.",
+        description="The average residents of this world.",
         exclude=["Types"],
         docs={
             "Standard": "1-Ebq40ONEzl0klHqUatG0Sy54mffal6AC2iX2aDHNas",
@@ -121,57 +119,54 @@ class Template(TemplateItem, Enum):
         },
     )
     Legendary = dict(
-        description="Legendaries that came from other world which want a new home/purpose.",
+        description="Normal residents that resemble legendaries.",
         exclude=["Types"],
         docs={"Standard": "1N2ZEZd1PEKusdIg9aAYw0_ODmoxHoe5GugkTGZWP21Y"},
     )
     Mythical = dict(
-        description="Mythicals that came from other world which want a new home/purpose.",
+        description="Normal residents that resemble mythicals.",
         exclude=["Types"],
         docs={"Standard": "1rVdi3XMXBadIZc03SrZl-vz3b-AcM2WgBSAfvdgW5Fs"},
     )
     UltraBeast = dict(
-        description="Ultra Beasts that came from other world which want a new home/purpose.",
+        description="Normal residents that resemble ultra beasts.",
         docs={"Standard": "1Xi25gAj6qoh14xYSXsinfMZ3-6loJ_CTCdrRdPlEhW8"},
     )
-    Paradox = dict(
-        description="From distant past/future, these kind of pokemon ended up here somehow.",
-        docs={"Standard": "1oe-W2uTJBHPuCje5zjMf2KVxWbomjuTgF1kX6UuAhbk"},
-    )
     Mega = dict(
-        description="People that mega evolved and kept stuck like this.",
+        description="Those that mega evolved and kept stuck like this.",
         exclude=["Abilities", "Types"],
         docs={
             "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM",
             "w/Sp. Ability": "1j7dO_sf4wEaO-enKBvmLjrD9gnBh5jMY_QY0XBb0-To",
         },
     )
+    Paradox = dict(
+        description="From distant past/future, they ended up here somehow.",
+        docs={"Standard": "1oe-W2uTJBHPuCje5zjMf2KVxWbomjuTgF1kX6UuAhbk"},
+    )
     Fusion = dict(
-        description="They are also known as Hybrids sometimes, fusions that contain legendaries can't have special abilities.",
+        description="Individuals that share traits of two species.",
         modifier={"Species": ("Species", "Species 1, Species 2")},
         docs={
             "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04",
             "w/Sp. Ability": "1l_fQ2i2By63CgCco29XvkZiAdEpWgs4xkDMunwceLHM",
         },
-        custom=True,
     )
     Variant = dict(
-        description="Community created variants of canon species",
+        description="Fan-made. Species variations (movesets, types)",
         modifier={"Species": ("Variant", "Variant Species")},
         docs={
             "Standard": "1zLNd_5QZ39aBuDEHt3RC4cmymBjRlFmxuesbfSDgDbA",
             "w/Sp. Ability": "12MwUc3uDUOAobHo-fyiwXxh-jI6Tfj5zimOmQHJUWTc",
         },
-        custom=True,
     )
     Chimera = dict(
-        description="Pokemon created by nature or science, three way fusions.",
+        description="Fan-made. rare three way fusions.",
         modifier={"Species": ("Chimera", "Species, Species, Species, ...")},
         docs={"Standard": "1MbaUTR2NDOpsifRO2lVw6t0eAUKFGaOOIOHD0nXC2aA"},
-        custom=True,
     )
     CustomPokemon = dict(
-        description="Community created species which are assumed to be foreigners",
+        description="Fan-made. They are normal residents.",
         modifier={"Species": ("Fakemon", "Fakemon Species")},
         docs={
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
@@ -179,49 +174,43 @@ class Template(TemplateItem, Enum):
             "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
             "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
         },
-        custom=True,
     )
     CustomLegendary = dict(
-        description="Community created species which are assumed to be foreigners",
+        description="Fan-made. Normal residents that resemble legendaries.",
         modifier={"Species": ("Fakemon", "Fakemon Legendary Species")},
         docs={
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
             "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
             "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
         },
-        custom=True,
     )
     CustomMythical = dict(
-        description="Community created species which are assumed to be foreigners",
+        description="Fan-made. Normal residents that resemble mythicals.",
         modifier={"Species": ("Fakemon", "Fakemon Mythical Species")},
         docs={
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
             "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
             "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
         },
-        custom=True,
     )
     CustomUltraBeast = dict(
-        description="Community created species which are assumed to be foreigners",
+        description="Fan-made. Normal residents that resemble ultra beasts.",
         modifier={"Species": ("Fakemon", "Fakemon Ultra Beast Species")},
         docs={
             "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
             "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
             "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
         },
-        custom=True,
     )
     CustomMega = dict(
-        description="Community created species which are assumed to be foreigners",
+        description="Fan-made. Mega evolved and kept stuck like this.",
         modifier={"Species": ("Fakemon", "Mega Species")},
         docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
-        custom=True,
     )
     CustomParadox = dict(
-        description="Community created species which are assumed to be foreigners",
+        description="Fan-made. From distant past/future, they ended up here somehow.",
         modifier={"Species": ("Fakemon", "Paradox Species")},
         docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
-        custom=True,
     )
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
@@ -318,17 +307,14 @@ class Template(TemplateItem, Enum):
 
     @property
     def title(self):
-        if self.custom:
-            return self.name.removeprefix("Custom") + " (Custom)"
-        return self.name
+        name = self.name.replace("UltraBeast", "Ultra Beast")
+        if name.startswith("Custom"):
+            name = name.removeprefix("Custom") + " (Custom)"
+        return name
 
     @property
     def formatted_text(self):
         return f"```yaml\n{self.text}\n```"
-
-    @property
-    def doc_urls(self):
-        return {k: f"https://docs.google.com/document/d/{v}/edit?usp=sharing" for k, v in self.docs.items()}
 
     @property
     def embed(self):
@@ -338,7 +324,8 @@ class Template(TemplateItem, Enum):
             color=Color.blurple(),
         )
         embed.set_image(url=WHITE_BAR)
-        for key, url in self.doc_urls.items():
+        for key, doc_id in self.docs.items():
+            url = f"https://docs.google.com/document/d/{doc_id}/edit?usp=sharing"
             embed.add_field(name=key, value=f"[Google Docs URL]({url})")
         embed.set_footer(text=self.description)
         return embed
@@ -1313,12 +1300,12 @@ class SubmissionModal(Modal):
         try:
             author = interaction.client.supporting.get(refer_author, refer_author)
             async for item in ParserMethods.parse(text=self.text.value, bot=interaction.client):
-                if oc := Character.process(**item):
-                    view = CreationOCView(bot=interaction.client, ctx=interaction, user=author, oc=oc)
-                    if self.ephemeral:
-                        await resp.edit_message(embeds=view.embeds, view=view)
-                    else:
-                        await view.send(ephemeral=False)
+                oc = Character.process(**item)
+                view = CreationOCView(bot=interaction.client, ctx=interaction, user=author, oc=oc)
+                if self.ephemeral:
+                    await resp.edit_message(embeds=view.embeds, view=view)
+                else:
+                    await view.send(ephemeral=False)
         except Exception as e:
             if not resp.is_done():
                 await resp.defer(ephemeral=True, thinking=True)
@@ -1365,21 +1352,16 @@ class TemplateView(View):
         resp: InteractionResponse = ctx.response
         match sct.values[0]:
             case "Form":
-                ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
+                ephemeral = bool(get(ctx.user.roles, name="Registered"))
                 modal = SubmissionModal(self.template.text, ephemeral=ephemeral)
                 await resp.send_modal(modal)
                 await modal.wait()
             case "Message":
-                await resp.edit_message(
-                    content=self.template.formatted_text,
-                    embed=None,
-                    view=None,
-                )
+                content = self.template.formatted_text
+                await resp.edit_message(content=content, embed=None, view=None)
             case "Google Document":
-                await resp.edit_message(
-                    embed=self.template.docs_embed,
-                    view=None,
-                )
+                embed = self.template.docs_embed
+                await resp.edit_message(embed=embed, view=None)
         self.stop()
 
 
@@ -1413,7 +1395,15 @@ class SubmissionView(View):
         resp: InteractionResponse = ctx.response
         member: Member = sct.values[0] if sct.values else ctx.user
         await resp.defer(ephemeral=True, thinking=True)
-        if values := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
+        if values := [
+            Character.from_mongo_dict(x)
+            async for x in db.find(
+                {
+                    "author": member.id,
+                    "server": ctx.guild_id,
+                }
+            )
+        ]:
             values.sort(key=lambda x: x.name)
             if ctx.user == member or ctx.user.guild_permissions.manage_messages:
                 view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
@@ -1490,7 +1480,9 @@ class SubmissionView(View):
         member: Member = ctx.user
         await resp.defer(ephemeral=True, thinking=True)
         member = ctx.client.supporting.get(member, member)
-        if values := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
+        if values := [
+            Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})
+        ]:
             values.sort(key=lambda x: x.name)
             view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
             view.embed.title = "Select Character to modify"
