@@ -372,7 +372,7 @@ class OCGroupBy(ABC):
 
     @classmethod
     def generate(cls, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
-        if member := ctx.namespace.kind.member:
+        if member := ctx.namespace.member:
             ocs = [x for x in ocs if x.author == member.id]
         else:
             ocs = [x for x in ocs if ctx.guild.get_member(x.author)]
