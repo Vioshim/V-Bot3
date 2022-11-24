@@ -70,7 +70,7 @@ class Proxy(commands.Cog):
         text = text or "\u200b"
         thread = view = MISSING
         if reference := message.reference:
-            view = View(Button(label="Replying to", url=reference.jump_url))
+            view = View().add_item(Button(label="Replying to", url=reference.jump_url))
         if isinstance(message.channel, Thread):
             thread = message.channel
         proxy_msg: WebhookMessage = await webhook.send(

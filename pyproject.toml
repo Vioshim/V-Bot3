@@ -7,7 +7,7 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.10.7"
+python = "3.10.8"
 "discord.py" = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
     "speed",
     "voice",
@@ -70,7 +70,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.10.7"
+pythonVersion = "3.10.8"
 flake8 = "^4.0.1"
 
 
