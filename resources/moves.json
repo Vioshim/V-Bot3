@@ -2020,7 +2020,7 @@
 		"desc": "The user uses the last move used by the target. The copied move is used against that target, if possible. Fails if the target has not made a move, or if the last move used cannot be copied by this move.",
 		"shortDesc": "User uses the target's last used move against it.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 120,
@@ -4910,7 +4910,7 @@
 		"desc": "If another Pokemon uses certain non-damaging moves this turn, the user steals that move to use itself. If multiple Pokemon use one of those moves this turn, the applicable moves are all stolen by the first Pokemon in turn order that used this move this turn. This effect is ignored while the user is under the effect of Sky Drop.",
 		"shortDesc": "User steals certain support moves to use itself.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 290,
@@ -6491,7 +6491,7 @@
 		"desc": "The user uses the move the target chose for use this turn against it, if possible, with its power multiplied by 1.5. The move must be a damaging move other than Beak Blast, Chatter, Counter, Covet, Focus Punch, Me First, Metal Burst, Mirror Coat, Shell Trap, Struggle, Thief, or any Z-Move. Fails if the target moves before the user. Ignores the target's substitute for the purpose of copying the move.",
 		"shortDesc": "Copys a foe at 1.5x power. User must be faster.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 383,
@@ -6729,7 +6729,7 @@
 		"desc": "This move does not check accuracy.",
 		"shortDesc": "This move does not check accuracy.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 397,
@@ -8769,7 +8769,7 @@
 		"desc": "The target receives the user's held item. Fails if the user has no item or is holding a Mail or Z-Crystal, if the target is already holding an item, if the user is a Kyogre holding a Blue Orb, a Groudon holding a Red Orb, a Giratina holding a Griseous Orb, an Arceus holding a Plate, a Genesect holding a Drive, a Silvally holding a Memory, a Pokemon that can Mega Evolve holding the Mega Stone for its specys, or if the target is one of those Pokemon and the user is holding the respective item.",
 		"shortDesc": "User passes its held item to the target.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 517,
@@ -9296,7 +9296,7 @@
 		"desc": "Has a 10% chance to cause the target to fall asleep. If this move is successful on at least one target and the user is a Meloetta, it changes to Pirouette Forme if it is currently in Aria Forme, or changes to Aria Forme if it is currently in Pirouette Forme. This forme change does not happen if the Meloetta has the Sheer Force Ability. The Pirouette Forme reverts to Aria Forme when Meloetta is not active.",
 		"shortDesc": "10% chance to sleep foe(s). Meloetta transforms.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 548,
@@ -10078,7 +10078,7 @@
 		"desc": "If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally.",
 		"shortDesc": "Breaks the target's protection for this turn.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 594,
@@ -10486,7 +10486,7 @@
 		"desc": "If the target lost HP, the user takes recoil damage equal to 1/2 the HP lost by the target, rounded half up, but not less than 1 HP.",
 		"shortDesc": "Has 1/2 recoil.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 618,
@@ -10503,7 +10503,7 @@
 		"desc": "No additional effect.",
 		"shortDesc": "No additional effect. Hits adjacent foes.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 619,
@@ -10520,7 +10520,7 @@
 		"desc": "No additional effect.",
 		"shortDesc": "No additional effect. Hits adjacent foes.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 620,
@@ -10537,7 +10537,7 @@
 		"desc": "Lowers the user's Defense and Special Defense by 1 stage.",
 		"shortDesc": "Lowers the user's Defense and Sp. Def by 1.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 621,
@@ -10554,7 +10554,7 @@
 		"desc": "Lowers the user's Defense by 1 stage. This move cannot be used successfully unless the user's current form, while considering Transform, is Hoopa Unbound. If this move is successful, it breaks through the target's Baneful Bunker, Detect, King's Shield, Protect, or Spiky Shield for this turn, allowing other Pokemon to attack the target normally. If the target's side is protected by Crafty Shield, Mat Block, Quick Guard, or Wide Guard, that protection is also broken for this turn and other Pokemon may attack the target's side normally.",
 		"shortDesc": "Hoopa-U: Lowers user's Def by 1. breaks protect.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 659,
@@ -10775,7 +10775,7 @@
 		"desc": "Until the end of the turn, all single-target attacks from opponents of the target are redirected to the target. Such attacks are redirected to the target before they can be reflected by Magic Coat or the Magic Bounce Ability, or drawn in by the Lightning Rod or Storm Drain Abilitys. Fails if it is not a Double Battle or Battle Royal.",
 		"shortDesc": "Target's foes' moves are redirected to it this turn.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 672,
@@ -11098,7 +11098,7 @@
 		"desc": "If the user is hit by a contact move this turn before it can execute this move, the attacker is burned.",
 		"shortDesc": "Burns on contact with the user before it moves.",
 		"banned": false,
-		"metronome": false
+		"metronome": true
 	},
 	{
 		"index": 691,
@@ -11336,7 +11336,7 @@
 		"desc": "This move and its effects ignore the Abilitys of other Pokemon.",
 		"shortDesc": "Ignores the Abilitys of other Pokemon.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 714,
@@ -11353,7 +11353,7 @@
 		"desc": "This move and its effects ignore the Abilitys of other Pokemon.",
 		"shortDesc": "Ignores the Abilitys of other Pokemon.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 715,
@@ -11404,7 +11404,7 @@
 		"desc": "Deals damage to the target equal to half of its current HP, rounded down, but not less than 1 HP.",
 		"shortDesc": "Does damage equal to 1/2 target's current HP.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 718,
@@ -11710,7 +11710,7 @@
 		"desc": "Hits twice. If the first hit breaks the target's substitute, it will take damage for the second hit. Has a 30% chance to flinch the target.",
 		"shortDesc": "Hits twice. 30% chance to flinch.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 744,
@@ -11727,7 +11727,7 @@
 		"desc": "Damage doubles if the target is Dynamaxed.",
 		"shortDesc": "Damage doubles if the target is Dynamaxed.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 745,
@@ -11948,7 +11948,7 @@
 		"desc": "Raises the user's Attack, Defense, Special Attack, Special Defense, and Speed by 1 stage in exchange for the user losing 33% of its maximum HP, rounded down. Fails if the user would faint or if its Attack, Defense, Special Attack, Special Defense, and Speed stat stages would not change.",
 		"shortDesc": "User loses 33% of its max HP. +1 to all stats.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 776,
@@ -11965,7 +11965,7 @@
 		"desc": "Damage is calculated using the user's Defense stat as its Attack, including stat stage changes. Other effects that modify the Attack stat are used as normal.",
 		"shortDesc": "Uses user's Def stat as Atk in damage calculation.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 777,
@@ -11982,7 +11982,7 @@
 		"desc": "Raises the target's Attack and Special Attack by 2 stages.",
 		"shortDesc": "Raises the target's Attack and Sp. Atk by 2.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 778,
@@ -11999,7 +11999,7 @@
 		"desc": "Has a 100% chance to lower the target's Speed by 1 stage.",
 		"shortDesc": "100% chance to lower the target's Speed by 1.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 779,
@@ -12016,7 +12016,7 @@
 		"desc": "Prevents the target from switching for four or five turns (seven turns if the user is holding Grip Claw). Causes damage to the target equal to 1/8 of its maximum HP (1/6 if the user is holding Binding Band) rounded down, at the end of each turn during effect. The target can still switch out if it is holding Shed Shell or uses Baton Pass, Parting Shot, Teleport, U-turn, or Volt Switch. The effect ends if either the user or the target leaves the field, or if the target uses Rapid Spin or Substitute successfully. This effect is not stackable or reset by using this or another binding move.",
 		"shortDesc": "Traps and damages the target for 4-5 turns.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 780,
@@ -12033,7 +12033,7 @@
 		"desc": "Has a 10% chance to burn the target.",
 		"shortDesc": "10% chance to burn the target. Thaws user.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 781,
@@ -12050,7 +12050,7 @@
 		"desc": "Damage doubles if the target is Dynamaxed.",
 		"shortDesc": "Damage doubles if the target is Dynamaxed.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 782,
@@ -12067,7 +12067,7 @@
 		"desc": "Damage doubles if the target is Dynamaxed.",
 		"shortDesc": "Damage doubles if the target is Dynamaxed.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 783,
@@ -12101,7 +12101,7 @@
 		"desc": "Has a 100% chance to lower the target's Attack by 1 stage.",
 		"shortDesc": "100% chance to lower the foe(s) Attack by 1.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 785,
@@ -12118,7 +12118,7 @@
 		"desc": "No additional effect.",
 		"shortDesc": "No additional effect.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 786,
@@ -12135,7 +12135,7 @@
 		"desc": "No additional effect.",
 		"shortDesc": "No additional effect. Hits foe(s).",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 787,
@@ -12152,7 +12152,7 @@
 		"desc": "Has a 100% chance to lower the target's Special Defense by 1 stage.",
 		"shortDesc": "100% chance to lower the target's Sp. Def by 1.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 788,
@@ -12169,7 +12169,7 @@
 		"desc": "Has a 100% chance to lower the target's Defense by 1 stage. Power is multiplied by 1.5 during Gravity's effect.",
 		"shortDesc": "Target: 100% -1 Def. During Gravity: 1.5x power.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 789,
@@ -12186,7 +12186,7 @@
 		"desc": "Has a 100% chance to lower the target's Special Attack by 1 stage.",
 		"shortDesc": "100% chance to lower the target's Sp. Atk by 1.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 790,
@@ -12203,7 +12203,7 @@
 		"desc": "Has a 20% chance to confuse the target.",
 		"shortDesc": "20% chance to confuse the target.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 791,
@@ -12220,7 +12220,7 @@
 		"desc": "Each Pokemon on the user's side restores 1/4 of its maximum HP, rounded half up.",
 		"shortDesc": "Heals the user and its allys by 1/4 their max HP.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 792,
@@ -12237,7 +12237,7 @@
 		"desc": "The user is protected from most attacks made by other Pokemon during this turn, and Pokemon trying to make contact with the user have their Defense lowered by 2 stages. Non-damaging moves go through this protection. This move has a 1/X chance of being successful, where X starts at 1 and triples each time this move is successfully used. X resets to 1 if this move fails, if the user's last move used is not Baneful Bunker, Detect, Endure, King's Shield, Max Guard, Obstruct, Protect, Quick Guard, Spiky Shield, or Wide Guard, or if it was one of those moves and the user's protection was broken. Fails if the user moves last this turn.",
 		"shortDesc": "Protects from damaging attacks. Contact: -2 Def.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 793,
@@ -12254,7 +12254,7 @@
 		"desc": "This move does not check accuracy.",
 		"shortDesc": "This move does not check accuracy.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 794,
@@ -12288,7 +12288,7 @@
 		"desc": "If this move is successful, the user must recharge on the following turn and cannot select a move.",
 		"shortDesc": "User cannot move next turn.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 796,
@@ -12305,7 +12305,7 @@
 		"desc": "Whether or not this move is successful and even if it would cause fainting, the user loses 1/2 of its maximum HP, rounded up, unless the user has the Magic Guard Ability.",
 		"shortDesc": "User loses 50% max HP.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 797,
@@ -12645,7 +12645,7 @@
 		"desc": "Each Pokemon on the user's side restores 1/4 of its maximum HP, rounded half up, and has its status condition cured.",
 		"shortDesc": "User and allys: healed 1/4 max HP, status cured.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 817,
@@ -12662,7 +12662,7 @@
 		"desc": "This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilitys.",
 		"shortDesc": "Always results in a critical hit.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 818,
@@ -12679,7 +12679,7 @@
 		"desc": "Hits three times. This move is always a critical hit unless the target is under the effect of Lucky Chant or has the Battle Armor or Shell Armor Abilitys.",
 		"shortDesc": "Always results in a critical hit. Hits 3 times.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 819,
@@ -12696,7 +12696,7 @@
 		"desc": "The user traps the target in a cage of sparking electricity for four to five turns.",
 		"shortDesc": "The user traps the target in a cage of sparking electricity for four to five turns.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 820,
@@ -12713,7 +12713,7 @@
 		"desc": "Dragon Energy does damage proportionately based on the user's HP. This move's base power reduces as the user's HP reduces and is calculated by the formula: 150 x HP/Max_HP.",
 		"shortDesc": "Converting its life-force into power, the user attacks opposing PokÃ©mon. The lower the user's HP, the lower the move's power.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 821,
@@ -12730,7 +12730,7 @@
 		"desc": "The user shoots its psychic power from its eyes to attack. This may also leave the target frozen.",
 		"shortDesc": "The user shoots its psychic power from its eyes to attack. This may also leave the target frozen.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 822,
@@ -12747,7 +12747,7 @@
 		"desc": "The user transforms its wrath into a fire-like aura to attack. This may also make opposing PokÃ©mon flinch.",
 		"shortDesc": null,
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 823,
@@ -12764,7 +12764,7 @@
 		"desc": "The user overwhelms the target with lightning-like movement before delivering a kick. This also lowers the target's Defense stat.",
 		"shortDesc": "Thunderous Kick inflicts damage and lowers the target's Defense stat.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 824,
@@ -12781,7 +12781,7 @@
 		"desc": "The user attacks by hurling a blizzard-cloaked icicle lance at opposing PokÃ©mon.",
 		"shortDesc": "The user attacks by hurling a blizzard-cloaked icicle lance at opposing PokÃ©mon.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 825,
@@ -12798,7 +12798,7 @@
 		"desc": "The user attacks by sending a frightful amount of small ghosts at opposing Pokemon.",
 		"shortDesc": "Astral Barrage inflicts damage to all adjacent opponents.",
 		"banned": false,
-		"metronome": true
+		"metronome": false
 	},
 	{
 		"index": 826,

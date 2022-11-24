@@ -14,6 +14,7 @@
 
 
 from os import path
+from random import choice
 from re import IGNORECASE
 from re import compile as re_compile
 from re import escape
@@ -29,7 +30,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Object,
-    Thread,
     app_commands,
 )
 from discord.ext import commands
@@ -226,17 +226,26 @@ class Utilities(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def metronome(self, ctx: Interaction):
-        """Allows to use metronome
+    async def metronome(self, ctx: Interaction, valid: bool = True, hidden: bool = False):
+        """Allows to use Metronome
 
         Parameters
         ----------
         ctx : Interaction
             Interaction
+        valid : bool, optional
+            Valid metronome, by default True
+        hidden : bool, optional
+            if hidden, by default False
         """
         resp: InteractionResponse = ctx.response
-        item = Move.getMetronome()
-        await resp.send_message(embed=item.embed)
+        moves = [*Move.all()]
+
+        if valid:
+            moves = [x for x in moves if x.metronome and not x.banned]
+
+        item = choice(moves)
+        await resp.send_message(content=f"Canon Metronome: {valid}", embed=item.embed, ephemeral=hidden)
 
     @commands.command()
     async def roll(self, ctx: commands.Context, *, expression: Optional[str] = None):
