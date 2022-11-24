@@ -983,7 +983,11 @@ class CharacterTransform(Transformer):
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.user
-        ocs = {oc.id: oc async for x in db.find({"author": member.id}) if (oc := Character.from_mongo_dict(x))}
+        ocs = {
+            oc.id: oc
+            async for x in db.find({"author": member.id, "server": interaction.guild_id})
+            if (oc := Character.from_mongo_dict(x))
+        }
         if value.isdigit() and (oc := ocs.get(int(value))):
             return oc
         elif options := process.extractOne(
@@ -998,7 +1002,11 @@ class CharacterTransform(Transformer):
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.user
-        ocs = {oc.id: oc async for x in db.find({"author": member.id}) if (oc := Character.from_mongo_dict(x))}
+        ocs = {
+            oc.id: oc
+            async for x in db.find({"author": member.id, "server": interaction.guild_id})
+            if (oc := Character.from_mongo_dict(x))
+        }
         if value.isdigit() and (oc := ocs.get(int(value))):
             options = [oc]
         elif options := process.extract(

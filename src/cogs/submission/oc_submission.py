@@ -141,7 +141,7 @@ class Template(TemplateItem, Enum):
         },
     )
     Paradox = dict(
-        description="From distant past/future, they ended up here somehow.",
+        description="From distant past/future, somehow ended up here.",
         docs={"Standard": "1oe-W2uTJBHPuCje5zjMf2KVxWbomjuTgF1kX6UuAhbk"},
     )
     Fusion = dict(
@@ -208,7 +208,7 @@ class Template(TemplateItem, Enum):
         docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
     )
     CustomParadox = dict(
-        description="Fan-made. From distant past/future, they ended up here somehow.",
+        description="Fan-made. From distant past/future, somehow ended up here.",
         modifier={"Species": ("Fakemon", "Paradox Species")},
         docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
     )
@@ -776,14 +776,15 @@ class AbilitiesField(TemplateField):
         ephemeral: bool = False,
     ):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
-        abilities, amount = oc.species.abilities, 1
+        abilities, amount = oc.species.abilities, oc.max_amount_abilities
         if template == Template.CustomUltraBeast:
             abilities = {Ability.get(name="Beast Boost")}
+            amount = 1
         elif template == Template.CustomParadox:
             abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
+            amount = 1
         elif isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
             abilities = ALL_ABILITIES.values()
-            amount = oc.max_amount_abilities
 
         view = Complex[Ability](
             member=ctx.user,
