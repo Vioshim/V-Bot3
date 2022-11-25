@@ -546,17 +546,50 @@ class SizeField(TemplateField):
             target=ctx,
             timeout=None,
             values=[*Size],
-            parser=lambda x: (x.info(height) + ("- Avg." if x == Size.M else ""), None),
+            parser=lambda x: (x.height_info(height), None),
             silent_mode=True,
         )
         async with view.send(
             title="Select the character's Size. Current below",
-            description=f"> {oc.size.info(height)}",
+            description=f"> {oc.size.height_info(height)}",
             single=True,
             ephemeral=ephemeral,
         ) as size:
             if isinstance(size, Size):
                 oc.size = size
+                progress.add(cls.name)
+
+
+class WeightField(TemplateField):
+    name = "Weight"
+    description = "Fill the OC's Weight"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        weight = oc.species.weight if oc.species else 0
+        view = Complex[Size](
+            member=ctx.user,
+            target=ctx,
+            timeout=None,
+            values=[*Size],
+            parser=lambda x: (x.weight_info(weight), None),
+            silent_mode=True,
+        )
+        async with view.send(
+            title="Select the character's Weight. Current below",
+            description=f"> {oc.size.weight_info(weight)}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as weight:
+            if isinstance(weight, Size):
+                oc.weight = weight
                 progress.add(cls.name)
 
 

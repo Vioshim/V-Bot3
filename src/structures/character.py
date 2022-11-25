@@ -187,18 +187,24 @@ class Kind(Enum):
 
 
 class Size(Enum):
-    XXXL = 2.00, 6.50
-    XXL = 1.750, 4.00
-    XL = 1.5000, 2.00
-    L = 1.25000, 1.50
-    M = 1.00000, 1.20
-    S = 0.87500, 1.00
-    XS = 0.7500, 0.80
-    XXS = 0.625, 0.50
-    XXXS = 0.50, 0.20
+    XXXL = 2.00, 2.2000, 6.50, 235.00
+    XXL = 1.750, 1.8750, 4.00, 193.25
+    XL = 1.5000, 1.5500, 2.00, 151.50
+    L = 1.25000, 1.2750, 1.50, 109.75
+    M = 1.00000, 1.0000, 1.20, 68.000
+    S = 0.87500, 0.8125, 1.00, 51.000
+    XS = 0.7500, 0.6250, 0.80, 34.000
+    XXS = 0.625, 0.4375, 0.50, 17.300
+    XXXS = 0.50, 0.2500, 0.20, 0.6000
 
-    def info(self, value: float):
-        proportion, size = self.value
+    @property
+    def emoji(self):
+        if self == self.M:
+            return "\N{BLACK SQUARE BUTTON}"
+        return "\N{BLACK LARGE SQUARE}"
+
+    def height_info(self, value: float):
+        proportion, _, size, _ = self.value
         if value:
             value *= proportion
         else:
@@ -206,6 +212,14 @@ class Size(Enum):
 
         feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
         return f"{value:.2f} m / {feet}' {inches}\" ft"
+
+    def weight_info(self, value: float):
+        _, proportion, _, size = self.value
+        if value:
+            value *= proportion
+        else:
+            value = size
+        return f"{value:.2f} kg / {value * 2.2046:.2f} lbs"
 
 
 @dataclass(slots=True)
@@ -229,6 +243,7 @@ class Character:
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
     size: Size = Size.M
+    weight: Size = Size.M
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -261,6 +276,7 @@ class Character:
 
         data["age"] = self.age.name
         data["size"] = self.size.name
+        data["weight"] = self.weight.name
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
@@ -314,6 +330,11 @@ class Character:
                 self.size = Size[self.size]
             except KeyError:
                 self.size = Size.M
+        if isinstance(self.weight, str):
+            try:
+                self.weight = Size[self.weight]
+            except KeyError:
+                self.weight = Size.M
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun.deduce(self.pronoun)
         self.age = AgeGroup.parse(self.age)
@@ -578,7 +599,9 @@ class Character:
             icon_url = None
 
         height = self.species.height if self.species else 0
-        c_embed.set_footer(text=self.size.info(height), icon_url=icon_url)
+        weight = self.species.weight if self.species else 0
+        text = f"{self.size.height_info(height)}\n{self.weight.weight_info(weight)}"
+        c_embed.set_footer(text=text, icon_url=icon_url)
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
@@ -896,6 +919,7 @@ class Character:
             location=self.location,
             hidden_power=self.hidden_power,
             size=self.size,
+            weight=self.weight,
         )
 
     def __repr__(self) -> str:
