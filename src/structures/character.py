@@ -187,18 +187,18 @@ class Kind(Enum):
 
 
 class Size(Enum):
-    XXXL = 256
-    XXL = 224
-    XL = 192
-    L = 160
-    M = 128
-    S = 96
-    XS = 64
-    XXS = 32
-    XXXS = 0
+    XXXL = 2.00
+    XXL = 1.750
+    XL = 1.5000
+    L = 1.25000
+    M = 1.00000
+    S = 0.87500
+    XS = 0.7500
+    XXS = 0.625
+    XXXS = 0.50
 
     def calculate(self, value: float) -> float:
-        return round(value * (self.value / 128.0), 2)
+        return round(value * self.value, 2)
 
     @property
     def title(self):
