@@ -598,10 +598,14 @@ class Character:
         else:
             icon_url = None
 
-        height = self.species.height if self.species else 0
-        weight = self.species.weight if self.species else 0
-        text = f"{self.size.height_info(height)}\n{self.weight.weight_info(weight)}"
-        c_embed.set_footer(text=text, icon_url=icon_url)
+        if species := self.species:
+            c_embed.set_footer(
+                text="{}\n{}".format(
+                    self.size.height_info(species.height),
+                    self.weight.weight_info(species.weight),
+                ),
+                icon_url=icon_url,
+            )
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)

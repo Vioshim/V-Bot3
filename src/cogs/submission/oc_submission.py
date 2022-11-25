@@ -525,6 +525,7 @@ class SpeciesField(TemplateField):
                 oc.moveset = frozenset(moves)
             if not oc.abilities and len(species.abilities) == 1:
                 oc.abilities = species.abilities.copy()
+            oc.size = oc.weight = Size.M
 
 
 class SizeField(TemplateField):
@@ -1168,8 +1169,18 @@ class CreationOCView(Basic):
     async def kind(self, ctx: Interaction, sct: Select):
         try:
             self.oc.species = None
-            self.progress -= {"Species", "Types", "Abilities", "Moveset"}
+            items: list[TemplateField] = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
+            self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
+            self.oc.size = self.oc.weight = Size.M
+
+            if self.ref_template == Template.CustomUltraBeast:
+                self.oc.abilities = frozenset({Ability.get(name="Beast Boost")})
+
+            if self.ref_template == Template.CustomParadox:
+                ab1, ab2 = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
+                if not (self.oc.abilities == {ab1} or self.oc.abilities == {ab2}):
+                    self.oc.abilities = frozenset()
 
             match self.ref_template:
                 case (
@@ -1183,14 +1194,8 @@ class CreationOCView(Basic):
                     | Template.CustomUltraBeast
                     | Template.CustomParadox
                 ):
-                    self.progress -= {"Special Ability"}
+                    self.progress -= {SpAbilityField.name}
                     self.oc.sp_ability = None
-                    if self.ref_template == Template.CustomUltraBeast:
-                        self.oc.abilities = frozenset({Ability.get(name="Beast Boost")})
-                    elif self.ref_template == Template.CustomParadox:
-                        ab1, ab2 = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
-                        if not (self.oc.abilities == {ab1} or self.oc.abilities == {ab2}):
-                            self.oc.abilities = frozenset()
 
             await self.update(ctx)
         except Exception as e:
