@@ -29,7 +29,6 @@ from discord import (
     Member,
     Object,
     PartialEmoji,
-    PartialMessage,
     TextChannel,
     TextStyle,
     Thread,
@@ -187,8 +186,7 @@ class PingView(View):
             id=self.oc.thread,
             guild_id=self.oc.server,
         )
-        msg = PartialMessage(channel=channel, id=self.oc.id)
-        await msg.delete(delay=0)
+        await channel.get_partial_message(self.oc.id).delete(delay=0)
         self.stop()
 
 

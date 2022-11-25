@@ -31,7 +31,6 @@ from discord import (
     Message,
     NotFound,
     PartialEmoji,
-    PartialMessage,
     RawMessageDeleteEvent,
     TextChannel,
     Thread,
@@ -551,7 +550,7 @@ class EmbedBuilder(commands.Cog):
             if reference := ctx.message.reference:
                 if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
                     try:
-                        message = PartialMessage(channel=ctx.channel, id=reference.message_id)
+                        message = ctx.channel.get_partial_message(reference.message_id)
                         message = await message.edit(embed=embed)
                     except DiscordException:
                         if not isinstance(msg, Message):
@@ -585,7 +584,7 @@ class EmbedBuilder(commands.Cog):
             if reference := ctx.message.reference:
                 if not isinstance(msg := reference.resolved, DeletedReferencedMessage):
                     try:
-                        message = PartialMessage(channel=ctx.channel, id=reference.message_id)
+                        message = ctx.channel.get_partial_message(reference.message_id)
                         message = await message.edit(embed=embed, files=files)
                     except DiscordException:
                         if not isinstance(msg, Message):

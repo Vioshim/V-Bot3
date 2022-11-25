@@ -37,7 +37,6 @@ from discord import (
     NotFound,
     Object,
     PartialEmoji,
-    PartialMessage,
     PermissionOverwrite,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
@@ -1502,15 +1501,15 @@ class Information(commands.Cog):
         if self.ready:
             return
 
-        if not (channel := self.bot.get_channel(860590339327918100)):
-            channel = await self.bot.fetch_channel(860590339327918100)
-
         db = self.bot.mongo_db("Poll")
         async for item in db.find({}):
             view = PollView.from_mongo(item)
             self.bot.add_view(view, message_id=item["id"])
 
-        await PartialMessage(channel=channel, id=1023703599538257940).edit(view=InformationView())
+        channel = self.bot.get_partial_messageable(860590339327918100, guild_id=719343092963999804)
+        message = channel.get_partial_message(1023703599538257940)
+        await message.edit(view=InformationView())
+
         self.ready = True
 
 

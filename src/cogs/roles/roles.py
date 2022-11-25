@@ -877,7 +877,7 @@ class RPRolesView(View):
                     f"{role.name} - {member}",
                     f"{member.display_name} w/ {len(ocs)} OCs",
                 ),
-                PartialMessage(channel=ctx.channel, id=item["id"]),
+                ctx.channel.get_partial_message(item["id"]),
             )
             async for item in db.find(key, sort=[("id", -1)])
             if (role := ctx.guild.get_role(item["role"]))

@@ -28,7 +28,6 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
-    PartialMessage,
     SelectOption,
     TextStyle,
 )
@@ -1244,7 +1243,7 @@ class CreationOCView(Basic):
             if resp.is_done():
                 message = self.message or ctx.message
                 if not message.flags.ephemeral:
-                    message = PartialMessage(channel=message.channel, id=message.id)
+                    message = message.channel.get_partial_message(message.id)
                 try:
                     m = await message.edit(embeds=embeds, view=self, attachments=files)
                 except DiscordException:
@@ -1293,8 +1292,7 @@ class CreationOCView(Basic):
             if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
                 channel = await ctx.guild.fetch_channel(self.oc.thread)
             await channel.edit(archived=False)
-            msg = PartialMessage(channel=channel, id=self.oc.id)
-            await msg.delete(delay=0)
+            await channel.get_partial_message(self.oc.id).delete(delay=0)
         await self.delete(ctx)
 
     @button(label="Close this Menu", row=2)
@@ -1530,7 +1528,7 @@ class SubmissionView(View):
                     progress=progress,
                 )
 
-                message = PartialMessage(channel=ctx.channel, id=msg_id)
+                message = ctx.channel.get_partial_message(msg_id)
 
                 try:
                     message = await message.edit(view=view)

@@ -27,7 +27,6 @@ from discord import (
     Message,
     NotFound,
     Object,
-    PartialMessage,
     RawMessageDeleteEvent,
     RawReactionActionEvent,
     Role,
@@ -122,10 +121,11 @@ class Roles(commands.Cog):
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
-        if not (channel := self.bot.get_channel(719709333369258015)):
-            channel = await self.bot.fetch_channel(719709333369258015)
-        await PartialMessage(channel=channel, id=1023688500182261850).edit(view=BasicRoleSelect(timeout=None))
-        await PartialMessage(channel=channel, id=1023688872531591331).edit(view=RegisteredRoleSelect(timeout=None))
+        channel = self.bot.get_partial_messageable(719709333369258015, guild_id=719343092963999804)
+        msg1 = channel.get_partial_message(1023688500182261850)
+        msg2 = channel.get_partial_message(1023688872531591331)
+        await msg1.edit(view=BasicRoleSelect(timeout=None))
+        await msg2.edit(view=RegisteredRoleSelect(timeout=None))
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
@@ -173,12 +173,8 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("Roleplayers")
-        if item := await db.find_one({"id": payload.message_id}):
+        if item := await db.find_one({"id": payload.message_id, "server": payload.guild_id}):
             guild = member.guild
-            if not (channel := guild.get_channel_or_thread(payload.channel_id)):
-                channel = await guild.fetch_channel(payload.channel_id)
-            msg = PartialMessage(channel=channel, id=payload.message_id)
-
             webhook = await self.bot.webhook(958122815171756042, reason="Ping")
             view = View()
             url = f"https://discord.com/channels/{payload.guild_id}/{payload.message_id}"
@@ -300,7 +296,7 @@ class Roles(commands.Cog):
 
             if entry := await db2.find_one(key):
                 message_id = entry["id"]
-                await PartialMessage(channel=msg.channel, id=message_id).delete(delay=0)
+                await msg.channel.get_partial_message(message_id).delete(delay=0)
                 date = snowflake_time(message_id)
                 embed = Embed(
                     title="RP has started!",
@@ -346,7 +342,15 @@ class Roles(commands.Cog):
         guild = interaction.guild
         role: Role = guild.get_role(int(role))
         user = self.bot.supporting.get(interaction.user, interaction.user)
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id})]
+        ocs = [
+            Character.from_mongo_dict(x)
+            async for x in db.find(
+                {
+                    "author": user.id,
+                    "server": guild.id,
+                }
+            )
+        ]
         modal = RPModal(user=user, role=role, ocs=ocs, to_user=member)
         if await modal.check(interaction):
             await resp.send_modal(modal)
