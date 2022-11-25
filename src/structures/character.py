@@ -198,7 +198,7 @@ class Size(Enum):
     XXXS = 0.50
 
     def calculate(self, value: float) -> float:
-        return round(value * self.value, 2)
+        return round(value * self.value, 3)
 
     @property
     def title(self):
