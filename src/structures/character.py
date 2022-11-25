@@ -187,65 +187,25 @@ class Kind(Enum):
 
 
 class Size(Enum):
-    XXXL = 2.00
-    XXL = 1.750
-    XL = 1.5000
-    L = 1.25000
-    M = 1.00000
-    S = 0.87500
-    XS = 0.7500
-    XXS = 0.625
-    XXXS = 0.50
-
-    def calculate(self, value: float) -> float:
-        return round(value * self.value, 3)
-
-    @property
-    def title(self):
-        match self:
-            case self.M:
-                return "Average"
-            case self.L:
-                return "Large"
-            case self.S:
-                return "Small"
-            case x if "L" in x.name:
-                return self.name.replace("L", "-Large")
-            case x if "S" in x.name:
-                return self.name.replace("S", "-Small")
-            case _:
-                return self.name
-
-    @property
-    def ranged_info(self):
-        match self:
-            case self.XXXL:
-                return 6.5
-            case self.XXL:
-                return 4.0
-            case self.XL:
-                return 2.0
-            case self.L:
-                return 1.5
-            case self.M:
-                return 1.2
-            case self.S:
-                return 1.0
-            case self.XS:
-                return 0.8
-            case self.XXS:
-                return 0.5
-            case self.XXXS:
-                return 0.2
-
-    def format(self, value: float = 0):
-        value = value or self.ranged_info
-        feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
-        return f"{value} m / {feet}' {inches}\" ft"
+    XXXL = 2.00, 6.50
+    XXL = 1.750, 4.00
+    XL = 1.5000, 2.00
+    L = 1.25000, 1.50
+    M = 1.00000, 1.20
+    S = 0.87500, 1.00
+    XS = 0.7500, 0.80
+    XXS = 0.625, 0.50
+    XXXS = 0.50, 0.20
 
     def info(self, value: float):
-        value = self.calculate(value)
-        return self.format(value)
+        proportion, size = self.value
+        if value:
+            value *= proportion
+        else:
+            value = size
+
+        feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
+        return f"{value:.2f} m / {feet}' {inches}\" ft"
 
 
 @dataclass(slots=True)
