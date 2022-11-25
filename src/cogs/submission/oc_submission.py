@@ -533,6 +533,10 @@ class SizeField(TemplateField):
     description = "Fill the OC's Size"
 
     @classmethod
+    def check(cls, oc: Character) -> bool:
+        return bool(oc.species)
+
+    @classmethod
     async def on_submit(
         cls,
         ctx: Interaction,
@@ -564,6 +568,10 @@ class SizeField(TemplateField):
 class WeightField(TemplateField):
     name = "Weight"
     description = "Fill the OC's Weight"
+
+    @classmethod
+    def check(cls, oc: Character) -> bool:
+        return bool(oc.species)
 
     @classmethod
     async def on_submit(
