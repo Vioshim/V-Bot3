@@ -935,6 +935,7 @@ class Character:
             image=self.image,
             location=self.location,
             hidden_power=self.hidden_power,
+            size=self.size,
         )
 
     def __repr__(self) -> str:
