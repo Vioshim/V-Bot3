@@ -37,8 +37,16 @@ from discord import (
 )
 from discord.app_commands import Choice
 from discord.ext import commands
+from discord.ext.tasks import loop
 from discord.ui import Button, View
-from discord.utils import MISSING, find, format_dt, snowflake_time, utcnow
+from discord.utils import (
+    MISSING,
+    find,
+    format_dt,
+    snowflake_time,
+    time_snowflake,
+    utcnow,
+)
 
 from src.cogs.roles.roles import (
     RP_SEARCH_ROLES,
@@ -78,9 +86,39 @@ class Roles(commands.Cog):
         self.bot.tree.add_command(self.ctx_menu1)
         await self.load_self_roles()
         await self.load_rp_searches()
+        self.clean_handler.start()
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+        self.clean_handler.stop()
+
+    @loop(hours=1)
+    async def clean_handler(self):
+        db = self.bot.mongo_db("RP Search")
+        time_id = time_snowflake(utcnow() - timedelta(days=3))
+
+        if not (channel := self.bot.get_channel(958122815171756042)):
+            return
+
+        async for item in db.find({"id": {"$lte": time_id}, "server": channel.guild.id}):
+            if not (thread := channel.guild.get_thread(item["id"])):
+                try:
+                    thread = await channel.guild.fetch_channel(item["id"])
+                except NotFound:
+                    await db.delete_one(item)
+                    continue
+
+            if (thread.last_message_id or 0) >= time_id:
+                if thread.archived:
+                    await thread.edit(archived=False)
+                continue
+
+            if not thread.archived:
+                await thread.edit(archived=True)
+
+            await channel.get_partial_message(item["id"]).delete(delay=0)
+            await thread.get_partial_message(item["message"]).delete(delay=0)
+            await db.delete_one(item)
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
