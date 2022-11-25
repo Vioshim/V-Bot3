@@ -52,7 +52,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ABILITIES_DEFINING, ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character
+from src.structures.character import AgeGroup, Character, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -525,6 +525,47 @@ class SpeciesField(TemplateField):
                 oc.moveset = frozenset(moves)
             if not oc.abilities and len(species.abilities) == 1:
                 oc.abilities = species.abilities.copy()
+
+
+class SizeField(TemplateField):
+    name = "Size"
+    description = "Fill the OC's Size"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        height = oc.species.height if oc.species else 0
+        view = Complex[Size](
+            member=ctx.user,
+            target=ctx,
+            timeout=None,
+            values=Size,
+            parser=lambda x: (x.title, x.info(height)),
+            sort_key=lambda x: x.name,
+            text_component=TextInput(
+                label="Size",
+                placeholder=" | ".join(x.name for x in Size),
+                default=oc.size.name,
+                min_length=1,
+                max_length=4,
+            ),
+            silent_mode=True,
+        )
+        async with view.send(
+            title="Select the character's Size. Current below",
+            description=f"> {oc.size.title}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as size:
+            if isinstance(size, Size):
+                oc.size = size
+                progress.add(cls.name)
 
 
 class PreEvoSpeciesField(TemplateField):

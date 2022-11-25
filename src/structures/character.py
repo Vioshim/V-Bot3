@@ -51,7 +51,7 @@ from src.structures.species import (
 from src.utils.functions import common_pop_get, fix, int_check
 from src.utils.imagekit import Fonts, ImageKit
 
-__all__ = ("Character", "CharacterArg", "Kind")
+__all__ = ("Character", "CharacterArg", "Kind", "Size")
 
 
 class AgeGroup(Enum):
@@ -186,6 +186,68 @@ class Kind(Enum):
         return cls.Fakemon
 
 
+class Size(Enum):
+    XXXL = 256
+    XXL = 224
+    XL = 192
+    L = 160
+    M = 128
+    S = 96
+    XS = 64
+    XXS = 32
+    XXXS = 0
+
+    def calculate(self, value: float) -> float:
+        return round(value * (self.value / 128.0), 2)
+
+    @property
+    def title(self):
+        match self:
+            case self.M:
+                return "Average"
+            case self.L:
+                return "Large"
+            case self.S:
+                return "Small"
+            case x if "L" in x.name:
+                return self.name.replace("L", "-Large")
+            case x if "S" in x.name:
+                return self.name.replace("S", "-Small")
+            case _:
+                return self.name
+
+    @property
+    def ranged_info(self):
+        match self:
+            case self.XXXL:
+                return 6.5
+            case self.XXL:
+                return 4.0
+            case self.XL:
+                return 2.0
+            case self.L:
+                return 1.5
+            case self.M:
+                return 1.2
+            case self.S:
+                return 1.0
+            case self.XS:
+                return 0.8
+            case self.XXS:
+                return 0.5
+            case self.XXXS:
+                return 0.2
+
+    def format(self, value: float = 0):
+        value = value or self.ranged_info
+        feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
+        return f"{value}m / {feet}\"{inches}' ft"
+
+    def info(self, value: float):
+        value = self.calculate(value)
+        return self.format(value)
+
+
 @dataclass(slots=True)
 class Character:
     species: Optional[Species] = None
@@ -206,6 +268,7 @@ class Character:
     image: Optional[int] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
+    size: Size = Size.M
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -237,6 +300,7 @@ class Character:
             data["species"] = self.species.id
 
         data["age"] = self.age.name
+        data["size"] = self.size.name
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
@@ -285,6 +349,11 @@ class Character:
         if isinstance(self.moveset, str):
             self.moveset = [self.moveset]
         self.moveset = Move.deduce_many(*self.moveset)
+        if isinstance(self.size, str):
+            try:
+                self.size = Size[self.size]
+            except KeyError:
+                self.size = Size.M
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun.deduce(self.pronoun)
         self.age = AgeGroup.parse(self.age)
@@ -374,7 +443,7 @@ class Character:
 
     @property
     def randomize_moveset(self) -> frozenset[Move]:
-        if movepool := self.movepool:
+        if movepool := self.total_movepool:
             moves = list(movepool())
             amount = min(6, len(moves))
             return frozenset(sample(moves, k=amount))
@@ -544,10 +613,12 @@ class Character:
             embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
             moves_text = moves_text.replace("[Hidden Power] - Normal", f"[Hidden Power] - {hidden_power.name}")
             moves_text = moves_text.replace("[Tera Blast] - Normal", f"[Tera Blast] - {hidden_power.name}")
-            c_embed.set_footer(
-                text=f"Hidden Power: {hidden_power.name}",
-                icon_url=hidden_power.emoji.url,
-            )
+            icon_url = hidden_power.emoji.url
+        else:
+            icon_url = None
+
+        height = self.species.height if self.species else 0
+        c_embed.set_footer(text=self.size.info(height), icon_url=icon_url)
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)

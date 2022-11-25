@@ -15,7 +15,7 @@
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
-from src.structures.character import Character
+from src.structures.character import AgeGroup, Character, CharacterArg, Size
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 from src.structures.move import Move
@@ -35,6 +35,9 @@ from src.structures.species import (
 from src.structures.transformer import ABCTransformer
 
 __all__ = (
+    "AgeGroup",
+    "Size",
+    "CharacterArg",
     "Ability",
     "SpAbility",
     "CustomBot",
