@@ -546,7 +546,7 @@ class SizeField(TemplateField):
             target=ctx,
             timeout=None,
             values=[*Size],
-            parser=lambda x: (x.info(height), None),
+            parser=lambda x: (x.info(height) + ("- Avg." if x == Size.M else ""), None),
             silent_mode=True,
         )
         async with view.send(
