@@ -241,7 +241,7 @@ class Size(Enum):
     def format(self, value: float = 0):
         value = value or self.ranged_info
         feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
-        return f"{value}m / {feet}\"{inches}' ft"
+        return f"{value} m / {feet}' {inches}\" ft"
 
     def info(self, value: float):
         value = self.calculate(value)
