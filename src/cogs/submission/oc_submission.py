@@ -545,21 +545,13 @@ class SizeField(TemplateField):
             member=ctx.user,
             target=ctx,
             timeout=None,
-            values=Size,
-            parser=lambda x: (x.title, x.info(height)),
-            sort_key=lambda x: x.name,
-            text_component=TextInput(
-                label="Size",
-                placeholder=" | ".join(x.name for x in Size),
-                default=oc.size.name,
-                min_length=1,
-                max_length=4,
-            ),
+            values=[*Size],
+            parser=lambda x: (x.info(height), None),
             silent_mode=True,
         )
         async with view.send(
             title="Select the character's Size. Current below",
-            description=f"> {oc.size.title}",
+            description=f"> {oc.size.info(height)}",
             single=True,
             ephemeral=ephemeral,
         ) as size:
