@@ -435,6 +435,7 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
             log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
             await log.send(
+                content=member.mention,
                 file=file,
                 embed=embed,
                 view=view,
@@ -468,6 +469,7 @@ class Information(commands.Cog):
                 view.add_item(Button(label="Characters", url=url))
 
             await log.send(
+                content=member.mention,
                 embed=embed,
                 file=file,
                 view=view,
@@ -543,6 +545,7 @@ class Information(commands.Cog):
                 view.add_item(Button(label="Characters", url=url))
 
             await log.send(
+                content=user.mention,
                 embed=embed,
                 file=file,
                 view=view,
@@ -947,6 +950,7 @@ class Information(commands.Cog):
                 url = f"https://discord.com/channels/{guild.id}/{item['id']}"
                 view.add_item(Button(label="Characters", url=url))
             await log.send(
+                content=user.mention,
                 embed=embed,
                 file=file,
                 view=view,
