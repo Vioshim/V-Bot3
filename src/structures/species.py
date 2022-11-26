@@ -356,7 +356,7 @@ class Species(metaclass=ABCMeta):
                 return Chimera(items)
             if len(items) == 2:
                 mon1, mon2 = items
-                return Fusion(mon1=mon1, mon2=mon2)
+                return Fusion(mon1=mon1, mon2=mon2, ratio=0.5)
             return items.pop()
 
     @classmethod
@@ -375,7 +375,7 @@ class Species(metaclass=ABCMeta):
             values = {i.id: i for i in cls.all()} or ALL_SPECIES
             items = {x for i in item.split("_") if (x := values.get(i))}
             if len(items) == 2:
-                items = {Fusion(*items)}
+                items = {Fusion(*items, ratio=0.5)}
             if items and isinstance(data := items.pop(), cls):
                 return data
 
@@ -831,29 +831,30 @@ class Fusion(Species):
 
     mon1: Optional[Species] = None
     mon2: Optional[Species] = None
+    ratio: float = 0.5
 
-    def __init__(self, mon1: Species, mon2: Species):
+    def __init__(self, mon1: Species, mon2: Species, ratio: float = 0.5):
         if isinstance(mon1, str):
             mon1 = Species.single_deduce(mon1)
         if isinstance(mon2, str):
             mon2 = Species.single_deduce(mon2)
 
-        ids = sorted((mon1.id, mon2.id))
-        names = sorted((mon1.name, mon2.name))
+        mons = sorted((mon1, mon2), key=lambda x: x.id)
         abilities = mon1.abilities | mon2.abilities
-        self.mon1 = mon1
-        self.mon2 = mon2
+        self.mon1, self.mon2 = mon1, mon2 = mons
+        self.ratio = ratio
+        ratio1, ratio2 = ratio, 1.0 - ratio
         super(Fusion, self).__init__(
-            id="_".join(ids),
-            name="/".join(names),
-            height=round((mon1.height + mon2.height) / 2, 3),
-            weight=round((mon1.weight + mon2.weight) / 2, 3),
-            HP=round((mon1.HP + mon2.HP) / 2),
-            ATK=round((mon1.ATK + mon2.ATK) / 2),
-            DEF=round((mon1.DEF + mon2.DEF) / 2),
-            SPA=round((mon1.SPA + mon2.SPA) / 2),
-            SPD=round((mon1.SPD + mon2.SPD) / 2),
-            SPE=round((mon1.SPE + mon2.SPE) / 2),
+            id="_".join(x.id for x in mons),
+            name="/".join(x.name for x in mons),
+            height=round(ratio1 * mon1.height + ratio2 * mon2.height, 3),
+            weight=round(ratio1 * mon1.weight + ratio2 * mon2.weight, 3),
+            HP=round(ratio1 * mon1.HP + ratio2 * mon2.HP),
+            ATK=round(ratio1 * mon1.ATK + ratio2 * mon2.ATK),
+            DEF=round(ratio1 * mon1.DEF + ratio2 * mon2.DEF),
+            SPA=round(ratio1 * mon1.SPA + ratio2 * mon2.SPA),
+            SPD=round(ratio1 * mon1.SPD + ratio2 * mon2.SPD),
+            SPE=round(ratio1 * mon1.SPE + ratio2 * mon2.SPE),
             banned=mon1.banned or mon2.banned,
             movepool=mon1.movepool + mon2.movepool,
             abilities=abilities,
@@ -874,21 +875,32 @@ class Fusion(Species):
         return super(Fusion, self).__eq__(other)
 
     @property
+    def label_name(self):
+        return f"{self.mon1.name}({self.ratio:.0%})/{self.mon2.name}({1 - self.ratio:.0%})"
+
+    @property
+    def ratios(self):
+        return [Fusion(self.mon1, self.mon2, ratio=x / 10) for x in range(1, 10)]
+
+    @property
     def bases(self) -> frozenset[Species]:
         return frozenset((self.mon1, self.mon2))
 
     @property
     def species_evolves_to(self) -> list[Fusion]:
-        items = [Fusion(mon1=a, mon2=b) for a, b in zip(self.mon1.species_evolves_to, self.mon2.species_evolves_to)]
+        items = [
+            Fusion(mon1=a, mon2=b, ratio=self.ratio)
+            for a, b in zip(self.mon1.species_evolves_to, self.mon2.species_evolves_to)
+        ]
 
         for mon in self.mon1.species_evolves_to:
             if mon != self.mon2:
-                mon = Fusion(mon1=mon, mon2=self.mon2)
+                mon = Fusion(mon1=mon, mon2=self.mon2, ratio=self.ratio)
             items.append(mon)
 
         for mon in self.mon2.species_evolves_to:
             if mon != self.mon1:
-                mon = Fusion(mon1=self.mon1, mon2=mon)
+                mon = Fusion(mon1=self.mon1, mon2=mon, ratio=1 - self.ratio)
             items.append(mon)
 
         return items
@@ -898,7 +910,7 @@ class Fusion(Species):
         mon1 = self.mon1.species_evolves_from
         mon2 = self.mon2.species_evolves_from
         if mon1 and mon2 and mon1 != mon2:
-            return Fusion(mon1=mon1, mon2=mon2)
+            return Fusion(mon1=mon1, mon2=mon2, ratio=self.ratio)
         return mon1 or mon2
 
     @property
@@ -911,21 +923,21 @@ class Fusion(Species):
 
         if mon1 := self.mon1.species_evolves_from:
             if mon1 != self.mon2:
-                mon = Fusion(mon1=mon1, mon2=self.mon2)
+                mon = Fusion(mon1=mon1, mon2=self.mon2, ratio=self.ratio)
             else:
                 mon = mon1
             items.append(mon)
 
         if mon2 := self.mon2.species_evolves_from:
             if self.mon1 != mon2:
-                mon = Fusion(mon1=self.mon1, mon2=mon2)
+                mon = Fusion(mon1=self.mon1, mon2=mon2, ratio=self.ratio)
             else:
                 mon = mon2
             items.append(mon)
 
         if mon1 and mon2:
             if mon1 != mon2:
-                mon1 = Fusion(mon1=mon1, mon2=mon2)
+                mon1 = Fusion(mon1=mon1, mon2=mon2, ratio=self.ratio)
             items.append(mon1)
 
         return items

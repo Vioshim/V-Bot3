@@ -249,7 +249,7 @@ class Template(TemplateItem, Enum):
                     oc.species = Chimera(choices)
             case self.Fusion:
                 if len(choices) == 2:
-                    oc.species = Fusion(*choices)
+                    oc.species = Fusion(*choices, ratio=0.5)
             case _:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="Character's Species.",
@@ -525,6 +525,45 @@ class SpeciesField(TemplateField):
             if not oc.abilities and len(species.abilities) == 1:
                 oc.abilities = species.abilities.copy()
             oc.size = oc.weight = Size.M
+
+
+class FusionRatioField(TemplateField):
+    name = "Proportion"
+    description = "Fill the OC's Fusion Ratio"
+
+    @classmethod
+    def check(cls, oc: Character) -> bool:
+        return isinstance(oc.species, Fusion)
+
+    @classmethod
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        mon: Fusion = oc.species
+        view = Complex[Fusion](
+            member=ctx.user,
+            target=ctx,
+            timeout=None,
+            values=mon.ratios,
+            parser=lambda x: (x.label_name[:100], None),
+            sort_key=lambda x: x.ratio,
+            silent_mode=True,
+        )
+        async with view.send(
+            title="Select the Fusion's Proportion. Current below",
+            description=f"> {mon.label_name}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as species:
+            if isinstance(species, Fusion):
+                oc.species = species
+                oc.size = oc.weight = Size.M
+                progress.add(cls.name)
 
 
 class SizeField(TemplateField):

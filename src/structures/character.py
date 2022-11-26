@@ -260,7 +260,7 @@ class Character:
             elif isinstance(self.species, CustomMega):
                 aux |= {"mega": self.species.id}
             elif isinstance(self.species, Fusion):
-                aux |= {"fusion": [x.id for x in self.species.bases]}
+                aux |= {"fusion": {"species": [x.id for x in self.species.bases], "ratio": self.species.ratio}}
             else:
                 aux |= {
                     "name": self.species.name,
@@ -300,7 +300,12 @@ class Character:
             elif "base" in species:
                 dct["species"] = Variant(**species)
             elif "fusion" in species:
-                fusion = Fusion(*species.get("fusion"))
+                data = species.get("fusion", [])
+                if isinstance(data, dict):
+                    (mon1, mon2), ratio = data.get("species"), data.get("ratio", 0.5)
+                    fusion = Fusion(mon1, mon2, ratio=ratio)
+                else:
+                    fusion = Fusion(*data, ratio=0.5)
                 if not fusion.types:
                     fusion.types = TypingEnum.deduce_many(*species.get("types", []))
                 dct["species"] = fusion
@@ -547,10 +552,20 @@ class Character:
 
         if self.species and self.species.name:
             match self.kind:
-                case Kind.Fusion | Kind.Chimera:
+                case Kind.Fusion:
+                    mon1, mon2 = self.species.mon1, self.species.mon2
+                    ratio1, ratio2 = self.species.ratio, 1 - self.species.ratio
+                    name1, name2 = mon1.name, mon2.name
+                    if ratio1 != ratio2:
+                        name1 = f"{ratio1:.0%} - {name1}"
+                        name2 = f"{ratio2:.0%} - {name2}"
+                    names = name1, name2
+                    if name := "\n".join(f"> **•** {name}" for name in names):
+                        c_embed.add_field(name="Fusion", value=name[:1024])
+                case Kind.Chimera:
                     names = self.species.name.split("/")
                     if name := "\n".join(f"> **•** {name}" for name in names).title():
-                        c_embed.add_field(name=f"{self.kind.name} Species", value=name[:1024])
+                        c_embed.add_field(name="Chimera", value=name[:1024])
                 case Kind.Fakemon:
                     if evolves_from := self.evolves_from:
                         name = f"Fakemon Evolution - {evolves_from.name}"

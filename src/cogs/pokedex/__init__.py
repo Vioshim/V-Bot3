@@ -155,7 +155,7 @@ class Pokedex(commands.Cog):
         mons = {species, fused, chimera}
         if mons := {x for x in mons if x is not None}:
             if len(mons) == 2:
-                mon = Fusion(*mons)
+                mon = Fusion(*mons, ratio=0.5)
             elif len(mons) == 3:
                 mon = Chimera(mons)
             else:
@@ -335,7 +335,7 @@ class Pokedex(commands.Cog):
 
         if isinstance(mon := species, Species):
             if fused and mon != fused and not isinstance(fused, Fusion) and not isinstance(mon, Fusion):
-                mon = Fusion(mon, fused)
+                mon = Fusion(mon, fused, ratio=0.5)
             filters.append(lambda oc: getattr(oc.species, "base", oc.species) == mon)
         elif fused and not isinstance(fused, Fusion):
             filters.append(lambda oc: isinstance(oc.species, Fusion) and fused in oc.species.bases)
