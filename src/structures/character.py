@@ -553,15 +553,12 @@ class Character:
         if self.species and self.species.name:
             match self.kind:
                 case Kind.Fusion:
-                    mon1, mon2 = self.species.mon1, self.species.mon2
                     ratio1, ratio2 = self.species.ratio, 1 - self.species.ratio
-                    name1, name2 = mon1.name, mon2.name
                     if ratio1 != ratio2:
-                        name1 = f"{ratio1:.0%}〛{name1}"
-                        name2 = f"{ratio2:.0%}〛{name2}"
-                    names = name1, name2
-                    if name := "\n".join(name for name in names):
-                        c_embed.add_field(name="Fusion", value=name[:1024])
+                        name = f"{ratio1:.0%}〛{self.species.mon1.name}\n{ratio2:.0%}〛{self.species.mon2.name}"
+                    else:
+                        name = f"• {self.species.mon1.name}\n• {self.species.mon2.name}"
+                    c_embed.add_field(name="Fusion", value=name[:1024])
                 case Kind.Chimera:
                     names = self.species.name.split("/")
                     if name := "\n".join(f"> **•** {name}" for name in names).title():
