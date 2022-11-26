@@ -121,6 +121,7 @@ def comparison_handler(before: Character, now: Character):
             aux1.title == aux2.title,
             e1.description == e2.description,
             before.image == now.image,
+            before.pokeball == now.pokeball,
             len(e1.fields) == len(e2.fields) == 0,
             e1.footer.text == e2.footer.text,
         )
