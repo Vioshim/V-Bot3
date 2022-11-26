@@ -876,7 +876,7 @@ class Fusion(Species):
 
     @property
     def label_name(self):
-        return f"{self.ratio:.0%}〛{self.mon1.name}(), {1 - self.ratio:.0%}〛{self.mon2.name}"
+        return f"{self.ratio:.0%}〛{self.mon1.name}, {1 - self.ratio:.0%}〛{self.mon2.name}"
 
     @property
     def ratios(self):
