@@ -38,6 +38,7 @@ from discord import (
     TextStyle,
     Thread,
     Webhook,
+    WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import get, time_snowflake, utcnow
@@ -559,11 +560,21 @@ class RPSearchManage(View):
                 ephemeral=True,
             )
         await ctx.response.pong()
-        if message := ctx.message:
+        if (message := ctx.message) and (
+            item := await db.find_one_and_delete(
+                {
+                    "server": ctx.guild_id,
+                    "$or": [{"id": message.id}, {"message": message.id}],
+                }
+            )
+        ):
+            channel = ctx.guild.get_channel(958122815171756042)
+            message = channel.get_partial_message(item["id"])
             await message.delete(delay=0)
-            if thread := ctx.guild.get_thread(message.id):
+            if thread := ctx.guild.get_thread(item["id"]):
+                message = thread.get_partial_message(item["message"])
+                await message.edit(view=None)
                 await thread.edit(archived=True, locked=True)
-            await db.delete_one({"server": ctx.guild_id, "id": message.id})
 
 
 def time_message(msg: str, s: int):
@@ -691,28 +702,29 @@ class RPModal(Modal):
             reference = self.to_user
             name += f" - {self.to_user.display_name}"
         webhook: Webhook = await interaction.client.webhook(958122815171756042, reason="RP Search")
-        kwargs = dict(
+        msg1: WebhookMessage = await webhook.send(
             content=reference.mention,
             allowed_mentions=AllowedMentions(roles=True),
             embed=embed,
             view=RPSearchManage(self.user, items),
             username=self.user.display_name,
             avatar_url=self.user.display_avatar.url,
+            wait=True,
         )
-        msg1 = await webhook.send(wait=True, **kwargs)
         thread = await msg1.create_thread(name=name)
-        kwargs["thread"] = thread
-        del kwargs["content"]
         embed.set_image(url=WHITE_BAR)
-        msg2 = await webhook.send(wait=True, **kwargs)
+        msg2 = await thread.send(
+            content=reference.mention,
+            allowed_mentions=AllowedMentions(users=True),
+            embed=embed,
+            view=RPSearchManage(self.user, items),
+        )
         await thread.add_user(self.user)
-        if isinstance(reference, Member):
-            await thread.add_user(reference)
 
         cog1.cool_down[reference.id] = utcnow()
         cog1.role_cool_down[reference.id] = utcnow()
 
-        ocs = {x["id"] async for x in db.find({"author": self.user.id})}
+        ocs = {x["id"] async for x in db.find({"author": self.user.id, "server": guild.id})}
         ocs2 = {x.id if isinstance(x, Character) else x for x in self.ocs}
         if ocs == ocs2:
             ocs2 = set()
