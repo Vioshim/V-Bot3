@@ -562,6 +562,7 @@ class FusionRatioField(TemplateField):
         ) as species:
             if isinstance(species, Fusion):
                 oc.species = species
+                oc.species.types = mon.types
                 oc.size = oc.weight = Size.M
                 progress.add(cls.name)
 
