@@ -350,8 +350,11 @@ class Character:
             self.sp_ability = None
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-        if self.pokeball:
-            self.pokeball = Pokeball(self.pokeball)
+        if isinstance(self.pokeball, str):
+            try:
+                self.pokeball = Pokeball[self.pokeball]
+            except KeyError:
+                self.pokeball = None
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
