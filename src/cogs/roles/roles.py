@@ -573,7 +573,11 @@ class RPSearchManage(View):
             await message.delete(delay=0)
             if thread := ctx.guild.get_thread(item["id"]):
                 message = thread.get_partial_message(item["message"])
-                await message.edit(view=None)
+                try:
+                    await message.edit(view=None)
+                except DiscordException:
+                    await message.delete(delay=0)
+
                 await thread.edit(archived=True, locked=True)
 
 
