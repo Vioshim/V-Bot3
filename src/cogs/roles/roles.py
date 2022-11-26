@@ -79,7 +79,7 @@ def role_gen(guild: Guild):
             yield x
 
 
-INTERVAL = timedelta(hours=12)
+INTERVAL = timedelta(days=3)
 RP_SEARCH_EMBED = (
     Embed(
         description="This is the section where RP Search roles get pinged, and don't worry even if you don't have the role, it will get assigned to you when you use the options",
