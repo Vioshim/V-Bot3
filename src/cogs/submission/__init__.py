@@ -354,8 +354,8 @@ class Submission(commands.Cog):
                     if word == "modified":
                         for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
                             embeds = [embed1, embed2]
-                            files1, embed1 = await self.bot.embed_raw(embed1, "footer")
-                            files2, embed2 = await self.bot.embed_raw(embed2, "footer")
+                            files1, embed1 = await self.bot.embed_raw(embed1, "footer", "thumbnail")
+                            files2, embed2 = await self.bot.embed_raw(embed2, "footer", "thumbnail")
 
                             files = files1 + files2
                             for index, (e, f) in enumerate(zip(embeds, files)):
