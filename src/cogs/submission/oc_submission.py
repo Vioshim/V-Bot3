@@ -55,6 +55,7 @@ from src.structures.character import AgeGroup, Character, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
+from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     Chimera,
@@ -1124,6 +1125,43 @@ class ImageField(TemplateField):
                 oc.image = img
 
         return None
+
+
+class PokeballField(TemplateField):
+    name = "Pokeball"
+    description = "Optional. Fill the OC's Pokeball"
+
+    @classmethod
+    def check(cls, oc: Character) -> bool:
+        return oc.species
+
+    @classmethod
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        view = Complex[Pokeball](
+            member=ctx.user,
+            target=ctx,
+            timeout=None,
+            values=Pokeball,
+            parser=lambda x: (x.label, None),
+            sort_key=lambda x: x.name,
+            silent_mode=True,
+        )
+        current = oc.pokeball.label if oc.pokeball else None
+        async with view.send(
+            title="Select the character's Pokeball. Current below",
+            description=f"> {current}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as pokeball:
+            oc.pokeball = pokeball
+            progress.add(cls.name)
 
 
 class CreationOCView(Basic):

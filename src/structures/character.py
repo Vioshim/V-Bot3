@@ -33,6 +33,7 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
+from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     Chimera,
@@ -244,6 +245,7 @@ class Character:
     hidden_power: Optional[TypingEnum] = None
     size: Size = Size.M
     weight: Size = Size.M
+    pokeball: Optional[Pokeball] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -280,6 +282,7 @@ class Character:
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
+        data["pokeball"] = self.pokeball.name if self.pokeball else None
         if isinstance(self.sp_ability, SpAbility):
             data["sp_ability"] = asdict(self.sp_ability)
         if isinstance(self.image, File):
@@ -347,6 +350,8 @@ class Character:
             self.sp_ability = None
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
+        if self.pokeball:
+            self.pokeball = Pokeball(self.pokeball)
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -601,6 +606,9 @@ class Character:
             embeds.append(sp_embed)
 
         moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
+
+        if pokeball := self.pokeball:
+            c_embed.set_thumbnail(url=pokeball.url)
 
         if hidden_power := self.hidden_power:
             embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
@@ -936,6 +944,7 @@ class Character:
             hidden_power=self.hidden_power,
             size=self.size,
             weight=self.weight,
+            pokeball=self.pokeball,
         )
 
     def __repr__(self) -> str:

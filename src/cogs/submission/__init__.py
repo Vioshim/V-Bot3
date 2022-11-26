@@ -92,6 +92,12 @@ def comparison_handler(before: Character, now: Character):
             if isinstance(img2, str):
                 e2.set_image(url=img2)
 
+        if before.pokeball != now.pokeball:
+            if before.pokeball:
+                e1.set_thumbnail(url=before.pokeball.url)
+            if now.pokeball:
+                e2.set_thumbnail(url=now.pokeball.url)
+
         if aux1.title != aux2.title:
             e2.title = aux2.title
 
