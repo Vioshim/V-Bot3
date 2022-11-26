@@ -545,6 +545,26 @@ class RPSearchManage(View):
                     repr(data),
                 )
 
+    @button(
+        label="Archive Thread",
+        row=1,
+        custom_id="archive_thread",
+        style=ButtonStyle.red,
+    )
+    async def conclude(self, ctx: Interaction, _: Button):
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+        if ctx.user.id != self.member_id and not ctx.user.guild_permissions.moderate_members:
+            return await ctx.response.send_message(
+                f"Only <@{self.member_id}> can archive it",
+                ephemeral=True,
+            )
+        await ctx.response.pong()
+        if message := ctx.message:
+            await message.delete(delay=0)
+            if thread := ctx.guild.get_thread(message.id):
+                await thread.edit(archived=True, locked=True)
+            await db.delete_one({"server": ctx.guild_id, "id": message.id})
+
 
 def time_message(msg: str, s: int):
     return f"{msg}\nTry again in {s // 3600:02} Hours, {s % 3600 // 60:02} Minutes, {s % 60:02} Seconds"
