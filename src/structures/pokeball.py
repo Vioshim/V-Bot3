@@ -16,7 +16,7 @@
 from enum import Enum
 
 
-class Pokéball(str, Enum):
+class Pokeball(str, Enum):
     Poké_Ball = "9/93/Bag_Poké_Ball"
     Great_Ball = "c/ca/Bag_Great_Ball"
     Ultra_Ball = "0/03/Bag_Ultra_Ball"
@@ -44,13 +44,13 @@ class Pokéball(str, Enum):
     Park_Ball = "b/b2/Bag_Park_Ball"
     Dream_Ball = "4/4a/Bag_Dream_Ball"
     Beast_Ball = "f/f2/Bag_Beast_Ball"
-    Strange_Ball = "9/9c/Bag_Strange_Ball_HOME"
-    Feather_Ball = "f/fe/Bag_Feather_Ball_HOME"
-    Wing_Ball = "0/07/Bag_Wing_Ball_HOME"
-    Jet_Ball = "d/d5/Bag_Jet_Ball_HOME"
-    Leaden_Ball = "b/bc/Bag_Leaden_Ball_HOME"
-    Gigaton_Ball = "1/15/Bag_Gigaton_Ball_HOME"
-    Origin_Ball = "c/c7/Bag_Origin_Ball_HOME"
+    Strange_Ball = "9/9c/Bag_Strange_Ball"
+    Feather_Ball = "f/fe/Bag_Feather_Ball"
+    Wing_Ball = "0/07/Bag_Wing_Ball"
+    Jet_Ball = "d/d5/Bag_Jet_Ball"
+    Leaden_Ball = "b/bc/Bag_Leaden_Ball"
+    Gigaton_Ball = "1/15/Bag_Gigaton_Ball"
+    Origin_Ball = "c/c7/Bag_Origin_Ball"
     Poké_Ball_HOME = "3/3d/Bag_Poké_Ball_HOME"
     Great_Ball_HOME = "b/bd/Bag_Great_Ball_HOME"
     Ultra_Ball_HOME = "b/b6/Bag_Ultra_Ball_HOME"
