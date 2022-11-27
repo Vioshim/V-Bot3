@@ -18,7 +18,7 @@ from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
 from logging import getLogger, setLoggerClass
 from time import mktime
-from typing import Callable, Iterable, Optional
+from typing import Iterable, Optional
 
 from dateparser import parse
 from discord import (
@@ -158,65 +158,37 @@ class AdjacentTimeState:
     key: int = 0
     previous: float = float("nan")
 
-    def __call__(self, value):
-        adjacent = value - self.previous == 1
-        wraps_around = value == 0 and self.previous == 23
+    def __call__(self, value: datetime):
+        adjacent = value.hour - self.previous == 1
+        wraps_around = value.hour == 0 and self.previous == 23
         if not adjacent and not wraps_around:
             self.key += 1
-        self.previous = value
+        self.previous = value.hour
         return self.key
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class AFKSchedule:
-    hours: frozenset[int] = field(default_factory=frozenset)
-    offset: int = 0
+    hours: frozenset[datetime] = field(default_factory=frozenset)
 
-    def pairs(self, wrap: Callable[[time], time | datetime] = None):
+    @property
+    def pairs(self):
         # find all consecutive runs
-        runs = [list(group) for _, group in groupby(sorted(self.hours), key=AdjacentTimeState())]
+        hours = sorted(self.hours, key=lambda x: x.hour)
+        runs = [list(group) for _, group in groupby(hours, key=AdjacentTimeState())]
 
         # check wrap-around
         if len(runs) >= 2:
             (first_time, *_), *_, (*_, last_time) = runs
-            if first_time - last_time == 1 or first_time == 0 and last_time == 23:
+            if first_time.hour - last_time.hour == 1 or first_time.hour == 0 and last_time.hour == 23:
                 runs[0] = runs[-1] + runs[0]
                 del runs[-1]
 
-        # form tuples
-        def procedure(x: int):
-            item = time(x)
-            return wrap(item) if wrap else item
-
-        return sorted((procedure(run[0]), procedure(run[-1])) for run in runs)
-
-    def convert(self, date: Optional[datetime] = None):
-        if not date:
-            date = utcnow()
-        offset = -timedelta(hours=self.offset)
-        tz = timezone(offset=offset)
-        return date.astimezone(tz)
-
-    @property
-    def tz(self):
-        offset = timedelta(hours=self.offset)
-        return timezone(offset=offset)
+        return sorted((run[0].time(), run[-1].time()) for run in runs)
 
     @property
     def text(self):
-        reference, tz = utcnow(), self.tz
-
-        def method(x: time):
-            return datetime.combine(reference, x).astimezone(tz)
-
-        return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs(method))
-
-    @classmethod
-    def from_dict(cls, kwargs: dict[str, int]):
-        if kwargs:
-            kwargs.pop("_id", None)
-            return cls(**kwargs)
-        return cls()
+        return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs)
 
 
 class AFKModal(Modal, title="Current Time"):
@@ -241,25 +213,23 @@ class AFKModal(Modal, title="Current Time"):
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
-        date1 = interaction.created_at.astimezone(DEFAULT_TIMEZONE)
+        current_date = interaction.created_at
+        date1 = current_date.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
         ref = abs(date1 - date2).seconds
         self.offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
         if date1 > date2:
             self.offset = -self.offset
 
-        data = AFKSchedule(self.hours, self.offset)
+        tz = timezone(timedelta(hours=self.offset))
+        data = AFKSchedule([datetime.combine(current_date, time(hour=x), tz) for x in self.hours])
 
         embed = Embed(
             title="AFK Schedule",
-            description="All schedules were removed.",
+            description=data.text or "All schedules were removed.",
             color=Color.blurple(),
         )
         embed.set_image(url=WHITE_BAR)
-
-        if description := data.text:
-            embed.description = description
-
         embed.set_footer(
             text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them.",
         )

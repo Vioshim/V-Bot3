@@ -888,19 +888,16 @@ class Fusion(Species):
 
     @property
     def species_evolves_to(self) -> list[Fusion]:
-        items = [
-            Fusion(mon1=a, mon2=b, ratio=self.ratio)
-            for a, b in zip(self.mon1.species_evolves_to, self.mon2.species_evolves_to)
-        ]
+        items = [Fusion(mon1=a, mon2=b) for a, b in zip(self.mon1.species_evolves_to, self.mon2.species_evolves_to)]
 
         for mon in self.mon1.species_evolves_to:
             if mon != self.mon2:
-                mon = Fusion(mon1=mon, mon2=self.mon2, ratio=self.ratio)
+                mon = Fusion(mon1=mon, mon2=self.mon2)
             items.append(mon)
 
         for mon in self.mon2.species_evolves_to:
             if mon != self.mon1:
-                mon = Fusion(mon1=self.mon1, mon2=mon, ratio=1 - self.ratio)
+                mon = Fusion(mon1=self.mon1, mon2=mon)
             items.append(mon)
 
         return items
@@ -910,7 +907,7 @@ class Fusion(Species):
         mon1 = self.mon1.species_evolves_from
         mon2 = self.mon2.species_evolves_from
         if mon1 and mon2 and mon1 != mon2:
-            return Fusion(mon1=mon1, mon2=mon2, ratio=self.ratio)
+            return Fusion(mon1=mon1, mon2=mon2)
         return mon1 or mon2
 
     @property
@@ -923,21 +920,21 @@ class Fusion(Species):
 
         if mon1 := self.mon1.species_evolves_from:
             if mon1 != self.mon2:
-                mon = Fusion(mon1=mon1, mon2=self.mon2, ratio=self.ratio)
+                mon = Fusion(mon1=mon1, mon2=self.mon2)
             else:
                 mon = mon1
             items.append(mon)
 
         if mon2 := self.mon2.species_evolves_from:
             if self.mon1 != mon2:
-                mon = Fusion(mon1=self.mon1, mon2=mon2, ratio=self.ratio)
+                mon = Fusion(mon1=self.mon1, mon2=mon2)
             else:
                 mon = mon2
             items.append(mon)
 
         if mon1 and mon2:
             if mon1 != mon2:
-                mon1 = Fusion(mon1=mon1, mon2=mon2, ratio=self.ratio)
+                mon1 = Fusion(mon1=mon1, mon2=mon2)
             items.append(mon1)
 
         return items

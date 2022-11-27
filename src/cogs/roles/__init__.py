@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta, timezone
 from typing import Optional
 from urllib.parse import quote_plus
 
@@ -359,26 +358,18 @@ class Roles(commands.Cog):
         resp: InteractionResponse = ctx.response
         db = self.bot.mongo_db("AFK")
         if item := await db.find_one({"user": ctx.user.id}):
-            embed = Embed(title="AFK Schedule", timestamp=ctx.created_at, color=member.color)
+            current_date = ctx.created_at
+            embed = Embed(title="AFK Schedule", timestamp=current_date, color=member.color)
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
-
             if item2 := await db.find_one({"user": member.id}):
-                data = AFKSchedule(item2["hours"], item["offset"] - item2["offset"])
-
-                if item["offset"] == item2["offset"]:
-                    embed.description = data.text
-                else:
-                    if text := data.text:
-                        embed.add_field(name="In your time", value=text, inline=False)
-
-                    data.offset = item2["offset"] - item["offset"]
-
-                    if text := data.text:
-                        embed.add_field(name="In their time", value=text, inline=False)
-
-                data.offset = item2["offset"]
-                date = ctx.created_at.astimezone(data.tz)
-                text = quote_plus(date.strftime("User time %I:%M %p"))
+                tz1 = timezone(timedelta(hours=item["offset"]))
+                tz2 = timezone(timedelta(hours=item2["offset"]))
+                data = AFKSchedule(
+                    [datetime.combine(current_date, time(hour=x), tz2).astimezone(tz1) for x in item["hours"]]
+                )
+                embed.description = data.text
+                date = current_date.astimezone(tz2)
+                text = quote_plus(f"{member.display_name}'s time is {date.strftime('%I:%M %p')}")
                 embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
             else:
                 embed.set_image(url=WHITE_BAR)
