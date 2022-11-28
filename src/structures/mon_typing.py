@@ -471,7 +471,7 @@ class TypingEnum(Typing, Enum):
 
     @property
     def id(self):
-        return self.value.id
+        return self.value.get("id", 0)
 
     @classmethod
     def all(cls):
