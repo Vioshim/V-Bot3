@@ -3310,7 +3310,7 @@
 			],
 			"levelup": ["EXTREMESPEED"]
 		},
-		"abilities": ["FLASHFIRE", "INTIMIDATE", "JUSTIFIED"],
+		"abilities": ["FLASHFIRE", "INTIMIDATE", "ROCKHEAD"],
 		"kind": "Pokemon"
 	},
 	{
@@ -6950,7 +6950,7 @@
 				"ZENHEADBUTT"
 			]
 		},
-		"abilities": ["ADAPTABILITY", "MOLDBREAKER", "RECKLESS"],
+		"abilities": ["ADAPTABILITY", "MOLDBREAKER", "SWIFTSWIM"],
 		"kind": "Pokemon"
 	},
 	{
@@ -10800,7 +10800,7 @@
 			],
 			"levelup": ["ESPERWING"]
 		},
-		"abilities": ["DEFIANT", "KEENEYE", "SHEERFORCE"],
+		"abilities": ["TINTEDLENS", "KEENEYE", "SHEERFORCE"],
 		"kind": "Pokemon"
 	},
 	{
@@ -20970,9 +20970,9 @@
 		"weight": 85.6,
 		"HP": 120,
 		"ATK": 70,
-		"DEF": 120,
+		"DEF": 110,
 		"SPA": 75,
-		"SPD": 130,
+		"SPD": 120,
 		"SPE": 85,
 		"movepool": {
 			"level": {
@@ -23644,7 +23644,7 @@
 			],
 			"levelup": ["ROCKSMASH", "TRIPLEARROWS"]
 		},
-		"abilities": ["LONGREACH", "OVERGROW"],
+		"abilities": ["SCRAPPY", "OVERGROW"],
 		"kind": "Pokemon"
 	},
 	{
@@ -32945,7 +32945,7 @@
 				"ZENHEADBUTT"
 			]
 		},
-		"abilities": ["CONTRARY", "HEALER"],
+		"abilities": ["CONTRARY", "CUTECHARM"],
 		"kind": "Legendary"
 	},
 	{
@@ -39004,7 +39004,7 @@
 			],
 			"levelup": ["SLASH"]
 		},
-		"abilities": ["JUSTIFIED", "STEADFAST"],
+		"abilities": ["JUSTIFIED", "STEADFAST", "SHARPNESS"],
 		"kind": "Pokemon"
 	},
 	{
@@ -44065,7 +44065,7 @@
 			],
 			"levelup": ["IRONTAIL"]
 		},
-		"abilities": ["GOOEY", "OVERCOAT", "SAPSIPPER"],
+		"abilities": ["GOOEY", "SHELLARMOR", "SAPSIPPER"],
 		"kind": "Pokemon"
 	},
 	{
@@ -47029,7 +47029,7 @@
 				"WILDCHARGE"
 			]
 		},
-		"abilities": ["FLASHFIRE", "INTIMIDATE", "JUSTIFIED"],
+		"abilities": ["FLASHFIRE", "INTIMIDATE", "ROCKHEAD"],
 		"kind": "Pokemon"
 	},
 	{
@@ -57201,10 +57201,10 @@
 		"height": 1.8,
 		"weight": 89,
 		"HP": 70,
-		"ATK": 135,
+		"ATK": 130,
 		"DEF": 95,
 		"SPA": 45,
-		"SPD": 70,
+		"SPD": 75,
 		"SPE": 85,
 		"evolves_from": "SCYTHER",
 		"movepool": {
@@ -57291,7 +57291,7 @@
 			],
 			"levelup": ["STONEAXE"]
 		},
-		"abilities": ["STEADFAST", "SWARM", "TECHNICIAN"],
+		"abilities": ["SHARPNESS", "SWARM", "TECHNICIAN"],
 		"kind": "Pokemon"
 	},
 	{
@@ -58687,7 +58687,7 @@
 			],
 			"tutor": ["COACHING"]
 		},
-		"abilities": ["INNERFOCUS"],
+		"abilities": ["INNERFOCUS", "NOGUARD"],
 		"kind": "Legendary"
 	},
 	{
@@ -99661,7 +99661,7 @@
 			],
 			"levelup": ["CEASELESSEDGE", "NIGHTSLASH"]
 		},
-		"abilities": ["SHELLARMOR", "TORRENT"],
+		"abilities": ["SHARPNESS", "TORRENT"],
 		"kind": "Pokemon"
 	},
 	{
@@ -107901,7 +107901,7 @@
 			],
 			"levelup": ["SHELTER"]
 		},
-		"abilities": ["GOOEY", "OVERCOAT", "SAPSIPPER"],
+		"abilities": ["GOOEY", "SHELLARMOR", "SAPSIPPER"],
 		"kind": "Pokemon"
 	},
 	{
@@ -109798,7 +109798,7 @@
 			],
 			"levelup": ["DIRECLAW"]
 		},
-		"abilities": ["POISONTOUCH", "PRESSURE"],
+		"abilities": ["POISONTOUCH", "PRESSURE", "UNBURDEN"],
 		"kind": "Pokemon"
 	},
 	{
@@ -123311,7 +123311,7 @@
 			],
 			"levelup": ["HEX", "INFERNALPARADE"]
 		},
-		"abilities": ["BLAZE", "FLASHFIRE"],
+		"abilities": ["BLAZE", "FRISK"],
 		"kind": "Pokemon"
 	},
 	{
@@ -133205,7 +133205,7 @@
 		"height": 2.8,
 		"weight": 110,
 		"HP": 92,
-		"ATK": 130,
+		"ATK": 120,
 		"DEF": 115,
 		"SPA": 80,
 		"SPD": 115,
@@ -133304,7 +133304,7 @@
 		"height": 2.8,
 		"weight": 355,
 		"HP": 92,
-		"ATK": 170,
+		"ATK": 150,
 		"DEF": 115,
 		"SPA": 80,
 		"SPD": 115,
@@ -133390,7 +133390,7 @@
 		"height": 2.9,
 		"weight": 210,
 		"HP": 92,
-		"ATK": 130,
+		"ATK": 120,
 		"DEF": 115,
 		"SPA": 80,
 		"SPD": 115,
@@ -133493,11 +133493,11 @@
 		"height": 2.9,
 		"weight": 785,
 		"HP": 92,
-		"ATK": 130,
-		"DEF": 115,
+		"ATK": 120,
+		"DEF": 140,
 		"SPA": 80,
-		"SPD": 115,
-		"SPE": 138,
+		"SPD": 140,
+		"SPE": 128,
 		"evolves_from": "ZAMAZENTA",
 		"movepool": {
 			"level": {
@@ -134929,12 +134929,12 @@
 		"types": ["GHOST", "NORMAL"],
 		"height": 1.6,
 		"weight": 73,
-		"HP": 55,
-		"ATK": 100,
+		"HP": 60,
+		"ATK": 105,
 		"DEF": 60,
-		"SPA": 125,
+		"SPA": 120,
 		"SPD": 60,
-		"SPE": 110,
+		"SPE": 105,
 		"evolves_from": "ZORUAHISUI",
 		"movepool": {
 			"level": {
