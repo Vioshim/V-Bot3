@@ -367,12 +367,13 @@ class Roles(commands.Cog):
                 user_data = [datetime.combine(current_date, time(hour=x), tz2) for x in item2["hours"]]
 
                 data1 = AFKSchedule(user_data)
-                if desc1 := data1.text:
-                    embed.add_field(name="In user's timezone", value=desc1, inline=False)
-
                 data2 = AFKSchedule([x.astimezone(tz1) for x in user_data])
-                if desc2 := data2.text:
+                desc1, desc2 = data1.text, data2.text
+                if desc1 != desc2 and desc1 and desc2:
+                    embed.add_field(name="In user's timezone", value=desc1, inline=False)
                     embed.add_field(name="In your timezone", value=desc2, inline=False)
+                else:
+                    embed.description = desc1 or desc2
 
                 date = current_date.astimezone(tz2)
                 text = quote_plus(f"{member.display_name}'s time is {date.strftime('%I:%M %p')}")
