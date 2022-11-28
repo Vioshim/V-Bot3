@@ -103,6 +103,7 @@ class Typing:
     z_move: str = ""
     max_move: str = ""
     chart: frozendict[int, float] = field(default_factory=frozendict)
+    game_id: int = 0
 
     def __init__(self, data: dict[str, Any]) -> None:
         self.name = data.get("name", "")
@@ -244,6 +245,7 @@ class TypingEnum(Typing, Enum):
     Normal = {
         "name": "Normal",
         "icon": "/Chart/NormalIC_lsh07JZFXF.png",
+        "game_id": 0,
         "id": 1,
         "color": 11052922,
         "emoji": "<:Normal:952523352839450634>",
@@ -254,6 +256,7 @@ class TypingEnum(Typing, Enum):
     Fire = {
         "name": "Fire",
         "icon": "/Chart/FireIC_FSXZ0ewoZ.png",
+        "game_id": 9,
         "id": 2,
         "color": 15630640,
         "emoji": "<:Fire:952523352667484160>",
@@ -264,6 +267,7 @@ class TypingEnum(Typing, Enum):
     Water = {
         "name": "Water",
         "icon": "/Chart/WaterIC_AePidQZ435.png",
+        "game_id": 10,
         "id": 3,
         "color": 6525168,
         "emoji": "<:Water:952523352688451594>",
@@ -274,6 +278,7 @@ class TypingEnum(Typing, Enum):
     Electric = {
         "name": "Electric",
         "icon": "/Chart/ElectricIC_SAqZW5RtMs.png",
+        "game_id": 12,
         "id": 4,
         "color": 16240684,
         "emoji": "<:Electric:952523352646492180>",
@@ -284,6 +289,7 @@ class TypingEnum(Typing, Enum):
     Grass = {
         "name": "Grass",
         "icon": "/Chart/GrassIC_U9S3zw7Hqs.png",
+        "game_id": 11,
         "id": 5,
         "color": 8046412,
         "emoji": "<:Grass:952523352571011072>",
@@ -295,6 +301,7 @@ class TypingEnum(Typing, Enum):
         "name": "Ice",
         "icon": "/Chart/IceIC_40f5wWdnqb.png",
         "id": 6,
+        "game_id": 14,
         "color": 9886166,
         "emoji": "<:Ice:952523352587784222>",
         "z_move": "Subzero Slammer",
@@ -305,6 +312,7 @@ class TypingEnum(Typing, Enum):
         "name": "Fighting",
         "icon": "/Chart/FightingIC_no8wYHEEg.png",
         "id": 7,
+        "game_id": 1,
         "color": 12725800,
         "emoji": "<:Fighting:952523352533266432>",
         "z_move": "All-Out Pummeling",
@@ -314,6 +322,7 @@ class TypingEnum(Typing, Enum):
     Poison = {
         "name": "Poison",
         "icon": "/Chart/PoisonIC_oQDclvCSdq.png",
+        "game_id": 3,
         "id": 8,
         "color": 10698401,
         "emoji": "<:Poison:952523352633901106>",
@@ -325,6 +334,7 @@ class TypingEnum(Typing, Enum):
         "name": "Ground",
         "icon": "/Chart/GroundIC_s-APkZLs1S.png",
         "id": 9,
+        "game_id": 4,
         "color": 14860133,
         "emoji": "<:Ground:952523352612958239>",
         "z_move": "Tectonic Rage",
@@ -334,6 +344,7 @@ class TypingEnum(Typing, Enum):
     Flying = {
         "name": "Flying",
         "icon": "/Chart/FlyingIC_c9yZsKBzO.png",
+        "game_id": 2,
         "id": 10,
         "color": 11112435,
         "emoji": "<:Flying:952523352994619402>",
@@ -344,6 +355,7 @@ class TypingEnum(Typing, Enum):
     Psychic = {
         "name": "Psychic",
         "icon": "/Chart/PsychicIC_DWslZRN75-.png",
+        "game_id": 13,
         "id": 11,
         "color": 16340359,
         "emoji": "<:Psychic:952523352872996934>",
@@ -355,6 +367,7 @@ class TypingEnum(Typing, Enum):
         "name": "Bug",
         "icon": "/Chart/BugIC_aYtpLtj9te.png",
         "id": 12,
+        "game_id": 6,
         "color": 10926362,
         "emoji": "<:Bug:952523352524877835>",
         "z_move": "Savage Spin-Out",
@@ -365,6 +378,7 @@ class TypingEnum(Typing, Enum):
         "name": "Rock",
         "icon": "/Chart/RockIC_9g894kz-kf.png",
         "id": 13,
+        "game_id": 5,
         "color": 11968822,
         "emoji": "<:Rock:952523352671662140>",
         "z_move": "Continental Crush",
@@ -375,6 +389,7 @@ class TypingEnum(Typing, Enum):
         "name": "Ghost",
         "icon": "/Chart/GhostIC_jeQRdkKWUU.png",
         "id": 14,
+        "game_id": 7,
         "color": 7559063,
         "emoji": "<:Ghost:952523352575209573>",
         "z_move": "Never-Ending Nightmare",
@@ -385,6 +400,7 @@ class TypingEnum(Typing, Enum):
         "name": "Dragon",
         "icon": "/Chart/DragonIC_n9B85giAn.png",
         "id": 15,
+        "game_id": 15,
         "color": 7288316,
         "emoji": "<:Dragon:952523352545837066>",
         "z_move": "Devastating Drake",
@@ -395,6 +411,7 @@ class TypingEnum(Typing, Enum):
         "name": "Dark",
         "icon": "/Chart/DarkIC_FwzVeCOWx.png",
         "id": 16,
+        "game_id": 16,
         "color": 7362374,
         "emoji": "<:Dark:952523352617144380>",
         "z_move": "Black Hole Eclipse",
@@ -405,6 +422,7 @@ class TypingEnum(Typing, Enum):
         "name": "Steel",
         "icon": "/Chart/SteelIC_0wxMPLo8K.png",
         "id": 17,
+        "game_id": 17,
         "color": 12040142,
         "emoji": "<:Steel:952523352717799454>",
         "z_move": "Corkscrew Crash",
@@ -430,6 +448,7 @@ class TypingEnum(Typing, Enum):
         "name": "Fairy",
         "icon": "/Chart/FairyIC_eeeXGKfZv0.png",
         "id": 18,
+        "game_id": 18,
         "color": 14058925,
         "emoji": "<:Fairy:952523352164159539>",
         "z_move": "Twinkle Tackle",
@@ -472,6 +491,30 @@ class TypingEnum(Typing, Enum):
     @classmethod
     def all(cls):
         return frozenset({x for x in TypingEnum if x.id != 19})
+
+    @classmethod
+    def convert(cls):
+        dict(
+            Normal=0,
+            Fighting=1,
+            Flying=2,
+            Poison=3,
+            Ground=4,
+            Rock=5,
+            Bug=6,
+            Ghost=7,
+            Steel=8,
+            Fire=9,
+            Water=10,
+            Grass=11,
+            Electric=12,
+            Psychic=13,
+            Ice=14,
+            Dragon=15,
+            Dark=16,
+            Fairy=17,
+        )
+        pass
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):
