@@ -63855,6 +63855,28 @@
 		"kind": "Legendary"
 	},
 	{
+		"id": "SHADOWLUGIA",
+		"name": "Shadow Lugia",
+		"shape": "Wings",
+		"base_image": "https://cdn.discordapp.com/attachments/958181841154756618/1046911353585148034/unknown.png",
+		"base_image_shiny": "https://cdn.discordapp.com/attachments/958181841154756618/1046911353585148034/unknown.png",
+		"female_image": "https://cdn.discordapp.com/attachments/958181841154756618/1046911353585148034/unknown.png",
+		"female_image_shiny": "https://cdn.discordapp.com/attachments/958181841154756618/1046911353585148034/unknown.png",
+		"types": ["SHADOW"],
+		"height": 5.2,
+		"weight": 216,
+		"HP": 106,
+		"ATK": 90,
+		"DEF": 130,
+		"SPA": 90,
+		"SPD": 154,
+		"SPE": 110,
+		"movepool": {},
+		"banned": true,
+		"abilities": ["MULTISCALE", "PRESSURE"],
+		"kind": "Legendary"
+	},
+	{
 		"id": "LUMINEON",
 		"name": "Lumineon",
 		"shape": "Fins",

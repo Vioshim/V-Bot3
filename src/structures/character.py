@@ -465,6 +465,27 @@ class Character:
 
     @property
     def total_movepool(self) -> Movepool:
+        if TypingEnum.Shadow in self.types:
+            return Movepool.from_dict(
+                tutor=[
+                    "SHADOWBLAST",
+                    "SHADOWBOLT",
+                    "SHADOWCHILL",
+                    "SHADOWDOWN",
+                    "SHADOWEND",
+                    "SHADOWFIRE",
+                    "SHADOWHALF",
+                    "SHADOWHOLD",
+                    "SHADOWMIST",
+                    "SHADOWPANIC",
+                    "SHADOWRAVE",
+                    "SHADOWRUSH",
+                    "SHADOWSHED",
+                    "SHADOWSKY",
+                    "SHADOWSTORM",
+                    "SHADOWWAVE",
+                ]
+            )
         if self.species:
             return self.species.total_movepool
         return Movepool()

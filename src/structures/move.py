@@ -75,7 +75,9 @@ CHECK_FLAGS: dict[str, Callable[[Any], Optional[str]]] = {
     "CritStage": lambda x: f"Crit. Stages: {x}" if x != 0 else None,
     "Flinch": lambda x: f"Flinch Chance: {x}%" if x != 0 else None,
     "Recoil": lambda x: f"Recoil: {x}%" if x != 0 else None,
-    "RawHealing": lambda x: f"Raw Healing: {x}%" if x != 0 else None,  # Check
+    "RawHealing": lambda x: (f"Raw Healing: {x}%" if x > 0 else f"Drains {x}% from User's HP")
+    if x != 0
+    else None,  # Check
     "RawTarget": lambda x: f"Raw Target: {x}" if x != 0 else None,  # Investigate
     "StatAmps": lambda x: f"Stat Amps: {x}" if x != "0|0|0|0|0|0|0|0|0" else None,
     "Affinity": lambda x: f"Affinity: {x}" if x != "None" else None,
@@ -314,5 +316,9 @@ class Move:
 
 with open("resources/moves.json", mode="r", encoding="utf8") as f:
     DATA: list[Move] = [Move(x) for x in load(f) if x]
-    ALL_MOVES = frozendict({item.id: item for item in DATA})
-    ALL_MOVES_BY_NAME = frozendict({item.name: item for item in DATA})
+
+with open("resources/shadow_moves.json", mode="r", encoding="utf8") as f:
+    DATA.extend(Move(x) for x in load(f) if x)
+
+ALL_MOVES = frozendict({item.id: item for item in DATA})
+ALL_MOVES_BY_NAME = frozendict({item.name: item for item in DATA})
