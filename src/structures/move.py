@@ -27,6 +27,7 @@ from frozendict import frozendict
 from rapidfuzz import process
 
 from src.structures.mon_typing import TypingEnum
+from src.utils.etc import WHITE_BAR
 from src.utils.functions import fix
 
 __all__ = (
@@ -194,6 +195,7 @@ class Move:
         cat = self.category
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
+        embed.set_image(url=WHITE_BAR)
         return embed
 
     def __str__(self):

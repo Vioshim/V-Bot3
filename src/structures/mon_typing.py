@@ -423,7 +423,7 @@ class TypingEnum(Typing, Enum):
         "name": "Steel",
         "icon": "/Chart/SteelIC_0wxMPLo8K.png",
         "id": 17,
-        "game_id": 17,
+        "game_id": 8,
         "color": 12040142,
         "emoji": "<:Steel:952523352717799454>",
         "z_move": "Corkscrew Crash",
@@ -449,7 +449,7 @@ class TypingEnum(Typing, Enum):
         "name": "Fairy",
         "icon": "/Chart/FairyIC_eeeXGKfZv0.png",
         "id": 18,
-        "game_id": 18,
+        "game_id": 17,
         "color": 14058925,
         "emoji": "<:Fairy:952523352164159539>",
         "z_move": "Twinkle Tackle",
@@ -460,6 +460,7 @@ class TypingEnum(Typing, Enum):
         "name": "Shadow",
         "icon": "/Chart/Shadow_FazY5m9Va.png",
         "id": 19,
+        "game_id": 18,
         "color": 14058925,
         "emoji": "<:pokeball:952522808435544074>",
         "z_move": "Gale of Darkness.",
@@ -492,30 +493,6 @@ class TypingEnum(Typing, Enum):
     @classmethod
     def all(cls):
         return frozenset({x for x in TypingEnum if x.id != 19})
-
-    @classmethod
-    def convert(cls):
-        dict(
-            Normal=0,
-            Fighting=1,
-            Flying=2,
-            Poison=3,
-            Ground=4,
-            Rock=5,
-            Bug=6,
-            Ghost=7,
-            Steel=8,
-            Fire=9,
-            Water=10,
-            Grass=11,
-            Electric=12,
-            Psychic=13,
-            Ice=14,
-            Dragon=15,
-            Dark=16,
-            Fairy=17,
-        )
-        pass
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):
