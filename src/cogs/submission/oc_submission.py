@@ -732,10 +732,14 @@ class TypesField(TemplateField):
             )
             single = True
         else:
+            mon_types = [x for x in TypingEnum]
+            if template != Template.Variant:
+                mon_types.remove(TypingEnum.Shadow)
+
             view = Complex[TypingEnum](
                 member=ctx.user,
                 target=ctx,
-                values=TypingEnum,
+                values=mon_types,
                 max_values=2,
                 timeout=None,
                 parser=lambda x: (x.name, f"Adds the typing {x.name}"),
