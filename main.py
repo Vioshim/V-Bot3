@@ -14,14 +14,12 @@
 
 
 from asyncio import run
-from json import dumps
 from logging import getLogger, setLoggerClass
 from os import getenv
 
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
 from apscheduler.schedulers.async_ import AsyncScheduler
-from asyncpg import Connection, create_pool
 from discord import Streaming
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
@@ -48,11 +46,6 @@ except ModuleNotFoundError:
     logger.error("Not using uvloop")
 
 
-async def init_connection(conn: Connection):
-    await conn.set_type_codec("json", encoder=dumps, decoder=loads, schema="pg_catalog")
-    await conn.set_type_codec("jsonb", encoder=dumps, decoder=loads, schema="pg_catalog")
-
-
 async def main() -> None:
     """Main Execution function"""
     try:
@@ -61,11 +54,9 @@ async def main() -> None:
         async with (
             Aiogoogle(service_account_creds=creds) as aiogoogle,
             AsyncScheduler() as scheduler,
-            create_pool(getenv("POSTGRES_POOL_URI"), init=init_connection) as pool,
             CustomBot(
                 activity=Streaming(name="Support V-Bot!", url="https://ko-fi.com/Vioshim"),
                 scheduler=scheduler,
-                pool=pool,
                 logger=logger,
                 owner_id=678374009045254198,
                 command_prefix=when_mentioned_or("?"),

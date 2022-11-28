@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from contextlib import asynccontextmanager, suppress
+from contextlib import suppress
 from io import BytesIO
 from logging import Logger
 from os import getenv
@@ -23,7 +23,6 @@ from typing import Literal, Optional
 from aiogoogle import Aiogoogle
 from aiohttp import ClientSession
 from apscheduler.schedulers.async_ import AsyncScheduler
-from asyncpg import Connection, Pool
 from discord import (
     AllowedMentions,
     DiscordException,
@@ -82,7 +81,6 @@ class CustomBot(Bot):
         scheduler: AsyncScheduler,
         logger: Logger,
         aiogoogle: Aiogoogle,
-        pool: Optional[Pool] = None,
         **options,
     ):
         super(CustomBot, self).__init__(
@@ -96,7 +94,6 @@ class CustomBot(Bot):
             ),
         )
         self.scheduler = scheduler
-        self.pool: Optional[Pool] = pool
         self.logger = logger
         self.aiogoogle = aiogoogle
         self.session = ClientSession(json_serialize=dumps, raise_for_status=True)
@@ -301,53 +298,6 @@ class CustomBot(Bot):
                     if not filename:
                         filename = ".".join(text)
                     return File(fp=fp, filename=filename, spoiler=spoiler)
-
-    @asynccontextmanager
-    async def database(
-        self,
-        *,
-        timeout: float = None,
-        isolation: Literal["read_committed", "serializable", "repeatable_read"] = None,
-        readonly: bool = False,
-        deferrable: bool = False,
-        raise_on_error: bool = True,
-    ):
-        """Database connection function
-
-        Parameters
-        ----------
-        timeout : float, optional
-            Timeout, by default None
-        isolation : str, optional
-            Isolation mode, by default None
-        readonly : bool, optional
-            If it restricts modification, by default False
-        deferrable : bool, optional
-            if it can be deferred, by default False
-        raise_on_error: bool, optional
-            If it will raise exceptions, by default False
-
-        Yields
-        ------
-        Connection
-            Connection
-        """
-        connection: Connection = await self.pool.acquire(timeout=timeout)
-        transaction = connection.transaction(isolation=isolation, readonly=readonly, deferrable=deferrable)
-        await transaction.start()
-        try:
-            yield connection
-        except Exception as e:
-            self.logger.exception("An exception occurred in the transaction", exc_info=e)
-            if not connection.is_closed():
-                await transaction.rollback()
-            if raise_on_error:
-                raise e
-        else:
-            if not connection.is_closed():
-                await transaction.commit()
-        finally:
-            await self.pool.release(connection)
 
     def webhook_lazy(self, channel: Messageable | int) -> Optional[Webhook]:
         """Function which returns first webhook if cached
