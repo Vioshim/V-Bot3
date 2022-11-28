@@ -492,7 +492,7 @@ class TypingEnum(Typing, Enum):
 
     @classmethod
     def all(cls):
-        return frozenset({x for x in TypingEnum if x.id != 19})
+        return frozenset({x for x in TypingEnum if x.game_id != 18})
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):
