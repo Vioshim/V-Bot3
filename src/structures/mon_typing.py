@@ -469,10 +469,6 @@ class TypingEnum(Typing, Enum):
             case _:
                 return MAX_MOVE_RANGE1
 
-    @property
-    def id(self):
-        return self.value.get("id", 0)
-
     @classmethod
     def all(cls):
         return frozenset({x for x in TypingEnum if x.id != 19})
