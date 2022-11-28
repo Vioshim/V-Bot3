@@ -376,10 +376,10 @@ class Roles(commands.Cog):
                     embed.description = desc1 or desc2
 
                 date = current_date.astimezone(tz2)
-                text = quote_plus(f"{member.display_name}'s time is {date.strftime('%I:%M %p')}")
-                embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
+                text = f"User's time is {date.strftime('%I:%M %p')}"
             else:
-                embed.set_image(url=WHITE_BAR)
+                text = "No timezone associated to the account."
+            embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={quote_plus(text)}")
             await resp.send_message(embed=embed, ephemeral=True)
         else:
             modal = AFKModal()
