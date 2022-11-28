@@ -93,8 +93,6 @@ class Typing:
     chart: frozendict[int, float]
         dict with the type charts' values that involve the typing
         format is {ID: multiplier} e.g.: {7: 2.0}
-    banner : str
-        Typing's banner
     """
 
     name: str = ""
@@ -105,7 +103,6 @@ class Typing:
     z_move: str = ""
     max_move: str = ""
     chart: frozendict[int, float] = field(default_factory=frozendict)
-    banner: str = ""
 
     def __init__(self, data: dict[str, Any]) -> None:
         self.name = data.get("name", "")
@@ -119,7 +116,6 @@ class Typing:
         self.z_move = data.get("z_move", "")
         self.max_move = data.get("max_move", "")
         self.chart = frozendict(data.get("chart", {}))
-        self.banner = data.get("banner", "")
 
     @property
     def id(self):
@@ -254,7 +250,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Breakneck Blitz",
         "max_move": "Max Strike",
         "chart": {7: 2.0, 14: 0},
-        "banner": "/Banners/Normal_7WLut6aBRu9.png",
     }
     Fire = {
         "name": "Fire",
@@ -265,7 +260,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Inferno Overdrive",
         "max_move": "Max Flare",
         "chart": {3: 2.0, 9: 2.0, 13: 2.0, 2: 0.5, 5: 0.5, 6: 0.5, 12: 0.5, 17: 0.5, 18: 0.5},
-        "banner": "/Banners/Fire_MWKQIWPHCI.png",
     }
     Water = {
         "name": "Water",
@@ -276,7 +270,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Hydro Vortex",
         "max_move": "Max Geyser",
         "chart": {4: 2.0, 5: 2.0, 2: 0.5, 3: 0.5, 6: 0.5, 17: 0.5},
-        "banner": "/Banners/Water_QrO8_rrrQA.png",
     }
     Electric = {
         "name": "Electric",
@@ -287,7 +280,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Gigavolt Havoc",
         "max_move": "Max Lightning",
         "chart": {9: 2.0, 4: 0.5, 10: 0.5, 17: 0.5},
-        "banner": "/Banners/Electric__HK82VrgVP.png",
     }
     Grass = {
         "name": "Grass",
@@ -298,7 +290,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Bloom Doom",
         "max_move": "Max Overgrowth",
         "chart": {2: 2.0, 6: 2.0, 8: 2.0, 10: 2.0, 12: 2.0, 4: 0.5, 5: 0.5, 9: 0.5, 3: 0.5},
-        "banner": "/Banners/Grass_MibpgmlZSu.png",
     }
     Ice = {
         "name": "Ice",
@@ -309,7 +300,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Subzero Slammer",
         "max_move": "Max Hailstorm",
         "chart": {2: 2.0, 7: 2.0, 13: 2.0, 17: 2.0, 6: 0.5},
-        "banner": "/Banners/Ice_qf9cM_0BZ.png",
     }
     Fighting = {
         "name": "Fighting",
@@ -320,7 +310,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "All-Out Pummeling",
         "max_move": "Max Knuckle",
         "chart": {10: 2.0, 11: 2.0, 18: 2.0, 12: 0.5, 13: 0.5, 16: 0.5},
-        "banner": "/Banners/Fighting_KadL0Lfvu.png",
     }
     Poison = {
         "name": "Poison",
@@ -331,7 +320,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Acid Downpour",
         "max_move": "Max Ooze",
         "chart": {9: 2.0, 11: 2.0, 5: 0.5, 7: 0.5, 8: 0.5, 12: 0.5, 18: 0.5},
-        "banner": "/Banners/Poison_51HLU3KQT.png",
     }
     Ground = {
         "name": "Ground",
@@ -342,7 +330,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Tectonic Rage",
         "max_move": "Max Quake",
         "chart": {3: 2.0, 5: 2.0, 6: 2.0, 8: 0.5, 13: 0.5, 4: 0},
-        "banner": "/Banners/Ground_0nzRnpGnrb.png",
     }
     Flying = {
         "name": "Flying",
@@ -353,7 +340,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Supersonic Skystrike",
         "max_move": "Max Airstream",
         "chart": {4: 2.0, 6: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 12: 0.5, 9: 0},
-        "banner": "/Banners/Flying_ndzxuXXBd.png",
     }
     Psychic = {
         "name": "Psychic",
@@ -364,7 +350,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Shattered Psyche",
         "max_move": "Max Mindstorm",
         "chart": {12: 2.0, 14: 2.0, 16: 2.0, 7: 0.5, 11: 0.5},
-        "banner": "/Banners/Psychic_DZdtI2j5sN.png",
     }
     Bug = {
         "name": "Bug",
@@ -375,7 +360,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Savage Spin-Out",
         "max_move": "Max Flutterby",
         "chart": {2: 2.0, 10: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 9: 0.5},
-        "banner": "/Banners/Bug_NF9aQ4XCV0.png",
     }
     Rock = {
         "name": "Rock",
@@ -386,7 +370,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Continental Crush",
         "max_move": "Max Rockfall",
         "chart": {3: 2.0, 5: 2.0, 7: 2.0, 9: 2.0, 17: 2.0, 1: 0.5, 2: 0.5, 8: 0.5, 10: 0.5},
-        "banner": "/Banners/Rock_io2kdnYrTQ.png",
     }
     Ghost = {
         "name": "Ghost",
@@ -397,7 +380,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Never-Ending Nightmare",
         "max_move": "Max Phantasm",
         "chart": {14: 2.0, 16: 2.0, 8: 0.5, 12: 0.5, 1: 0, 7: 0},
-        "banner": "/Banners/Ghost_-8cmW_6pBqM.png",
     }
     Dragon = {
         "name": "Dragon",
@@ -408,7 +390,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Devastating Drake",
         "max_move": "Max Wyrmwind",
         "chart": {6: 2.0, 15: 2.0, 18: 2.0, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5},
-        "banner": "/Banners/Dragon_fxDjF0oKbiw.png",
     }
     Dark = {
         "name": "Dark",
@@ -419,7 +400,6 @@ class TypingEnum(Typing, Enum):
         "z_move": "Black Hole Eclipse",
         "max_move": "Max Darkness",
         "chart": {7: 2.0, 12: 2.0, 18: 2.0, 14: 0.5, 16: 0.5, 11: 0},
-        "banner": "/Banners/Dark_ZKw4hIYdnp.png",
     }
     Steel = {
         "name": "Steel",
@@ -445,7 +425,6 @@ class TypingEnum(Typing, Enum):
             18: 0.5,
             8: 0,
         },
-        "banner": "/Banners/Steel_lSEoLioGM.png",
     }
     Fairy = {
         "name": "Fairy",
@@ -456,7 +435,16 @@ class TypingEnum(Typing, Enum):
         "z_move": "Twinkle Tackle",
         "max_move": "Max Starfall",
         "chart": {8: 2.0, 17: 2.0, 7: 0.5, 12: 0.5, 16: 0.5, 15: 0},
-        "banner": "/Banners/Fairy_avtBHCy-TB.png",
+    }
+    Shadow = {
+        "name": "Shadow",
+        "icon": "/Chart/Shadow_FazY5m9Va.png",
+        "id": 19,
+        "color": 14058925,
+        "emoji": "<:pokeball:952522808435544074>",
+        "z_move": "Gale of Darkness.",
+        "max_move": "Max Nightmare",
+        "chart": {x: 2.0 if x != 19 else 0.5 for x in range(1, 20)},
     }
 
     @property
@@ -483,7 +471,7 @@ class TypingEnum(Typing, Enum):
 
     @classmethod
     def all(cls):
-        return frozenset(TypingEnum)
+        return frozenset({x for x in TypingEnum if x.id != 19})
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):

@@ -26,7 +26,7 @@ from discord import (
     PartialEmoji,
 )
 from discord.abc import Messageable
-from discord.ui import Button, Select, TextInput, View, button, select
+from discord.ui import Button, Select, TextInput, button, select
 
 from src.pagination.complex import Complex, DefaultModal
 from src.structures.mon_typing import TypingEnum
@@ -206,11 +206,7 @@ class MoveView(MoveComplex):
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         response: InteractionResponse = interaction.response
         if item := self.current_choice:
-            embed = item.embed
-            view = View()
-            if url := getattr(item, "url", None):
-                view.add_item(Button(label="Click here to check more information at Bulbapedia.", url=url))
-            await response.send_message(embed=embed, view=view, ephemeral=True)
+            await response.send_message(embed=item.embed, ephemeral=True)
         await super(MoveView, self).select_choice(interaction=interaction, sct=sct)
 
 

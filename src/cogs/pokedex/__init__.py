@@ -397,25 +397,16 @@ class Pokedex(commands.Cog):
             title = repr(move)
             if move.banned:
                 title += " - Banned Move"
-            description = move.desc or move.shortDesc
+            description = move.description
             if embed.color == ctx.user.color:
                 embed.color = move.color
             embed.set_thumbnail(url=move.type.emoji.url)
-            embed.set_image(url=move.image)
-            power = move.base or "-"
-            acc = move.accuracy or "-"
-            pp = move.pp or "-"
 
             if embed.description:
-                embed.add_field(name=f"{title} - Power:{power}|Acc:{acc}|PP:{pp}", value=description, inline=False)
+                embed.add_field(name=title, value=description[:1024], inline=False)
             else:
                 embed.title = title
                 embed.description = description
-                embed.add_field(name="Power", value=power)
-                embed.add_field(name="Accuracy", value=acc)
-                embed.add_field(name="PP", value=pp)
-            for e in embeds:
-                e.url = move.url
         if kind:
             filters.append(lambda oc: oc.kind == kind)
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
