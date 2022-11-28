@@ -156,7 +156,7 @@ class Move:
 
     @property
     def type(self) -> TypingEnum:
-        return TypingEnum.get(id=self.data["Type"])
+        return TypingEnum.get(id=self.data["Type"] + 1)
 
     @property
     def color(self):
