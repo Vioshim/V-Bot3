@@ -117,6 +117,7 @@ class Typing:
         self.z_move = data.get("z_move", "")
         self.max_move = data.get("max_move", "")
         self.chart = frozendict(data.get("chart", {}))
+        self.game_id = data.get("game_id", 0)
 
     @property
     def id(self):
