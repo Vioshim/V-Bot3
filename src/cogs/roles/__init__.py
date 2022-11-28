@@ -365,7 +365,7 @@ class Roles(commands.Cog):
                 tz1 = timezone(timedelta(hours=item["offset"]))
                 tz2 = timezone(timedelta(hours=item2["offset"]))
                 data = AFKSchedule(
-                    [datetime.combine(current_date, time(hour=x), tz2).astimezone(tz1) for x in item["hours"]]
+                    [datetime.combine(current_date, time(hour=x), tz2).astimezone(tz1) for x in item2["hours"]]
                 )
                 embed.description = data.text
                 date = current_date.astimezone(tz2)
