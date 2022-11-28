@@ -815,7 +815,10 @@ class MovesetField(TemplateField):
                 isinstance(species, (Fakemon, Variant)) and not moves,
             )
         ):
-            movepool = Movepool(other={x for x in Move.all() if not x.banned})
+            if TypingEnum.Shadow not in oc.types:
+                movepool = Movepool(tm={x for x in Move.all() if not x.banned})
+            else:
+                movepool = Movepool(tm={x for x in Move.all() if x.type == TypingEnum.Shadow})
             moveset = oc.moveset
         else:
             movepool = oc.total_movepool
@@ -847,7 +850,7 @@ class MovepoolField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant))
+        return isinstance(oc.species, (Fakemon, Variant)) and TypingEnum.Shadow not in oc.types
 
     @classmethod
     async def on_submit(
