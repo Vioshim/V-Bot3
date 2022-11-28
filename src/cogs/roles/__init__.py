@@ -359,15 +359,21 @@ class Roles(commands.Cog):
         db = self.bot.mongo_db("AFK")
         if item := await db.find_one({"user": ctx.user.id}):
             current_date = ctx.created_at
-            embed = Embed(title="AFK Schedule", timestamp=current_date, color=member.color)
+            embed = Embed(title="AFK Schedule", color=member.color)
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
             if item2 := await db.find_one({"user": member.id}):
                 tz1 = timezone(timedelta(hours=item["offset"]))
                 tz2 = timezone(timedelta(hours=item2["offset"]))
-                data = AFKSchedule(
-                    [datetime.combine(current_date, time(hour=x), tz2).astimezone(tz1) for x in item2["hours"]]
-                )
-                embed.description = data.text
+                user_data = [datetime.combine(current_date, time(hour=x), tz2) for x in item2["hours"]]
+
+                data1 = AFKSchedule(user_data)
+                if desc1 := data1.text:
+                    embed.add_field(name="In user's timezone", value=desc1, inline=False)
+
+                data2 = AFKSchedule([x.astimezone(tz1) for x in user_data])
+                if desc2 := data2.text:
+                    embed.add_field(name="In your timezone", value=desc2, inline=False)
+
                 date = current_date.astimezone(tz2)
                 text = quote_plus(f"{member.display_name}'s time is {date.strftime('%I:%M %p')}")
                 embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
