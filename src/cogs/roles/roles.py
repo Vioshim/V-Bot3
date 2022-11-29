@@ -906,8 +906,8 @@ class RPRolesView(View):
             if not choice:
                 return
 
-        oc_view = CharactersView(member=ctx.user, target=view.message, ocs=choice[0])
         msg: PartialMessage = choice[2]
+        oc_view = CharactersView(member=ctx.user, target=view.message, ocs=choice[0], msg_id=msg.id)
 
         try:
             msg = await msg.fetch()
