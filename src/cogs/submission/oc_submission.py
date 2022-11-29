@@ -783,7 +783,6 @@ class MovesetField(TemplateField):
             movepool = Movepool.from_dict(**DEFAULT_MOVES) + oc.total_movepool
             moves = movepool()
             if items := ", ".join(x.name for x in oc.moveset if x not in moves):
-                print(repr(movepool))
                 value += f"Not in Movepool: {items}"
 
         return value or None
