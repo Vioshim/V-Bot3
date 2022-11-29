@@ -461,7 +461,7 @@ class TypingEnum(Typing, Enum):
         "icon": "/Chart/Shadow_FazY5m9Va.png",
         "id": 19,
         "game_id": 18,
-        "color": 14058925,
+        "color": 4076373,
         "emoji": "<:pokeball:952522808435544074>",
         "z_move": "Gale of Darkness.",
         "max_move": "Max Nightmare",
