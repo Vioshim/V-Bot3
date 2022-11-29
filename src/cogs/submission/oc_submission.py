@@ -732,10 +732,7 @@ class TypesField(TemplateField):
             )
             single = True
         else:
-            mon_types = [x for x in TypingEnum]
-            if template != Template.Variant:
-                mon_types.remove(TypingEnum.Shadow)
-
+            mon_types = TypingEnum.all(ignore=TypingEnum.Shadow if template == Template.Variant else None)
             view = Complex[TypingEnum](
                 member=ctx.user,
                 target=ctx,
@@ -960,7 +957,7 @@ class HiddenPowerField(TemplateField):
         view = Complex[TypingEnum](
             member=ctx.user,
             target=ctx,
-            values=TypingEnum.all(),
+            values=TypingEnum.all(ignore=TypingEnum.Shadow),
             max_values=1,
             timeout=None,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
