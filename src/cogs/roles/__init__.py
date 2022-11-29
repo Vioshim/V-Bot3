@@ -18,7 +18,9 @@ from urllib.parse import quote_plus
 
 from discord import (
     AllowedMentions,
+    ChannelType,
     Color,
+    DiscordException,
     Embed,
     Interaction,
     InteractionResponse,
@@ -146,8 +148,12 @@ class Roles(commands.Cog):
                 self.cool_down[member_id] = created_at
 
             view = RPSearchManage(msg_id=msg_id, member_id=member_id, ocs=ocs)
-            await w.edit_message(msg_id, view=view)
-            await w.edit_message(aux, view=view, thread=Object(id=msg_id))
+            try:
+                await w.edit_message(msg_id, view=view)
+                th = self.bot.get_partial_messageable(msg_id, guild_id=w.guild_id, type=ChannelType.public_thread)
+                await th.get_partial_message(aux).edit(view=view)
+            except DiscordException:
+                await db.delete_one(item)
             # self.bot.add_view(view=view, message_id=msg_id)
             # self.bot.add_view(view=view, message_id=aux)
         self.bot.logger.info("Finished loading existing RP Searches")
