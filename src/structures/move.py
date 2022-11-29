@@ -138,6 +138,9 @@ class Move:
     def __hash__(self) -> int:
         return self.move_id
 
+    def __eq__(self, o: Move) -> bool:
+        return isinstance(o, Move) and self.move_id == o.move_id
+
     def __int__(self):
         return self.move_id
 
