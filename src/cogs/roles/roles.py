@@ -475,11 +475,12 @@ class RegisteredRoleSelect(RoleSelect):
 
 
 class RPSearchManage(View):
-    def __init__(self, member_id: int | Member, ocs: set[int | Character] = None):
+    def __init__(self, msg_id: int, member_id: int | Member, ocs: set[int | Character] = None):
         super(RPSearchManage, self).__init__(timeout=None)
         if not isinstance(member_id, int):
             member_id = member_id.id
         self.member_id = member_id
+        self.check_ocs.custom_id = str(msg_id)
         self.ocs = ocs
 
     @button(
@@ -489,7 +490,7 @@ class RPSearchManage(View):
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
     )
-    async def check_ocs(self, ctx: Interaction, _: Button):
+    async def check_ocs(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
@@ -500,7 +501,14 @@ class RPSearchManage(View):
             ]
         ):
             ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": self.member_id})]
-        view = CharactersView(member=ctx.user, target=ctx, ocs=ocs, keep_working=True)
+
+        view = CharactersView(
+            member=ctx.user,
+            target=ctx,
+            ocs=ocs,
+            keep_working=True,
+            msg_id=int(btn.custom_id) if btn.custom_id.isdigit() else None,
+        )
         embed = view.embed
         if member := ctx.guild.get_member(self.member_id) or ctx.client.get_user(self.member_id):
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
@@ -680,18 +688,18 @@ class RPModal(Modal):
             content=reference.mention,
             allowed_mentions=AllowedMentions(roles=True),
             embed=embed,
-            view=RPSearchManage(self.user, items),
             username=self.user.display_name,
             avatar_url=self.user.display_avatar.url,
             wait=True,
         )
         thread = await msg1.create_thread(name=name)
         embed.set_image(url=WHITE_BAR)
+        view = RPSearchManage(msg1.id, self.user, items)
         msg2 = await thread.send(
             content=reference.mention,
             allowed_mentions=AllowedMentions(users=True),
             embed=embed,
-            view=RPSearchManage(self.user, items),
+            view=view,
         )
         await thread.add_user(self.user)
 
@@ -728,7 +736,7 @@ class RPModal(Modal):
 
         if file := await interaction.client.get_file(Character.collage(items, background=img)):
             embed.set_image(url=f"attachment://{file.filename}")
-            await msg1.edit(embed=embed, attachments=[file])
+            await msg1.edit(embed=embed, attachments=[file], view=view)
         elif text := ", ".join(str(x.id) for x in items):
             logger.info("Error Image Parsing OCs: %s", text)
         self.stop()

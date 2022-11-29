@@ -130,6 +130,7 @@ class Roles(commands.Cog):
     async def load_rp_searches(self):
         self.bot.logger.info("Loading existing RP Searches")
         db = self.bot.mongo_db("RP Search")
+        w = await self.bot.webhook(958122815171756042)
         async for item in db.find({}):
             msg_id, member_id, role_id, aux, ocs = (
                 item["id"],
@@ -143,9 +144,12 @@ class Roles(commands.Cog):
                 self.role_cool_down[role_id] = created_at
             if self.cool_down.get(role_id, created_at) <= created_at:
                 self.cool_down[member_id] = created_at
-            view = RPSearchManage(member_id=member_id, ocs=ocs)
-            self.bot.add_view(view=view, message_id=msg_id)
-            self.bot.add_view(view=view, message_id=aux)
+
+            view = RPSearchManage(msg_id=msg_id, member_id=member_id, ocs=ocs)
+            await w.edit_message(msg_id, view=view)
+            await w.edit_message(aux, view=view, thread=Object(id=msg_id))
+            # self.bot.add_view(view=view, message_id=msg_id)
+            # self.bot.add_view(view=view, message_id=aux)
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @commands.Cog.listener()

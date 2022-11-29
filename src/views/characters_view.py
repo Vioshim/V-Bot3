@@ -128,10 +128,16 @@ class PingModal(Modal):
 
 
 class PingView(View):
-    def __init__(self, oc: Character, reference: Interaction):
+    def __init__(
+        self,
+        oc: Character,
+        reference: Interaction,
+        msg_id: Optional[int] = None,
+    ):
         super(PingView, self).__init__(timeout=None)
         self.oc = oc
         self.reference = reference
+        self.msg_id = msg_id
         if reference.user.id != oc.author:
             self.remove_item(self.delete)
 
@@ -151,8 +157,13 @@ class PingView(View):
     async def ping(self, ctx: Interaction, btn: Button) -> None:
         member: Member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
-        if ctx.user != member:
-            db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+        if ctx.user == member:
+            return await resp.send_message("You can't ping yourself.", ephemeral=True)
+
+        if self.msg_id:
+            modal = PingModal(oc=self.oc, thread_id=self.msg_id)
+        else:
             options = [{"id": ctx.channel_id}]
             if ctx.message:
                 options.append({"id": ctx.message.id})
@@ -165,9 +176,7 @@ class PingView(View):
                 modal = PingModal(oc=self.oc, thread_id=data["id"])
             else:
                 modal = PingModal(oc=self.oc)
-            await resp.send_modal(modal)
-        else:
-            await resp.send_message("You can't ping yourself.", ephemeral=True)
+        await resp.send_modal(modal)
 
     @button(
         label="Delete Character",
@@ -197,6 +206,7 @@ class CharactersView(Complex[Character]):
         target: Interaction | Webhook | TextChannel,
         ocs: set[Character],
         keep_working: bool = False,
+        msg_id: Optional[None] = None,
     ):
         super(CharactersView, self).__init__(
             member=member,
@@ -207,6 +217,7 @@ class CharactersView(Complex[Character]):
             keep_working=keep_working,
         )
         self.embed.title = "Select a character"
+        self.msg_id = int(msg_id) if msg_id else None
 
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
@@ -225,7 +236,7 @@ class CharactersView(Complex[Character]):
                 target = self.target
             else:
                 target = interaction
-            view = PingView(oc=item, reference=target)
+            view = PingView(oc=item, reference=target, msg_id=self.msg_id)
             await interaction.followup.send(embeds=embeds, view=view, ephemeral=True)
             await view.wait()
         await super(CharactersView, self).select_choice(interaction, sct)
