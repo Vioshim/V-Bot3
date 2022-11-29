@@ -318,7 +318,7 @@ with open("resources/moves.json", mode="r", encoding="utf8") as f:
     DATA: list[Move] = [Move(x) for x in load(f) if x]
 
 with open("resources/shadow_moves.json", mode="r", encoding="utf8") as f:
-    DATA.extend(Move(x) for x in load(f) if x)
+    DATA += [Move(x) for x in load(f) if x]
 
 ALL_MOVES = frozendict({item.id: item for item in DATA})
 ALL_MOVES_BY_NAME = frozendict({item.name: item for item in DATA})

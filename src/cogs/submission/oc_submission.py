@@ -780,9 +780,10 @@ class MovesetField(TemplateField):
                 isinstance(species, Species) and species.id in mons,
             )
         ):
-            moves = oc.total_movepool()
-            aux = Movepool.from_dict(**DEFAULT_MOVES)
-            if items := ", ".join(x.name for x in oc.moveset if x not in moves and x not in aux):
+            movepool = Movepool.from_dict(**DEFAULT_MOVES) + oc.total_movepool
+            moves = movepool()
+            if items := ", ".join(x.name for x in oc.moveset if x not in moves):
+                print(repr(movepool))
                 value += f"Not in Movepool: {items}"
 
         return value or None
@@ -805,6 +806,8 @@ class MovesetField(TemplateField):
         moveset = None
         mons = "SMEARGLE", "DITTO", "MEW"
 
+        movepool = Movepool.from_dict(**DEFAULT_MOVES)
+
         if any(
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
@@ -816,14 +819,12 @@ class MovesetField(TemplateField):
             )
         ):
             if TypingEnum.Shadow not in oc.types:
-                movepool = Movepool(tm={x for x in Move.all() if not x.banned})
+                movepool += Movepool(tm={x for x in Move.all() if not x.banned})
             else:
-                movepool = Movepool(tm={x for x in Move.all() if x.type == TypingEnum.Shadow})
+                movepool += Movepool(tm={x for x in Move.all() if x.type == TypingEnum.Shadow})
             moveset = oc.moveset
         else:
-            movepool = oc.total_movepool
-
-        movepool += Movepool.from_dict(**DEFAULT_MOVES)
+            movepool += oc.total_movepool
 
         view = MovepoolMoveComplex(
             member=ctx.user,
