@@ -1,7 +1,7 @@
 [
 	{
 		"Name": "Shadow Blast",
-		"MoveID": 0,
+		"MoveID": -1,
 		"CanUseMove": false,
 		"Type": 18,
 		"Quality": 0,
@@ -67,7 +67,7 @@
 	},
 	{
 		"Name": "Shadow Blitz",
-		"MoveID": 0,
+		"MoveID": -2,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
@@ -133,7 +133,7 @@
 	},
 	{
 		"Name": "Shadow Bolt",
-		"MoveID": 0,
+		"MoveID": -3,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 4,
@@ -199,7 +199,7 @@
 	},
 	{
 		"Name": "Shadow Break",
-		"MoveID": 0,
+		"MoveID": -4,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
@@ -265,7 +265,7 @@
 	},
 	{
 		"Name": "Shadow Chill",
-		"MoveID": 0,
+		"MoveID": -5,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 4,
@@ -331,7 +331,7 @@
 	},
 	{
 		"Name": "Shadow Down",
-		"MoveID": 0,
+		"MoveID": -6,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 2,
@@ -397,7 +397,7 @@
 	},
 	{
 		"Name": "Shadow End",
-		"MoveID": 0,
+		"MoveID": -7,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
@@ -463,7 +463,7 @@
 	},
 	{
 		"Name": "Shadow Fire",
-		"MoveID": 0,
+		"MoveID": -8,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 4,
@@ -529,7 +529,7 @@
 	},
 	{
 		"Name": "Shadow Half",
-		"MoveID": 0,
+		"MoveID": -9,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 13,
@@ -595,7 +595,7 @@
 	},
 	{
 		"Name": "Shadow Hold",
-		"MoveID": 0,
+		"MoveID": -10,
 		"CanUseMove": false,
 		"Type": 18,
 		"Quality": 13,
@@ -661,7 +661,7 @@
 	},
 	{
 		"Name": "Shadow Mist",
-		"MoveID": 0,
+		"MoveID": -11,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 2,
@@ -727,7 +727,7 @@
 	},
 	{
 		"Name": "Shadow Panic",
-		"MoveID": 0,
+		"MoveID": -12,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 1,
@@ -793,7 +793,7 @@
 	},
 	{
 		"Name": "Shadow Rave",
-		"MoveID": 0,
+		"MoveID": -13,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
@@ -859,7 +859,7 @@
 	},
 	{
 		"Name": "Shadow Rush",
-		"MoveID": 0,
+		"MoveID": -14,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
@@ -925,7 +925,7 @@
 	},
 	{
 		"Name": "Shadow Shed",
-		"MoveID": 0,
+		"MoveID": -15,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 13,
@@ -991,7 +991,7 @@
 	},
 	{
 		"Name": "Shadow Sky",
-		"MoveID": 0,
+		"MoveID": -16,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 10,
@@ -1057,7 +1057,7 @@
 	},
 	{
 		"Name": "Shadow Storm",
-		"MoveID": 0,
+		"MoveID": -17,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
@@ -1123,7 +1123,7 @@
 	},
 	{
 		"Name": "Shadow Wave",
-		"MoveID": 0,
+		"MoveID": -18,
 		"CanUseMove": true,
 		"Type": 18,
 		"Quality": 0,
