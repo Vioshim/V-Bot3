@@ -18,9 +18,7 @@ from urllib.parse import quote_plus
 
 from discord import (
     AllowedMentions,
-    ChannelType,
     Color,
-    DiscordException,
     Embed,
     Interaction,
     InteractionResponse,
@@ -132,7 +130,6 @@ class Roles(commands.Cog):
     async def load_rp_searches(self):
         self.bot.logger.info("Loading existing RP Searches")
         db = self.bot.mongo_db("RP Search")
-        w = await self.bot.webhook(958122815171756042)
         async for item in db.find({}):
             msg_id, member_id, role_id, aux, ocs = (
                 item["id"],
@@ -148,14 +145,8 @@ class Roles(commands.Cog):
                 self.cool_down[member_id] = created_at
 
             view = RPSearchManage(msg_id=msg_id, member_id=member_id, ocs=ocs)
-            try:
-                await w.edit_message(msg_id, view=view)
-                th = self.bot.get_partial_messageable(msg_id, guild_id=w.guild_id, type=ChannelType.public_thread)
-                await th.get_partial_message(aux).edit(view=view)
-            except DiscordException:
-                await db.delete_one(item)
-            # self.bot.add_view(view=view, message_id=msg_id)
-            # self.bot.add_view(view=view, message_id=aux)
+            self.bot.add_view(view=view, message_id=msg_id)
+            self.bot.add_view(view=view, message_id=aux)
         self.bot.logger.info("Finished loading existing RP Searches")
 
     @commands.Cog.listener()
