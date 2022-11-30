@@ -97,7 +97,6 @@ class MovepoolView(Basic):
     def __init__(self, target: Interaction | TextChannel, member: Member, oc: Character):
         super(MovepoolView, self).__init__(target=target, member=member, timeout=None)
         self.oc = oc
-        self.embed.title = f"Modify Movepool for {oc.name}"
 
     @button(label="Modify Movepool")
     async def modify(self, ctx: Interaction, _: Button):

@@ -79,9 +79,7 @@ from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
-DEFAULT_MOVES = {
-    "tm": ["TERABLAST"],
-}
+DEFAULT_MOVES = Movepool.from_dict(tm=["TERABLAST"])
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -253,7 +251,7 @@ class Template(TemplateItem, Enum):
                     oc.species = Fusion(*choices, ratio=0.5)
             case _:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label="Character's Species.",
+                    label=f"{self.title} Character's Species.",
                     required=True,
                     ephemeral=ephemeral,
                 ) as answer:
@@ -393,7 +391,7 @@ class NameField(TemplateField):
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         handler = text_view.handle(
-            label="Write the character's Name.",
+            label=f"Write the {template.title} character's Name.",
             placeholder=f"> {oc.name}",
             default=oc.name,
             required=True,
@@ -428,7 +426,7 @@ class AgeField(TemplateField):
             silent_mode=True,
         )
         async with view.send(
-            title="Select the character's Age. Current below",
+            title=f"{template.title} Character's Age.",
             description=f"> {oc.age.name}",
             single=True,
             ephemeral=ephemeral,
@@ -473,7 +471,7 @@ class PronounField(TemplateField):
             silent_mode=True,
         )
         async with view.send(
-            title="Select the character's Pronoun. Current below",
+            title=f"{template.title} Character's Pronoun.",
             description=f"> {oc.pronoun.name}",
             single=True,
             ephemeral=ephemeral,
@@ -556,7 +554,7 @@ class FusionRatioField(TemplateField):
             silent_mode=True,
         )
         async with view.send(
-            title="Select the Fusion's Proportion. Current below",
+            title=f"{template.title} Character's Proportion.",
             description=f"> {mon.label_name}",
             single=True,
             ephemeral=ephemeral,
@@ -595,7 +593,7 @@ class SizeField(TemplateField):
             silent_mode=True,
         )
         async with view.send(
-            title="Select the character's Size. Current below",
+            title=f"{template.title} Character's Size.",
             description=f"> {oc.size.height_info(height)}",
             single=True,
             ephemeral=ephemeral,
@@ -632,7 +630,7 @@ class WeightField(TemplateField):
             silent_mode=True,
         )
         async with view.send(
-            title="Select the character's Weight. Current below",
+            title=f"{template.title} Character's Weight.",
             description=f"> {oc.size.weight_info(weight)}",
             single=True,
             ephemeral=ephemeral,
@@ -661,7 +659,7 @@ class PreEvoSpeciesField(TemplateField):
     async def on_submit(
         cls,
         ctx: Interaction,
-        template: Template,
+        _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
@@ -724,10 +722,6 @@ class TypesField(TemplateField):
                 values=values,
                 timeout=None,
                 parser=lambda x: (y := "/".join(i.name for i in x), f"Adds the typing {y}"),
-                text_component=TextInput(
-                    label="Select Typing",
-                    placeholder=" | ".join("/".join(i.name for i in x).title() for x in values),
-                ),
                 silent_mode=True,
             )
             single = True
@@ -749,7 +743,11 @@ class TypesField(TemplateField):
             )
             single = False
 
-        async with view.send(title="Select Typing", single=single, ephemeral=ephemeral) as types:
+        async with view.send(
+            title=f"{template.title} Character's Typing",
+            single=single,
+            ephemeral=ephemeral,
+        ) as types:
             if types:
                 species.types = frozenset(types)
                 progress.add(cls.name)
@@ -777,7 +775,7 @@ class MovesetField(TemplateField):
                 isinstance(species, Species) and species.id in mons,
             )
         ):
-            movepool = Movepool.from_dict(**DEFAULT_MOVES) + oc.total_movepool
+            movepool = DEFAULT_MOVES + oc.total_movepool
             moves = movepool()
             if items := ", ".join(x.name for x in oc.moveset if x not in moves):
                 value += f"Not in Movepool: {items}"
@@ -802,7 +800,7 @@ class MovesetField(TemplateField):
         moveset = None
         mons = "SMEARGLE", "DITTO", "MEW"
 
-        movepool = Movepool.from_dict(**DEFAULT_MOVES)
+        movepool = DEFAULT_MOVES.copy()
 
         if any(
             (
@@ -828,7 +826,10 @@ class MovesetField(TemplateField):
             target=ctx,
             choices=moveset,
         )
-        async with view.send(ephemeral=ephemeral) as choices:
+        async with view.send(
+            title=f"{template.title} Character's Movepool",
+            ephemeral=ephemeral,
+        ) as choices:
             oc.moveset = frozenset(choices)
             if isinstance(oc.species, (Fakemon, Variant)) and not oc.movepool:
                 oc.species.movepool = Movepool(tutor=oc.moveset.copy())
@@ -859,7 +860,10 @@ class MovepoolField(TemplateField):
         ephemeral: bool = False,
     ):
         view = MovepoolView(ctx, ctx.user, oc)
-        await view.send(ephemeral=ephemeral)
+        await view.send(
+            title=f"{template.title} Character's Movepool",
+            ephemeral=ephemeral,
+        )
         await view.wait()
         progress.add(cls.name)
 
@@ -919,16 +923,17 @@ class AbilitiesField(TemplateField):
             ),
             silent_mode=True,
         )
-        view.embed.title = "Select the abilities. Current ones below"
-
-        for index, item in enumerate(oc.abilities, start=1):
-            view.embed.add_field(
-                name=f"Ability {index} - {item.name}",
-                value=item.description,
-                inline=False,
-            )
-
-        async with view.send(ephemeral=ephemeral) as choices:
+        async with view.send(
+            title=f"{template.title} Character's Abilities",
+            fields=[
+                (
+                    f"Ability {index} - {item.name}",
+                    item.description[:1024],
+                )
+                for index, item in enumerate(oc.abilities, start=1)
+            ],
+            ephemeral=ephemeral,
+        ) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
                 if isinstance(oc.species, (Fakemon, Variant)):
@@ -969,7 +974,7 @@ class HiddenPowerField(TemplateField):
             silent_mode=True,
         )
         async with view.send(
-            title="Select Hidden Power",
+            title=f"{template.title} Character's Hidden Power",
             single=True,
             ephemeral=ephemeral,
         ) as types:
@@ -1007,8 +1012,8 @@ class SpAbilityField(TemplateField):
 
 
 class BackstoryField(TemplateField):
-    name = "Backstory"
-    description = "Optional. Fill the OC's Backstory"
+    name = "Bio"
+    description = "Define who is the character."
 
     @classmethod
     async def on_submit(
@@ -1021,7 +1026,7 @@ class BackstoryField(TemplateField):
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
-            label="Write the character's Backstory.",
+            label=f"Write the {template.title}'s Bio.",
             placeholder=oc.backstory,
             default=oc.backstory,
             required=False,
@@ -1164,7 +1169,7 @@ class PokeballField(TemplateField):
         )
         current = oc.pokeball.label if oc.pokeball else None
         async with view.send(
-            title="Select the character's Pokeball. Current below",
+            title=f"{template.title} Character's Pokeball.",
             description=f"> {current}",
             single=True,
             ephemeral=ephemeral,

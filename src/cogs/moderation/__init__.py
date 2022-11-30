@@ -39,6 +39,7 @@ from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
 
 from src.structures.bot import CustomBot
+from src.structures.converters import AfterDateCall
 from src.utils.etc import WHITE_BAR
 
 __all__ = ("Moderation", "setup")
@@ -403,6 +404,22 @@ class Moderation(commands.Cog):
             pass
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
         await member.kick(reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}")
+
+    @commands.command(name="timeout", aliases=["mute"])
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.bot_has_guild_permissions(ban_members=True)
+    async def timeout(self, ctx: Context, user: Member, *, until: Optional[AfterDateCall] = None):
+        """timeouts an user
+
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        user : Member
+            User
+        """
+        await user.timeout(until)
+        await ctx.message.delete(delay=0)
 
     @commands.command(name="ban")
     @commands.has_guild_permissions(ban_members=True)

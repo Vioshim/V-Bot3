@@ -220,7 +220,7 @@ def embed_modifier(embed: Embed = None, **kwargs):
                 elif isinstance(field, tuple):
                     if len(field) == 2:
                         name, value = field
-                        embed.add_field(name=name, value=value)
+                        embed.add_field(name=name, value=value, inline=False)
                     elif len(field) == 3:
                         name, value, inline = field
                         embed.add_field(name=name, value=value, inline=inline)
