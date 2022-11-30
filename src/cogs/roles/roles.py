@@ -32,7 +32,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    PartialMessage,
     Role,
     SelectOption,
     TextStyle,
@@ -873,46 +872,3 @@ class RPRolesView(View):
                     await thread.edit(archived=False)
                 await thread.add_user(member)
                 await thread.add_user(choice)
-
-    @button(label="Existing RP Pings", style=ButtonStyle.blurple, custom_id="rp-pings")
-    async def rp_pings(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
-        date = time_snowflake(ctx.created_at - INTERVAL)
-        user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
-        db2: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-
-        key = {"$and": [{"id": {"$gte": date}}, {"member": {"$ne": user.id}}]}
-        items = [
-            (
-                frozenset(ocs),
-                (
-                    f"{role.name} - {member}",
-                    f"{member.display_name} w/ {len(ocs)} OCs",
-                ),
-                ctx.channel.get_partial_message(item["id"]),
-            )
-            async for item in db.find(key, sort=[("id", -1)])
-            if (role := ctx.guild.get_role(item["role"]))
-            and (member := ctx.guild.get_member(item["member"]))
-            and (
-                ocs := {Character.from_mongo_dict(x) async for x in db2.find({"id": {"$in": item["ocs"]}})}
-                or {Character.from_mongo_dict(x) async for x in db2.find({"author": member.id})}
-            )
-        ]
-        view = Complex(member=ctx.user, target=ctx, values=items, parser=lambda x: x[1], silent_mode=True)
-        async with view.send(ephemeral=True, single=True) as choice:
-            if not choice:
-                return
-
-        msg: PartialMessage = choice[2]
-        oc_view = CharactersView(member=ctx.user, target=view.message, ocs=choice[0], msg_id=msg.id)
-
-        try:
-            msg = await msg.fetch()
-            oc_view.embed = msg.embeds[0]
-        except DiscordException:
-            await db.delete_one({"id": msg.id})
-
-        await oc_view.simple_send(editing_original=True)
