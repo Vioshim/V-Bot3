@@ -359,7 +359,7 @@ langdetect = ["langdetect"]
 
 [[package]]
 name = "discord.py"
-version = "2.2.0a4646+ga098867a"
+version = "2.2.0a4647+gda317ad8"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -383,7 +383,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "a098867a4d9fe005d399f42bb4aec23a73f76cb7"
+resolved_reference = "da317ad84b0f34a574c2a40248ba5ce23c2f6597"
 
 [[package]]
 name = "distlib"
@@ -1215,7 +1215,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "tzdata"
-version = "2022.6"
+version = "2022.7"
 description = "Provider of IANA time zone data"
 category = "main"
 optional = false

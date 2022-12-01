@@ -710,9 +710,7 @@ class TypesField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        item = isinstance(oc.species, (Fakemon, Variant, CustomMega))
-        item |= isinstance(oc.species, (Fusion, Chimera)) and len(oc.species.possible_types) > 1
-        return item
+        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, Chimera))
 
     @classmethod
     async def on_submit(
@@ -724,34 +722,30 @@ class TypesField(TemplateField):
         ephemeral: bool = False,
     ):
         species = oc.species
-        if isinstance(species, (Chimera, Fusion)):
+
+        if single := isinstance(species, (Chimera, Fusion)):
+
+            def parser(x: set[TypingEnum]):
+                return (y := "/".join(i.name for i in x), f"Adds the typing {y}")
+
             values = species.possible_types
-            view = Complex[set[TypingEnum]](
-                member=ctx.user,
-                target=ctx,
-                values=values,
-                timeout=None,
-                parser=lambda x: (y := "/".join(i.name for i in x), f"Adds the typing {y}"),
-                silent_mode=True,
-            )
-            single = True
+
         else:
-            mon_types = TypingEnum.all(ignore=TypingEnum.Shadow if template == Template.Variant else None)
-            view = Complex[TypingEnum](
-                member=ctx.user,
-                target=ctx,
-                values=mon_types,
-                max_values=2,
-                timeout=None,
-                parser=lambda x: (x.name, f"Adds the typing {x.name}"),
-                text_component=TextInput(
-                    label="Character's Types",
-                    placeholder="Type, Type",
-                    required=True,
-                ),
-                silent_mode=True,
-            )
-            single = False
+
+            def parser(x: TypingEnum):
+                return (x.name, f"Adds the typing {x.name}")
+
+            values = TypingEnum.all(ignore=TypingEnum.Shadow if template == Template.Variant else None)
+
+        view = Complex(
+            member=ctx.user,
+            target=ctx,
+            values=values,
+            parser=parser,
+            max_values=2,
+            timeout=None,
+            silent_mode=True,
+        )
 
         async with view.send(
             title=f"{template.title} Character's Typing",
