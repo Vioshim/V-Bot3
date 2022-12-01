@@ -24,11 +24,11 @@ from discord import (
     TextStyle,
     Webhook,
 )
-from discord.ui import Modal, Select, TextInput, select
+from discord.ui import Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import Ability, SpAbility, UTraitKind
 from src.structures.character import Character
 from src.utils.etc import EMOTE_CREATE_EMOJI, EMOTE_REMOVE_EMOJI, EMOTE_UPDATE_EMOJI
 
@@ -84,6 +84,7 @@ class SPAbilityModal(Modal):
             placeholder="How your OC refers to it?",
             max_length=100,
             default=sp_ability.name[:100],
+            required=False,
         )
         self.description = TextInput(
             label="Description",
@@ -91,6 +92,7 @@ class SPAbilityModal(Modal):
             max_length=1024,
             style=TextStyle.paragraph,
             default=sp_ability.description[:1024],
+            required=False,
         )
         self.origin = TextInput(
             label="Origin",
@@ -98,6 +100,7 @@ class SPAbilityModal(Modal):
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.origin[:600],
+            required=False,
         )
         self.pros = TextInput(
             label="Pros",
@@ -105,6 +108,7 @@ class SPAbilityModal(Modal):
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.pros[:600],
+            required=False,
         )
         self.cons = TextInput(
             label="Cons",
@@ -112,6 +116,7 @@ class SPAbilityModal(Modal):
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.cons[:600],
+            required=False,
         )
         self.add_item(self.name)
         self.add_item(self.description)
@@ -137,44 +142,41 @@ class SPAbilityModal(Modal):
 class SPAbilityView(Basic):
     def __init__(self, target: Interaction, member: Member, oc: Character):
         super(SPAbilityView, self).__init__(target=target, member=member, timeout=None)
-        self.embed.title = "Special Ability Settings"
-        self.sp_ability: Optional[SpAbility] = oc.sp_ability
+        self.embed.title = "Unique Trait Settings"
+        self.sp_ability: SpAbility = oc.sp_ability or SpAbility()
+        for x in self.setting.options:
+            x.default = x.value == self.sp_ability.kind.name
         self.member = member
         self.oc = oc
 
     @select(
-        placeholder="Available Options",
+        placeholder="Sp. Ability Kinds",
         options=[
             SelectOption(
-                label="Add Sp. Ability",
-                value="add",
-                description="Provide Sp. Ability (Name, Desc, Origin, Pros, Cons)",
-                emoji=EMOTE_CREATE_EMOJI,
-            ),
-            SelectOption(
-                label="No Sp. Ability",
-                value="remove",
-                description="Removes Sp. Ability",
-                emoji=EMOTE_REMOVE_EMOJI,
-            ),
-            SelectOption(
-                label="Keep as is",
-                value="default",
-                description="Skip this process",
-                emoji=EMOTE_UPDATE_EMOJI,
-            ),
+                label=x.name.replace("_", " "),
+                value=x.name,
+                description=x.value,
+            )
+            for x in UTraitKind
         ],
     )
     async def setting(self, ctx: Interaction, sct: Select):
-        match sct.values[0]:
-            case "add":
-                await self.confirm(ctx)
-            case "remove":
-                await self.deny(ctx)
-            case "default":
-                await self.cancel(ctx)
-        await self.delete(ctx)
+        resp: InteractionResponse = ctx.response
+        kind = UTraitKind[sct.values[0]]
+        if not self.sp_ability:
+            self.sp_ability = SpAbility()
+        self.sp_ability.kind = kind
+        sct.options.clear()
+        for x in UTraitKind:
+            sct.add_option(
+                label=x.name.replace("_", " "),
+                value=x.name,
+                description=x.value,
+                default=x == kind,
+            )
+        await resp.edit_message(view=self)
 
+    @button(label="Modify", emoji=EMOTE_CREATE_EMOJI, custom_id="modify")
     async def confirm(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         modal = SPAbilityModal(self.sp_ability)
@@ -211,14 +213,19 @@ class SPAbilityView(Basic):
 
         if sp_ability and sp_ability.valid:
             self.sp_ability = sp_ability
+        await self.delete(ctx)
 
+    @button(label="Remove", emoji=EMOTE_REMOVE_EMOJI, custom_id="remove")
     async def deny(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
-        self.sp_ability = None
-        self.embed.description = "Alright, no Sp Ability"
+        self.sp_ability.clear()
+        self.embed.description = "Alright, no Unique Trait"
         await resp.edit_message(embed=self.embed, view=None)
+        await self.delete(ctx)
 
+    @button(label="Keep as is", emoji=EMOTE_UPDATE_EMOJI, custom_id="default")
     async def cancel(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         self.embed.description = "Process concluded"
         await resp.edit_message(embed=self.embed, view=None)
+        await self.delete(ctx)

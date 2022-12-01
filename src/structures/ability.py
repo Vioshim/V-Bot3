@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, astuple, dataclass
+from enum import Enum
 from json import JSONDecoder, JSONEncoder, load
 from re import split
 from typing import Any, Callable, Optional
@@ -159,17 +160,39 @@ class Ability:
         return ALL_ABILITIES.get(item)
 
 
+class UTraitKind(Enum):
+    Birth_Gift = "Unusual birth conditions."
+    Bloodline = "Runs through family's veins."
+    Hard_work = "A power within that awakened by hard work."
+    Science = "Unnatural modifications."
+    Technology = "Improvements."
+    Survival = "Instinctively awakened by adrenaline."
+    Defect = "Adaptation to something negative."
+    Curse = "Harm or Punishment root"
+    Blessing = "External favour and/or protection."
+    Magic = "Spellcasting, rituals or new techniques"
+
+    @property
+    def phrase(self):
+        name = self.name.replace("_", " ")
+        return f"{name}: {self.value}"
+
+
 @dataclass(unsafe_hash=True, slots=True)
 class SpAbility:
-    """
-    Special Ability class which inherits from Ability
-    """
-
     name: str = ""
     description: str = ""
     origin: str = ""
     pros: str = ""
     cons: str = ""
+    kind: UTraitKind = UTraitKind.Hard_work
+
+    def __post_init__(self):
+        if isinstance(self.kind, str):
+            try:
+                self.kind = UTraitKind[self.kind]
+            except KeyError:
+                self.kind = UTraitKind.Hard_work
 
     def __repr__(self) -> str:
         return f"SPAbility(name={self.name})"
@@ -180,6 +203,7 @@ class SpAbility:
         self.origin = ""
         self.pros = ""
         self.cons = ""
+        self.kind = UTraitKind.Hard_work
 
     @property
     def valid(self):
@@ -201,6 +225,7 @@ class SpAbility:
             embed.add_field(name="Pros", value=pros[:1024], inline=False)
         if cons := self.cons:
             embed.add_field(name="Cons", value=cons[:1024], inline=False)
+        embed.set_footer(text=self.kind.phrase)
         if len(embed) >= 6000 and embed.description:
             embed.description = embed.description[:2000]
         return embed
@@ -230,6 +255,7 @@ class SpAbility:
             origin=self.origin,
             pros=self.pros,
             cons=self.cons,
+            kind=self.kind,
         )
 
     @classmethod

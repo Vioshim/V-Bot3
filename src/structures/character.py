@@ -284,7 +284,9 @@ class Character:
         data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
         data["pokeball"] = self.pokeball.name if self.pokeball else None
         if isinstance(self.sp_ability, SpAbility):
-            data["sp_ability"] = asdict(self.sp_ability)
+            aux = asdict(self.sp_ability)
+            aux["kind"] = self.sp_ability.kind.name
+            data["sp_ability"] = aux
         if isinstance(self.image, File):
             data["image"] = None
         return data

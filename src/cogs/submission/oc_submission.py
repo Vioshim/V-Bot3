@@ -943,7 +943,7 @@ class AbilitiesField(TemplateField):
 
 class HiddenPowerField(TemplateField):
     name = "Hidden Power"
-    description = "Optional. Fill the OC's Hidden Power"
+    description = "Typing that matches with their soul's"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -982,14 +982,14 @@ class HiddenPowerField(TemplateField):
             progress.add(cls.name)
 
 
-class SpAbilityField(TemplateField):
-    name = "Special Ability"
-    description = "Optional. Fill the OC's Special Ability"
+class UniqueTraitField(TemplateField):
+    name = "Unique Trait"
+    description = "No other in species but OC can do it."
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         if not oc.can_have_special_abilities and oc.sp_ability:
-            return "Can't have Special Abilities."
+            return "Can't have Unique Traits."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -1007,7 +1007,11 @@ class SpAbilityField(TemplateField):
         view = SPAbilityView(ctx, ctx.user, oc)
         await view.send(ephemeral=ephemeral)
         await view.wait()
-        oc.sp_ability = view.sp_ability
+
+        if view.sp_ability.valid:
+            oc.sp_ability = view.sp_ability
+        else:
+            oc.sp_ability = None
         progress.add(cls.name)
 
 

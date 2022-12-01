@@ -194,7 +194,7 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Characters")
         if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
             user = self.bot.supporting.get(ctx.user, ctx.user)
-            if ocs[0].author in [ctx.user.id, user.id]:
+            if ocs[0].author in [ctx.user.id, user.id] or ctx.user.id == ctx.guild.owner_id:
                 view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
             else:
                 view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
