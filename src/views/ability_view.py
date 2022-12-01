@@ -154,7 +154,7 @@ class SPAbilityView(Basic):
         placeholder="Sp. Ability Kinds",
         options=[
             SelectOption(
-                label=x.name.replace("_", " "),
+                label=x.title,
                 value=x.name,
                 description=x.value,
                 emoji=x.emoji,
@@ -171,7 +171,7 @@ class SPAbilityView(Basic):
         sct.options.clear()
         for x in UTraitKind:
             sct.add_option(
-                label=x.name.replace("_", " "),
+                label=x.title,
                 value=x.name,
                 description=x.value,
                 default=x == kind,

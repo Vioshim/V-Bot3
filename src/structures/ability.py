@@ -174,15 +174,18 @@ class UTraitKind(Enum):
     Magic = "Spellcasting, rituals or new techniques", "🪄"
 
     @property
+    def title(self):
+        return self.name.replace("_", " ")
+
+    @property
     def emoji(self) -> str:
         _, value = self.value
         return value
 
     @property
     def phrase(self):
-        name = self.name.replace("_", " ")
         value, _ = self.value
-        return f"{name}: {value}"
+        return f"{self.title}: {value}"
 
 
 @dataclass(unsafe_hash=True, slots=True)
