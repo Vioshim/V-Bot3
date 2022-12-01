@@ -156,7 +156,7 @@ class SPAbilityView(Basic):
             SelectOption(
                 label=x.title,
                 value=x.name,
-                description=x.value,
+                description=x.desc,
                 emoji=x.emoji,
             )
             for x in UTraitKind
@@ -165,7 +165,7 @@ class SPAbilityView(Basic):
     async def setting(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         kind = UTraitKind[sct.values[0]]
-        if not self.sp_ability:
+        if self.sp_ability is None:
             self.sp_ability = SpAbility()
         self.sp_ability.kind = kind
         sct.options.clear()
@@ -173,7 +173,7 @@ class SPAbilityView(Basic):
             sct.add_option(
                 label=x.title,
                 value=x.name,
-                description=x.value,
+                description=x.desc,
                 default=x == kind,
                 emoji=x.emoji,
             )
