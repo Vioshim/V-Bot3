@@ -629,6 +629,8 @@ class Character:
             if cons := sp_ability.cons[:600]:
                 sp_embed.add_field(name="Sp.Ability - Cons", value=cons, inline=False)
 
+            sp_embed.set_footer(text=sp_ability.kind.phrase)
+
             embeds.append(sp_embed)
 
         moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
