@@ -341,6 +341,7 @@ class Template(TemplateItem, Enum):
 class TemplateField(ABC):
     name: str = ""
     description: str = ""
+    required: bool = False
 
     @classmethod
     def all(cls):
@@ -373,7 +374,8 @@ class TemplateField(ABC):
 
 class NameField(TemplateField):
     name = "Name"
-    description = "Fill the OC's Name"
+    description = "Modify the OC's Name"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -405,7 +407,8 @@ class NameField(TemplateField):
 
 class AgeField(TemplateField):
     name = "Age"
-    description = "Optional. Fill the OC's Age"
+    description = "Modify the OC's Age"
+    required: bool = True
 
     @classmethod
     async def on_submit(
@@ -438,7 +441,8 @@ class AgeField(TemplateField):
 
 class PronounField(TemplateField):
     name = "Pronoun"
-    description = "Optional. Fill the OC's Pronoun"
+    description = "He, She or Them"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -483,7 +487,8 @@ class PronounField(TemplateField):
 
 class SpeciesField(TemplateField):
     name = "Species"
-    description = "Fill the OC's Species"
+    description = "Modify the OC's Species"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -528,7 +533,8 @@ class SpeciesField(TemplateField):
 
 class FusionRatioField(TemplateField):
     name = "Proportion"
-    description = "Fill the OC's Fusion Ratio"
+    description = "Modify the OC's Fusion Ratio"
+    required: bool = False
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -568,7 +574,8 @@ class FusionRatioField(TemplateField):
 
 class SizeField(TemplateField):
     name = "Size"
-    description = "Fill the OC's Size"
+    description = "Modify the OC's Size"
+    required: bool = False
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -605,7 +612,8 @@ class SizeField(TemplateField):
 
 class WeightField(TemplateField):
     name = "Weight"
-    description = "Fill the OC's Weight"
+    description = "Modify the OC's Weight"
+    required: bool = False
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -642,7 +650,8 @@ class WeightField(TemplateField):
 
 class PreEvoSpeciesField(TemplateField):
     name = "Pre-Evolution"
-    description = "Optional. Fill the OC's Pre evo Species"
+    description = "Modify the OC's Pre evo Species"
+    required: bool = False
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -682,7 +691,8 @@ class PreEvoSpeciesField(TemplateField):
 
 class TypesField(TemplateField):
     name = "Types"
-    description = "Fill the OC's Types"
+    description = "Modify the OC's Types"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -755,7 +765,8 @@ class TypesField(TemplateField):
 
 class MovesetField(TemplateField):
     name = "Moveset"
-    description = "Optional. Fill the OC's fav. moves"
+    description = "Modify the OC's fav. moves"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -827,7 +838,7 @@ class MovesetField(TemplateField):
             choices=moveset,
         )
         async with view.send(
-            title=f"{template.title} Character's Movepool",
+            title=f"{template.title} Character's Moveset",
             ephemeral=ephemeral,
         ) as choices:
             oc.moveset = frozenset(choices)
@@ -839,7 +850,8 @@ class MovesetField(TemplateField):
 
 class MovepoolField(TemplateField):
     name = "Movepool"
-    description = "Optional. Fill the OC's movepool"
+    description = "Modify the OC's movepool"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -870,7 +882,8 @@ class MovepoolField(TemplateField):
 
 class AbilitiesField(TemplateField):
     name = "Abilities"
-    description = "Fill the OC's Abilities"
+    description = "Modify the OC's Abilities"
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -944,6 +957,7 @@ class AbilitiesField(TemplateField):
 class HiddenPowerField(TemplateField):
     name = "Hidden Power"
     description = "Typing that matches with their soul's"
+    required: bool = False
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -985,6 +999,7 @@ class HiddenPowerField(TemplateField):
 class UniqueTraitField(TemplateField):
     name = "Unique Trait"
     description = "No other in species but OC can do it."
+    required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -1018,6 +1033,7 @@ class UniqueTraitField(TemplateField):
 class BackstoryField(TemplateField):
     name = "Bio"
     description = "Define who is the character."
+    required: bool = True
 
     @classmethod
     async def on_submit(
@@ -1044,7 +1060,8 @@ class BackstoryField(TemplateField):
 
 class PersonalityField(TemplateField):
     name = "Personality"
-    description = "Optional. Fill the OC's Personality"
+    description = "Modify the OC's Personality"
+    required: bool = False
 
     @classmethod
     async def on_submit(
@@ -1057,7 +1074,7 @@ class PersonalityField(TemplateField):
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
-            label="Write the character's Personality.",
+            label=f"Write the {template.title} Character's Personality.",
             placeholder=oc.personality,
             ephemeral=ephemeral,
             default=oc.personality,
@@ -1071,7 +1088,8 @@ class PersonalityField(TemplateField):
 
 class ExtraField(TemplateField):
     name = "Extra Information"
-    description = "Optional. Fill the OC's Extra Information"
+    description = "Modify the OC's Extra Information"
+    required: bool = False
 
     @classmethod
     async def on_submit(
@@ -1098,7 +1116,8 @@ class ExtraField(TemplateField):
 
 class ImageField(TemplateField):
     name = "Image"
-    description = "Fill the OC's Image"
+    description = "Modify the OC's Image"
+    required: bool = True
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -1147,7 +1166,8 @@ class ImageField(TemplateField):
 
 class PokeballField(TemplateField):
     name = "Pokeball"
-    description = "Optional. Fill the OC's Pokeball"
+    description = "Specify if OC has a pokeball or not"
+    required: bool = False
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -1242,7 +1262,8 @@ class CreationOCView(Basic):
             )
             for x in Template
         ]
-        self.fields.options.clear()
+        self.fields1.options.clear()
+        self.fields2.options.clear()
         for item in filter(lambda x: x.check(self.oc), TemplateField.all()):
             emoji = "\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}"
             description = item.evaluate(self.oc)
@@ -1250,17 +1271,23 @@ class CreationOCView(Basic):
                 description = item.description
             else:
                 emoji = "\N{CROSS MARK}"
-            self.fields.add_option(label=item.name, description=description[:100], emoji=emoji)
+            menu = self.fields1 if item.required else self.fields2
+            menu.add_option(label=item.name, description=description[:100], emoji=emoji)
 
-        if count := sum(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options):
-            self.fields.placeholder = f"Click here to continue ({count} needed changes)."
-        else:
-            self.fields.placeholder = "Click here to continue."
+        items: list[tuple[str, Select]] = [("Essentials", self.fields1), ("Extras", self.fields2)]
 
-        self.fields.options.sort(key=lambda x: str(x.emoji) != "\N{CROSS MARK}")
+        errors: int = 0
+        for x, y in items:
+            if count := sum(str(o.emoji) == "\N{CROSS MARK}" for o in y.options):
+                y.options.sort(key=lambda x: str(x.emoji) != "\N{CROSS MARK}")
+                y.placeholder = f"{x}. ({count} needed changes)."
+            else:
+                y.placeholder = f"{x}. Click here!"
+            errors += count
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
-        self.submit.disabled = any(str(x.emoji) == "\N{CROSS MARK}" for x in self.fields.options)
+        self.submit.disabled = bool(errors)
+
         if embed_update:
             embeds = self.oc.embeds
             embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
@@ -1366,8 +1393,17 @@ class CreationOCView(Basic):
         await self.upload()
         return m
 
-    @select(placeholder="Click here!", row=1)
-    async def fields(self, ctx: Interaction, sct: Select):
+    @select(placeholder="Essentials. Click here!", row=1)
+    async def fields1(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        if item := TemplateField.get(name=sct.values[0]):
+            self.ephemeral = ctx.message.flags.ephemeral or self.ephemeral
+            await resp.defer(ephemeral=self.ephemeral, thinking=True)
+            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
+        await self.update(ctx)
+
+    @select(placeholder="Extras. Click here!", row=2)
+    async def fields2(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         if item := TemplateField.get(name=sct.values[0]):
             self.ephemeral = ctx.message.flags.ephemeral or self.ephemeral
@@ -1382,7 +1418,7 @@ class CreationOCView(Basic):
             await db.delete_one({"id": m.id, "server": guild_id})
         return await super(CreationOCView, self).delete(ctx)
 
-    @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=2)
+    @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=3)
     async def finish_oc(self, ctx: Interaction, _: Button):
         if self.oc.id and self.oc.thread:
             if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
@@ -1391,7 +1427,7 @@ class CreationOCView(Basic):
             await channel.get_partial_message(self.oc.id).delete(delay=0)
         await self.delete(ctx)
 
-    @button(label="Close this Menu", row=2)
+    @button(label="Close this Menu", row=3)
     async def cancel(self, ctx: Interaction, _: Button):
         await self.delete(ctx)
 
@@ -1419,11 +1455,11 @@ class CreationOCView(Basic):
 
         await self.delete(ctx)
 
-    @button(label="Request Help", row=2)
+    @button(label="Request Help", row=3)
     async def help(self, ctx: Interaction, _: Button):
         await self.help_method(ctx)
 
-    @button(disabled=True, label="Submit", style=ButtonStyle.green, row=2)
+    @button(disabled=True, label="Submit", style=ButtonStyle.green, row=3)
     async def submit(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         try:
