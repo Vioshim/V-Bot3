@@ -161,21 +161,28 @@ class Ability:
 
 
 class UTraitKind(Enum):
-    Birth_Gift = "Unusual birth conditions."
-    Bloodline = "Runs through family's veins."
-    Hard_work = "A power within that awakened by hard work."
-    Science = "Unnatural modifications."
-    Technology = "Improvements."
-    Survival = "Instinctively awakened by adrenaline."
-    Defect = "Adaptation to something negative."
-    Curse = "Harm or Punishment root"
-    Blessing = "External favour and/or protection."
-    Magic = "Spellcasting, rituals or new techniques"
+    Birth_Gift = "Unusual birth conditions.", "🐣"
+    Bloodline = "Runs through family's veins.", "👨‍👩‍👧‍👦"
+    Hard_work = "A power within that awakened by hard work.", "⚒️"
+    Science = "Unnatural modifications.", "🔬"
+    Technology = "Improvements.", "⚙️"
+    Survival = "Instinctively awakened by adrenaline.", "🏕️"
+    Cosmical = "Sudden, very rare yet it happened one day.", "☄️"
+    Defect = "Adaptation to something negative.", "🧑‍⚕️"
+    Curse = "Harm or Punishment root", "☠️"
+    Blessing = "External favour and/or protection.", "🕯️"
+    Magic = "Spellcasting, rituals or new techniques", "🪄"
+
+    @property
+    def emoji(self) -> str:
+        _, value = self.value
+        return value
 
     @property
     def phrase(self):
         name = self.name.replace("_", " ")
-        return f"{name}: {self.value}"
+        value, _ = self.value
+        return f"{name}: {value}"
 
 
 @dataclass(unsafe_hash=True, slots=True)

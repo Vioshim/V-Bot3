@@ -157,6 +157,7 @@ class SPAbilityView(Basic):
                 label=x.name.replace("_", " "),
                 value=x.name,
                 description=x.value,
+                emoji=x.emoji,
             )
             for x in UTraitKind
         ],
@@ -174,6 +175,7 @@ class SPAbilityView(Basic):
                 value=x.name,
                 description=x.value,
                 default=x == kind,
+                emoji=x.emoji,
             )
         await resp.edit_message(view=self)
 
