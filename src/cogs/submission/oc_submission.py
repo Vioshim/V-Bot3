@@ -1297,7 +1297,7 @@ class CreationOCView(Basic):
                     | Template.CustomUltraBeast
                     | Template.CustomParadox
                 ):
-                    self.progress -= {SpAbilityField.name}
+                    self.progress -= {UniqueTraitField.name}
                     self.oc.sp_ability = None
 
             await self.update(ctx)
