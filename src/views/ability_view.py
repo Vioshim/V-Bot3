@@ -24,7 +24,7 @@ from discord import (
     TextStyle,
     Webhook,
 )
-from discord.ui import Modal, Select, TextInput, button, select
+from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
 from src.pagination.view_base import Basic
@@ -143,6 +143,7 @@ class SPAbilityView(Basic):
     def __init__(self, target: Interaction, member: Member, oc: Character):
         super(SPAbilityView, self).__init__(target=target, member=member, timeout=None)
         self.embed.title = "Unique Trait Settings"
+        self.embed.description = "Unique powers are something that few people have, these unique powers usually have more disadvantages than advantages. Most people don't have them."
         self.sp_ability: SpAbility = oc.sp_ability or SpAbility()
         for x in self.setting.options:
             x.default = x.value == self.sp_ability.kind.name
@@ -177,7 +178,7 @@ class SPAbilityView(Basic):
         await resp.edit_message(view=self)
 
     @button(label="Modify", emoji=EMOTE_CREATE_EMOJI, custom_id="modify")
-    async def confirm(self, ctx: Interaction):
+    async def confirm(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         modal = SPAbilityModal(self.sp_ability)
         await resp.send_modal(modal)
@@ -216,7 +217,7 @@ class SPAbilityView(Basic):
         await self.delete(ctx)
 
     @button(label="Remove", emoji=EMOTE_REMOVE_EMOJI, custom_id="remove")
-    async def deny(self, ctx: Interaction):
+    async def deny(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         self.sp_ability.clear()
         self.embed.description = "Alright, no Unique Trait"
@@ -224,7 +225,7 @@ class SPAbilityView(Basic):
         await self.delete(ctx)
 
     @button(label="Keep as is", emoji=EMOTE_UPDATE_EMOJI, custom_id="default")
-    async def cancel(self, ctx: Interaction):
+    async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         self.embed.description = "Process concluded"
         await resp.edit_message(embed=self.embed, view=None)
