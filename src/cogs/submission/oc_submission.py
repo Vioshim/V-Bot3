@@ -728,21 +728,22 @@ class TypesField(TemplateField):
             def parser(x: set[TypingEnum]):
                 return (y := "/".join(i.name for i in x), f"Adds the typing {y}")
 
-            values = species.possible_types
+            values, max_values = species.possible_types, 1
 
         else:
 
             def parser(x: TypingEnum):
                 return (x.name, f"Adds the typing {x.name}")
 
-            values = TypingEnum.all(ignore=TypingEnum.Shadow if template == Template.Variant else None)
+            ignore = TypingEnum.Shadow if template == Template.Variant else None
+            values, max_values = TypingEnum.all(ignore=ignore), 2
 
         view = Complex(
             member=ctx.user,
             target=ctx,
             values=values,
             parser=parser,
-            max_values=2,
+            max_values=max_values,
             timeout=None,
             silent_mode=True,
         )
