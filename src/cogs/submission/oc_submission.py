@@ -315,27 +315,21 @@ class Template(TemplateItem, Enum):
         return f"```yaml\n{self.text}\n```"
 
     @property
-    def embed(self):
+    def gdocs(self):
         embed = Embed(
-            title=self.title,
-            description=self.formatted_text,
+            title=f"Available Templates - {self.title}",
+            description="Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel.",
             color=Color.blurple(),
         )
         embed.set_image(url=WHITE_BAR)
-        for key, doc_id in self.docs.items():
-            url = f"https://docs.google.com/document/d/{doc_id}/edit?usp=sharing"
-            embed.add_field(name=key, value=f"[Google Docs URL]({url})")
-        embed.set_footer(text=self.description)
-        return embed
 
-    @property
-    def docs_embed(self):
-        embed = self.embed
-        embed.title = f"Available Templates - {embed.title}"
-        embed.description = (
-            "Make a copy of our templates, make sure it has reading permissions and then send the URL in this channel."
-        )
-        return embed
+        view = View()
+        for index, (key, doc_id) in enumerate(self.docs.items()):
+            url = f"https://docs.google.com/document/d/{doc_id}/edit?usp=sharing"
+            view.add_item(Button(label=key, url=url, row=index, emoji=RICH_PRESENCE_EMOJI))
+
+        embed.set_footer(text=self.description)
+        return embed, view
 
 
 class TemplateField(ABC):
@@ -1566,8 +1560,8 @@ class TemplateView(View):
                 content = self.template.formatted_text
                 await resp.edit_message(content=content, embed=None, view=None)
             case "Google Document":
-                embed = self.template.docs_embed
-                await resp.edit_message(embed=embed, view=None)
+                embed, view = self.template.gdocs
+                await resp.edit_message(embed=embed, view=view)
         self.stop()
 
 
