@@ -454,10 +454,15 @@ class Pokedex(commands.Cog):
             embed.title += "(Inverse)"
         embed.set_image(url=WHITE_BAR)
 
-        def method(x: TypingEnum) -> float:
-            if mode == "Attacking":
+        if mode == "Attacking":
+
+            def method(x: TypingEnum) -> float:
                 return type1.when_attacking(x, inverse=inverse)
-            return type1.when_attacked_by(x, inverse=inverse)
+
+        else:
+
+            def method(x: TypingEnum) -> float:
+                return type1.when_attacked_by(x, inverse=inverse)
 
         for k, v in groupby(sorted(TypingEnum, key=method, reverse=True), key=method):
             if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):

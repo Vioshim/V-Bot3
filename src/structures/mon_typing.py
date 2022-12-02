@@ -252,7 +252,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Normal:952523352839450634>",
         "z_move": "Breakneck Blitz",
         "max_move": "Max Strike",
-        "chart": {7: 2.0, 14: 0},
+        "chart": {7: 2.0, 14: 0, 19: 2},
     }
     Fire = {
         "name": "Fire",
@@ -263,7 +263,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Fire:952523352667484160>",
         "z_move": "Inferno Overdrive",
         "max_move": "Max Flare",
-        "chart": {3: 2.0, 9: 2.0, 13: 2.0, 2: 0.5, 5: 0.5, 6: 0.5, 12: 0.5, 17: 0.5, 18: 0.5},
+        "chart": {3: 2.0, 9: 2.0, 13: 2.0, 2: 0.5, 5: 0.5, 6: 0.5, 12: 0.5, 17: 0.5, 18: 0.5, 19: 2},
     }
     Water = {
         "name": "Water",
@@ -274,7 +274,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Water:952523352688451594>",
         "z_move": "Hydro Vortex",
         "max_move": "Max Geyser",
-        "chart": {4: 2.0, 5: 2.0, 2: 0.5, 3: 0.5, 6: 0.5, 17: 0.5},
+        "chart": {4: 2.0, 5: 2.0, 2: 0.5, 3: 0.5, 6: 0.5, 17: 0.5, 19: 2},
     }
     Electric = {
         "name": "Electric",
@@ -285,7 +285,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Electric:952523352646492180>",
         "z_move": "Gigavolt Havoc",
         "max_move": "Max Lightning",
-        "chart": {9: 2.0, 4: 0.5, 10: 0.5, 17: 0.5},
+        "chart": {9: 2.0, 4: 0.5, 10: 0.5, 17: 0.5, 19: 2},
     }
     Grass = {
         "name": "Grass",
@@ -296,7 +296,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Grass:952523352571011072>",
         "z_move": "Bloom Doom",
         "max_move": "Max Overgrowth",
-        "chart": {2: 2.0, 6: 2.0, 8: 2.0, 10: 2.0, 12: 2.0, 4: 0.5, 5: 0.5, 9: 0.5, 3: 0.5},
+        "chart": {2: 2.0, 6: 2.0, 8: 2.0, 10: 2.0, 12: 2.0, 4: 0.5, 5: 0.5, 9: 0.5, 3: 0.5, 19: 2},
     }
     Ice = {
         "name": "Ice",
@@ -307,7 +307,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Ice:952523352587784222>",
         "z_move": "Subzero Slammer",
         "max_move": "Max Hailstorm",
-        "chart": {2: 2.0, 7: 2.0, 13: 2.0, 17: 2.0, 6: 0.5},
+        "chart": {2: 2.0, 7: 2.0, 13: 2.0, 17: 2.0, 6: 0.5, 19: 2},
     }
     Fighting = {
         "name": "Fighting",
@@ -318,7 +318,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Fighting:952523352533266432>",
         "z_move": "All-Out Pummeling",
         "max_move": "Max Knuckle",
-        "chart": {10: 2.0, 11: 2.0, 18: 2.0, 12: 0.5, 13: 0.5, 16: 0.5},
+        "chart": {10: 2.0, 11: 2.0, 18: 2.0, 12: 0.5, 13: 0.5, 16: 0.5, 19: 2},
     }
     Poison = {
         "name": "Poison",
@@ -329,7 +329,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Poison:952523352633901106>",
         "z_move": "Acid Downpour",
         "max_move": "Max Ooze",
-        "chart": {9: 2.0, 11: 2.0, 5: 0.5, 7: 0.5, 8: 0.5, 12: 0.5, 18: 0.5},
+        "chart": {9: 2.0, 11: 2.0, 5: 0.5, 7: 0.5, 8: 0.5, 12: 0.5, 18: 0.5, 19: 2},
     }
     Ground = {
         "name": "Ground",
@@ -340,7 +340,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Ground:952523352612958239>",
         "z_move": "Tectonic Rage",
         "max_move": "Max Quake",
-        "chart": {3: 2.0, 5: 2.0, 6: 2.0, 8: 0.5, 13: 0.5, 4: 0},
+        "chart": {3: 2.0, 5: 2.0, 6: 2.0, 8: 0.5, 13: 0.5, 4: 0, 19: 2},
     }
     Flying = {
         "name": "Flying",
@@ -351,7 +351,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Flying:952523352994619402>",
         "z_move": "Supersonic Skystrike",
         "max_move": "Max Airstream",
-        "chart": {4: 2.0, 6: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 12: 0.5, 9: 0},
+        "chart": {4: 2.0, 6: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 12: 0.5, 9: 0, 19: 2},
     }
     Psychic = {
         "name": "Psychic",
@@ -362,7 +362,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Psychic:952523352872996934>",
         "z_move": "Shattered Psyche",
         "max_move": "Max Mindstorm",
-        "chart": {12: 2.0, 14: 2.0, 16: 2.0, 7: 0.5, 11: 0.5},
+        "chart": {12: 2.0, 14: 2.0, 16: 2.0, 7: 0.5, 11: 0.5, 19: 2},
     }
     Bug = {
         "name": "Bug",
@@ -373,7 +373,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Bug:952523352524877835>",
         "z_move": "Savage Spin-Out",
         "max_move": "Max Flutterby",
-        "chart": {2: 2.0, 10: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 9: 0.5},
+        "chart": {2: 2.0, 10: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 9: 0.5, 19: 2},
     }
     Rock = {
         "name": "Rock",
@@ -384,7 +384,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Rock:952523352671662140>",
         "z_move": "Continental Crush",
         "max_move": "Max Rockfall",
-        "chart": {3: 2.0, 5: 2.0, 7: 2.0, 9: 2.0, 17: 2.0, 1: 0.5, 2: 0.5, 8: 0.5, 10: 0.5},
+        "chart": {3: 2.0, 5: 2.0, 7: 2.0, 9: 2.0, 17: 2.0, 1: 0.5, 2: 0.5, 8: 0.5, 10: 0.5, 19: 2},
     }
     Ghost = {
         "name": "Ghost",
@@ -395,7 +395,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Ghost:952523352575209573>",
         "z_move": "Never-Ending Nightmare",
         "max_move": "Max Phantasm",
-        "chart": {14: 2.0, 16: 2.0, 8: 0.5, 12: 0.5, 1: 0, 7: 0},
+        "chart": {14: 2.0, 16: 2.0, 8: 0.5, 12: 0.5, 1: 0, 7: 0, 19: 2},
     }
     Dragon = {
         "name": "Dragon",
@@ -406,7 +406,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Dragon:952523352545837066>",
         "z_move": "Devastating Drake",
         "max_move": "Max Wyrmwind",
-        "chart": {6: 2.0, 15: 2.0, 18: 2.0, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5},
+        "chart": {6: 2.0, 15: 2.0, 18: 2.0, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5, 19: 2},
     }
     Dark = {
         "name": "Dark",
@@ -417,7 +417,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Dark:952523352617144380>",
         "z_move": "Black Hole Eclipse",
         "max_move": "Max Darkness",
-        "chart": {7: 2.0, 12: 2.0, 18: 2.0, 14: 0.5, 16: 0.5, 11: 0},
+        "chart": {7: 2.0, 12: 2.0, 18: 2.0, 14: 0.5, 16: 0.5, 11: 0, 19: 2},
     }
     Steel = {
         "name": "Steel",
@@ -443,6 +443,7 @@ class TypingEnum(Typing, Enum):
             17: 0.5,
             18: 0.5,
             8: 0,
+            19: 2,
         },
     }
     Fairy = {
@@ -454,7 +455,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Fairy:952523352164159539>",
         "z_move": "Twinkle Tackle",
         "max_move": "Max Starfall",
-        "chart": {8: 2.0, 17: 2.0, 7: 0.5, 12: 0.5, 16: 0.5, 15: 0},
+        "chart": {8: 2.0, 17: 2.0, 7: 0.5, 12: 0.5, 16: 0.5, 15: 0, 19: 2},
     }
     Shadow = {
         "name": "Shadow",
@@ -465,7 +466,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:pokeball:952522808435544074>",
         "z_move": "Gale of Darkness.",
         "max_move": "Max Nightmare",
-        "chart": {x: 2.0 if x != 19 else 0.5 for x in range(1, 20)},
+        "chart": {x: 1.0 if x == 19 else 0.5 for x in range(1, 20)},
     }
 
     @property

@@ -182,25 +182,28 @@ class SpeciesTransformer(Transformer):
 
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
         guild: Guild = ctx.guild
-        mons: set[Character | Species] = {x for x in ocs if x.species} | set(Species.all())
-        filters: list[Callable[[Character | Species], bool]] = []
-        if fused := Species.from_ID(ctx.namespace.fused):
-            mons = {
-                (set(x.species.bases) - {fused}).pop()
-                for x in mons
-                if isinstance(x, Character) and isinstance(x.species, (Fusion, Chimera)) and fused in x.species.bases
-            }
-        elif kind := Kind.associated(ctx.namespace.kind):
-            filters.append(lambda x: x.kind == kind if isinstance(x, Character) else isinstance(x, kind.value))
-            mons = kind.all() or mons
+        key = {"server": ctx.guild_id}
+        filters: list[Callable[[Character], bool]] = []
 
         if member := ctx.namespace.member:
-            ocs1 = {x.species for x in ocs if x.author == member.id}
-            filters.append(lambda x: x.author == member.id if isinstance(x, Character) else x in ocs1)
+            key["author"] = member.id
         else:
-            filters.append(lambda x: bool(guild.get_member(x.author)) if isinstance(x, Character) else True)
+            filters.append(lambda x: bool(guild.get_member(x.author)))
+
+        if (ability := ctx.namespace.ability) and (ability := Ability.from_ID(ability)):
+            key["abilities"] = {"$in": [ability.id]}
+
+        if (mon_type := ctx.namespace.type) and (mon_type := TypingEnum.deduce(mon_type)):
+            key["types"] = {"$in": [str(mon_type)]}
+
+        if (move := ctx.namespace.move) and (move := Move.from_ID(move)):
+            key["moveset"] = {"$in": [move.id]}
+
+        if fused := Species.from_ID(ctx.namespace.fused):
+            key["species.fusion.species"] = {"$in": fused.id.split("/")}
+        elif kind := Kind.associated(ctx.namespace.kind):
+            filters.append(lambda x: x.kind == kind)
 
         if location := ctx.namespace.location:
 
@@ -208,26 +211,16 @@ class SpeciesTransformer(Transformer):
                 ref = ch.parent_id if (ch := guild.get_thread(oc.location)) else oc.location
                 return oc.species and ref == location.id
 
-            ocs2 = {x.species for x in filter(foo2, ocs)}
-            filters.append(lambda x: foo2(x) if isinstance(x, Character) else x in ocs2)
+            filters.append(foo2)
 
-        if (mon_type := ctx.namespace.type) and (mon_type := TypingEnum.deduce(mon_type)):
-            filters.append(lambda x: mon_type in x.types)
+        ocs = {o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in filters)}
 
-        if (ability := ctx.namespace.ability) and (ability := Ability.from_ID(ability)):
-            filters.append(lambda x: ability in x.abilities)
-
-        if (move := ctx.namespace.move) and (move := Move.from_ID(move)):
-            filters.append(lambda x: move in x.moveset if isinstance(x, Character) else True)
-
-        values = {mon for mon in mons if all(i(mon) for i in filters)}
-        if data := process.extract(value or "", choices=values, limit=25, processor=item_name, score_cutoff=60):
+        if data := process.extract(value, choices=ocs, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in data]
         elif not value:
-            options = list(values)[:25]
+            options = list(ocs)[:25]
 
         entries = {item_name(x): item_value(x) for x in options}
-
         return [Choice(name=k, value=v) for k, v in entries.items()]
 
 
@@ -242,24 +235,29 @@ class DefaultSpeciesTransformer(Transformer):
     async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
             db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-            items = list(
-                {
-                    (set(oc.species.bases) - {fused}).pop()
-                    async for x in db.find(
-                        {"$or": [{"species.chimera": {"$exists": 1}}, {"species.fusion": {"$exists": 1}}]}
-                    )
-                    if (oc := Character.from_mongo_dict(x))
-                    and fused in oc.species.bases
-                    and ctx.guild.get_member(oc.author)
-                }
-            )
+            items = [
+                base
+                async for x in db.find(
+                    {
+                        "$or": [
+                            {"species.chimera": {"$in": fused.id.split("/")}},
+                            {"species.fusion.species": {"$in": fused.id.split("/")}},
+                        ]
+                    }
+                )
+                if (oc := Character.from_mongo_dict(x))
+                and isinstance(oc.species, Fusion)
+                and ctx.guild.get_member(oc.author)
+                for base in oc.species.bases
+                if base != fused
+            ]
         else:
-            items = list(Species.all())
+            items = [*Species.all()]
         if options := process.extract(value or "", choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
         elif not value:
-            options = items
-        return [Choice(name=x.name, value=x.id) for x in set(options[:25])]
+            options = items[:25]
+        return [Choice(name=x.name, value=x.id) for x in options]
 
 
 SpeciesArg = Transform[Species, SpeciesTransformer]
@@ -279,7 +277,7 @@ class AbilityTransformer(Transformer):
             options = [x[0] for x in options]
         elif not value:
             options = items[:25]
-        return [Choice(name=x.name, value=x.id) for x in set(options)]
+        return [Choice(name=x.name, value=x.id) for x in options]
 
 
 AbilityArg = Transform[Ability, AbilityTransformer]

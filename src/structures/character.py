@@ -212,7 +212,7 @@ class Size(Enum):
             value = size
 
         feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
-        return f"{value:.2f} m / {feet}' {inches}\" ft"
+        return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_info(self, value: float):
         _, proportion, _, size = self.value
