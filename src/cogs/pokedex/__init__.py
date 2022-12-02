@@ -251,7 +251,7 @@ class Pokedex(commands.Cog):
         _type: Optional[TypingEnum],
         ability: Optional[AbilityArg],
         move: Optional[MoveArg],
-        species: Optional[SpeciesArg],
+        species: Optional[DefaultSpeciesArg],
         fused: Optional[DefaultSpeciesArg],
         member: Optional[Member | User],
         location: Optional[TextChannel],
@@ -280,7 +280,7 @@ class Pokedex(commands.Cog):
             Ability to filter
         move : Optional[MoveArg]
             Move to filter
-        species : Optional[SpeciesArg]
+        species : Optional[DefaultSpeciesArg]
             Species to look up info about.
         fused : Optional[DefaultSpeciesArg]
             Search Fusions that contain the species

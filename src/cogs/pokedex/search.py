@@ -26,7 +26,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.pagination.complex import Complex
-from src.structures.ability import Ability
+from src.structures.ability import Ability, UTraitKind
 from src.structures.character import AgeGroup, Character, Kind
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
@@ -555,6 +555,14 @@ class OCGroupByHiddenPower(OCGroupBy):
         return data
 
 
+class OCGroupByUniqueTrait(OCGroupBy):
+    @classmethod
+    def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+        data = {k.name: frozenset({x for x in ocs if x.sp_ability and x.sp_ability.kind == k}) for k in UTraitKind}
+        data["Unknown"] = frozenset({x for x in ocs if x.sp_ability is None})
+        return data
+
+
 class GroupByArg(Enum):
     Kind = OCGroupByKind
     Shape = OCGroupByShape
@@ -568,6 +576,7 @@ class GroupByArg(Enum):
     Location = OCGroupByLocation
     Member = OCGroupByMember
     HiddenPower = OCGroupByHiddenPower
+    UniqueTrait = OCGroupByUniqueTrait
 
     def generate(self, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
         """Short cut generate
