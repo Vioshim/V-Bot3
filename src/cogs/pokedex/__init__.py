@@ -43,8 +43,8 @@ from src.cogs.pokedex.search import (
     FakemonArg,
     GroupByArg,
     MoveArg,
-    SpeciesArg,
 )
+from src.cogs.submission.oc_submission import ModCharactersView
 from src.structures.ability import Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Kind
@@ -53,7 +53,6 @@ from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Chimera, Fusion, Species
 from src.utils.etc import WHITE_BAR
-from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
@@ -307,7 +306,7 @@ class Pokedex(commands.Cog):
         amount : amount
             Groupby limit search
         active : bool
-            modified or used since last week
+            modified or used since last 2 weeks
         """
         resp: InteractionResponse = ctx.response
         text: str = ""
@@ -415,7 +414,7 @@ class Pokedex(commands.Cog):
             filters.append(lambda oc: oc.kind == kind)
 
         if isinstance(active, bool):
-            date = ctx.created_at - timedelta(days=7)
+            date = ctx.created_at - timedelta(days=14)
             filters.append(lambda x: x.last_used_at >= date if active else x.last_used_at < date)
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
@@ -424,7 +423,7 @@ class Pokedex(commands.Cog):
             embed.title = f"{embed.title} - Group by {group_by.name}"
         else:
             ocs.sort(key=lambda x: x.name)
-            view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
 
         async with view.send(ephemeral=True, embeds=embeds, content=text):
             namespace = " ".join(f"{k}={v}" for k, v in ctx.namespace)
