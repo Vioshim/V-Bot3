@@ -386,15 +386,18 @@ class OCGroupBy(ABC):
         else:
             ocs = [x for x in ocs if ctx.guild.get_member(x.author)]
 
-        data = list(cls.method(ctx, ocs).items())
+        data = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs).items()]
 
         try:
             data.sort(key=lambda x: (-len(x[1]), x[0]))
         except TypeError:
-            data.sort(key=lambda x: getattr(x[0], "name", str(x[0])))
+            data.sort(key=lambda x: (-len(x[1]), getattr(x[0], "name", str(x[0]))))
 
-        items = {k: sorted(v, key=lambda x: x.name) for k, v in data if amount_parser(amount, v)}
-        return GroupByComplex(member=ctx.user, target=ctx, data=items)
+        return GroupByComplex(
+            member=ctx.user,
+            target=ctx,
+            data={k: v for k, v in data if amount_parser(amount, v)},
+        )
 
 
 class OCGroupByKind(OCGroupBy):
