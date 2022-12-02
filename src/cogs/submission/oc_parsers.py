@@ -93,6 +93,7 @@ PLACEHOLDER_STATS = {
     "Special Defense": "SPD",
     "Speed": "SPE",
 }
+IGNORE_MOVE = ["None", "Move", "Ability"]
 
 
 def doc_convert(doc: DocumentType) -> dict[str, Any]:
@@ -117,7 +118,7 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
 
     for index, item in enumerate(text[:-1], start=1):
         next_value = text[index]
-        data = f"{next_value}".title().strip() not in ["None", "Move"]
+        data = f"{next_value}".title().strip() not in IGNORE_MOVE
         data &= next_value not in PLACEHOLDER_NAMES
         data &= next_value not in PLACEHOLDER_DEFAULTS.values()
         data &= next_value not in PLACEHOLDER_STATS
@@ -125,7 +126,13 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
             continue
         if argument := PLACEHOLDER_NAMES.get(item):
             if item.lower() in ["abilities", "types", "moveset"]:
-                argument, next_value = item.lower(), next_value.split(",")
+                argument = item.lower()
+                raw_kwargs.setdefault(argument, set())
+                if isinstance(raw_kwargs[argument], str):
+                    raw_kwargs[argument] = {raw_kwargs[argument]}
+                values = [o for x in next_value.split(",") if (o := x.title().strip()) and o not in IGNORE_MOVE]
+                raw_kwargs[argument].update(values)
+
             raw_kwargs[argument] = next_value
         elif element := PLACEHOLDER_SP.get(item):
             raw_kwargs.setdefault("sp_ability", {})
@@ -139,7 +146,7 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                     raw_kwargs["movepool"].setdefault("level", {})
                     raw_kwargs["movepool"]["level"].setdefault(idx, set())
                     info: set[str] = raw_kwargs["movepool"]["level"][idx]
-                    info.update(argument.split(","))
+                    info.update(o for x in argument.split(",") if (o := x.title().strip()) and o not in IGNORE_MOVE)
                 case ["Move", _]:
                     raw_kwargs.setdefault("moveset", set())
                     raw_kwargs["moveset"].add(argument)

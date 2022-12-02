@@ -334,8 +334,8 @@ class Simple(Generic[_T], Basic):
         if not resp.is_done():
             await resp.edit_message(**data)
         elif message := self.message:
-            if not message.flags.ephemeral:
-                message = await message.channel.get_partial_message(message.id)
+            # if not message.flags.ephemeral:
+            #       message = message.channel.get_partial_message(message.id)
             try:
                 self.message = await message.edit(**data)
             except (HTTPException, NotFound) as e:
