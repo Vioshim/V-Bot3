@@ -42,10 +42,12 @@ PLACEHOLDER_NAMES = {
     "Species": "species",
     "Gender": "gender",
     "Ability": "ability",
+    "Abilities": "abilities",
     "Pronoun": "pronoun",
     "Chimera": "chimera",
     "Backstory": "backstory",
     "Personality": "personality",
+    "Types": "types",
     "Additional Information": "extra",
     "F. Species": "fakemon",
     "F. Base": "base",
@@ -59,6 +61,8 @@ PLACEHOLDER_DEFAULTS = {
     "species": "OC's Species",
     "gender": "OC's Gender",
     "ability": "OC's Ability",
+    "abilities": "OC's Abilities",
+    "types": "OC's Types",
     "pronoun": "OC's Preferred Pronoun",
     "backstory": "Character's backstory",
     "personality": "Character's personality",
@@ -101,7 +105,8 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
     dict[str, Any]
         Info
     """
-    tables = [*chain(*[cell.tables for table in doc.tables for row in table.rows for cell in row.cells])] or doc.tables
+    tables = doc.tables
+    tables.extend(chain(*[cell.tables for table in doc.tables for row in table.rows for cell in row.cells]))
     content_values = [str(cell.text) for table in tables for row in table.rows for cell in row.cells]
 
     text = [x for item in content_values if (x := item.replace("\u2019", "'").strip())]
@@ -116,6 +121,8 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
         if not data:
             continue
         if argument := PLACEHOLDER_NAMES.get(item):
+            if item.lower() in ["abilities", "types"]:
+                argument, next_value = item.lower(), next_value.split(",")
             raw_kwargs[argument] = next_value
         elif element := PLACEHOLDER_SP.get(item):
             raw_kwargs.setdefault("sp_ability", {})

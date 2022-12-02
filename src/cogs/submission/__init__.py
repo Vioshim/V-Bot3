@@ -488,13 +488,15 @@ class Submission(commands.Cog):
                 upsert=True,
             )
 
+            oc.last_used = message.id
             if oc.location != channel.id:
                 oc.location = channel.id
-                await self.bot.mongo_db("Characters").replace_one(
-                    {"id": oc.id},
-                    oc.to_mongo_dict(),
-                    upsert=True,
-                )
+
+            await self.bot.mongo_db("Characters").replace_one(
+                {"id": oc.id, "server": oc.server},
+                oc.to_mongo_dict(),
+                upsert=True,
+            )
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages

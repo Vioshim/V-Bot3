@@ -14,6 +14,7 @@
 
 
 from dataclasses import astuple
+from datetime import timedelta
 from itertools import groupby
 from random import random
 from re import IGNORECASE
@@ -263,6 +264,7 @@ class Pokedex(commands.Cog):
         age: Optional[AgeGroup],
         group_by: Optional[GroupByArg],
         amount: Optional[str],
+        active: Optional[bool],
     ):
         """Command to obtain Pokemon entries and its ocs
 
@@ -304,6 +306,8 @@ class Pokedex(commands.Cog):
             Group by method
         amount : amount
             Groupby limit search
+        active : bool
+            modified or used since last week
         """
         resp: InteractionResponse = ctx.response
         text: str = ""
@@ -409,6 +413,11 @@ class Pokedex(commands.Cog):
                 embed.description = description
         if kind:
             filters.append(lambda oc: oc.kind == kind)
+
+        if isinstance(active, bool):
+            date = ctx.created_at - timedelta(days=7)
+            filters.append(lambda x: x.last_used_at >= date if active else x.last_used_at < date)
+
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
         if group_by:
             view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount)

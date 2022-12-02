@@ -1461,6 +1461,7 @@ class CreationOCView(Basic):
             await resp.defer(ephemeral=True, thinking=True)
             cog = ctx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
+            self.oc.last_used = ctx.id
             await cog.register_oc(self.oc, image_as_is=True)
             await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
         except Exception as e:

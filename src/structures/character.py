@@ -246,6 +246,7 @@ class Character:
     size: Size = Size.M
     weight: Size = Size.M
     pokeball: Optional[Pokeball] = None
+    last_used: Optional[int] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -368,6 +369,11 @@ class Character:
         return self.id >> 22
 
     @property
+    def last_used_at(self):
+        data = self.last_used or max(self.id, self.location or 0)
+        return snowflake_time(data) if data else utcnow()
+
+    @property
     def types(self) -> frozenset[TypingEnum]:
         if self.species:
             return frozenset(self.species.types)
@@ -439,8 +445,7 @@ class Character:
 
     @property
     def randomize_moveset(self) -> frozenset[Move]:
-        if movepool := self.total_movepool:
-            moves = list(movepool())
+        if moves := list(self.total_movepool()):
             amount = min(6, len(moves))
             return frozenset(sample(moves, k=amount))
         return self.moveset
@@ -585,10 +590,8 @@ class Character:
             match self.kind:
                 case Kind.Fusion:
                     ratio1, ratio2 = self.species.ratio, 1 - self.species.ratio
-                    if ratio1 != ratio2:
-                        name = f"{ratio1:.0%}〛{self.species.mon1.name}\n{ratio2:.0%}〛{self.species.mon2.name}"
-                    else:
-                        name = f"• {self.species.mon1.name}\n• {self.species.mon2.name}"
+                    b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
+                    name = f"{b1}{self.species.mon1.name}\n{b2}{self.species.mon2.name}"
                     c_embed.add_field(name="Fusion", value=name[:1024])
                 case Kind.Chimera:
                     names = self.species.name.split("/")
@@ -973,6 +976,7 @@ class Character:
             size=self.size,
             weight=self.weight,
             pokeball=self.pokeball,
+            last_used=self.last_used,
         )
 
     def __repr__(self) -> str:
