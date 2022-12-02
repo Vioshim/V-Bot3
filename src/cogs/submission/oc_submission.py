@@ -112,103 +112,103 @@ class Template(TemplateItem, Enum):
         description="The average residents of this world.",
         exclude=["Types"],
         docs={
-            "Standard": "1-Ebq40ONEzl0klHqUatG0Sy54mffal6AC2iX2aDHNas",
-            "w/Sp. Ability": "1prCYzbqJAAetv_c3HRsXIU22dN7Co-tqykhxWo2SrwY",
+            "Standard": "1-1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
+            "w/Sp. Ability": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
         },
     )
     Legendary = dict(
         description="Normal residents that resemble legendaries.",
         exclude=["Types"],
-        docs={"Standard": "1N2ZEZd1PEKusdIg9aAYw0_ODmoxHoe5GugkTGZWP21Y"},
+        docs={"Standard": "1T-T7sRtI-jgi60hS-BRWBumIWBqrcuhvtv64LG0vGXU"},
     )
     Mythical = dict(
         description="Normal residents that resemble mythicals.",
         exclude=["Types"],
-        docs={"Standard": "1rVdi3XMXBadIZc03SrZl-vz3b-AcM2WgBSAfvdgW5Fs"},
+        docs={"Standard": "18ltPylrj9ivVsNJcA-S-3Cpht9LZzGcneVG2oH-FTyc"},
     )
     UltraBeast = dict(
         description="Normal residents that resemble ultra beasts.",
-        docs={"Standard": "1Xi25gAj6qoh14xYSXsinfMZ3-6loJ_CTCdrRdPlEhW8"},
+        docs={"Standard": "1atImbQS_z9SzdpK8ZhFZomd0PfgOcFNFURxpZb_YD2I"},
     )
     Mega = dict(
         description="Those that mega evolved and kept stuck like this.",
         exclude=["Abilities", "Types"],
         docs={
-            "Standard": "1Q3-RDADz6nuk1X4PwvIFactqYRyQEGJx8NM4weenGdM",
-            "w/Sp. Ability": "1j7dO_sf4wEaO-enKBvmLjrD9gnBh5jMY_QY0XBb0-To",
+            "Standard": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
+            "w/Sp. Ability": "1QRlm692RM5lXBv3bx8YKdnkkeYqz8bYY9MLzR8ElX4s",
         },
     )
     Paradox = dict(
         description="From distant past/future, somehow ended up here.",
-        docs={"Standard": "1oe-W2uTJBHPuCje5zjMf2KVxWbomjuTgF1kX6UuAhbk"},
+        docs={"Standard": "14xDwqhRwQFL8jZdq2Rjx34JCVYxgtxMAG5X-4rSVuL0"},
     )
     Fusion = dict(
         description="Individuals that share traits of two species.",
         modifier={"Species": ("Species", "Species 1, Species 2")},
         docs={
-            "Standard": "1YOGxjJcl-RzIu0rv78GTW3qtN-joLxwrena9PHqJi04",
-            "w/Sp. Ability": "1l_fQ2i2By63CgCco29XvkZiAdEpWgs4xkDMunwceLHM",
+            "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
+            "w/Sp. Ability": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
     )
     Variant = dict(
         description="Fan-made. Species variations (movesets, types)",
         modifier={"Species": ("Variant", "Variant Species")},
         docs={
-            "Standard": "1zLNd_5QZ39aBuDEHt3RC4cmymBjRlFmxuesbfSDgDbA",
-            "w/Sp. Ability": "12MwUc3uDUOAobHo-fyiwXxh-jI6Tfj5zimOmQHJUWTc",
+            "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
+            "w/Sp. Ability": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
         },
     )
     Chimera = dict(
         description="Fan-made. rare three way fusions.",
         modifier={"Species": ("Chimera", "Species, Species, Species, ...")},
-        docs={"Standard": "1MbaUTR2NDOpsifRO2lVw6t0eAUKFGaOOIOHD0nXC2aA"},
+        docs={"Standard": "1P5EZPtOGvMN9onoIwZSyHqrkelfZvlKdepSRxwcu73Q"},
     )
     CustomPokemon = dict(
         description="Fan-made. They are normal residents.",
         modifier={"Species": ("Fakemon", "Fakemon Species")},
         docs={
-            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
-            "w/Sp. Ability": "12EJpXCJmtDksb1VZjdr8DrMiJeRlpIWI3544r47MVns",
-            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
-            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "w/Sp. Ability": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
+            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     )
     CustomLegendary = dict(
         description="Fan-made. Normal residents that resemble legendaries.",
         modifier={"Species": ("Fakemon", "Fakemon Legendary Species")},
         docs={
-            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
-            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
-            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
+            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     )
     CustomMythical = dict(
         description="Fan-made. Normal residents that resemble mythicals.",
         modifier={"Species": ("Fakemon", "Fakemon Mythical Species")},
         docs={
-            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
-            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
-            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
+            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     )
     CustomUltraBeast = dict(
         description="Fan-made. Normal residents that resemble ultra beasts.",
         modifier={"Species": ("Fakemon", "Fakemon Ultra Beast Species")},
         docs={
-            "Standard": "1CS0Y5fiEyaVUavHh5cJURU4OtLihUzRwn8_GRFDkI2s",
-            "Evolution": "1_BoUubkuk5PJ62VyLboRWEaCX7SSrG80ZlltKkAAkaA",
-            "Evolution w/ Sp. Ability": "1ZYUEwb0YHdzMTw1U1psRHvyQ_I2ya9_OQVev_aU3W1Q",
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
+            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     )
     CustomMega = dict(
         description="Fan-made. Mega evolved and kept stuck like this.",
         modifier={"Species": ("Fakemon", "Mega Species")},
-        docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
+        docs={"Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0"},
     )
     CustomParadox = dict(
         description="Fan-made. From distant past/future, somehow ended up here.",
         modifier={"Species": ("Fakemon", "Paradox Species")},
-        docs={"Standard": "1EQci2zxlm7WEpxF4CaH0KhEs4eywY6wIYhbDquc4gts"},
+        docs={"Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY"},
     )
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):

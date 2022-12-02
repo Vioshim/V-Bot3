@@ -87,10 +87,10 @@ PLACEHOLDER_SP = {
 }
 PLACEHOLDER_SP_DEFAULTS = {
     "name": "Here you can describe how the unique trait is called, either how it's referenced OOC or in RP.",
-    "origin": "Here you can describe how the ability was obtained.",
+    "origin": "Here you can describe how the trait was obtained.",
     "description": "Here you can describe how the trait works, what causes it to activate, the required conditions for it to happen, its cool down and such.",
-    "pros": "Describe how such ability causes pros in the character, what it means for the character to have it, and the usual things they'd use their unique trait for.",
-    "cons": "Describe how such ability causes downsides in the character, what it implies for the character to have it, and the usual things they'd try to not use their unique trait due to its limitations.",
+    "pros": "Describe how such a trait causes pros in the character, what it means for the character to have it, and the usual things they'd use their unique trait for.",
+    "cons": "Describe how such a trait causes downsides in the character, what it implies for the character to have it, and the usual things they'd try to not use their unique trait due to its limitations.",
 }
 PLACEHOLDER_STATS = {
     "HP": "HP",
