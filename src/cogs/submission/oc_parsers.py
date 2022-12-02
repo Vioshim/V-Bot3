@@ -18,6 +18,7 @@ from asyncio import gather
 from contextlib import suppress
 from enum import Enum
 from io import BytesIO
+from itertools import chain
 from typing import Any, Optional
 
 from discord import File, Message
@@ -100,7 +101,9 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
     dict[str, Any]
         Info
     """
-    content_values: list[str] = [cell.text for table in doc.tables for row in table.rows for cell in row.cells]
+    tables = [*chain(*[cell.tables for table in doc.tables for row in table.rows for cell in row.cells])] or doc.tables
+    content_values = [str(cell.text) for table in tables for row in table.rows for cell in row.cells]
+
     text = [x for item in content_values if (x := item.replace("\u2019", "'").strip())]
     raw_kwargs = dict(url=getattr(doc, "url", None))
 
