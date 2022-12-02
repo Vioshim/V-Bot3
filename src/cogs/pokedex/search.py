@@ -184,26 +184,32 @@ class SpeciesTransformer(Transformer):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         guild: Guild = ctx.guild
         key = {"server": ctx.guild_id}
-        filters: list[Callable[[Character], bool]] = []
+        pk_filters: list[Callable[[Species], bool]] = []
+        oc_filters: list[Callable[[Character], bool]] = []
 
         if member := ctx.namespace.member:
             key["author"] = member.id
         else:
-            filters.append(lambda x: bool(guild.get_member(x.author)))
+            oc_filters.append(lambda x: bool(guild.get_member(x.author)))
 
         if (ability := ctx.namespace.ability) and (ability := Ability.from_ID(ability)):
             key["abilities"] = {"$in": [ability.id]}
+            pk_filters.append(lambda x: ability in x.abilities)
 
         if (mon_type := ctx.namespace.type) and (mon_type := TypingEnum.deduce(mon_type)):
             key["types"] = {"$in": [str(mon_type)]}
+            pk_filters.append(lambda x: mon_type in x.types)
 
         if (move := ctx.namespace.move) and (move := Move.from_ID(move)):
             key["moveset"] = {"$in": [move.id]}
+            pk_filters.append(lambda x: move in x.total_movepool)
 
         if fused := Species.from_ID(ctx.namespace.fused):
             key["species.fusion.species"] = {"$in": fused.id.split("/")}
+            pk_filters.append(lambda x: fused == x)
         elif kind := Kind.associated(ctx.namespace.kind):
-            filters.append(lambda x: x.kind == kind)
+            oc_filters.append(lambda x: x.kind == kind)
+            pk_filters.append(lambda x: isinstance(x, kind.value))
 
         if location := ctx.namespace.location:
 
@@ -211,12 +217,14 @@ class SpeciesTransformer(Transformer):
                 ref = ch.parent_id if (ch := guild.get_thread(oc.location)) else oc.location
                 return oc.species and ref == location.id
 
-            filters.append(foo2)
+            oc_filters.append(foo2)
 
         if not (
-            ocs := {o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in filters)}
+            ocs := {
+                o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in oc_filters)
+            }
         ):
-            ocs = Species.all()
+            ocs = [x for x in Species.all() if all(i(x) for i in pk_filters)]
 
         if data := process.extract(value, choices=ocs, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in data]
