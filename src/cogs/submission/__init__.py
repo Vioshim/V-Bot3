@@ -672,21 +672,10 @@ class Submission(commands.Cog):
         """
         db = self.bot.mongo_db("Roleplayers")
         db2 = self.bot.mongo_db("Characters")
-        await db.delete_one(
-            {
-                "id": payload.message_id,
-                "server": payload.guild_id,
-            }
-        )
-        await db2.delete_many(
-            {
-                "server": payload.guild_id,
-                "$or": [
-                    {"id": payload.message_id},
-                    {"thread": payload.message_id},
-                ],
-            }
-        )
+        key = {"id": payload.message_id}
+        key2 = {"server": payload.guild_id}
+        await db.delete_one(key | key2)
+        await db2.delete_many(key2 | {"$or": [key, {"thread": payload.message_id}]})
 
     @commands.command()
     @commands.guild_only()

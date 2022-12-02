@@ -44,6 +44,7 @@ PLACEHOLDER_NAMES = {
     "Ability": "ability",
     "Abilities": "abilities",
     "Pronoun": "pronoun",
+    "Moveset": "moveset",
     "Chimera": "chimera",
     "Backstory": "backstory",
     "Personality": "personality",
@@ -62,6 +63,7 @@ PLACEHOLDER_DEFAULTS = {
     "gender": "OC's Gender",
     "ability": "OC's Ability",
     "abilities": "OC's Abilities",
+    "moveset": "OC's Moveset",
     "types": "OC's Types",
     "pronoun": "OC's Preferred Pronoun",
     "backstory": "Character's backstory",
@@ -79,6 +81,7 @@ PLACEHOLDER_SP = {
     "How is it Called?": "name",
     "How did they obtain it?": "origin",
     "What does the Special Ability do?": "description",
+    "What does the Unique Trait do?": "description",
     "How does it make the character's life easier?": "pros",
     "How does it make the character's life harder?": "cons",
 }
@@ -121,7 +124,7 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
         if not data:
             continue
         if argument := PLACEHOLDER_NAMES.get(item):
-            if item.lower() in ["abilities", "types"]:
+            if item.lower() in ["abilities", "types", "moveset"]:
                 argument, next_value = item.lower(), next_value.split(",")
             raw_kwargs[argument] = next_value
         elif element := PLACEHOLDER_SP.get(item):
@@ -135,7 +138,8 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                     raw_kwargs.setdefault("movepool", {})
                     raw_kwargs["movepool"].setdefault("level", {})
                     raw_kwargs["movepool"]["level"].setdefault(idx, set())
-                    raw_kwargs["movepool"]["level"][idx].add(argument)
+                    info: set[str] = raw_kwargs["movepool"]["level"][idx]
+                    info.update(argument.split(","))
                 case ["Move", _]:
                     raw_kwargs.setdefault("moveset", set())
                     raw_kwargs["moveset"].add(argument)
