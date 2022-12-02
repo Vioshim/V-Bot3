@@ -47,6 +47,7 @@ STANDARD = [
     Kind.Legendary,
     Kind.UltraBeast,
     Kind.Mega,
+    Kind.Paradox,
 ]
 
 OPERATORS = {
