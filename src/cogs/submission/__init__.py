@@ -590,8 +590,10 @@ class Submission(commands.Cog):
             await self.on_message_submission(message)
         elif (
             message.guild
-            and (tupper := message.guild.get_member(431544605209788416))
-            and tupper.status == Status.online
+            and (
+                (self.bot.webhook_lazy(message.channel))
+                or ((tupper := message.guild.get_member(431544605209788416)) and tupper.status == Status.online)
+            )
             and message.channel.category_id in RP_CATEGORIES
             and not message.webhook_id
         ):
@@ -655,18 +657,9 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Roleplayers")
         db2 = self.bot.mongo_db("Characters")
-        await db.delete_one(
-            {
-                "id": payload.thread_id,
-                "server": payload.guild_id,
-            }
-        )
-        await db2.delete_many(
-            {
-                "thread": payload.thread_id,
-                "server": payload.guild_id,
-            }
-        )
+        key = {"server": payload.guild_id}
+        await db.delete_one(key | {"id": payload.thread_id})
+        await db2.delete_many(key | {"thread": payload.thread_id})
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
