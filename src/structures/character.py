@@ -604,7 +604,7 @@ class Character:
                         name = "Fakemon Species"
                     c_embed.add_field(name=name, value=self.species.name)
                 case Kind.CustomMega | Kind.Variant:
-                    c_embed.add_field(name=f"{self.kind.name} Species", value=self.species.name)
+                    c_embed.add_field(name=f"{self.species.base.name} {self.kind.name}", value=self.species.name)
                 case _:
                     c_embed.add_field(name="Species", value=self.species.name)
 
