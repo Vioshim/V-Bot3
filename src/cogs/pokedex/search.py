@@ -338,10 +338,10 @@ class GroupByComplex(Complex[str]):
 
         def inner_parser(item: str):
             elements = self.data.get(item, [])
-            return item, f"Group has {len(elements):02d} OCs."
+            return getattr(item, "name", str(item)), f"Group has {len(elements):02d} OCs."
 
         values = list(data.keys())
-        values.sort(key=lambda x: (-len(data.get(x, [])), x))
+        values.sort(key=lambda x: (-len(data.get(x, [])), getattr(x, "name", str(x))))
 
         super(GroupByComplex, self).__init__(
             member=member,
@@ -393,7 +393,7 @@ class OCGroupBy(ABC):
 class OCGroupByKind(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {k.name: frozenset({x for x in ocs if x.kind == k}) for k in Kind}
+        return {k: frozenset({x for x in ocs if x.kind == k}) for k in Kind}
 
 
 class OCGroupByShape(OCGroupBy):
@@ -426,7 +426,7 @@ class OCGroupByShape(OCGroupBy):
 class OCGroupByAge(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {k.name: frozenset({x for x in ocs if x.age == k}) for k in AgeGroup}
+        return {k: frozenset({x for x in ocs if x.age == k}) for k in AgeGroup}
 
 
 class OCGroupBySpecies(OCGroupBy):
@@ -448,9 +448,9 @@ class OCGroupBySpecies(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
-        data = {k.name: frozenset(o) for k in Kind if k not in STANDARD and (o := {x for x in ocs if x.kind == k})}
+        data = {k: frozenset(o) for k in Kind if k not in STANDARD and (o := {x for x in ocs if x.kind == k})}
         total = cls.total_data(ctx)
-        data |= {k.name: frozenset({x for x in ocs if getattr(x.species, "base", x.species) == k}) for k in total}
+        data |= {k: frozenset({x for x in ocs if getattr(x.species, "base", x.species) == k}) for k in total}
         return data
 
 
@@ -477,8 +477,8 @@ class OCGroupByEvoLine(OCGroupBy):
             if isinstance(species := oc.species, (Fusion, Chimera)):
                 for mon in species.bases:
                     mon = mon.first_evo
-                    data.setdefault(mon.name, set())
-                    data[mon.name].add(oc)
+                    data.setdefault(mon, set())
+                    data[mon].add(oc)
             elif mon := species:
                 if isinstance(species, (CustomMega, Variant)):
                     mon = species.base.first_evo
@@ -488,8 +488,8 @@ class OCGroupByEvoLine(OCGroupBy):
                     mon = mon.first_evo
 
                 if mon:
-                    data.setdefault(mon.name, set())
-                    data[mon.name].add(oc)
+                    data.setdefault(mon, set())
+                    data[mon].add(oc)
 
         return data
 
@@ -497,25 +497,25 @@ class OCGroupByEvoLine(OCGroupBy):
 class OCGroupByType(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {x.name: frozenset({oc for oc in ocs if x in oc.types}) for x in TypingEnum}
+        return {x: frozenset({oc for oc in ocs if x in oc.types}) for x in TypingEnum}
 
 
 class OCGroupByPronoun(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {k.name: frozenset({x for x in ocs if x.pronoun == k}) for k in Pronoun}
+        return {k: frozenset({x for x in ocs if x.pronoun == k}) for k in Pronoun}
 
 
 class OCGroupByMove(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {x.name: frozenset({oc for oc in ocs if x in oc.moveset}) for x in Move.all()}
+        return {x: frozenset({oc for oc in ocs if x in oc.moveset}) for x in Move.all()}
 
 
 class OCGroupByAbility(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        return {item.name: frozenset({oc for oc in ocs if item in oc.abilities}) for item in Ability.all()}
+        return {item: frozenset({oc for oc in ocs if item in oc.abilities}) for item in Ability.all()}
 
 
 class OCGroupByLocation(OCGroupBy):
@@ -542,15 +542,13 @@ class OCGroupByMember(OCGroupBy):
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
-        return {
-            m.display_name: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))
-        }
+        return {m: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))}
 
 
 class OCGroupByHiddenPower(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        data = {k.name: frozenset({x for x in ocs if x.hidden_power == k}) for k in TypingEnum}
+        data = {k: frozenset({x for x in ocs if x.hidden_power == k}) for k in TypingEnum}
         data["Unknown"] = frozenset({x for x in ocs if x.hidden_power is None})
         return data
 
@@ -558,7 +556,7 @@ class OCGroupByHiddenPower(OCGroupBy):
 class OCGroupByUniqueTrait(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        data = {k.name: frozenset({x for x in ocs if x.sp_ability and x.sp_ability.kind == k}) for k in UTraitKind}
+        data = {k: frozenset({x for x in ocs if x.sp_ability and x.sp_ability.kind == k}) for k in UTraitKind}
         data["Unknown"] = frozenset({x for x in ocs if x.sp_ability is None})
         return data
 
