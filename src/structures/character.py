@@ -370,7 +370,7 @@ class Character:
 
     @property
     def last_used_at(self):
-        data = self.last_used or max(self.id, self.location or 0)
+        data = self.last_used or max(self.id or 0, self.location or 0)
         return snowflake_time(data) if data else utcnow()
 
     @property
