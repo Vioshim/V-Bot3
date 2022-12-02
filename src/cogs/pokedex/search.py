@@ -213,7 +213,10 @@ class SpeciesTransformer(Transformer):
 
             filters.append(foo2)
 
-        ocs = {o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in filters)}
+        if not (
+            ocs := {o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in filters)}
+        ):
+            ocs = Species.all()
 
         if data := process.extract(value, choices=ocs, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in data]
