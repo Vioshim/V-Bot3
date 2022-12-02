@@ -313,7 +313,7 @@ class Pokedex(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
         db = self.bot.mongo_db("Characters")
-        total = [Character.from_mongo_dict(x) async for x in db.find({})]
+        total = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
         filters: list[Callable[[Character], bool]] = []
         ocs = [species] if isinstance(species, Character) else total
         if name:

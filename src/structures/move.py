@@ -175,7 +175,7 @@ class Move:
     @property
     def banned(self) -> bool:
         move_id: int = self.move_id
-        aux = move_id in [165, 449]  # Struggle, Judgement
+        aux = move_id in [165, 449, 875, 876]  # Struggle, Judgement + UNKNOWN moves
         aux |= 622 <= move_id <= 658  # Z-Moves
         aux |= 757 <= move_id <= 774  # Max-Moves
         aux |= 695 <= move_id <= 703 or move_id == 719 or 723 <= move_id <= 728  # Unique Z-Moves
