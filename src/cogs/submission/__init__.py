@@ -22,6 +22,7 @@ from discord import (
     Color,
     DiscordException,
     Embed,
+    File,
     ForumChannel,
     Guild,
     Interaction,
@@ -334,7 +335,8 @@ class Submission(commands.Cog):
 
             try:
                 if former:
-                    pack_embeds, pack_files = [], []
+                    pack_embeds: list[list[Embed]] = []
+                    pack_files: list[list[File]] = []
                     log = await self.bot.webhook(1020151767532580934, reason="Logging")
                     if isinstance(user, (User, Member)):
                         username, avatar_url = user.display_name, user.display_avatar.url
@@ -369,6 +371,9 @@ class Submission(commands.Cog):
                         files, embeds[0] = await self.bot.embed_raw(embeds[0], "footer")
                         pack_embeds.append(embeds)
                         pack_files.append(files)
+
+                    if pack_embeds:
+                        pack_embeds[0][0].title = oc.name
 
                     for embeds, files in zip(pack_embeds, pack_files):
                         await log.send(
