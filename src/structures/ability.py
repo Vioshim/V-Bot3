@@ -167,7 +167,7 @@ class UTraitKind(Enum):
     Science = ("Unnatural modifications or applications.", "🔬")
     Technology = ("Tech-related improvements.", "⚙️")
     Survival = ("Instinctively awakened by adrenaline.", "🏕️")
-    Cosmical = ("Sudden, very rare yet it happened one day.", "☄️")
+    Event = ("Sudden, very rare yet it happened one day.", "☄️")
     Defect = ("Adaptation or unintended change.", "🧑‍⚕️")
     Curse = ("Harm or Punishment root", "☠️")
     Blessing = ("External favour and/or protection.", "🕯️")
