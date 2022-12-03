@@ -173,6 +173,7 @@ class UTraitKind(Enum):
     Blessing = ("External favour and/or protection.", "🕯️")
     Magic = ("Spellcasting, rituals or new techniques", "🪄")
     Spite = ("Hatred, malice or sheer anger did this.", "💢")
+    Item = ("Body synchronizes with it", "📦")
 
     @property
     def title(self):

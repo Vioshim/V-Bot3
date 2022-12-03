@@ -372,7 +372,7 @@ class Submission(commands.Cog):
                         pack_embeds.append(embeds)
                         pack_files.append(files)
 
-                    if pack_embeds:
+                    if pack_embeds and former.name == oc.name:
                         pack_embeds[0][0].title = oc.name
 
                     for embeds, files in zip(pack_embeds, pack_files):
