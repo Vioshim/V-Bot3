@@ -419,14 +419,12 @@ class Pokedex(commands.Cog):
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
-        view_cls = ModCharactersView if ctx.user.id == ctx.guild.owner_id else CharactersView
-
         if group_by:
-            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount, view_cls=view_cls)
+            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount, view_cls=ModCharactersView)
             embed.title = f"{embed.title} - Group by {group_by.name}"
         else:
             ocs.sort(key=lambda x: x.name)
-            view = view_cls(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
 
         async with view.send(ephemeral=True, embeds=embeds, content=text):
             namespace = " ".join(f"{k}={v}" for k, v in ctx.namespace)

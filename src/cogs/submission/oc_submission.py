@@ -73,7 +73,7 @@ from src.structures.species import (
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
 from src.views.ability_view import SPAbilityView
-from src.views.characters_view import CharactersView
+from src.views.characters_view import CharactersView, PingView
 from src.views.image_view import ImageView
 from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
@@ -1472,9 +1472,14 @@ class ModCharactersView(CharactersView):
         try:
             if item := self.current_choice:
                 user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-                view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
 
-                await view.send(ephemeral=True)
+                if item.author in [interaction.user.id, user.id] or interaction.user.id == interaction.guild.owner_id:
+                    view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
+                    await view.send(ephemeral=True)
+                else:
+                    view = PingView(oc=item, reference=interaction)
+                    await interaction.followup.send(embeds=item.embeds, view=view, ephemeral=True)
+
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
         finally:
