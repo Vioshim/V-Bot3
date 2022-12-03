@@ -697,7 +697,7 @@ class TypesField(TemplateField):
             if not (mon_types := species.possible_types):
                 return "No possible types for current species"
             if oc.types not in mon_types:
-                return "Possible Typings: {}".format(", ".join("/".join(y.name for y in x) for x in mon_types))
+                return ", ".join("/".join(y.name for y in x) for x in mon_types)
 
         if not oc.types:
             return "Types have not been specified."
@@ -781,10 +781,9 @@ class MovesetField(TemplateField):
         ):
             movepool = DEFAULT_MOVES + oc.total_movepool
             moves = movepool()
-            if items := ", ".join(x.name for x in oc.moveset if x not in moves):
-                value += f"Not in Movepool: {items}"
+            value += ", ".join(x.name for x in oc.moveset if x not in moves)
 
-        return value or None
+        return value
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -848,8 +847,7 @@ class MovepoolField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if items := ", ".join(x for x in oc.movepool() if x.banned):
-            return f"Banned Movepool: {items}"
+        return ", ".join(x for x in oc.movepool() if x.banned)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -888,8 +886,7 @@ class AbilitiesField(TemplateField):
         if isinstance(oc.species, (Fakemon, Variant, CustomMega)):
             return None
 
-        if items := ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities):
-            return f"Invalid Abilities: {items}"
+        return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
