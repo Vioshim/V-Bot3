@@ -112,7 +112,7 @@ class Template(TemplateItem, Enum):
         description="The average residents of this world.",
         exclude=["Types"],
         docs={
-            "Standard": "1-1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
+            "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
             "w/Sp. Ability": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
         },
     )
