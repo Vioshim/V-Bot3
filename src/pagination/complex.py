@@ -537,8 +537,8 @@ class Complex(Simple[_T]):
 
         if not self.keep_working:
             self.choices |= items
+            self.values = set(self.values) - self.choices
 
-        self.values = set(self.values) - self.choices
         max_pages = len(self.values[:: self.entries_per_page]) - 1
 
         if "first" in sct.values:
