@@ -74,10 +74,8 @@ class AbilityView(Complex[Ability | SpAbility]):
 
 
 class SPAbilityModal(Modal):
-    def __init__(self, sp_ability: SpAbility = None) -> None:
-        super(SPAbilityModal, self).__init__(title="Special Ability", timeout=None)
-        if not sp_ability:
-            sp_ability = SpAbility()
+    def __init__(self, sp_ability: SpAbility) -> None:
+        super(SPAbilityModal, self).__init__(title=f"Unique Trait - {sp_ability.kind.title}", timeout=None)
         self.sp_ability = sp_ability
         self.name = TextInput(
             label="Name",
@@ -132,6 +130,7 @@ class SPAbilityModal(Modal):
             origin=self.origin.value,
             pros=self.pros.value,
             cons=self.cons.value,
+            kind=self.sp_ability.kind,
         )
         if not self.sp_ability.valid:
             self.sp_ability = None
