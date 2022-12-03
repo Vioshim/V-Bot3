@@ -15,6 +15,8 @@
 
 from enum import Enum
 
+from discord import PartialEmoji
+
 
 class Pokeball(Enum):
     Poke_Ball = "9/93/Bag_Poké_Ball"
@@ -55,6 +57,10 @@ class Pokeball(Enum):
     Great_Ball_HOME = "b/bd/Bag_Great_Ball_HOME"
     Ultra_Ball_HOME = "b/b6/Bag_Ultra_Ball_HOME"
     Heavy_Ball_HOME = "e/eb/Bag_Heavy_Ball_HOME"
+
+    @property
+    def emoji(self):
+        return PartialEmoji(name="pokeball", id=952522808435544074)
 
     @property
     def url(self):

@@ -51,8 +51,11 @@ PLACEHOLDER_NAMES = {
     "Personality": "personality",
     "Types": "types",
     "Additional Information": "extra",
-    "F. Species": "fakemon",
     "F. Base": "base",
+    "F. Species": "fakemon",
+    "Mega Base": "mega",
+    "Mega Species": "mega",
+    "Paradox Base": "paradox",
     "Variant": "variant",
     "Artist": "artist",
     "Website": "website",
@@ -71,7 +74,9 @@ PLACEHOLDER_DEFAULTS = {
     "personality": "Character's personality",
     "extra": "Character's extra information",
     "fakemon": "OC's Fakemon Species",
+    "paradox": "OC's Base Species",
     "base": "OC's Base Species",
+    "mega": "OC's Base Species",
     "chimera": "OC's Chimera Species",
     "variant": "OC's Variant Species",
     "artist": "Artist's Name",
@@ -179,6 +184,8 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                 case [x, _]:
                     raw_kwargs.setdefault("movepool", {})
                     raw_kwargs["movepool"].setdefault(x.lower(), set())
+                    if isinstance(raw_kwargs["movepool"][x.lower()], str):
+                        raw_kwargs["movepool"][x.lower()] = {raw_kwargs["movepool"][x.lower()]}
                     raw_kwargs["movepool"][x.lower()].add(argument)
 
     try:
