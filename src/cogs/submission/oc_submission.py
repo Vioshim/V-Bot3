@@ -591,7 +591,7 @@ class SizeField(TemplateField):
             target=ctx,
             timeout=None,
             values=[*Size],
-            sort_key=lambda x: x.value,
+            sort_key=(lambda x: x.value, True),
             parser=lambda x: (x.height_info(height), None),
             silent_mode=True,
         )
@@ -630,7 +630,7 @@ class WeightField(TemplateField):
             target=ctx,
             timeout=None,
             values=[*Size],
-            sort_key=lambda x: x.value,
+            sort_key=(lambda x: x.value, True),
             parser=lambda x: (x.weight_info(weight), None),
             silent_mode=True,
         )

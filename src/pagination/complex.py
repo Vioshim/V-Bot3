@@ -111,7 +111,7 @@ class Complex(Simple[_T]):
         emoji_parser: str | PartialEmoji | Emoji | Callable[[_T], str | PartialEmoji | Emoji] = None,
         silent_mode: bool = False,
         keep_working: bool = False,
-        sort_key: Optional[Callable[[_T], Any]] = None,
+        sort_key: Optional[tuple[Callable[[_T], Any], bool] | Callable[[_T], Any]] = None,
         text_component: Optional[TextInput | Modal] = None,
         real_max: Optional[int] = None,
     ):
@@ -149,7 +149,13 @@ class Complex(Simple[_T]):
             items = list(values)
             self._values = items
             self.real_values = items
-            self.sort()
+
+            try:
+                sort_key, reverse = self._sort_key
+            except TypeError:
+                sort_key, reverse = self._sort_key, False
+
+            self.sort(sort_key=sort_key, reverse=reverse)
         else:
             self._values = values
             self.real_values = values

@@ -82,7 +82,7 @@ class Simple(Generic[_T], Basic):
         inline: bool = False,
         entries_per_page: int = 25,
         parser: Callable[[_T], tuple[str, str]] = None,
-        sort_key: Callable[[_T], Any] = None,
+        sort_key: Optional[tuple[Callable[[_T], Any], bool] | Callable[[_T], Any]] = None,
         modifying_embed: bool = True,
     ):
         """Init Method
@@ -121,7 +121,11 @@ class Simple(Generic[_T], Basic):
         self._parser = parser
         self._entries_per_page = entries_per_page
         if not isinstance(values, list) or sort_key:
-            self.sort(sort_key=sort_key)
+            try:
+                sort_key, reverse = sort_key
+            except TypeError:
+                sort_key, reverse = sort_key, False
+            self.sort(sort_key=sort_key, reverse=reverse)
 
     def sort(self, sort_key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
         """Sort method used for the view's values
