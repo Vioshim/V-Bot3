@@ -242,7 +242,7 @@ class Pokedex(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @app_commands.rename(_type="type")
+    @app_commands.rename(_type="type", sp_ability="unique_trait")
     async def find(
         self,
         ctx: Interaction,

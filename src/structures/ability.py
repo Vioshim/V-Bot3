@@ -164,14 +164,15 @@ class UTraitKind(Enum):
     Birth_Gift = ("Unusual birth conditions.", "🐣")
     Bloodline = ("Runs through family's veins.", "👨‍👩‍👧‍👦")
     Hard_work = ("A power within that awakened by hard work.", "⚒️")
-    Science = ("Unnatural modifications.", "🔬")
-    Technology = ("Improvements.", "⚙️")
+    Science = ("Unnatural modifications or applications.", "🔬")
+    Technology = ("Tech-related improvements.", "⚙️")
     Survival = ("Instinctively awakened by adrenaline.", "🏕️")
     Cosmical = ("Sudden, very rare yet it happened one day.", "☄️")
-    Defect = ("Adaptation to something negative.", "🧑‍⚕️")
+    Defect = ("Adaptation or unintended change.", "🧑‍⚕️")
     Curse = ("Harm or Punishment root", "☠️")
     Blessing = ("External favour and/or protection.", "🕯️")
     Magic = ("Spellcasting, rituals or new techniques", "🪄")
+    Spite = ("Hatred, malice or sheer anger did this.", "💢")
 
     @property
     def title(self):
