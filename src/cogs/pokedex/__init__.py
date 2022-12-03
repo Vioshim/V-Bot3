@@ -34,7 +34,6 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
-from discord.utils import utcnow
 from yarl import URL
 
 from src.cogs.pokedex.search import (
@@ -53,12 +52,13 @@ from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Chimera, Fusion, Species
 from src.utils.etc import WHITE_BAR
+from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
 __all__ = ("Pokedex", "setup")
 
-PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/913555643699458088"
+PLACEHOLDER = "https://discord.com/channels/719343092963999804/860590339327918100/1023703599538257940"
 API = URL("https://ash-pinto-frog.glitch.me/api")
 
 
@@ -147,7 +147,7 @@ class Pokedex(commands.Cog):
             title="See Movepool",
             description="To use this command, provide Species and/or Move.",
             color=ctx.user.color,
-            timestamp=utcnow(),
+            timestamp=ctx.created_at,
         )
         embed.set_image(url=WHITE_BAR)
         await resp.defer(ephemeral=True, thinking=True)
@@ -312,7 +312,7 @@ class Pokedex(commands.Cog):
         text: str = ""
         guild: Guild = ctx.guild
         await resp.defer(ephemeral=True, thinking=True)
-        embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=utcnow())
+        embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
         db = self.bot.mongo_db("Characters")
@@ -418,12 +418,15 @@ class Pokedex(commands.Cog):
             filters.append(lambda x: x.last_used_at >= date if active else x.last_used_at < date)
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
+
+        view_cls = ModCharactersView if ctx.user.id == ctx.guild.owner_id else CharactersView
+
         if group_by:
-            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount)
+            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount, view_cls=view_cls)
             embed.title = f"{embed.title} - Group by {group_by.name}"
         else:
             ocs.sort(key=lambda x: x.name)
-            view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            view = view_cls(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
 
         async with view.send(ephemeral=True, embeds=embeds, content=text):
             namespace = " ".join(f"{k}={v}" for k, v in ctx.namespace)

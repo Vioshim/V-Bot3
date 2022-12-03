@@ -16,7 +16,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import groupby
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, Optional, Type
 
 from discord import Guild, Interaction, Member, TextChannel, Thread
 from discord.app_commands import Choice
@@ -334,8 +334,15 @@ FakemonArg = Transform[Character, FakemonTransformer]
 
 
 class GroupByComplex(Complex[str]):
-    def __init__(self, member: Member, target: Interaction, data: dict[str, list[Character]]):
+    def __init__(
+        self,
+        member: Member,
+        target: Interaction,
+        data: dict[str, list[Character]],
+        view_cls: Type[CharactersView] = CharactersView,
+    ):
         self.data = data
+        self.view_cls = view_cls
 
         def inner_parser(item: str):
             elements = self.data.get(item, [])
@@ -356,7 +363,7 @@ class GroupByComplex(Complex[str]):
     async def select_choice(self, interaction: Interaction, sct: Select) -> None:
         key = self.current_choice
         ocs = self.data.get(key, [])
-        view = CharactersView(member=interaction.user, target=interaction, ocs=ocs, keep_working=True)
+        view = self.view_cls(member=interaction.user, target=interaction, ocs=ocs, keep_working=True)
         async with view.send(ephemeral=True):
             await super(GroupByComplex, self).select_choice(interaction, sct)
 
@@ -381,7 +388,13 @@ class OCGroupBy(ABC):
         """
 
     @classmethod
-    def generate(cls, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
+    def generate(
+        cls,
+        ctx: Interaction,
+        ocs: Iterable[Character],
+        amount: Optional[str] = None,
+        view_cls: Type[CharactersView] = CharactersView,
+    ):
         if member := ctx.namespace.member:
             ocs = [x for x in ocs if x.author == member.id]
         else:
@@ -398,6 +411,7 @@ class OCGroupBy(ABC):
             member=ctx.user,
             target=ctx,
             data={k: v for k, v in data if amount_parser(amount, v)},
+            view_cls=view_cls,
         )
 
 
@@ -587,7 +601,13 @@ class GroupByArg(Enum):
     HiddenPower = OCGroupByHiddenPower
     UniqueTrait = OCGroupByUniqueTrait
 
-    def generate(self, ctx: Interaction, ocs: Iterable[Character], amount: Optional[str] = None):
+    def generate(
+        self,
+        ctx: Interaction,
+        ocs: Iterable[Character],
+        amount: Optional[str] = None,
+        view_cls: Type[CharactersView] = CharactersView,
+    ):
         """Short cut generate
 
         Parameters
@@ -605,4 +625,4 @@ class GroupByArg(Enum):
             Information complex paginator groups.
         """
         value: OCGroupBy = self.value
-        return value.generate(ctx=ctx, ocs=ocs, amount=amount)
+        return value.generate(ctx=ctx, ocs=ocs, amount=amount, view_cls=view_cls)
