@@ -157,15 +157,23 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                     info.update(o for x in argument.split(",") if (o := x.title().strip()) and o not in IGNORE_MOVE)
                 case ["Move", _]:
                     raw_kwargs.setdefault("moveset", set())
+                    if isinstance(raw_kwargs["moveset"], str):
+                        raw_kwargs["moveset"] = {raw_kwargs["moveset"]}
                     raw_kwargs["moveset"].add(argument)
                 case ["Ability", _]:
                     raw_kwargs.setdefault("abilities", set())
+                    if isinstance(raw_kwargs["abilities"], str):
+                        raw_kwargs["abilities"] = {raw_kwargs["abilities"]}
                     raw_kwargs["abilities"].add(next_value)
                 case ["Species", _]:
                     raw_kwargs.setdefault("fusion", set())
+                    if isinstance(raw_kwargs["fusion"], str):
+                        raw_kwargs["fusion"] = {raw_kwargs["fusion"]}
                     raw_kwargs["fusion"].add(next_value)
                 case ["Type", _]:
                     raw_kwargs.setdefault("types", set())
+                    if isinstance(raw_kwargs["types"], str):
+                        raw_kwargs["types"] = {raw_kwargs["types"]}
                     raw_kwargs["types"].add(next_value.upper())
                 case [x, _]:
                     raw_kwargs.setdefault("movepool", {})
