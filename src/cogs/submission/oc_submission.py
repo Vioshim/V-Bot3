@@ -1463,7 +1463,8 @@ class CreationOCView(Basic):
             word = "modified" if self.oc.id else "registered"
             self.oc.last_used = ctx.id
             await cog.register_oc(self.oc, image_as_is=True)
-            await ctx.followup.send(f"Character {word} without Issues!", ephemeral=True)
+            msg = await ctx.followup.send(f"Character {self.oc.name} {word} without Issues!", ephemeral=True, wait=True)
+            await msg.delete(delay=2)
         except Exception as e:
             self.bot.logger.exception("Error in oc %s", btn.label, exc_info=e)
         finally:
@@ -1478,13 +1479,14 @@ class ModCharactersView(CharactersView):
         try:
             if item := self.current_choice:
                 user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-
+                embeds = item.embeds
+                if author := interaction.guild.get_member(item.author):
+                    embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
                 if item.author in [interaction.user.id, user.id] or interaction.user.id == interaction.guild.owner_id:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
-                    await view.send(ephemeral=True)
                 else:
                     view = PingView(oc=item, reference=interaction)
-                    await interaction.followup.send(embeds=item.embeds, view=view, ephemeral=True)
+                await interaction.followup.send(embeds=item.embeds, view=view, ephemeral=True)
 
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
