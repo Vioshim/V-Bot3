@@ -549,6 +549,7 @@ class FusionRatioField(TemplateField):
             target=ctx,
             timeout=None,
             values=mon.ratios,
+            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == 0.5 else "\N{BLACK LARGE SQUARE}",
             parser=lambda x: (x.label_name[:100], None),
             sort_key=lambda x: x.ratio,
             silent_mode=True,
@@ -590,6 +591,7 @@ class SizeField(TemplateField):
             target=ctx,
             timeout=None,
             values=[*Size],
+            sort_key=lambda x: x.value,
             parser=lambda x: (x.height_info(height), None),
             silent_mode=True,
         )
@@ -628,6 +630,7 @@ class WeightField(TemplateField):
             target=ctx,
             timeout=None,
             values=[*Size],
+            sort_key=lambda x: x.value,
             parser=lambda x: (x.weight_info(weight), None),
             silent_mode=True,
         )
@@ -737,6 +740,7 @@ class TypesField(TemplateField):
             target=ctx,
             values=values,
             parser=parser,
+            sort_key=parser,
             max_values=max_values,
             timeout=None,
             silent_mode=True,
@@ -917,6 +921,7 @@ class AbilitiesField(TemplateField):
             timeout=None,
             target=ctx,
             max_values=amount,
+            sort_key=lambda x: x.name,
             parser=lambda x: (x.name, x.description),
             text_component=TextInput(
                 label="Ability",
@@ -968,6 +973,7 @@ class HiddenPowerField(TemplateField):
             values=TypingEnum.all(ignore=TypingEnum.Shadow),
             max_values=1,
             timeout=None,
+            sort_key=lambda x: x.name,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
             text_component=TextInput(
                 label="Hidden Power",

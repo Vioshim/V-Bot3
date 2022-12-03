@@ -346,15 +346,13 @@ class GroupByComplex(Complex[str]):
             elements = self.data.get(item, [])
             return getattr(item, "name", str(item)), f"Group has {len(elements):02d} OCs."
 
-        values = list(data.keys())
-        values.sort(key=lambda x: (-len(data.get(x, [])), getattr(x, "name", str(x))))
-
         super(GroupByComplex, self).__init__(
             member=member,
             target=target,
             parser=inner_parser,
-            values=values,
+            values=data.keys(),
             keep_working=True,
+            sort_key=lambda x: (-len(data.get(x, [])), getattr(x, "name", str(x))),
         )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")

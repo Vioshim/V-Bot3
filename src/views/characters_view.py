@@ -215,6 +215,7 @@ class CharactersView(Complex[Character]):
             timeout=None,
             parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
+            sort_key=lambda x: (x.name, repr(x)),
         )
         self.embed.title = "Select a character"
         self.msg_id = int(msg_id) if msg_id else None

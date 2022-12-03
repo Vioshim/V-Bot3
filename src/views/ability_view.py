@@ -195,6 +195,7 @@ class SPAbilityView(Basic):
                 values=backup,
                 timeout=None,
                 parser=lambda x: (x.name, x.description),
+                sort_key=lambda x: x.name,
                 silent_mode=True,
             )
             async with view.send(

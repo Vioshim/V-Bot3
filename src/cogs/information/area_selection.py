@@ -91,6 +91,7 @@ class AreaSelection(Complex[TextChannel]):
                 f"{len(self.entries.get(x.id, [])):02d}{x.name[1:]}".replace("-", " ").title(),
                 x.topic or "No description yet.",
             ),
+            sort_key=lambda x: x.name,
             emoji_parser=lambda x: x.name[0],
         )
 
@@ -148,6 +149,7 @@ class RegionViewComplex(Complex[MapPair]):
             target=target,
             timeout=None,
             parser=lambda x: (x.name, x.short_desc or x.desc),
+            sort_key=lambda x: x.name,
             silent_mode=True,
             keep_working=True,
         )
