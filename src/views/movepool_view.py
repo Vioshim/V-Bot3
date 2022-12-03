@@ -88,7 +88,7 @@ class MovepoolModal(Modal):
         )
 
         if self.oc.kind in [Kind.Variant, Kind.Fakemon]:
-            movepool.event |= self.oc.moveset
+            movepool.event |= {x for x in self.oc.moveset if x not in movepool}
 
         self.oc.species.movepool = movepool
         await resp.send_message(repr(movepool), ephemeral=True, delete_after=3)
