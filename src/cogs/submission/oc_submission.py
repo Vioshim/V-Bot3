@@ -1380,8 +1380,9 @@ class CreationOCView(Basic):
             await self.upload()
             self.message = m
 
-    async def send(self, *, ephemeral: bool = False):
+    async def send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
         self.ephemeral = ephemeral
+        self.embeds = embeds or self.embeds
         if not ephemeral:
             self.remove_item(self.help)
         m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
@@ -1484,9 +1485,10 @@ class ModCharactersView(CharactersView):
                     embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
                 if item.author in [interaction.user.id, user.id] or interaction.user.id == interaction.guild.owner_id:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
+                    await view.send(ephemeral=True, embeds=embeds)
                 else:
                     view = PingView(oc=item, reference=interaction)
-                await interaction.followup.send(embeds=item.embeds, view=view, ephemeral=True)
+                    await interaction.followup.send(embeds=embeds, view=view, ephemeral=True)
 
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
