@@ -573,7 +573,7 @@ class OCGroupByUniqueTrait(OCGroupBy):
 class OCGroupByPokeball(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: getattr(x.pokeball, "name", None))
+        ocs = sorted(ocs, key=lambda x: getattr(x.pokeball, "name", "None"))
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball or "None")}
 
 
