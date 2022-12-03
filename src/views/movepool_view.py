@@ -17,7 +17,7 @@ from discord import Interaction, InteractionResponse, Member, TextChannel, TextS
 from discord.ui import Button, Modal, TextInput, button
 
 from src.pagination.view_base import Basic
-from src.structures.character import Character
+from src.structures.character import Character, Kind
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Variant
 from src.utils.functions import yaml_handler
@@ -87,9 +87,11 @@ class MovepoolModal(Modal):
             event=yaml_handler(self.event.value),
         )
 
+        if self.oc.kind in [Kind.Variant, Kind.Fakemon]:
+            movepool.event |= self.oc.moveset
+
         self.oc.species.movepool = movepool
-        self.oc.moveset &= frozenset(movepool())
-        await resp.send_message("Movepool has been changed.", ephemeral=True, delete_after=3)
+        await resp.send_message(repr(movepool), ephemeral=True, delete_after=3)
         self.stop()
 
 
