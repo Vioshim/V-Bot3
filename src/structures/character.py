@@ -624,13 +624,13 @@ class Character:
                 sp_embed.description = value
 
             if origin := sp_ability.origin[:600]:
-                sp_embed.add_field(name="U. Trait - Origin", value=origin, inline=False)
+                sp_embed.add_field(name="Origin", value=origin, inline=False)
 
             if pros := sp_ability.pros[:600]:
-                sp_embed.add_field(name="U. Trait - Pros", value=pros, inline=False)
+                sp_embed.add_field(name="Pros", value=pros, inline=False)
 
             if cons := sp_ability.cons[:600]:
-                sp_embed.add_field(name="U. Trait - Cons", value=cons, inline=False)
+                sp_embed.add_field(name="Cons", value=cons, inline=False)
 
             sp_embed.set_footer(text=sp_ability.kind.phrase)
 
