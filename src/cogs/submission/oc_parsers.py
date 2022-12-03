@@ -38,6 +38,7 @@ __all__ = ("OCParser", "ParserMethods")
 
 PLACEHOLDER_NAMES = {
     "Name": "name",
+    "Names": "name",
     "Age": "age",
     "Species": "species",
     "Gender": "gender",
@@ -140,8 +141,8 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                     raw_kwargs[argument] = {raw_kwargs[argument]}
                 values = [o for x in next_value.split(",") if (o := x.title().strip()) and o not in IGNORE_MOVE]
                 raw_kwargs[argument].update(values)
-
-            raw_kwargs[argument] = next_value
+            else:
+                raw_kwargs[argument] = next_value
         elif element := PLACEHOLDER_SP.get(item):
             raw_kwargs.setdefault("sp_ability", {})
             raw_kwargs["sp_ability"][element] = next_value
