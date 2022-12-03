@@ -420,7 +420,7 @@ class Pokedex(commands.Cog):
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
         if group_by:
-            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount, view_cls=ModCharactersView)
+            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount)
             embed.title = f"{embed.title} - Group by {group_by.name}"
         else:
             ocs.sort(key=lambda x: x.name)
