@@ -89,7 +89,7 @@ class MovepoolModal(Modal):
 
         self.oc.species.movepool = movepool
         self.oc.moveset &= frozenset(movepool())
-        await resp.send_message("Movepool has been changed.", ephemeral=True)
+        await resp.send_message("Movepool has been changed.", ephemeral=True, delete_after=3)
         self.stop()
 
 

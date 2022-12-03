@@ -174,6 +174,7 @@ class UTraitKind(Enum):
     Magic = ("Spellcasting, rituals or new techniques", "🪄")
     Spite = ("Hatred, malice or sheer anger did this.", "💢")
     Item = ("Body synchronizes with it", "📦")
+    Passed = ("Given from another creature", "🎁")
 
     @property
     def title(self):
