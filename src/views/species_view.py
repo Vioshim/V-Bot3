@@ -21,7 +21,14 @@ from discord.ui import Select, TextInput, select
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.mon_typing import TypingEnum
-from src.structures.species import Chimera, CustomMega, Fusion, Species, Variant
+from src.structures.species import (
+    Chimera,
+    CustomMega,
+    CustomParadox,
+    Fusion,
+    Species,
+    Variant,
+)
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
 __all__ = ("SpeciesComplex",)
@@ -54,15 +61,15 @@ class SpeciesComplex(Complex[Species]):
             if not target.guild.get_member(oc.author):
                 continue
 
-            if isinstance(oc.species, (Fusion, Chimera)):
-                for mon in oc.species.bases:
-                    self.reference1.setdefault(mon, 0)
-                    self.reference1[mon] += 1
-            elif isinstance(oc.species, (Variant, CustomMega)):
-                mon = oc.species.base
-                self.reference2.setdefault(mon, 0)
-                self.reference2[mon] += 1
-            elif isinstance(mon := oc.species, Species):
+            mon = oc.species
+            if isinstance(mon, (Fusion, Chimera)):
+                for x in mon.bases:
+                    self.reference1.setdefault(x, 0)
+                    self.reference1[x] += 1
+            elif isinstance(mon, (Variant, CustomMega, CustomParadox)):
+                self.reference2.setdefault(mon.base, 0)
+                self.reference2[mon.base] += 1
+            elif isinstance(mon, Species):
                 self.reference3.setdefault(mon, 0)
                 self.reference3[mon] += 1
 

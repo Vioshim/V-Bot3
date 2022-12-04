@@ -60,6 +60,7 @@ from src.structures.pronouns import Pronoun
 from src.structures.species import (
     Chimera,
     CustomMega,
+    CustomParadox,
     Fakemon,
     Fusion,
     Legendary,
@@ -240,6 +241,9 @@ class Template(TemplateItem, Enum):
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         oc.species = Variant(base=choices[0], name=answer)
+            case self.CustomParadox:
+                oc.species = CustomParadox(choices[0])
+                oc.abilities &= oc.species.abilities
             case self.CustomMega:
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
@@ -251,7 +255,7 @@ class Template(TemplateItem, Enum):
                     oc.species = Fusion(*choices, ratio=0.5)
             case _:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
-                    label=f"{self.title} Character's Species.",
+                    label="OC's Species.",
                     required=True,
                     ephemeral=ephemeral,
                 ) as answer:
@@ -281,7 +285,7 @@ class Template(TemplateItem, Enum):
         match self:
             case self.Pokemon | self.Chimera:
                 mon_total = Pokemon.all()
-            case self.CustomMega | Template.Variant:
+            case self.CustomMega | Template.Variant | self.CustomParadox:
                 mon_total = Species.all(exclude=Mega)
             case self.Legendary:
                 mon_total = Legendary.all()
@@ -380,14 +384,14 @@ class NameField(TemplateField):
     async def on_submit(
         cls,
         ctx: Interaction,
-        template: Template,
+        _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         handler = text_view.handle(
-            label=f"Write the {template.title} character's Name.",
+            label="OC's Name.",
             placeholder=f"> {oc.name}",
             default=oc.name,
             required=True,
@@ -493,7 +497,7 @@ class SpeciesField(TemplateField):
         if species.banned:
             return f"{species.name} as species are banned."
 
-        if isinstance(species, (Variant, CustomMega)) and isinstance(species.base, Mega):
+        if isinstance(species, (Variant, CustomMega, CustomParadox)) and isinstance(species.base, Mega):
             return "This kind of Pokemon can't have variants."
         if isinstance(species, Fakemon) and isinstance(species.evolves_from, Mega):
             return "Fakemon evolutions from this kind of Pokemon aren't possible."
@@ -707,7 +711,7 @@ class TypesField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, Chimera))
+        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, Chimera, CustomParadox))
 
     @classmethod
     async def on_submit(
@@ -774,7 +778,7 @@ class MovesetField(TemplateField):
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
                 isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
-                isinstance(species, (CustomMega, Variant)) and species.base.id in mons,
+                isinstance(species, (CustomMega, Variant, CustomParadox)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
             )
@@ -809,7 +813,7 @@ class MovesetField(TemplateField):
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
                 isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
-                isinstance(species, (CustomMega, Variant)) and species.base.id in mons,
+                isinstance(species, (CustomMega, Variant, CustomParadox)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
                 isinstance(species, (Fakemon, Variant)) and not moves,
@@ -883,7 +887,7 @@ class AbilitiesField(TemplateField):
         if not (1 <= len(oc.abilities) <= amount):
             return f"Abilities, Min: 1, Max: {amount}"
 
-        if isinstance(oc.species, (Fakemon, Variant, CustomMega)):
+        if isinstance(oc.species, (Fakemon, Variant, CustomMega, CustomParadox)):
             return None
 
         return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
@@ -940,7 +944,7 @@ class AbilitiesField(TemplateField):
         ) as choices:
             if isinstance(choices, set):
                 oc.abilities = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant)):
+                if isinstance(oc.species, (Fakemon, Variant, CustomParadox)):
                     oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
@@ -1031,14 +1035,14 @@ class BackstoryField(TemplateField):
     async def on_submit(
         cls,
         ctx: Interaction,
-        template: Template,
+        _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
-            label=f"Write the {template.title}'s Bio.",
+            label="OC's Bio.",
             placeholder=oc.backstory,
             default=oc.backstory,
             required=False,
@@ -1059,14 +1063,14 @@ class PersonalityField(TemplateField):
     async def on_submit(
         cls,
         ctx: Interaction,
-        template: Template,
+        _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
-            label=f"Write the {template.title} Character's Personality.",
+            label="OC's Personality.",
             placeholder=oc.personality,
             ephemeral=ephemeral,
             default=oc.personality,
@@ -1087,14 +1091,14 @@ class ExtraField(TemplateField):
     async def on_submit(
         cls,
         ctx: Interaction,
-        template: Template,
+        _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         text_view = ModernInput(member=ctx.user, target=ctx)
         async with text_view.handle(
-            label="Write the character's Extra Information.",
+            label="OC's Extra Information.",
             placeholder=oc.extra,
             ephemeral=ephemeral,
             default=oc.extra,

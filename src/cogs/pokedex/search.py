@@ -18,7 +18,7 @@ from enum import Enum
 from itertools import groupby
 from typing import Callable, Iterable, Optional
 
-from discord import Guild, Interaction, Member, TextChannel, Thread
+from discord import Guild, Interaction, Member, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
@@ -34,6 +34,7 @@ from src.structures.move import Move
 from src.structures.species import (
     Chimera,
     CustomMega,
+    CustomParadox,
     Fakemon,
     Fusion,
     Species,
@@ -425,7 +426,7 @@ class OCGroupByShape(OCGroupBy):
                     data.setdefault(mon.shape, set())
                     data[mon.shape].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant)):
+                if isinstance(species, (CustomMega, Variant, CustomParadox)):
                     shape = species.base.shape
                 elif isinstance(species, Fakemon):
                     if mon := species.species_evolves_from:
@@ -475,7 +476,7 @@ class OCGroupByEvoLine(OCGroupBy):
                     data.setdefault(mon, set())
                     data[mon].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant)):
+                if isinstance(species, (CustomMega, Variant, CustomParadox)):
                     mon = species.base.first_evo
                 elif isinstance(species, Fakemon):
                     mon = species.species_evolves_from
@@ -533,19 +534,16 @@ class OCGroupByLocation(OCGroupBy):
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         guild: Guild = ctx.guild
-        aux: dict[TextChannel, set[Character]] = {}
-        unknown = set()
-        for oc in ocs:
+
+        def foo(oc: Character):
             if ch := guild.get_channel_or_thread(oc.location):
                 if isinstance(ch, Thread):
                     ch = ch.parent
-                aux.setdefault(ch, set())
-                aux[ch].add(oc)
-            else:
-                unknown.add(oc)
-        data = {k.name.replace("-", " ").title(): frozenset(v) for k, v in aux.items()}
-        data["Unknown"] = unknown
-        return data
+                return ch
+
+        ocs = sorted(ocs, key=lambda x: o.id if (o := foo(x)) else 0)
+
+        return {k: frozenset(v) for k, v in groupby(ocs, key=foo)}
 
 
 class OCGroupByMember(OCGroupBy):

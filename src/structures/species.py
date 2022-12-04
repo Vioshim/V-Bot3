@@ -719,6 +719,82 @@ class CustomMega(Species):
 
 
 @dataclass(unsafe_hash=True, slots=True)
+class CustomParadox(Species):
+    """
+    This class Represents a Custom Mega
+    """
+
+    base: Optional[Species] = None
+
+    def __init__(self, base: Species, name: str = None, types: frozenset[TypingEnum] = None):
+
+        if isinstance(base, str):
+            base = Species.single_deduce(base)
+
+        abilities = frozenset({Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")})
+
+        super(CustomParadox, self).__init__(
+            id=base.id,
+            name=name or f"Paradox {base.name}",
+            shape=base.shape,
+            height=base.height,
+            weight=base.weight,
+            HP=base.HP,
+            ATK=base.ATK,
+            DEF=base.DEF,
+            SPA=base.SPA,
+            SPD=base.SPD,
+            SPE=base.SPE,
+            types=types or base.types.copy(),
+            movepool=base.movepool.copy(),
+            abilities=abilities,
+            evolves_from=base.id,
+        )
+        self.base = base
+
+    @property
+    def requires_image(self) -> bool:
+        return True
+
+    @property
+    def max_amount_abilities(self) -> int:
+        return 1
+
+    @property
+    def can_have_special_abilities(self) -> bool:
+        return False
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[CustomParadox]:
+        """Method deduce but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[CustomMega]
+            Result
+        """
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
+            return cls(base=mon)
+
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[CustomParadox]:
+        """Method from ID but filtered
+
+        Parameters
+        ----------
+        item : str
+            placeholder
+        """
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
+            return CustomParadox(base=mon)
+
+
+@dataclass(unsafe_hash=True, slots=True)
 class Variant(Species):
     """
     This class Represents a Variant

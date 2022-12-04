@@ -38,6 +38,7 @@ from src.structures.pronouns import Pronoun
 from src.structures.species import (
     Chimera,
     CustomMega,
+    CustomParadox,
     Fakemon,
     Fusion,
     Legendary,
@@ -122,6 +123,7 @@ class Kind(Enum):
     Fusion = Fusion
     Paradox = Paradox
     CustomMega = CustomMega
+    CustomParadox = CustomParadox
     Chimera = Chimera
 
     @property
@@ -256,12 +258,14 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
-        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera, Fusion)):
+        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera, Fusion, CustomParadox)):
             aux = {"types": [x.name for x in self.types]}
             if isinstance(self.species, Chimera):
                 aux |= {"chimera": [x.id for x in self.species.bases]}
             elif isinstance(self.species, CustomMega):
                 aux |= {"mega": self.species.id}
+            elif isinstance(self.species, CustomParadox):
+                aux |= {"paradox": self.species.id, "name": self.species.name}
             elif isinstance(self.species, Fusion):
                 aux |= {"fusion": {"species": [x.id for x in self.species.bases], "ratio": self.species.ratio}}
             else:
@@ -303,6 +307,9 @@ class Character:
             elif mega := species.pop("mega", ""):
                 species["base"] = mega
                 dct["species"] = CustomMega(**species)
+            elif paradox := species.pop("paradox", ""):
+                species["base"] = paradox
+                dct["species"] = CustomParadox(**species)
             elif "base" in species:
                 dct["species"] = Variant(**species)
             elif "fusion" in species:
@@ -995,30 +1002,33 @@ class Character:
         """
         data: dict[str, Any] = {k.lower(): v for k, v in kwargs.items()}
 
-        if fakemon := data.pop("fakemon", ""):
+        base = common_pop_get(
+            data,
+            "base",
+            "preevo",
+            "pre evo",
+            "pre_evo",
+        )
+
+        if mega := data.pop("mega", ""):
+            species = CustomMega.deduce(mega.removeprefix("Mega "))
+            data["species"] = species
+        elif (paradox := data.pop("paradox", "")) and base:
+            species = CustomParadox.deduce(base)
+            species.name = paradox
+            data["species"] = species
+        elif fakemon := data.pop("fakemon", ""):
 
             name: str = fakemon.title()
-
-            if name.startswith("Mega "):
-                species = CustomMega.deduce(name.removeprefix("Mega "))
-            elif species := Fakemon.deduce(
-                common_pop_get(
-                    data,
-                    "base",
-                    "preevo",
-                    "pre evo",
-                    "pre_evo",
-                )
-            ):
+            if species := Fakemon.deduce(base):
                 species.name = name
             else:
                 species = Fakemon(name=name)
 
             data["species"] = species
         elif variant := data.pop("variant", ""):
-            if species := Variant.deduce(common_pop_get(data, "base", "preevo", "pre evo", "pre_evo")):
-                name = variant.title().replace(species.name, "").strip()
-                species.name = f"{name} {species.name}".title()
+            if species := Variant.deduce(base):
+                species.name = variant
             else:
                 for item in variant.split(" "):
                     if species := Variant.deduce(item):
@@ -1062,7 +1072,7 @@ class Character:
             data.pop("moveset", None)
         else:
             if type_info and (types := TypingEnum.deduce_many(*type_info)):
-                if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
+                if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera, CustomParadox)):
                     species.types = types
                 elif species.types != types:
                     types_txt = "/".join(i.name for i in types)
@@ -1077,6 +1087,8 @@ class Character:
 
                 if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
                     species.abilities = abilities
+                elif isinstance(species, CustomParadox):
+                    pass
                 elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
                     species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
                     species.abilities = abilities
