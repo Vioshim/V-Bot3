@@ -726,10 +726,12 @@ class CustomParadox(Species):
 
     base: Optional[Species] = None
 
-    def __init__(self, base: Species, name: str = None, types: frozenset[TypingEnum] = None):
+    def __init__(self, base: Species, name: str = None, movepool: Movepool = None, types: frozenset[TypingEnum] = None):
 
         if isinstance(base, str):
             base = Species.single_deduce(base)
+
+        movepool = movepool or base.movepool
 
         abilities = frozenset({Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")})
 
@@ -746,7 +748,7 @@ class CustomParadox(Species):
             SPD=base.SPD,
             SPE=base.SPE,
             types=types or base.types.copy(),
-            movepool=base.movepool.copy(),
+            movepool=movepool.copy(),
             abilities=abilities,
             evolves_from=base.id,
         )

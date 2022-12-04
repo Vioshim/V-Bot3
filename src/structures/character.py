@@ -265,9 +265,18 @@ class Character:
             elif isinstance(self.species, CustomMega):
                 aux |= {"mega": self.species.id}
             elif isinstance(self.species, CustomParadox):
-                aux |= {"paradox": self.species.id, "name": self.species.name}
+                aux |= {
+                    "paradox": self.species.id,
+                    "name": self.species.name,
+                    "movepool": self.species.movepool.as_dict,
+                }
             elif isinstance(self.species, Fusion):
-                aux |= {"fusion": {"species": [x.id for x in self.species.bases], "ratio": self.species.ratio}}
+                aux |= {
+                    "fusion": {
+                        "species": [x.id for x in self.species.bases],
+                        "ratio": self.species.ratio,
+                    }
+                }
             else:
                 aux |= {
                     "name": self.species.name,
@@ -519,7 +528,7 @@ class Character:
         bool
             answer
         """
-        return isinstance(self.species, (Variant, Fakemon))
+        return isinstance(self.species, (Variant, Fakemon, CustomParadox))
 
     @property
     def any_ability_at_first(self) -> bool:
@@ -1094,7 +1103,7 @@ class Character:
                     species.abilities = abilities
                     data["species"] = species
 
-            if isinstance(species, (Fakemon, Variant)):
+            if isinstance(species, (Fakemon, Variant, CustomParadox)):
                 species.movepool = movepool
 
             data = {k: v for k, v in data.items() if v}

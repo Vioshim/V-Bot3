@@ -242,8 +242,13 @@ class Template(TemplateItem, Enum):
                     if isinstance(answer, str) and answer:
                         oc.species = Variant(base=choices[0], name=answer)
             case self.CustomParadox:
-                oc.species = CustomParadox(choices[0])
-                oc.abilities &= oc.species.abilities
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label=f"Paradox {choices[0].name}"[:45],
+                    ephemeral=ephemeral,
+                    required=True,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        oc.species = CustomParadox(choices[0], name=answer)
             case self.CustomMega:
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
@@ -840,7 +845,7 @@ class MovesetField(TemplateField):
             ephemeral=ephemeral,
         ) as choices:
             oc.moveset = frozenset(choices)
-            if isinstance(oc.species, (Fakemon, Variant)) and not oc.movepool:
+            if isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and not oc.movepool:
                 oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                 progress.add("Movepool")
             progress.add(cls.name)
@@ -857,7 +862,7 @@ class MovepoolField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant)) and TypingEnum.Shadow not in oc.types
+        return isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and TypingEnum.Shadow not in oc.types
 
     @classmethod
     async def on_submit(
@@ -870,7 +875,7 @@ class MovepoolField(TemplateField):
     ):
         view = MovepoolView(ctx, ctx.user, oc)
         await view.send(
-            title=f"{template.title} Character's Movepool",
+            title=f"{template.title} OC's Movepool"[:45],
             ephemeral=ephemeral,
         )
         await view.wait()
