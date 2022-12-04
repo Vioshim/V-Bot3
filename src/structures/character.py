@@ -216,7 +216,7 @@ class Size(Enum):
             value = size
 
         feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
-        return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
+        return f"{round(value, 2):.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_info(self, value: float):
         _, proportion, _, size = self.value
@@ -224,7 +224,9 @@ class Size(Enum):
             value *= proportion
         else:
             value = size
-        return f"{value:.2f} kg / {value * 2.2046:.2f} lbs"
+
+        kg, lbs = round(value, 2), round(value * 2.20462, 2)
+        return f"{kg:.2f} kg / {lbs:.2f} lbs"
 
 
 @dataclass(slots=True)
@@ -604,30 +606,28 @@ class Character:
         c_embed.add_field(name="Pronoun", value=self.pronoun.name)
         c_embed.add_field(name="Age", value=self.age.name)
 
-        if self.species and self.species.name:
-            match self.kind:
-                case Kind.Fusion:
-                    ratio1, ratio2 = self.species.ratio, 1 - self.species.ratio
-                    b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
-                    name = f"{b1}{self.species.mon1.name}\n{b2}{self.species.mon2.name}"
-                    c_embed.add_field(name="Fusion", value=name[:1024])
-                case Kind.Chimera:
-                    names = self.species.name.split("/")
-                    if name := "\n".join(f"> **•** {name}" for name in names).title():
-                        c_embed.add_field(name="Chimera", value=name[:1024])
-                case Kind.Fakemon:
-                    if evolves_from := self.evolves_from:
-                        name = f"{evolves_from.name} Evo"
-                    else:
-                        name = "Fakemon Species"
-                    c_embed.add_field(name=name, value=self.species.name)
-                case Kind.CustomMega | Kind.Variant | Kind.CustomParadox:
-                    c_embed.add_field(
-                        name=f"{self.species.base.name} {self.kind.name.removeprefix('Custom')}",
-                        value=self.species.name,
-                    )
-                case _:
-                    c_embed.add_field(name="Species", value=self.species.name)
+        match species := self.species:
+            case mon if isinstance(mon, Fusion):
+                ratio1, ratio2 = mon.ratio, 1 - mon.ratio
+                b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
+                name = f"{b1}{mon.mon1.name}\n{b2}{mon.mon2.name}"
+                c_embed.add_field(name="Fusion", value=name[:1024])
+            case mon if isinstance(mon, Chimera):
+                if name := "\n".join(f"> **•** {name}" for name in mon.name.split("/")).title():
+                    c_embed.add_field(name="Chimera", value=name[:1024])
+            case mon if isinstance(mon, Fakemon):
+                if evolves_from := mon.species_evolves_from:
+                    name = f"{evolves_from.name} Evo"
+                else:
+                    name = "Fakemon Species"
+                c_embed.add_field(name=name, value=mon.name)
+            case mon if isinstance(mon, (CustomMega, CustomParadox, Variant)):
+                c_embed.add_field(
+                    name=f"{mon.base.name} {mon.__class__.__name__.removeprefix('Custom')}",
+                    value=mon.name,
+                )
+            case mon if isinstance(mon, Species):
+                c_embed.add_field(name="Species", value=mon.name)
 
         for index, ability in enumerate(sorted(self.abilities, key=lambda x: x.name), start=1):
             c_embed.add_field(
@@ -670,7 +670,7 @@ class Character:
         else:
             icon_url = None
 
-        if species := self.species:
+        if species:
             c_embed.set_footer(
                 text="{}\n{}".format(
                     self.size.height_info(species.height),
@@ -693,7 +693,7 @@ class Character:
             c_embed.add_field(name="Personality", value=self.personality[:200], inline=False)
 
         if self.extra:
-            c_embed.add_field(name="Extra Information", value=self.extra[:256], inline=False)
+            c_embed.add_field(name="Extra", value=self.extra[:256], inline=False)
 
         return embeds
 
