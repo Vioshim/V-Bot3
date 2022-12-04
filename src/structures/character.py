@@ -208,12 +208,6 @@ class Size(Enum):
     XXXS_ = 0.5625, 0.34375, 0.35, 8.95000
     XXXS = 0.50000, 0.25000, 0.20, 0.60000
 
-    @property
-    def emoji(self):
-        if self == self.M:
-            return "\N{BLACK SQUARE BUTTON}"
-        return "\N{BLACK LARGE SQUARE}"
-
     def height_info(self, value: float):
         proportion, _, size, _ = self.value
         if value:

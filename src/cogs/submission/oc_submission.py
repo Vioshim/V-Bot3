@@ -601,7 +601,8 @@ class SizeField(TemplateField):
             timeout=None,
             values=[*Size],
             sort_key=(lambda x: x.value, True),
-            parser=lambda x: (x.height_info(height), None),
+            parser=lambda x: (x.height_info(height), "Average" if x == Size.M else None),
+            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.size else "\N{BLACK LARGE SQUARE}",
             silent_mode=True,
         )
         async with view.send(
@@ -640,7 +641,8 @@ class WeightField(TemplateField):
             timeout=None,
             values=[*Size],
             sort_key=(lambda x: x.value, True),
-            parser=lambda x: (x.weight_info(weight), None),
+            parser=lambda x: (x.weight_info(weight), "Average" if x == Size.M else None),
+            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.size else "\N{BLACK LARGE SQUARE}",
             silent_mode=True,
         )
         async with view.send(
