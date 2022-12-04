@@ -706,6 +706,9 @@ class TypesField(TemplateField):
         if not oc.types:
             return "Types have not been specified."
 
+        if TypingEnum.Shadow in oc.types:
+            return "Shadow typing is not valid"
+
         if len(oc.types) > 2:
             return "Max 2 Pokemon Types: ({})".format(", ".join(x.name for x in oc.types))
 
@@ -736,8 +739,7 @@ class TypesField(TemplateField):
             def parser(x: TypingEnum):
                 return (x.name, f"Adds the typing {x.name}")
 
-            ignore = TypingEnum.Shadow if template == Template.Variant else None
-            values, max_values = TypingEnum.all(ignore=ignore), 2
+            values, max_values = TypingEnum.all(ignore=TypingEnum.Shadow), 2
 
         view = Complex(
             member=ctx.user,
