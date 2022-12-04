@@ -615,12 +615,15 @@ class Character:
                         c_embed.add_field(name="Chimera", value=name[:1024])
                 case Kind.Fakemon:
                     if evolves_from := self.evolves_from:
-                        name = f"Fakemon Evolution - {evolves_from.name}"
+                        name = f"{evolves_from.name} Evo"
                     else:
                         name = "Fakemon Species"
                     c_embed.add_field(name=name, value=self.species.name)
                 case Kind.CustomMega | Kind.Variant | Kind.CustomParadox:
-                    c_embed.add_field(name=f"{self.species.base.name} {self.kind.name}", value=self.species.name)
+                    c_embed.add_field(
+                        name=f"{self.species.base.name} {self.kind.name.removeprefix('Custom')}",
+                        value=self.species.name,
+                    )
                 case _:
                     c_embed.add_field(name="Species", value=self.species.name)
 
