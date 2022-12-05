@@ -220,7 +220,7 @@ class Template(TemplateItem, Enum):
             ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
             async with view.send(ephemeral=ephemeral) as data:
-                if 1 <= len(data) <= self.max_values:
+                if self.min_values <= len(data) <= self.max_values:
                     choices.extend(data)
                 else:
                     return
@@ -256,8 +256,7 @@ class Template(TemplateItem, Enum):
                 if choices:
                     oc.species = Chimera(choices)
             case self.Fusion:
-                if len(choices) == 2:
-                    oc.species = Fusion(*choices, ratio=0.5)
+                oc.species = Fusion(*choices, ratio=0.5)
             case _:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="OC's Species.",
@@ -276,6 +275,14 @@ class Template(TemplateItem, Enum):
                             )
 
     @property
+    def min_values(self):
+        match self:
+            case self.Fusion:
+                return 2
+            case _:
+                return 1
+
+    @property
     def max_values(self):
         match self:
             case self.Fusion:
@@ -288,10 +295,8 @@ class Template(TemplateItem, Enum):
     @property
     def total_species(self) -> frozenset[Species]:
         match self:
-            case self.Pokemon | self.Chimera:
+            case self.Pokemon:
                 mon_total = Pokemon.all()
-            case self.CustomMega | Template.Variant | self.CustomParadox:
-                mon_total = Species.all(exclude=Mega)
             case self.Legendary:
                 mon_total = Legendary.all()
             case self.Mythical:
@@ -300,10 +305,10 @@ class Template(TemplateItem, Enum):
                 mon_total = UltraBeast.all()
             case self.Mega:
                 mon_total = Mega.all()
-            case self.Fusion:
-                mon_total = Species.all()
             case self.Paradox:
                 mon_total = Paradox.all()
+            case (self.CustomMega | self.Variant | self.CustomParadox | self.Chimera | self.Fusion):
+                mon_total = Species.all(exclude=(Mega, Paradox))
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
@@ -317,7 +322,7 @@ class Template(TemplateItem, Enum):
         name = self.name.replace("UltraBeast", "Ultra Beast")
         if name.startswith("Custom"):
             name = name.removeprefix("Custom") + " (Custom)"
-        return name
+        return name.strip()
 
     @property
     def formatted_text(self):
@@ -495,24 +500,25 @@ class SpeciesField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        species = oc.species
-        if not species:
+        if not (species := oc.species):
             return "Missing Species"
 
         if species.banned:
             return f"{species.name} as species are banned."
 
-        if isinstance(species, (Variant, CustomMega, CustomParadox)) and isinstance(species.base, Mega):
-            return "This kind of Pokemon can't have variants."
-        if isinstance(species, Fakemon) and isinstance(species.evolves_from, Mega):
-            return "Fakemon evolutions from this kind of Pokemon aren't possible."
-        if isinstance(species, Fusion) and all(isinstance(x, Mega) for x in species.bases):
-            return "Fusions can't work with all being mega."
-        if isinstance(species, Chimera):
-            if not (1 <= len(species.bases) <= 3):
-                return "Chimeras require to have 1-3 species."
-            if any(isinstance(x, (Legendary, Mythical, Mega, UltraBeast, Paradox)) for x in species.bases):
-                return "Chimeras from this kind of Pokemon aren't possible."
+        if isinstance(species, (Variant, CustomMega, CustomParadox)) and isinstance(species.base, (Paradox, Mega)):
+            return f"{species.base.name} can't have variants."
+
+        if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
+            return f"{species.species_evolves_from.name} can't custom evolve."
+
+        if isinstance(species, (Chimera, Fusion)):
+            if text := ", ".join(x.name for x in species.bases if isinstance(x, (Paradox, Mega))):
+                return f"Can't use {text}."
+
+            x_min, x_max = oc.min_amount_species, oc.max_amount_species
+            if not (x_min <= len(species.bases) <= x_max):
+                return f"Min: {x_min}, Max:{x_max} Species."
 
     @classmethod
     async def on_submit(

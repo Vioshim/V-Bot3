@@ -389,6 +389,24 @@ class Character:
         return self.id >> 22
 
     @property
+    def min_amount_species(self):
+        match self.species:
+            case x if isinstance(x, Fusion):
+                return 2
+            case _:
+                return 1
+
+    @property
+    def max_amount_species(self):
+        match self.species:
+            case x if isinstance(x, Chimera):
+                return 3
+            case x if isinstance(x, Fusion):
+                return 2
+            case _:
+                return 1
+
+    @property
     def last_used_at(self):
         data = self.last_used or max(self.id or 0, self.location or 0)
         return snowflake_time(data) if data else utcnow()
