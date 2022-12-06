@@ -186,13 +186,13 @@ class Pokedex(commands.Cog):
                 if possible_types := "\n".join(
                     f"• {o}" for x in species.possible_types if (o := "/".join(i.name for i in x))
                 ):
-                    embed.add_field(text="Possible Types", value=possible_types, inline=False)
+                    embed.add_field(name="Possible Types", value=possible_types, inline=False)
 
                 if height := species.height:
-                    embed.add_field(text="Average Height", value=Size.M.height_info(height), inline=False)
+                    embed.add_field(name="Average Height", value=Size.M.height_info(height), inline=False)
 
                 if weight := species.weight:
-                    embed.add_field(text="Average Weight", value=Size.M.weight_info(weight), inline=False)
+                    embed.add_field(name="Average Weight", value=Size.M.weight_info(weight), inline=False)
 
                 if isinstance(species, Species):
 
