@@ -217,7 +217,10 @@ class Template(TemplateItem, Enum):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
 
         if mons := self.total_species:
-            ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
+            key = {"server": ctx.guild_id}
+            if role := get(ctx.guild.roles, name="Registered"):
+                key["author"] = {"$in": [x.id for x in role.members]}
+            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
             async with view.send(ephemeral=ephemeral) as data:
                 if self.min_values <= len(data) <= self.max_values:
@@ -227,12 +230,11 @@ class Template(TemplateItem, Enum):
 
         match self:
             case self.Pokemon | self.Legendary | self.Mythical | self.UltraBeast | self.Paradox | self.Mega:
-                if choices:
-                    oc.species, abilities = choices[0], choices[0].abilities.copy()
-                    if len(abilities) <= oc.max_amount_abilities:
-                        oc.abilities = abilities
-                    else:
-                        oc.abilities &= abilities
+                oc.species, abilities = choices[0], choices[0].abilities.copy()
+                if len(abilities) <= oc.max_amount_abilities:
+                    oc.abilities = abilities
+                else:
+                    oc.abilities &= abilities
             case self.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"{choices[0].name} Variant"[:45],
@@ -253,8 +255,7 @@ class Template(TemplateItem, Enum):
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
             case self.Chimera:
-                if choices:
-                    oc.species = Chimera(choices)
+                oc.species = Chimera(choices)
             case self.Fusion:
                 oc.species = Fusion(*choices, ratio=0.5)
             case _:
@@ -285,10 +286,10 @@ class Template(TemplateItem, Enum):
     @property
     def max_values(self):
         match self:
-            case self.Fusion:
-                return 2
             case self.Chimera:
                 return 3
+            case self.Fusion:
+                return 2
             case _:
                 return 1
 
@@ -689,7 +690,10 @@ class PreEvoSpeciesField(TemplateField):
     ):
         mon_total = {x for x in Pokemon.all() if not x.banned}
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
+        key = {"server": ctx.guild_id}
+        if role := get(ctx.guild.roles, name="Registered"):
+            key["author"] = {"$in": [x.id for x in role.members]}
+        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
         view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, ocs=ocs)
         async with view.send(
             title="Select if it has a canon Pre-Evo (Skip if not needed)",

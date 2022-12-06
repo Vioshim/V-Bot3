@@ -34,6 +34,7 @@ from discord import (
     app_commands,
 )
 from discord.ext import commands
+from discord.utils import get
 from yarl import URL
 
 from src.cogs.pokedex.search import (
@@ -44,15 +45,13 @@ from src.cogs.pokedex.search import (
     MoveArg,
 )
 from src.cogs.submission.oc_submission import ModCharactersView
-from src.structures.ability import Ability
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Kind
+from src.structures.character import AgeGroup, Character, Kind, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
 from src.structures.species import Chimera, Fusion, Species
 from src.utils.etc import WHITE_BAR
-from src.views.characters_view import CharactersView
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
@@ -115,9 +114,9 @@ class Pokedex(commands.Cog):
         chimera: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
         move_id: Optional[MoveArg],
-        level: Optional[int] = 100,
-        ivs: Optional[int] = 31,
-        evs: Optional[int] = 252,
+        level: int = 0,
+        ivs: int = 0,
+        evs: int = 0,
     ):
         """Check for Movepool information
 
@@ -135,11 +134,11 @@ class Pokedex(commands.Cog):
             Search fakemon species
         move_id : Optional[MoveArg]
             Move to lookup
-        level : Optional[int]
+        level : int
             Level to calculate stats for
-        ivs : Optional[int]
+        ivs : int
             IVs to calculate stats for
-        evs : Optional[int]
+        evs : int
             EVs to calculate stats for
         """
         resp: InteractionResponse = ctx.response
@@ -152,14 +151,14 @@ class Pokedex(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         await resp.defer(ephemeral=True, thinking=True)
 
-        mons = {species, fused, chimera}
-        if mons := {x for x in mons if x is not None}:
-            if len(mons) == 2:
-                mon = Fusion(*mons, ratio=0.5)
-            elif len(mons) == 3:
-                mon = Chimera(mons)
+        mons: set[Optional[Species]] = {species, fused, chimera}
+        if aux := {x for x in mons if x is not None}:
+            if len(aux) == 2:
+                mon = Fusion(*aux, ratio=0.5)
+            elif len(aux) == 3:
+                mon = Chimera(aux)
             else:
-                mon = mons.pop()
+                mon = aux.pop()
 
             species = mon
             movepool = mon.total_movepool
@@ -184,41 +183,60 @@ class Pokedex(commands.Cog):
                     else:
                         embed.title = f"{species.name} can not learn {move_id.name}."
 
-                if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
-                    embed.set_footer(text=f"Possible Types:\n{possible_types}")
+                if possible_types := "\n".join(
+                    f"• {o}" for x in species.possible_types if (o := "/".join(i.name for i in x))
+                ):
+                    embed.add_field(text="Possible Types", value=possible_types, inline=False)
+
+                if height := species.height:
+                    embed.add_field(text="Average Height", value=Size.M.height_info(height), inline=False)
+
+                if weight := species.weight:
+                    embed.add_field(text="Average Weight", value=Size.M.weight_info(weight), inline=False)
 
                 if isinstance(species, Species):
-                    HP, ATK, DEF, SPA, SPD, SPE = (
-                        species.HP,
-                        species.ATK,
-                        species.DEF,
-                        species.SPA,
-                        species.SPD,
-                        species.SPE,
-                    )
-                    cHP = 1
-                    cATK, cDEF, cSPA, cSPD, cSPE = (
-                        int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
-                    )
 
-                    if Ability.from_ID("WONDERGUARD") not in species.abilities:
-                        cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
+                    if evs or ivs:
+                        level = level or 100
 
-                    embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
-                    embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
-                    embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
-                    embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
-                    embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
-                    embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
+                    if level:
+                        evs = evs or 252
+                        ivs = ivs or 31
+
+                        HP, ATK, DEF, SPA, SPD, SPE = (
+                            species.HP,
+                            species.ATK,
+                            species.DEF,
+                            species.SPA,
+                            species.SPD,
+                            species.SPE,
+                        )
+                        cHP = 1
+                        cATK, cDEF, cSPA, cSPD, cSPE = (
+                            int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
+                            int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
+                            int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
+                            int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
+                            int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
+                        )
+
+                        if not get(species.abilities, name="Wonder Guard"):
+                            cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
+
+                        embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
+                        embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
+                        embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
+                        embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
+                        embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
+                        embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
 
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             db = self.bot.mongo_db("Characters")
-            ocs = [Character.from_mongo_dict(x) async for x in db.find({})]
+            key = {"server": ctx.guild_id}
+            if role := get(ctx.guild.roles, name="Registered"):
+                key["author"] = {"$in": [x.id for x in role.members]}
+            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
             embed = view.embed
             embed.description = (
