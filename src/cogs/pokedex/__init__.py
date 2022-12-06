@@ -174,14 +174,14 @@ class Pokedex(commands.Cog):
             if move_id is None:
                 view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
             if species:
-                embed.title = f"See {species.name}'s movepool (Possible Types below)"
-                embed.description = "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id))
 
-                if move_id is not None:
-                    if embed.description:
-                        embed.title = f"{species.name} learns {move_id.name} by"
-                    else:
-                        embed.title = f"{species.name} can not learn {move_id.name}."
+                if move_id is None:
+                    embed.title = f"{species.name}'s movepool"
+                elif description := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
+                    embed.title = f"{species.name} learns {move_id.name} by"
+                    embed.description = description
+                else:
+                    embed.title = f"{species.name} can not learn {move_id.name}."
 
                 if possible_types := "\n".join(
                     f"• {o}" for x in species.possible_types if (o := "/".join(i.name for i in x))
@@ -220,11 +220,13 @@ class Pokedex(commands.Cog):
                             int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
                         )
 
-                        if not get(species.abilities, name="Wonder Guard"):
+                        if ab := get(species.abilities, name="Wonder Guard"):
+                            hp_value = ab.name
+                        else:
                             cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
-
-                        embed.add_field(name=f"{HP=}, {cHP=}", value=f"{0.9*cHP:.0f} - {1.1*cHP:.0f}")
-                        embed.add_field(name=f"{ATK=}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
+                            hp_value = f"{0.9*cHP:.0f} - {1.1*cHP:.0f}"
+                        embed.add_field(name=f"{HP=}, {cHP=}", value=hp_value)
+                        embed.add_field(name=f"{ATK:}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
                         embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
                         embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
                         embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
