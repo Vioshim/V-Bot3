@@ -188,11 +188,15 @@ class Pokedex(commands.Cog):
                 ):
                     embed.add_field(name="Possible Types", value=possible_types, inline=False)
 
-                if height := species.height:
-                    embed.add_field(name="Average Height", value=Size.M.height_info(height), inline=False)
+                if isinstance(species, Character):
+                    embed.add_field(name="Height", value=species.size.height_info(), inline=False)
+                    embed.add_field(name="Weight", value=species.weight.weight_info(), inline=False)
+                else:
+                    if height := species.height:
+                        embed.add_field(name="Average Height", value=Size.M.height_info(height), inline=False)
 
-                if weight := species.weight:
-                    embed.add_field(name="Average Weight", value=Size.M.weight_info(weight), inline=False)
+                    if weight := species.weight:
+                        embed.add_field(name="Average Weight", value=Size.M.weight_info(weight), inline=False)
 
                 if isinstance(species, Species):
 

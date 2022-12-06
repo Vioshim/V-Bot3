@@ -208,7 +208,7 @@ class Size(Enum):
     XXXS_ = 0.5625, 0.34375, 0.35, 8.95000
     XXXS = 0.50000, 0.25000, 0.20, 0.60000
 
-    def height_info(self, value: float):
+    def height_info(self, value: float = 0):
         proportion, _, size, _ = self.value
         if value:
             value *= proportion
@@ -218,7 +218,7 @@ class Size(Enum):
         feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
         return f"{round(value, 2):.2f} m / {feet}' {inches:02d}\" ft"
 
-    def weight_info(self, value: float):
+    def weight_info(self, value: float = 0):
         _, proportion, _, size = self.value
         if value:
             value *= proportion
