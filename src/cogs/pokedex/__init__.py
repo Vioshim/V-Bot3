@@ -183,20 +183,16 @@ class Pokedex(commands.Cog):
                 else:
                     embed.title = f"{species.name} can not learn {move_id.name}."
 
-                if possible_types := "\n".join(
-                    f"• {o}" for x in species.possible_types if (o := "/".join(i.name for i in x))
-                ):
+                if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
                     embed.add_field(name="Possible Types", value=possible_types, inline=False)
 
                 if isinstance(species, Character):
-                    embed.add_field(name="Height", value=species.size.height_info(), inline=False)
-                    embed.add_field(name="Weight", value=species.weight.weight_info(), inline=False)
+                    height, weight, val1, val2 = species.size, species.weight, 0, 0
                 else:
-                    if height := species.height:
-                        embed.add_field(name="Average Height", value=Size.M.height_info(height), inline=False)
+                    height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
 
-                    if weight := species.weight:
-                        embed.add_field(name="Average Weight", value=Size.M.weight_info(weight), inline=False)
+                embed.add_field(name="Height", value=height.height_info(val1), inline=False)
+                embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
 
                 if isinstance(species, Species):
 
