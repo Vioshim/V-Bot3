@@ -246,7 +246,7 @@ class Pokedex(commands.Cog):
             )
             embed.title = move_id.name
             embed.color = move_id.type.color
-            embed.set_image(url=move_id.image or WHITE_BAR)
+            embed.set_image(url=WHITE_BAR)
             embed.set_thumbnail(url=move_id.emoji.url)
 
         self.bot.logger.info(
