@@ -651,12 +651,12 @@ class WeightField(TemplateField):
             values=[*Size],
             sort_key=(lambda x: x.value, True),
             parser=lambda x: (x.weight_info(weight), "Average" if x == Size.M else None),
-            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.size else "\N{BLACK LARGE SQUARE}",
+            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.weight else "\N{BLACK LARGE SQUARE}",
             silent_mode=True,
         )
         async with view.send(
             title=f"{template.title} Character's Weight.",
-            description=f"> {oc.size.weight_info(weight)}",
+            description=f"> {oc.weight.weight_info(weight)}",
             single=True,
             ephemeral=ephemeral,
         ) as weight:
