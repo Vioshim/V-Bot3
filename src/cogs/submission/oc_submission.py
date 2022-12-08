@@ -308,8 +308,10 @@ class Template(TemplateItem, Enum):
                 mon_total = Mega.all()
             case self.Paradox:
                 mon_total = Paradox.all()
-            case (self.CustomMega | self.Variant | self.CustomParadox | self.Chimera | self.Fusion):
+            case (self.CustomMega | self.Variant | self.CustomParadox | self.Chimera):
                 mon_total = Species.all(exclude=(Mega, Paradox))
+            case self.Fusion:
+                mon_total = Species.all()
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
@@ -513,10 +515,10 @@ class SpeciesField(TemplateField):
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
 
-        if isinstance(species, (Chimera, Fusion)):
-            if text := ", ".join(x.name for x in species.bases if isinstance(x, (Paradox, Mega))):
-                return f"Can't use {text}."
+        if isinstance(species, Chimera) and (any(isinstance(x, (Paradox, Mega)) for x in species.bases)):
+            return "No Mega/Paradox Chimera."
 
+        if isinstance(species, (Chimera, Fusion)):
             x_min, x_max = oc.min_amount_species, oc.max_amount_species
             if not (x_min <= len(species.bases) <= x_max):
                 return f"Min: {x_min}, Max:{x_max} Species."

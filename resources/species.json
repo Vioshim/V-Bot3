@@ -33752,7 +33752,6 @@
 		"SPA": 125,
 		"SPD": 250,
 		"SPE": 130,
-		"banned": true,
 		"evolves_from": "ETERNATUS",
 		"abilities": ["PRESSURE"],
 		"kind": "Legendary"
