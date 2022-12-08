@@ -610,7 +610,7 @@ class SizeField(TemplateField):
             timeout=None,
             values=Size,
             sort_key=(lambda x: x.value, True),
-            parser=lambda x: (x.height_info(height), "Average" if x == Size.M else None),
+            parser=lambda x: (x.height_info(height), {Size.XXXL: "Jumbo", Size.M: "Average", Size.XXXS: "Mini"}.get(x)),
             emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.size else "\N{BLACK LARGE SQUARE}",
             silent_mode=True,
         )
