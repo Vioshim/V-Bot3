@@ -2138,7 +2138,7 @@
 	{
 		"id": "COMMANDER",
 		"name": "Commander",
-		"description": "When the Pokémon enters a battle, it goes inside the mouth of an ally Dondozo if one is on the field. The Pokémon then issues commands from there.",
+		"description": "Can get protected by an ally Dondozo if one is on the field. The Pokémon then issues commands from the protection.",
 		"battle": "",
 		"outside": "",
 		"random_fact": ""

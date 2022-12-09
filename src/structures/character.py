@@ -346,9 +346,7 @@ class Character:
             self.species = Species.from_ID(self.species)
         if not self.server:
             self.server = 719343092963999804
-        if not self.can_have_special_abilities:
-            self.sp_ability = None
-        elif isinstance(self.sp_ability, dict):
+        if isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
         if isinstance(self.abilities, str):
             self.abilities = [self.abilities]
@@ -369,8 +367,6 @@ class Character:
         if isinstance(self.pronoun, str):
             self.pronoun = Pronoun.deduce(self.pronoun)
         self.age = AgeGroup.parse(self.age)
-        if not self.can_have_special_abilities:
-            self.sp_ability = None
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
         if isinstance(self.pokeball, str):
@@ -861,12 +857,7 @@ class Character:
             mon = Character(**data)
             if sp_data:
                 sp_data.pop("id", None)
-                sp_ability = SpAbility(**sp_data)
-                if mon.can_have_special_abilities:
-                    mon.sp_ability = sp_ability
-                else:
-                    sp_ability.clear()
-                    await sp_ability.upsert(connection, mon.id)
+                mon.sp_ability = SpAbility(**sp_data)
             yield mon
 
     async def upsert(self, connection: Connection) -> None:

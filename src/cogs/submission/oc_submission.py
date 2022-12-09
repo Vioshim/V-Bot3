@@ -1020,12 +1020,12 @@ class UniqueTraitField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if not oc.can_have_special_abilities and oc.sp_ability:
-            return "Can't have Unique Traits."
+        if oc.sp_ability and not oc.sp_ability.valid:
+            return "Missing parameters."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return oc.species and oc.can_have_special_abilities
+        return oc.species
 
     @classmethod
     async def on_submit(
