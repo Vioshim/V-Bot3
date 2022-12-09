@@ -112,6 +112,14 @@
 		"random_fact": "Not much to add here other than the cliche of people referring to it as plot armor"
 	},
 	{
+		"id": "BATTLEBOND",
+		"name": "Battle Bond",
+		"description": "When the Pokémon knocks out a target, its bond with its Trainer is strengthened, and its Attack, Sp. Atk, and Speed stats are boosted.",
+		"battle": "",
+		"outside": "",
+		"random_fact": ""
+	},
+	{
 		"id": "BEASTBOOST",
 		"name": "Beast Boost",
 		"description": "This Pokemon's highest stat is raised by 1 if it attacks and KOes another Pokemon.",
