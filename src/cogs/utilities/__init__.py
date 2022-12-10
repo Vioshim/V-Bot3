@@ -66,7 +66,6 @@ class ForumModal(Modal):
         self.file = file
 
     async def on_submit(self, itx: Interaction, /) -> None:
-        await itx.response.defer(ephemeral=True, thinking=True)
         view = View(timeout=None)
         if isinstance(self.channel, (ForumChannel, TextChannel)):
             data = await self.channel.create_thread(
@@ -77,7 +76,7 @@ class ForumModal(Modal):
             if isinstance(data, ThreadWithMessage):
                 data = data.message
             view.add_item(Button(label="Jump URL", url=data.jump_url))
-            await itx.followup.send("Added Forum thread", ephemeral=True, view=view)
+            await itx.response.send_message("Added Forum thread", ephemeral=True, view=view)
         elif isinstance(self.channel, Thread):
             msg: PartialMessage = self.channel.get_partial_message(message_id=self.channel.id)
             try:
@@ -86,10 +85,9 @@ class ForumModal(Modal):
                     attachments=[self.file] if self.file else MISSING,
                 )
                 view.add_item(Button(label="Jump URL", url=data.jump_url))
-                await itx.followup.send("Modified Forum", ephemeral=True, view=view)
+                await itx.response.send_message("Modified Forum", ephemeral=True, view=view)
             except NotFound:
-                await itx.followup.send("Message not Found", ephemeral=True)
-            await itx.followup.send("Modified ", ephemeral=True, view=view)
+                await itx.response.send_message("Message not Found", ephemeral=True)
 
 
 class Utilities(commands.Cog):
