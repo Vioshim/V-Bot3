@@ -19,7 +19,6 @@ from re import IGNORECASE
 from re import compile as re_compile
 from re import escape
 from typing import Literal, Optional
-from unicodedata import name as u_name
 
 from d20 import roll
 from d20.utils import simplify_expr
@@ -27,39 +26,70 @@ from discord import (
     Attachment,
     Color,
     Embed,
+    File,
     ForumChannel,
     HTTPException,
     Interaction,
     InteractionResponse,
+    Message,
+    NotFound,
     Object,
+    PartialMessage,
+    TextChannel,
+    TextStyle,
     Thread,
+    VoiceChannel,
     app_commands,
 )
+from discord.channel import ThreadWithMessage
 from discord.ext import commands
+from discord.ui import Button, Modal, TextInput, View
+from discord.utils import MISSING
 
-from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader
+from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader, to_string
 from src.structures.bot import CustomBot
 from src.structures.move import Move
 from src.utils.etc import WHITE_BAR, RTFMPages
 
 
-def to_string(c: str) -> str:
-    """To String Method
+class ForumModal(Modal):
+    name = TextInput(label="Name", max_length=100)
+    description = TextInput(label="Content", style=TextStyle.paragraph, max_length=2000)
 
-    Parameters
-    ----------
-    c : str
-        Character
+    def __init__(
+        self,
+        channel: ForumChannel | Thread | TextChannel,
+        file: Optional[File] = None,
+    ) -> None:
+        super().__init__(title="Name")
+        self.channel = channel
+        self.file = file
 
-    Returns
-    -------
-    str
-        Parameters
-    """
-    digit = f"{ord(c):x}"
-    url = f"http://www.fileformat.info/info/unicode/char/{digit}"
-    name = u_name(c, "Name not found.")
-    return f"[`\\U{digit:>08}`](<{url}>): {name} - {c}"
+    async def on_submit(self, itx: Interaction, /) -> None:
+        await itx.response.defer(ephemeral=True, thinking=True)
+        view = View(timeout=None)
+        if isinstance(self.channel, (ForumChannel, TextChannel)):
+            data = await self.channel.create_thread(
+                name=self.name.value,
+                content=self.description.value,
+                file=self.file,
+            )
+            if isinstance(data, ThreadWithMessage):
+                data = data.message
+            view.add_item(Button(label="Jump URL", url=data.jump_url))
+            await itx.followup.send("Added Forum thread", ephemeral=True, view=view)
+        elif isinstance(self.channel, Thread):
+            msg: PartialMessage = self.channel.get_partial_message(message_id=self.channel.id)
+            try:
+                data = await msg.edit(
+                    content=self.description.value,
+                    attachments=[self.file] if self.file else [],
+                )
+                view.add_item(Button(label="Jump URL", url=data.jump_url))
+                await itx.followup.send("Modified Forum", ephemeral=True, view=view)
+            except NotFound:
+                await itx.followup.send("Message not Found", ephemeral=True)
+            await itx.followup.send("Modified ", ephemeral=True, view=view)
 
 
 class Utilities(commands.Cog):
@@ -233,18 +263,28 @@ class Utilities(commands.Cog):
     async def forum(
         self,
         ctx: Interaction,
-        name: Optional[str],
-        content: Optional[str],
-        image: Optional[Attachment],
-        forum: Optional[ForumChannel | Thread],
+        image: Optional[Attachment] = MISSING,
+        forum: Optional[ForumChannel | Thread] = None,
     ):
-        if isinstance(forum, ForumChannel):
-            pass
+        """Post Forums or Edit
 
-        elif isinstance(forum := ctx.channel, Thread):
-            pass
-
-        await ctx.response.send_message("Test", ephemeral=True)
+        Parameters
+        ----------
+        ctx : Interaction
+            Interaction
+        image : Optional[Attachment], optional
+            Image to attach, by default None
+        forum : Optional[ForumChannel  |  Thread], optional
+            Forum to manage, by default current
+        """
+        forum = forum or ctx.channel
+        if isinstance(forum, VoiceChannel) or forum is None:
+            name = forum.mention if forum else "Channel"
+            await ctx.response.send_message(f"{name} can't forum", ephemeral=True)
+        else:
+            file = await image.to_file() if image else None
+            modal = ForumModal(timeout=None, channel=forum, file=file)
+            await ctx.response.send_modal(modal)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)

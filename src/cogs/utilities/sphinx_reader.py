@@ -13,10 +13,30 @@
 # limitations under the License.
 
 
+import unicodedata
 from io import BytesIO
 from zlib import decompressobj
 
 __all__ = ("SphinxObjectFileReader",)
+
+
+def to_string(c: str) -> str:
+    """To String Method
+
+    Parameters
+    ----------
+    c : str
+        Character
+
+    Returns
+    -------
+    str
+        Parameters
+    """
+    digit = f"{ord(c):x}"
+    url = f"http://www.fileformat.info/info/unicode/char/{digit}"
+    name = unicodedata.name(c, "Name not found.")
+    return f"[`\\U{digit:>08}`](<{url}>): {name} - {c}"
 
 
 class SphinxObjectFileReader:
