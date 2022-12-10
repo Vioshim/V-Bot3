@@ -83,7 +83,7 @@ class ForumModal(Modal):
             try:
                 data = await msg.edit(
                     content=self.description.value,
-                    attachments=[self.file] if self.file else [],
+                    attachments=[self.file] if self.file else MISSING,
                 )
                 view.add_item(Button(label="Jump URL", url=data.jump_url))
                 await itx.followup.send("Modified Forum", ephemeral=True, view=view)
@@ -263,8 +263,8 @@ class Utilities(commands.Cog):
     async def forum(
         self,
         ctx: Interaction,
-        image: Optional[Attachment] = MISSING,
         forum: Optional[ForumChannel | Thread] = None,
+        image: Optional[Attachment] = None,
     ):
         """Post Forums or Edit
 
@@ -272,10 +272,10 @@ class Utilities(commands.Cog):
         ----------
         ctx : Interaction
             Interaction
-        image : Optional[Attachment], optional
-            Image to attach, by default None
         forum : Optional[ForumChannel  |  Thread], optional
             Forum to manage, by default current
+        image : Optional[Attachment], optional
+            Image to attach, by default None
         """
         forum = forum or ctx.channel
         if isinstance(forum, VoiceChannel) or forum is None:
