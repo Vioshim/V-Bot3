@@ -95,15 +95,16 @@ class ForumModal(Modal):
         else:
             if isinstance(self.channel, TextChannel):
                 data = await self.channel.create_thread(name=self.name.value)
-                data = await data.send(content=self.description.value)
+                message = await data.send(content=self.description.value)
             else:
                 data = await self.channel.create_thread(
                     name=self.name.value,
                     content=self.description.value,
                     file=self.file or MISSING,
                 )
-                data = data.message
-            view.add_item(Button(label="Jump URL", url=data.jump_url))
+                message = data.message
+            await message.pin()
+            view.add_item(Button(label="Jump URL", url=message.jump_url))
             await itx.response.send_message("Added Forum thread", ephemeral=True, view=view)
 
 
