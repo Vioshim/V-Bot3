@@ -31,7 +31,6 @@ from discord import (
     HTTPException,
     Interaction,
     InteractionResponse,
-    Message,
     NotFound,
     Object,
     PartialMessage,
@@ -41,7 +40,6 @@ from discord import (
     VoiceChannel,
     app_commands,
 )
-from discord.channel import ThreadWithMessage
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 from discord.utils import MISSING
@@ -53,27 +51,39 @@ from src.utils.etc import WHITE_BAR, RTFMPages
 
 
 class ForumModal(Modal):
-    name = TextInput(label="Name", max_length=100)
-    description = TextInput(label="Content", style=TextStyle.paragraph, max_length=2000)
-
     def __init__(
         self,
         channel: ForumChannel | Thread | TextChannel,
         file: Optional[File] = None,
     ) -> None:
         super().__init__(title="Name")
+        self.name = TextInput(
+            label="Name",
+            max_length=100,
+            default=channel.name,
+        )
+        self.description = TextInput(
+            label="Content",
+            style=TextStyle.paragraph,
+            max_length=2000,
+            default=getattr(channel, "topic", None),
+        )
+
         self.channel = channel
         self.file = file
 
     async def on_submit(self, itx: Interaction, /) -> None:
         view = View(timeout=None)
         if isinstance(self.channel, (ForumChannel, TextChannel)):
-            data = await self.channel.create_thread(
-                name=self.name.value,
-                content=self.description.value,
-                file=self.file,
-            )
-            if isinstance(data, ThreadWithMessage):
+            if isinstance(self.channel, TextChannel):
+                data = await self.channel.create_thread(name=self.name.value)
+                data = await data.send(content=self.description.value)
+            else:
+                data = await self.channel.create_thread(
+                    name=self.name.value,
+                    content=self.description.value,
+                    file=self.file,
+                )
                 data = data.message
             view.add_item(Button(label="Jump URL", url=data.jump_url))
             await itx.response.send_message("Added Forum thread", ephemeral=True, view=view)
@@ -84,6 +94,8 @@ class ForumModal(Modal):
                     content=self.description.value,
                     attachments=[self.file] if self.file else MISSING,
                 )
+                if data.channel.name != self.name.value:
+                    await self.channel.edit(name=self.name.value)
                 view.add_item(Button(label="Jump URL", url=data.jump_url))
                 await itx.response.send_message("Modified Forum", ephemeral=True, view=view)
             except NotFound:
