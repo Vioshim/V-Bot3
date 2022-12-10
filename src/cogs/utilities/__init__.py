@@ -60,8 +60,8 @@ class ForumModal(Modal):
         self.name = TextInput(
             label="Name",
             max_length=100,
-            default=channel.parent.name
-            if isinstance(channel, Message) and channel.parent
+            default=channel.channel.parent.name
+            if isinstance(channel, Message) and channel.channel.parent
             else getattr(channel, "name", None),
         )
         self.description = TextInput(
