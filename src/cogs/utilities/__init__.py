@@ -32,6 +32,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Object,
+    Thread,
     app_commands,
 )
 from discord.ext import commands
@@ -229,14 +230,20 @@ class Utilities(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_permissions(manage_messages=True)
-    async def post_forum(
+    async def forum(
         self,
         ctx: Interaction,
-        name: str,
-        content: str,
-        image: Attachment,
-        forum: ForumChannel,
+        name: Optional[str],
+        content: Optional[str],
+        image: Optional[Attachment],
+        forum: Optional[ForumChannel | Thread],
     ):
+        if isinstance(forum, ForumChannel):
+            pass
+
+        elif isinstance(forum := ctx.channel, Thread):
+            pass
+
         await ctx.response.send_message("Test", ephemeral=True)
 
     @app_commands.command()
