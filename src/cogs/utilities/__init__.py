@@ -24,8 +24,10 @@ from unicodedata import name as u_name
 from d20 import roll
 from d20.utils import simplify_expr
 from discord import (
+    Attachment,
     Color,
     Embed,
+    ForumChannel,
     HTTPException,
     Interaction,
     InteractionResponse,
@@ -223,6 +225,19 @@ class Utilities(commands.Cog):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         await self.do_rtfm(ctx, key or RTFMPages.Discord, query)
+
+    @app_commands.command()
+    @app_commands.guilds(719343092963999804)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def post_forum(
+        self,
+        ctx: Interaction,
+        name: str,
+        content: str,
+        image: Attachment,
+        forum: ForumChannel,
+    ):
+        await ctx.response.send_message("Test", ephemeral=True)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
