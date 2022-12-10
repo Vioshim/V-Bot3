@@ -63,13 +63,10 @@ from src.structures.species import (
     CustomParadox,
     Fakemon,
     Fusion,
-    Legendary,
     Mega,
-    Mythical,
     Paradox,
     Pokemon,
     Species,
-    UltraBeast,
     Variant,
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
@@ -110,45 +107,19 @@ class TemplateItem:
 
 class Template(TemplateItem, Enum):
     Pokemon = dict(
-        description="The average residents of this world.",
+        description="Normal residents that resemble Pokemon.",
         exclude=["Types"],
         docs={
             "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
-            "w/Sp. Ability": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
+            "Unique Trait": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
         },
-    )
-    Legendary = dict(
-        description="Normal residents that resemble legendaries.",
-        exclude=["Types"],
-        docs={"Standard": "1T-T7sRtI-jgi60hS-BRWBumIWBqrcuhvtv64LG0vGXU"},
-    )
-    Mythical = dict(
-        description="Normal residents that resemble mythicals.",
-        exclude=["Types"],
-        docs={"Standard": "18ltPylrj9ivVsNJcA-S-3Cpht9LZzGcneVG2oH-FTyc"},
-    )
-    UltraBeast = dict(
-        description="Normal residents that resemble ultra beasts.",
-        docs={"Standard": "1atImbQS_z9SzdpK8ZhFZomd0PfgOcFNFURxpZb_YD2I"},
-    )
-    Mega = dict(
-        description="Those that mega evolved and kept stuck like this.",
-        exclude=["Abilities", "Types"],
-        docs={
-            "Standard": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
-            "w/Sp. Ability": "1QRlm692RM5lXBv3bx8YKdnkkeYqz8bYY9MLzR8ElX4s",
-        },
-    )
-    Paradox = dict(
-        description="From distant past/future, somehow ended up here.",
-        docs={"Standard": "14xDwqhRwQFL8jZdq2Rjx34JCVYxgtxMAG5X-4rSVuL0"},
     )
     Fusion = dict(
         description="Individuals that share traits of two species.",
         modifier={"Species": ("Species", "Species 1, Species 2")},
         docs={
             "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
-            "w/Sp. Ability": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
+            "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
     )
     Variant = dict(
@@ -156,60 +127,34 @@ class Template(TemplateItem, Enum):
         modifier={"Species": ("Variant", "Variant Species")},
         docs={
             "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
-            "w/Sp. Ability": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
+            "Unique Trait": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
         },
-    )
-    Chimera = dict(
-        description="Fan-made. rare three way fusions.",
-        modifier={"Species": ("Chimera", "Species, Species, Species, ...")},
-        docs={"Standard": "1P5EZPtOGvMN9onoIwZSyHqrkelfZvlKdepSRxwcu73Q"},
     )
     CustomPokemon = dict(
         description="Fan-made. They are normal residents.",
         modifier={"Species": ("Fakemon", "Fakemon Species")},
         docs={
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-            "w/Sp. Ability": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
             "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
-            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
-        },
-    )
-    CustomLegendary = dict(
-        description="Fan-made. Normal residents that resemble legendaries.",
-        modifier={"Species": ("Fakemon", "Fakemon Legendary Species")},
-        docs={
-            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
-            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
-        },
-    )
-    CustomMythical = dict(
-        description="Fan-made. Normal residents that resemble mythicals.",
-        modifier={"Species": ("Fakemon", "Fakemon Mythical Species")},
-        docs={
-            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
-            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
-        },
-    )
-    CustomUltraBeast = dict(
-        description="Fan-made. Normal residents that resemble ultra beasts.",
-        modifier={"Species": ("Fakemon", "Fakemon Ultra Beast Species")},
-        docs={
-            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
-            "Evolution w/ Sp. Ability": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
+            "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     )
     CustomMega = dict(
         description="Fan-made. Mega evolved and kept stuck like this.",
         modifier={"Species": ("Fakemon", "Mega Species")},
-        docs={"Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0"},
+        docs={
+            "Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0",
+            "Unique Trait": "1tQPKNdxQTA33eUwNgWVGZMYJ3iQzloZIbSNirRXqhj4",
+        },
     )
     CustomParadox = dict(
         description="Fan-made. From distant past/future, somehow ended up here.",
         modifier={"Species": ("Fakemon", "Paradox Species")},
-        docs={"Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY"},
+        docs={
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
     )
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
@@ -229,12 +174,14 @@ class Template(TemplateItem, Enum):
                     return
 
         match self:
-            case self.Pokemon | self.Legendary | self.Mythical | self.UltraBeast | self.Paradox | self.Mega:
+            case self.Pokemon:
                 oc.species, abilities = choices[0], choices[0].abilities.copy()
                 if len(abilities) <= oc.max_amount_abilities:
                     oc.abilities = abilities
                 else:
                     oc.abilities &= abilities
+            case self.Fusion:
+                oc.species = Fusion(*choices, ratio=0.5)
             case self.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"{choices[0].name} Variant"[:45],
@@ -254,11 +201,7 @@ class Template(TemplateItem, Enum):
             case self.CustomMega:
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
-            case self.Chimera:
-                oc.species = Chimera(choices)
-            case self.Fusion:
-                oc.species = Fusion(*choices, ratio=0.5)
-            case _:
+            case self.CustomPokemon:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="OC's Species.",
                     required=True,
@@ -286,8 +229,6 @@ class Template(TemplateItem, Enum):
     @property
     def max_values(self):
         match self:
-            case self.Chimera:
-                return 3
             case self.Fusion:
                 return 2
             case _:
@@ -296,22 +237,10 @@ class Template(TemplateItem, Enum):
     @property
     def total_species(self) -> frozenset[Species]:
         match self:
-            case self.Pokemon:
-                mon_total = Pokemon.all()
-            case self.Legendary:
-                mon_total = Legendary.all()
-            case self.Mythical:
-                mon_total = Mythical.all()
-            case self.UltraBeast:
-                mon_total = UltraBeast.all()
-            case self.Mega:
-                mon_total = Mega.all()
-            case self.Paradox:
-                mon_total = Paradox.all()
-            case (self.CustomMega | self.Variant | self.CustomParadox | self.Chimera):
-                mon_total = Species.all(exclude=(Mega, Paradox))
-            case self.Fusion:
+            case self.Pokemon | self.Fusion:
                 mon_total = Species.all()
+            case (self.CustomMega | self.Variant | self.CustomParadox):
+                mon_total = Species.all(exclude=(Mega, Paradox))
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
@@ -322,7 +251,7 @@ class Template(TemplateItem, Enum):
 
     @property
     def title(self):
-        name = self.name.replace("UltraBeast", "Ultra Beast")
+        name = self.name
         if name.startswith("Custom"):
             name = name.removeprefix("Custom") + " (Custom)"
         return name.strip()
@@ -506,7 +435,7 @@ class SpeciesField(TemplateField):
         if not (species := oc.species):
             return "Missing Species"
 
-        if species.banned:
+        if species.banned or isinstance(species, Chimera):
             return f"{species.name} as species are banned."
 
         if isinstance(species, (Variant, CustomMega, CustomParadox)) and isinstance(species.base, (Paradox, Mega)):
@@ -515,13 +444,8 @@ class SpeciesField(TemplateField):
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
 
-        if isinstance(species, Chimera) and (any(isinstance(x, (Paradox, Mega)) for x in species.bases)):
-            return "No Mega/Paradox Chimera."
-
-        if isinstance(species, (Chimera, Fusion)):
-            x_min, x_max = oc.min_amount_species, oc.max_amount_species
-            if not (x_min <= len(species.bases) <= x_max):
-                return f"Min: {x_min}, Max:{x_max} Species."
+        if isinstance(species, Fusion) and len(species.bases) != 2:
+            return "Must include 2 species."
 
     @classmethod
     async def on_submit(
@@ -567,8 +491,8 @@ class FusionRatioField(TemplateField):
             target=ctx,
             timeout=None,
             values=mon.ratios,
-            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == 0.5 else "\N{BLACK LARGE SQUARE}",
-            parser=lambda x: (x.label_name[:100], None),
+            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x.ratio == mon.ratio else "\N{BLACK LARGE SQUARE}",
+            parser=lambda x: (x.label_name[:100], {0.5: "Default"}.get(x.ratio)),
             sort_key=lambda x: x.ratio,
             silent_mode=True,
         )
@@ -690,7 +614,7 @@ class PreEvoSpeciesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        mon_total = {x for x in Pokemon.all() if not x.banned}
+        mon_total = {x for x in Species.all(exclude=(Paradox, Mega)) if not x.banned}
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         key = {"server": ctx.guild_id}
         if role := get(ctx.guild.roles, name="Registered"):
@@ -729,11 +653,11 @@ class TypesField(TemplateField):
             return "Shadow typing is not valid"
 
         if len(oc.types) > 2:
-            return "Max 2 Pokemon Types: ({})".format(", ".join(x.name for x in oc.types))
+            return f"Max 2 Pokemon Types: ({', '.join(x.name for x in oc.types)})"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, Chimera, CustomParadox))
+        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, CustomParadox))
 
     @classmethod
     async def on_submit(
@@ -746,7 +670,7 @@ class TypesField(TemplateField):
     ):
         species = oc.species
 
-        if single := isinstance(species, (Chimera, Fusion)):
+        if single := isinstance(species, Fusion):
 
             def parser(x: set[TypingEnum]):
                 return (y := "/".join(i.name for i in x), f"Adds the typing {y}")
@@ -798,7 +722,6 @@ class MovesetField(TemplateField):
         if not any(
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
-                isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
                 isinstance(species, (CustomMega, Variant, CustomParadox)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
                 isinstance(species, Species) and species.id in mons,
@@ -833,11 +756,10 @@ class MovesetField(TemplateField):
         if any(
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
-                isinstance(species, Chimera) and all(x.id in mons for x in species.bases),
                 isinstance(species, (CustomMega, Variant, CustomParadox)) and species.base.id in mons,
                 isinstance(species, Fakemon) and species.evolves_from in mons,
-                isinstance(species, Species) and species.id in mons,
                 isinstance(species, (Fakemon, Variant)) and not moves,
+                isinstance(species, Species) and species.id in mons,
             )
         ):
             if TypingEnum.Shadow not in oc.types:
@@ -854,6 +776,7 @@ class MovesetField(TemplateField):
             target=ctx,
             choices=moveset,
         )
+        view.choices = {x for x in moveset if x in movepool}
         async with view.send(
             title=f"{template.title} Character's Moveset",
             ephemeral=ephemeral,
@@ -928,10 +851,7 @@ class AbilitiesField(TemplateField):
     ):
         placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities, amount = oc.species.abilities, oc.max_amount_abilities
-        if template == Template.CustomUltraBeast:
-            abilities = {Ability.get(name="Beast Boost")}
-            amount = 1
-        elif template == Template.CustomParadox:
+        if template == Template.CustomParadox:
             abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
             amount = 1
         elif isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
@@ -1321,28 +1241,10 @@ class CreationOCView(Basic):
             self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.M
 
-            if self.ref_template == Template.CustomUltraBeast:
-                self.oc.abilities = frozenset({Ability.get(name="Beast Boost")})
-
             if self.ref_template == Template.CustomParadox:
                 ab1, ab2 = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
                 if not (self.oc.abilities == {ab1} or self.oc.abilities == {ab2}):
                     self.oc.abilities = frozenset()
-
-            match self.ref_template:
-                case (
-                    Template.Legendary
-                    | Template.Mythical
-                    | Template.UltraBeast
-                    | Template.Chimera
-                    | Template.Paradox
-                    | Template.CustomLegendary
-                    | Template.CustomMythical
-                    | Template.CustomUltraBeast
-                    | Template.CustomParadox
-                ):
-                    self.progress -= {UniqueTraitField.name}
-                    self.oc.sp_ability = None
 
             await self.update(ctx)
         except Exception as e:
