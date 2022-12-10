@@ -49,8 +49,6 @@ from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
-    EMOTE_CREATE_EMOJI,
-    EMOTE_REMOVE_EMOJI,
     MAP_ELEMENTS,
     MOBILE_EMOJI,
     SETTING_EMOJI,
@@ -374,76 +372,6 @@ class BasicRoleSelect(RoleSelect):
         await self.choice(ctx, sct)
 
     @select(
-        placeholder="AFK Schedule (No timezone)",
-        custom_id="afk",
-        min_values=0,
-        max_values=24,
-        options=[
-            SelectOption(
-                label=lapse.strftime("%I:00 %p"),
-                value=str(lapse.hour),
-                description=lapse.strftime("From %I:00 %p to %I:59 %p"),
-                emoji="\N{SLEEPING SYMBOL}",
-            )
-            for lapse in map(time, range(24))
-        ],
-    )
-    async def afk_schedule(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        modal = AFKModal(hours=sct.values)
-        await resp.send_modal(modal)
-
-
-class RegisteredRoleSelect(RoleSelect):
-    @select(
-        placeholder="Select Location Roles",
-        custom_id="location",
-        min_values=0,
-        max_values=len(MAP_ELEMENTS),
-        options=[
-            SelectOption(
-                label=x.name,
-                value=str(x.role),
-                description=x.desc[:100],
-                emoji=x.emoji,
-            )
-            for x in MAP_ELEMENTS
-        ],
-    )
-    async def location_roles(self, ctx: Interaction, sct: Select):
-        await self.choice(ctx, sct)
-
-    @button(
-        label="Add Spectator Role",
-        custom_id="spectator_add",
-        emoji=EMOTE_CREATE_EMOJI,
-        style=ButtonStyle.blurple,
-    )
-    async def spectator_add(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        role = ctx.guild.get_role(1033371159426764901)
-        if role not in ctx.user.roles:
-            await ctx.user.add_roles(role)
-
-        if roles := {x for x in role_gen(ctx.guild) if x in ctx.user.roles}:
-            await ctx.user.remove_roles(*roles)
-
-        await resp.send_message("Role has been added", ephemeral=True)
-
-    @button(
-        label="Remove Spectator Role",
-        custom_id="spectator_remove",
-        emoji=EMOTE_REMOVE_EMOJI,
-        style=ButtonStyle.blurple,
-    )
-    async def spectator_remove(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        role = ctx.guild.get_role(1033371159426764901)
-        if role in ctx.user.roles:
-            await ctx.user.remove_roles(role)
-        await resp.send_message("Role has been removed", ephemeral=True)
-
-    @select(
         placeholder="Select RP Search Roles",
         custom_id="rp-search",
         min_values=0,
@@ -471,6 +399,26 @@ class RegisteredRoleSelect(RoleSelect):
             tags.sort(key=lambda x: x.name)
             if set(channel.applied_tags) != set(tags):
                 await channel.edit(archived=False, applied_tags=tags)
+
+    @select(
+        placeholder="AFK Schedule (No timezone)",
+        custom_id="afk",
+        min_values=0,
+        max_values=24,
+        options=[
+            SelectOption(
+                label=lapse.strftime("%I:00 %p"),
+                value=str(lapse.hour),
+                description=lapse.strftime("From %I:00 %p to %I:59 %p"),
+                emoji="\N{SLEEPING SYMBOL}",
+            )
+            for lapse in map(time, range(24))
+        ],
+    )
+    async def afk_schedule(self, ctx: Interaction, sct: Select):
+        resp: InteractionResponse = ctx.response
+        modal = AFKModal(hours=sct.values)
+        await resp.send_modal(modal)
 
 
 class RPSearchManage(View):

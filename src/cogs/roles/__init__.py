@@ -51,7 +51,6 @@ from src.cogs.roles.roles import (
     AFKModal,
     AFKSchedule,
     BasicRoleSelect,
-    RegisteredRoleSelect,
     RPModal,
     RPRolesView,
     RPSearchManage,
@@ -121,10 +120,8 @@ class Roles(commands.Cog):
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
         channel = self.bot.get_partial_messageable(719709333369258015, guild_id=719343092963999804)
-        msg1 = channel.get_partial_message(1023688500182261850)
-        msg2 = channel.get_partial_message(1023688872531591331)
-        await msg1.edit(view=BasicRoleSelect(timeout=None))
-        await msg2.edit(view=RegisteredRoleSelect(timeout=None))
+        msg = channel.get_partial_message(1023688500182261850)
+        await msg.edit(view=BasicRoleSelect(timeout=None))
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):
