@@ -87,7 +87,7 @@ class ForumModal(Modal):
                 data = await self.channel.create_thread(
                     name=self.name.value,
                     content=self.description.value,
-                    file=self.file,
+                    file=self.file or MISSING,
                 )
                 data = data.message
             view.add_item(Button(label="Jump URL", url=data.jump_url))
