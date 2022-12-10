@@ -748,7 +748,6 @@ class MovesetField(TemplateField):
     ):
         moves = {x for x in oc.total_movepool() if not x.banned}
         species = oc.species
-        moveset = None
         mons = "SMEARGLE", "DITTO", "MEW"
 
         movepool = DEFAULT_MOVES.copy()
@@ -766,7 +765,6 @@ class MovesetField(TemplateField):
                 movepool += Movepool(tm={x for x in Move.all() if not x.banned})
             else:
                 movepool += Movepool(tm={x for x in Move.all() if x.type == TypingEnum.Shadow})
-            moveset = oc.moveset
         else:
             movepool += oc.total_movepool
 
@@ -774,9 +772,8 @@ class MovesetField(TemplateField):
             member=ctx.user,
             movepool=movepool,
             target=ctx,
-            choices=moveset,
+            choices={x for x in oc.moveset if x in movepool},
         )
-        view.choices = {x for x in moveset if x in movepool}
         async with view.send(
             title=f"{template.title} Character's Moveset",
             ephemeral=ephemeral,

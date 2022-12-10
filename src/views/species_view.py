@@ -26,12 +26,36 @@ from src.structures.species import (
     CustomMega,
     CustomParadox,
     Fusion,
+    Legendary,
+    Mega,
+    Mythical,
+    Paradox,
+    Pokemon,
     Species,
+    UltraBeast,
     Variant,
 )
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
 __all__ = ("SpeciesComplex",)
+
+
+def emoji_parser(x: Species):
+    match x:
+        case o if isinstance(o, Pokemon):
+            return "\N{LARGE BLUE SQUARE}"
+        case o if isinstance(o, Mythical):
+            return "\N{LARGE GREEN SQUARE}"
+        case o if isinstance(o, Legendary):
+            return "\N{LARGE YELLOW SQUARE}"
+        case o if isinstance(o, Paradox):
+            return "\N{LARGE BROWN SQUARE}"
+        case o if isinstance(o, UltraBeast):
+            return "\N{LARGE PURPLE SQUARE}"
+        case o if isinstance(o, Mega):
+            return "\N{LARGE ORANGE SQUARE}"
+        case _:
+            return "\N{LARGE RED SQUARE}"
 
 
 class SpeciesComplex(Complex[Species]):
@@ -93,6 +117,7 @@ class SpeciesComplex(Complex[Species]):
             sort_key=lambda x: x.name,
             max_values=max_values,
             silent_mode=silent_mode,
+            emoji_parser=emoji_parser,
             real_max=max_values,
             text_component=TextInput(
                 label="Species",
