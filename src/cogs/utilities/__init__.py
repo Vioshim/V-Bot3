@@ -263,7 +263,7 @@ class Utilities(commands.Cog):
     async def forum(
         self,
         ctx: Interaction,
-        forum: Optional[ForumChannel | Thread] = None,
+        forum: Optional[ForumChannel | Thread | TextChannel] = None,
         image: Optional[Attachment] = None,
     ):
         """Post Forums or Edit
@@ -283,7 +283,7 @@ class Utilities(commands.Cog):
             await ctx.response.send_message(f"{name} can't forum", ephemeral=True)
         else:
             file = await image.to_file() if image else None
-            modal = ForumModal(timeout=None, channel=forum, file=file)
+            modal = ForumModal(channel=forum, file=file)
             await ctx.response.send_modal(modal)
 
     @app_commands.command()
