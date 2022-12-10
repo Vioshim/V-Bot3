@@ -33,7 +33,6 @@ from discord import (
     InteractionResponse,
     NotFound,
     Object,
-    PartialMessage,
     TextChannel,
     TextStyle,
     Thread,
@@ -94,7 +93,7 @@ class ForumModal(Modal):
             view.add_item(Button(label="Jump URL", url=data.jump_url))
             await itx.response.send_message("Added Forum thread", ephemeral=True, view=view)
         elif isinstance(self.channel, Thread):
-            msg: PartialMessage = self.channel.get_partial_message(message_id=self.channel.id)
+            msg = self.channel.get_partial_message(self.channel.id)
             try:
                 data = await msg.edit(
                     content=self.description.value,
