@@ -67,12 +67,16 @@ class ForumModal(Modal):
             style=TextStyle.paragraph,
             max_length=2000,
             default=getattr(channel, "topic", None),
+            required=False,
         )
         self.add_item(self.name)
         self.add_item(self.description)
 
         self.channel = channel
         self.file = file
+
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
     async def on_submit(self, itx: Interaction, /) -> None:
         view = View(timeout=None)
