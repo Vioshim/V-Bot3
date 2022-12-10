@@ -68,6 +68,8 @@ class ForumModal(Modal):
             max_length=2000,
             default=getattr(channel, "topic", None),
         )
+        self.add_item(self.name)
+        self.add_item(self.description)
 
         self.channel = channel
         self.file = file
