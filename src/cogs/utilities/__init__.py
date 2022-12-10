@@ -31,6 +31,7 @@ from discord import (
     HTTPException,
     Interaction,
     InteractionResponse,
+    Message,
     NotFound,
     Object,
     TextChannel,
@@ -52,20 +53,22 @@ from src.utils.etc import WHITE_BAR, RTFMPages
 class ForumModal(Modal):
     def __init__(
         self,
-        channel: ForumChannel | Thread | TextChannel,
+        channel: ForumChannel | TextChannel | Message,
         file: Optional[File] = None,
     ) -> None:
-        super().__init__(title="Name")
+        super().__init__(title="Forum management")
         self.name = TextInput(
             label="Name",
             max_length=100,
-            default=channel.name,
+            default=channel.parent.name
+            if isinstance(channel, Message) and channel.parent
+            else getattr(channel, "name", None),
         )
         self.description = TextInput(
             label="Content",
             style=TextStyle.paragraph,
             max_length=2000,
-            default=getattr(channel, "topic", None),
+            default=getattr(channel, "content", getattr(channel, "topic", None)),
             required=False,
         )
         self.add_item(self.name)
@@ -79,7 +82,19 @@ class ForumModal(Modal):
 
     async def on_submit(self, itx: Interaction, /) -> None:
         view = View(timeout=None)
-        if isinstance(self.channel, (ForumChannel, TextChannel)):
+        if isinstance(msg := self.channel, Message):
+            try:
+                await msg.edit(
+                    content=self.description.value,
+                    attachments=[self.file] if self.file else MISSING,
+                )
+                if msg.channel.name != self.name.value:
+                    await self.channel.edit(name=self.name.value)
+                view.add_item(Button(label="Jump URL", url=msg.jump_url))
+                await itx.response.send_message("Modified Message", ephemeral=True, view=view)
+            except NotFound:
+                await itx.response.send_message("Message not Found", ephemeral=True)
+        else:
             if isinstance(self.channel, TextChannel):
                 data = await self.channel.create_thread(name=self.name.value)
                 data = await data.send(content=self.description.value)
@@ -92,19 +107,6 @@ class ForumModal(Modal):
                 data = data.message
             view.add_item(Button(label="Jump URL", url=data.jump_url))
             await itx.response.send_message("Added Forum thread", ephemeral=True, view=view)
-        elif isinstance(self.channel, Thread):
-            msg = self.channel.get_partial_message(self.channel.id)
-            try:
-                data = await msg.edit(
-                    content=self.description.value,
-                    attachments=[self.file] if self.file else MISSING,
-                )
-                if data.channel.name != self.name.value:
-                    await self.channel.edit(name=self.name.value)
-                view.add_item(Button(label="Jump URL", url=data.jump_url))
-                await itx.response.send_message("Modified Forum", ephemeral=True, view=view)
-            except NotFound:
-                await itx.response.send_message("Message not Found", ephemeral=True)
 
 
 class Utilities(commands.Cog):
@@ -298,6 +300,8 @@ class Utilities(commands.Cog):
             await ctx.response.send_message(f"{name} can't forum", ephemeral=True)
         else:
             file = await image.to_file() if image else None
+            if isinstance(forum, Thread):
+                forum = await forum.get_partial_message(forum.id).fetch()
             modal = ForumModal(channel=forum, file=file)
             await ctx.response.send_modal(modal)
 
