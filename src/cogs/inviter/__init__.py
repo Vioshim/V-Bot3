@@ -235,6 +235,13 @@ class Inviter(commands.Cog):
                 )
                 self.view.append(message)
                 self.message = await self.message.edit(view=self.view)
+                embed = Embed(title="Partnership Rules", description=channel.topic, color=Color.blurple())
+                embed.set_footer(text=guild.name, icon_url=guild.icon)
+                embed.set_thumbnail(url=guild.icon)
+                embed.set_image(url="https://dummyimage.com/500x5/FFFFFF/000000&text=%20")
+                if msg := self.message:
+                    await msg.delete(delay=0)
+                self.message = await channel.send(embed=embed, view=self.view)
                 if isinstance(view, InviteAdminComplex) and (partnered_role := get(ctx.guild.roles, name="Partners")):
                     await ctx.author.add_roles(partnered_role)
 
