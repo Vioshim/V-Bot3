@@ -70,16 +70,14 @@ class InviteView(Basic):
         sct: Select = self.process
         sct.options.clear()
 
-        for key in self.data:
-            sct.add_option(label=key, value=key, description=f"Adds {key} partnership")
-
-        if not sct.options:
-            sct.add_option(label="NOTHING", value="NOTHING")
-            sct.disabled = True
-        else:
-            sct.disabled = False
-
-        sct.max_values = len(sct.values)
+        if self.data:
+            for key in self.data:
+                sct.add_option(label=key, value=key, description=f"Adds {key} partnership")
+            sct.max_values = len(sct.values)
+            if sct not in self.children:
+                self.add_item(sct)
+        elif sct in self.children:
+            self.remove_item(sct)
 
     async def interaction_check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
