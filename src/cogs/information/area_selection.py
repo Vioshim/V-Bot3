@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from itertools import groupby
 
 from discord import (
     CategoryChannel,
+    DiscordException,
     Embed,
     ForumChannel,
     Interaction,
     InteractionResponse,
     Member,
-    Role,
     Thread,
     User,
 )
@@ -55,7 +54,8 @@ class LocationSelection(Complex[Thread]):
         entries = groupby(values, key=lambda x: x.location)
         self.entries = {k: set(v) for k, v in entries if k}
         self.total = sum(map(len, self.entries.values()))
-        channels = sorted(base.threads, key=lambda x: len(self.entries.get(x.id, [])), reverse=True)
+        channels = [x for x in base.threads if not x.name.endswith(" OOC")]
+        channels.sort(key=lambda x: len(self.entries.get(x.id, [])), reverse=True)
         super(LocationSelection, self).__init__(
             target=target,
             member=target.user,
@@ -80,7 +80,13 @@ class LocationSelection(Complex[Thread]):
             view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
             embed = view.embed
             embed.title = channel.name[2:].replace("-", " ").title()
-            embed.description = channel.topic or "No description yet"
+
+            try:
+                msg = await channel.get_partial_message(channel.id).fetch()
+                embed.description = msg.content or "No description yet."
+            except DiscordException:
+                embed.description = "Error in description"
+
             embed.color = interaction.user.color
             embed.timestamp = interaction.created_at
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar.url)
@@ -90,7 +96,7 @@ class LocationSelection(Complex[Thread]):
         except Exception as e:
             interaction.client.logger.exception("Error in location view", exc_info=e)
         finally:
-            await super(AreaSelection, self).select_choice(interaction=interaction, sct=sct)
+            await super(LocationSelection, self).select_choice(interaction=interaction, sct=sct)
 
 
 class AreaSelection(Complex[ForumChannel]):
