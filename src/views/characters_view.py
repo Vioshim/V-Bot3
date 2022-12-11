@@ -237,7 +237,6 @@ class CharactersView(BaseCharactersView):
             ocs=ocs,
             keep_working=keep_working,
             max_values=1,
-            silent_mode=True,
         )
         self.msg_id = int(msg_id) if msg_id else None
 
