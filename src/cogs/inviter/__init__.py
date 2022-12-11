@@ -39,6 +39,7 @@ from discord.utils import get, utcnow
 
 from src.cogs.inviter.classifier import InviterView
 from src.pagination.complex import Complex
+from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 from src.utils.matches import INVITE
@@ -46,19 +47,21 @@ from src.utils.matches import INVITE
 __all__ = ("Inviter", "setup")
 
 
-class InviteView(View):
+class InviteView(Basic):
     def __init__(
         self,
         invite: Invite,
-        embed: Embed,
-        author: Member,
-        data: dict[str, set[Message]],
+        target: TextChannel,
+        member: Member,
+        timeout: Optional[float] = 180,
+        embed: Optional[Embed] = None,
+        data: dict[str, set[Message]] = None,
         **kwargs,
     ):
-        super(InviteView, self).__init__(timeout=None)
+        super().__init__(target=target, member=member, timeout=timeout, embed=embed)
         self.invite = invite
         self.embed = embed
-        self.author = author
+        self.author = member
         self.data = data
         self.kwargs = kwargs
         self.setup()
@@ -66,6 +69,7 @@ class InviteView(View):
     def setup(self):
         sct: Select = self.process
         sct.options.clear()
+
         for key in self.data:
             sct.add_option(label=key, value=key, description=f"Adds {key} partnership")
 
