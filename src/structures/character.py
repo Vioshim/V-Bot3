@@ -214,13 +214,16 @@ class Size(Enum):
 
     @classmethod
     def all(self, value: float = 0.0):
-        values = [x for x in self]
-        if 0 < value <= 0.5:
-            values.remove(self.XXXXS)
-            values.remove(self.XXXXS_)
-        elif value > 4:
-            values.remove(self.XXXXL)
-            values.remove(self.XXXXL_)
+        if value:
+            values = [x for x in self if 0.5 <= x.value[0] <= 2]
+            if 0 < value <= 0.5:
+                values.append(self.XXXXL)
+                values.append(self.XXXXL_)
+            elif value > 4:
+                values.append(self.XXXXS)
+                values.append(self.XXXXS_)
+        else:
+            values = [*self]
         return values
 
     def height_info(self, value: float = 0):
