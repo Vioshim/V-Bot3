@@ -295,6 +295,11 @@ class Complex(Simple[_T]):
         elif foo not in self.children:
             self.add_item(foo)
 
+        if not self.choices:
+            self.remove_item(self.element_remove)
+        elif self.element_remove not in self.children:
+            self.add_item(self.element_remove)
+
     async def update(self, interaction: Interaction) -> None:
         """Method used to edit the pagination
 
@@ -595,3 +600,36 @@ class Complex(Simple[_T]):
     )
     async def finish(self, ctx: Interaction, btn: Button):
         await self.delete(ctx)
+
+    @button(
+        label="Deselect",
+        emoji=PartialEmoji(name="channeldelete", id=432986579674333215),
+        custom_id="remover",
+        style=ButtonStyle.blurple,
+        disabled=False,
+        row=4,
+    )
+    async def element_remove(self, interaction: Interaction, _: Button):
+        view = Complex(
+            member=self.member,
+            values=self.choices,
+            target=interaction,
+            timeout=None,
+            max_values=len(self.choices),
+            entries_per_page=self.entries_per_page,
+            emoji_parser=self.emoji_parser,
+            parser=self.parser,
+            silent_mode=self.silent_mode,
+            sort_key=self._sort_key,
+            text_component=self.text_component,
+        )
+        view.remove_item(view.element_remove)
+        async with view.send(
+            title="Remove Elements",
+            description="\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096],
+            editing_original=True,
+        ) as choices:
+            self.choices -= choices
+            self.values.extend(choices)
+            self.sort()
+        await self.edit(interaction, page=0)

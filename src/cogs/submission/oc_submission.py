@@ -71,7 +71,7 @@ from src.structures.species import (
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
 from src.views.ability_view import SPAbilityView
-from src.views.characters_view import CharactersView, PingView
+from src.views.characters_view import BaseCharactersView, CharactersView, PingView
 from src.views.image_view import ImageView
 from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
@@ -1552,7 +1552,7 @@ class SubmissionView(View):
         else:
             await ctx.followup.send(f"{member.mention} doesn't have characters.", ephemeral=True)
 
-    @button(label="Character Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
+    @button(label="Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         cog = ctx.client.get_cog("Submission")
         db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Creation")
@@ -1609,7 +1609,7 @@ class SubmissionView(View):
         finally:
             cog.ignore -= users
 
-    @button(label="Character Modification", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
+    @button(label="Modification", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
     async def oc_update(self, ctx: Interaction, _: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         resp: InteractionResponse = ctx.response
@@ -1625,5 +1625,30 @@ class SubmissionView(View):
             view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
             async with view.send(single=True):
                 ctx.client.logger.info("%s is modifying characters", str(ctx.user))
+        else:
+            await ctx.followup.send("You don't have characters to modify", ephemeral=True)
+
+    @button(style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=2, custom_id="delete-oc")
+    async def oc_delete(self, ctx: Interaction, _: Button):
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        resp: InteractionResponse = ctx.response
+        member: Member = ctx.user
+        await resp.defer(ephemeral=True, thinking=True)
+        member = ctx.client.supporting.get(member, member)
+        key = {"author": member.id, "server": ctx.guild_id}
+        if values := [Character.from_mongo_dict(x) async for x in db.find(key)]:
+            values.sort(key=lambda x: x.name)
+            view = BaseCharactersView(member=ctx.user, target=ctx, ocs=values, max_values=len(values))
+            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            async with view.send(title="Select Characters to delete") as choices:
+                if choices and isinstance(choices, set):
+                    thread_id = values[0].thread
+                    if not (channel := ctx.guild.get_channel_or_thread(thread_id)):
+                        channel = await ctx.guild.fetch_channel(thread_id)
+                    await channel.edit(archived=False)
+                    for oc in choices:
+                        msg = channel.get_partial_message(oc.id)
+                        await msg.delete(delay=0)
+                    ctx.client.logger.info("%s is deleting %s characters", str(ctx.user), len(choices))
         else:
             await ctx.followup.send("You don't have characters to modify", ephemeral=True)

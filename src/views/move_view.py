@@ -100,11 +100,6 @@ class MoveComplex(Complex[Move]):
             description = f"Has {len(items)} items."
             self.select_types.add_option(label=label, emoji=emoji, description=description)
 
-        if not self.choices:
-            self.remove_item(self.move_remove)
-        elif self.move_remove not in self.children:
-            self.add_item(self.move_remove)
-
         if not self.select_types.options:
             self.remove_item(self.select_types)
         elif self.select_types not in self.children:
@@ -162,27 +157,6 @@ class MoveComplex(Complex[Move]):
             component = DefaultModal(view=self)
         await response.send_modal(component)
         await component.wait()
-
-    @button(
-        label="Remove Moves",
-        emoji=PartialEmoji(name="channeldelete", id=432986579674333215),
-        custom_id="remover",
-        style=ButtonStyle.blurple,
-        disabled=False,
-        row=4,
-    )
-    async def move_remove(self, interaction: Interaction, _: Button):
-        view = MoveComplex(member=self.member, moves=self.choices, target=interaction)
-        view.remove_item(view.move_remove)
-        async with view.send(
-            title="Remove Moves",
-            description="\n".join(f"> {x!r}" for x in self.choices),
-            editing_original=True,
-        ) as choices:
-            self.choices -= choices
-            self.values.extend(choices)
-            self.sort()
-        await self.edit(interaction, page=0)
 
 
 class MoveView(MoveComplex):

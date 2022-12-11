@@ -49,7 +49,7 @@ setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 
-__all__ = ("CharactersView", "PingView")
+__all__ = ("BaseCharactersView", "CharactersView", "PingView")
 
 PING_EMOJI = PartialEmoji(name="IconInsights", id=751160378800472186)
 
@@ -199,7 +199,30 @@ class PingView(View):
         self.stop()
 
 
-class CharactersView(Complex[Character]):
+class BaseCharactersView(Complex[Character]):
+    def __init__(
+        self,
+        member: Member,
+        target: Interaction | Webhook | TextChannel,
+        ocs: set[Character],
+        keep_working: bool = False,
+        max_values: int = 1,
+    ):
+        super(BaseCharactersView, self).__init__(
+            member=member,
+            target=target,
+            values=ocs,
+            timeout=None,
+            parser=lambda x: (x.name, repr(x)),
+            keep_working=keep_working,
+            sort_key=lambda x: (x.name, repr(x)),
+            max_values=max_values,
+            silent_mode=True,
+        )
+        self.embed.title = "Select a character"
+
+
+class CharactersView(BaseCharactersView):
     def __init__(
         self,
         member: Member,
@@ -212,12 +235,10 @@ class CharactersView(Complex[Character]):
             member=member,
             target=target,
             values=ocs,
-            timeout=None,
-            parser=lambda x: (x.name, repr(x)),
             keep_working=keep_working,
-            sort_key=lambda x: (x.name, repr(x)),
+            max_values=1,
+            silent_mode=True,
         )
-        self.embed.title = "Select a character"
         self.msg_id = int(msg_id) if msg_id else None
 
     @select(row=1, placeholder="Select the Characters", custom_id="selector")

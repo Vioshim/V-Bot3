@@ -194,7 +194,7 @@ lxml = ["lxml"]
 
 [[package]]
 name = "black"
-version = "22.10.0"
+version = "22.12.0"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -767,7 +767,7 @@ types-pytz = ">=2022.1.1"
 
 [[package]]
 name = "pathspec"
-version = "0.10.2"
+version = "0.10.3"
 description = "Utility library for gitignore style pattern matching of file paths."
 category = "dev"
 optional = false
@@ -883,7 +883,7 @@ pyasn1 = ">=0.4.6,<0.5.0"
 
 [[package]]
 name = "pycares"
-version = "4.2.2"
+version = "4.3.0"
 description = "Python interface for c-ares"
 category = "main"
 optional = false
@@ -1037,7 +1037,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "rapidfuzz"
-version = "2.13.4"
+version = "2.13.5"
 description = "rapid fuzzy string matching"
 category = "main"
 optional = false
