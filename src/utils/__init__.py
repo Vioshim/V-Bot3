@@ -14,7 +14,7 @@
 
 
 from src.utils.doc_reader import BytesAIO, DriveFormat, docs_aioreader
-from src.utils.etc import DICE_NUMBERS, RP_CATEGORIES, WHITE_BAR
+from src.utils.etc import DICE_NUMBERS, WHITE_BAR
 from src.utils.functions import (
     check_valid,
     common_get,
@@ -48,7 +48,6 @@ __all__ = (
     "BytesAIO",
     "docs_aioreader",
     "DICE_NUMBERS",
-    "RP_CATEGORIES",
     "WHITE_BAR",
     "fix",
     "common_get",

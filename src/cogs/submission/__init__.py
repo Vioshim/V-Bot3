@@ -56,7 +56,7 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import RP_CATEGORIES, WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
 from src.views.characters_view import CharactersView, PingView
 from src.views.move_view import MoveView
 
@@ -460,8 +460,6 @@ class Submission(commands.Cog):
         if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member_id})]:
 
             if isinstance(channel := message.channel, Thread):
-                if isinstance(channel.parent, ForumChannel):
-                    return
                 thread_id, channel_id = channel.id, channel.parent_id
             else:
                 thread_id, channel_id = None, channel.id
@@ -599,7 +597,7 @@ class Submission(commands.Cog):
                 (self.bot.webhook_lazy(message.channel))
                 or ((tupper := message.guild.get_member(431544605209788416)) and tupper.status == Status.online)
             )
-            and message.channel.category_id in RP_CATEGORIES
+            and message.channel.category_id in MAP_ELEMENTS2
             and not message.webhook_id
         ):
             if tupper == message.author:
