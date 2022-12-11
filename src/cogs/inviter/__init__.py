@@ -340,7 +340,15 @@ class Inviter(commands.Cog):
                 embed.set_image(url=images[0].proxy_url)
 
             files_embed, embed = await self.bot.embed_raw(embed=embed)
-            view = InviteView(invite, generator, ctx.author, data, view=link_view, files=files)
+            view = InviteView(
+                invite=invite,
+                target=mod_ch,
+                member=ctx.author,
+                embed=generator,
+                data=data,
+                view=link_view,
+                files=files,
+            )
             await mod_ch.send(content=invite.url, embed=embed, files=files_embed, view=view)
             await ctx.delete(delay=0)
 
