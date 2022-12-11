@@ -40,7 +40,7 @@ from discord import (
     WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import get, time_snowflake, utcnow
+from discord.utils import get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -252,7 +252,7 @@ class RoleSelect(View):
         embed = Embed(
             title=sct.placeholder.removeprefix("Select "),
             color=Color.blurple(),
-            timestamp=utcnow(),
+            timestamp=ctx.created_at,
         )
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -644,8 +644,8 @@ class RPModal(Modal):
         )
         await thread.add_user(self.user)
 
-        cog1.cool_down[reference.id] = utcnow()
-        cog1.role_cool_down[reference.id] = utcnow()
+        cog1.cool_down[reference.id] = interaction.created_at
+        cog1.role_cool_down[reference.id] = interaction.created_at
 
         ocs = {x["id"] async for x in db.find({"author": self.user.id, "server": guild.id})}
         ocs2 = {x.id if isinstance(x, Character) else x for x in self.ocs}
@@ -777,6 +777,7 @@ class RPRolesView(View):
     async def choice(self, interaction: Interaction, sct: Select):
         guild: Guild = interaction.guild
         role: Role = interaction.guild.get_role(int(sct.values[0]))
+        resp: InteractionResponse = interaction.response
 
         if aux := self.current.get(role):
             resp: InteractionResponse = interaction.response
@@ -794,24 +795,9 @@ class RPRolesView(View):
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-        key = {
-            "$and": [
-                {"role": role.id},
-                {"id": {"$gte": time_snowflake(interaction.created_at - INTERVAL)}},
-                {"member": {"$ne": user.id}},
-            ]
-        }
-        data: list[dict[str, int]] = await db.find(key, sort=[("id", -1)]).to_list(length=None)
-        entries = {m: item["id"] for item in data if (m := guild.get_member(item["member"]))}
-        member: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-        self.current[role] = member
-        view = RPSearchComplex(member=member, values=entries.keys(), target=interaction, role=role)
-        async with view.send(ephemeral=True, single=True) as choice:
-            self.current.pop(role, None)
-            if thread_id := entries.get(choice):
-                if not (thread := guild.get_channel_or_thread(thread_id)):
-                    thread = await guild.fetch_channel(thread_id)
-                if thread.archived:
-                    await thread.edit(archived=False)
-                await thread.add_user(member)
-                await thread.add_user(choice)
+        self.current[role] = user
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": interaction.guild_id})]
+        modal = RPModal(user=user, role=role, ocs=ocs)
+        if await modal.check(interaction):
+            await resp.send_modal(modal)
+            await modal.wait()
