@@ -139,8 +139,7 @@ class Basic(View):
             If validation is successful
         """
         condition = self.member is None or interaction.user == self.member
-        with suppress(KeyError):
-            aux = interaction.client.supporting[interaction.user]
+        if aux := interaction.client.supporting.get(interaction.user):
             condition |= self.member == aux
 
         if not condition:

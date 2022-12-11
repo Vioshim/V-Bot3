@@ -700,12 +700,10 @@ class RPRolesView(Basic):
     async def choice(self, interaction: Interaction, sct: Select):
         role: Role = interaction.guild.get_role(int(sct.values[0]))
         resp: InteractionResponse = interaction.response
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": user.id})]:
-            modal = RPModal(user=user, role=role, ocs=ocs)
-            if await modal.check(interaction):
-                await resp.send_modal(modal)
-                await modal.wait()
-        else:
-            await resp.send_message("You don't have OCs", ephemeral=True)
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": interaction.guild_id})]
+        modal = RPModal(user=user, role=role, ocs=ocs)
+        if await modal.check(interaction):
+            await resp.send_modal(modal)
+            await modal.wait()
