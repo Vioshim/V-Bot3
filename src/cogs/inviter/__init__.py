@@ -240,9 +240,7 @@ class Inviter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
-        if payload.channel_id != 957602085753458708:
-            return
-        if view := self.view:
+        if payload.channel_id == 957602085753458708 and (view := self.view):
             messages = view.messages
             if any(x.id == payload.message_id for x in messages):
                 messages = [x for x in messages if x.id != payload.message_id]
@@ -251,9 +249,7 @@ class Inviter(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
-        if payload.channel_id != 957602085753458708:
-            return
-        if view := self.view:
+        if payload.channel_id == 957602085753458708 and (view := self.view):
             messages = view.messages
             if any(x.id in payload.message_ids for x in messages):
                 messages = [x for x in messages if x.id not in payload.message_ids]

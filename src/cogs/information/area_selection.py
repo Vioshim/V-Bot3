@@ -192,7 +192,15 @@ class RegionViewComplex(Complex[MapPair]):
             )
             embed.set_image(url=info.image or WHITE_BAR)
             db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
-            ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": interaction.guild_id})]
+            ocs = [
+                Character.from_mongo_dict(x)
+                async for x in db.find(
+                    {
+                        "server": interaction.guild_id,
+                        "location": {"$in": [thread.id for x in cat.channels for thread in x.threads]},
+                    }
+                )
+            ]
             view = AreaSelection(target=interaction, cat=cat, ocs=ocs)
             interaction.client.logger.info("%s is reading Map Information of %s", interaction.user, cat.name)
             embed.set_footer(text=f"There's a total of {view.total:02d} OCs in {cat.name}.")
