@@ -316,8 +316,14 @@ class BasicRoleSelect(RoleSelect):
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=6,
+        max_values=7,
         options=[
+            SelectOption(
+                label="Archive",
+                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
+                value="1051564303901261934",
+                description="Read RPs from 2020 - 2022",
+            ),
             SelectOption(
                 label="RP Events",
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
