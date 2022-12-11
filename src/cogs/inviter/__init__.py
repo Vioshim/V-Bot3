@@ -222,7 +222,14 @@ class Inviter(commands.Cog):
         ctx: Message
             Message to be scanned
         """
-        if ctx.flags.ephemeral or not self.message or not ctx.guild or not ctx.content:
+        if (
+            ctx.flags.ephemeral
+            or not self.message
+            or not ctx.guild
+            or not ctx.content
+            or ctx.author == self.bot.user
+            or ctx.channel.id == 1020157013126283284
+        ):
             return
 
         context = await self.bot.get_context(ctx)
