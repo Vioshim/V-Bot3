@@ -220,7 +220,8 @@ class Inviter(commands.Cog):
             view_class, target = InviteAdminComplex, mod_ch
 
         view = view_class(invite=invite, member=ctx.author, tags=self.view.data, target=target)
-        async with view.send(title="Select Tags") as choices:
+        await ctx.delete(delay=0)
+        async with view.send(description=generator.description) as choices:
             if choices:
                 generator.set_footer(text=", ".join(choices))
                 if partnered_role := get(author.guild.roles, name="Partners"):
@@ -236,8 +237,6 @@ class Inviter(commands.Cog):
                 self.message = await self.message.edit(view=self.view)
                 if isinstance(view, InviteAdminComplex) and (partnered_role := get(ctx.guild.roles, name="Partners")):
                     await ctx.author.add_roles(partnered_role)
-
-        await ctx.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:

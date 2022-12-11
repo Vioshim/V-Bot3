@@ -72,7 +72,8 @@ class InviteAdminComplex(InviteComplex):
         )
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        return not interaction.user.guild_permissions.administrator
+        pm_manager_role = interaction.guild.get_role(788215077336514570)
+        return interaction.user.guild_permissions.administrator or pm_manager_role in interaction.user.roles
 
 
 DATA: dict[str, Embed] = {}
