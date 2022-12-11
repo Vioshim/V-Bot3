@@ -17,107 +17,28 @@ from contextlib import suppress
 from typing import Optional
 
 from discord import (
-    ButtonStyle,
     Color,
     DiscordException,
     Embed,
     Guild,
-    Interaction,
-    InteractionResponse,
     Invite,
     Member,
     Message,
-    PartialEmoji,
     PartialInviteGuild,
     RawBulkMessageDeleteEvent,
     RawMessageDeleteEvent,
     TextChannel,
 )
 from discord.ext import commands
-from discord.ui import Button, Select, View, button, select
+from discord.ui import Button, View
 from discord.utils import get, utcnow
 
-from src.cogs.inviter.classifier import InviterView
-from src.pagination.complex import Complex
-from src.pagination.view_base import Basic
+from src.cogs.inviter.classifier import InviteAdminComplex, InviteComplex, InviterView
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 from src.utils.matches import INVITE
 
 __all__ = ("Inviter", "setup")
-
-
-class InviteView(Basic):
-    def __init__(
-        self,
-        invite: Invite,
-        target: TextChannel,
-        member: Member,
-        timeout: Optional[float] = 180,
-        embed: Optional[Embed] = None,
-        data: dict[str, set[Message]] = None,
-        **kwargs,
-    ):
-        super().__init__(target=target, member=member, timeout=timeout, embed=embed)
-        self.invite = invite
-        self.embed = embed
-        self.author = member
-        self.data = data or {}
-        self.kwargs = kwargs
-        self.setup()
-
-    def setup(self):
-        sct: Select = self.process
-        sct.options.clear()
-
-        if self.data:
-            for key in self.data:
-                sct.add_option(label=key, value=key, description=f"Adds {key} partnership")
-            sct.max_values = len(sct.values)
-            if sct not in self.children:
-                self.add_item(sct)
-        elif sct in self.children:
-            self.remove_item(sct)
-
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
-        if not interaction.user.guild_permissions.administrator:
-            await resp.send_message("You are not an administrator", ephemeral=True)
-            return False
-        return True
-
-    @select(placeholder="Select Tags", custom_id="partner")
-    async def process(self, inter: Interaction, sct: Select):
-        member: Member = inter.user
-        resp: InteractionResponse = inter.response
-        channel = inter.guild.get_channel(957602085753458708)
-        self.embed.set_footer(text=", ".join(sct.values))
-        message = await channel.send(content=self.invite.url, embed=self.embed, **self.kwargs)
-        for tag in sct.values:
-            self.data.setdefault(tag, set())
-            self.data[tag].add(message)
-        await resp.pong()
-        if partnered_role := get(member.guild.roles, name="Partners"):
-            await self.author.add_roles(partnered_role)
-        await inter.message.delete()
-        self.stop()
-
-    @button(label="Not interested...", style=ButtonStyle.red, row=0)
-    async def accident(self, inter: Interaction, btn: Button) -> None:
-        """Conclude Partnership
-
-        Parameters
-        ----------
-        btn: Button
-            Button
-        inter: Interaction
-            Interaction
-        """
-        member: Member = inter.user
-        resp: InteractionResponse = inter.response
-        await resp.send_message(f"{btn.label!r} has been chosen by {member.display_name}")
-        await inter.message.delete()
-        self.stop()
 
 
 class Inviter(commands.Cog):
@@ -291,66 +212,32 @@ class Inviter(commands.Cog):
 
         link_view = View()
         link_view.add_item(Button(label="Click Here to Join", url=invite.url))
-        data = self.view.data
+
         pm_manager_role = guild.get_role(788215077336514570)
         if pm_manager_role and pm_manager_role in author.roles and ctx.channel.id == 957602085753458708:
-            view: Complex[str] = Complex(
-                member=author,
-                values=data.keys(),
-                max_values=len(data),
-                parser=lambda x: (x, None),
-                target=ctx.channel,
-                timeout=None,
-                emoji_parser=PartialEmoji(name="MessageLink", id=778925231506587668),
-            )
-            await ctx.delete(delay=0)
-            async with view.send(title="Select Category") as choices:
-                if choices:
-                    generator.set_footer(text=", ".join(choices))
-                    if partnered_role := get(author.guild.roles, name="Partners"):
-                        await author.add_roles(partnered_role)
-                    message = await ctx.channel.send(
-                        content=invite.url,
-                        embed=generator,
-                        view=link_view,
-                        files=files,
-                    )
-                    self.view.append(message)
-                    self.message = await self.message.edit(view=self.view)
+            view_class, target = InviteComplex, ctx.channel
         else:
-            generator.set_footer(text=author.display_name, icon_url=author.display_avatar.url)
-            embed = Embed(
-                title="Server Invite Detected - Possible Partner/Advertiser",
-                color=author.color,
-                description=ctx.content,
-                timestamp=utcnow(),
-            )
-            embed.set_author(name=author.display_name, icon_url=author.display_avatar.url)
-            if icon := invite_guild.icon:
-                embed.set_footer(text=f"ID: {author.id}", icon_url=icon.url)
-                embed.set_thumbnail(url=icon.url)
-            else:
-                embed.set_footer(text=f"ID: {author.id}")
-            embed.add_field(name="Posted at", value=ctx.channel.mention)
+            view_class, target = InviteAdminComplex, mod_ch
 
-            if user := invite.inviter:
-                embed.add_field(name=f"Invite creator - {user.name!r}", value=user.mention)
+        view = view_class(invite=invite, member=ctx.author, tags=self.view.data, target=target)
+        async with view.send(title="Select Tags") as choices:
+            if choices:
+                generator.set_footer(text=", ".join(choices))
+                if partnered_role := get(author.guild.roles, name="Partners"):
+                    await author.add_roles(partnered_role)
+                channel = ctx.guild.get_channel(957602085753458708)
+                message = await channel.send(
+                    content=invite.url,
+                    embed=generator,
+                    view=link_view,
+                    files=files,
+                )
+                self.view.append(message)
+                self.message = await self.message.edit(view=self.view)
+                if isinstance(view, InviteAdminComplex) and (partnered_role := get(ctx.guild.roles, name="Partners")):
+                    await ctx.author.add_roles(partnered_role)
 
-            if images := ctx.attachments:
-                embed.set_image(url=images[0].proxy_url)
-
-            files_embed, embed = await self.bot.embed_raw(embed=embed)
-            view = InviteView(
-                invite=invite,
-                target=mod_ch,
-                member=ctx.author,
-                embed=generator,
-                data=data,
-                view=link_view,
-                files=files,
-            )
-            await mod_ch.send(content=invite.url, embed=embed, files=files_embed, view=view)
-            await ctx.delete(delay=0)
+        await ctx.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:

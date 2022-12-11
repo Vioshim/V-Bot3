@@ -20,15 +20,59 @@ from discord import (
     Embed,
     Interaction,
     InteractionResponse,
+    Invite,
+    Member,
     Message,
+    PartialEmoji,
     SelectOption,
+    TextChannel,
 )
 from discord.ui import Button, Select, View, button, select
 
+from src.pagination.complex import Complex
 from src.utils.etc import INVITE_EMOJI, LINK_EMOJI, SETTING_EMOJI
 from src.views.message_view import MessagePaginator, msg_parser
 
-__all__ = ("InviterView",)
+__all__ = ("InviteComplex", "InviteAdminComplex", "InviterView")
+
+
+class InviteComplex(Complex[str]):
+    def __init__(
+        self,
+        invite: Invite,
+        member: Member,
+        tags: dict[str, set[Message]],
+        target: TextChannel,
+    ):
+        super(InviteComplex, self).__init__(
+            member=member,
+            values=tags.keys(),
+            max_values=len(tags),
+            emoji_parser=PartialEmoji(name="MessageLink", id=778925231506587668),
+            target=target,
+            parser=lambda x: (x, f"Adds {x} partnership"),
+        )
+        self.data = tags
+        self.invite = invite
+
+
+class InviteAdminComplex(InviteComplex):
+    def __init__(
+        self,
+        invite: Invite,
+        member: Member,
+        tags: dict[str, set[Message]],
+        target: TextChannel,
+    ):
+        super(InviteAdminComplex, self).__init__(
+            invite=invite,
+            member=member,
+            tags=tags,
+            target=target,
+        )
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        return not interaction.user.guild_permissions.administrator
 
 
 DATA: dict[str, Embed] = {}
