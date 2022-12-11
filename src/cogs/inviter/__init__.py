@@ -62,7 +62,7 @@ class InviteView(Basic):
         self.invite = invite
         self.embed = embed
         self.author = member
-        self.data = data
+        self.data = data or {}
         self.kwargs = kwargs
         self.setup()
 
