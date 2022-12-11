@@ -44,10 +44,9 @@ from discord.utils import get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
-from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import DEFAULT_TIMEZONE, MOBILE_EMOJI, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import DEFAULT_TIMEZONE, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
 
@@ -683,76 +682,6 @@ class RPModal(Modal):
         self.stop()
 
 
-class RPSearchComplex(Complex[Member]):
-    def __init__(
-        self,
-        member: Member,
-        values: Iterable[Member],
-        target: Interaction,
-        role: Role,
-    ):
-        super(RPSearchComplex, self).__init__(
-            member=member,
-            values=values,
-            target=target,
-            timeout=None,
-            parser=lambda x: (x.display_name, "Click to Ping"),
-            sort_key=lambda x: x.display_name,
-            silent_mode=True,
-            deselect_mode=False,
-        )
-        self.embed = RP_SEARCH_EMBED.copy()
-        self.embed.title = role.name
-        self.role = role
-        if role in member.roles:
-            self.ping_mode.label, self.ping_mode.style, self.ping_mode.emoji = (
-                f"Remove {role.name} Role",
-                ButtonStyle.red,
-                "\N{BELL WITH CANCELLATION STROKE}",
-            )
-        elif role:
-            self.ping_mode.label = f"Add {role.name} Role"
-
-    async def method(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
-        modal = RPModal(user=member, role=self.role, ocs=ocs)
-        if await modal.check(ctx):
-            await resp.send_modal(modal)
-            await modal.wait()
-            self.stop()
-
-    @button(emoji="\N{BELL}", style=ButtonStyle.blurple, row=4)
-    async def ping_mode(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        match btn.style:
-            case ButtonStyle.blurple:
-                btn.label, btn.style, btn.emoji = (
-                    f"Remove {self.role.name} Role",
-                    ButtonStyle.red,
-                    "\N{BELL WITH CANCELLATION STROKE}",
-                )
-                await ctx.user.add_roles(self.role)
-            case ButtonStyle.red:
-                btn.label, btn.style, btn.emoji = (
-                    f"Add {self.role.name} Role",
-                    ButtonStyle.blurple,
-                    "\N{BELL}",
-                )
-                await ctx.user.remove_roles(self.role)
-        await resp.edit_message(view=self)
-
-    @button(label="New Ping", style=ButtonStyle.blurple, emoji=MOBILE_EMOJI, row=4)
-    async def mobile_pinging(self, ctx: Interaction, btn: Button):
-        await self.method(ctx, btn)
-
-    @button(label="New Ping", emoji="\N{DESKTOP COMPUTER}", style=ButtonStyle.blurple, row=4, disabled=True)
-    async def pinging(self, ctx: Interaction, btn: Button):
-        await self.method(ctx, btn)
-
-
 class RPRolesView(View):
     def __init__(self, *, timeout: Optional[float] = 180, current: dict[Role, Member] = None):
         super().__init__(timeout=timeout)
@@ -778,25 +707,9 @@ class RPRolesView(View):
         guild: Guild = interaction.guild
         role: Role = interaction.guild.get_role(int(sct.values[0]))
         resp: InteractionResponse = interaction.response
-
-        if aux := self.current.get(role):
-            resp: InteractionResponse = interaction.response
-
-            embed = Embed(
-                title=role.name,
-                description=f"Hello there, the user {aux.mention} is about to ping {role.mention}, have some patience and then join the user's thread.",
-                color=Color.blurple(),
-                timestamp=interaction.created_at,
-            )
-            embed.set_image(url=WHITE_BAR)
-            embed.set_footer(text=guild.name, icon_url=guild.icon)
-
-            return await resp.send_message(embed=embed, ephemeral=True)
-
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-        self.current[role] = user
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": interaction.guild_id})]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": guild.id})]
         modal = RPModal(user=user, role=role, ocs=ocs)
         if await modal.check(interaction):
             await resp.send_modal(modal)
