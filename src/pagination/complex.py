@@ -114,6 +114,7 @@ class Complex(Simple[_T]):
         sort_key: Optional[tuple[Callable[[_T], Any], bool] | Callable[[_T], Any]] = None,
         text_component: Optional[TextInput | Modal] = None,
         real_max: Optional[int] = None,
+        deselect_mode: bool = True,
     ):
         super(Complex, self).__init__(
             timeout=timeout,
@@ -134,6 +135,7 @@ class Complex(Simple[_T]):
         self.text_component = text_component
         self.real_max = real_max
         self.real_values = self.values
+        self.deselect_mode = deselect_mode
 
     @property
     def values(self) -> list[_T]:
@@ -297,7 +299,7 @@ class Complex(Simple[_T]):
 
         if not self.choices:
             self.remove_item(self.element_remove)
-        elif self.element_remove not in self.children:
+        elif self.deselect_mode and self.element_remove not in self.children:
             self.add_item(self.element_remove)
 
     async def update(self, interaction: Interaction) -> None:
@@ -619,11 +621,11 @@ class Complex(Simple[_T]):
             entries_per_page=self.entries_per_page,
             emoji_parser=self.emoji_parser,
             parser=self.parser,
-            silent_mode=self.silent_mode,
+            silent_mode=True,
             sort_key=self._sort_key,
             text_component=self.text_component,
+            deselect_mode=False,
         )
-        view.remove_item(view.element_remove)
         async with view.send(
             title="Remove Elements",
             description="\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096],
