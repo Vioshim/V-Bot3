@@ -275,7 +275,7 @@ class Roles(commands.Cog):
                 allowed_mentions=AllowedMentions(users=True),
             )
 
-        if msg.channel.category_id in MAP_ELEMENTS2 and "»〛" not in msg.channel.name:
+        if msg.channel.category_id in MAP_ELEMENTS2 and not msg.channel.name.endswith(" OOC"):
             db2 = self.bot.mongo_db("RP Sessions")
 
             if isinstance(msg.channel, Thread):
@@ -399,7 +399,9 @@ class Roles(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    @commands.check(lambda x: x.message.channel.category_id in MAP_ELEMENTS2 and "»〛" not in x.message.channel.name)
+    @commands.check(
+        lambda x: (o := x.message.channel) and o.category_id in MAP_ELEMENTS2 and not o.name.endswith(" OOC")
+    )
     async def finish(self, ctx: commands.Context):
         db1 = self.bot.mongo_db("RP Channels")
         db2 = self.bot.mongo_db("RP Sessions")

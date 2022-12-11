@@ -47,13 +47,7 @@ from rapidfuzz import process
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
-from src.utils.etc import (
-    DEFAULT_TIMEZONE,
-    MAP_ELEMENTS,
-    MOBILE_EMOJI,
-    SETTING_EMOJI,
-    WHITE_BAR,
-)
+from src.utils.etc import DEFAULT_TIMEZONE, MOBILE_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
 
@@ -69,12 +63,6 @@ __all__ = (
     "hours",
     "seconds",
 )
-
-
-def role_gen(guild: Guild):
-    for item in MAP_ELEMENTS:
-        if x := guild.get_role(item.role):
-            yield x
 
 
 INTERVAL = timedelta(days=3)
