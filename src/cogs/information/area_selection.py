@@ -158,7 +158,7 @@ class AreaSelection(Complex[ForumChannel]):
 
 
 class RegionViewComplex(Complex[MapPair]):
-    def __init__(self, *, member: Member | User, target: Interaction, role: Role):
+    def __init__(self, *, member: Member | User, target: Interaction):
         super(RegionViewComplex, self).__init__(
             member=member,
             values=MAP_ELEMENTS,
@@ -168,7 +168,6 @@ class RegionViewComplex(Complex[MapPair]):
             silent_mode=True,
             keep_working=True,
         )
-        self.role = role
         self.embed.title = "Map Selection Tool"
         self.embed.description = "Tool will also show you how many characters have been in certain areas."
 

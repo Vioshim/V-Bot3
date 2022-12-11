@@ -348,12 +348,12 @@ class InformationView(View):
             )
         )
 
+    async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
+        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
     async def see_map(self, ctx: Interaction, _: Button):
-        role = ctx.guild.get_role(1033371159426764901)
-        view = RegionViewComplex(member=ctx.user, target=ctx, role=role)
-        view.add_role.disabled = role in ctx.user.roles
-        view.remove_role.disabled = role not in ctx.user.roles
+        view = RegionViewComplex(member=ctx.user, target=ctx)
         await view.simple_send(ephemeral=True)
 
     @button(label="Make a Ticket", emoji=STICKER_EMOJI, row=1, style=ButtonStyle.blurple)
