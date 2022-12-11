@@ -699,6 +699,7 @@ class RPSearchComplex(Complex[Member]):
             parser=lambda x: (x.display_name, "Click to Ping"),
             sort_key=lambda x: x.display_name,
             silent_mode=True,
+            deselect_mode=False,
         )
         self.embed = RP_SEARCH_EMBED.copy()
         self.embed.title = role.name
