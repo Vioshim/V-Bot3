@@ -44,6 +44,7 @@ from discord.utils import get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
+from src.pagination.view_base import Basic
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
 from src.utils.etc import DEFAULT_TIMEZONE, SETTING_EMOJI, WHITE_BAR
@@ -682,14 +683,7 @@ class RPModal(Modal):
         self.stop()
 
 
-class RPRolesView(View):
-    def __init__(self, *, timeout: Optional[float] = 180, current: dict[Role, Member] = None):
-        super().__init__(timeout=timeout)
-        self.current = current or {}
-
-    async def on_error(self, interaction: Interaction, error: Exception, item) -> None:
-        logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
-
+class RPRolesView(Basic):
     @select(
         placeholder="Make a new Ping",
         custom_id="rp-view",
@@ -704,13 +698,14 @@ class RPRolesView(View):
         ],
     )
     async def choice(self, interaction: Interaction, sct: Select):
-        guild: Guild = interaction.guild
         role: Role = interaction.guild.get_role(int(sct.values[0]))
         resp: InteractionResponse = interaction.response
         db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
         user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": guild.id})]
-        modal = RPModal(user=user, role=role, ocs=ocs)
-        if await modal.check(interaction):
-            await resp.send_modal(modal)
-            await modal.wait()
+        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": user.id})]:
+            modal = RPModal(user=user, role=role, ocs=ocs)
+            if await modal.check(interaction):
+                await resp.send_modal(modal)
+                await modal.wait()
+        else:
+            await resp.send_message("You don't have OCs", ephemeral=True)

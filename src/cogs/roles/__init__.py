@@ -150,7 +150,7 @@ class Roles(commands.Cog):
     async def on_ready(self):
         if not self.ref_msg:
             channel = self.bot.get_channel(958122815171756042)
-            self.view = RPRolesView(timeout=None)
+            self.view = RPRolesView(target=channel, timeout=None)
             async for msg in channel.history(limit=1):
                 if msg.author == self.bot.user and not msg.webhook_id:
                     self.ref_msg = await msg.edit(embed=IMAGE_EMBED, view=self.view)
