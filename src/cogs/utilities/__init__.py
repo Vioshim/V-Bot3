@@ -87,7 +87,7 @@ class ForumModal(Modal):
                     attachments=[self.file] if self.file else MISSING,
                 )
                 if msg.channel.name != self.name.value:
-                    await self.channel.edit(name=self.name.value)
+                    await msg.channel.edit(name=self.name.value)
                 view.add_item(Button(label="Jump URL", url=msg.jump_url))
                 await itx.response.send_message("Modified Message", ephemeral=True, view=view)
             except NotFound:
