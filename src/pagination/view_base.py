@@ -83,7 +83,10 @@ class Basic(View):
         """
         super(Basic, self).__init__(timeout=timeout)
         if not embed:
-            embed = Embed(colour=member.colour, timestamp=datetime.now())
+            embed = Embed(
+                colour=member.colour if member else None,
+                timestamp=datetime.now(),
+            )
 
         if not member:
             if isinstance(target, (Message, Context)):
@@ -96,10 +99,10 @@ class Basic(View):
             member = guild.get_member(member.id)
 
         embed.set_image(url=WHITE_BAR)
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         if isinstance(member, Member):
             guild = member.guild
-            embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+            embed.set_footer(text=guild.name, icon_url=guild.icon)
         self.embed = embed
         self.member = member
         self.target = target
