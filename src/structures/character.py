@@ -190,6 +190,8 @@ class Kind(Enum):
 
 
 class Size(Enum):
+    XXXXL = 3.0000, 3.50000, 8.00, 300.000
+    XXXXL_ = 2.500, 2.70000, 7.50, 260.000
     XXXL = 2.00000, 2.20000, 6.50, 235.000
     XXXL_ = 1.8750, 2.03750, 5.25, 214.125
     XXL = 1.750000, 1.87500, 4.00, 193.250
@@ -206,7 +208,20 @@ class Size(Enum):
     XXS_ = 0.68750, 0.53125, 0.65, 25.6500
     XXS = 0.625000, 0.43750, 0.50, 17.3000
     XXXS_ = 0.5625, 0.34375, 0.35, 8.95000
-    XXXS = 0.50000, 0.25000, 0.20, 0.60000
+    XXXS = 0.50000, 0.25000, 0.30, 4.60000
+    XXXXS_ = 0.375, 0.15000, 0.20, 2.60000
+    XXXXS = 0.2500, 0.05000, 0.10, 1.60000
+
+    @classmethod
+    def all(self, value: float = 0.0):
+        values = [x for x in self]
+        if 0 < value <= 0.5:
+            values.remove(self.XXXS)
+            values.remove(self.XXXS_)
+        elif value > 4:
+            values.remove(self.XXXL)
+            values.remove(self.XXXL_)
+        return values
 
     def height_info(self, value: float = 0):
         proportion, _, size, _ = self.value
