@@ -213,13 +213,21 @@ class Size(Enum):
     XXXXS = 0.2500, 0.05000, 0.10, 1.60000
 
     @classmethod
-    def all(self, value: float = 0.0):
-        if value:
+    def all(self, height: float = 0.0, weight: float = 0.0):
+        if height:
             values = [x for x in self if 0.5 <= x.value[0] <= 2]
-            if 0 < value <= 0.5:
+            if 0 < height <= 0.5:
                 values.append(self.XXXXL)
                 values.append(self.XXXXL_)
-            elif value > 4:
+            elif height > 4:
+                values.append(self.XXXXS)
+                values.append(self.XXXXS_)
+        elif weight:
+            values = [x for x in self if 0.25 <= x.value[1] <= 2.2]
+            if 0 < weight <= 40:
+                values.append(self.XXXXL)
+                values.append(self.XXXXL_)
+            elif weight > 400:
                 values.append(self.XXXXS)
                 values.append(self.XXXXS_)
         else:
