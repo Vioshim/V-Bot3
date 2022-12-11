@@ -234,7 +234,7 @@ class CharactersView(BaseCharactersView):
         super(CharactersView, self).__init__(
             member=member,
             target=target,
-            values=ocs,
+            ocs=ocs,
             keep_working=keep_working,
             max_values=1,
             silent_mode=True,
