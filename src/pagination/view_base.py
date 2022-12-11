@@ -99,7 +99,8 @@ class Basic(View):
             member = guild.get_member(member.id)
 
         embed.set_image(url=WHITE_BAR)
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar)
+        if isinstance(member, (User, Member)):
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         if isinstance(member, Member):
             guild = member.guild
             embed.set_footer(text=guild.name, icon_url=guild.icon)
@@ -137,7 +138,7 @@ class Basic(View):
         bool
             If validation is successful
         """
-        condition = interaction.user == self.member
+        condition = self.member is None or interaction.user == self.member
         with suppress(KeyError):
             aux = interaction.client.supporting[interaction.user]
             condition |= self.member == aux
