@@ -404,7 +404,7 @@ class Character:
 
     @property
     def last_used_at(self):
-        data = self.last_used or max(self.id or 0, self.location or 0)
+        data = max(self.id or 0, self.location or 0, self.last_used or 0)
         return snowflake_time(data) if data else utcnow()
 
     @property
@@ -561,9 +561,7 @@ class Character:
 
     @property
     def max_amount_abilities(self) -> int:
-        if self.sp_ability:
-            return 1
-        return self.species.max_amount_abilities
+        return 2 if self.sp_ability else 1
 
     @property
     def place_mention(self) -> Optional[str]:

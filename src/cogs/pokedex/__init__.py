@@ -375,7 +375,8 @@ class Pokedex(commands.Cog):
                 embed.set_footer(text=f"Possible Types:\n{mon_types}")
 
             if ab_text := "\n".join(f"• {ab.name}" for ab in mon.abilities):
-                embed.add_field(name=f"Abilities (Max {mon.max_amount_abilities})", value=ab_text)
+                amount = min(len(mon.abilities), 2)
+                embed.add_field(name=f"Abilities (Max {amount})", value=ab_text)
 
             if isinstance(mon, Fusion):
                 image1, image2 = mon.mon1.image(gender=pronoun), mon.mon2.image(gender=pronoun)
