@@ -91,7 +91,7 @@ class SPAbilityModal(Modal):
             required=False,
         )
         self.origin = TextInput(
-            label="How your oc obtained this",
+            label="How your oc obtained this?",
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.origin[:600],

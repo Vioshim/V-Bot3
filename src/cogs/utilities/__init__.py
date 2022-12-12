@@ -279,7 +279,7 @@ class Utilities(commands.Cog):
     async def forum(
         self,
         ctx: Interaction,
-        forum: Optional[ForumChannel | Thread | TextChannel] = None,
+        forum: Optional[ForumChannel | Thread] = None,
         image: Optional[Attachment] = None,
     ):
         """Post Forums or Edit
