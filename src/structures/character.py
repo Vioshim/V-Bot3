@@ -29,7 +29,7 @@ from discord.utils import snowflake_time, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import ABILITIES_DEFINING, Ability, SpAbility
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -561,7 +561,9 @@ class Character:
 
     @property
     def max_amount_abilities(self) -> int:
-        return 2 if self.sp_ability else 1
+        condition = any(x.name in ABILITIES_DEFINING for x in self.abilities)
+        condition |= self.sp_ability is not None
+        return 1 if condition else 2
 
     @property
     def place_mention(self) -> Optional[str]:
