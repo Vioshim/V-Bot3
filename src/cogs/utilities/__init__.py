@@ -25,6 +25,7 @@ from d20.utils import simplify_expr
 from discord import (
     Attachment,
     Color,
+    DiscordException,
     Embed,
     File,
     ForumChannel,
@@ -32,7 +33,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Message,
-    NotFound,
     Object,
     TextChannel,
     TextStyle,
@@ -89,9 +89,10 @@ class ForumModal(Modal):
                 if msg.channel.name != self.name.value:
                     await msg.channel.edit(name=self.name.value)
                 view.add_item(Button(label="Jump URL", url=msg.jump_url))
+            except DiscordException:
+                await itx.response.send_message("Unable to modify it.", ephemeral=True)
+            else:
                 await itx.response.send_message("Modified Message", ephemeral=True, view=view)
-            except NotFound:
-                await itx.response.send_message("Message not Found", ephemeral=True)
         else:
             if isinstance(self.channel, TextChannel):
                 data = await self.channel.create_thread(name=self.name.value)
