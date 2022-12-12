@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, astuple, dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
 from json import JSONDecoder, JSONEncoder, load
 from re import split
@@ -224,7 +224,7 @@ class SpAbility:
 
     @property
     def valid(self):
-        return all(astuple(self))
+        return self.name and self.description and self.origin
 
     @property
     def embed(self) -> Embed:

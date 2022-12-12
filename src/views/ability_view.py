@@ -78,39 +78,34 @@ class SPAbilityModal(Modal):
         super(SPAbilityModal, self).__init__(title=f"Unique Trait - {sp_ability.kind.title}", timeout=None)
         self.sp_ability = sp_ability
         self.name = TextInput(
-            label="Name",
-            placeholder="How your OC refers to it?",
+            label="How your OC refers to it?",
             max_length=100,
             default=sp_ability.name[:100],
             required=False,
         )
         self.description = TextInput(
-            label="Description",
-            placeholder="Describe how it works",
+            label="Describe how it works",
             max_length=1024,
             style=TextStyle.paragraph,
             default=sp_ability.description[:1024],
             required=False,
         )
         self.origin = TextInput(
-            label="Origin",
-            placeholder="Explain the story of how your oc obtained this",
+            label="How your oc obtained this",
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.origin[:600],
             required=False,
         )
         self.pros = TextInput(
-            label="Pros",
-            placeholder="How it makes your oc's life easier?",
+            label="How it makes your oc's life easier?",
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.pros[:600],
             required=False,
         )
         self.cons = TextInput(
-            label="Cons",
-            placeholder="How it makes your oc's life harder?",
+            label="How it makes your oc's life harder?",
             max_length=600,
             style=TextStyle.paragraph,
             default=sp_ability.cons[:600],
@@ -142,7 +137,7 @@ class SPAbilityView(Basic):
     def __init__(self, target: Interaction, member: Member, oc: Character):
         super(SPAbilityView, self).__init__(target=target, member=member, timeout=None)
         self.embed.title = "Unique Trait Settings"
-        self.embed.description = "Unique powers are something that few people have, these unique powers usually have more disadvantages than advantages. Most people don't have them."
+        self.embed.description = "Unique powers are something that most people have, they don't necessarily have to use pros and cons, they are just traits, but the field is optional if needed."
         self.sp_ability: SpAbility = oc.sp_ability or SpAbility()
         for x in self.setting.options:
             x.default = x.value == self.sp_ability.kind.name
@@ -150,7 +145,7 @@ class SPAbilityView(Basic):
         self.oc = oc
 
     @select(
-        placeholder="Sp. Ability Kinds",
+        placeholder="Unique Trait Kinds",
         options=[
             SelectOption(
                 label=x.title,
@@ -184,36 +179,7 @@ class SPAbilityView(Basic):
         modal = SPAbilityModal(self.sp_ability)
         await resp.send_modal(modal)
         await modal.wait()
-
         sp_ability = modal.sp_ability
-        backup: set[Ability] = set(self.oc.abilities)
-
-        if len(self.oc.abilities) > 1:
-            view = Complex[Ability](
-                member=self.member,
-                target=ctx,
-                values=backup,
-                timeout=None,
-                parser=lambda x: (x.name, x.description),
-                sort_key=lambda x: x.name,
-                silent_mode=True,
-            )
-            async with view.send(
-                title="Select an Ability to Remove.",
-                fields=[
-                    dict(
-                        name=f"Ability {index} - {item.name}",
-                        value=item.description,
-                        inline=False,
-                    )
-                    for index, item in enumerate(backup, start=1)
-                ],
-            ) as items:
-                if isinstance(items, set):
-                    self.oc.abilities -= items
-                else:
-                    sp_ability = None
-
         if sp_ability and sp_ability.valid:
             self.sp_ability = sp_ability
         await self.delete(ctx)
