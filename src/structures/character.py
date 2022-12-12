@@ -562,7 +562,6 @@ class Character:
     @property
     def max_amount_abilities(self) -> int:
         condition = any(x.name in ABILITIES_DEFINING for x in self.abilities)
-        condition |= self.sp_ability is not None
         return 1 if condition else 2
 
     @property
