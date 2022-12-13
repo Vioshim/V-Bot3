@@ -26,11 +26,10 @@ from discord import (
     User,
 )
 from discord.ui import Select, select
-from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
-from src.utils.etc import MAP_ELEMENTS, WHITE_BAR, MapPair
+from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR, MapPair
 from src.views.characters_view import CharactersView
 
 __all__ = ("RegionViewComplex",)
@@ -45,11 +44,11 @@ class LocationSelection(Complex[Thread]):
     ):
         self.entries: dict[int, set[Character]] = {}
 
-        def foo(oc: Character):
+        def foo1(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
             return isinstance(ch, Thread) and ch.parent == base
 
-        values = [x for x in ocs if x.location and foo(x)]
+        values = [x for x in ocs if x.location and foo1(x)]
         values.sort(key=lambda x: x.location)
         entries = groupby(values, key=lambda x: x.location)
         self.entries = {k: set(v) for k, v in entries if k}
@@ -110,17 +109,17 @@ class AreaSelection(Complex[ForumChannel]):
 
         self.entries: dict[int, set[Character]] = {}
 
-        def foo(oc: Character):
+        def foo2(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
             return bool(ch and cat == ch.category)
 
-        def foo2(oc: Character):
+        def foo3(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
             if isinstance(ch, Thread):
                 ch = ch.parent
             return ch
 
-        entries = groupby(sorted(filter(foo, ocs), key=lambda x: foo2(x).id), key=foo2)
+        entries = groupby(sorted(filter(foo2, ocs), key=lambda x: foo3(x).id), key=foo3)
         self.entries = {k.id: set(v) for k, v in entries if k}
         self.total = sum(map(len, self.entries.values()))
 
@@ -164,16 +163,28 @@ class AreaSelection(Complex[ForumChannel]):
 
 
 class RegionViewComplex(Complex[MapPair]):
-    def __init__(self, *, member: Member | User, target: Interaction):
+    def __init__(self, *, member: Member | User, target: Interaction, ocs: list[Character]):
+        def foo4(oc: Character):
+            ch = target.guild.get_channel_or_thread(oc.location)
+            return ch.category_id if isinstance(ch, Thread) else 0
+
+        ocs = sorted(ocs, key=foo4)
+        data = {k: set(v) for k, v in groupby(ocs, key=foo4) if k in MAP_ELEMENTS2}
+
+        def parser(x: MapPair):
+            values = data.get(x.category, set())
+            return f"{len(values):02d}〛{x.name}", x.short_desc or x.desc
+
         super(RegionViewComplex, self).__init__(
             member=member,
             values=MAP_ELEMENTS,
             target=target,
             timeout=None,
-            parser=lambda x: (x.name, x.short_desc or x.desc),
+            parser=parser,
             silent_mode=True,
             keep_working=True,
         )
+        self.data = data
         self.embed.title = "Map Selection Tool"
         self.embed.description = "Tool will also show you how many characters have been in certain areas."
 
@@ -191,16 +202,7 @@ class RegionViewComplex(Complex[MapPair]):
                 color=interaction.user.color,
             )
             embed.set_image(url=info.image or WHITE_BAR)
-            db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
-            ocs = [
-                Character.from_mongo_dict(x)
-                async for x in db.find(
-                    {
-                        "server": interaction.guild_id,
-                        "location": {"$in": [thread.id for x in cat.channels for thread in x.threads]},
-                    }
-                )
-            ]
+            ocs = self.data.get(cat.id, set())
             view = AreaSelection(target=interaction, cat=cat, ocs=ocs)
             interaction.client.logger.info("%s is reading Map Information of %s", interaction.user, cat.name)
             embed.set_footer(text=f"There's a total of {view.total:02d} OCs in {cat.name}.")

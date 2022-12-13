@@ -59,6 +59,7 @@ from src.cogs.information.area_selection import RegionViewComplex
 from src.cogs.information.perks import CustomPerks
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
+from src.structures.character import Character
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
     KOFI_EMOJI,
@@ -353,7 +354,9 @@ class InformationView(View):
 
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
     async def see_map(self, ctx: Interaction, _: Button):
-        view = RegionViewComplex(member=ctx.user, target=ctx)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        ocs = [Character.from_dict(x) async for x in db.find({"server": ctx.guild_id, "location": {"$type": 18}})]
+        view = RegionViewComplex(member=ctx.user, target=ctx, ocs=ocs)
         await view.simple_send(ephemeral=True)
 
     @button(label="Make a Ticket", emoji=STICKER_EMOJI, row=1, style=ButtonStyle.blurple)
