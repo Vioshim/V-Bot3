@@ -641,19 +641,28 @@ class Complex(Simple[_T]):
             text_component=self.text_component,
             deselect_mode=False,
         )
+        embed = Embed(
+            title="Remove Elements",
+            color=self.embed.color,
+            timestamp=interaction.created_at,
+        )
+        embed.set_image(url=WHITE_BAR)
+
+        if author := self.embed.author:
+            embed.set_author(name=author.name, icon_url=author.icon_url, url=author.url)
+
+        if footer := self.embed.footer:
+            embed.set_footer(text=footer.text, icon_url=footer.icon_url)
 
         if len(self.choices) > 25:
-            description, fields = "\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096], []
+            embed.description = "\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096]
         else:
-            description, fields = "", [(x, str(y)) for x, y in map(view.parser, self.choices)]
+            for x, y in map(view.parser, self.choices):
+                embed.add_field(name=x, value=str(y), inline=False)
 
-        async with view.send(
-            title="Remove Elements",
-            description=description,
-            fields=fields,
-            editing_original=True,
-        ) as choices:
+        async with view.send(embed, editing_original=True) as choices:
             self.choices -= choices
             self.values.extend(choices)
             self.sort()
+
         await self.edit(interaction, page=0)
