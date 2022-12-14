@@ -702,10 +702,13 @@ class Submission(commands.Cog):
             if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
                 ocs.sort(key=lambda x: x.id)
                 url = Character.rack(ocs, font=font)
+                view = View()
+                for oc in ocs:
+                    view.add_item(Button(label=oc.name, url=oc.jump_url))
                 if file := await self.bot.get_file(url):
-                    await ctx.reply(file=file)
+                    await ctx.reply(file=file, view=view)
                 else:
-                    await ctx.reply(content=url)
+                    await ctx.reply(content=url, view=view)
 
     @commands.command()
     @commands.guild_only()
@@ -715,10 +718,13 @@ class Submission(commands.Cog):
             if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
                 ocs.sort(key=lambda x: x.id)
                 url = Character.rack2(ocs, font=font)
+                view = View()
+                for index, oc in enumerate(ocs):
+                    view.add_item(Button(label=oc.name, url=oc.jump_url, row=index // 2))
                 if file := await self.bot.get_file(url):
-                    await ctx.reply(file=file)
+                    await ctx.reply(file=file, view=view)
                 else:
-                    await ctx.reply(content=url)
+                    await ctx.reply(content=url, view=view)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
