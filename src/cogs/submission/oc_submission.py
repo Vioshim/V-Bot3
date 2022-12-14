@@ -650,7 +650,7 @@ class TypesField(TemplateField):
             if len(oc.types) != 1:
                 return "Typeless can't have types, duh."
 
-            if isinstance(oc.species, (Variant, Fakemon)):
+            if not isinstance(oc.species, (Variant, Fakemon)):
                 return "For Variants or Custom pokemon"
 
         if len(oc.types) > 2:
