@@ -1303,13 +1303,12 @@ class CreationOCView(Basic):
             await self.upload()
             self.message = m
 
-    # skipcq: PYL-W0221
-    async def send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
+    async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
         self.ephemeral = ephemeral
         self.embeds = embeds or self.embeds
         if not ephemeral:
             self.remove_item(self.help)
-        m = await super(CreationOCView, self).send(embeds=self.embeds, ephemeral=ephemeral)
+        m = await self.send(embeds=self.embeds, ephemeral=ephemeral, content=str(self.oc.id or ""))
         await self.upload()
         return m
 
@@ -1369,7 +1368,7 @@ class CreationOCView(Basic):
             template=self.ref_template,
             progress=self.progress,
         )
-        await view.send(ephemeral=False)
+        await view.handler_send(ephemeral=False)
 
         if isinstance(self.oc.image, str) and isinstance(file := await ctx.client.get_file(self.oc.image), File):
             embeds = view.embeds
@@ -1423,7 +1422,7 @@ class ModCharactersView(CharactersView):
                     embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
                 if item.author in [interaction.user.id, user.id] or interaction.user.id == interaction.guild.owner_id:
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
-                    await view.send(ephemeral=True, embeds=embeds)
+                    await view.handler_send(ephemeral=True, embeds=embeds)
                 else:
                     view = PingView(oc=item, reference=interaction)
                     await interaction.followup.send(embeds=embeds, view=view, ephemeral=True)
@@ -1458,7 +1457,7 @@ class SubmissionModal(Modal):
                 if self.ephemeral:
                     await resp.edit_message(embeds=view.embeds, view=view)
                 else:
-                    await view.send(ephemeral=False)
+                    await view.handler_send(ephemeral=False)
         except Exception as e:
             if not resp.is_done():
                 await resp.defer(ephemeral=True, thinking=True)
@@ -1609,7 +1608,7 @@ class SubmissionView(View):
                     message = await message.edit(view=view)
                 except DiscordException:
                     try:
-                        message = await view.send(ephemeral=ephemeral)
+                        message = await view.handler_send(ephemeral=ephemeral)
                     except DiscordException:
                         message = None
                 finally:

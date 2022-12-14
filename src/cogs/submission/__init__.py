@@ -420,7 +420,7 @@ class Submission(commands.Cog):
                 view = CreationOCView(bot=self.bot, ctx=message, user=author, oc=oc)
                 if isinstance(message, Message):
                     await message.delete(delay=0)
-                await view.send()
+                await view.handler_send()
                 await view.wait()
 
     async def on_message_submission(self, message: Message):
@@ -717,7 +717,7 @@ class Submission(commands.Cog):
         if character:
             if character.author in [ctx.user.id, user.id]:
                 view = CreationOCView(bot=self.bot, ctx=ctx, user=user, oc=character)
-                await view.send(ephemeral=True)
+                await view.handler_send(ephemeral=True)
             else:
                 view = PingView(oc=character, reference=ctx)
                 await ctx.followup.send(embeds=character.embeds, view=view, ephemeral=True)
