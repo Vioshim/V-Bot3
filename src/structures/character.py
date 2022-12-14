@@ -312,7 +312,7 @@ class Character:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
-        species: Optional[dict[str, Any]] = dct.pop("species", None)
+        species: Optional[dict[str, Any]] = dct.get("species", None)
         if isinstance(species, dict):
             if chimera := species.pop("chimera", []):
                 species["bases"] = chimera
@@ -369,8 +369,6 @@ class Character:
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-        if isinstance(self.species, dict):
-            self.species = Fakemon(**self.species)
         if isinstance(self.pokeball, str):
             try:
                 self.pokeball = Pokeball[self.pokeball]
