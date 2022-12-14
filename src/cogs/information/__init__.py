@@ -295,7 +295,6 @@ class TicketModal(Modal, title="Ticket"):
         thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
         embed = Embed(title=f"Ticket {name}"[:256], description=self.content.value, timestamp=data, color=member.color)
         embed.set_thumbnail(url=member.display_avatar.url)
-        embed.set_image(url=WHITE_BAR)
 
         msg = await webhook.send(thread=thread, wait=True, embed=embed)
 
