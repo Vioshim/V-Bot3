@@ -792,7 +792,7 @@ class Character:
     def rack2(cls, ocs: Iterable[Character], font: bool = True):
         items: list[Character | None] = list(ocs)[:4]
 
-        kit = ImageKit(base="Rack2_tAEzwkZUI.png", width=1500, height=1000, format="png")
+        kit = ImageKit(base="Rack2_tAEzwkZUI.png", width=1000, height=1000, format="png")
         for index, oc in enumerate(items):
             x = 500 * (index % 2) + 25
             y = 500 * (index // 2) + 25
