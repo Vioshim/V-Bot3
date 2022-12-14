@@ -354,7 +354,7 @@ class InformationView(View):
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
     async def see_map(self, ctx: Interaction, _: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_dict(x) async for x in db.find({"server": ctx.guild_id, "location": {"$type": 18}})]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id, "location": {"$type": 18}})]
         view = RegionViewComplex(member=ctx.user, target=ctx, ocs=ocs)
         await view.simple_send(ephemeral=True)
 
