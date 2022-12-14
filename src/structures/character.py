@@ -688,7 +688,7 @@ class Character:
 
         if species:
             height_text = self.size.height_info(species.height)
-            weight_text = self.size.weight_info(species.weight)
+            weight_text = self.weight.weight_info(species.weight)
             c_embed.set_footer(text=f"{height_text}\n{weight_text}", icon_url=icon_url)
 
         if moves_text:
