@@ -660,7 +660,7 @@ class Complex(Simple[_T]):
             for x, y in map(view.parser, self.choices):
                 embed.add_field(name=x, value=str(y), inline=False)
 
-        async with view.send(embed, editing_original=True) as choices:
+        async with view.send(embed=embed, editing_original=True) as choices:
             self.choices -= choices
             self.values.extend(choices)
             self.sort()

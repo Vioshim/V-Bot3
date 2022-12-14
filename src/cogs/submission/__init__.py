@@ -694,6 +694,19 @@ class Submission(commands.Cog):
                 else:
                     await ctx.reply(content=url)
 
+    @commands.command()
+    @commands.guild_only()
+    async def oc_rack(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
+        async with ctx.typing():
+            db = self.bot.mongo_db("Characters")
+            if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
+                ocs.sort(key=lambda x: x.id)
+                url = Character.rack(ocs, font=font)
+                if file := await self.bot.get_file(url):
+                    await ctx.reply(file=file)
+                else:
+                    await ctx.reply(content=url)
+
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
     async def get_ocs(self, ctx: Interaction, member: Optional[Member | User], character: Optional[CharacterArg]):
