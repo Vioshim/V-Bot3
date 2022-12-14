@@ -24,6 +24,7 @@ from typing import Callable, Literal, Optional
 from bs4 import BeautifulSoup
 from discord import (
     Embed,
+    ForumChannel,
     Guild,
     Interaction,
     InteractionResponse,
@@ -274,7 +275,7 @@ class Pokedex(commands.Cog):
         species: Optional[DefaultSpeciesArg],
         fused: Optional[DefaultSpeciesArg],
         member: Optional[Member | User],
-        location: Optional[TextChannel],
+        location: Optional[ForumChannel | Thread],
         backstory: Optional[str],
         personality: Optional[str],
         extra: Optional[str],
@@ -307,7 +308,7 @@ class Pokedex(commands.Cog):
             Search Fusions that contain the species
         member : Optional[Member]
             Member to filter
-        location : Optional[TextChannel  |  Thread]
+        location : Optional[ForumChannel | Thread]
             Location to filter
         backstory : Optional[str]
             Any words to look for in backstories
@@ -344,13 +345,13 @@ class Pokedex(commands.Cog):
             filters.append(lambda oc: name_pattern.search(oc.name))
         if age:
             filters.append(lambda oc: oc.age == age)
-        if isinstance(location, Thread):
-            location = location.parent
-        if isinstance(location, TextChannel):
+        if isinstance(location, ForumChannel):
             filters.append(
                 lambda oc: (ch := guild.get_channel_or_thread(oc.location))
                 and (ch.parent if isinstance(ch, Thread) else ch) == location
             )
+        if isinstance(location, Thread):
+            filters.append(lambda oc: oc.location == location.id)
         if member_id := getattr(member, "id", member):
             filters.append(lambda oc: oc.author == member_id)
         else:
