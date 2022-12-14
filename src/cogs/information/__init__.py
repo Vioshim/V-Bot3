@@ -1419,7 +1419,7 @@ class Information(commands.Cog):
         error: Exception | app_commands.AppCommandError = getattr(error, "original", error)
         command = interaction.command
         resp: InteractionResponse = interaction.response
-        if command and command._has_any_error_handlers():
+        if command and command._has_any_error_handlers():  # skipcq: PYL-W0212
             return
 
         self.bot.logger.error(
@@ -1483,6 +1483,7 @@ class Information(commands.Cog):
         if hasattr(ctx.command, "on_error"):
             return
 
+        # skipcq: PYL-W0212
         if (cog := ctx.cog) and cog._get_overridden_method(cog.cog_command_error):
             return
 

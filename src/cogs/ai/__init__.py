@@ -165,7 +165,8 @@ class AiCog(commands.Cog):
             self.cache.pop(item, None)
             self.msg_cache.pop(item, None)
 
-    async def ai(self, interaction: Interaction, text: str, ephemeral: bool = True):
+    @staticmethod
+    async def ai(interaction: Interaction, text: str, ephemeral: bool = True):
         """Open AI Generator
 
         Parameters

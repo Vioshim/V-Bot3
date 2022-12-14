@@ -105,7 +105,7 @@ class Debug(Feature):
         return Scope()
 
     @Feature.Command(name="retain")
-    async def retain(self, ctx: commands.Context, *, toggle: bool = None):
+    async def retain_cmd(self, ctx: commands.Context, *, toggle: bool = None):
         """
         Turn variable retention for REPL on or off.
 

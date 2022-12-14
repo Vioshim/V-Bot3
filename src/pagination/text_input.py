@@ -14,7 +14,7 @@
 
 
 from contextlib import asynccontextmanager
-from logging import getLogger, setLoggerClass
+from logging import getLogger
 from typing import Optional, TypeVar, Union
 
 from discord import (
@@ -32,9 +32,6 @@ from discord.abc import Messageable
 from discord.ui import Button, Modal, TextInput, button
 
 from src.pagination.view_base import Basic
-from src.structures.logger import ColoredLogger
-
-setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
 

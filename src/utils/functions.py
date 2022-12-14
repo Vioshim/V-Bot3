@@ -312,7 +312,7 @@ def stats_check(*args: str) -> int:
     """
     if data := int_check("".join(item for item in args), 1, 5):
         return data
-    return sum([bool(item.strip()) for item in args])
+    return sum(bool(item.strip()) for item in args)
 
 
 def check_valid(ctx: Context) -> Callable[[Message], bool]:

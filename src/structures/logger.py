@@ -74,7 +74,8 @@ class ColoredFormatter(Formatter):
         super(ColoredFormatter, self).__init__(fmt=msg, datefmt=r"%Y-%m-%d,%H:%M:%S.%f")
         self.use_color = use_color
 
-    def converter(self, timestamp):
+    @staticmethod
+    def converter(timestamp):
         # Create datetime in UTC
         dt = datetime.fromtimestamp(timestamp, tz=UTC)
         # Change datetime's timezone

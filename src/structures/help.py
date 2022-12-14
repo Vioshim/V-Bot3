@@ -93,7 +93,8 @@ class HelpExploration(Complex[Cog | Command | Group | SlashCommand | SlashGroup 
         self.embed.title = title
         self.parent_button.disabled = parent is None
 
-    def flatten(self, value: Mapping[Cog, list[Command]] | Group | Cog):
+    @staticmethod
+    def flatten(value: Mapping[Cog, list[Command]] | Group | Cog):
         if isinstance(value, Cog):
             items = [Listener(x, y) for x, y in value.get_listeners()]
             items.extend(value.get_app_commands())
@@ -115,8 +116,6 @@ class HelpExploration(Complex[Cog | Command | Group | SlashCommand | SlashGroup 
         if isinstance(value, Listener):
             self.embed.title = value.name
             self.embed.description = value.short_doc
-
-            pass
         await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
@@ -130,7 +129,7 @@ class HelpExploration(Complex[Cog | Command | Group | SlashCommand | SlashGroup 
 
 
 class CustomHelp(HelpCommand):
-    async def send_bot_help(self, mapping: Mapping[Cog, list[Command]]) -> None:
+    async def send_bot_help(self, mapping: Mapping[Cog, list[Command]], /) -> None:
         """Bot Help (Cog Select)
 
         Parameters
@@ -171,7 +170,7 @@ class CustomHelp(HelpCommand):
         )
         await view.send(title="Help Command - Bot Options")
 
-    async def send_command_help(self, cmd: Command) -> None:
+    async def send_command_help(self, cmd: Command, /) -> None:
         """Command Help
 
         Parameters
@@ -207,7 +206,7 @@ class CustomHelp(HelpCommand):
             desciption=cmd.description,
         )
 
-    async def send_group_help(self, group: Group) -> None:
+    async def send_group_help(self, group: Group, /) -> None:
         """Group help
 
         Parameters
@@ -245,7 +244,7 @@ class CustomHelp(HelpCommand):
             if isinstance(cmd, Command):
                 await self.send_command_help(cmd)
 
-    async def send_cog_help(self, cog: Cog) -> None:
+    async def send_cogs_help(self, cog: Cog, /) -> None:
         """Cog help
 
         Parameters
@@ -292,7 +291,7 @@ class CustomHelp(HelpCommand):
             description="\n".join(commands) or "> No Commands",
         )
 
-    async def send_error_message(self, error: str):
+    async def send_error_message(self, error: str, /):
         """Error sending function
 
         Parameters
@@ -305,7 +304,7 @@ class CustomHelp(HelpCommand):
         embed.set_image(url=WHITE_BAR)
         await context.reply(embed=embed)
 
-    async def on_help_command_error(self, ctx: Context, error: Exception):
+    async def on_help_command_error(self, ctx: Context, error: Exception, /):
         """Error detection
 
         Parameters

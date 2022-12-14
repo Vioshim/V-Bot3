@@ -100,7 +100,8 @@ class Wiki(commands.Cog):
     def __init__(self, bot: CustomBot) -> None:
         self.bot = bot
 
-    async def wiki_add(self, ctx: Interaction, msg: Message):
+    @staticmethod
+    async def wiki_add(ctx: Interaction, msg: Message):
         resp: InteractionResponse = ctx.response
         role = ctx.guild.get_role(996542547155497082)
         if not (role and role in ctx.user.roles):

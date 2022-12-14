@@ -136,13 +136,13 @@ def age_parser(text: str, oc: Character):
 
 
 class MoveTransformer(Transformer):
-    async def transform(cls, _: Interaction, value: Optional[str]):
+    async def transform(self, _: Interaction, value: Optional[str], /):
         move = Move.deduce(value)
         if not move:
             raise ValueError(f"Move {value!r} Not found.")
         return move
 
-    async def autocomplete(cls, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, _: Interaction, value: str, /) -> list[Choice[str]]:
         items = list(Move.all())
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
@@ -155,10 +155,10 @@ MoveArg = Transform[Move, MoveTransformer]
 
 
 class ABCTransformer(Transformer):
-    async def on_submit(self, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def on_submit(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
         return []
 
-    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
         items = await self.on_submit(ctx, value)
         if options := process.extract(
             value or "",
@@ -172,7 +172,7 @@ class ABCTransformer(Transformer):
 
 
 class SpeciesTransformer(Transformer):
-    async def transform(self, ctx: Interaction, value: Optional[str]):
+    async def transform(self, ctx: Interaction, value: Optional[str], /):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         value = value or ""
         if value.isdigit() and (item := await db.find_one({"id": int(value)})):
@@ -181,7 +181,7 @@ class SpeciesTransformer(Transformer):
             return oc
         raise ValueError(f"Species {value!r} not found")
 
-    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         guild: Guild = ctx.guild
         key = {"server": ctx.guild_id}
@@ -239,12 +239,12 @@ class SpeciesTransformer(Transformer):
 class DefaultSpeciesTransformer(Transformer):
     cache: dict = {}
 
-    async def transform(self, _: Interaction, value: Optional[str]):
+    async def transform(self, _: Interaction, value: Optional[str], /):
         if not (item := Species.single_deduce(value)):
             raise ValueError(f"Species {value!r} not found")
         return item
 
-    async def autocomplete(self, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
             db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
             items = [
@@ -277,13 +277,13 @@ DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
 
 
 class AbilityTransformer(Transformer):
-    async def transform(self, _: Interaction, value: Optional[str]):
+    async def transform(self, _: Interaction, value: Optional[str], /):
         item = Ability.from_ID(value)
         if not item:
             raise ValueError(f"Ability {item!r} not found")
         return item
 
-    async def autocomplete(self, _: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, _: Interaction, value: str, /) -> list[Choice[str]]:
         items = list(Ability.all())
         if options := process.extract(value or "", choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
@@ -296,7 +296,7 @@ AbilityArg = Transform[Ability, AbilityTransformer]
 
 
 class FakemonTransformer(Transformer):
-    async def transform(cls, ctx: Interaction, value: Optional[str]):
+    async def transform(self, ctx: Interaction, value: Optional[str], /):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         oc: Optional[Character] = None
         if value.isdigit() and (item := await db.find_one({"id": int(value)})):
@@ -315,7 +315,7 @@ class FakemonTransformer(Transformer):
             raise ValueError(f"Fakemon {value!r} not found.")
         return oc
 
-    async def autocomplete(cls, ctx: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
         guild: Guild = ctx.guild
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         mons = [

@@ -114,7 +114,8 @@ class Utilities(commands.Cog):
         self.bot = bot
         self._rtfm_cache: dict[str, dict[str, str]] = {}
 
-    def finder(self, text, collection, *, key=None, lazy=True):
+    @staticmethod
+    def finder(text, collection, *, key=None, lazy=True):
         suggestions = []
         text = str(text)
         pat = ".*?".join(map(escape, text))
@@ -134,7 +135,8 @@ class Utilities(commands.Cog):
             return (z for _, _, z in sorted(suggestions, key=sort_key))
         return [z for _, _, z in sorted(suggestions, key=sort_key)]
 
-    def parse_object_inv(self, stream: SphinxObjectFileReader, url: str):
+    @staticmethod
+    def parse_object_inv(stream: SphinxObjectFileReader, url: str):
 
         result: dict[str, str] = {}
 

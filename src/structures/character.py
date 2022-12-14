@@ -485,12 +485,12 @@ class Character:
         return self.moveset
 
     @property
-    def evolves_from(self) -> Optional[Species]:
+    def evolves_from(self):
         if self.species:
             return self.species.species_evolves_from
 
     @property
-    def evolves_to(self) -> list[Species]:
+    def evolves_to(self):
         if self.species:
             return self.species.species_evolves_to
 
@@ -570,19 +570,12 @@ class Character:
             return f"<#{location}>"
 
     @property
-    def jump_url(self) -> Optional[str]:
-        """Message Link
-
-        Returns
-        -------
-        Optional[str]
-            URL
-        """
+    def jump_url(self):
         if self.server and self.thread and self.id:
             return f"https://discord.com/channels/{self.server}/{self.thread}/{self.id}"
 
     @property
-    def default_image(self) -> Optional[str]:
+    def default_image(self):
         """This allows to obtain a default image for the character
 
         Returns
@@ -684,13 +677,9 @@ class Character:
             icon_url = None
 
         if species:
-            c_embed.set_footer(
-                text="{}\n{}".format(
-                    self.size.height_info(species.height),
-                    self.weight.weight_info(species.weight),
-                ),
-                icon_url=icon_url,
-            )
+            height_text = self.size.height_info(species.height)
+            weight_text = self.size.weight_info(species.weight)
+            c_embed.set_footer(text=f"{height_text}\n{weight_text}", icon_url=icon_url)
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
@@ -1126,7 +1115,7 @@ class Character:
 
 
 class CharacterTransform(Transformer):
-    async def transform(self, interaction: Interaction, value: str):
+    async def transform(self, interaction: Interaction, value: str, /):
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.user
@@ -1137,7 +1126,7 @@ class CharacterTransform(Transformer):
         }
         if value.isdigit() and (oc := ocs.get(int(value))):
             return oc
-        elif options := process.extractOne(
+        if options := process.extractOne(
             value,
             choices=ocs.values(),
             processor=lambda x: getattr(x, "name", x),
@@ -1145,7 +1134,7 @@ class CharacterTransform(Transformer):
         ):
             return options[0]
 
-    async def autocomplete(self, interaction: Interaction, value: str) -> list[Choice[str]]:
+    async def autocomplete(self, interaction: Interaction, value: str, /) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.user

@@ -296,7 +296,7 @@ class TemplateField(ABC):
         return isinstance(oc, Character)
 
     @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
+    def evaluate(cls, _: Character) -> Optional[str]:
         return None
 
     @classmethod
@@ -825,7 +825,7 @@ class AbilitiesField(TemplateField):
     def evaluate(cls, oc: Character) -> Optional[str]:
         amount = oc.max_amount_abilities
 
-        if not (1 <= len(oc.abilities) <= amount):
+        if not 1 <= len(oc.abilities) <= amount:
             return f"Abilities, Min: 1, Max: {amount}"
 
         if isinstance(oc.species, (Fakemon, Variant, CustomMega, CustomParadox)):
@@ -1200,11 +1200,12 @@ class CreationOCView(Basic):
         self.fields2.options.clear()
         for item in filter(lambda x: x.check(self.oc), TemplateField.all()):
             emoji = "\N{BLACK SQUARE BUTTON}" if (item.name in self.progress) else "\N{BLACK LARGE SQUARE}"
-            description = item.evaluate(self.oc)
-            if not description:
+
+            if not (description := item.evaluate(self.oc)):
                 description = item.description
             else:
                 emoji = "\N{CROSS MARK}"
+
             menu = self.fields1 if item.required else self.fields2
             menu.add_option(label=item.name, description=description[:100], emoji=emoji)
 
@@ -1238,10 +1239,11 @@ class CreationOCView(Basic):
             self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.M
 
-            if self.ref_template == Template.CustomParadox:
-                ab1, ab2 = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
-                if not (self.oc.abilities == {ab1} or self.oc.abilities == {ab2}):
-                    self.oc.abilities = frozenset()
+            if self.ref_template == Template.CustomParadox and not (
+                len(self.oc.abilities) == 1
+                and (get(self.oc.abilities, name="Protosynthesis") or get(self.oc.abilities, name="Quark Drive"))
+            ):
+                self.oc.abilities = frozenset()
 
             await self.update(ctx)
         except Exception as e:
@@ -1301,6 +1303,7 @@ class CreationOCView(Basic):
             await self.upload()
             self.message = m
 
+    # skipcq: PYL-W0221
     async def send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
         self.ephemeral = ephemeral
         self.embeds = embeds or self.embeds
@@ -1336,7 +1339,11 @@ class CreationOCView(Basic):
         return await super(CreationOCView, self).delete(ctx)
 
     @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=3)
-    async def finish_oc(self, ctx: Interaction, _: Button):
+    async def finish_oc(self, ctx: Interaction, btn: Button):
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await ctx.response.edit_message(view=self)
+
         if self.oc.id and self.oc.thread:
             if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
                 channel = await ctx.guild.fetch_channel(self.oc.thread)
@@ -1345,7 +1352,10 @@ class CreationOCView(Basic):
         await self.delete(ctx)
 
     @button(label="Close this Menu", row=3)
-    async def cancel(self, ctx: Interaction, _: Button):
+    async def cancel(self, ctx: Interaction, btn: Button):
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await ctx.response.edit_message(view=self)
         await self.delete(ctx)
 
     async def help_method(self, ctx: Interaction):
@@ -1379,6 +1389,9 @@ class CreationOCView(Basic):
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=3)
     async def submit(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
         try:
             await resp.defer(ephemeral=True, thinking=True)
             cog = ctx.client.get_cog("Submission")

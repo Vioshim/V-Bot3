@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from dataclasses import astuple, dataclass, field
-from json import JSONDecoder, JSONEncoder
+from json import JSONEncoder
 from typing import Any, Callable, Iterable, Optional
 
 from frozendict import frozendict
@@ -24,7 +24,7 @@ from frozendict import frozendict
 from src.structures.move import Move
 from src.utils.functions import fix
 
-__all__ = ("Movepool", "MovepoolEncoder", "MovepoolDecoder")
+__all__ = ("Movepool", "MovepoolEncoder")
 
 
 @dataclass(unsafe_hash=True, repr=False, slots=True)
@@ -49,6 +49,12 @@ class Movepool:
         self.egg = frozenset(self.egg)
         self.levelup = frozenset(self.levelup)
         self.other = frozenset(self.other)
+
+    @classmethod
+    def hook(cls, dct: dict[str, Any]):
+        if set(dct).issubsset(Movepool.__slots__):
+            return Movepool.from_dict(**dct)
+        return dct
 
     @classmethod
     def from_record(cls, item) -> Optional[Movepool]:
@@ -337,10 +343,6 @@ class Movepool:
         elif isinstance(value := value or set(), Iterable):
             moves = frozenset({data for item in value if (data := Move.deduce(item))})
             match key:
-                case "LEVEL":
-                    pass
-                    # self.level.setdefault(1, frozenset())
-                    # self.level[1] |= moves
                 case "TM":
                     self.tm |= moves
                 case "EVENT":
@@ -349,7 +351,7 @@ class Movepool:
                     self.tutor |= moves
                 case "EGG":
                     self.egg |= moves
-                case "LEVELUP":
+                case "LEVEL" | "LEVELUP":
                     self.levelup |= moves
                 case _:
                     self.other |= moves
@@ -694,27 +696,3 @@ class MovepoolEncoder(JSONEncoder):
         if isinstance(o, Movepool):
             return o.as_dict
         return super(MovepoolEncoder, self).default(o)
-
-
-class MovepoolDecoder(JSONDecoder):
-    """Movepool decoder"""
-
-    def __init__(self, *args, **kwargs):
-        super(MovepoolDecoder, self).__init__(object_hook=self.object_hook, *args, **kwargs)
-
-    def object_hook(self, dct: dict[str, Any]):
-        """Decoder method for dicts
-
-        Parameters
-        ----------
-        dct : dict[str, Any]
-            Input
-
-        Returns
-        -------
-        Any
-            Result
-        """
-        if set(dct).issubsset(Movepool.__slots__):
-            return Movepool.from_dict(**dct)
-        return dct

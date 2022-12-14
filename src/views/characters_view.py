@@ -14,7 +14,6 @@
 
 
 from contextlib import suppress
-from logging import getLogger, setLoggerClass
 from typing import Optional
 
 from discord import (
@@ -41,13 +40,8 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
-from src.structures.logger import ColoredLogger
 from src.utils.etc import WHITE_BAR
 from src.utils.imagekit import Fonts, ImageKit
-
-setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
 
 __all__ = ("BaseCharactersView", "CharactersView", "PingView")
 
@@ -155,6 +149,11 @@ class PingView(View):
 
     @button(label="Ping Character", style=ButtonStyle.blurple)
     async def ping(self, ctx: Interaction, btn: Button) -> None:
+        resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
+
         member: Member = ctx.guild.get_member(self.oc.author)
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
@@ -183,8 +182,12 @@ class PingView(View):
         style=ButtonStyle.red,
         emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
     )
-    async def delete(self, ctx: Interaction, _: Button) -> None:
+    async def delete(self, ctx: Interaction, btn: Button) -> None:
         resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
+
         member = ctx.guild.get_member(self.oc.author)
         if ctx.user != member:
             await resp.send_message("This is not yours", ephemeral=True)

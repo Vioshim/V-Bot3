@@ -239,7 +239,8 @@ class RoleSelect(View):
     async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
         logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
-    async def choice(self, ctx: Interaction, sct: Select, remove_all: bool = False):
+    @staticmethod
+    async def choice(ctx: Interaction, sct: Select, remove_all: bool = False):
         resp: InteractionResponse = ctx.response
         member: Member = ctx.user
         guild = ctx.guild
@@ -471,14 +472,19 @@ class RPSearchManage(View):
         custom_id="archive_thread",
         style=ButtonStyle.red,
     )
-    async def conclude(self, ctx: Interaction, _: Button):
+    async def conclude(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
+
         db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
         if ctx.user.id != self.member_id and not ctx.user.guild_permissions.moderate_members:
-            return await ctx.response.send_message(
+            return await resp.send_message(
                 f"Only <@{self.member_id}> can archive it",
                 ephemeral=True,
             )
-        await ctx.response.pong()
+        await resp.pong()
         if (message := ctx.message) and (
             item := await db.find_one_and_delete(
                 {

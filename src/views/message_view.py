@@ -14,7 +14,6 @@
 
 
 from itertools import groupby
-from logging import getLogger, setLoggerClass
 from typing import Callable, Optional
 
 from discord import (
@@ -36,12 +35,6 @@ from discord.utils import remove_markdown
 from humanize import naturaltime
 
 from src.pagination.complex import Complex
-from src.structures.logger import ColoredLogger
-
-setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
-
 
 __all__ = ("MessagePaginator", "get_title", "get_date", "msg_parser")
 
@@ -177,6 +170,6 @@ class MessageView(View):
             embed = view.embed
             embed.title = f"{item} Group".title()
             async with view.send(ephemeral=True):
-                logger.info("User %s is reading %s", str(ctx.user), embed.title)
+                ctx.client.logger.info("User %s is reading %s", str(ctx.user), embed.title)
         else:
             await resp.send_message("No values were found that match this category.", ephemeral=True)

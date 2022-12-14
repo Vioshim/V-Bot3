@@ -423,8 +423,9 @@ class Roles(commands.Cog):
 
         if entry := await db2.find_one(key):
             message_id = entry["id"]
-            if any([item.id == message_id async for item in ctx.channel.history(limit=1, before=ctx.message)]):
-                return
+            async for item in ctx.channel.history(limit=1, before=ctx.message):
+                if item.id == message_id:
+                    return
 
             try:
                 m = await ctx.channel.fetch_message(message_id)

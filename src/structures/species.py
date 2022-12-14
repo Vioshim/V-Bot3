@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from itertools import combinations_with_replacement
-from json import JSONDecoder, JSONEncoder, load
+from json import JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional, Type
 
 from asyncpg import Record
@@ -378,6 +378,36 @@ class Species(metaclass=ABCMeta):
                 items = {Fusion(*items, ratio=0.5)}
             if items and isinstance(data := items.pop(), cls):
                 return data
+
+    @classmethod
+    def hook(cls, dct: dict[str, Any], default=None):
+        """Converter
+
+        Parameters
+        ----------
+        dct : dict[str, Any]
+            Input
+
+        Returns
+        -------
+        Any
+            Output
+        """
+        if "id" in dct:
+            match dct.pop("kind", ""):
+                case "Legendary":
+                    return Legendary(**dct)
+                case "Mythical":
+                    return Mythical(**dct)
+                case "UltraBeast":
+                    return UltraBeast(**dct)
+                case "Mega":
+                    return Mega(**dct)
+                case "Paradox":
+                    return Paradox(**dct)
+                case _:
+                    return Pokemon(**dct)
+        return default
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -1090,46 +1120,8 @@ class SpeciesEncoder(JSONEncoder):
         return super(SpeciesEncoder, self).default(o)
 
 
-class SpeciesDecoder(JSONDecoder):
-    def __init__(self, *args, **kwargs):
-        super(SpeciesDecoder, self).__init__(
-            object_hook=self.object_hook,
-            *args,
-            **kwargs,
-        )
-
-    def object_hook(self, dct: dict[str, Any]):
-        """Converter
-
-        Parameters
-        ----------
-        dct : dict[str, Any]
-            Input
-
-        Returns
-        -------
-        Any
-            Output
-        """
-        if "id" in dct:
-            match dct.pop("kind", ""):
-                case "Legendary":
-                    return Legendary(**dct)
-                case "Mythical":
-                    return Mythical(**dct)
-                case "UltraBeast":
-                    return UltraBeast(**dct)
-                case "Mega":
-                    return Mega(**dct)
-                case "Paradox":
-                    return Paradox(**dct)
-                case _:
-                    return Pokemon(**dct)
-        return dct
-
-
 with open("resources/species.json", mode="r", encoding="utf8") as f:
-    DATA: list[Species] = load(f, cls=SpeciesDecoder)
+    DATA: list[Species] = load(f, object_hook=lambda x: Species.hook(x, x))
     ALL_SPECIES: frozendict[str, Species] = frozendict({item.id: item for item in DATA if isinstance(item, Species)})
     SPECIES_BY_NAME: frozendict[str, Species] = frozendict(
         {item.name: item for item in DATA if isinstance(item, Species)}

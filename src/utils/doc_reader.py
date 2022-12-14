@@ -29,6 +29,7 @@ class DriveFormat(Enum):
 
 
 class BytesAIO(BytesIO):
+    # skipcq: PYL-W0236
     async def write(self, __buffer: bytes) -> int:
         return super(BytesAIO, self).write(__buffer)
 

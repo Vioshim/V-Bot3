@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-from typing import Optional, Union
-
 from discord import (
     Interaction,
     InteractionResponse,
@@ -35,7 +33,7 @@ from src.utils.etc import EMOTE_CREATE_EMOJI, EMOTE_REMOVE_EMOJI, EMOTE_UPDATE_E
 __all__ = ("AbilityView", "SPAbilityModal", "SPAbilityView")
 
 
-def ability_emoji_parser(x: Ability | SpAbility) -> Optional[str]:
+def ability_emoji_parser(x: Ability | SpAbility):
     if isinstance(x, Ability):
         return "\N{LARGE BLUE CIRCLE}"
     if isinstance(x, SpAbility):
@@ -46,7 +44,7 @@ class AbilityView(Complex[Ability | SpAbility]):
     def __init__(
         self,
         member: Member,
-        target: Union[Interaction, Webhook, TextChannel],
+        target: Interaction | Webhook | TextChannel,
         abilities: set[Ability | SpAbility],
         keep_working: bool = False,
         max_values: int = 1,

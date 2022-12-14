@@ -54,14 +54,14 @@ class Category(Enum):
         return self.value
 
     @classmethod
-    def from_id(self, value: int):
+    def from_id(cls, value: int):
         match value:
             case 1:
-                return self.PHYSICAL
+                return cls.PHYSICAL
             case 2:
-                return self.SPECIAL
+                return cls.SPECIAL
             case _:
-                return self.STATUS
+                return cls.STATUS
 
 
 CHECK_FLAGS: dict[str, Callable[[Any], Optional[str]]] = {

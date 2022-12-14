@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from enum import Enum
-from json import JSONDecoder, JSONEncoder, load
+from json import JSONEncoder, load
 from re import split
 from typing import Any, Callable, Optional
 
@@ -31,7 +31,6 @@ from src.utils.functions import fix
 
 __all__ = (
     "Ability",
-    "AbilityDecoder",
     "AbilityEncoder",
     "SpAbility",
     "ALL_ABILITIES",
@@ -117,7 +116,7 @@ class Ability:
         return frozenset(list(items)[:limit_range])
 
     @classmethod
-    def deduce(cls, item: str) -> Optional[Ability]:
+    def deduce(cls, item: str):
         """This is a method that determines the ability out of
         the existing entries, it has a 85% of precision.
         Parameters
@@ -131,15 +130,17 @@ class Ability:
         """
         if isinstance(item, cls):
             return item
-        if data := ALL_ABILITIES.get(fix(item)):
-            return data
-        if data := process.extractOne(
-            item,
-            cls.all(),
-            processor=lambda x: getattr(x, "name", x),
-            score_cutoff=85,
+        if not (data := ALL_ABILITIES.get(fix(item))) and (
+            items := process.extractOne(
+                item,
+                cls.all(),
+                processor=lambda x: getattr(x, "name", x),
+                score_cutoff=85,
+            )
         ):
-            return data[0]
+            data = items[0]
+        if isinstance(data, Ability):
+            return data
 
     @classmethod
     def from_ID(cls, item: str) -> Optional[Ability]:
@@ -158,6 +159,11 @@ class Ability:
         if isinstance(item, Ability):
             return item
         return ALL_ABILITIES.get(item)
+
+    @classmethod
+    def hook(cls, data: dict[str, str]):
+        if all(x in data for x in cls.__slots__):
+            return cls(**data)
 
 
 class UTraitKind(Enum):
@@ -339,6 +345,11 @@ class SpAbility:
             self.cons,
         )
 
+    @classmethod
+    def hook(cls, data: dict[str, str]):
+        if all(x in data for x in cls.__slots__):
+            return cls(**data)
+
 
 class AbilityEncoder(JSONEncoder):
     """Ability encoder"""
@@ -349,36 +360,6 @@ class AbilityEncoder(JSONEncoder):
         return super(AbilityEncoder, self).default(o)
 
 
-class AbilityDecoder(JSONDecoder):
-    """Ability decoder"""
-
-    def __init__(self, *args, **kwargs):
-        super(AbilityDecoder, self).__init__(
-            object_hook=self.object_hook,
-            *args,
-            **kwargs,
-        )
-
-    def object_hook(self, dct: dict[str, Any]):
-        """Decoder method for dicts
-
-        Parameters
-        ----------
-        dct : dict[str, Any]
-            Input
-
-        Returns
-        -------
-        Any
-            Result
-        """
-        if all(x in dct for x in SpAbility.__slots__):
-            return SpAbility(**dct)
-        if all(x in dct for x in Ability.__slots__):
-            return Ability(**dct)
-        return dct
-
-
 with open("resources/abilities.json", mode="r", encoding="utf8") as f:
-    abilities: list[Ability] = load(f, cls=AbilityDecoder)
+    abilities: list[Ability] = load(f, object_hook=lambda x: Ability.hook(x) or SpAbility.hook(x) or x)
     ALL_ABILITIES = frozendict({ab.id: ab for ab in abilities})

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from asyncio import run
+from asyncio import run, set_event_loop_policy
 from logging import getLogger, setLoggerClass
 from os import getenv
 
@@ -29,7 +29,6 @@ from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 
-# basicConfig(level=INFO)
 setLoggerClass(ColoredLogger)
 
 logger = getLogger(__name__)
@@ -37,7 +36,6 @@ logger = getLogger(__name__)
 load_dotenv()
 
 try:
-    from asyncio import set_event_loop_policy
 
     from uvloop import EventLoopPolicy  # type: ignore
 

@@ -14,7 +14,6 @@
 
 
 from contextlib import asynccontextmanager
-from logging import getLogger, setLoggerClass
 from typing import Optional, TypeVar, Union
 
 from discord import (
@@ -30,12 +29,7 @@ from discord.abc import Messageable
 from discord.ui import Button, button
 
 from src.pagination.view_base import Basic
-from src.structures.logger import ColoredLogger
 from src.utils.functions import embed_modifier
-
-setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
 
 __all__ = ("BooleanView",)
 
@@ -75,8 +69,6 @@ class BooleanView(Basic):
                 await aux.send()
                 await aux.wait()
             yield aux.value
-        except Exception as e:
-            logger.exception("Exception occurred, target: %s, user: %s", str(self.target), str(self.member), exc_info=e)
         finally:
             await aux.delete()
 

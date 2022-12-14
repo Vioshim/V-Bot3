@@ -42,7 +42,7 @@ class WikiModal(Modal, title="Wiki Route"):
         self.folder = TextInput(label="Wiki Folder", style=TextStyle.paragraph, required=True, default=tree.route)
         self.add_item(self.folder)
 
-    async def on_submit(self, interaction: Interaction) -> None:
+    async def on_submit(self, interaction: Interaction, /) -> None:
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")

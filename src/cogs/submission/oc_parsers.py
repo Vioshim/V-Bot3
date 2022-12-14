@@ -66,7 +66,6 @@ PLACEHOLDER_NAMES = {
     "Fakemon Base": "base",
     "Variant Species": "variant",
     "Fakemon Species": "fakemon",
-    "Mega Base": "mega",
     "Paradox Species": "paradox",
 }
 PLACEHOLDER_DEFAULTS = {
@@ -205,7 +204,7 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
             rid = blip.embed
             doc_part = doc.part
             image_part = doc_part.related_parts[rid]
-            fp = BytesIO(image_part._blob)
+            fp = BytesIO(image_part._blob)  # skipcq: PYL-W0212
             raw_kwargs["image"] = File(fp=fp, filename="image.png")
     except Exception:
         pass

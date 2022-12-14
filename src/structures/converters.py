@@ -43,6 +43,7 @@ from src.utils.matches import REGEX_URL
 
 
 class MovesCall(Converter[Move]):
+    # skipcq: PYL-R0201
     async def convert(self, _: Context, argument: str) -> str:
         """Function which converts to image url if possible
 
@@ -71,6 +72,7 @@ class MovesCall(Converter[Move]):
 
 
 class SpeciesCall(Converter[Species]):
+    # skipcq: PYL-R0201
     async def convert(self, _: Context, argument: str) -> Species:
         """Function which converts to Species if possible
 
@@ -99,6 +101,7 @@ class SpeciesCall(Converter[Species]):
 
 
 class ImageURL(Converter[str]):
+    # skipcq: PYL-R0201
     async def convert(self, ctx: Context, argument: str) -> str:
         """Function which converts to image url if possible
 
@@ -140,6 +143,7 @@ class ImageURL(Converter[str]):
 
 
 class ImageFile(Converter[File]):
+    # skipcq: PYL-R0201
     async def convert(self, ctx: Context, argument: str) -> File:
         """Function which converts to file if possible
 
@@ -174,6 +178,7 @@ class ImageFile(Converter[File]):
 
 
 class AnyDateCall(Converter[datetime]):
+    # skipcq: PYL-R0201
     async def convert(self, _: Context, argument: str) -> datetime:
         """This method converts a string into a datetime
 
@@ -200,6 +205,7 @@ class AnyDateCall(Converter[datetime]):
 
 
 class CurrentDateCall(Converter[datetime]):
+    # skipcq: PYL-R0201
     async def convert(self, _: Context, argument: str) -> datetime:
         """This method converts a string into a datetime
 
@@ -226,6 +232,7 @@ class CurrentDateCall(Converter[datetime]):
 
 
 class AfterDateCall(Converter[datetime]):
+    # skipcq: PYL-R0201
     async def convert(self, _: Context, argument: str):
         """This method converts a string into a datetime
 
@@ -252,6 +259,7 @@ class AfterDateCall(Converter[datetime]):
 
 
 class BeforeDateCall(Converter[datetime]):
+    # skipcq: PYL-R0201
     async def convert(self, _: Context, argument: str):
         """This method converts a string into a datetime
 
@@ -278,6 +286,7 @@ class BeforeDateCall(Converter[datetime]):
 
 
 class MessageCaller(Converter[Message]):
+    # skipcq: PYL-R0201
     async def convert(self, ctx: Context, argument: str) -> Message:
         """Message Converter
 
@@ -309,6 +318,7 @@ class MessageCaller(Converter[Message]):
 
 
 class UserCaller(Converter[Union[Member, User]]):
+    # skipcq: PYL-R0201
     async def convert(self, ctx: Context, argument: str) -> Union[Member, User]:
         """Method which obtains an user by it being a close match
 

@@ -601,6 +601,10 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def finish(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
         await self.delete(ctx)
 
     @button(

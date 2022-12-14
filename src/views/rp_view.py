@@ -43,7 +43,7 @@ class RPView(View):
             return f"https://discord.com/channels/{self.server}/{msg_id}/"
         return "https://discord.com/channels/{self.server}/919277769735680050/"
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
+    async def interaction_check(self, interaction: Interaction, /) -> bool:
         resp: InteractionResponse = interaction.response
         registered = interaction.guild.get_role(719642423327719434)
         if interaction.user.id == self.member_id:
@@ -62,7 +62,13 @@ class RPView(View):
         return True
 
     @button(label="Ping User", style=ButtonStyle.green, custom_id="ping")
-    async def ping(self, interaction: Interaction, _: Button):
+    async def ping(self, interaction: Interaction, btn: Button):
+        resp: InteractionResponse = interaction.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
+
+        await resp.pong()
         member: Member = interaction.user
         guild = interaction.guild
         webhook = await interaction.client.webhook(740568087820238919, reason="Ping")
