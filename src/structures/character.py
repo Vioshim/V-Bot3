@@ -762,11 +762,40 @@ class Character:
 
     @classmethod
     def rack(cls, ocs: Iterable[Character], font: bool = True):
-        items: list[Character | None] = list(ocs)[:6]
+        items: list[Character | None] = list(ocs)[:4]
         kit = ImageKit(base="Rack_FgmVfIYZs.png", width=2000, height=500, format="png")
         for index, oc in enumerate(items):
             x = 500 * index + 25
             y = 25
+            if oc is None:
+                kit.add_image(image="placeholder_uSDglnt-E.png", height=450, width=450, x=x, y=y)
+            elif isinstance(oc, Character):
+                kit.add_image(image=oc.image_url, height=450, width=450, x=x, y=y)
+                for idx, item in enumerate(oc.types):
+                    kit.add_image(image=item.icon, width=200, height=44, x=250 + x, y=y + 44 * idx)
+                if font:
+                    kit.add_text(
+                        text=oc.name,
+                        width=330,
+                        x=x,
+                        y=y + 400,
+                        background=0xFFFFFF,
+                        background_transparency=70,
+                        font=Fonts.Whitney_Black,
+                        font_size=36,
+                    )
+                if oc.pronoun.image:
+                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
+        return kit.url
+
+    @classmethod
+    def rack2(cls, ocs: Iterable[Character], font: bool = True):
+        items: list[Character | None] = list(ocs)[:4]
+
+        kit = ImageKit(base="Rack2_tAEzwkZUI.png", width=1500, height=1000, format="png")
+        for index, oc in enumerate(items):
+            x = 500 * (index % 2) + 25
+            y = 500 * (index // 2) + 25
             if oc is None:
                 kit.add_image(image="placeholder_uSDglnt-E.png", height=450, width=450, x=x, y=y)
             elif isinstance(oc, Character):
