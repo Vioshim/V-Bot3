@@ -76,8 +76,6 @@ class LocationSelection(Complex[Thread]):
             await resp.defer(ephemeral=True, thinking=True)
             channel: Thread = self.current_choice
             ocs = self.entries.get(channel.id, set())
-            for x in ocs:
-                interaction.client.logger.info("%s", repr(x.species))
             view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
             embed = view.embed
             embed.title = channel.name[2:].replace("-", " ").title()
