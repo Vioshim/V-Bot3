@@ -214,7 +214,7 @@ class Complex(Simple[_T]):
         foo.placeholder = text
         if self.auto_text_component:
             self.text_component = TextInput(
-                label=self.embed.title[:100],
+                label=self.embed.title[:45],
                 placeholder=text[:100],
             )
 

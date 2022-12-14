@@ -405,13 +405,6 @@ class PronounField(TemplateField):
             values=Pronoun,
             parser=lambda x: (x.name, f"Sets Pronoun as {x.name}"),
             sort_key=lambda x: x.name,
-            text_component=TextInput(
-                label="Pronoun",
-                placeholder="He | She | Them",
-                default=oc.pronoun.name,
-                min_length=2,
-                max_length=4,
-            ),
             silent_mode=True,
         )
         async with view.send(
@@ -849,7 +842,6 @@ class AbilitiesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        placeholder = ", ".join(["Ability"] * oc.max_amount_abilities)
         abilities, amount = oc.species.abilities, oc.max_amount_abilities
         if template == Template.CustomParadox:
             abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
@@ -865,11 +857,6 @@ class AbilitiesField(TemplateField):
             max_values=amount,
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, x.description),
-            text_component=TextInput(
-                label="Ability",
-                placeholder=placeholder,
-                default=", ".join(x.name for x in oc.abilities),
-            ),
             silent_mode=True,
         )
         async with view.send(
@@ -917,11 +904,6 @@ class HiddenPowerField(TemplateField):
             timeout=None,
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
-            text_component=TextInput(
-                label="Hidden Power",
-                placeholder="Type",
-                required=True,
-            ),
             silent_mode=True,
         )
         async with view.send(
