@@ -663,7 +663,17 @@ class Character:
 
             embeds.append(sp_embed)
 
-        moves_text = "\n".join(f"> {item!r}" for item in sorted(self.moveset, key=lambda x: x.name))
+        if TypingEnum.Typeless in self.types:
+
+            def move_parser(x: Move):
+                return f"> [{x.name}] - Typeless ({x.category.name})".title()
+
+        else:
+
+            def move_parser(x: Move):
+                return f"> {x!r}"
+
+        moves_text = "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name)))
 
         if pokeball := self.pokeball:
             c_embed.set_thumbnail(url=pokeball.url)

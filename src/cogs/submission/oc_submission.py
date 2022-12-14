@@ -684,7 +684,7 @@ class TypesField(TemplateField):
                 return (x.name, f"Adds the typing {x.name}")
 
             ignore = [TypingEnum.Shadow, TypingEnum.Typeless]
-            if template not in [Template.Variant, Template.CustomPokemon]:
+            if template in [Template.Variant, Template.CustomPokemon]:
                 ignore.remove(TypingEnum.Typeless)
 
             values, max_values = TypingEnum.all(*ignore), 2
