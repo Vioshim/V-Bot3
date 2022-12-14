@@ -719,6 +719,9 @@ class MovesetField(TemplateField):
         if value := ", ".join(x.name for x in oc.moveset if x.banned):
             value = f"Banned Moves: {value}. "
 
+        if len(oc.moveset) > 6:
+            return "Max 6 Preferred Moves."
+
         if not any(
             (
                 isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
