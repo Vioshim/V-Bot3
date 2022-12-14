@@ -1221,6 +1221,7 @@ class CreationOCView(Basic):
             errors += count
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
+        self.cancel.label = "Close this Menu"
         self.submit.disabled = bool(errors)
 
         if embed_update:
