@@ -72,6 +72,8 @@ class DefaultModal(Modal):
         logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
     async def on_submit(self, interaction: Interaction) -> None:
+        resp: InteractionResponse = interaction.response
+        await resp.pong()
         current = set()
         elements = [o for x in str(self.item.value or "").split(",") if (o := x.strip())]
         choices = self.view.choices
@@ -113,8 +115,10 @@ class Complex(Simple[_T]):
         keep_working: bool = False,
         sort_key: Optional[tuple[Callable[[_T], Any], bool] | Callable[[_T], Any]] = None,
         text_component: Optional[TextInput | Modal] = None,
+        auto_text_component: bool = False,
         real_max: Optional[int] = None,
         deselect_mode: bool = True,
+        auto_conclude: bool = True,
     ):
         super(Complex, self).__init__(
             timeout=timeout,
@@ -127,12 +131,14 @@ class Complex(Simple[_T]):
             sort_key=sort_key,
             modifying_embed=False,
         )
+        self.auto_conclude = auto_conclude
         self.silent_mode = silent_mode
         self.keep_working = keep_working
         self.choices: set[_T] = set()
         self.max_values = max_values
         self._emoji_parser = emoji_parser
         self.text_component = text_component
+        self.auto_text_component = auto_text_component
         self.real_max = real_max
         self.real_values = self.values
         self.deselect_mode = deselect_mode
@@ -200,16 +206,22 @@ class Complex(Simple[_T]):
         """Default Formatter"""
         # First, the current stored values in each option get cleared.
         # aside of changing the placeholder text
-        if not self.text_component:
-            self.remove_item(self.message_handler)
-        elif self.message_handler not in self.children:
-            self.add_item(self.message_handler)
-
         foo: Select = self.select_choice
         pages: Select = self.navigate
         choices = self.choices
         amount = self.real_max or self.max_values
-        foo.placeholder = f"Picked: {len(choices)}, Max: {amount}, Total: {len(self.values)}"
+        text = f"Picked: {len(choices)}, Max: {amount}, Total: {len(self.values)}"
+        foo.placeholder = text
+        if self.auto_text_component:
+            self.text_component = TextInput(
+                label=self.embed.title[:100],
+                placeholder=text[:100],
+            )
+
+        if not self.text_component:
+            self.remove_item(self.message_handler)
+        elif self.message_handler not in self.children:
+            self.add_item(self.message_handler)
         foo.options.clear()
         pages.options.clear()
         # Then gets defined the amount of entries an user can pick
@@ -321,10 +333,9 @@ class Complex(Simple[_T]):
             Page to be accessed, defaults to None
         """
         amount = self.max_values if self.real_max is None else self.real_max
-        if self.keep_working or len(self.choices) < amount:
-            await super(Complex, self).edit(interaction=interaction, page=page)
-        else:
-            await self.delete(interaction)
+        if self.keep_working or not self.auto_conclude or len(self.choices) < amount:
+            return await super(Complex, self).edit(interaction=interaction, page=page)
+        await self.delete(interaction)
 
     @asynccontextmanager
     async def send(

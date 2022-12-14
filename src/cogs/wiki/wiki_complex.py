@@ -124,11 +124,7 @@ class WikiComplex(Complex[WikiEntry]):
             values=list(data.keys()),
             max_values=len(data),
             parser=lambda x: (x, f"{len(data[x])} Entries."),
-            text_component=TextInput(
-                label=btn.label,
-                placeholder="Tag, Tag",
-                default=", ".join(data.keys()),
-            ),
+            auto_text_component=True,
         )
         async with view.send(title="Select Tags", editing_original=True) as entries:
             if entries:

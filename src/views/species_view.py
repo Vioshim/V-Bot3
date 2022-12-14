@@ -16,7 +16,7 @@
 from typing import Any, Iterable, Optional
 
 from discord import Color, Embed, Interaction, InteractionResponse, Member
-from discord.ui import Select, TextInput, select
+from discord.ui import Select, select
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
@@ -119,10 +119,7 @@ class SpeciesComplex(Complex[Species]):
             silent_mode=silent_mode,
             emoji_parser=emoji_parser,
             real_max=max_values,
-            text_component=TextInput(
-                label="Species",
-                placeholder=", ".join(["Species"] * max_values),
-            ),
+            auto_text_component=True,
         )
         self.embed.title = "Select Species"
         self.data = {}

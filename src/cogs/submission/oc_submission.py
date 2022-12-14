@@ -1209,10 +1209,10 @@ class CreationOCView(Basic):
             menu = self.fields1 if item.required else self.fields2
             menu.add_option(label=item.name, description=description[:100], emoji=emoji)
 
-        items: list[tuple[str, Select]] = [("Essentials", self.fields1), ("Extras", self.fields2)]
+        items = {"Essentials": self.fields1, "Extras": self.fields2}
 
         errors: int = 0
-        for x, y in items:
+        for x, y in items.items():
             if count := sum(str(o.emoji) == "\N{CROSS MARK}" for o in y.options):
                 y.options.sort(key=lambda x: str(x.emoji) != "\N{CROSS MARK}")
                 y.placeholder = f"{x}. ({count} needed changes)."
@@ -1222,6 +1222,8 @@ class CreationOCView(Basic):
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.cancel.label = "Close this Menu"
+        self.finish_oc.label = "Delete Character"
+        self.help.label = "Request Help"
         self.submit.disabled = bool(errors)
 
         if embed_update:
@@ -1384,7 +1386,11 @@ class CreationOCView(Basic):
         await self.delete(ctx)
 
     @button(label="Request Help", row=3)
-    async def help(self, ctx: Interaction, _: Button):
+    async def help(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
         await self.help_method(ctx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=3)
@@ -1653,6 +1659,7 @@ class SubmissionView(View):
         if values := [Character.from_mongo_dict(x) async for x in db.find(key)]:
             values.sort(key=lambda x: x.name)
             view = BaseCharactersView(member=ctx.user, target=ctx, ocs=values, max_values=len(values))
+            view.auto_conclude = False
             view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
             async with view.send(title="Select Characters to delete") as choices:
                 if choices and isinstance(choices, set):

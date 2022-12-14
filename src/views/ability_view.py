@@ -59,7 +59,7 @@ class AbilityView(Complex[Ability | SpAbility]):
             sort_key=lambda x: x.name,
             emoji_parser=ability_emoji_parser,
             max_values=max_values,
-            text_component=TextInput(label="Ability", placeholder=", ".join(["Ability"] * max_values)),
+            auto_text_component=True,
         )
         self.embed.title = "Select an Ability"
 

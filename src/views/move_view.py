@@ -16,19 +16,11 @@
 from itertools import groupby
 from typing import Any, Optional
 
-from discord import (
-    ButtonStyle,
-    Color,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    Member,
-    PartialEmoji,
-)
+from discord import Color, Embed, Interaction, InteractionResponse, Member
 from discord.abc import Messageable
-from discord.ui import Button, Select, TextInput, button, select
+from discord.ui import Select, select
 
-from src.pagination.complex import Complex, DefaultModal
+from src.pagination.complex import Complex
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Category, Move
 from src.structures.movepool import Movepool
@@ -59,11 +51,8 @@ class MoveComplex(Complex[Move]):
             sort_key=lambda x: x.name,
             max_values=max_values,
             silent_mode=True,
-            text_component=TextInput(
-                label="Moves",
-                placeholder=("Move, " * max_values).removesuffix(", "),
-                required=False,
-            ),
+            auto_conclude=False,
+            auto_text_component=True,
         )
         self.modifying_embed = True
         self.real_max = self.max_values
@@ -141,22 +130,6 @@ class MoveComplex(Complex[Move]):
             )
             embed.set_image(url=WHITE_BAR)
             await resp.send_message(embed=embed, ephemeral=True)
-
-    @button(
-        label="Write down the choice instead.",
-        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
-        custom_id="writer",
-        style=ButtonStyle.blurple,
-        disabled=False,
-        row=4,
-    )
-    async def message_handler(self, interaction: Interaction, _: Button):
-        response: InteractionResponse = interaction.response
-        component = self.text_component
-        if isinstance(component, TextInput):
-            component = DefaultModal(view=self)
-        await response.send_modal(component)
-        await component.wait()
 
 
 class MoveView(MoveComplex):
