@@ -645,6 +645,14 @@ class TypesField(TemplateField):
         if TypingEnum.Shadow in oc.types:
             return "Shadow typing is not valid"
 
+        if TypingEnum.Typeless in oc.types:
+
+            if len(oc.types) != 1:
+                return "Typeless can't have types, duh."
+
+            if isinstance(oc.species, (Variant, Fakemon)):
+                return "For Variants or Custom pokemon"
+
         if len(oc.types) > 2:
             return f"Max 2 Pokemon Types: ({', '.join(x.name for x in oc.types)})"
 
@@ -675,7 +683,11 @@ class TypesField(TemplateField):
             def parser(x: TypingEnum):
                 return (x.name, f"Adds the typing {x.name}")
 
-            values, max_values = TypingEnum.all(ignore=TypingEnum.Shadow), 2
+            ignore = [TypingEnum.Shadow, TypingEnum.Typeless]
+            if template not in [Template.Variant, Template.CustomPokemon]:
+                ignore.remove(TypingEnum.Typeless)
+
+            values, max_values = TypingEnum.all(*ignore), 2
 
         view = Complex(
             member=ctx.user,
@@ -899,7 +911,7 @@ class HiddenPowerField(TemplateField):
         view = Complex[TypingEnum](
             member=ctx.user,
             target=ctx,
-            values=TypingEnum.all(ignore=TypingEnum.Shadow),
+            values=TypingEnum.all(TypingEnum.Shadow),
             max_values=1,
             timeout=None,
             sort_key=lambda x: x.name,

@@ -641,9 +641,16 @@ class Complex(Simple[_T]):
             text_component=self.text_component,
             deselect_mode=False,
         )
+
+        if len(self.choices) > 25:
+            description, fields = "\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096], []
+        else:
+            description, fields = "", [(x, str(y)) for x, y in map(view.parser, self.choices)]
+
         async with view.send(
             title="Remove Elements",
-            description="\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096],
+            description=description,
+            fields=fields,
             editing_original=True,
         ) as choices:
             self.choices -= choices

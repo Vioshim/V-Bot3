@@ -113,7 +113,7 @@ class Typing:
         else:
             self.ids = frozenset(data.get("ids", []))
         self.color = data.get("color", 0)
-        self.emoji = PartialEmoji.from_str(data.get("emoji", ""))
+        self.emoji = PartialEmoji.from_str(data.get("emoji", "<:pokeball:952522808435544074>"))
         self.z_move = data.get("z_move", "")
         self.max_move = data.get("max_move", "")
         self.chart = frozendict(data.get("chart", {}))
@@ -463,10 +463,18 @@ class TypingEnum(Typing, Enum):
         "id": 19,
         "game_id": 18,
         "color": 4076373,
-        "emoji": "<:pokeball:952522808435544074>",
-        "z_move": "Gale of Darkness.",
+        "z_move": "Gale of Darkness",
         "max_move": "Max Nightmare",
         "chart": {x: 1.0 if x == 19 else 0.5 for x in range(1, 20)},
+    }
+    Typeless = {
+        "name": "Typeless",
+        "icon": "/Chart/Typeless_0kxw2KAj3.png",
+        "id": 20,
+        "game_id": 19,
+        "color": 6856848,
+        "z_move": "Wide Slash",
+        "max_move": "Vacuum-Cut",
     }
 
     @property
@@ -486,14 +494,14 @@ class TypingEnum(Typing, Enum):
     @property
     def max_move_range(self):
         match self:
-            case self.Fighting | self.Poison:
+            case self.Fighting | self.Poison | self.Shadow | self.Typeless:
                 return MAX_MOVE_RANGE2
             case _:
                 return MAX_MOVE_RANGE1
 
     @classmethod
-    def all(cls, *, ignore: Optional[TypingEnum] = None):
-        return frozenset({x for x in TypingEnum if ignore is None or x != ignore})
+    def all(cls, *ignore: TypingEnum):
+        return frozenset({x for x in TypingEnum if x not in ignore})
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):
