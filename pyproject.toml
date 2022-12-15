@@ -13,7 +13,7 @@ python = "3.11.1"
     "voice",
 ] }
 jishaku = "^2.5.1"
-uvloop = { version = "^0.16.0", platform = "linux" }
+uvloop = { version = "^0.17.0", platform = "linux" }
 frozendict = "^2.3.4"
 rapidfuzz = "^2.6.0"
 dateparser = "^1.1.1"
