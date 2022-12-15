@@ -89,9 +89,29 @@ class MapPair:
 
 
 MAP_ELEMENTS = [
-    MapPair(name="Drakevale Village", category=1051237750277410846, emoji="\N{SHINTO SHRINE}"),
-    MapPair(name="Cybhrell", category=1051238187898511470, emoji="\N{BATTERY}"),
-    MapPair(name="Northfall", category=1049254145359614023, emoji="\N{ICE CUBE}"),
-    MapPair(name="Wisteria Township", category=1051238399618592829, emoji="\N{EVERGREEN TREE}"),
+    MapPair(
+        name="Drakevale Village",
+        category=1051237750277410846,
+        emoji="\N{SHINTO SHRINE}",
+        desc="A japanese-like village known for its traditions and harmony.",
+    ),
+    MapPair(
+        name="Cybhrell",
+        category=1051238187898511470,
+        emoji="\N{BATTERY}",
+        desc="A tech-oriented city known for its industry.",
+    ),
+    MapPair(
+        name="Northfall",
+        category=1049254145359614023,
+        emoji="\N{ICE CUBE}",
+        desc="Snow territory known for its vast land extension.",
+    ),
+    MapPair(
+        name="Wisteria Township",
+        category=1051238399618592829,
+        emoji="\N{TANABATA TREE}",
+        desc="Territory nature reliant and rich in agriculture.",
+    ),
 ]
 MAP_ELEMENTS2 = {x.category: x for x in MAP_ELEMENTS}

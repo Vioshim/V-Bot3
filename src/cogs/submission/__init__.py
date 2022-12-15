@@ -15,7 +15,7 @@
 
 from asyncio import TimeoutError as AsyncTimeoutError
 from contextlib import suppress
-from typing import Optional
+from typing import Any, Optional
 
 from discord import (
     AllowedMentions,
@@ -37,13 +37,14 @@ from discord import (
     RawThreadUpdateEvent,
     Role,
     Status,
+    TextChannel,
     Thread,
     User,
     app_commands,
 )
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.utils import MISSING, get
+from discord.utils import MISSING, find, get
 from rapidfuzz import process
 
 from src.cogs.submission.oc_parsers import ParserMethods
@@ -449,7 +450,7 @@ class Submission(commands.Cog):
         finally:
             self.ignore -= {message.author.id}
 
-    async def on_message_tupper(self, message: Message, member_id: int):
+    async def on_message_tupper(self, message: Message, member: Member | User):
         channel = message.channel
         author = message.author.name.title()
 
@@ -457,13 +458,7 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("Characters")
-        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member_id})]:
-
-            if isinstance(channel := message.channel, Thread):
-                thread_id, channel_id = channel.id, channel.parent_id
-            else:
-                thread_id, channel_id = None, channel.id
-
+        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
             if item := process.extractOne(
                 author,
                 choices=ocs,
@@ -476,20 +471,20 @@ class Submission(commands.Cog):
             else:
                 return
 
-            await self.bot.mongo_db("RP Samples").replace_one(
-                {"id": message.id},
-                {
-                    "id": message.id,
-                    "text": message.content,
-                    "category": message.channel.category_id,
-                    "thread": thread_id,
-                    "channel": channel_id,
-                    "server": message.guild.id,
-                    "created_at": message.created_at,
-                    "oc": oc.id,
-                },
-                upsert=True,
-            )
+            if info_channel := find(
+                lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"), channel.category.channels
+            ):
+                w = await self.bot.webhook(info_channel)
+                cog = self.bot.get_cog("Information")
+                kwargs: dict[str, Any] = await cog.embed_info(message)
+                for e in kwargs.get("embeds", []):
+                    e.set_author(name=member.display_name, icon_url=member.display_avatar)
+                kwargs["content"] = member.mention
+                kwargs["allowed_mentions"] = AllowedMentions.none()
+                view: View = kwargs.get("view", View())
+                view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
+                kwargs["view"] = view
+                await w.send(**kwargs)
 
             oc.last_used = message.id
             if oc.location != channel.id:
@@ -524,7 +519,7 @@ class Submission(commands.Cog):
 
         with suppress(AsyncTimeoutError):
             msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
-            await self.on_message_tupper(msg, message.author.id)
+            await self.on_message_tupper(msg, message.author)
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
