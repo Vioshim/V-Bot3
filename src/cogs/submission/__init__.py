@@ -15,7 +15,7 @@
 
 from asyncio import TimeoutError as AsyncTimeoutError
 from contextlib import suppress
-from typing import Any, Optional
+from typing import Optional
 
 from discord import (
     AllowedMentions,
@@ -57,7 +57,7 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import MAP_ELEMENTS2, WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
 from src.views.characters_view import CharactersView, PingView
 from src.views.move_view import MoveView
 
@@ -475,17 +475,26 @@ class Submission(commands.Cog):
                 lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"), channel.category.channels
             ):
                 w = await self.bot.webhook(info_channel)
-                cog = self.bot.get_cog("Information")
-                kwargs: dict[str, Any] = await cog.embed_info(message)
-                for e in kwargs.get("embeds", []):
-                    e.set_author(name=member.display_name, icon_url=member.display_avatar)
-                kwargs["username"] = message.author.display_name
-                kwargs["content"] = member.mention
-                kwargs["allowed_mentions"] = AllowedMentions.none()
-                view: View = kwargs.get("view", View())
+
+                try:
+                    name = message.channel.name.replace("»", "")
+                    emoji, name = name.split("〛")
+                except ValueError:
+                    emoji, name = SETTING_EMOJI, message.channel.name
+                finally:
+                    name = name.replace("-", " ").title()
+
+                view = View()
+                view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
                 view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
-                kwargs["view"] = view
-                await w.send(**kwargs)
+
+                await w.send(
+                    content=message.content,
+                    username=message.author.display_name,
+                    avatar_url=message.author.display_avatar.url,
+                    files=[await x.to_file() for x in message.attachments],
+                    allowed_mentions=AllowedMentions.none(),
+                )
 
             oc.last_used = message.id
             if oc.location != channel.id:
