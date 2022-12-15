@@ -104,6 +104,7 @@ class AreaSelection(Complex[ForumChannel]):
         target: Interaction,
         cat: CategoryChannel,
         ocs: set[Character],
+        emoji: str,
     ):
         channels = [x for x in cat.channels if isinstance(x, ForumChannel)]
 
@@ -132,11 +133,11 @@ class AreaSelection(Complex[ForumChannel]):
             silent_mode=True,
             keep_working=True,
             parser=lambda x: (
-                f"{len(self.entries.get(x.id, [])):02d}{x.name[1:]}".replace("-", " ").title(),
+                f"{len(self.entries.get(x.id, [])):02d}{x.name.removeprefix(emoji)}".replace("-", " ").title(),
                 x.topic or "No description yet.",
             ),
             sort_key=lambda x: x.name,
-            emoji_parser=lambda x: x.name[0],
+            emoji_parser=emoji,
         )
 
     @select(row=1, placeholder="Select an area to check", custom_id="selector")
@@ -203,7 +204,7 @@ class RegionViewComplex(Complex[MapPair]):
             )
             embed.set_image(url=info.image or WHITE_BAR)
             ocs = self.data.get(cat.id, set())
-            view = AreaSelection(target=interaction, cat=cat, ocs=ocs)
+            view = AreaSelection(target=interaction, cat=cat, ocs=ocs, emoji=info.emoji)
             interaction.client.logger.info("%s is reading Map Information of %s", interaction.user, cat.name)
             embed.set_footer(text=f"There's a total of {view.total:02d} OCs in {cat.name}.")
             await view.simple_send(ephemeral=True, embed=embed)
