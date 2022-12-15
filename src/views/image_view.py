@@ -127,8 +127,8 @@ class ImageView(Basic):
 
             done, _ = await asyncio.wait(
                 [
-                    ctx.client.wait_for("message", check=check(ctx)),
-                    self.wait(),
+                    asyncio.Task(ctx.client.wait_for("message", check=check(ctx))),
+                    asyncio.Task(self.wait()),
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
