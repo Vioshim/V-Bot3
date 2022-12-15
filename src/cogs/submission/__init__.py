@@ -479,6 +479,7 @@ class Submission(commands.Cog):
                 kwargs: dict[str, Any] = await cog.embed_info(message)
                 for e in kwargs.get("embeds", []):
                     e.set_author(name=member.display_name, icon_url=member.display_avatar)
+                kwargs["username"] = message.author.display_name
                 kwargs["content"] = member.mention
                 kwargs["allowed_mentions"] = AllowedMentions.none()
                 view: View = kwargs.get("view", View())
