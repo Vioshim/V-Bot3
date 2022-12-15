@@ -494,6 +494,7 @@ class Submission(commands.Cog):
                     avatar_url=message.author.display_avatar.url,
                     files=[await x.to_file() for x in message.attachments],
                     allowed_mentions=AllowedMentions.none(),
+                    view=view,
                 )
 
             oc.last_used = message.id
