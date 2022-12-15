@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from dataclasses import astuple
 from datetime import timedelta
 from itertools import groupby
 from random import random
@@ -398,7 +397,7 @@ class Pokedex(commands.Cog):
             filters.append(lambda oc: oc.extra and extra_pattern.search(oc.extra))
         if sp_ability:
             sp_ability_pattern = re_compile(sp_ability, IGNORECASE)
-            filters.append(lambda oc: oc.sp_ability and any(map(sp_ability_pattern.search, astuple(oc.sp_ability))))
+            filters.append(lambda oc: oc.sp_ability and any(map(sp_ability_pattern.search, oc.sp_ability.params)))
         if _type:
             filters.append(lambda oc: _type in oc.types)
             if embed.color == ctx.user.color:

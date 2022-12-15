@@ -220,6 +220,10 @@ class SpAbility:
     def __repr__(self) -> str:
         return f"SPAbility(name={self.name})"
 
+    @property
+    def params(self):
+        return self.name, self.description, self.origin, self.pros, self.cons
+
     def clear(self):
         self.name = ""
         self.description = ""
