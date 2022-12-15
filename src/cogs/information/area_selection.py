@@ -105,7 +105,7 @@ class AreaSelection(Complex[ForumChannel]):
         cat: CategoryChannel,
         ocs: set[Character],
     ):
-        channels: list[ForumChannel] = [x for x in cat.channels if not x.name.endswith(" OOC")]
+        channels = [x for x in cat.channels if isinstance(x, ForumChannel)]
 
         self.entries: dict[int, set[Character]] = {}
 
