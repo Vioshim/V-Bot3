@@ -206,10 +206,11 @@ class Complex(Simple[_T]):
         """Default Formatter"""
         # First, the current stored values in each option get cleared.
         # aside of changing the placeholder text
-        foo: Select = self.select_choice
-        pages: Select = self.navigate
+        foo = self.select_choice
+        pages = self.navigate
         choices = self.choices
         amount = self.real_max or self.max_values
+        self.finish.label = "Finish"
         text = f"Picked: {len(choices)}, Max: {amount}, Total: {len(self.values)}"
         foo.placeholder = text
         if self.auto_text_component:
