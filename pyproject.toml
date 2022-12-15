@@ -7,7 +7,7 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.10.8"
+python = "3.11.1"
 "discord.py" = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
     "speed",
     "voice",
@@ -51,7 +51,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 
 line-length = 120 # override black's default line-length
-target-version = ["py310"]
+target-version = ["py311"]
 exclude = '''
 /(
     \.git
@@ -70,7 +70,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.10.8"
+pythonVersion = "3.11.1"
 flake8 = "^4.0.1"
 
 
