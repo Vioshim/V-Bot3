@@ -24,7 +24,6 @@ description = "Async Google API client"
 category = "main"
 optional = false
 python-versions = "*"
-develop = false
 
 [package.dependencies]
 aiofiles = "*"
@@ -36,12 +35,6 @@ tonyg-rfc3339 = "*"
 [package.extras]
 curio_asks = ["asks", "curio"]
 trio_asks = ["asks", "trio"]
-
-[package.source]
-type = "git"
-url = "https://github.com/omarryhan/aiogoogle.git"
-reference = "master"
-resolved_reference = "94931e1a18f9e78366df1c8841b489a38e80a40f"
 
 [[package]]
 name = "aiohttp"
@@ -104,7 +97,6 @@ develop = false
 anyio = ">=3.6,<4.0"
 attrs = ">=21.3"
 tenacity = ">=8.0,<9.0"
-typing-extensions = {version = ">=4.0", markers = "python_version < \"3.11\""}
 tzlocal = ">=3.0"
 
 [package.extras]
@@ -205,7 +197,6 @@ click = ">=8.0.0"
 mypy-extensions = ">=0.4.3"
 pathspec = ">=0.9.0"
 platformdirs = ">=2"
-tomli = {version = ">=1.1.0", markers = "python_full_version < \"3.11.0a7\""}
 
 [package.extras]
 colorama = ["colorama (>=0.4.3)"]
@@ -710,7 +701,10 @@ optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-numpy = {version = ">=1.21.0", markers = "python_version >= \"3.10\""}
+numpy = [
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
+    {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
+]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
 
@@ -1035,14 +1029,6 @@ python-versions = ">=3.6"
 doc = ["reno", "sphinx", "tornado (>=4.5)"]
 
 [[package]]
-name = "tomli"
-version = "2.0.1"
-description = "A lil' TOML parser"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-
-[[package]]
 name = "tonyg-rfc3339"
 version = "0.1"
 description = "Python implementation of RFC 3339"
@@ -1166,8 +1152,8 @@ multidict = ">=4.0"
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.10.8"
-content-hash = "daceb2a0ef5d2e5b189b9d6b8ee503bd6645dc673831a1b3b4bd42df780ff032"
+python-versions = "3.11.1"
+content-hash = "5574dad1ae09901455390a8aca65b047a3c84cd38e51c1555ef075fe492be4ad"
 
 [metadata.files]
 aiodns = []
@@ -1254,7 +1240,6 @@ six = []
 sniffio = []
 soupsieve = []
 tenacity = []
-tomli = []
 tonyg-rfc3339 = []
 tqdm = []
 types-pytz = []

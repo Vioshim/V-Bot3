@@ -7,7 +7,7 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.10.8"
+python = "3.11.1"
 "discord.py" = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
     "speed",
     "voice",
@@ -26,11 +26,11 @@ python-docx = "^0.8.11"
 d20 = "^1.1.2"
 asyncpg = "^0.26.0"
 mystbin-py = "^5.0.2"
-aiogoogle = { git = "https://github.com/omarryhan/aiogoogle.git", rev = "master" }
 humanize = "^4.3.0"
 python-dotenv = "^0.20.0"
 pymongo = { extras = ["srv"], version = "^4.2.0" }
 chronological = "^0.1.1"
+aiogoogle = "^4.5.0"
 
 
 [tool.poetry.dev-dependencies]
@@ -51,7 +51,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 
 line-length = 120 # override black's default line-length
-target-version = ["py310"]
+target-version = ["py311"]
 exclude = '''
 /(
     \.git
@@ -70,7 +70,7 @@ exclude = '''
 [tool.pyright]
 useLibraryCodeForTypes = true
 typeCheckingMethod = "basic"
-pythonVersion = "3.10.8"
+pythonVersion = "3.11.1"
 flake8 = "^4.0.1"
 
 
