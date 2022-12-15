@@ -145,16 +145,6 @@ class Typing:
             return Typing.from_dict(ids=self.ids | other.ids, name=f"{self.name}/{other.name}", chart=frozendict(chart))
         return self
 
-    def __str__(self) -> str:
-        """str method
-
-        Returns
-        -------
-        str
-            Upper name
-        """
-        return self.name.upper()
-
     def __contains__(self, other: Typing) -> bool:
         """contains method
 

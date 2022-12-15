@@ -214,7 +214,7 @@ class Move:
         str
             Representation of a move
         """
-        return f"[{self.name}] - {self.type} ({self.category.name})".title()
+        return f"[{self.name}] - {self.type.name} ({self.category.name})".title()
 
     def calculated_base(self, raw: dict[int, int]) -> int:
         """Obtains the calculated base for the move
