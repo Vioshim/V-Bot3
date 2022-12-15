@@ -215,8 +215,8 @@ class Size(Enum):
         else:
             value = size
 
-        feet, inches = int(value / 0.3048), round(value / 0.3048 % 1 * 12)
-        return f"{round(value, 2):.2f} m / {feet}' {inches:02d}\" ft"
+        feet, inches = int(value / 0.3048), int(value / 0.3048 % 1 * 12)
+        return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_info(self, value: float = 0):
         _, proportion, _, size = self.value
@@ -225,8 +225,7 @@ class Size(Enum):
         else:
             value = size
 
-        kg, lbs = round(value, 2), round(value * 2.20462, 2)
-        return f"{kg:.2f} kg / {lbs:.2f} lbs"
+        return f"{value:.2f} kg / {value * 2.20462:.2f} lbs"
 
 
 @dataclass(slots=True)
