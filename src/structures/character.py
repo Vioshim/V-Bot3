@@ -783,8 +783,6 @@ class Character:
                         font=Fonts.Whitney_Black,
                         font_size=36,
                     )
-                if oc.pronoun.image:
-                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
         return kit.url
 
     @classmethod
@@ -812,8 +810,6 @@ class Character:
                         font=Fonts.Whitney_Black,
                         font_size=36,
                     )
-                if oc.pronoun.image:
-                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
         return kit.url
 
     async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:

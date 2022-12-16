@@ -709,7 +709,7 @@ class Submission(commands.Cog):
                 url = Character.rack(ocs, font=font)
                 view = View()
                 for oc in ocs:
-                    view.add_item(Button(label=oc.name, url=oc.jump_url))
+                    view.add_item(Button(label=oc.name, url=oc.jump_url, emoji=oc.pronoun.emoji))
                 if file := await self.bot.get_file(url):
                     await ctx.reply(file=file, view=view)
                 else:
@@ -725,7 +725,7 @@ class Submission(commands.Cog):
                 url = Character.rack2(ocs, font=font)
                 view = View()
                 for index, oc in enumerate(ocs):
-                    view.add_item(Button(label=oc.name, url=oc.jump_url, row=index // 2))
+                    view.add_item(Button(label=oc.name, url=oc.jump_url, row=index // 2, emoji=oc.pronoun.emoji))
                 if file := await self.bot.get_file(url):
                     await ctx.reply(file=file, view=view)
                 else:

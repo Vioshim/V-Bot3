@@ -184,15 +184,9 @@ class SPAbilityView(Basic):
 
     @button(label="Remove", emoji=EMOTE_REMOVE_EMOJI, custom_id="remove")
     async def deny(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
         self.sp_ability.clear()
-        self.embed.description = "Alright, no Unique Trait"
-        await resp.edit_message(embed=self.embed, view=None)
         await self.delete(ctx)
 
     @button(label="Keep as is", emoji=EMOTE_UPDATE_EMOJI, custom_id="default")
     async def cancel(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        self.embed.description = "Process concluded"
-        await resp.edit_message(embed=self.embed, view=None)
         await self.delete(ctx)
