@@ -408,7 +408,7 @@ class OCGroupBy(Generic[D], ABC):
 
         items = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs).items()]
         data = {k: v for k, v in cls.sort_by(items) if amount_parser(amount, v)}
-        return GroupByComplex(member=ctx.user, target=ctx, data=data, parser=cls.inner_parser)
+        return GroupByComplex(member=ctx.user, target=ctx, data=data, inner_parser=cls.inner_parser)
 
 
 class OCGroupByKind(OCGroupBy[Kind]):
