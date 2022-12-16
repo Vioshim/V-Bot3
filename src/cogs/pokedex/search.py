@@ -16,7 +16,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import groupby
-from typing import Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 from discord import Guild, Interaction, Member, Thread
 from discord.app_commands import Choice
@@ -383,6 +383,13 @@ class OCGroupBy(ABC):
             Characters per category
         """
 
+    @staticmethod
+    def sort_by(items: list[tuple[Any, list[Character]]]):
+        try:
+            return sorted(items, key=lambda x: (-len(x[1]), x[0]))
+        except TypeError:
+            return sorted(items, key=lambda x: (-len(x[1]), getattr(x[0], "name", str(x[0]))))
+
     @classmethod
     def generate(
         cls,
@@ -395,18 +402,9 @@ class OCGroupBy(ABC):
         else:
             ocs = [x for x in ocs if ctx.guild.get_member(x.author)]
 
-        data = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs).items()]
-
-        try:
-            data.sort(key=lambda x: (-len(x[1]), x[0]))
-        except TypeError:
-            data.sort(key=lambda x: (-len(x[1]), getattr(x[0], "name", str(x[0]))))
-
-        return GroupByComplex(
-            member=ctx.user,
-            target=ctx,
-            data={k: v for k, v in data if amount_parser(amount, v)},
-        )
+        items = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs).items()]
+        data = {k: v for k, v in cls.sort_by(items) if amount_parser(amount, v)}
+        return GroupByComplex(member=ctx.user, target=ctx, data=data)
 
 
 class OCGroupByKind(OCGroupBy):
@@ -545,6 +543,10 @@ class OCGroupByLocation(OCGroupBy):
 
         return {k: frozenset(v) for k, v in groupby(ocs, key=foo)}
 
+    @staticmethod
+    def sort_by(items: list[tuple[Thread, list[Character]]]):
+        return sorted(items, key=lambda x: x[0].name if x[0] else "None")
+
 
 class OCGroupByMember(OCGroupBy):
     @classmethod
@@ -552,6 +554,10 @@ class OCGroupByMember(OCGroupBy):
         ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
         return {m: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))}
+
+    @staticmethod
+    def sort_by(items: list[tuple[Member, list[Character]]]):
+        return sorted(items, key=lambda x: x[0].name)
 
 
 class OCGroupByHiddenPower(OCGroupBy):
@@ -579,14 +585,22 @@ class OCGroupByHeight(OCGroupBy):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.size.height_value(x.species.height), reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size.height_info(x.species.height))}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size.height_info(x.species.height)) if k}
+
+    @staticmethod
+    def sort_by(items: list[tuple[str, list[Character]]]):
+        return sorted(items, key=lambda x: float(x[0].split(" m ")[0]), reverse=True)
 
 
 class OCGroupByWeight(OCGroupBy):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.weight.weight_value(x.species.weight), reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight.weight_info(x.species.weight))}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight.weight_info(x.species.weight)) if k}
+
+    @staticmethod
+    def sort_by(items: list[tuple[str, list[Character]]]):
+        return sorted(items, key=lambda x: float(x[0].split(" kg ")[0]), reverse=True)
 
 
 class GroupByArg(Enum):
