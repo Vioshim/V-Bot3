@@ -756,7 +756,7 @@ class Character:
                 if font:
                     kit.add_text(
                         text=oc.name,
-                        width=330,
+                        width=450,
                         x=x,
                         y=y + 400,
                         background=0xFFFFFF,
@@ -764,8 +764,6 @@ class Character:
                         font=Fonts.Whitney_Black,
                         font_size=36,
                     )
-                if oc.pronoun.image:
-                    kit.add_image(image=oc.pronoun.image, height=120, width=120, x=x + 325, y=y + 325)
         return kit.url
 
     @classmethod

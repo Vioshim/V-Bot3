@@ -427,7 +427,7 @@ class RPSearchManage(View):
 
     @button(
         label="Click to Read User's OCs.",
-        row=1,
+        row=4,
         custom_id="check_ocs",
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
@@ -468,22 +468,21 @@ class RPSearchManage(View):
 
     @button(
         label="Archive Thread",
-        row=1,
+        row=4,
         custom_id="archive_thread",
         style=ButtonStyle.red,
     )
     async def conclude(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
-        if "Confirm" not in btn.label:
-            btn.label = f"{btn.label} (Confirm)"
-            return await resp.edit_message(view=self)
-
         db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
+        resp: InteractionResponse = ctx.response
         if ctx.user.id != self.member_id and not ctx.user.guild_permissions.moderate_members:
             return await resp.send_message(
                 f"Only <@{self.member_id}> can archive it",
                 ephemeral=True,
             )
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
         await resp.pong()
         if (message := ctx.message) and (
             item := await db.find_one_and_delete(
@@ -622,8 +621,8 @@ class RPModal(Modal):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
         if not items:
-            items = sorted(self.ocs, key=lambda x: x.name)
-        items = set(items)
+            items = self.ocs
+        items = sorted(set(items), key=lambda x: x.name)
 
         reference = self.role
         name = f"{self.role.name} - {self.user.display_name}"
@@ -642,6 +641,8 @@ class RPModal(Modal):
         thread = await msg1.create_thread(name=name)
         embed.set_image(url=WHITE_BAR)
         view = RPSearchManage(msg1.id, self.user, items)
+        for idx, x in enumerate(items[:6]):
+            view.add_item(Button(label=x.name[:45], emoji=x.pronoun.emoji, url=x.jump_url, row=idx // 3))
         msg2 = await thread.send(
             content=reference.mention,
             allowed_mentions=AllowedMentions(users=True),
