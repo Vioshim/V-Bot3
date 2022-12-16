@@ -636,7 +636,7 @@ class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
     def inner_parser(group: Pokeball | None, elements: list[Character]):
         if group is None:
             return "None", f"Total without: {len(elements):02d} OCs."
-        return group.name, f"Obtained by {len(elements):02d} OCs."
+        return group.label, f"Obtained by {len(elements):02d} OCs."
 
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
