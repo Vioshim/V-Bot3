@@ -208,23 +208,31 @@ class Size(Enum):
     XXXS_ = 0.5625, 0.34375, 0.35, 8.95000
     XXXS = 0.50000, 0.25000, 0.30, 4.60000
 
-    def height_info(self, value: float = 0):
+    def height_value(self, value: float = 0):
         proportion, _, size, _ = self.value
         if value:
             value *= proportion
         else:
             value = size
 
+        return value
+
+    def height_info(self, value: float = 0):
+        value = self.height_value(value)
         feet, inches = int(value / 0.3048), int(value / 0.3048 % 1 * 12)
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
-    def weight_info(self, value: float = 0):
+    def weight_value(self, value: float = 0):
         _, proportion, _, size = self.value
         if value:
             value *= proportion
         else:
             value = size
 
+        return value
+
+    def weight_info(self, value: float = 0):
+        value = self.weight_value(value)
         return f"{value:.2f} kg / {value * 2.20462:.2f} lbs"
 
 

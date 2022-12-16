@@ -578,15 +578,15 @@ class OCGroupByPokeball(OCGroupBy):
 class OCGroupByHeight(OCGroupBy):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.size.value, reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size)}
+        ocs = sorted(ocs, key=lambda x: x.size.height_value(x.species.height), reverse=True)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size.height_info(x.species.height))}
 
 
 class OCGroupByWeight(OCGroupBy):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.weight.value, reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight)}
+        ocs = sorted(ocs, key=lambda x: x.weight.weight_value(x.species.weight), reverse=True)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight.weight_info(x.species.weight))}
 
 
 class GroupByArg(Enum):
