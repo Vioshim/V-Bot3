@@ -775,7 +775,7 @@ class Character:
                 if font:
                     kit.add_text(
                         text=oc.name,
-                        width=330,
+                        width=450,
                         x=x,
                         y=y + 400,
                         background=0xFFFFFF,
@@ -802,7 +802,7 @@ class Character:
                 if font:
                     kit.add_text(
                         text=oc.name,
-                        width=330,
+                        width=450,
                         x=x,
                         y=y + 400,
                         background=0xFFFFFF,
