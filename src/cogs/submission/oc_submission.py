@@ -896,8 +896,8 @@ class HiddenPowerField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.hidden_power and oc.hidden_power == TypingEnum.Shadow:
-            return "Shadow hidden power isn't a thing."
+        if oc.hidden_power and oc.hidden_power in [TypingEnum.Shadow, TypingEnum.Typeless]:
+            return "Invalid Hidden Power."
 
     @classmethod
     async def on_submit(
@@ -911,8 +911,7 @@ class HiddenPowerField(TemplateField):
         view = Complex[TypingEnum](
             member=ctx.user,
             target=ctx,
-            values=TypingEnum.all(TypingEnum.Shadow),
-            max_values=1,
+            values=TypingEnum.all(TypingEnum.Shadow, TypingEnum.Typeless),
             timeout=None,
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
