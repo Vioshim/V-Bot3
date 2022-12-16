@@ -127,6 +127,13 @@ class Kind(Enum):
     Chimera = Chimera
 
     @property
+    def title(self):
+        name = self.name
+        if name.startswith("Custom"):
+            name = name.removeprefix("Custom") + " (Custom)"
+        return name.replace("Common", "Pokemon")
+
+    @property
     def to_db(self) -> str:
         match self:
             case self.Common:

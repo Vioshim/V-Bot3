@@ -16,9 +16,9 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import groupby
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 
-from discord import Guild, Interaction, Member, Thread
+from discord import ForumChannel, Guild, Interaction, Member, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
@@ -27,10 +27,12 @@ from rapidfuzz import process
 
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.pagination.complex import Complex
-from src.structures.ability import Ability
-from src.structures.character import Character, Kind
+from src.structures.ability import Ability, UTraitKind
+from src.structures.character import AgeGroup, Character, Kind, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
+from src.structures.pokeball import Pokeball
+from src.structures.pronouns import Pronoun
 from src.structures.species import (
     Chimera,
     CustomMega,
@@ -333,26 +335,21 @@ class FakemonTransformer(Transformer):
 FakemonArg = Transform[Character, FakemonTransformer]
 
 
-class GroupByComplex(Complex[str]):
+class GroupByComplex(Complex[tuple[str, list[Character]]]):
     def __init__(
         self,
         member: Member,
         target: Interaction,
         data: dict[str, list[Character]],
+        inner_parser: Callable[[tuple[Any, list[Character]]], tuple[str, str]],
     ):
         self.data = data
-
-        def inner_parser(item: str):
-            elements = self.data.get(item, [])
-            return getattr(item, "name", str(item)), f"Group has {len(elements):02d} OCs."
-
         super(GroupByComplex, self).__init__(
             member=member,
             target=target,
-            parser=inner_parser,
-            values=data.keys(),
+            parser=lambda x: inner_parser(x, data.get(x, [])),
+            values=list(data),
             keep_working=True,
-            sort_key=lambda x: (-len(data.get(x, [])), getattr(x, "name", str(x))),
         )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
@@ -364,10 +361,13 @@ class GroupByComplex(Complex[str]):
             await super(GroupByComplex, self).select_choice(interaction, sct)
 
 
-class OCGroupBy(ABC):
+D = TypeVar("D")
+
+
+class OCGroupBy(Generic[D], ABC):
     @classmethod
     @abstractmethod
-    def method(cls, ctx: Interaction, ocs: Iterable[Character]) -> dict[str, frozenset[Character]]:
+    def method(cls, ctx: Interaction, ocs: Iterable[Character]) -> dict[D, frozenset[Character]]:
         """Abstract method for grouping
 
         Parameters
@@ -384,7 +384,11 @@ class OCGroupBy(ABC):
         """
 
     @staticmethod
-    def sort_by(items: list[tuple[Any, list[Character]]]):
+    def inner_parser(group: D, elements: list[Character]):
+        return getattr(group, "name", str(group)), f"Group has {len(elements):02d} OCs."
+
+    @staticmethod
+    def sort_by(items: list[tuple[D, list[Character]]]) -> list[tuple[D, list[Character]]]:
         try:
             return sorted(items, key=lambda x: (-len(x[1]), x[0]))
         except TypeError:
@@ -404,17 +408,21 @@ class OCGroupBy(ABC):
 
         items = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs).items()]
         data = {k: v for k, v in cls.sort_by(items) if amount_parser(amount, v)}
-        return GroupByComplex(member=ctx.user, target=ctx, data=data)
+        return GroupByComplex(member=ctx.user, target=ctx, data=data, parser=cls.inner_parser)
 
 
-class OCGroupByKind(OCGroupBy):
+class OCGroupByKind(OCGroupBy[Kind]):
+    @staticmethod
+    def inner_parser(group: Kind, elements: list[Character]):
+        return group.title, f"Kind has {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
 
 
-class OCGroupByShape(OCGroupBy):
+class OCGroupByShape(OCGroupBy[str]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[str, set[Character]] = {}
@@ -441,14 +449,20 @@ class OCGroupByShape(OCGroupBy):
         return data
 
 
-class OCGroupByAge(OCGroupBy):
+class OCGroupByAge(OCGroupBy[AgeGroup]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.age.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
 
 
-class OCGroupBySpecies(OCGroupBy):
+class OCGroupBySpecies(OCGroupBy[Kind | Species]):
+    @staticmethod
+    def inner_parser(group: Kind | Species, elements: list[Character]):
+        if isinstance(group, Kind):
+            return group.title, f"Kind has {len(elements):02d} OCs."
+        return group.name, f"Species has {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
@@ -463,7 +477,11 @@ class OCGroupBySpecies(OCGroupBy):
         return data
 
 
-class OCGroupByEvoLine(OCGroupBy):
+class OCGroupByEvoLine(OCGroupBy[Species]):
+    @staticmethod
+    def inner_parser(group: Species, elements: list[Character]):
+        return group.name, f"Evo line has {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[Species, set[Character]] = {}
@@ -488,7 +506,11 @@ class OCGroupByEvoLine(OCGroupBy):
         return data
 
 
-class OCGroupByType(OCGroupBy):
+class OCGroupByType(OCGroupBy[TypingEnum]):
+    @staticmethod
+    def inner_parser(group: TypingEnum, elements: list[Character]):
+        return group.name, f"Included in {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[TypingEnum, set[Character]] = {}
@@ -499,14 +521,22 @@ class OCGroupByType(OCGroupBy):
         return {k: frozenset(v) for k, v in data.items()}
 
 
-class OCGroupByPronoun(OCGroupBy):
+class OCGroupByPronoun(OCGroupBy[Pronoun]):
+    @staticmethod
+    def inner_parser(group: Pronoun, elements: list[Character]):
+        return group.name, f"Identified by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.pronoun.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun)}
 
 
-class OCGroupByMove(OCGroupBy):
+class OCGroupByMove(OCGroupBy[Move]):
+    @staticmethod
+    def inner_parser(group: Move, elements: list[Character]):
+        return group.name, f"Learned by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[Move, set[Character]] = {}
@@ -517,7 +547,11 @@ class OCGroupByMove(OCGroupBy):
         return {k: frozenset(v) for k, v in data.items()}
 
 
-class OCGroupByAbility(OCGroupBy):
+class OCGroupByAbility(OCGroupBy[Ability]):
+    @staticmethod
+    def inner_parser(group: Ability, elements: list[Character]):
+        return group.name, f"Carried by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[Ability, set[Character]] = {}
@@ -528,7 +562,13 @@ class OCGroupByAbility(OCGroupBy):
         return {k: frozenset(v) for k, v in data.items()}
 
 
-class OCGroupByLocation(OCGroupBy):
+class OCGroupByLocation(OCGroupBy[ForumChannel | None]):
+    @staticmethod
+    def inner_parser(group: ForumChannel | None, elements: list[Character]):
+        if group is None:
+            return "Unknown", f"Total unassigned: {len(elements):02d} OCs."
+        return group.name, f"Explored by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         guild: Guild = ctx.guild
@@ -537,69 +577,92 @@ class OCGroupByLocation(OCGroupBy):
             if ch := guild.get_channel_or_thread(oc.location):
                 if isinstance(ch, Thread):
                     ch = ch.parent
-                return ch
+                if isinstance(ch, ForumChannel):
+                    return ch
 
         ocs = sorted(ocs, key=lambda x: o.id if (o := foo(x)) else 0)
 
         return {k: frozenset(v) for k, v in groupby(ocs, key=foo)}
 
     @staticmethod
-    def sort_by(items: list[tuple[Thread, list[Character]]]):
+    def sort_by(items: list[tuple[ForumChannel | None, list[Character]]]):
         return sorted(items, key=lambda x: x[0].name if x[0] else "None")
 
 
-class OCGroupByMember(OCGroupBy):
+class OCGroupByMember(OCGroupBy[Member]):
+    @staticmethod
+    def inner_parser(group: Member, elements: list[Character]):
+        return group.display_name, f"Has {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, ctx: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
         return {m: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))}
 
-    @staticmethod
-    def sort_by(items: list[tuple[Member, list[Character]]]):
+    @classmethod
+    def sort_by(cls, items: list[tuple[Member, list[Character]]]):
         return sorted(items, key=lambda x: x[0].name)
 
 
-class OCGroupByHiddenPower(OCGroupBy):
+class OCGroupByHiddenPower(OCGroupBy[TypingEnum | None]):
+    @staticmethod
+    def inner_parser(group: TypingEnum | None, elements: list[Character]):
+        if group is None:
+            return "Unknown", f"Unknown to {len(elements):02d} OCs."
+        return group.name, f"Granted to {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: getattr(x.hidden_power, "name", "Unknown"))
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.hidden_power or "Unknown")}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.hidden_power)}
 
 
-class OCGroupByUniqueTrait(OCGroupBy):
+class OCGroupByUniqueTrait(OCGroupBy[UTraitKind | None]):
+    @staticmethod
+    def inner_parser(group: UTraitKind | None, elements: list[Character]):
+        if group is None:
+            return "Unknown", f"Unknown to {len(elements):02d} OCs."
+        return group.name, f"Used by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.sp_ability.kind.name if x.sp_ability else "Unknown")
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: getattr(x.sp_ability, "kind", "Unknown"))}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.sp_ability.kind if x.sp_ability else None)}
 
 
-class OCGroupByPokeball(OCGroupBy):
+class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
+    @staticmethod
+    def inner_parser(group: Pokeball | None, elements: list[Character]):
+        if group is None:
+            return "None", f"Total without: {len(elements):02d} OCs."
+        return group.name, f"Obtained by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: getattr(x.pokeball, "name", "None"))
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball or "None")}
+        ocs = sorted(ocs, key=lambda x: x.pokeball.name if x.pokeball else "None")
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball)}
 
 
-class OCGroupByHeight(OCGroupBy):
+class OCGroupByHeight(OCGroupBy[Size]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.size.height_value(x.species.height), reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size.height_info(x.species.height)) if k}
 
-    @staticmethod
-    def sort_by(items: list[tuple[str, list[Character]]]):
+    @classmethod
+    def sort_by(cls, items: list[tuple[str, list[Character]]]):
         return sorted(items, key=lambda x: float(x[0].split(" m ")[0]), reverse=True)
 
 
-class OCGroupByWeight(OCGroupBy):
+class OCGroupByWeight(OCGroupBy[Size]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.weight.weight_value(x.species.weight), reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight.weight_info(x.species.weight)) if k}
 
-    @staticmethod
-    def sort_by(items: list[tuple[str, list[Character]]]):
+    @classmethod
+    def sort_by(cls, items: list[tuple[str, list[Character]]]):
         return sorted(items, key=lambda x: float(x[0].split(" kg ")[0]), reverse=True)
 
 
