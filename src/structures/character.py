@@ -662,15 +662,9 @@ class Character:
 
             embeds.append(sp_embed)
 
-        if TypingEnum.Typeless in self.types:
-
-            def move_parser(x: Move):
-                return f"> [{x.name}] - Typeless ({x.category.name})".title()
-
-        else:
-
-            def move_parser(x: Move):
-                return f"> {x!r}"
+        def move_parser(x: Move):
+            item = TypingEnum.Typeless if TypingEnum.Typeless in self.types else x.type
+            return f"> [{x.name}] - {item.name} ({x.category.name})".title()
 
         moves_text = "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name)))
 
