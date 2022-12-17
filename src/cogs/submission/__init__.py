@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from asyncio import TimeoutError as AsyncTimeoutError
+import asyncio
 from contextlib import suppress
 from typing import Optional
 
@@ -520,16 +520,23 @@ class Submission(commands.Cog):
         if context.command:
             return
 
+        messages: list[Message] = []
+
         def checker(m: Message):
+            condition: bool = False
             if m.webhook_id and message.channel == m.channel:
                 if isinstance(content := message.content, str):
-                    return m.content in content
-                if attachments := message.attachments:
-                    return len(attachments) == len(m.attachments)
+                    condition = m.content in content
+                elif attachments := message.attachments:
+                    condition = len(attachments) == len(m.attachments)
+            if condition:
+                messages.append(m)
             return False
 
-        with suppress(AsyncTimeoutError):
-            msg: Message = await self.bot.wait_for("message", check=checker, timeout=3)
+        with suppress(asyncio.TimeoutError):
+            await self.bot.wait_for("message", check=checker, timeout=3)
+
+        for msg in messages:
             await self.on_message_tupper(msg, message.author)
 
     async def load_submssions(self):
