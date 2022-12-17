@@ -17,8 +17,6 @@ from enum import Enum
 
 from discord import PartialEmoji
 
-"https://archives.bulbagarden.net/media/upload/_Sprite.png"
-
 
 class Pokeball(Enum):
     Poke_Ball = "7/79/Dream_Pok%C3%A9_Ball"

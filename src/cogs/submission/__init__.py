@@ -619,18 +619,30 @@ class Submission(commands.Cog):
                 await self.on_message_proxy(message)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, _: Message, message: Message):
+    async def on_message_edit(self, previous: Message, message: Message):
         """on_message_edit handler
 
         Parameters
         ----------
-        _ : Message
+        previous : Message
             Previous message
         message : Message
             Message to process
         """
+        if not message.guild or previous.content == message.content:
+            return
+
+        tupper = message.guild.get_member(431544605209788416)
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
+        elif (
+            ((self.bot.webhook_lazy(message.channel)) or (tupper and tupper.status == Status.online))
+            and message.channel.category_id in MAP_ELEMENTS2
+            and tupper != message.author
+            and not message.channel.name.endswith("OOC")
+            and not message.webhook_id
+        ):
+            await self.on_message_proxy(message)
 
     @commands.Cog.listener()
     async def on_raw_thread_update(self, payload: RawThreadUpdateEvent):
