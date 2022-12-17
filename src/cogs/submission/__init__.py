@@ -551,10 +551,13 @@ class Submission(commands.Cog):
             return_when=asyncio.FIRST_COMPLETED,
         )
 
-        for x in pending:
-            x.cancel()
+        for future in done:
+            future.exception()
 
-        if not any(task == x for x in done):
+        for future in pending:
+            future.cancel()
+
+        if not any(task == future for future in done):
             for msg in sorted(messages, key=lambda x: x.id):
                 await self.on_message_tupper(msg, message.author)
 
