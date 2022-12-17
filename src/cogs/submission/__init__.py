@@ -533,11 +533,30 @@ class Submission(commands.Cog):
                 messages.append(m)
             return False
 
-        with suppress(asyncio.TimeoutError):
-            await self.bot.wait_for("message", check=checker, timeout=3)
+        done, pending = await asyncio.wait(
+            [
+                asyncio.create_task(
+                    self.bot.wait_for("message", check=checker),
+                    name="Message",
+                ),
+                task := asyncio.create_task(
+                    self.bot.wait_for("message_edit", check=lambda x, _: x == message),
+                    name="Edit",
+                ),
+                asyncio.create_task(
+                    self.bot.wait_for("message_delete", check=lambda x: x == message, timeout=3),
+                    name="Delete",
+                ),
+            ],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
 
-        for msg in sorted(messages, key=lambda x: x.id):
-            await self.on_message_tupper(msg, message.author)
+        for x in pending:
+            x.cancel()
+
+        if not any(task == x for x in done):
+            for msg in sorted(messages, key=lambda x: x.id):
+                await self.on_message_tupper(msg, message.author)
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
