@@ -602,12 +602,14 @@ class Submission(commands.Cog):
         message : Message
             Message to process
         """
+        if not message.guild:
+            return
+
         tupper = message.guild.get_member(431544605209788416)
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
         elif (
-            message.guild
-            and ((self.bot.webhook_lazy(message.channel)) or (tupper and tupper.status == Status.online))
+            ((self.bot.webhook_lazy(message.channel)) or (tupper and tupper.status == Status.online))
             and message.channel.category_id in MAP_ELEMENTS2
             and not message.channel.name.endswith("OOC")
             and not message.webhook_id
