@@ -523,13 +523,13 @@ class Submission(commands.Cog):
         messages: list[Message] = []
 
         def checker(m: Message):
-            condition: bool = False
-            if m.webhook_id and message.channel == m.channel:
-                if isinstance(content := message.content, str):
-                    condition = m.content in content
-                elif attachments := message.attachments:
-                    condition = len(attachments) == len(m.attachments)
-            if condition:
+            if not (m.webhook_id and message.channel == m.channel):
+                return False
+
+            attachments = message.attachments
+            if (message.content and (m.content in message.content)) or (
+                attachments and len(attachments) == len(m.attachments)
+            ):
                 messages.append(m)
             return False
 
