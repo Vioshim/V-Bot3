@@ -536,7 +536,7 @@ class Submission(commands.Cog):
         with suppress(asyncio.TimeoutError):
             await self.bot.wait_for("message", check=checker, timeout=3)
 
-        for msg in messages:
+        for msg in sorted(messages, key=lambda x: x.id):
             await self.on_message_tupper(msg, message.author)
 
     async def load_submssions(self):
