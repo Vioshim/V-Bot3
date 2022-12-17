@@ -341,7 +341,7 @@ class GroupByComplex(Complex[tuple[str, list[Character]]]):
         member: Member,
         target: Interaction,
         data: dict[str, list[Character]],
-        inner_parser: Callable[[tuple[Any, list[Character]]], tuple[str, str]],
+        inner_parser: Callable[[Any, list[Character]], tuple[str, str]],
     ):
         self.data = data
         super(GroupByComplex, self).__init__(

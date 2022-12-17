@@ -10,23 +10,38 @@
 	},
 	"The Simple Roleplay Hub": {
 		"image": {
-			"url": "https://dummyimage.com/500x5/FFFFFF/000000&text=%20"
+			"width": 1920,
+			"url": "https://i.imgur.com/7CZtLUV.jpg",
+			"proxy_url": "https://images-ext-1.discordapp.net/external/LsXkFFVp5-GFm-FHoQ-sbfoT9jZy3jkG3fwpWLyULpE/https/i.imgur.com/7CZtLUV.jpg",
+			"height": 1080
 		},
-		"thumbnail": {
-			"url": "https://cdn.discordapp.com/icons/611716723606945805/cc714b894b22e7e2e3266ea8a9786e06.webp?size=1024"
-		},
+		"author": { "name": "The Simple way to level up your server." },
 		"fields": [
 			{
-				"value": "https://discord.gg/G6Nz5jW",
-				"name": "Invite",
+				"name": "\ud83d\ude80  DIVERSE ADVERTISING",
+				"value": ">  Dozens of genre-specific and resource-geared channels available to advertise in!",
+				"inline": false
+			},
+			{
+				"name": "\ud83d\ude80  EASY PARTNERSHIPS",
+				"value": "> Simple partnership rules, an easy process, and only 15 members required!",
+				"inline": false
+			},
+			{
+				"name": "\ud83d\ude80  BOOSTING PERKS",
+				"value": "> For our amazing supporters!",
+				"inline": false
+			},
+			{
+				"name": "\ud83d\ude80  STAFF POSITIONS AVAILABLE",
+				"value": "> We are always looking for new members to help us run SRH!",
 				"inline": false
 			}
 		],
 		"color": 16705372,
 		"type": "rich",
-		"description": "Tired of complicated RP hubs?\nDo you want to find new and great RP servers?\nAre you a server owner and you just want a simple everyone ping to advertise your server?\nLook no further than the **Simple Roleplay Hub!** \nThis ad like the server will be kept simple. \nWe will ping everyone regardless of size and we have 6 different tiers depending on the size of your server. \n\nWhat are you waiting for? Join today!",
-		"url": "https://discord.gg/G6Nz5jW",
-		"title": "The Simple Roleplay Hub"
+		"description": "OUR MISSION {-} In the beginning, The Simple Roleplay Hub was designed to be a place for simple, easy-to-understand partnerships and advertising. With our mission in mind, we have evolved to become a server that meets all of your partnering or advertising needs\u2014without the hassle! As we continue to grow, we listen to your voices to ensure that SRH will always be a server made for and by its members. Just like our server, this advertisement will be kept simple.\n\n\u00bb\u00bb\u2014\u2014\u2014-\u3000\u3000\u2014\u2014\u2014-\u00ab\u00ab\n\ud835\ude71\ud835\ude70\ud835\ude7d\ud835\ude7d\ud835\ude74\ud835\ude81: https://imgur.com/7CZtLUV\n\ud835\ude78\ud835\ude7d\ud835\ude85\ud835\ude78\ud835\ude83\ud835\ude74: https://discord.gg/G6Nz5jW\n\u00bb\u00bb\u2014\u2014\u2014-\u3000\u3000\u2014\u2014\u2014-\u00ab\u00ab",
+		"title": "\u2554\u2550\u2550\u2550\u2550\u2550\u2550 \u2740\u2022\u00b0\u2740\u00b0\u2022\u2740 \u2550\u2550\u2550\u2550\u2550\u2550\u2557\n     \ud835\ude83\ud835\ude77\ud835\ude74  \ud835\ude82\ud835\ude78\ud835\ude7c\ud835\ude7f\ud835\ude7b\ud835\ude74  \ud835\ude81\ud835\ude7e\ud835\ude7b\ud835\ude74\ud835\ude7f\ud835\ude7b\ud835\ude70\ud835\ude88  \ud835\ude77\ud835\ude84\ud835\ude71 \n\u255a\u2550\u2550\u2550\u2550\u2550\u2550 \u2740\u2022\u00b0\u2740\u00b0\u2022\u2740 \u2550\u2550\u2550\u2550\u2550\u2550\u255d"
 	},
 	"〚🌙 〛𝐂𝐫𝐞𝐬𝐜𝐞𝐧𝐭 𝐑𝐨𝐥𝐞𝐩𝐥𝐚𝐲 𝐇𝐮𝐛 〚🌙 〛": {
 		"image": {
@@ -34,23 +49,23 @@
 		},
 		"fields": [
 			{
-				"value": "198118592632455168 (Sovereign I)\n248049930428481536 (Sovereign II)\n205100036760141825 (Sovereign III)\n207729013693743104 (Sovereign IV)\n282602243348365313 (Sovereign V)",
 				"name": "〚 𝐎𝐰𝐧𝐞𝐫 𝐈𝐃𝐬 〛",
+				"value": "198118592632455168 (Sovereign I)\n248049930428481536 (Sovereign II)\n205100036760141825 (Sovereign III)\n207729013693743104 (Sovereign IV)\n282602243348365313 (Sovereign V)",
 				"inline": false
 			},
 			{
-				"value": "@everyone | @here",
 				"name": "〚 𝐌𝐞𝐧𝐭𝐢𝐨𝐧𝐬 〛",
+				"value": "@everyone | @here",
 				"inline": true
 			},
 			{
-				"value": "[Image URL](https://cdn.discordapp.com/attachments/742602526326521926/899746669824978984/MOSHED-2021-10-18-14-48-32.gif)",
 				"name": "〚 𝐁𝐚𝐧𝐧𝐞𝐫 〛",
+				"value": "[Image URL](https://cdn.discordapp.com/attachments/742602526326521926/899746669824978984/MOSHED-2021-10-18-14-48-32.gif)",
 				"inline": true
 			},
 			{
-				"value": "[Invite URL](https://discord.gg/Ms8kFU5TDA)",
 				"name": "〚 𝐈𝐧𝐯𝐢𝐭𝐞 〛",
+				"value": "[Invite URL](https://discord.gg/Ms8kFU5TDA)",
 				"inline": true
 			}
 		],

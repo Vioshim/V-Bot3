@@ -261,6 +261,6 @@ class CharactersView(BaseCharactersView):
             else:
                 target = interaction
             view = PingView(oc=item, reference=target, msg_id=self.msg_id)
-            await interaction.followup.send(embeds=embeds, view=view, ephemeral=True)
+            await interaction.followup.send(content=item.id, embeds=embeds, view=view, ephemeral=True)
             await view.wait()
         await super(CharactersView, self).select_choice(interaction, sct)

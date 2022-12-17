@@ -1419,12 +1419,16 @@ class ModCharactersView(CharactersView):
                 embeds = item.embeds
                 if author := interaction.guild.get_member(item.author):
                     embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
-                if item.author in [interaction.user.id, user.id] or interaction.user.id == interaction.guild.owner_id:
+                if (
+                    interaction.user.guild_permissions.manage_messages
+                    or interaction.user.id == interaction.guild.owner_id
+                    or item.author in [interaction.user.id, user.id]
+                ):
                     view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
                     await view.handler_send(ephemeral=True, embeds=embeds)
                 else:
                     view = PingView(oc=item, reference=interaction)
-                    await interaction.followup.send(embeds=embeds, view=view, ephemeral=True)
+                    await interaction.followup.send(content=item.id, embeds=embeds, view=view, ephemeral=True)
 
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
@@ -1556,12 +1560,8 @@ class SubmissionView(View):
             )
         ]:
             values.sort(key=lambda x: x.name)
-            if ctx.user == member or ctx.user.guild_permissions.manage_messages:
-                view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
-                view.embed.title = "Select Character to modify"
-            else:
-                view = CharactersView(member=ctx.user, target=ctx, ocs=values)
-            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar)
             async with view.send(single=True):
                 ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
         else:

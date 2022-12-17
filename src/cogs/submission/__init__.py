@@ -194,19 +194,13 @@ class Submission(commands.Cog):
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=True, thinking=True)
         db = self.bot.mongo_db("Characters")
-        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
-            user = self.bot.supporting.get(ctx.user, ctx.user)
-            if ocs[0].author in [ctx.user.id, user.id] or ctx.user.id == ctx.guild.owner_id:
-                view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
-            else:
-                view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
-            embed = view.embed
-            embed.color = member.color
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            async with view.send(ephemeral=True):
-                self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
-        else:
-            await ctx.followup.send(f"{member.mention} doesn't have characters.", ephemeral=True)
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
+        view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+        embed = view.embed
+        embed.color = member.color
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar)
+        async with view.send(ephemeral=True):
+            self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
     async def list_update(self, member: Object | User | Member):
         """This function updates an user's character list message
@@ -501,10 +495,10 @@ class Submission(commands.Cog):
             if oc.location != channel.id:
                 oc.location = channel.id
 
-            await self.bot.mongo_db("Characters").replace_one(
+            await db.update_one(
                 {"id": oc.id, "server": oc.server},
-                oc.to_mongo_dict(),
-                upsert=True,
+                {"$set": {"location": oc.location, "last_used": message.id}},
+                upsert=False,
             )
 
     async def on_message_proxy(self, message: Message):
@@ -735,44 +729,45 @@ class Submission(commands.Cog):
             data = [x for x in ctx.message.attachments if x.content_type.startswith("image/")]
             image = data[0].proxy_url if data else None
             db = self.bot.mongo_db("Characters")
-            if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
-                url = Character.collage(ocs, background=image, font=font)
-                if file := await self.bot.get_file(url):
-                    await ctx.reply(file=file)
-                else:
-                    await ctx.reply(content=url)
+            ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
+            ocs.sort(key=lambda x: x.id)
+            url = Character.collage(ocs, background=image, font=font)
+            if file := await self.bot.get_file(url):
+                await ctx.reply(file=file)
+            else:
+                await ctx.reply(content=url)
 
     @commands.command()
     @commands.guild_only()
     async def oc_rack(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with ctx.typing():
             db = self.bot.mongo_db("Characters")
-            if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
-                ocs.sort(key=lambda x: x.id)
-                url = Character.rack(ocs, font=font)
-                view = View()
-                for oc in ocs:
-                    view.add_item(Button(label=oc.name, url=oc.jump_url, emoji=oc.pronoun.emoji))
-                if file := await self.bot.get_file(url):
-                    await ctx.reply(file=file, view=view)
-                else:
-                    await ctx.reply(content=url, view=view)
+            ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
+            ocs.sort(key=lambda x: x.id)
+            url = Character.rack(ocs, font=font)
+            view = View()
+            for oc in ocs:
+                view.add_item(Button(label=oc.name, url=oc.jump_url, emoji=oc.pronoun.emoji))
+            if file := await self.bot.get_file(url):
+                await ctx.reply(file=file, view=view)
+            else:
+                await ctx.reply(content=url, view=view)
 
     @commands.command()
     @commands.guild_only()
     async def oc_rack2(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with ctx.typing():
             db = self.bot.mongo_db("Characters")
-            if ocs := [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]:
-                ocs.sort(key=lambda x: x.id)
-                url = Character.rack2(ocs, font=font)
-                view = View()
-                for index, oc in enumerate(ocs):
-                    view.add_item(Button(label=oc.name, url=oc.jump_url, row=index // 2, emoji=oc.pronoun.emoji))
-                if file := await self.bot.get_file(url):
-                    await ctx.reply(file=file, view=view)
-                else:
-                    await ctx.reply(content=url, view=view)
+            ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
+            ocs.sort(key=lambda x: x.id)
+            url = Character.rack2(ocs, font=font)
+            view = View()
+            for index, oc in enumerate(ocs):
+                view.add_item(Button(label=oc.name, url=oc.jump_url, row=index // 2, emoji=oc.pronoun.emoji))
+            if file := await self.bot.get_file(url):
+                await ctx.reply(file=file, view=view)
+            else:
+                await ctx.reply(content=url, view=view)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
@@ -800,26 +795,21 @@ class Submission(commands.Cog):
                 await view.handler_send(ephemeral=True)
             else:
                 view = PingView(oc=character, reference=ctx)
-                await ctx.followup.send(embeds=character.embeds, view=view, ephemeral=True)
+                await ctx.followup.send(content=character.id, embeds=character.embeds, view=view, ephemeral=True)
             return
 
         db = self.bot.mongo_db("Characters")
-        if ocs := [Character.from_mongo_dict(item) async for item in db.find({"author": member.id})]:
-            ocs.sort(key=lambda x: x.name)
-            if ocs[0].author in [ctx.user.id, user.id]:
-                view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+        ocs = [Character.from_mongo_dict(item) async for item in db.find({"author": member.id})]
+        ocs.sort(key=lambda x: x.name)
+        view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+        embed = view.embed
+        embed.color = member.color
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        async with view.send(ephemeral=True):
+            if member == ctx.user:
+                self.bot.logger.info("User %s is reading their OCs", str(member))
             else:
-                view = CharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
-            embed = view.embed
-            embed.color = member.color
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            async with view.send(ephemeral=True):
-                if member == ctx.user:
-                    self.bot.logger.info("User %s is reading their OCs", str(member))
-                else:
-                    self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
-        else:
-            await ctx.followup.send(f"{member.mention} has no characters.", ephemeral=True)
+                self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
