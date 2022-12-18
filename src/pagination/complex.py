@@ -211,10 +211,8 @@ class Complex(Simple[_T]):
         choices = self.choices
         if (amount := self.real_max or self.max_values) > 1:
             text = f"Picked: {len(choices)}, Max: {amount}, Options: {len(self.values)}"
-        elif not self.keep_working:
-            text = f"Single Choice. Options: {len(self.values)}"
         else:
-            text = f"Options: {len(self.values)}"
+            text = f"Single Choice. Options: {len(self.values)}"
 
         foo.placeholder = text
         if self.auto_text_component:
