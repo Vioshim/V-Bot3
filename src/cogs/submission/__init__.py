@@ -478,7 +478,7 @@ class Submission(commands.Cog):
             except ValueError:
                 emoji, name = SETTING_EMOJI, message.channel.name
             finally:
-                name = name.replace("-", " ").title()
+                name = name.replace("-", " ")
 
             view = View()
             view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
