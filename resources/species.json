@@ -9113,6 +9113,7 @@
 		"SPA": 120,
 		"SPD": 90,
 		"SPE": 95,
+		"evolves_from": "KYUREM",
 		"movepool": {
 			"level": { "48": ["FUSIONBOLT"], "80": ["FREEZESHOCK"] }
 		},
@@ -130501,6 +130502,7 @@
 		"SPA": 170,
 		"SPD": 100,
 		"SPE": 95,
+		"evolves_from": "KYUREM",
 		"movepool": { "level": { "48": ["FUSIONFLARE"], "80": ["ICEBURN"] } },
 		"abilities": ["TURBOBLAZE"],
 		"kind": "Legendary"
