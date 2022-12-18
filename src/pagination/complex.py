@@ -217,7 +217,7 @@ class Complex(Simple[_T]):
         )
         if self.auto_text_component:
             self.text_component = TextInput(
-                label=self.embed.title[:45] if self.embed else "Input",
+                label=self.embed.title[:45] if self.embed and self.embed.title else "Input",
                 placeholder=text[:100],
                 style=TextStyle.paragraph,
             )
