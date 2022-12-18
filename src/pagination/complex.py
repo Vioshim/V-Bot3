@@ -295,8 +295,9 @@ class Complex(Simple[_T]):
             emoji = self.emoji_parser(item)
             foo.add_option(label=name, value=str(index), description=value, emoji=emoji)
 
-        pages.disabled = len(pages.options) == 1
-        foo.max_values = min(foo.max_values, len(foo.options))
+        pages.disabled = len(pages.options) <= 1
+        foo.disabled = not foo.options
+        foo.max_values = min(foo.max_values, len(foo.options) or 1)
 
         # This is the outcome for provided values.
         if not pages.options:
@@ -305,8 +306,14 @@ class Complex(Simple[_T]):
             self.add_item(pages)
 
         if not foo.options:
-            self.remove_item(foo)
-        elif foo not in self.children:
+            foo.add_option(
+                label="Placeholder",
+                description="You shouldn't be seeing this",
+                emoji=LIST_EMOJI,
+                default=True,
+            )
+
+        if foo not in self.children:
             self.add_item(foo)
 
         if not self.choices:
