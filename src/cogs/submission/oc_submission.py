@@ -1550,22 +1550,13 @@ class SubmissionView(View):
         resp: InteractionResponse = ctx.response
         member: Member = sct.values[0] if sct.values else ctx.user
         await resp.defer(ephemeral=True, thinking=True)
-        if values := [
-            Character.from_mongo_dict(x)
-            async for x in db.find(
-                {
-                    "author": member.id,
-                    "server": ctx.guild_id,
-                }
-            )
-        ]:
-            values.sort(key=lambda x: x.name)
-            view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
-            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar)
-            async with view.send(single=True):
-                ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
-        else:
-            await ctx.followup.send(f"{member.mention} doesn't have characters.", ephemeral=True)
+        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})]
+
+        values.sort(key=lambda x: x.name)
+        view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+        view.embed.set_author(name=member.display_name, icon_url=member.display_avatar)
+        async with view.send(single=True):
+            ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
 
     @button(label="Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
@@ -1651,20 +1642,18 @@ class SubmissionView(View):
         await resp.defer(ephemeral=True, thinking=True)
         member = ctx.client.supporting.get(member, member)
         key = {"author": member.id, "server": ctx.guild_id}
-        if values := [Character.from_mongo_dict(x) async for x in db.find(key)]:
-            values.sort(key=lambda x: x.name)
-            view = BaseCharactersView(member=ctx.user, target=ctx, ocs=values, max_values=len(values))
-            view.auto_conclude = False
-            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            async with view.send(title="Select Characters to delete") as choices:
-                if choices and isinstance(choices, set):
-                    thread_id = values[0].thread
-                    if not (channel := ctx.guild.get_channel_or_thread(thread_id)):
-                        channel = await ctx.guild.fetch_channel(thread_id)
-                    await channel.edit(archived=False)
-                    for oc in choices:
-                        msg = channel.get_partial_message(oc.id)
-                        await msg.delete(delay=0)
-                    ctx.client.logger.info("%s is deleting %s characters", str(ctx.user), len(choices))
-        else:
-            await ctx.followup.send("You don't have characters to modify", ephemeral=True)
+        values = [Character.from_mongo_dict(x) async for x in db.find(key)]
+        values.sort(key=lambda x: x.name)
+        view = BaseCharactersView(member=ctx.user, target=ctx, ocs=values, max_values=len(values))
+        view.auto_conclude = False
+        view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        async with view.send(title="Select Characters to delete") as choices:
+            if choices and isinstance(choices, set):
+                thread_id = values[0].thread
+                if not (channel := ctx.guild.get_channel_or_thread(thread_id)):
+                    channel = await ctx.guild.fetch_channel(thread_id)
+                await channel.edit(archived=False)
+                for oc in choices:
+                    msg = channel.get_partial_message(oc.id)
+                    await msg.delete(delay=0)
+                ctx.client.logger.info("%s is deleting %s characters", str(ctx.user), len(choices))

@@ -37,7 +37,8 @@ class BytesAIO(BytesIO):
 async def docs_aioreader(document_id: str, aio: Aiogoogle) -> Document:
     file = BytesAIO()
     storage = await aio.discover("drive", "v3")
-    info: dict[str, str] = await aio.as_service_account(storage.files.get(fileId=document_id))
+    query = storage.files.get(fileId=document_id)
+    info: dict[str, str] = await aio.as_service_account(query)
 
     match DriveFormat(info.get("mimeType")):
         case DriveFormat.DOCX:

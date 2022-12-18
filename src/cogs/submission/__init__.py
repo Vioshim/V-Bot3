@@ -460,9 +460,9 @@ class Submission(commands.Cog):
             choices=kwargs.keys(),
             score_cutoff=85,
         ):
-            oc = kwargs[item[0]]
-        elif ocs := [v for k, v in kwargs.items() if k in author or author in k]:
-            oc = ocs[0]
+            key, oc = item[0], kwargs[item[0]]
+        elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
+            key, oc = ocs[0]
         else:
             return
 
@@ -482,7 +482,7 @@ class Submission(commands.Cog):
 
             view = View()
             view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
-            view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
+            view.add_item(Button(label=key[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
 
             await w.send(
                 content=message.content,
