@@ -559,7 +559,7 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Characters")
         kwargs = {}
-        async for x in db.find({"author": message.author}):
+        async for x in db.find({"author": message.author.id}):
             oc = Character.from_mongo_dict(x)
             for name in oc.name.split(","):
                 kwargs[name.strip()] = oc
