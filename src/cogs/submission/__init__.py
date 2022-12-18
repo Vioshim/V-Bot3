@@ -444,62 +444,65 @@ class Submission(commands.Cog):
         finally:
             self.ignore -= {message.author.id}
 
-    async def on_message_tupper(self, message: Message, member: Member | User):
+    async def on_message_tupper(
+        self,
+        message: Message,
+        kwargs: dict[str, Character],
+    ):
         channel = message.channel
         author = message.author.name.title()
 
         if "Npc" in author or "Narrator" in author:
             return
 
-        db = self.bot.mongo_db("Characters")
-        if ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]:
-            if item := process.extractOne(
-                author,
-                choices=ocs,
-                score_cutoff=85,
-                processor=lambda x: getattr(x, "name", x),
-            ):
-                oc = item[0]
-            elif ocs := [oc for oc in ocs if oc.name in author or author in oc.name]:
-                oc = ocs[0]
-            else:
-                return
+        if item := process.extractOne(
+            author,
+            choices=kwargs.keys(),
+            score_cutoff=85,
+        ):
+            oc = kwargs[item[0]]
+        elif ocs := [v for k, v in kwargs.items() if k in author or author in k]:
+            oc = ocs[0]
+        else:
+            return
 
-            if info_channel := find(
-                lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"), channel.category.channels
-            ):
-                w = await self.bot.webhook(info_channel)
+        if info_channel := find(
+            lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"),
+            channel.category.channels,
+        ):
+            w = await self.bot.webhook(info_channel)
 
-                try:
-                    name = message.channel.name.replace("»", "")
-                    emoji, name = name.split("〛")
-                except ValueError:
-                    emoji, name = SETTING_EMOJI, message.channel.name
-                finally:
-                    name = name.replace("-", " ").title()
+            try:
+                name = message.channel.name.replace("»", "")
+                emoji, name = name.split("〛")
+            except ValueError:
+                emoji, name = SETTING_EMOJI, message.channel.name
+            finally:
+                name = name.replace("-", " ").title()
 
-                view = View()
-                view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
-                view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
+            view = View()
+            view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
+            view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
 
-                await w.send(
-                    content=message.content,
-                    username=message.author.display_name,
-                    avatar_url=message.author.display_avatar.url,
-                    files=[await x.to_file() for x in message.attachments],
-                    allowed_mentions=AllowedMentions.none(),
-                    view=view,
-                )
-
-            oc.last_used = message.id
-            if oc.location != channel.id:
-                oc.location = channel.id
-
-            await db.update_one(
-                {"id": oc.id, "server": oc.server},
-                {"$set": {"location": oc.location, "last_used": message.id}},
-                upsert=False,
+            await w.send(
+                content=message.content,
+                username=message.author.display_name,
+                avatar_url=message.author.display_avatar.url,
+                files=[await x.to_file() for x in message.attachments],
+                allowed_mentions=AllowedMentions.none(),
+                view=view,
             )
+
+        oc.last_used = message.id
+        if oc.location != channel.id:
+            oc.location = channel.id
+
+        db = self.bot.mongo_db("Characters")
+        await db.update_one(
+            {"id": oc.id, "server": oc.server},
+            {"$set": {"location": oc.location, "last_used": message.id}},
+            upsert=False,
+        )
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
@@ -551,9 +554,18 @@ class Submission(commands.Cog):
         for future in pending:
             future.cancel()
 
-        if not any(task == future for future in done):
-            for msg in sorted(messages, key=lambda x: x.id):
-                await self.on_message_tupper(msg, message.author)
+        if any(task == future for future in done):
+            return
+
+        db = self.bot.mongo_db("Characters")
+        kwargs = {}
+        async for x in db.find({"author": message.author}):
+            oc = Character.from_mongo_dict(x)
+            for name in oc.name.split(","):
+                kwargs[name.strip()] = oc
+
+        for msg in sorted(messages, key=lambda x: x.id):
+            await self.on_message_tupper(msg, kwargs)
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
