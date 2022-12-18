@@ -210,7 +210,7 @@ class Complex(Simple[_T]):
         pages = self.navigate
         choices = self.choices
         amount = self.real_max or self.max_values
-        text = f"Picked: {len(choices)}, Max: {amount}, Total: {len(self.values)}"
+        text = f"{len(choices):02d}/{amount:02d} out of {len(self.values):02d}."
         foo.placeholder = text
         if self.auto_text_component:
             self.text_component = TextInput(
