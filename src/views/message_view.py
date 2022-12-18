@@ -83,6 +83,7 @@ class MessagePaginator(Complex[Message]):
             keep_working=True,
             sort_key=get_title,
             silent_mode=True,
+            auto_text_component=True,
         )
         self.embed.title = "Select Message"
 

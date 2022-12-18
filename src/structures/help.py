@@ -234,6 +234,7 @@ class CustomHelp(HelpCommand):
             parser=lambda x: (x.name, x.short_doc),
             emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x.parent else "\N{BLACK LARGE SQUARE}",
             silent_mode=True,
+            auto_text_component=True,
         )
 
         async with view.send(

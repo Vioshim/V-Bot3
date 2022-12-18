@@ -698,6 +698,7 @@ class TypesField(TemplateField):
             max_values=max_values,
             timeout=None,
             silent_mode=True,
+            auto_text_component=True,
         )
 
         async with view.send(
@@ -870,6 +871,7 @@ class AbilitiesField(TemplateField):
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, x.description),
             silent_mode=True,
+            auto_text_component=True,
         )
         async with view.send(
             title=f"{template.title} Character's Abilities",
@@ -916,6 +918,7 @@ class HiddenPowerField(TemplateField):
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
             silent_mode=True,
+            auto_text_component=True,
         )
         async with view.send(
             title=f"{template.title} Character's Hidden Power",
@@ -1120,6 +1123,7 @@ class PokeballField(TemplateField):
             parser=lambda x: (x.label, None),
             sort_key=lambda x: x.name,
             silent_mode=True,
+            auto_text_component=True,
         )
         current = oc.pokeball.label if oc.pokeball else None
         async with view.send(

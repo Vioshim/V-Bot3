@@ -350,6 +350,7 @@ class GroupByComplex(Complex[tuple[str, list[Character]]]):
             parser=lambda x: inner_parser(x, data.get(x, [])),
             values=list(data),
             keep_working=True,
+            auto_text_component=True,
         )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
@@ -584,10 +585,6 @@ class OCGroupByLocation(OCGroupBy[ForumChannel | None]):
 
         return {k: frozenset(v) for k, v in groupby(ocs, key=foo)}
 
-    @staticmethod
-    def sort_by(items: list[tuple[ForumChannel | None, list[Character]]]):
-        return sorted(items, key=lambda x: x[0].name if x[0] else "None")
-
 
 class OCGroupByMember(OCGroupBy[Member]):
     @staticmethod
@@ -599,10 +596,6 @@ class OCGroupByMember(OCGroupBy[Member]):
         ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
         return {m: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))}
-
-    @classmethod
-    def sort_by(cls, items: list[tuple[Member, list[Character]]]):
-        return sorted(items, key=lambda x: x[0].name)
 
 
 class OCGroupByHiddenPower(OCGroupBy[TypingEnum | None]):
@@ -650,20 +643,12 @@ class OCGroupByHeight(OCGroupBy[Size]):
         ocs = sorted(ocs, key=lambda x: x.size.height_value(x.species.height), reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size.height_info(x.species.height)) if k}
 
-    @classmethod
-    def sort_by(cls, items: list[tuple[str, list[Character]]]):
-        return sorted(items, key=lambda x: float(x[0].split(" m ")[0]), reverse=True)
-
 
 class OCGroupByWeight(OCGroupBy[Size]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.weight.weight_value(x.species.weight), reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight.weight_info(x.species.weight)) if k}
-
-    @classmethod
-    def sort_by(cls, items: list[tuple[str, list[Character]]]):
-        return sorted(items, key=lambda x: float(x[0].split(" kg ")[0]), reverse=True)
 
 
 class GroupByArg(Enum):

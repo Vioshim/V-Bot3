@@ -37,6 +37,7 @@ from discord import (
     PartialEmoji,
     PartialMessage,
     StickerItem,
+    TextStyle,
     User,
 )
 from discord.abc import Messageable, Snowflake
@@ -209,16 +210,16 @@ class Complex(Simple[_T]):
         foo = self.select_choice
         pages = self.navigate
         choices = self.choices
-        if (amount := self.real_max or self.max_values) > 1:
-            text = f"Picked: {len(choices)}, Max: {amount}, Options: {len(self.values)}"
-        else:
-            text = f"Single Choice. Options: {len(self.values)}"
-
-        foo.placeholder = text
+        foo.placeholder = text = (
+            f"Picked: {len(choices)}, Max: {amount}, Options: {len(self.values)}"
+            if (amount := self.real_max or self.max_values) > 1
+            else f"Single Choice, Options: {len(self.values)}"
+        )
         if self.auto_text_component:
             self.text_component = TextInput(
                 label=self.embed.title[:45],
                 placeholder=text[:100],
+                style=TextStyle.paragraph,
             )
 
         if not self.text_component:
@@ -649,6 +650,7 @@ class Complex(Simple[_T]):
             sort_key=self._sort_key,
             text_component=self.text_component,
             deselect_mode=False,
+            auto_text_component=self.auto_text_component,
         )
         embed = Embed(
             title="Remove Elements",
