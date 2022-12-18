@@ -210,9 +210,12 @@ class Complex(Simple[_T]):
         pages = self.navigate
         choices = self.choices
         if (amount := self.real_max or self.max_values) > 1:
-            text = f"{len(choices):02d}/{amount:02d} out of {len(self.values):02d}."
+            text = f"Picked: {len(choices)}, Max: {amount}, Options: {len(self.values)}"
+        elif not self.keep_working:
+            text = f"Single Choice. Options: {len(self.values)}"
         else:
-            text = f"Single Choice. {len(self.values):02d} Options."
+            text = f"Options: {len(self.values)}"
+
         foo.placeholder = text
         if self.auto_text_component:
             self.text_component = TextInput(
