@@ -310,7 +310,6 @@ class Complex(Simple[_T]):
                 label="Placeholder",
                 description="You shouldn't be seeing this",
                 emoji=LIST_EMOJI,
-                default=True,
             )
 
         if foo not in self.children:
