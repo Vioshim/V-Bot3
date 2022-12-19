@@ -719,7 +719,7 @@ class Submission(commands.Cog):
             elif item := await db.find_one({"id": message.id, "channel": message.channel.id}):
                 log_channel = message.guild.get_channel(item["log-channel"])
                 w = await self.bot.webhook(log_channel)
-                await w.edit_message(item["log"], content=message.content, thread=message.channel)
+                await w.edit_message(item["log"], content=message.content)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: Message):
@@ -736,11 +736,11 @@ class Submission(commands.Cog):
             and isinstance(message.channel, Thread)
             and message.channel.category_id in MAP_ELEMENTS2
             and not message.channel.name.endswith("OOC")
-            and (item := await db.find_one({"id": message.id, "channel": message.channel.id}))
+            and (item := await db.find_one_and_delete({"id": message.id, "channel": message.channel.id}))
         ):
             log_channel = message.guild.get_channel(item["log-channel"])
             w = await self.bot.webhook(log_channel)
-            await w.delete_message(item["log"], thread=message.channel)
+            await w.delete_message(item["log"])
 
     @commands.Cog.listener()
     async def on_raw_thread_update(self, payload: RawThreadUpdateEvent):
