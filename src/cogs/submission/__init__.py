@@ -512,13 +512,33 @@ class Submission(commands.Cog):
             view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
             view.add_item(Button(label=key[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
 
-            await w.send(
+            msg = await w.send(
                 content=message.content,
                 username=message.author.display_name,
                 avatar_url=message.author.display_avatar.url,
                 files=[await x.to_file() for x in message.attachments],
                 allowed_mentions=AllowedMentions.none(),
                 view=view,
+                wait=True,
+            )
+
+            db = self.bot.mongo_db("RP Logs")
+            db2 = self.bot.mongo_db("Tupper-logs")
+
+            await db.insert_one(
+                {
+                    "id": message.id,
+                    "channel": message.channel.id,
+                    "log": msg.id,
+                    "log-channel": info_channel.id,
+                }
+            )
+            await db2.insert_one(
+                {
+                    "channel": info_channel.id,
+                    "id": msg.id,
+                    "author": oc.author,
+                }
             )
 
         oc.last_used = message.id
@@ -686,17 +706,44 @@ class Submission(commands.Cog):
         if not message.guild or previous.content == message.content:
             return
 
+        db = self.bot.mongo_db("RP Logs")
         tupper = message.guild.get_member(431544605209788416)
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
         elif (
-            ((self.bot.webhook_lazy(message.channel)) or (tupper and tupper.status == Status.online))
+            isinstance(message.channel, Thread)
+            and ((self.bot.webhook_lazy(message.channel)) or (tupper and tupper.status == Status.online))
             and message.channel.category_id in MAP_ELEMENTS2
             and tupper != message.author
             and not message.channel.name.endswith("OOC")
-            and not message.webhook_id
         ):
-            await self.on_message_proxy(message)
+            if not message.webhook_id:
+                await self.on_message_proxy(message)
+            elif item := await db.find_one({"id": message.id, "channel": message.channel.id}):
+                log_channel = message.guild.get_channel(item["log-channel"])
+                w = await self.bot.webhook(log_channel)
+                await w.edit_message(item["log"], content=message.content, thread=message.channel)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: Message):
+        """Detection for webhook message deletion
+
+        Parameters
+        ----------
+        message : Message
+            Message
+        """
+        db = self.bot.mongo_db("RP Logs")
+        if (
+            message.webhook_id
+            and isinstance(message.channel, Thread)
+            and message.channel.category_id in MAP_ELEMENTS2
+            and not message.channel.name.endswith("OOC")
+            and (item := await db.find_one({"id": message.id, "channel": message.channel.id}))
+        ):
+            log_channel = message.guild.get_channel(item["log-channel"])
+            w = await self.bot.webhook(log_channel)
+            await w.delete_message(item["log"], thread=message.channel)
 
     @commands.Cog.listener()
     async def on_raw_thread_update(self, payload: RawThreadUpdateEvent):
