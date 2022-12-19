@@ -283,7 +283,7 @@ class Pokedex(commands.Cog):
         age: Optional[AgeGroup],
         group_by: Optional[GroupByArg],
         amount: Optional[str],
-        active: Optional[bool],
+        active: bool = True,
     ):
         """Command to obtain Pokemon entries and its ocs
 
@@ -326,7 +326,7 @@ class Pokedex(commands.Cog):
         amount : amount
             Groupby limit search
         active : bool
-            modified or used since last 2 weeks
+            modified/used since last 2 weeks. True by default
         """
         resp: InteractionResponse = ctx.response
         text: str = ""
@@ -434,9 +434,11 @@ class Pokedex(commands.Cog):
         if kind:
             filters.append(lambda oc: oc.kind == kind)
 
-        if isinstance(active, bool):
-            date = ctx.created_at - timedelta(days=14)
-            filters.append(lambda x: x.last_used_at >= date if active else x.last_used_at < date)
+        date = ctx.created_at - timedelta(days=14)
+        if active:
+            filters.append(lambda x: x.last_used_at >= date)
+        else:
+            filters.append(lambda x: x.last_used_at < date)
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
