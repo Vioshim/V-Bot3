@@ -33,6 +33,7 @@ from discord import (
     Object,
     PartialEmoji,
     RawMessageDeleteEvent,
+    RawMessageUpdateEvent,
     RawThreadDeleteEvent,
     RawThreadUpdateEvent,
     Role,
@@ -523,8 +524,6 @@ class Submission(commands.Cog):
             )
 
             db = self.bot.mongo_db("RP Logs")
-            db2 = self.bot.mongo_db("Tupper-logs")
-
             await db.insert_one(
                 {
                     "id": message.id,
@@ -533,6 +532,7 @@ class Submission(commands.Cog):
                     "log-channel": info_channel.id,
                 }
             )
+            db2 = self.bot.mongo_db("Tupper-logs")
             await db2.insert_one(
                 {
                     "channel": info_channel.id,
@@ -693,6 +693,17 @@ class Submission(commands.Cog):
                 await self.on_message_proxy(message)
 
     @commands.Cog.listener()
+    async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):
+        if payload.cached_message:
+            return
+
+        content: str = payload.data.get("content", "")
+        db = self.bot.mongo_db("RP Logs")
+        if item := await db.find_one({"id": payload.message_id, "channel": payload.channel_id}):
+            w = await self.bot.webhook(item["log-channel"])
+            await w.edit_message(item["log"], content=content)
+
+    @commands.Cog.listener()
     async def on_message_edit(self, previous: Message, message: Message):
         """on_message_edit handler
 
@@ -717,30 +728,8 @@ class Submission(commands.Cog):
             if not message.webhook_id:
                 await self.on_message_proxy(message)
             elif item := await db.find_one({"id": message.id, "channel": message.channel.id}):
-                log_channel = message.guild.get_channel(item["log-channel"])
-                w = await self.bot.webhook(log_channel)
+                w = await self.bot.webhook(item["log-channel"])
                 await w.edit_message(item["log"], content=message.content)
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message: Message):
-        """Detection for webhook message deletion
-
-        Parameters
-        ----------
-        message : Message
-            Message
-        """
-        db = self.bot.mongo_db("RP Logs")
-        if (
-            message.webhook_id
-            and isinstance(message.channel, Thread)
-            and message.channel.category_id in MAP_ELEMENTS2
-            and not message.channel.name.endswith("OOC")
-            and (item := await db.find_one_and_delete({"id": message.id, "channel": message.channel.id}))
-        ):
-            log_channel = message.guild.get_channel(item["log-channel"])
-            w = await self.bot.webhook(log_channel)
-            await w.delete_message(item["log"])
 
     @commands.Cog.listener()
     async def on_raw_thread_update(self, payload: RawThreadUpdateEvent):
@@ -801,6 +790,14 @@ class Submission(commands.Cog):
         key2 = {"server": payload.guild_id}
         await db.delete_one(key | key2)
         await db2.delete_many(key2 | {"$or": [key, {"thread": payload.message_id}]})
+
+        db = self.bot.mongo_db("RP Logs")
+        db2 = self.bot.mongo_db("Tupper-logs")
+        if item := await db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
+            log_channel = self.bot.get_channel(item["log-channel"])
+            w = await self.bot.webhook(log_channel)
+            await db2.delete_one({"channel": log_channel.id, "id": item["log"]})
+            await w.delete_message(item["log"])
 
     @commands.command()
     @commands.guild_only()
