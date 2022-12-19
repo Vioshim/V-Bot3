@@ -59,7 +59,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.utils.etc import MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
-from src.views.characters_view import CharactersView, PingView
+from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 
 __all__ = ("Submission", "setup")
@@ -395,9 +395,6 @@ class Submission(commands.Cog):
                         files, embeds[0] = await self.bot.embed_raw(embeds[0], "footer")
                         pack_embeds.append(embeds)
                         pack_files.append(files)
-
-                    if pack_embeds and former.name == oc.name:
-                        pack_embeds[0][0].title = oc.name
 
                     for embeds, files in zip(pack_embeds, pack_files):
                         await log.send(

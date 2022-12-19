@@ -15,6 +15,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import timedelta
 from enum import Enum
 from typing import Optional
 
@@ -165,7 +166,8 @@ class Template(TemplateItem, Enum):
             key = {"server": ctx.guild_id}
             if role := get(ctx.guild.roles, name="Registered"):
                 key["author"] = {"$in": [x.id for x in role.members]}
-            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
+            date = ctx.created_at - timedelta(days=14)
+            ocs = [o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and o.last_used_at >= date]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
             async with view.send(ephemeral=ephemeral) as data:
                 if self.min_values <= len(data) <= self.max_values:
@@ -1575,7 +1577,6 @@ class SubmissionView(View):
     @button(label="Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
         cog = ctx.client.get_cog("Submission")
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Creation")
         user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         resp: InteractionResponse = ctx.response
         ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
@@ -1583,46 +1584,14 @@ class SubmissionView(View):
         users = {ctx.user.id, user.id}
         try:
             cog.ignore |= users
-            items = [data async for data in db.find({"server": ctx.guild_id, "author": {"$in": list(users)}})] or [{}]
-            for data in items:
-                msg_id, template, author, character, progress = (
-                    data.get("id", 0),
-                    data.get("template", Template.Pokemon),
-                    data.get("author", user.id),
-                    data.get("character", {}),
-                    data.get("progress", []),
-                )
-                character = Character.from_mongo_dict(character)
-
-                if not (member := ctx.guild.get_member(author) or ctx.client.get_user(author)):
-                    member = await ctx.client.fetch_user(author)
-
-                view = CreationOCView(
-                    bot=ctx.client,
-                    ctx=ctx,
-                    user=member,
-                    oc=character,
-                    template=template,
-                    progress=progress,
-                )
-
-                message = ctx.channel.get_partial_message(msg_id)
-
-                try:
-                    message = await message.edit(view=view)
-                except DiscordException:
-                    try:
-                        message = await view.handler_send(ephemeral=ephemeral)
-                    except DiscordException:
-                        message = None
-                finally:
-                    await db.delete_one({"id": msg_id, "server": ctx.guild_id})
-
-                if message and (embeds := message.embeds):
-                    view.message = message
-                    if not character.image_url and embeds and embeds[0].image:
-                        character.image_url = embeds[0].image.url
-                    await view.wait()
+            view = CreationOCView(
+                bot=ctx.client,
+                ctx=ctx,
+                user=user,
+                template=Template.Pokemon,
+            )
+            await view.handler_send(ephemeral=ephemeral)
+            await view.wait()
         except Exception as e:
             await ctx.followup.send(str(e), ephemeral=ephemeral)
             ctx.client.logger.exception("Character Creation Exception", exc_info=e)
