@@ -224,6 +224,13 @@ class Submission(commands.Cog):
                 with suppress(DiscordException):
                     thread: Thread = await channel.guild.fetch_channel(item["id"])
 
+        if thread:
+            try:
+                msg = thread.get_partial_message(thread.id)
+                msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
+            except DiscordException:
+                thread = None
+
         if not thread:
 
             if isinstance(member, Object):
@@ -239,11 +246,9 @@ class Submission(commands.Cog):
                     for x in map(lambda x: x.name.removesuffix(" RP Search"), roles)
                     if (o := get(channel.available_tags, name=x))
                 ]
-                file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
-                    content=member.mention,
-                    file=file,
+                    content=f"{member.mention}\n{member.display_avatar.url}",
                     applied_tags=sorted(tags[:5], key=lambda x: x.name),
                     allowed_mentions=AllowedMentions(users=True),
                 )
@@ -581,10 +586,9 @@ class Submission(commands.Cog):
 
         thread = None
         if await db.find_one({"user": member.id, "server": member.guild.id}):
-            file = await member.display_avatar.to_file()
             thread = await self.list_update(member)
             message = thread.get_partial_message(thread.id)
-            await message.edit(attachments=[file])
+            await message.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
             await thread.edit(
                 name=member.display_name if thread.name != member.display_name else MISSING,
                 reason=f"{thread.name} -> {member.display_name}",
@@ -595,10 +599,9 @@ class Submission(commands.Cog):
     async def on_member_remove(self, member: Member):
         db = self.bot.mongo_db("Roleplayers")
         if await db.find_one({"user": member.id, "server": member.guild.id}):
-            file = await member.display_avatar.to_file()
             thread = await self.list_update(member)
             message = thread.get_partial_message(thread.id)
-            await message.edit(attachments=[file])
+            await message.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
             if thread.name == member.display_name:
                 await thread.edit(reason="Member left", archived=True)
             else:
@@ -612,14 +615,12 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Roleplayers")
         if await db.find_one({"user": now.id, "server": now.guild.id}):
             thread = await self.list_update(now)
-            if past.display_name != now.display_name or thread.name != now.display_name:
+            if thread.name != now.display_name:
                 reason = f"{thread.name} -> {now.display_name}."
                 await thread.edit(name=now.display_name, reason=reason)
 
-            if past.display_avatar != now.display_avatar:
-                file = await now.display_avatar.to_file()
-                message = thread.get_partial_message(thread.id)
-                await message.edit(attachments=[file])
+            message = thread.get_partial_message(thread.id)
+            await message.edit(content=f"{now.mention}\n{now.display_avatar.url}", attachments=[])
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
