@@ -1280,13 +1280,6 @@ class CreationOCView(Basic):
             server=self.oc.server,
         )
 
-    async def upload(self):
-        db = self.bot.mongo_db("OC Creation")
-        data = self.data
-        if data_id := data.get("id"):
-            key = {"id": data_id, "server": data["server"]}
-            await db.replace_one(key, data, upsert=True)
-
     async def update(self, ctx: Interaction):
         resp: InteractionResponse = ctx.response
         if self.is_finished():
@@ -1315,7 +1308,6 @@ class CreationOCView(Basic):
                 self.setup(embed_update=False)
                 m = await m.edit(view=self)
 
-            await self.upload()
             self.message = m
 
     async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
@@ -1323,9 +1315,7 @@ class CreationOCView(Basic):
         self.embeds = embeds or self.embeds
         if not ephemeral:
             self.remove_item(self.help)
-        m = await self.send(embeds=self.embeds, ephemeral=ephemeral, content=str(self.oc.id or ""))
-        await self.upload()
-        return m
+        return await self.send(embeds=self.embeds, ephemeral=ephemeral, content=str(self.oc.id or ""))
 
     @select(placeholder="Essentials. Click here!", row=1)
     async def fields1(self, ctx: Interaction, sct: Select):
@@ -1392,7 +1382,6 @@ class CreationOCView(Basic):
             message = await view.message.edit(attachments=attachments, embeds=embeds)
             if image := message.embeds[0].image:
                 self.oc.image = image.url
-                await view.upload()
 
         await self.delete(ctx)
 
