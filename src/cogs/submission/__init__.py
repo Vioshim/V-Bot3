@@ -235,11 +235,22 @@ class Submission(commands.Cog):
                             member = await self.bot.fetch_user(member.id)
 
                 if isinstance(member, (User, Member)):
+                    roles: list[Role] = getattr(member, "roles", [])
+                    tags = [
+                        o
+                        for x in map(
+                            lambda x: x.name.removesuffix(" RP Search"),
+                            filter(lambda x: " RP Search" in x.name, roles),
+                        )
+                        if (o := get(channel.available_tags, name=x))
+                    ]
+                    tags.sort(key=lambda x: x.name)
+                    thread = await thread.edit(name=member.display_name, applied_tags=tags[:5])
                     msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
             except DiscordException:
                 thread = None
 
-        if not thread:
+        if thread is None:
 
             if isinstance(member, Object):
                 if member_info := channel.guild.get_member(member.id) or self.bot.get_user(member.id):
@@ -251,13 +262,17 @@ class Submission(commands.Cog):
                 roles: list[Role] = getattr(member, "roles", [])
                 tags = [
                     o
-                    for x in map(lambda x: x.name.removesuffix(" RP Search"), roles)
+                    for x in map(
+                        lambda x: x.name.removesuffix(" RP Search"),
+                        filter(lambda x: " RP Search" in x.name, roles),
+                    )
                     if (o := get(channel.available_tags, name=x))
                 ]
+                tags.sort(key=lambda x: x.name)
                 x = await channel.create_thread(
                     name=member.display_name,
                     content=f"{member.mention}\n{member.display_avatar.url}",
-                    applied_tags=sorted(tags[:5], key=lambda x: x.name),
+                    applied_tags=tags[:5],
                     allowed_mentions=AllowedMentions(users=True),
                 )
                 thread = x.thread

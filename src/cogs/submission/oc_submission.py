@@ -936,8 +936,18 @@ class UniqueTraitField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.sp_ability and not oc.sp_ability.valid:
-            return "Missing parameters."
+        if (sp_ability := oc.sp_ability) and (
+            text := ", ".join(
+                k
+                for k, v in dict(
+                    name=sp_ability.name,
+                    origin=sp_ability.origin,
+                    description=sp_ability.description,
+                ).items()
+                if not v
+            )
+        ):
+            return f"Missing {text}."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
