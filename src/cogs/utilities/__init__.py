@@ -371,7 +371,7 @@ class Utilities(commands.Cog):
 
     @app_commands.command(name="roll")
     @app_commands.guilds(719343092963999804)
-    async def slash_roll(self, ctx: Interaction, expression: Optional[str] = None, hidden: bool = False):
+    async def slash_roll(self, ctx: Interaction, expression: Optional[str] = None, hidden: bool = True):
         """Allows to roll dice based on 20
 
         Parameters
@@ -381,7 +381,7 @@ class Utilities(commands.Cog):
         expression : str
             Expression (Example: d20)
         hidden : bool, optional
-            If it's shown, by default visible
+            If it's shown, by default invisible
         """
         resp: InteractionResponse = ctx.response
         await resp.defer(ephemeral=hidden, thinking=True)
