@@ -559,7 +559,7 @@ class Submission(commands.Cog):
         """
         context = await self.bot.get_context(message)
 
-        if context.command:
+        if context.command and context.command.name not in ["npc", "pc"]:
             return
 
         messages: list[Message] = []
@@ -674,16 +674,14 @@ class Submission(commands.Cog):
         if not message.guild:
             return
 
-        tupper = message.guild.get_member(431544605209788416)
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
         elif (
-            ((self.bot.webhook_lazy(message.channel)) or (tupper and tupper.status == Status.online))
-            and message.channel.category_id in MAP_ELEMENTS2
+            message.channel.category_id in MAP_ELEMENTS2
             and not message.channel.name.endswith("OOC")
             and not message.webhook_id
         ):
-            if tupper == message.author:
+            if message.author.id == 431544605209788416:  # Tupper
                 self.bot.msg_cache_add(message)
                 await message.delete(delay=3)
             else:
