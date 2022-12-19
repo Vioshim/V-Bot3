@@ -227,7 +227,15 @@ class Submission(commands.Cog):
         if thread:
             try:
                 msg = thread.get_partial_message(thread.id)
-                msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
+                if isinstance(member, Object):
+                    if aux := channel.guild.get_member(member.id):
+                        member = aux
+                    else:
+                        with suppress(DiscordException):
+                            member = await self.bot.fetch_user(member.id)
+
+                if isinstance(member, (User, Member)):
+                    msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
             except DiscordException:
                 thread = None
 
