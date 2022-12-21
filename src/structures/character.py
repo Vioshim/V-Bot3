@@ -769,9 +769,9 @@ class Character:
 
         params_header = {
             "Pronoun": self.pronoun.name,
-            "Pokeball": self.pokeball.name if self.pokeball else None,
+            "Pokeball": self.pokeball.label if self.pokeball else None,
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
-            "Date": self.created_at.isoformat(),
+            "Date": self.created_at.strftime("%x"),
         }
 
         doc.add_heading(self.name, 0)
