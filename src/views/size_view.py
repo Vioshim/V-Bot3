@@ -28,18 +28,13 @@ __all__ = (
 )
 
 
-class SizeModal(Modal):
-    async def on_submit(self, interaction: Interaction, /) -> None:
-        await interaction.response.pong()
-
-
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
         super().__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
 
-        if isinstance(oc.weight, Size):
+        if isinstance(oc.size, Size):
             info = oc.size.height_info(oc.species.height)
         else:
             info = Size.M.height_info(oc.size)
@@ -63,10 +58,10 @@ class HeightView(Basic):
 
     @button(label="Meters", style=ButtonStyle.blurple)
     async def manual_1(self, itx: Interaction, btn: Button):
-        class ManualModal(SizeModal):
+        class ManualModal(Modal, title="Height"):
             text = TextInput(label="Meters", placeholder=btn.label, default=btn.label)
 
-        modal = ManualModal(title="Height", timeout=None)
+        modal = ManualModal(timeout=None)
         await itx.response.send_modal(modal)
         await modal.wait()
 
@@ -97,11 +92,11 @@ class HeightView(Basic):
         info = btn.label.removesuffix('" ft')
         ft_info, in_info = info.split("' ")
 
-        class ManualModal(SizeModal):
+        class ManualModal(Modal, title="Height"):
             text1 = TextInput(label="Feet", placeholder=ft_info, default=ft_info, required=False)
             text2 = TextInput(label="Inches", placeholder=in_info, default=in_info, required=False)
 
-        modal = ManualModal(title="Height", timeout=None)
+        modal = ManualModal(timeout=None)
         await itx.response.send_modal(modal)
         await modal.wait()
 
@@ -162,10 +157,10 @@ class WeightView(Basic):
 
     @button(label="Kg", style=ButtonStyle.blurple)
     async def manual_1(self, itx: Interaction, btn: Button):
-        class ManualModal(SizeModal):
+        class ManualModal(Modal, title="Weight"):
             text = TextInput(label="kg", placeholder=btn.label, default=btn.label)
 
-        modal = ManualModal(title="Weight", timeout=None)
+        modal = ManualModal(timeout=None)
         await itx.response.send_modal(modal)
         await modal.wait()
 
@@ -191,10 +186,10 @@ class WeightView(Basic):
 
     @button(label="Lbs", style=ButtonStyle.blurple)
     async def manual_2(self, itx: Interaction, btn: Button):
-        class ManualModal(SizeModal):
+        class ManualModal(Modal, title="Weight"):
             text = TextInput(label="lbs", placeholder=btn.label, default=btn.label)
 
-        modal = ManualModal(title="Weight", timeout=None)
+        modal = ManualModal(timeout=None)
         await itx.response.send_modal(modal)
         await modal.wait()
 
