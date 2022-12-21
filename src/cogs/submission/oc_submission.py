@@ -1252,8 +1252,9 @@ class CreationOCView(Basic):
 
         self.submit.label = "Save Changes" if self.oc.id else "Submit"
         self.cancel.label = "Close this Menu"
-        self.finish_oc.label = "Delete Character"
+        self.finish_oc.label = "Delete OC"
         self.help.label = "Request Help"
+        self.printer.label = None
         self.submit.disabled = bool(errors)
 
         if embed_update:
@@ -1360,7 +1361,7 @@ class CreationOCView(Basic):
             await db.delete_one({"id": m.id, "server": guild_id})
         return await super(CreationOCView, self).delete(ctx)
 
-    @button(label="Delete Character", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=3)
+    @button(label="Delete OC", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=3)
     async def finish_oc(self, ctx: Interaction, btn: Button):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
@@ -1372,6 +1373,15 @@ class CreationOCView(Basic):
             await channel.edit(archived=False)
             await channel.get_partial_message(self.oc.id).delete(delay=0)
         await self.delete(ctx)
+
+    @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple, row=3)
+    async def printer(self, ctx: Interaction, btn: Button):
+        if not btn.label:
+            btn.label = "Confirm"
+            return await ctx.response.edit_message(view=self)
+        await ctx.response.defer(ephemeral=True, thinking=True)
+        file = await self.oc.to_docx(ctx.client)
+        await ctx.followup.send(file=file, ephemeral=True)
 
     @button(label="Close this Menu", row=3)
     async def cancel(self, ctx: Interaction, btn: Button):

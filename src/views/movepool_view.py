@@ -36,7 +36,7 @@ class MovepoolModal(Modal):
             label="Level Moves",
             placeholder="1: Move, Move\n2: Move, Move",
             required=False,
-            default="\n".join(f"{k}: {', '.join(x.name for x in v)}" for k, v in movepool.level.items() if v),
+            default="\n".join(f"{k}: {o}" for k, v in movepool.level.items() if (o := ", ".join(x.name for x in v))),
         )
         self.tm = TextInput(
             style=TextStyle.paragraph,
@@ -105,12 +105,10 @@ class MovepoolView(Basic):
         modal = MovepoolModal(self.oc)
         await resp.send_modal(modal)
         await modal.wait()
-        await self.delete()
-        self.stop()
+        await self.delete(ctx)
 
     @button(label="Keep Current")
     async def cancel(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_message("Keeping current movepool", ephemeral=True)
-        await self.delete()
-        self.stop()
+        await self.delete(ctx)

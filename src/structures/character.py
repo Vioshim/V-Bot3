@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+from io import BytesIO
 from random import sample
 from re import match as re_match
 from typing import Any, Iterable, Optional, Type
@@ -26,10 +27,14 @@ from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
+from docx import Document as document
+from docx.document import Document
+from docx.shared import Inches
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.structures.ability import ABILITIES_DEFINING, Ability, SpAbility
+from src.structures.bot import CustomBot
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -758,6 +763,121 @@ class Character:
             c_embed.add_field(name="Extra", value=self.extra[:256], inline=False)
 
         return embeds
+
+    async def to_docx(self, bot: CustomBot):
+        doc: Document = document()
+
+        params_header = {
+            "Pronoun": self.pronoun.name,
+            "Pokeball": self.pokeball.name if self.pokeball else None,
+            "Hidden Power": self.hidden_power.name if self.hidden_power else None,
+            "Date": self.created_at.isoformat(),
+        }
+
+        doc.add_heading(self.name, 0)
+        doc.add_paragraph("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
+
+        match species := self.species:
+            case mon if isinstance(mon, Fusion):
+                ratio1, ratio2 = mon.ratio, 1 - mon.ratio
+                b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("", "")
+                params_header["Fusion"] = f"{b1}{mon.mon1.name}, {b2}{mon.mon2.name}"
+            case mon if isinstance(mon, Chimera):
+                params_header["Chimera"] = ", ".join(name for name in mon.name.split("/")).title()
+            case mon if isinstance(mon, Fakemon):
+                if evolves_from := mon.species_evolves_from:
+                    name = f"{evolves_from.name} Evo"
+                else:
+                    name = "Fakemon"
+                params_header[name] = mon.name
+            case mon if isinstance(mon, (CustomMega, CustomParadox, Variant)):
+                params_header[f"{mon.base.name} {mon.__class__.__name__.removeprefix('Custom')}"] = mon.name
+            case mon if isinstance(mon, Species):
+                params_header["Species"] = mon.name
+
+        doc.add_paragraph("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
+        if img_file := await bot.get_file(self.image_url):
+            doc.add_picture(img_file, width=Inches(6))
+
+        if self.abilities:
+            doc.add_heading("Abilities", level=1)
+            for item in sorted(self.abilities, key=lambda x: x.name):
+                p = doc.add_paragraph("• ")
+                p.add_run(f"{item.name}: ").bold = True
+                p.add_run(item.description)
+
+        if self.moveset:
+            doc.add_heading("Moveset", level=1)
+            for item in sorted(self.moveset, key=lambda x: x.name):
+                item_type = item.type
+                if item.name in ["Hidden Power", "Tera Blast"] and self.hidden_power:
+                    item_type = self.hidden_power
+                item_type = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item_type
+                p = doc.add_paragraph("• ")
+                p.add_run(f"{item.name}: ").bold = True
+                p.add_run(f"{item.category.name}, {item_type.name}".title())
+
+        doc.add_page_break()
+
+        if self.backstory or self.extra:
+            doc.add_page_break()
+
+            if self.backstory:
+                doc.add_heading("Bio", 1)
+                doc.add_paragraph(self.backstory)
+
+            if self.extra:
+                doc.add_heading("Extra Information", 1)
+                doc.add_paragraph(self.extra)
+
+        if sp_ability := self.sp_ability:
+            doc.add_page_break()
+            doc.add_heading(f"Unique Trait: {sp_ability.name}", 1)
+            if sp_ability.description:
+                doc.add_paragraph(sp_ability.description)
+
+            if origin := sp_ability.origin:
+                doc.add_heading(f"How did {self.pronoun.name} obtain it?", 2)
+                doc.add_paragraph(origin)
+
+            if pros := sp_ability.pros:
+                doc.add_heading("How does it make the character's life easier?", 2)
+                doc.add_paragraph(pros)
+
+            if cons := sp_ability.cons:
+                doc.add_heading("How does it make the character's life harder?", 2)
+                doc.add_paragraph(cons)
+
+        if isinstance(species, (Variant, CustomParadox, Fakemon)) and (movepool := species.movepool):
+            doc.add_heading("Movepool", level=1)
+
+            if movepool.level:
+                doc.add_heading("Level Moves", level=2)
+                for k, v in movepool.level.items():
+                    if o := ", ".join(x.name for x in sorted(v, key=lambda x: x.name)):
+                        p = doc.add_paragraph()
+                        p.add_run(f"Level {k:02d}:").bold = True
+                        p.add_run(o)
+
+            if tm := ", ".join(x.name for x in sorted(movepool.tm, key=lambda x: x.name)):
+                doc.add_heading("TM Moves", level=2)
+                doc.add_paragraph(tm)
+
+            if tutor := ", ".join(x.name for x in sorted(movepool.tutor, key=lambda x: x.name)):
+                doc.add_heading("Tutor Moves", level=2)
+                doc.add_paragraph(tutor)
+
+            if egg := ", ".join(x.name for x in sorted(movepool.egg, key=lambda x: x.name)):
+                doc.add_heading("Egg Moves", level=2)
+                doc.add_paragraph(egg)
+
+            if other := ", ".join(x.name for x in sorted(movepool.other, key=lambda x: x.name)):
+                doc.add_heading("Other Moves", level=2)
+                doc.add_paragraph(other)
+
+        doc.save(fp := BytesIO())
+        fp.seek(0)
+        return File(fp=fp, filename=f"{self.id or 'Character'}.docx")
 
     def generated_image(self, background: Optional[str] = None) -> Optional[str]:
         """Generated Image
