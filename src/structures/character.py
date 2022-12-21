@@ -768,13 +768,14 @@ class Character:
         doc: Document = document()
 
         params_header = {
+            "Age": self.age.name,
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
             "Pokeball": self.pokeball.label if self.pokeball else None,
             "Registration": self.created_at.strftime("%x"),
-            "Measure": f"{self.height_text}\n{self.weight_text}",
+            "Measure": "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")]),
         }
 
-        doc.add_heading(f"Name: {self.name}\tPronoun: {self.pronoun.name}\tAge: {self.age.name}", 0)
+        doc.add_heading(f"{self.name} - {self.pronoun.emoji}", 0)
         match species := self.species:
             case mon if isinstance(mon, Fusion):
                 ratio1, ratio2 = mon.ratio, 1 - mon.ratio
