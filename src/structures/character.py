@@ -775,8 +775,6 @@ class Character:
         }
 
         doc.add_heading(self.name, 0)
-        doc.add_paragraph("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
-
         match species := self.species:
             case mon if isinstance(mon, Fusion):
                 ratio1, ratio2 = mon.ratio, 1 - mon.ratio
@@ -795,7 +793,7 @@ class Character:
             case mon if isinstance(mon, Species):
                 params_header["Species"] = mon.name
 
-        doc.add_paragraph("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
+        doc.add_heading("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
         if img_file := await bot.get_file(self.image_url):
             doc.add_picture(img_file, width=Inches(6))
 
