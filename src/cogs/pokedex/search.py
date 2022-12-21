@@ -640,15 +640,35 @@ class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
 class OCGroupByHeight(OCGroupBy[Size]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.size.height_value(x.species.height), reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.size.height_info(x.species.height)) if k}
+        def sorter(x: Character) -> float:
+            if isinstance(x.size, Size):
+                return x.size.height_value(x.species.height)
+            return Size.M.height_value(x.size)
+
+        def parser(x: Character) -> str:
+            if isinstance(x.size, Size):
+                return x.size.height_info(x.species.height)
+            return Size.M.height_info(x.size)
+
+        ocs = sorted(ocs, key=sorter, reverse=True)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=parser) if k}
 
 
 class OCGroupByWeight(OCGroupBy[Size]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.weight.weight_value(x.species.weight), reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight.weight_info(x.species.weight)) if k}
+        def sorter(x: Character) -> float:
+            if isinstance(x.weight, Size):
+                return x.weight.weight_value(x.species.weight)
+            return Size.M.weight_value(x.weight)
+
+        def parser(x: Character) -> str:
+            if isinstance(x.weight, Size):
+                return x.weight.weight_info(x.species.weight)
+            return Size.M.weight_info(x.weight)
+
+        ocs = sorted(ocs, key=sorter, reverse=True)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=parser) if k}
 
 
 class GroupByArg(Enum):

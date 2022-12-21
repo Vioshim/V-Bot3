@@ -86,7 +86,7 @@ trio = ["trio (>=0.16,<0.22)"]
 
 [[package]]
 name = "APScheduler"
-version = "4.0.0a2.post32"
+version = "4.0.0a2.post33"
 description = "In-process task scheduler with Cron-like capabilities"
 category = "main"
 optional = false
@@ -113,7 +113,7 @@ test = ["apscheduler", "coverage", "freezegun", "paho-mqtt (>=1.5)", "pymongo (>
 type = "git"
 url = "https://github.com/agronholm/apscheduler.git"
 reference = "master"
-resolved_reference = "32816344ef0e14c97cd601232ca40459dabd4ada"
+resolved_reference = "7e130f238413dd72b89670a9bc5cc9a7e5cbb68c"
 
 [[package]]
 name = "astunparse"
@@ -637,8 +637,8 @@ docs = ["sphinx (>=4.0.0,<5.0.0)", "sphinxcontrib-trio", "furo"]
 
 [[package]]
 name = "numpy"
-version = "1.23.5"
-description = "NumPy is the fundamental package for array computing with Python."
+version = "1.24.0"
+description = "Fundamental package for array computing in Python"
 category = "main"
 optional = false
 python-versions = ">=3.8"
@@ -947,7 +947,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "rapidfuzz"
-version = "2.13.6"
+version = "2.13.7"
 description = "rapid fuzzy string matching"
 category = "main"
 optional = false
@@ -1055,7 +1055,7 @@ telegram = ["requests"]
 
 [[package]]
 name = "types-pytz"
-version = "2022.6.0.1"
+version = "2022.7.0.0"
 description = "Typing stubs for pytz"
 category = "main"
 optional = false

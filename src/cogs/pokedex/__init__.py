@@ -191,6 +191,18 @@ class Pokedex(commands.Cog):
                 else:
                     height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
 
+                if isinstance(species, Character):
+                    if isinstance(species.size, Size):
+                        height, val1 = species.size, 0
+                    else:
+                        height, val1 = Size.M, species.size
+                    if isinstance(species.weight, Size):
+                        weight, val2 = species.weight, 0
+                    else:
+                        weight, val2 = Size.M, species.weight
+                else:
+                    height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
+
                 embed.add_field(name="Height", value=height.height_info(val1), inline=False)
                 embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
 

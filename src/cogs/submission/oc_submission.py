@@ -76,6 +76,7 @@ from src.views.characters_view import BaseCharactersView, CharactersView, PingVi
 from src.views.image_view import ImageView
 from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
+from src.views.size_view import HeightView, WeightView
 from src.views.species_view import SpeciesComplex
 
 DEFAULT_MOVES = Movepool.from_dict(tm=["TERABLAST"])
@@ -514,6 +515,19 @@ class SizeField(TemplateField):
         return bool(oc.species)
 
     @classmethod
+    def evaluate(cls, oc: Character):
+        if not isinstance(oc.size, float):
+            return
+
+        if oc.size < Size.XXXS.height_value(oc.species.height):
+            info = Size.XXXS.height_info(oc.species.height)
+            return f"Min {info}"
+
+        if oc.size > Size.XXXL.height_value(oc.species.height):
+            info = Size.XXXL.height_info(oc.species.height)
+            return f"Max {info}"
+
+    @classmethod
     async def on_submit(
         cls,
         ctx: Interaction,
@@ -522,26 +536,21 @@ class SizeField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        height = oc.species.height if oc.species else 0
-        view = Complex[Size](
-            member=ctx.user,
-            target=ctx,
-            timeout=None,
-            values=Size,
-            sort_key=(lambda x: x.value, True),
-            parser=lambda x: (x.height_info(height), {Size.M: "Average"}.get(x)),
-            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.size else "\N{BLACK LARGE SQUARE}",
-            silent_mode=True,
-        )
-        async with view.send(
+
+        if isinstance(oc.size, Size):
+            height = oc.species.height if oc.species else 0
+            info = oc.size.height_info(height)
+        else:
+            info = Size.M.height_info(oc.size)
+
+        view = HeightView(target=ctx, member=ctx.user, oc=oc)
+        await view.send(
             title=f"{template.title} Character's Size.",
-            description=f"> {oc.size.height_info(height)}",
-            single=True,
+            description=f"> {info}",
             ephemeral=ephemeral,
-        ) as size:
-            if isinstance(size, Size):
-                oc.size = size
-                progress.add(cls.name)
+        )
+        await view.wait()
+        progress.add(cls.name)
 
 
 class WeightField(TemplateField):
@@ -554,6 +563,19 @@ class WeightField(TemplateField):
         return bool(oc.species)
 
     @classmethod
+    def evaluate(cls, oc: Character):
+        if not isinstance(oc.weight, float):
+            return
+
+        if oc.weight < Size.XXXS.weight_value(oc.species.weight):
+            info = Size.XXXS.weight_info(oc.species.weight)
+            return f"Min {info}"
+
+        if oc.weight > Size.XXXL.weight_value(oc.species.weight):
+            info = Size.XXXL.weight_info(oc.species.weight)
+            return f"Max {info}"
+
+    @classmethod
     async def on_submit(
         cls,
         ctx: Interaction,
@@ -562,26 +584,22 @@ class WeightField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
+
+        if isinstance(oc.weight, Size):
+            weight = oc.species.weight if oc.species else 0
+            info = oc.weight.weight_info(weight)
+        else:
+            info = Size.M.weight_info(oc.weight)
+
         weight = oc.species.weight if oc.species else 0
-        view = Complex[Size](
-            member=ctx.user,
-            target=ctx,
-            timeout=None,
-            values=Size,
-            sort_key=(lambda x: x.value, True),
-            parser=lambda x: (x.weight_info(weight), "Average" if x == Size.M else None),
-            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x == oc.weight else "\N{BLACK LARGE SQUARE}",
-            silent_mode=True,
-        )
-        async with view.send(
+        view = WeightView(target=ctx, member=ctx.user, oc=oc)
+        await view.send(
             title=f"{template.title} Character's Weight.",
-            description=f"> {oc.weight.weight_info(weight)}",
-            single=True,
+            description=f"> {info}",
             ephemeral=ephemeral,
-        ) as weight:
-            if isinstance(weight, Size):
-                oc.weight = weight
-                progress.add(cls.name)
+        )
+        await view.wait()
+        progress.add(cls.name)
 
 
 class PreEvoSpeciesField(TemplateField):

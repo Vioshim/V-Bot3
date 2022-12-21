@@ -45,8 +45,6 @@ from src.utils.imagekit import Fonts, ImageKit
 
 __all__ = ("BaseCharactersView", "CharactersView", "PingView")
 
-PING_EMOJI = PartialEmoji(name="IconInsights", id=751160378800472186)
-
 
 class PingModal(Modal):
     def __init__(self, oc: Character, thread_id: Optional[int] = None) -> None:

@@ -593,11 +593,11 @@ class Submission(commands.Cog):
             return_when=asyncio.FIRST_COMPLETED,
         )
 
-        for future in done:
-            future.exception()
-
         for future in pending:
             future.cancel()
+
+        for future in done:
+            future.exception()
 
         if any(task == future for future in done):
             return
@@ -607,7 +607,8 @@ class Submission(commands.Cog):
         async for x in db.find({"author": message.author.id}):
             oc = Character.from_mongo_dict(x)
             for name in oc.name.split(","):
-                kwargs[name.strip()] = oc
+                if name := name.strip():
+                    kwargs[name] = oc
 
         for msg in sorted(messages, key=lambda x: x.id):
             await self.on_message_tupper(msg, kwargs)

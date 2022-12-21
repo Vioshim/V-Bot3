@@ -224,9 +224,25 @@ class Size(Enum):
 
         return value
 
+    @staticmethod
+    def meters_to_ft_inches(value: float = 0):
+        return int(value / 0.3048), int(value / 0.3048 % 1 * 12)
+
+    @staticmethod
+    def kg_to_lbs(value: float = 0):
+        return value * 2.20462
+
+    @staticmethod
+    def ft_inches_to_meters(feet: float = 0, inches: float = 0):
+        return feet * 0.3048 + inches * 0.0254
+
+    @staticmethod
+    def lbs_to_kgs(value: float = 0):
+        return value * 0.45359
+
     def height_info(self, value: float = 0):
         value = self.height_value(value)
-        feet, inches = int(value / 0.3048), int(value / 0.3048 % 1 * 12)
+        feet, inches = self.meters_to_ft_inches(value)
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_value(self, value: float = 0):
@@ -240,7 +256,7 @@ class Size(Enum):
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
-        return f"{value:.2f} kg / {value * 2.20462:.2f} lbs"
+        return f"{value:.2f} kg / {self.kg_to_lbs(value):.2f} lbs"
 
 
 @dataclass(slots=True)
@@ -263,8 +279,8 @@ class Character:
     image: Optional[int] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
-    size: Size = Size.M
-    weight: Size = Size.M
+    size: Size | float = Size.M
+    weight: Size | float = Size.M
     pokeball: Optional[Pokeball] = None
     last_used: Optional[int] = None
 
@@ -309,8 +325,8 @@ class Character:
             data["species"] = self.species.id
 
         data["age"] = self.age.name
-        data["size"] = self.size.name
-        data["weight"] = self.weight.name
+        data["size"] = self.size.name if isinstance(self.size, Size) else self.size
+        data["weight"] = self.weight.name if isinstance(self.weight, Size) else self.weight
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
@@ -695,8 +711,16 @@ class Character:
             icon_url = None
 
         if species:
-            height_text = self.size.height_info(species.height)
-            weight_text = self.weight.weight_info(species.weight)
+            if isinstance(self.size, Size):
+                height_text = self.size.height_info(species.height)
+            else:
+                height_text = Size.M.height_info(self.size)
+
+            if isinstance(self.weight, Size):
+                weight_text = self.weight.weight_info(species.weight)
+            else:
+                weight_text = Size.M.weight_info(self.weight)
+
             c_embed.set_footer(text=f"{height_text}\n{weight_text}", icon_url=icon_url)
 
         if moves_text:
