@@ -771,7 +771,7 @@ class Character:
             "Pronoun": self.pronoun.name,
             "Pokeball": self.pokeball.label if self.pokeball else None,
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
-            "Date": self.created_at.strftime("%x"),
+            "Registration Date": self.created_at.strftime("%x"),
         }
 
         doc.add_heading(self.name, 0)
