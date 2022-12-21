@@ -775,7 +775,7 @@ class Character:
             "Measure": "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")]),
         }
 
-        doc.add_heading(f"{self.name} - {self.pronoun.emoji}", 0)
+        doc.add_heading(f"{self.pronoun.emoji}〛{self.name}", 0)
         match species := self.species:
             case mon if isinstance(mon, Fusion):
                 ratio1, ratio2 = mon.ratio, 1 - mon.ratio
