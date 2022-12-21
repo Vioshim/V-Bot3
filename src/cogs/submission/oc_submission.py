@@ -1254,7 +1254,6 @@ class CreationOCView(Basic):
         self.cancel.label = "Close this Menu"
         self.finish_oc.label = "Delete OC"
         self.help.label = "Request Help"
-        self.printer.label = None
         self.submit.disabled = bool(errors)
 
         if embed_update:
@@ -1375,13 +1374,11 @@ class CreationOCView(Basic):
         await self.delete(ctx)
 
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple, row=3)
-    async def printer(self, ctx: Interaction, btn: Button):
-        if not btn.label:
-            btn.label = "Confirm"
-            return await ctx.response.edit_message(view=self)
+    async def printer(self, ctx: Interaction, _: Button):
         await ctx.response.defer(ephemeral=True, thinking=True)
         file = await self.oc.to_docx(ctx.client)
         await ctx.followup.send(file=file, ephemeral=True)
+        ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
 
     @button(label="Close this Menu", row=3)
     async def cancel(self, ctx: Interaction, btn: Button):
