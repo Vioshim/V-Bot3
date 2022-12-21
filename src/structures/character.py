@@ -770,7 +770,7 @@ class Character:
         params_header = {
             "Pronoun": self.pronoun.name,
             "Pokeball": self.pokeball.name if self.pokeball else None,
-            "Hidden Power": self.hidden_power.name if self.hidden_power else None,
+            "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
             "Date": self.created_at.isoformat(),
         }
 
@@ -793,7 +793,7 @@ class Character:
             case mon if isinstance(mon, Species):
                 params_header["Species"] = mon.name
 
-        doc.add_heading("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
+        doc.add_paragraph("\t".join(f"{k}: {v}" for k, v in params_header.items()))
         if img_file := await bot.get_file(self.image_url):
             doc.add_picture(img_file.fp, width=Inches(6))
 
@@ -814,8 +814,6 @@ class Character:
                 p = doc.add_paragraph("• ")
                 p.add_run(f"{item.name}: ").bold = True
                 p.add_run(f"{item.category.name}, {item_type.name}".title())
-
-        doc.add_page_break()
 
         if self.backstory or self.extra:
             doc.add_page_break()
@@ -854,7 +852,7 @@ class Character:
                 for k, v in movepool.level.items():
                     if o := ", ".join(x.name for x in sorted(v, key=lambda x: x.name)):
                         p = doc.add_paragraph()
-                        p.add_run(f"Level {k:02d}:").bold = True
+                        p.add_run(f"Level {k:02d}: ").bold = True
                         p.add_run(o)
 
             if tm := ", ".join(x.name for x in sorted(movepool.tm, key=lambda x: x.name)):
