@@ -28,6 +28,142 @@ __all__ = (
 )
 
 
+class HeightModal1(Modal, title="Height"):
+    def __init__(self, oc: Character, info: str) -> None:
+        super().__init__(title="Height", timeout=None)
+        self.text = TextInput(label="Meters", placeholder=info, default=info)
+        self.add_item(self.text)
+        self.oc = oc
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        a = Size.XXXS.height_value(self.oc.species.height)
+        b = Size.XXXL.height_value(self.oc.species.height)
+
+        with suppress(ValueError):
+            answer = round(float(self.text.value), 2)
+            if answer <= a:
+                answer = Size.XXXS
+            elif answer >= b:
+                answer = Size.XXXL
+            elif item := find(lambda x: x.height_value(self.oc.species.height) == answer, Size):
+                answer = item
+            self.oc.size = answer
+
+        if isinstance(self.oc.size, Size):
+            info = self.oc.size.height_info(self.oc.species.height)
+        else:
+            info = Size.M.height_info(self.oc.size)
+
+        await interaction.response.send_message(info, ephemeral=True, delete_after=3)
+        self.stop()
+
+
+class HeightModal2(Modal, title="Height"):
+    def __init__(self, oc: Character, info: str) -> None:
+        super().__init__(title="Height", timeout=None)
+        info = info.removesuffix('" ft')
+        ft_info, in_info = info.split("' ")
+
+        self.text1 = TextInput(label="Feet", placeholder=ft_info, default=ft_info, required=False)
+        self.text2 = TextInput(label="Inches", placeholder=in_info, default=in_info, required=False)
+
+        self.add_item(self.text1)
+        self.add_item(self.text2)
+        self.oc = oc
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        a = Size.XXXS.height_value(self.oc.species.height)
+        b = Size.XXXL.height_value(self.oc.species.height)
+
+        with suppress(ValueError):
+            answer = Size.ft_inches_to_meters(
+                feet=float(self.text1.value or "0"),
+                inches=float(self.text2.value or "0"),
+            )
+            answer = round(answer, 2)
+            if answer <= a:
+                answer = Size.XXXS
+            elif answer >= b:
+                answer = Size.XXXL
+            elif item := find(lambda x: x.height_value(self.oc.species.height) == answer, Size):
+                answer = item
+            self.oc.size = answer
+
+        if isinstance(self.oc.size, Size):
+            info = self.oc.size.height_info(self.oc.species.height)
+        else:
+            info = Size.M.height_info(self.oc.size)
+
+        await interaction.response.send_message(info, ephemeral=True, delete_after=3)
+        self.stop()
+
+
+class WeightModal1(Modal, title="Weight"):
+    def __init__(self, oc: Character, info: str) -> None:
+        super().__init__(title="Weight", timeout=None)
+        self.text = TextInput(label="kg", placeholder=info, default=info)
+        self.add_item(self.text)
+        self.oc = oc
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        a = Size.XXXS.weight_value(self.oc.species.weight)
+        b = Size.XXXL.weight_value(self.oc.species.weight)
+
+        text = self.text.value.lower().removesuffix(".")
+        text = text.removesuffix("kg").strip()
+
+        with suppress(ValueError):
+            answer = round(float(text), 2)
+            if answer <= a:
+                answer = Size.XXXS
+            elif answer >= b:
+                answer = Size.XXXL
+            elif item := find(lambda x: x.weight_value(self.oc.species.weight) == answer, Size):
+                answer = item
+            self.oc.weight = answer
+
+        if isinstance(self.oc.weight, Size):
+            info = self.oc.weight.weight_info(self.oc.species.weight)
+        else:
+            info = Size.M.weight_info(self.oc.weight)
+
+        await interaction.response.send_message(info, ephemeral=True, delete_after=3)
+        self.stop()
+
+
+class WeightModal2(Modal, title="Weight"):
+    def __init__(self, oc: Character, info: str) -> None:
+        super().__init__(title="Weight", timeout=None)
+        self.text = TextInput(label="lbs", placeholder=info, default=info)
+        self.add_item(self.text)
+        self.oc = oc
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        a = Size.XXXS.weight_value(self.oc.species.weight)
+        b = Size.XXXL.weight_value(self.oc.species.weight)
+
+        text = self.text.value.lower().removesuffix(".")
+        text = text.removesuffix("lbs").removesuffix("lb").strip()
+
+        with suppress(ValueError):
+            answer = round(Size.lbs_to_kgs(float(text)), 2)
+            if answer <= a:
+                answer = Size.XXXS
+            elif answer >= b:
+                answer = Size.XXXL
+            elif item := find(lambda x: x.weight_value(self.oc.species.weight) == answer, Size):
+                answer = item
+            self.oc.weight = answer
+
+        if isinstance(self.oc.weight, Size):
+            info = self.oc.weight.weight_info(self.oc.species.weight)
+        else:
+            info = Size.M.weight_info(self.oc.weight)
+
+        await interaction.response.send_message(info, ephemeral=True, delete_after=3)
+        self.stop()
+
+
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
         super().__init__(target=target, member=member, timeout=None)
@@ -58,65 +194,16 @@ class HeightView(Basic):
 
     @button(label="Meters", style=ButtonStyle.blurple)
     async def manual_1(self, itx: Interaction, btn: Button):
-        class ManualModal(Modal, title="Height"):
-            text = TextInput(label="Meters", placeholder=btn.label, default=btn.label)
-
-        modal = ManualModal(timeout=None)
+        modal = HeightModal1(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
-
-        text: str = modal.text.value.lower().removesuffix(".")
-
-        if "cm" in text:
-            factor, text = 0.01, text.removesuffix("cm")
-        else:
-            factor, text = 1, text.removesuffix("m")
-
-        a = Size.XXXS.height_value(self.oc.species.height)
-        b = Size.XXXL.height_value(self.oc.species.height)
-
-        with suppress(ValueError):
-            answer = round(factor * float(text.strip()), 2)
-            if answer <= a:
-                answer = Size.XXXS
-            elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: x.height_value(self.oc.species.height) == answer, Size):
-                answer = item
-            self.oc.size = answer
-
         await self.delete(itx)
 
     @button(label="Feet & Inches", style=ButtonStyle.blurple)
     async def manual_2(self, itx: Interaction, btn: Button):
-        info = btn.label.removesuffix('" ft')
-        ft_info, in_info = info.split("' ")
-
-        class ManualModal(Modal, title="Height"):
-            text1 = TextInput(label="Feet", placeholder=ft_info, default=ft_info, required=False)
-            text2 = TextInput(label="Inches", placeholder=in_info, default=in_info, required=False)
-
-        modal = ManualModal(timeout=None)
+        modal = HeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
-
-        a = Size.XXXS.height_value(self.oc.species.height)
-        b = Size.XXXL.height_value(self.oc.species.height)
-
-        with suppress(ValueError):
-            answer = Size.ft_inches_to_meters(
-                feet=float(modal.text1.value or "0"),
-                inches=float(modal.text2.value or "0"),
-            )
-            answer = round(answer, 2)
-            if answer <= a:
-                answer = Size.XXXS
-            elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: x.height_value(self.oc.species.height) == answer, Size):
-                answer = item
-            self.oc.size = answer
-
         await self.delete(itx)
 
     @button(label="Close", style=ButtonStyle.gray)
@@ -157,58 +244,16 @@ class WeightView(Basic):
 
     @button(label="Kg", style=ButtonStyle.blurple)
     async def manual_1(self, itx: Interaction, btn: Button):
-        class ManualModal(Modal, title="Weight"):
-            text = TextInput(label="kg", placeholder=btn.label, default=btn.label)
-
-        modal = ManualModal(timeout=None)
+        modal = WeightModal1(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
-
-        text: str = modal.text.value.lower().removesuffix(".")
-
-        text = text.removesuffix("kg").strip()
-
-        a = Size.XXXS.weight_value(self.oc.species.weight)
-        b = Size.XXXL.weight_value(self.oc.species.weight)
-
-        with suppress(ValueError):
-            answer = round(float(text), 2)
-            if answer <= a:
-                answer = Size.XXXS
-            elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: x.weight_value(self.oc.species.weight) == answer, Size):
-                answer = item
-
-            self.oc.weight = answer
-
         await self.delete(itx)
 
     @button(label="Lbs", style=ButtonStyle.blurple)
     async def manual_2(self, itx: Interaction, btn: Button):
-        class ManualModal(Modal, title="Weight"):
-            text = TextInput(label="lbs", placeholder=btn.label, default=btn.label)
-
-        modal = ManualModal(timeout=None)
+        modal = WeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
-
-        a = Size.XXXS.weight_value(self.oc.species.weight)
-        b = Size.XXXL.weight_value(self.oc.species.weight)
-
-        text = modal.text.value.lower().removesuffix(".")
-        text = text.removesuffix("lbs").removesuffix("lb").strip()
-
-        with suppress(ValueError):
-            answer = round(Size.lbs_to_kgs(float(text)), 2)
-            if answer <= a:
-                answer = Size.XXXS
-            elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: x.weight_value(self.oc.species.weight) == answer, Size):
-                answer = item
-            self.oc.weight = answer
-
         await self.delete(itx)
 
     @button(label="Close", style=ButtonStyle.gray)
