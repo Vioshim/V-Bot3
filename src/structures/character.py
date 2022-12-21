@@ -793,7 +793,15 @@ class Character:
             case mon if isinstance(mon, Species):
                 params_header["Species"] = mon.name
 
-        doc.add_paragraph("\t".join(f"{k}: {v}" for k, v in params_header.items()))
+        table = doc.add_table(rows=1, cols=len(params_header))
+        hdr_cells = table.rows[0].cells
+        for text, row in zip(params_header, hdr_cells):
+            row.text = text
+
+        row_cells = table.add_row().cells
+        for index, item in enumerate(params_header.values()):
+            row_cells[index].text = str(item)
+
         if img_file := await bot.get_file(self.image_url):
             doc.add_picture(img_file.fp, width=Inches(6))
 
