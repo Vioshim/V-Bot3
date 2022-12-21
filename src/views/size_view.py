@@ -39,8 +39,15 @@ class HeightModal1(Modal, title="Height"):
         a = Size.XXXS.height_value(self.oc.species.height)
         b = Size.XXXL.height_value(self.oc.species.height)
 
+        text = self.text.value.removesuffix(".").lower()
+
+        if "cm" in text:
+            ratio, text = 0.01, text.removesuffix("cm")
+        else:
+            ratio, text = 1, text.removesuffix("m")
+
         with suppress(ValueError):
-            answer = round(float(self.text.value), 2)
+            answer = round(ratio * float(text.strip()), 2)
             if answer <= a:
                 answer = Size.XXXS
             elif answer >= b:
@@ -110,10 +117,10 @@ class WeightModal1(Modal, title="Weight"):
         b = Size.XXXL.weight_value(self.oc.species.weight)
 
         text = self.text.value.lower().removesuffix(".")
-        text = text.removesuffix("kg").strip()
+        text = text.removesuffix("kg")
 
         with suppress(ValueError):
-            answer = round(float(text), 2)
+            answer = round(float(text.strip()), 2)
             if answer <= a:
                 answer = Size.XXXS
             elif answer >= b:
@@ -143,10 +150,10 @@ class WeightModal2(Modal, title="Weight"):
         b = Size.XXXL.weight_value(self.oc.species.weight)
 
         text = self.text.value.lower().removesuffix(".")
-        text = text.removesuffix("lbs").removesuffix("lb").strip()
+        text = text.removesuffix("lbs").removesuffix("lb")
 
         with suppress(ValueError):
-            answer = round(Size.lbs_to_kgs(float(text)), 2)
+            answer = round(Size.lbs_to_kgs(float(text.strip())), 2)
             if answer <= a:
                 answer = Size.XXXS
             elif answer >= b:

@@ -605,6 +605,34 @@ class Character:
             return f"https://discord.com/channels/{self.server}/{self.thread}/{self.id}"
 
     @property
+    def height_text(self):
+        if isinstance(self.size, Size):
+            height = self.species.height if self.species else 0
+            return self.size.height_info(height)
+        return Size.M.height_info(self.size)
+
+    @property
+    def height_value(self):
+        if isinstance(self.size, Size):
+            height = self.species.height if self.species else 0
+            return self.size.height_value(height)
+        return self.size
+
+    @property
+    def weight_text(self):
+        if isinstance(self.weight, Size):
+            weight = self.species.weight if self.species else 0
+            return self.weight.weight_info(weight)
+        return Size.M.weight_info(self.weight)
+
+    @property
+    def weight_value(self):
+        if isinstance(self.weight, Size):
+            weight = self.species.weight if self.species else 0
+            return self.weight.weight_value(weight)
+        return self.weight
+
+    @property
     def default_image(self):
         """This allows to obtain a default image for the character
 
@@ -711,17 +739,7 @@ class Character:
             icon_url = None
 
         if species:
-            if isinstance(self.size, Size):
-                height_text = self.size.height_info(species.height)
-            else:
-                height_text = Size.M.height_info(self.size)
-
-            if isinstance(self.weight, Size):
-                weight_text = self.weight.weight_info(species.weight)
-            else:
-                weight_text = Size.M.weight_info(self.weight)
-
-            c_embed.set_footer(text=f"{height_text}\n{weight_text}", icon_url=icon_url)
+            c_embed.set_footer(text=f"{self.height_text}\n{self.weight_text}", icon_url=icon_url)
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
