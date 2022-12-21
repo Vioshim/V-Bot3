@@ -83,30 +83,30 @@ class SPAbilityModal(Modal):
         )
         self.description = TextInput(
             label="Describe how it works",
-            max_length=1024,
+            max_length=4000,
             style=TextStyle.paragraph,
-            default=sp_ability.description[:1024],
+            default=sp_ability.description,
             required=False,
         )
         self.origin = TextInput(
             label="How your oc obtained this?",
-            max_length=600,
+            max_length=4000,
             style=TextStyle.paragraph,
-            default=sp_ability.origin[:600],
+            default=sp_ability.origin,
             required=False,
         )
         self.pros = TextInput(
             label="How it makes your oc's life easier?",
-            max_length=600,
+            max_length=4000,
             style=TextStyle.paragraph,
-            default=sp_ability.pros[:600],
+            default=sp_ability.pros,
             required=False,
         )
         self.cons = TextInput(
             label="How it makes your oc's life harder?",
-            max_length=600,
+            max_length=4000,
             style=TextStyle.paragraph,
-            default=sp_ability.cons[:600],
+            default=sp_ability.cons,
             required=False,
         )
         self.add_item(self.name)

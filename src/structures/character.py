@@ -837,6 +837,7 @@ class Character:
         if sp_ability := self.sp_ability:
             doc.add_page_break()
             doc.add_heading(f"Unique Trait: {sp_ability.name}", 1)
+            doc.add_heading(sp_ability.kind.phrase, 2)
             if sp_ability.description:
                 doc.add_paragraph(sp_ability.description)
 
