@@ -52,7 +52,7 @@ class HeightModal1(Modal, title="Height"):
                 answer = Size.XXXS
             elif answer >= b:
                 answer = Size.XXXL
-            elif item := find(lambda x: x.height_value(self.oc.species.height) == answer, Size):
+            elif item := find(lambda x: round(x.height_value(self.oc.species.height), 2) == answer, Size):
                 answer = item
             self.oc.size = answer
 
@@ -92,7 +92,7 @@ class HeightModal2(Modal, title="Height"):
                 answer = Size.XXXS
             elif answer >= b:
                 answer = Size.XXXL
-            elif item := find(lambda x: x.height_value(self.oc.species.height) == answer, Size):
+            elif item := find(lambda x: round(x.height_value(self.oc.species.height), 2) == answer, Size):
                 answer = item
             self.oc.size = answer
 
@@ -125,7 +125,7 @@ class WeightModal1(Modal, title="Weight"):
                 answer = Size.XXXS
             elif answer >= b:
                 answer = Size.XXXL
-            elif item := find(lambda x: x.weight_value(self.oc.species.weight) == answer, Size):
+            elif item := find(lambda x: round(x.weight_value(self.oc.species.weight), 2) == answer, Size):
                 answer = item
             self.oc.weight = answer
 
@@ -158,7 +158,7 @@ class WeightModal2(Modal, title="Weight"):
                 answer = Size.XXXS
             elif answer >= b:
                 answer = Size.XXXL
-            elif item := find(lambda x: x.weight_value(self.oc.species.weight) == answer, Size):
+            elif item := find(lambda x: round(x.weight_value(self.oc.species.weight), 2) == answer, Size):
                 answer = item
             self.oc.weight = answer
 
