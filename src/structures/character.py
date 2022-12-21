@@ -795,7 +795,7 @@ class Character:
 
         doc.add_heading("\t".join(f"{k}: {v}" for k, v in params_header.items() if v), 1)
         if img_file := await bot.get_file(self.image_url):
-            doc.add_picture(img_file, width=Inches(6))
+            doc.add_picture(img_file.fp, width=Inches(6))
 
         if self.abilities:
             doc.add_heading("Abilities", level=1)
