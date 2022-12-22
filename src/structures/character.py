@@ -232,9 +232,7 @@ class Size(Enum):
 
     @staticmethod
     def meters_to_ft_inches(value: float = 0):
-        feet = value / 0.3048
-        inches = math.ceil(100 * value / 0.3048 % 1 * 12) / 100
-        return int(feet), int(inches)
+        return int(value / 0.3048), int(value / 0.3048 % 1 * 12)
 
     @staticmethod
     def kg_to_lbs(value: float = 0):
