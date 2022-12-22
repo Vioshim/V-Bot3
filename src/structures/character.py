@@ -808,21 +808,32 @@ class Character:
 
         if self.abilities:
             doc.add_heading("Abilities", level=1)
+            table = doc.add_table(rows=1, cols=2)
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = "Name"
+            hdr_cells[1].text = "Description"
+
             for item in sorted(self.abilities, key=lambda x: x.name):
-                p = doc.add_paragraph("• ")
-                p.add_run(f"{item.name}: ").bold = True
-                p.add_run(item.description)
+                row_cells = table.add_row().cells
+                row_cells[0].text = item.name
+                row_cells[1].text = item.description
 
         if self.moveset:
-            doc.add_heading("Moveset", level=1)
-            for item in sorted(self.moveset, key=lambda x: x.name):
-                item_type = item.type
-                if item.name in ["Hidden Power", "Tera Blast"] and self.hidden_power:
-                    item_type = self.hidden_power
-                item_type = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item_type
-                p = doc.add_paragraph("• ")
-                p.add_run(f"{item.name}: ").bold = True
-                p.add_run(f"{item.category.name}, {item_type.name}".title())
+            doc.add_heading("Favorite Moves", level=1)
+            items = sorted(self.moveset, key=lambda x: x.name)
+            table = doc.add_table(rows=1, cols=2)
+            hdr_cells = table.rows[0].cells
+            for index, values in enumerate((items[:3], items[3:])):
+                move_args = []
+
+                for item in values:
+                    item_type = item.type
+                    if item.name in ["Hidden Power", "Tera Blast"] and self.hidden_power:
+                        item_type = self.hidden_power
+                    item_type = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item_type
+                    move_args.append(f"{item.name} - {item.category.name} - {item_type.name}".title())
+
+                hdr_cells[index].text = "\n".join(move_args)
 
         if self.backstory or self.extra:
             doc.add_page_break()
