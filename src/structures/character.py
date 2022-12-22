@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from io import BytesIO
@@ -231,19 +232,22 @@ class Size(Enum):
 
     @staticmethod
     def meters_to_ft_inches(value: float = 0):
-        return int(value / 0.3048), int(value / 0.3048 % 1 * 12)
+        feet = value / 0.3048
+        inches = math.ceil(100 * value / 0.3048 % 1 * 12) / 100
+        return int(feet), int(inches)
 
     @staticmethod
     def kg_to_lbs(value: float = 0):
-        return value * 2.20462
+        return math.ceil(100 * value * 2.20462) / 100
 
     @staticmethod
     def ft_inches_to_meters(feet: float = 0, inches: float = 0):
-        return feet * 0.3048 + inches * 0.0254
+        value = feet * 0.3048 + inches * 0.0254
+        return math.ceil(100 * value) / 100
 
     @staticmethod
     def lbs_to_kgs(value: float = 0):
-        return value * 0.45359
+        return math.ceil(100 * value * 0.45359) / 100
 
     def height_info(self, value: float = 0):
         value = self.height_value(value)

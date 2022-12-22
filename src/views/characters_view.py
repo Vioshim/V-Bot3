@@ -145,6 +145,13 @@ class PingView(View):
             return False
         return True
 
+    @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple)
+    async def printer(self, ctx: Interaction, _: Button):
+        await ctx.response.defer(ephemeral=True, thinking=True)
+        file = await self.oc.to_docx(ctx.client)
+        await ctx.followup.send(file=file, ephemeral=True)
+        ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
+
     @button(label="Ping OC", style=ButtonStyle.blurple)
     async def ping(self, ctx: Interaction, btn: Button) -> None:
         resp: InteractionResponse = ctx.response
@@ -174,13 +181,6 @@ class PingView(View):
             else:
                 modal = PingModal(oc=self.oc)
         await resp.send_modal(modal)
-
-    @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple, row=3)
-    async def printer(self, ctx: Interaction, _: Button):
-        await ctx.response.defer(ephemeral=True, thinking=True)
-        file = await self.oc.to_docx(ctx.client)
-        await ctx.followup.send(file=file, ephemeral=True)
-        ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
 
     @button(
         label="Delete OC",
