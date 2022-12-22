@@ -199,13 +199,24 @@ class Pokedex(commands.Cog):
                     mon1 = Fusion(base.mon1, base.mon2, ratio=0.1)
                     mon2 = Fusion(base.mon1, base.mon2, ratio=0.5)
                     mon3 = Fusion(base.mon1, base.mon2, ratio=0.9)
-                    heights = "\n".join(map(height.height_info, sorted({mon1.height, mon2.height, mon3.height})))
-                    weights = "\n".join(map(weight.weight_info, sorted({mon1.weight, mon2.weight, mon3.weight})))
+                    items = [mon1, mon2, mon3]
+                    item_heights = {x.height: x for x in items}
+                    item_weights = {x.weight: x for x in items}
+                    for k, v in sorted(item_heights.items(), key=lambda x: x[0]):
+                        if len(item_heights) > 1:
+                            name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1-v.ratio:.0%}〛{v.mon2.name}"
+                        else:
+                            name = "Height"
+                        embed.add_field(name=name, value=height.height_info(k), inline=False)
+                    for k, v in sorted(item_weights.items(), key=lambda x: x[0]):
+                        if len(item_weights) > 1:
+                            name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1-v.ratio:.0%}〛{v.mon2.name}"
+                        else:
+                            name = "Weight"
+                        embed.add_field(name=name, value=height.height_info(k), inline=False)
                 else:
-                    heights, weights = height.height_info(val1), weight.weight_info(val2)
-
-                embed.add_field(name="Height", value=heights, inline=False)
-                embed.add_field(name="Weight", value=weights, inline=False)
+                    embed.add_field(name="Height", value=height.height_info(val1), inline=False)
+                    embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
 
                 if isinstance(species, Species):
 
