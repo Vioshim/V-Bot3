@@ -955,8 +955,8 @@ class Fusion(Species):
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
             name="/".join(x.name for x in mons),
-            height=round(ratio1 * mon1.height + ratio2 * mon2.height, 3),
-            weight=round(ratio1 * mon1.weight + ratio2 * mon2.weight, 3),
+            height=round(ratio1 * mon1.height + ratio2 * mon2.height, 1),
+            weight=round(ratio1 * mon1.weight + ratio2 * mon2.weight, 1),
             HP=round(ratio1 * mon1.HP + ratio2 * mon2.HP),
             ATK=round(ratio1 * mon1.ATK + ratio2 * mon2.ATK),
             DEF=round(ratio1 * mon1.DEF + ratio2 * mon2.DEF),

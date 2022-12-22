@@ -187,24 +187,25 @@ class Pokedex(commands.Cog):
                     embed.add_field(name="Possible Types", value=possible_types, inline=False)
 
                 if isinstance(species, Character):
-                    height, weight, val1, val2 = species.size, species.weight, 0, 0
+                    base = species.species
+                    data1, data2 = species.size, species.weight
+                    height, val1 = (data1, 0.0) if isinstance(data1, Size) else (Size.M, data1)
+                    weight, val2 = (data2, 0.0) if isinstance(data2, Size) else (Size.M, data2)
                 else:
+                    base = species
                     height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
 
-                if isinstance(species, Character):
-                    if isinstance(species.size, Size):
-                        height, val1 = species.size, 0
-                    else:
-                        height, val1 = Size.M, species.size
-                    if isinstance(species.weight, Size):
-                        weight, val2 = species.weight, 0
-                    else:
-                        weight, val2 = Size.M, species.weight
+                if isinstance(base, Fusion):
+                    mon1 = Fusion(base.mon1, base.mon2, ratio=0.1)
+                    mon2 = Fusion(base.mon1, base.mon2, ratio=0.5)
+                    mon3 = Fusion(base.mon1, base.mon2, ratio=0.9)
+                    heights = "\n".join(map(height.height_info, sorted({mon1.height, mon2.height, mon3.height})))
+                    weights = "\n".join(map(weight.weight_info, sorted({mon1.weight, mon2.weight, mon3.weight})))
                 else:
-                    height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
+                    heights, weights = height.height_info(val1), weight.weight_info(val2)
 
-                embed.add_field(name="Height", value=height.height_info(val1), inline=False)
-                embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
+                embed.add_field(name="Height", value=heights, inline=False)
+                embed.add_field(name="Weight", value=weights, inline=False)
 
                 if isinstance(species, Species):
 
