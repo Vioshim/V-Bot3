@@ -155,7 +155,7 @@ class PartnerComplex(Complex[Partner]):
                 title=item.title,
                 url=item.invite_url,
                 color=ctx.user.color,
-                content=item.content,
+                description=item.content,
                 timestamp=ctx.created_at,
             )
             embed.set_image(url=item.image_url)
