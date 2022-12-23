@@ -248,9 +248,11 @@ class InviterView(View):
         )
         async with view.send(title=btn.custom_id, ephemeral=True) as choices:
             if choices:
-                title = "Servers with tags: {}".format(", ".join(choices))
                 items = [data.get(x, set()) for x in choices]
                 items = set[Partner].intersection(*items)
                 view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-                view.embed.title = title
-                await ctx.edit_original_response(embed=view.embed, view=view)
+                await view.simple_send(
+                    title="Servers with tags: {}".format(", ".join(choices)),
+                    editing_original=True,
+                )
+                await view.wait()
