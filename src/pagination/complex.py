@@ -660,7 +660,7 @@ class Complex(Simple[_T]):
             self.choices -= choices
             self.values.extend(choices)
             self.sort()
-            self.embed = reference_embed
-            self.menu_format()
 
+        self.embed = reference_embed
+        self.menu_format()
         await self.edit(interaction, page=0)
