@@ -147,7 +147,6 @@ class Pokedex(commands.Cog):
             color=ctx.user.color,
             timestamp=ctx.created_at,
         )
-        embed.set_image(url=WHITE_BAR)
         await resp.defer(ephemeral=True, thinking=True)
 
         mons: set[Optional[Species]] = {species, fused, chimera}
@@ -276,7 +275,6 @@ class Pokedex(commands.Cog):
             )
             embed.title = move_id.name
             embed.color = move_id.type.color
-            embed.set_image(url=WHITE_BAR)
             embed.set_thumbnail(url=move_id.emoji.url)
 
         self.bot.logger.info(
