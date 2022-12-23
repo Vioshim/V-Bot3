@@ -252,5 +252,5 @@ class InviterView(View):
                 items = [data.get(x, set()) for x in choices]
                 items = set[Partner].intersection(*items)
                 view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-                async with view.send(title=title, editing_original=True):
-                    ctx.client.logger.info("User %s is reading %s", str(ctx.user), title)
+                view.embed.title = title
+                await ctx.edit_original_response(embed=view.embed, view=view)
