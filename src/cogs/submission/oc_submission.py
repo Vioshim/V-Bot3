@@ -42,7 +42,7 @@ from discord.ui import (
     button,
     select,
 )
-from discord.utils import MISSING, get
+from discord.utils import MISSING, get, time_snowflake
 from frozendict import frozendict
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -164,11 +164,18 @@ class Template(TemplateItem, Enum):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
 
         if mons := self.total_species:
-            key = {"server": ctx.guild_id}
+            date_value = time_snowflake(ctx.created_at - timedelta(days=14))
+            key = {
+                "server": ctx.guild_id,
+                "$or": [
+                    {"id": {"$gte": date_value}},
+                    {"location": {"$gte": date_value}},
+                    {"last_used": {"$gte": date_value}},
+                ],
+            }
             if role := get(ctx.guild.roles, name="Registered"):
                 key["author"] = {"$in": [x.id for x in role.members]}
-            date = ctx.created_at - timedelta(days=14)
-            ocs = [o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and o.last_used_at >= date]
+            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
             async with view.send(ephemeral=ephemeral) as data:
                 if self.min_values <= len(data) <= self.max_values:
