@@ -13,7 +13,11 @@
 # limitations under the License.
 
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 from json import load
+from typing import Optional
 
 from discord import (
     ButtonStyle,
@@ -22,18 +26,18 @@ from discord import (
     InteractionResponse,
     Invite,
     Member,
-    Message,
-    PartialEmoji,
     SelectOption,
     TextChannel,
 )
+from discord.abc import Messageable
 from discord.ui import Button, Select, View, button, select
+from discord.utils import remove_markdown
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.utils.etc import INVITE_EMOJI, LINK_EMOJI, SETTING_EMOJI
-from src.views.message_view import MessagePaginator, msg_parser
 
-__all__ = ("InviteComplex", "InviteAdminComplex", "InviterView")
+__all__ = ("InviteComplex", "InviteAdminComplex", "InviterView", "Partner", "PartnerComplex")
 
 
 class InviteComplex(Complex[str]):
@@ -41,14 +45,14 @@ class InviteComplex(Complex[str]):
         self,
         invite: Invite,
         member: Member,
-        tags: dict[str, set[Message]],
+        tags: dict[str, set[Partner]],
         target: TextChannel,
     ):
         super(InviteComplex, self).__init__(
             member=member,
             values=tags.keys(),
             max_values=len(tags),
-            emoji_parser=PartialEmoji(name="MessageLink", id=778925231506587668),
+            emoji_parser=LINK_EMOJI,
             target=target,
             parser=lambda x: (x, f"Adds {x} partnership"),
         )
@@ -61,7 +65,7 @@ class InviteAdminComplex(InviteComplex):
         self,
         invite: Invite,
         member: Member,
-        tags: dict[str, set[Message]],
+        tags: dict[str, set[Partner]],
         target: TextChannel,
     ):
         super(InviteAdminComplex, self).__init__(
@@ -84,70 +88,107 @@ with open("resources/hub_partners.json", mode="r", encoding="utf8") as f:
         DATA = {k: Embed.from_dict(v) for k, v in data.items()}
 
 
-def inv_msg_parser(message: Message):
-    info, desc = msg_parser(message)
-    return info.split("partnered with ")[-1], desc
+@dataclass(slots=True)
+class Partner:
+    id: int
+    msg_id: int
+    url: str
+    title: str
+    content: str
+    icon_url: str
+    image_url: Optional[str]
+    tags: list[str]
+
+    @property
+    def invite_url(self):
+        return f"https://discord.gg/{self.url}"
+
+    @property
+    def data(self):
+        return {
+            "id": self.id,
+            "msg_id": self.msg_id,
+            "url": self.url,
+            "title": self.title,
+            "content": self.content,
+            "icon_url": self.icon_url,
+            "image_url": self.image_url,
+            "tags": sorted(self.tags),
+        }
+
+    @classmethod
+    def from_mongo_dict(self, kwargs: dict[str, str]):
+        del kwargs["_id"]
+        return Partner(**kwargs)
+
+    def __eq__(self, o: Partner) -> bool:
+        return isinstance(o, Partner) and o.id == self.id
+
+    def __hash__(self) -> int:
+        return self.id >> 22
+
+
+class PartnerComplex(Complex[Partner]):
+    def __init__(
+        self,
+        member: Member,
+        items: set[Partner],
+        target: Optional[Messageable] = None,
+    ):
+        super(PartnerComplex, self).__init__(
+            member=member,
+            target=target,
+            values=items,
+            timeout=None,
+            parser=lambda x: (x.title, remove_markdown(x.content)),
+            keep_working=True,
+            sort_key=lambda x: x.title,
+            silent_mode=True,
+            auto_text_component=True,
+        )
+        self.embed.title = "Select Partner"
+
+    @select(row=1, placeholder="Select Partners", custom_id="selector")
+    async def select_choice(self, ctx: Interaction, sct: Select) -> None:
+        if item := self.current_choice:
+            embed = Embed(
+                title=item.title,
+                url=item.invite_url,
+                color=ctx.user.color,
+                content=item.content,
+                timestamp=ctx.created_at,
+            )
+            embed.set_image(url=item.image_url)
+            embed.set_thumbnail(url=item.icon_url)
+            view = View()
+            view.add_item(Button(label="Click here to join", url=item.invite_url))
+            await ctx.response.send_message(
+                content=item.invite_url,
+                embed=embed,
+                view=view,
+                ephemeral=True,
+            )
+
+        await super(PartnerComplex, self).select_choice(ctx, sct)
 
 
 class InviterView(View):
-    def __init__(self):
-        super(InviterView, self).__init__(timeout=None)
-        self._messages = []
-        self.data: dict[str, set[Message]] = {}
-
-    def group_method(self, messages: set[Message]):
-        sct = self.select_msg
-        sct.options.clear()
-        self._messages = messages = sorted(
-            filter(lambda x: x.author.bot and x.content and x.embeds, messages),
-            key=inv_msg_parser,
-        )
-        entries: dict[str, set[Message]] = {}
-        for item in messages:
-            for tag in item.embeds[0].footer.text.split(", "):
+    @staticmethod
+    def group_method(items: set[Partner]):
+        items = sorted(items, key=lambda x: x.title)
+        entries: dict[str, set[Partner]] = {}
+        for item in items:
+            for tag in item.tags:
                 entries.setdefault(tag, set())
                 entries[tag].add(item)
-        self.data = dict(sorted(entries.items(), key=lambda x: (len(x[1]), x[0]), reverse=True))
-        for key, value in self.data.items():
-            sct.add_option(label=key, value=key, description=f"{len(value)} servers.", emoji=LINK_EMOJI)
-        if not sct.options:
-            sct.add_option(label="Empty")
-            sct.disabled = True
-        else:
-            sct.disabled = False
-        sct.max_values = len(sct.options)
-
-    def append(self, message: Message):
-        self._messages.append(message)
-        self.group_method(self._messages)
-
-    @property
-    def messages(self):
-        return self._messages
-
-    @messages.setter
-    def messages(self, messages: list[Message]):
-        self.group_method(messages)
-
-    @messages.deleter
-    def messages(self):
-        self.group_method([])
-
-    @select(placeholder="Select Tags", row=3, custom_id="msg-filter")
-    async def select_msg(self, ctx: Interaction, sct: Select):
-        title = f"Servers with tags: {', '.join(sct.values)}"
-        items = [self.data.get(x, set()) for x in sct.values]
-        messages: set[Message] = set.intersection(*items)
-        view = MessagePaginator(member=ctx.user, target=ctx, messages=messages, parser=inv_msg_parser)
-        async with view.send(ephemeral=True, title=title):
-            ctx.client.logger.info("User %s is reading %s", str(ctx.user), title)
+        return dict(sorted(entries.items(), key=lambda x: (-len(x[1]), x[0])))
 
     @select(
         placeholder="Select RP Hub",
         custom_id="hubs",
         options=[
             SelectOption(
-                label=k,
+                label=k[:100],
                 description=v.description.replace("\n", " ")[:100],
                 emoji=INVITE_EMOJI,
             )
@@ -166,16 +207,48 @@ class InviterView(View):
         await resp.send_message(content=info.url, embed=info, ephemeral=True, view=view)
 
     @button(
-        label="Parallel Yonder's Ad",
-        custom_id="ad",
+        label="Parallel World's Ad",
+        custom_id="Parallel",
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
         row=4,
     )
-    async def server_ad(self, ctx: Interaction, _: Button):
+    async def server_ad(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
-        embed = DATA["Parallel"].copy()
+        embed = DATA[btn.custom_id].copy()
         embed.timestamp = ctx.created_at
         embed.color = ctx.user.color
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
         await resp.send_message(content=embed.url, embed=embed, ephemeral=True)
+
+    @button(
+        placeholder="Check Partners!",
+        row=3,
+        custom_id="Partner Tag System",
+        style=ButtonStyle.blurple,
+        emoji=LINK_EMOJI,
+    )
+    async def select_msg(self, ctx: Interaction, btn: Button):
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Partnerships")
+        await ctx.response.defer(ephemeral=True, thinking=True)
+        items = [Partner.from_mongo_dict(x) async for x in db.find()]
+        data = self.group_method(items)
+        view = Complex[str](
+            member=ctx.user,
+            values=data.keys(),
+            max_values=len(data.keys()),
+            emoji_parser=LINK_EMOJI,
+            parser=lambda x: (x, f"{len(data[x])} servers."),
+            auto_text_component=True,
+            deselect_mode=True,
+            auto_conclude=False,
+            sort_key=str,
+        )
+        async with view.send(title=btn.custom_id, ephemeral=True) as choices:
+            if choices:
+                title = "Servers with tags: {}".format(", ".join(choices))
+                items = [data.get(x, set()) for x in choices]
+                items = set[Partner].intersection(*items)
+                view = PartnerComplex(member=ctx.user, target=ctx, items=items)
+                async with view.send(ephemeral=True, title=title, editing_original=True):
+                    ctx.client.logger.info("User %s is reading %s", str(ctx.user), title)

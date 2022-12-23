@@ -17,6 +17,7 @@ from contextlib import suppress
 from typing import Optional
 
 from discord import (
+    AllowedMentions,
     Color,
     DiscordException,
     Embed,
@@ -33,7 +34,12 @@ from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import get, utcnow
 
-from src.cogs.inviter.classifier import InviteAdminComplex, InviteComplex, InviterView
+from src.cogs.inviter.classifier import (
+    InviteAdminComplex,
+    InviteComplex,
+    InviterView,
+    Partner,
+)
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 from src.utils.matches import INVITE
@@ -44,40 +50,35 @@ __all__ = ("Inviter", "setup")
 class Inviter(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
-        self.ready = False
         self.message: Optional[Message] = None
-        self.view: Optional[InviterView] = None
+
+    async def load_partners(self):
+        if not (channel := self.bot.get_channel(957602085753458708)):
+            channel: TextChannel = await self.bot.fetch_channel(957602085753458708)
+
+        if self.message is None:
+            async for m in channel.history(limit=1, oldest_first=False):
+                if m.embeds and m.author == self.bot.user and not m.content:
+                    self.message = m
+
+        guild = channel.guild
+        view = InviterView(timeout=None)
+        embed = Embed(title="Partnership Rules", description=channel.topic, color=Color.blurple())
+        embed.set_footer(text=guild.name, icon_url=guild.icon)
+        embed.set_thumbnail(url=guild.icon)
+        embed.set_image(url="https://dummyimage.com/500x5/FFFFFF/000000&text=%20")
+
+        if self.message:
+            try:
+                self.message = await self.message.edit(embed=embed, view=view)
+            except DiscordException:
+                self.message = await channel.send(embed=embed, view=view)
+        else:
+            self.message = await channel.send(embed=embed, view=view)
 
     @commands.Cog.listener()
     async def on_ready(self):
-        if not self.ready:
-            if not (channel := self.bot.get_channel(957602085753458708)):
-                channel: TextChannel = await self.bot.fetch_channel(957602085753458708)
-
-            messages: list[Message] = []
-            async for m in channel.history(limit=None, oldest_first=True):
-                if m.embeds and m.author == self.bot.user:
-                    if m.content:
-                        messages.append(m)
-                    else:
-                        self.message = m
-
-            guild = channel.guild
-            self.view = InviterView()
-            self.view.group_method(messages)
-            embed = Embed(title="Partnership Rules", description=channel.topic, color=Color.blurple())
-            embed.set_footer(text=guild.name, icon_url=guild.icon)
-            embed.set_thumbnail(url=guild.icon)
-            embed.set_image(url="https://dummyimage.com/500x5/FFFFFF/000000&text=%20")
-            msg = self.message
-            if not msg or messages[-1].created_at > msg.created_at:
-                if msg:
-                    await msg.delete(delay=0)
-                msg = await channel.send(embed=embed, view=self.view)
-            else:
-                msg = await self.message.edit(embed=embed, view=self.view)
-            self.message = msg
-            self.ready = True
+        await self.load_partners()
 
     @commands.command()
     @commands.is_owner()
@@ -109,7 +110,7 @@ class Inviter(commands.Cog):
             return await ctx.reply("Invalid URL", delete_after=2)
 
         view = View()
-        view.add_item(Button(label="Click Here to Join", url=invite.url))
+        view.add_item(Button(label="Click here to join", url=invite.url))
 
         guild: PartialInviteGuild = invite.guild
         if guild.icon:
@@ -127,11 +128,22 @@ class Inviter(commands.Cog):
             file = await icon_banner.with_size(4096).to_file()
             embed.set_image(url=f"attachment://{file.filename}")
             attachments.append(file)
-        msgs = [x for x in self.view.messages if x.id != reference.id]
-        msgs.append(reference)
-        self.view.messages = msgs
 
-        await reference.edit(content=invite.url, attachments=attachments, embed=embed, view=view)
+        msg = await reference.edit(content=invite.url, attachments=attachments, embed=embed, view=view)
+
+        partner = Partner(
+            id=guild.id,
+            msg_id=msg.id,
+            url=invite.id,
+            title=guild.name,
+            content=msg.embeds[0].description,
+            icon_url=msg.embeds[0].thumbnail.url,
+            image_url=msg.embeds[0].image.url,
+            tags=sorted((msg.embeds[0].footer.text or "").split(", ")),
+        )
+
+        db = self.bot.mongo_db("Partnerships")
+        await db.replace_one({"id": guild.id}, partner.data, upsert=True)
         await ctx.message.delete(delay=3)
 
     @commands.Cog.listener()
@@ -160,7 +172,8 @@ class Inviter(commands.Cog):
 
         if ctx.channel.id == 957602085753458708 and ctx.author == self.bot.user:
             if m := self.message:
-                self.message = await ctx.channel.send(embeds=m.embeds, view=self.view)
+                view = InviterView(timeout=None)
+                self.message = await ctx.channel.send(embeds=m.embeds, view=view)
                 await m.delete(delay=0)
             return
 
@@ -180,7 +193,21 @@ class Inviter(commands.Cog):
         if not isinstance(invite_guild := invite.guild, PartialInviteGuild) or invite_guild == guild:
             return
 
+        partner_channel = ctx.guild.get_channel(957602085753458708)
         mod_ch = self.bot.get_partial_messageable(id=1020157013126283284, guild_id=guild.id)
+
+        db = self.bot.mongo_db("Partnerships")
+
+        if item := await db.find_one({"id": invite_guild.id}):
+            url = partner_channel.get_partial_message(item["msg_id"]).jump_url
+            view = View()
+            view.add_item(Button(label="Jump URL", url=url))
+            await context.send(
+                content=f"{author}\n\nWe are already partnered with this server.",
+                view=view,
+                allowed_mentions=AllowedMentions(users=True),
+            )
+            return
 
         generator = Embed(
             title=f"__**{guild.name} is now officially partnered with {invite_guild.name}**__",
@@ -211,7 +238,7 @@ class Inviter(commands.Cog):
             files.append(file)
 
         link_view = View()
-        link_view.add_item(Button(label="Click Here to Join", url=invite.url))
+        link_view.add_item(Button(label="Click here to join", url=invite.url))
 
         pm_manager_role = guild.get_role(788215077336514570)
         if pm_manager_role and pm_manager_role in author.roles and ctx.channel.id == 957602085753458708:
@@ -219,49 +246,52 @@ class Inviter(commands.Cog):
         else:
             view_class, target = InviteAdminComplex, mod_ch
 
-        view = view_class(invite=invite, member=ctx.author, tags=self.view.data, target=target)
+        data = InviterView.group_method([Partner.from_mongo_dict(x) async for x in db.find()])
+        view = view_class(invite=invite, member=ctx.author, tags=data, target=target)
         await ctx.delete(delay=0)
         async with view.send(description=generator.description) as choices:
             if choices:
                 generator.set_footer(text=", ".join(choices))
                 if partnered_role := get(author.guild.roles, name="Partners"):
                     await author.add_roles(partnered_role)
-                channel = ctx.guild.get_channel(957602085753458708)
-                message = await channel.send(
+
+                message = await partner_channel.send(
                     content=invite.url,
                     embed=generator,
                     view=link_view,
                     files=files,
                 )
-                self.view.append(message)
-                self.message = await self.message.edit(view=self.view)
-                embed = Embed(title="Partnership Rules", description=channel.topic, color=Color.blurple())
-                embed.set_footer(text=guild.name, icon_url=guild.icon)
-                embed.set_thumbnail(url=guild.icon)
-                embed.set_image(url="https://dummyimage.com/500x5/FFFFFF/000000&text=%20")
-                if msg := self.message:
-                    await msg.delete(delay=0)
-                self.message = await channel.send(embed=embed, view=self.view)
+
                 if isinstance(view, InviteAdminComplex) and (partnered_role := get(ctx.guild.roles, name="Partners")):
                     await ctx.author.add_roles(partnered_role)
 
+                partner = Partner(
+                    id=invite_guild.id,
+                    msg_id=message.id,
+                    url=invite.id,
+                    title=invite_guild.name,
+                    content=message.embeds[0].description,
+                    icon_url=message.embeds[0].thumbnail.url,
+                    image_url=message.embeds[0].image.url,
+                    tags=choices,
+                )
+
+                await db.replace_one({"id": invite_guild}, partner.data, upsert=True)
+                if msg := self.message:
+                    self.message = await msg.delete(delay=0)
+                await self.load_partners()
+
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
-        if payload.channel_id == 957602085753458708 and (view := self.view):
-            messages = view.messages
-            if any(x.id == payload.message_id for x in messages):
-                messages = [x for x in messages if x.id != payload.message_id]
-                view.group_method(messages)
-                self.message = await self.message.edit(view=view)
+        db = self.bot.mongo_db("Partnerships")
+        if payload.channel_id == 957602085753458708:
+            await db.delete_one({"msg_id": payload.message_id})
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
-        if payload.channel_id == 957602085753458708 and (view := self.view):
-            messages = view.messages
-            if any(x.id in payload.message_ids for x in messages):
-                messages = [x for x in messages if x.id not in payload.message_ids]
-                view.group_method(messages)
-                self.message = await self.message.edit(view=view)
+        db = self.bot.mongo_db("Partnerships")
+        if payload.channel_id == 957602085753458708:
+            await db.delete_many({"msg_id": {"$in": list(payload.message_ids)}})
 
 
 async def setup(bot: CustomBot) -> None:
