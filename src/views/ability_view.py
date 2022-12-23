@@ -60,6 +60,7 @@ class AbilityView(Complex[Ability | SpAbility]):
             emoji_parser=ability_emoji_parser,
             max_values=max_values,
             auto_text_component=True,
+            auto_choice_info=True,
         )
         self.embed.title = "Select an Ability"
 

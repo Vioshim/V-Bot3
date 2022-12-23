@@ -244,6 +244,7 @@ class InviterView(View):
             auto_text_component=True,
             deselect_mode=True,
             auto_conclude=False,
+            silent_mode=True,
         )
         async with view.send(title=btn.custom_id, ephemeral=True) as choices:
             if choices:
@@ -251,5 +252,5 @@ class InviterView(View):
                 items = [data.get(x, set()) for x in choices]
                 items = set[Partner].intersection(*items)
                 view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-                async with view.send(ephemeral=True, title=title, editing_original=True):
+                async with view.send(title=title, editing_original=True):
                     ctx.client.logger.info("User %s is reading %s", str(ctx.user), title)

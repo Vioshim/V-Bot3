@@ -53,8 +53,8 @@ class MoveComplex(Complex[Move]):
             silent_mode=True,
             auto_conclude=False,
             auto_text_component=True,
+            auto_choice_info=True,
         )
-        self.modifying_embed = True
         self.real_max = self.max_values
         self.embed.title = "Select Moves"
         if choices:
@@ -100,10 +100,6 @@ class MoveComplex(Complex[Move]):
         data = {}
         self.values = [x for x in self.values if x not in self.choices] or self.total
         self.max_values = min(self.real_max, len(self.values))
-
-        if self.modifying_embed:
-            data["embed"] = self.embed
-            self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
 
         if isinstance(page, int):
             self.pos = page

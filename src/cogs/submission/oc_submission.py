@@ -892,16 +892,14 @@ class AbilitiesField(TemplateField):
             parser=lambda x: (x.name, x.description),
             silent_mode=True,
             auto_text_component=True,
+            auto_choice_info=True,
         )
         async with view.send(
             title=f"{template.title} Character's Abilities",
-            fields=[
-                (
-                    f"Ability {index} - {item.name}",
-                    item.description[:1024],
-                )
+            description="\n".join(
+                f"**Ability {index} - {item.name}**\n> {item.description}\n"
                 for index, item in enumerate(oc.abilities, start=1)
-            ],
+            )[:4000],
             ephemeral=ephemeral,
         ) as choices:
             if isinstance(choices, set):

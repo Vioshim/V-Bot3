@@ -120,6 +120,7 @@ class Complex(Simple[_T]):
         real_max: Optional[int] = None,
         deselect_mode: bool = True,
         auto_conclude: bool = True,
+        auto_choice_info: bool = False,
     ):
         super(Complex, self).__init__(
             timeout=timeout,
@@ -135,6 +136,7 @@ class Complex(Simple[_T]):
         self.auto_conclude = auto_conclude
         self.silent_mode = silent_mode
         self.keep_working = keep_working
+        self.auto_choice_info = auto_choice_info
         self.choices: set[_T] = set()
         self.max_values = max_values
         self._emoji_parser = emoji_parser
@@ -221,6 +223,11 @@ class Complex(Simple[_T]):
                 placeholder=text[:100],
                 style=TextStyle.paragraph,
             )
+        if self.auto_choice_info and self.embed and 1 <= len(self.choices) <= 25:
+            self.embed.clear_fields()
+            key, reverse = self._sort_key if isinstance(self._sort_key, tuple) else (self._sort_key, False)
+            for k, v in map(self.parser, sorted(self.choices, key=key, reverse=reverse)):
+                self.embed.add_field(name=k[:256], value=v[:1024], inline=False)
 
         if not self.text_component:
             self.remove_item(self.message_handler)
