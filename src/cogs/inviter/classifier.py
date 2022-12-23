@@ -250,9 +250,9 @@ class InviterView(View):
             if choices:
                 items = [data.get(x, set()) for x in choices]
                 items = set[Partner].intersection(*items)
-                view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-                await view.simple_send(
+                aux_view = PartnerComplex(member=ctx.user, target=ctx, items=items)
+                await aux_view.simple_send(
                     title="Servers with tags: {}".format(", ".join(choices)),
                     editing_original=True,
                 )
-                await view.wait()
+                await aux_view.wait()
