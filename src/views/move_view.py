@@ -59,7 +59,6 @@ class MoveComplex(Complex[Move]):
         self.embed.title = "Select Moves"
         if choices:
             self.choices.update(choices)
-        self.embed.description = "\n".join(f"> {x!r}" for x in self.choices)
         self.total = total
         self.data = {}
         self.menu_format()
