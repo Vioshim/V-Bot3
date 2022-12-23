@@ -203,7 +203,7 @@ class Inviter(commands.Cog):
             view = View()
             view.add_item(Button(label="Jump URL", url=url))
             await context.send(
-                content=f"{author}\n\nWe are already partnered with this server.",
+                content=f"{author.mention}\n\nWe are already partnered with this server.",
                 view=view,
                 allowed_mentions=AllowedMentions(users=True),
             )
