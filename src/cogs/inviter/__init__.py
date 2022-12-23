@@ -202,12 +202,13 @@ class Inviter(commands.Cog):
             url = partner_channel.get_partial_message(item["msg_id"]).jump_url
             view = View()
             view.add_item(Button(label="Jump URL", url=url))
-            await context.send(
-                content=f"{author.mention}\n\nWe are partnered with this server.",
-                view=view,
-                allowed_mentions=AllowedMentions(users=True),
-                delete_after=3,
-            )
+            with suppress(DiscordException):
+                await context.reply(
+                    content="We are partnered with this server.",
+                    view=view,
+                    allowed_mentions=AllowedMentions(users=True),
+                    delete_after=3,
+                )
             return
 
         generator = Embed(
