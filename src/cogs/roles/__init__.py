@@ -274,10 +274,7 @@ class Roles(commands.Cog):
             embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
             user_data = [datetime.combine(msg.created_at, time(hour=x), tz) for x in item["hours"]]
             data1 = AFKSchedule(user_data)
-            if reference_tz:
-                data2 = AFKSchedule([x.astimezone(reference_tz) for x in user_data])
-            else:
-                data2 = data1
+            data2 = data1.astimezone(reference_tz) if reference_tz else data1
             desc1, desc2 = data1.text, data2.text
             if desc1 != desc2 and desc1 and desc2:
                 embed.add_field(name="In user's timezone", value=desc1, inline=False)
@@ -342,7 +339,7 @@ class Roles(commands.Cog):
                 user_data = [datetime.combine(current_date, time(hour=x), tz2) for x in item2["hours"]]
 
                 data1 = AFKSchedule(user_data)
-                data2 = AFKSchedule([x.astimezone(tz1) for x in user_data])
+                data2 = data1.astimezone(tz1)
                 desc1, desc2 = data1.text, data2.text
                 if desc1 != desc2 and desc1 and desc2:
                     embed.add_field(name="In user's timezone", value=desc1, inline=False)

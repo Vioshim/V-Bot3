@@ -156,6 +156,9 @@ class AdjacentTimeState:
 class AFKSchedule:
     hours: frozenset[datetime] = field(default_factory=frozenset)
 
+    def astimezone(self, tz: timezone):
+        return AFKSchedule([x.astimezone(tz) for x in self.hours])
+
     @property
     def pairs(self):
         # find all consecutive runs
