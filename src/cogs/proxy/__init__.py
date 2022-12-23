@@ -126,25 +126,32 @@ class Proxy(commands.Cog):
         resp: InteractionResponse = ctx.response
         name = character.name if character else name
 
-        if image and image.content_type.startswith("image/"):
-            w = await self.bot.webhook(1020151767532580934)
-            file = await image.to_file()
-            m = await w.send(ctx.user.mention, file=file, wait=True, thread=Object(id=1045687852069040148))
-            image = m.attachments[0].url
-        else:
-            image = None
-
         if pokemon and not name:
             name = f"NPC〕{pokemon.name}"
-
-        if pokemon and not image:
-            image = pokemon.image(shiny=shiny, gender=pronoun)
 
         if not name:
             modal = NameModal(timeout=None)
             await resp.send_modal(modal)
             await modal.wait()
             name = modal.name.value
+
+        if image and image.content_type.startswith("image/"):
+            w = await self.bot.webhook(1020151767532580934)
+            file = await image.to_file()
+            m = await w.send(
+                name,
+                file=file,
+                wait=True,
+                thread=Object(id=1045687852069040148),
+                username=ctx.user.display_name,
+                avatar_url=ctx.user.display_avatar.url,
+            )
+            image = m.attachments[0].url
+        else:
+            image = None
+
+        if pokemon and not image:
+            image = pokemon.image(shiny=shiny, gender=pronoun)
 
         if resp.is_done():
             context = ctx.followup.send
