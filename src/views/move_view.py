@@ -96,16 +96,9 @@ class MoveComplex(Complex[Move]):
         return super(MoveComplex, self).menu_format()
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
-        data = {"embed": self.embed}
         self.values = [x for x in self.values if x not in self.choices] or self.total
         self.max_values = min(self.real_max, len(self.values))
-
-        if isinstance(page, int):
-            self.pos = page
-            self.menu_format()
-            data["view"] = self
-
-        return data
+        return super().default_params(page)
 
     @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, min_values=0, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
