@@ -96,7 +96,7 @@ class MoveComplex(Complex[Move]):
         return super(MoveComplex, self).menu_format()
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
-        data = {}
+        data = {"embed": self.embed}
         self.values = [x for x in self.values if x not in self.choices] or self.total
         self.max_values = min(self.real_max, len(self.values))
 
