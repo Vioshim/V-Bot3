@@ -628,7 +628,6 @@ class Complex(Simple[_T]):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await resp.edit_message(view=self)
-        await resp.defer(ephemeral=True, thinking=True)
         await self.delete(ctx)
 
     @button(
@@ -655,9 +654,9 @@ class Complex(Simple[_T]):
             text_component=self.text_component,
             deselect_mode=False,
             auto_text_component=self.auto_text_component,
-            auto_choice_info=True,
+            auto_choice_info=self.auto_choice_info,
         )
-        async with view.send(title="Remove Elements", editing_original=True) as choices:
+        async with view.send(title="Remove Elements") as choices:
             self.choices -= choices
             self.values.extend(choices)
             self.sort()
