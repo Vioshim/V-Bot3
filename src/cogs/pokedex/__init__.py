@@ -203,15 +203,17 @@ class Pokedex(commands.Cog):
                     item_heights = {x.height: x for x in items}
                     item_weights = {x.weight: x for x in items}
                     for k, v in sorted(item_heights.items(), key=lambda x: x[0]):
-                        name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1-v.ratio:.0%}〛{v.mon2.name}"
-                        if inline := len(item_heights) == 1:
+                        if inline := len(item_heights) != 1:
+                            name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1 - v.ratio:.0%}〛{v.mon2.name}"
+                        else:
                             name = "Height"
-                        embed.add_field(name=name, value=height.height_info(k), inline=not inline)
+                        embed.add_field(name=name, value=height.height_info(k), inline=inline)
                     for k, v in sorted(item_weights.items(), key=lambda x: x[0]):
-                        name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1-v.ratio:.0%}〛{v.mon2.name}"
-                        if inline := len(item_weights) == 1:
+                        if inline := len(item_weights) != 1:
+                            name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1 - v.ratio:.0%}〛{v.mon2.name}"
+                        else:
                             name = "Weight"
-                        embed.add_field(name=name, value=weight.weight_info(k), inline=not inline)
+                        embed.add_field(name=name, value=weight.weight_info(k), inline=inline)
                 else:
                     embed.add_field(name="Height", value=height.height_info(val1), inline=False)
                     embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
