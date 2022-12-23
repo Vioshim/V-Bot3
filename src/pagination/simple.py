@@ -121,11 +121,16 @@ class Simple(Generic[_T], Basic):
         self._parser = parser
         self._entries_per_page = entries_per_page
         if not isinstance(values, list) or sort_key:
-            try:
-                sort_key, reverse = sort_key
-            except TypeError:
-                sort_key, reverse = sort_key, False
+            sort_key, reverse = self.sort_pair
             self.sort(sort_key=sort_key, reverse=reverse)
+
+    @property
+    def sort_pair(self) -> tuple[Callable[[_T], Any], bool]:
+        try:
+            sort_key, reverse = self._sort_key
+        except TypeError:
+            sort_key, reverse = self._sort_key, False
+        return sort_key or str, reverse
 
     def sort(self, sort_key: Callable[[_T], Any] = None, reverse: bool = False) -> None:
         """Sort method used for the view's values
@@ -137,12 +142,8 @@ class Simple(Generic[_T], Basic):
         reverse : bool, optional
             sets the order to reverse, defaults to False
         """
-        try:
-            self._sort_key = sort_key
-            self.values.sort(key=sort_key, reverse=reverse)
-        except TypeError:
-            self._sort_key = str
-            self.values.sort(key=str, reverse=reverse)
+        sort_key, reverse = self.sort_pair
+        self.values.sort(key=sort_key, reverse=reverse)
 
     @property
     def pos(self):

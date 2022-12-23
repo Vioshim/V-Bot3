@@ -160,12 +160,7 @@ class Complex(Simple[_T]):
             items = list(values)
             self._values = items
             self.real_values = items
-
-            try:
-                sort_key, reverse = self._sort_key
-            except TypeError:
-                sort_key, reverse = self._sort_key, False
-
+            sort_key, reverse = self.sort_pair
             self.sort(sort_key=sort_key, reverse=reverse)
         else:
             self._values = values
@@ -225,7 +220,7 @@ class Complex(Simple[_T]):
             )
         if self.auto_choice_info and self.embed and 1 <= len(self.choices) <= 25:
             self.embed.clear_fields()
-            key, reverse = self._sort_key if isinstance(self._sort_key, tuple) else (self._sort_key, False)
+            key, reverse = self.sort_pair
             for k, v in map(self.parser, sorted(self.choices, key=key, reverse=reverse)):
                 self.embed.add_field(name=k[:256], value=v[:1024], inline=False)
 
@@ -658,27 +653,9 @@ class Complex(Simple[_T]):
             text_component=self.text_component,
             deselect_mode=False,
             auto_text_component=self.auto_text_component,
+            auto_choice_info=self.auto_choice_info,
         )
-        embed = Embed(
-            title="Remove Elements",
-            color=self.embed.color,
-            timestamp=interaction.created_at,
-        )
-        embed.set_image(url=WHITE_BAR)
-
-        if author := self.embed.author:
-            embed.set_author(name=author.name, icon_url=author.icon_url, url=author.url)
-
-        if footer := self.embed.footer:
-            embed.set_footer(text=footer.text, icon_url=footer.icon_url)
-
-        if len(self.choices) > 25:
-            embed.description = "\n".join(f"> {x}" for x, _ in map(view.parser, self.choices))[:4096]
-        else:
-            for x, y in map(view.parser, self.choices):
-                embed.add_field(name=x, value=str(y), inline=False)
-
-        async with view.send(embed=embed, editing_original=True) as choices:
+        async with view.send(title="Remove Elements", editing_original=True) as choices:
             self.choices -= choices
             self.values.extend(choices)
             self.sort()
