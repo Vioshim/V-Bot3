@@ -222,7 +222,7 @@ class InviterView(View):
         await resp.send_message(content=embed.url, embed=embed, ephemeral=True)
 
     @button(
-        placeholder="Check Partners!",
+        label="Check Partners!",
         row=3,
         custom_id="Partner Tag System",
         style=ButtonStyle.blurple,
@@ -235,14 +235,13 @@ class InviterView(View):
         data = self.group_method(items)
         view = Complex[str](
             member=ctx.user,
-            values=data.keys(),
+            values=[*data.keys()],
             max_values=len(data.keys()),
             emoji_parser=LINK_EMOJI,
             parser=lambda x: (x, f"{len(data[x])} servers."),
             auto_text_component=True,
             deselect_mode=True,
             auto_conclude=False,
-            sort_key=str,
         )
         async with view.send(title=btn.custom_id, ephemeral=True) as choices:
             if choices:
