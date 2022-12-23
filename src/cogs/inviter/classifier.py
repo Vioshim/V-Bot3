@@ -172,6 +172,47 @@ class PartnerComplex(Complex[Partner]):
         await super(PartnerComplex, self).select_choice(ctx, sct)
 
 
+class TagComplex(Complex[str]):
+    def __init__(
+        self,
+        member: Member,
+        target: Interaction,
+        data: dict[str, set[Partner]],
+    ):
+        super().__init__(
+            member=member,
+            target=target,
+            values=[*data.keys()],
+            max_values=len(data.keys()),
+            emoji_parser=LINK_EMOJI,
+            parser=lambda x: (x, f"{len(data[x])} servers."),
+            auto_text_component=True,
+            deselect_mode=True,
+            auto_conclude=False,
+            silent_mode=True,
+        )
+        self.data = data
+
+    @button(
+        label="Finish",
+        custom_id="finish",
+        style=ButtonStyle.blurple,
+        row=4,
+    )
+    async def finish(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
+        await ctx.response.defer(ephemeral=True, thinking=True)
+        if choices := sorted(self.choices):
+            items = [self.data.get(x, set()) for x in choices]
+            items = set[Partner].intersection(*items)
+            view = PartnerComplex(member=ctx.user, target=ctx, items=items)
+            await view.simple_send(title="Servers with tags: {}".format(", ".join(choices)), ephemeral=True)
+        await self.delete(ctx)
+
+
 class InviterView(View):
     @staticmethod
     def group_method(items: set[Partner]):
@@ -234,25 +275,5 @@ class InviterView(View):
         await ctx.response.defer(ephemeral=True, thinking=True)
         items = {Partner.from_mongo_dict(x) async for x in db.find()}
         data = self.group_method(items)
-        view = Complex[str](
-            member=ctx.user,
-            target=ctx,
-            values=[*data.keys()],
-            max_values=len(data.keys()),
-            emoji_parser=LINK_EMOJI,
-            parser=lambda x: (x, f"{len(data[x])} servers."),
-            auto_text_component=True,
-            deselect_mode=True,
-            auto_conclude=False,
-            silent_mode=True,
-        )
-        async with view.send(title=btn.custom_id, ephemeral=True) as choices:
-            if choices:
-                items = [data.get(x, set()) for x in choices]
-                items = set[Partner].intersection(*items)
-                aux_view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-                await aux_view.simple_send(
-                    title="Servers with tags: {}".format(", ".join(choices)),
-                    editing_original=True,
-                )
-                await aux_view.wait()
+        view = TagComplex(member=ctx.user, target=ctx, data=data)
+        await view.simple_send(title=btn.custom_id, ephemeral=True)

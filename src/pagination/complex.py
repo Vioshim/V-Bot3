@@ -131,7 +131,7 @@ class Complex(Simple[_T]):
             entries_per_page=entries_per_page,
             parser=parser,
             sort_key=sort_key,
-            modifying_embed=False,
+            modifying_embed=auto_choice_info,
         )
         self.auto_conclude = auto_conclude
         self.silent_mode = silent_mode
