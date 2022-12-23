@@ -251,7 +251,9 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("AFK")
-        users = {x.id: x for x in msg.mentions if isinstance(x, Member) and str(x.status) == "offline"}
+        users = {
+            x.id: x for x in msg.mentions if x != msg.author and isinstance(x, Member) and str(x.status) == "offline"
+        }
         if not users:
             return
 
