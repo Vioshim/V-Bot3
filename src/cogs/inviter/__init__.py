@@ -246,7 +246,7 @@ class Inviter(commands.Cog):
         else:
             view_class, target = InviteAdminComplex, mod_ch
 
-        data = InviterView.group_method([Partner.from_mongo_dict(x) async for x in db.find()])
+        data = InviterView.group_method({Partner.from_mongo_dict(x) async for x in db.find()})
         view = view_class(invite=invite, member=ctx.author, tags=data, target=target)
         await ctx.delete(delay=0)
         async with view.send(description=generator.description) as choices:
