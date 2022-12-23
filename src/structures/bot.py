@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import sys
 from contextlib import suppress
 from io import BytesIO
 from logging import Logger
@@ -104,6 +105,9 @@ class CustomBot(Bot):
         self.scam_urls: set[str] = set()
         self.webhook_cache: dict[int, Webhook] = {}
         self.supporting: dict[Member, Member] = {}
+
+    async def on_error(self, event_method: str, /, *args, **kwargs) -> None:
+        self.logger.exception("Ignoring exception in %s", event_method, exc_info=sys.exc_info())
 
     def mongo_db(self, db: str) -> AsyncIOMotorCollection:
         return self.mongodb.discord[db]

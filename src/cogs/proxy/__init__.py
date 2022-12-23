@@ -21,6 +21,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Message,
+    Object,
     RawReactionActionEvent,
     Thread,
     WebhookMessage,
@@ -124,7 +125,15 @@ class Proxy(commands.Cog):
         """
         resp: InteractionResponse = ctx.response
         name = character.name if character else name
-        image = image.proxy_url if image else None
+
+        if image and image.content_type.startswith("image/"):
+            w = await self.bot.webhook(1020151767532580934)
+            file = await image.to_file()
+            m = await w.send(ctx.user.mention, file=file, wait=True, thread=Object(id=1045687852069040148))
+            image = m.attachments[0].url
+        else:
+            image = None
+
         if pokemon and not name:
             name = f"NPC〕{pokemon.name}"
 
@@ -165,20 +174,11 @@ class Proxy(commands.Cog):
         text : str, optional
             _description_, by default None
         """
-        db = self.bot.mongo_db("Characters")
-        member = self.bot.supporting.get(ctx.author, ctx.author)
         if mon := Species.single_deduce(pokemon):
             npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
-        elif (ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]) and (
-            options := process.extractOne(
-                pokemon, choices=ocs, score_cutoff=60, processor=lambda x: getattr(x, "name", x)
-            )
-        ):
-            oc = options[0]
-            npc = NPC(name=oc.name, avatar=oc.image_url)
+            await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
-            npc = NPC(name=pokemon)
-        await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+            await ctx.message.delete(delay=0)
 
     @commands.command(name="pc")
     @commands.guild_only()
@@ -196,16 +196,17 @@ class Proxy(commands.Cog):
         member = self.bot.supporting.get(ctx.author, ctx.author)
         if (ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]) and (
             options := process.extractOne(
-                pokemon, choices=ocs, score_cutoff=60, processor=lambda x: getattr(x, "name", x)
+                pokemon,
+                choices=ocs,
+                score_cutoff=60,
+                processor=lambda x: getattr(x, "name", x),
             )
         ):
             oc = options[0]
             npc = NPC(name=oc.name, avatar=oc.image_url)
-        elif mon := Species.single_deduce(pokemon):
-            npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
+            await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
-            npc = NPC(name=pokemon)
-        await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+            await ctx.message.delete(delay=0)
 
     @commands.command(name="npci")
     @commands.guild_only()
@@ -223,9 +224,9 @@ class Proxy(commands.Cog):
         """
         if entry := await self.bot.mongo_db("NPC").find_one({"author": ctx.author.id}):
             npc = NPC(name=entry["name"], avatar=entry["avatar"])
+            await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
-            npc = NPC()
-        await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+            await ctx.message.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):

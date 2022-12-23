@@ -1151,7 +1151,6 @@ class Information(commands.Cog):
                     allow_unicode=True,
                     sort_keys=False,
                 ),
-                syntax="yaml",
             )
         ):
             embed = Embed(

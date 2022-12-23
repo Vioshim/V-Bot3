@@ -251,73 +251,48 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("AFK")
-        if (users := [x.id for x in msg.mentions if isinstance(x, Member) and str(x.status) == "offline"]) and (
-            afk_members := [
-                f"• {user.mention} ({user.display_name})"
-                async for item in db.find({"user": {"$in": users}})
-                if (user := msg.guild.get_member(item["user"]))
-                and ((msg.created_at + timedelta(hours=item["offset"])).hour in item["hours"])
-            ]
-        ):
-            embed = Embed(
-                title="AFK Schedules",
-                description="\n".join(afk_members),
-                color=Color.blurple(),
-                timestamp=msg.created_at,
-            )
-            embed.set_image(url=WHITE_BAR)
-            embed.set_footer(text="Feel free to use /afk to check their AFK schedules.")
+        users = {x.id: x for x in msg.mentions if isinstance(x, Member) and str(x.status) == "offline"}
+        if not users:
+            return
 
+        embeds = []
+        if reference_tz := await db.find_one({"user": msg.author.id}):
+            reference_tz: Optional[timezone] = timezone(offset=timedelta(hours=reference_tz["offset"]))
+
+        async for item in db.find({"user": {"$in": [*users]}}):
+            user = users[item["user"]]
+            tz = timezone(offset=timedelta(hours=item["offset"]))
+            ref_date = msg.created_at.astimezone(tz)
+            if ref_date.hour not in item["hours"]:
+                continue
+
+            embed = Embed(title=user.display_name, color=user.color, timestamp=ref_date)
+            embed.set_thumbnail(url=user.display_avatar)
+            text = quote_plus(f"User's time is {ref_date.strftime('%I:%M %p')}")
+            embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={text}")
+            user_data = [datetime.combine(msg.created_at, time(hour=x), tz) for x in item["hours"]]
+            data1 = AFKSchedule(user_data)
+            if reference_tz:
+                data2 = AFKSchedule([x.astimezone(reference_tz) for x in user_data])
+            else:
+                data2 = data1
+            desc1, desc2 = data1.text, data2.text
+            if desc1 != desc2 and desc1 and desc2:
+                embed.add_field(name="In user's timezone", value=desc1, inline=False)
+                embed.add_field(name="In your timezone", value=desc2, inline=False)
+            elif not reference_tz:
+                embed.add_field(name="In user's timezone", value=desc1, inline=False)
+            else:
+                embed.description = desc1 or desc2
+            embeds.append(embed)
+
+        if embeds:
             await msg.channel.send(
                 content=msg.author.mention,
-                embed=embed,
-                delete_after=3,
+                embeds=embeds[:10],
+                delete_after=10,
                 allowed_mentions=AllowedMentions(users=True),
             )
-
-        if msg.channel.category_id in MAP_ELEMENTS2 and not msg.channel.name.endswith(" OOC"):
-            db2 = self.bot.mongo_db("RP Sessions")
-
-            if isinstance(msg.channel, Thread):
-                key = {
-                    "category": msg.channel.category_id,
-                    "thread": msg.channel.id,
-                    "channel": msg.channel.parent_id,
-                }
-            else:
-                key = {
-                    "category": msg.channel.category_id,
-                    "thread": None,
-                    "channel": msg.channel.id,
-                }
-
-            if entry := await db2.find_one(key):
-                message_id = entry["id"]
-                await msg.channel.get_partial_message(message_id).delete(delay=0)
-                date = snowflake_time(message_id)
-                embed = Embed(
-                    title="RP has started!",
-                    description=format_dt(date, "R"),
-                    color=Color.blurple(),
-                    timestamp=date,
-                )
-                embed.set_image(url=WHITE_BAR)
-                embed.set_footer(text=msg.guild.name, icon_url=msg.guild.icon)
-                username = avatar_url = MISSING
-                if member := msg.guild.get_member(entry["author"]):
-                    username, avatar_url = member.display_name, member.display_avatar.url
-
-                view = View()
-                view.add_item(Button(label="Jump URL", url=msg.channel.jump_url))
-                log_w = await self.bot.webhook(1001125143071965204)
-                await log_w.send(
-                    embed=embed,
-                    username=username,
-                    avatar_url=avatar_url,
-                    view=view,
-                    thread=Object(id=1001949202621931680),
-                )
-                await db2.delete_one(entry)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -396,121 +371,6 @@ class Roles(commands.Cog):
             User to Check
         """
         await self.check_afk(ctx, member or ctx.user)
-
-    @commands.command()
-    @commands.guild_only()
-    @commands.check(
-        lambda x: (o := x.message.channel) and o.category_id in MAP_ELEMENTS2 and not o.name.endswith(" OOC")
-    )
-    async def finish(self, ctx: commands.Context):
-        db1 = self.bot.mongo_db("RP Channels")
-        db2 = self.bot.mongo_db("RP Sessions")
-
-        await ctx.message.delete(delay=0)
-
-        if isinstance(ctx.channel, Thread):
-            key = {
-                "category": ctx.channel.category_id,
-                "thread": ctx.channel.id,
-                "channel": ctx.channel.parent_id,
-            }
-        else:
-            key = {
-                "category": ctx.channel.category_id,
-                "thread": None,
-                "channel": ctx.channel.id,
-            }
-
-        if entry := await db2.find_one(key):
-            message_id = entry["id"]
-            async for item in ctx.channel.history(limit=1, before=ctx.message):
-                if item.id == message_id:
-                    return
-
-            try:
-                m = await ctx.channel.fetch_message(message_id)
-                e = m.embeds[0]
-
-                try:
-                    emoji = ctx.channel.name.split("〛")[0][0]
-                except ValueError:
-                    emoji = None
-
-                await db1.replace_one(
-                    key,
-                    key
-                    | {
-                        "name": e.title,
-                        "topic": e.description,
-                        "image": e.image.url,
-                        "emoji": emoji,
-                    },
-                    upsert=True,
-                )
-                await m.delete(delay=0)
-            except NotFound:
-                pass
-
-            date = snowflake_time(message_id)
-            embed = Embed(
-                title="RP has concluded!",
-                description=format_dt(date, "R"),
-                color=Color.blurple(),
-                timestamp=date,
-            )
-            embed.set_image(url=WHITE_BAR)
-            embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-            username = avatar_url = MISSING
-            if member := ctx.guild.get_member(entry["author"]):
-                username, avatar_url = member.display_name, member.display_avatar.url
-
-            view = View()
-            view.add_item(Button(label="Jump URL", url=ctx.channel.jump_url))
-            log_w = await self.bot.webhook(1001125143071965204)
-            await log_w.send(
-                embed=embed,
-                username=username,
-                avatar_url=avatar_url,
-                view=view,
-                thread=Object(id=1001949202621931680),
-            )
-
-            await db2.delete_one(entry)
-
-        embed = Embed(
-            title=ctx.channel.name,
-            description=getattr(ctx.channel, "topic", ""),
-            timestamp=ctx.message.created_at,
-        )
-        embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text="This channel is free to use.!")
-        view = View()
-        if ooc := find(lambda x: "»〛" in x.name, ctx.channel.category.channels):
-            emoji, name = ooc.name.split("»〛")
-            view.add_item(Button(label=name, emoji=emoji[0], url=ooc.jump_url))
-
-        if data := await db1.find_one(key):
-            if name := data["name"]:
-                embed.title = name
-            if topic := data["topic"]:
-                embed.description = topic
-            if image := data["image"]:
-                embed.set_image(url=image)
-
-        file = await ctx.author.display_avatar.to_file()
-
-        embed.set_author(
-            name=ctx.author.display_name,
-            icon_url=f"attachment://{file.filename}",
-        )
-
-        message = await ctx.channel.send(embed=embed, view=view, file=file)
-
-        await db2.replace_one(
-            key,
-            key | {"id": message.id, "author": ctx.author.id},
-            upsert=True,
-        )
 
 
 async def setup(bot: CustomBot) -> None:
