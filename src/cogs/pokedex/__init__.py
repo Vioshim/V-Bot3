@@ -28,7 +28,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    TextChannel,
     Thread,
     User,
     app_commands,
@@ -50,7 +49,7 @@ from src.structures.character import AgeGroup, Character, Kind, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
-from src.structures.species import Chimera, Fusion, Species
+from src.structures.species import Chimera, Fakemon, Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
@@ -207,16 +206,23 @@ class Pokedex(commands.Cog):
                             name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1 - v.ratio:.0%}〛{v.mon2.name}"
                         else:
                             name = "Height"
-                        embed.add_field(name=name, value=height.height_info(k), inline=inline)
+                        entries = Size.XXXS.height_info(k), height.height_info(k), Size.XXXL.height_info(k)
+                        embed.add_field(name=name, value="\n".join(entries), inline=inline)
                     for k, v in sorted(item_weights.items(), key=lambda x: x[0]):
                         if inline := len(item_weights) != 1:
                             name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1 - v.ratio:.0%}〛{v.mon2.name}"
                         else:
                             name = "Weight"
-                        embed.add_field(name=name, value=weight.weight_info(k), inline=inline)
-                else:
+                        entries = Size.XXXS.weight_info(k), weight.weight_info(k), Size.XXXL.weight_info(k)
+                        embed.add_field(name=name, value="\n".join(entries), inline=inline)
+                elif isinstance(base, Fakemon):
                     embed.add_field(name="Height", value=height.height_info(val1), inline=False)
                     embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
+                else:
+                    entries1 = Size.XXXS.height_info(val1), height.height_info(val1), Size.XXXL.height_info(val1)
+                    entries2 = Size.XXXS.weight_info(val2), weight.weight_info(val2), Size.XXXL.weight_info(val2)
+                    embed.add_field(name="Height", value="\n".join(entries1), inline=False)
+                    embed.add_field(name="Weight", value="\n".join(entries2), inline=False)
 
                 if isinstance(species, Species):
 
