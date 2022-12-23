@@ -236,6 +236,7 @@ class InviterView(View):
         data = self.group_method(items)
         view = Complex[str](
             member=ctx.user,
+            target=ctx,
             values=[*data.keys()],
             max_values=len(data.keys()),
             emoji_parser=LINK_EMOJI,
