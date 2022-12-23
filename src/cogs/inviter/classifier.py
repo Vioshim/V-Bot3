@@ -183,6 +183,9 @@ class InviterView(View):
                 entries[tag].add(item)
         return dict(sorted(entries.items(), key=lambda x: (-len(x[1]), x[0])))
 
+    async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
+        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+
     @select(
         placeholder="Select RP Hub",
         custom_id="hubs",
@@ -211,7 +214,6 @@ class InviterView(View):
         custom_id="Parallel",
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
-        row=4,
     )
     async def server_ad(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
@@ -223,7 +225,6 @@ class InviterView(View):
 
     @button(
         label="Check Partners!",
-        row=3,
         custom_id="Partner Tag System",
         style=ButtonStyle.blurple,
         emoji=LINK_EMOJI,
@@ -231,7 +232,7 @@ class InviterView(View):
     async def select_msg(self, ctx: Interaction, btn: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Partnerships")
         await ctx.response.defer(ephemeral=True, thinking=True)
-        items = [Partner.from_mongo_dict(x) async for x in db.find()]
+        items = {Partner.from_mongo_dict(x) async for x in db.find()}
         data = self.group_method(items)
         view = Complex[str](
             member=ctx.user,
