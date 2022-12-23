@@ -326,19 +326,6 @@ class Complex(Simple[_T]):
         elif self.deselect_mode and self.element_remove not in self.children:
             self.add_item(self.element_remove)
 
-    def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
-        data = {}
-
-        if self.modifying_embed or self.auto_choice_info:
-            data["embed"] = self.embed
-
-        if isinstance(page, int):
-            self.pos = min(max(0, page), self.max_pages)
-            self.menu_format()
-            data["view"] = self
-
-        return data
-
     async def update(self, interaction: Interaction) -> None:
         """Method used to edit the pagination
 
@@ -667,7 +654,7 @@ class Complex(Simple[_T]):
             text_component=self.text_component,
             deselect_mode=False,
             auto_text_component=self.auto_text_component,
-            auto_choice_info=self.auto_choice_info,
+            auto_choice_info=True,
         )
         async with view.send(title="Remove Elements", editing_original=True) as choices:
             self.choices -= choices
