@@ -639,7 +639,6 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def element_remove(self, interaction: Interaction, _: Button):
-        reference_embed = self.embed.copy()
         view = Complex(
             member=self.member,
             values=self.choices,
@@ -661,6 +660,5 @@ class Complex(Simple[_T]):
             self.values.extend(choices)
             self.sort()
 
-        self.embed = reference_embed
         self.menu_format()
         await self.edit(interaction, page=0)
