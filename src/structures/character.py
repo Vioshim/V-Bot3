@@ -679,18 +679,23 @@ class Character:
         list[Embed]
             Embed with the character's information
         """
-        c_embed = Embed(title=self.name.title(), color=Color.blurple(), timestamp=self.created_at)
+        c_embed = Embed(
+            url=self.document_url,
+            title=self.name.title(),
+            color=Color.blurple(),
+            timestamp=self.created_at,
+        )
         sp_embed = c_embed.copy()
         embeds = [c_embed]
 
-        if url := self.document_url:
-            c_embed.url = url
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]
 
         if pronoun := self.pronoun_text:
             c_embed.add_field(name="Pronoun", value=pronoun)
-        c_embed.add_field(name="Age", value=self.age.name)
+
+        if self.age != AgeGroup.Unknown:
+            c_embed.add_field(name="Age", value=self.age.name)
 
         match species := self.species:
             case mon if isinstance(mon, Fusion):

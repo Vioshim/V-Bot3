@@ -104,9 +104,9 @@ def comparison_handler(before: Character, now: Character):
         if aux1.title != aux2.title:
             e2.title = aux2.title
 
-        if aux1.footer.text != aux2.footer.text:
-            e1.set_footer(text=aux1.footer.text)
-            e2.set_footer(text=aux2.footer.text)
+        if aux1.footer != aux2.footer:
+            e1.set_footer(text=aux1.footer.text, icon_url=aux1.footer.icon_url)
+            e2.set_footer(text=aux2.footer.text, icon_url=aux2.footer.icon_url)
 
         if e1.description == e2.description:
             e1.description = e2.description = None
@@ -126,7 +126,7 @@ def comparison_handler(before: Character, now: Character):
             before.image == now.image,
             before.pokeball == now.pokeball,
             len(e1.fields) == len(e2.fields) == 0,
-            e1.footer.text == e2.footer.text,
+            e1.footer == e2.footer,
         )
         if not all(conditions):
             aux1_new.append(e1)
