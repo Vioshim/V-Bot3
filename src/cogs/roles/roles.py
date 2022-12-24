@@ -47,6 +47,7 @@ from rapidfuzz import process
 from src.pagination.view_base import Basic
 from src.structures.character import Character
 from src.structures.logger import ColoredLogger
+from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
@@ -280,11 +281,15 @@ class BasicRoleSelect(RoleSelect):
         placeholder="Select Pronoun Roles",
         custom_id="pronouns",
         min_values=0,
-        max_values=3,
+        max_values=len(Pronoun),
         options=[
-            SelectOption(label="He", value="738230651840626708", emoji="\N{MALE SIGN}"),
-            SelectOption(label="She", value="738230653916807199", emoji="\N{FEMALE SIGN}"),
-            SelectOption(label="Them", value="874721683381030973"),
+            SelectOption(
+                label=pronoun.name,
+                value=str(pronoun.role_id),
+                description=f"Adds {pronoun.name} as pronoun in roles.",
+                emoji=pronoun.emoji,
+            )
+            for pronoun in Pronoun
         ],
     )
     async def pronouns_choice(self, ctx: Interaction, sct: Select):
@@ -565,7 +570,7 @@ class RPModal(Modal):
                             label=oc.name[:100],
                             value=str(oc.id),
                             description=f"{oc!r}"[:100],
-                            emoji=oc.pronoun.emoji,
+                            emoji=oc.emoji,
                         )
                         for oc in characters
                     ]
@@ -645,7 +650,7 @@ class RPModal(Modal):
         embed.set_image(url=WHITE_BAR)
         view = RPSearchManage(msg1.id, self.user, items)
         for idx, x in enumerate(items[:6]):
-            view.add_item(Button(label=x.name[:45], emoji=x.pronoun.emoji, url=x.jump_url, row=idx // 3))
+            view.add_item(Button(label=x.name[:80], emoji=x.emoji, url=x.jump_url, row=idx // 3))
         msg2 = await thread.send(
             content=reference.mention,
             allowed_mentions=AllowedMentions(users=True),

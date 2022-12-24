@@ -275,7 +275,7 @@ class Character:
     server: int = 719343092963999804
     name: str = ""
     age: AgeGroup = AgeGroup.Unknown
-    pronoun: Pronoun = Pronoun.Them
+    pronoun: frozenset[Pronoun] = field(default_factory=frozenset)
     backstory: Optional[str] = None
     personality: Optional[str] = None
     extra: Optional[str] = None
@@ -334,7 +334,7 @@ class Character:
         data["age"] = self.age.name
         data["size"] = self.size.name if isinstance(self.size, Size) else self.size
         data["weight"] = self.weight.name if isinstance(self.weight, Size) else self.weight
-        data["pronoun"] = self.pronoun.name
+        data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
         data["pokeball"] = self.pokeball.name if self.pokeball else None
@@ -402,7 +402,11 @@ class Character:
             except KeyError:
                 self.weight = Size.M
         if isinstance(self.pronoun, str):
-            self.pronoun = Pronoun.deduce(self.pronoun)
+            self.pronoun = Pronoun.deduce_many(self.pronoun)
+        if isinstance(self.pronoun, Pronoun):
+            self.pronoun = frozenset({self.pronoun})
+        else:
+            self.pronoun = frozenset(self.pronoun)
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
@@ -533,7 +537,21 @@ class Character:
 
     @property
     def emoji(self):
-        return self.pronoun.emoji
+        match self.pronoun:
+            case x if len(x) == len(Pronoun) or (Pronoun.He in x and Pronoun.She in x):
+                return Pronoun.Them.emoji
+            case x if Pronoun.He in x:
+                return Pronoun.He.emoji
+            case x if Pronoun.She in x:
+                return Pronoun.She.emoji
+            case _:
+                return Pronoun.Them.emoji
+
+    @property
+    def pronoun_text(self):
+        if len(self.pronoun) == len(Pronoun):
+            return "Any"
+        return ", ".join(sorted(x.name for x in self.pronoun))
 
     @property
     def movepool(self) -> Movepool:
@@ -649,8 +667,6 @@ class Character:
             Image it defaults to
         """
         if self.species and not self.species.requires_image:
-            if self.pronoun == Pronoun.She:
-                return self.species.female_image
             return self.species.base_image
 
     @property
@@ -674,7 +690,9 @@ class Character:
             c_embed.url = url
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]
-        c_embed.add_field(name="Pronoun", value=self.pronoun.name)
+
+        if pronoun := self.pronoun_text:
+            c_embed.add_field(name="Pronoun", value=pronoun)
         c_embed.add_field(name="Age", value=self.age.name)
 
         match species := self.species:
@@ -777,7 +795,7 @@ class Character:
             "Measure": "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")]),
         }
 
-        doc.add_heading(f"{self.pronoun.emoji}〛{self.name}", 0)
+        doc.add_heading(f"{self.emoji}〛{self.name}", 0)
         match species := self.species:
             case mon if isinstance(mon, Fusion):
                 ratio1, ratio2 = mon.ratio, 1 - mon.ratio
@@ -852,7 +870,7 @@ class Character:
                 doc.add_paragraph(sp_ability.description)
 
             if origin := sp_ability.origin:
-                doc.add_heading(f"How did {self.pronoun.name} obtain it?", 2)
+                doc.add_heading("How was it obtained?", 2)
                 doc.add_paragraph(origin)
 
             if pros := sp_ability.pros:
@@ -1123,7 +1141,7 @@ class Character:
             self.id,
             self.name,
             self.age.name,
-            self.pronoun.name,
+            [x.name for x in self.pronoun],
             self.backstory,
             self.extra,
             self.kind.to_db,
@@ -1309,7 +1327,7 @@ class Character:
             data["age"] = AgeGroup.parse(age)
 
         if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
-            data["pronoun"] = Pronoun.deduce(pronoun_info)
+            data["pronoun"] = Pronoun.deduce_many(pronoun_info)
 
         data.pop("stats", {})
 

@@ -83,7 +83,7 @@ class PingModal(Modal):
             kit.add_image(image=item.icon, width=200, height=44, x=250, y=44 * index)
         kit.add_text(
             text=self.oc.name,
-            width=330,
+            width=450,
             x=0,
             y=400,
             background=0xFFFFFF,
@@ -91,12 +91,12 @@ class PingModal(Modal):
             font=Fonts.Whitney_Black,
             font_size=36,
         )
-        if self.oc.pronoun.image:
-            kit.add_image(image=self.oc.pronoun.image, height=120, width=120, x=330, y=330)
         file: File = await interaction.client.get_file(kit.url)
         embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.set_image(url=WHITE_BAR)
         webhook: Webhook = await interaction.client.webhook(channel)
+        view = View()
+        view.add_item(Button(label=self.oc.name[:80], emoji=self.oc.emoji, url=self.oc.jump_url))
         msg: WebhookMessage = await webhook.send(
             receiver.mention,
             file=file,
@@ -105,6 +105,7 @@ class PingModal(Modal):
             username=user.display_name,
             avatar_url=user.display_avatar.url,
             thread=thread,
+            view=view,
             wait=True,
         )
         if thread is MISSING:

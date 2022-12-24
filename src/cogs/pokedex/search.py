@@ -525,12 +525,16 @@ class OCGroupByType(OCGroupBy[TypingEnum]):
 class OCGroupByPronoun(OCGroupBy[Pronoun]):
     @staticmethod
     def inner_parser(group: Pronoun, elements: list[Character]):
-        return group.name, f"Identified by {len(elements):02d} OCs."
+        return group.name, f"Used by {len(elements):02d} OCs."
 
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
-        ocs = sorted(ocs, key=lambda x: x.pronoun.name)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pronoun)}
+        data: dict[Pronoun, set[Character]] = {}
+        for oc in ocs:
+            for x in oc.pronoun:
+                data.setdefault(x, set())
+                data[x].add(oc)
+        return {k: frozenset(v) for k, v in data.items()}
 
 
 class OCGroupByMove(OCGroupBy[Move]):

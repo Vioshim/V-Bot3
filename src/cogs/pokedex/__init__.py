@@ -413,7 +413,7 @@ class Pokedex(commands.Cog):
 
             embeds = [embed.set_image(url=image1), Embed(url=PLACEHOLDER).set_image(url=image2)]
         if pronoun:
-            filters.append(lambda oc: oc.pronoun == pronoun)
+            filters.append(lambda oc: pronoun in oc.pronoun)
         if backstory:
             backstory_pattern = re_compile(backstory, IGNORECASE)
             filters.append(lambda oc: oc.backstory and backstory_pattern.search(oc.backstory))

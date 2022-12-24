@@ -36,9 +36,9 @@ class PronounItem:
         discord role that represents the pronoun, defaults to None
     """
 
-    image: Optional[str] = None
-    emoji: Optional[str] = None
-    role_id: Optional[int] = None
+    image: Optional[str]
+    emoji: str
+    role_id: int
 
 
 class Pronoun(PronounItem, Enum):
@@ -85,7 +85,7 @@ class Pronoun(PronounItem, Enum):
             item = "/".join(map(str, item))
 
         match fix(item):
-            case x if "THEM" in x or "THEIR" in x or "HELICOPTER" in x:
+            case x if "THEM" in x or "THEIR" in x:
                 return Pronoun.Them
             case x if "FEMALE" in x or "SHE" in x or "HER" in x or "HERS" in x:
                 return Pronoun.She
@@ -93,3 +93,22 @@ class Pronoun(PronounItem, Enum):
                 return Pronoun.He
             case _:
                 return Pronoun.Them
+
+    @classmethod
+    def deduce_many(cls, item: str) -> frozenset[Pronoun]:
+        if isinstance(item, Pronoun):
+            return frozenset({item})
+
+        if not isinstance(item, str):
+
+            if not isinstance(item, Iterable):
+                name = item.__class__.__name__
+                raise TypeError(f"Expected str but received {name!r} instead.")
+
+            item = "/".join(map(str, item))
+
+        if "ANY" == fix(item):
+            return frozenset(Pronoun)
+
+        data = item.split(",") if "," in item else item.split("/")
+        return frozenset({o for x in data if (o := cls.deduce(x))})

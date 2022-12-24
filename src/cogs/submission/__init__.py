@@ -508,7 +508,7 @@ class Submission(commands.Cog):
 
             view = View()
             view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
-            view.add_item(Button(label=key[:80], url=oc.jump_url, emoji=oc.pronoun.emoji))
+            view.add_item(Button(label=key[:80], url=oc.jump_url, emoji=oc.emoji))
 
             msg = await w.send(
                 content=message.content,
@@ -820,7 +820,7 @@ class Submission(commands.Cog):
             url = Character.rack(ocs, font=font)
             view = View()
             for oc in ocs:
-                view.add_item(Button(label=oc.name, url=oc.jump_url, emoji=oc.pronoun.emoji))
+                view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.emoji))
             if file := await self.bot.get_file(url):
                 await ctx.reply(file=file, view=view)
             else:
@@ -836,7 +836,7 @@ class Submission(commands.Cog):
             url = Character.rack2(ocs, font=font)
             view = View()
             for index, oc in enumerate(ocs):
-                view.add_item(Button(label=oc.name, url=oc.jump_url, row=index // 2, emoji=oc.pronoun.emoji))
+                view.add_item(Button(label=oc.name[:80], url=oc.jump_url, row=index // 2, emoji=oc.emoji))
             if file := await self.bot.get_file(url):
                 await ctx.reply(file=file, view=view)
             else:

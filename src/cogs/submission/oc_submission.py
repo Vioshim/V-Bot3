@@ -391,13 +391,13 @@ class AgeField(TemplateField):
 
 class PronounField(TemplateField):
     name = "Pronoun"
-    description = "He, She or Them"
+    description = "He, She, Them"
     required: bool = True
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if not isinstance(oc.pronoun, Pronoun):
-            return "Invalid Pronoun"
+        if not oc.pronoun:
+            return "No pronoun added."
 
     @classmethod
     async def on_submit(
@@ -413,17 +413,19 @@ class PronounField(TemplateField):
             target=ctx,
             timeout=None,
             values=Pronoun,
-            parser=lambda x: (x.name, f"Sets Pronoun as {x.name}"),
+            max_values=len(Pronoun),
+            parser=lambda x: (x.name, f"Adds {x.name} as pronoun."),
             sort_key=lambda x: x.name,
             silent_mode=True,
+            auto_choice_info=True,
+            auto_conclude=False,
         )
         async with view.send(
             title=f"{template.title} Character's Pronoun.",
-            description=f"> {oc.pronoun.name}",
-            single=True,
+            description=f"> {oc.pronoun_text}",
             ephemeral=ephemeral,
         ) as pronoun:
-            if isinstance(pronoun, Pronoun):
+            if pronoun:
                 oc.pronoun = pronoun
                 progress.add(cls.name)
 
