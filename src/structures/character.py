@@ -1260,8 +1260,8 @@ class Character:
 
     def __repr__(self) -> str:
         types = "/".join(i.name for i in self.types)
-        name = self.kind.name if self.kind else "Error"
-        species = self.species.name if self.species else "None"
+        name = self.kind.title if self.kind else "Error"
+        species = self.species.name if self.species else None
         return f"{name}: {species}, Age: {self.age.name}, Types: {types}"
 
     @classmethod
