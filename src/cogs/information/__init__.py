@@ -1489,7 +1489,7 @@ class Information(commands.Cog):
             self.bot.add_view(view, message_id=item["id"])
 
         channel = self.bot.get_partial_messageable(860590339327918100, guild_id=719343092963999804)
-        message = channel.get_partial_message(1023703599538257940)
+        message = channel.get_partial_message(1056291757517705367)
         await message.edit(view=InformationView())
 
         self.ready = True

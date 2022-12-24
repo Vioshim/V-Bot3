@@ -425,9 +425,8 @@ class PronounField(TemplateField):
             description=f"> {oc.pronoun_text}",
             ephemeral=ephemeral,
         ) as pronoun:
-            if pronoun:
-                oc.pronoun = pronoun
-                progress.add(cls.name)
+            oc.pronoun = frozenset(pronoun)
+            progress.add(cls.name)
 
 
 class SpeciesField(TemplateField):
@@ -735,9 +734,8 @@ class TypesField(TemplateField):
             single=single,
             ephemeral=ephemeral,
         ) as types:
-            if types:
-                species.types = frozenset(types)
-                progress.add(cls.name)
+            species.types = frozenset(types)
+            progress.add(cls.name)
 
 
 class MovesetField(TemplateField):
