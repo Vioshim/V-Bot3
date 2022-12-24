@@ -797,10 +797,12 @@ class MovesetField(TemplateField):
                 isinstance(species, Species) and species.id in mons,
             )
         ):
-            if TypingEnum.Shadow not in oc.types:
-                movepool += Movepool(tm={x for x in Move.all() if not x.banned})
+            moves_reference = {x for x in Move.all() if not x.banned}
+            if TypingEnum.Shadow in oc.types:
+                moves_reference = {x for x in moves_reference if x.type == TypingEnum.Shadow}
             else:
-                movepool += Movepool(tm={x for x in Move.all() if x.type == TypingEnum.Shadow})
+                moves_reference = {x for x in moves_reference if x.type != TypingEnum.Shadow}
+            movepool += Movepool(tm=moves_reference)
         else:
             movepool += oc.total_movepool
 
