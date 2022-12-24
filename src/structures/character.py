@@ -336,7 +336,7 @@ class Character:
         data["weight"] = self.weight.name if isinstance(self.weight, Size) else self.weight
         data["pronoun"] = self.pronoun.name
         data["moveset"] = [x.id for x in self.moveset]
-        data["hidden_power"] = str(self.hidden_power) if self.hidden_power else None
+        data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
         data["pokeball"] = self.pokeball.name if self.pokeball else None
         if isinstance(self.sp_ability, SpAbility):
             aux = asdict(self.sp_ability)
@@ -1134,10 +1134,10 @@ class Character:
             self.location,
             self.thread,
             [x.id for x in self.moveset],
-            [str(x) for x in self.types],
+            [x.name for x in self.types],
             [x.id for x in self.abilities],
             None if isinstance(self.species.id, int) else self.species.id,
-            str(self.hidden_power) if self.hidden_power else None,
+            self.hidden_power.name if self.hidden_power else None,
         )
         if (sp_ability := self.sp_ability) is None:
             sp_ability = SpAbility()
