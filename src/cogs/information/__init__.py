@@ -317,30 +317,6 @@ class InformationView(View):
         super(InformationView, self).__init__(timeout=None)
         self.add_item(
             Button(
-                label="Self Roles",
-                emoji="\N{CHEERING MEGAPHONE}",
-                url="https://canary.discord.com/channels/719343092963999804/719709333369258015/1023688500182261850",
-                row=0,
-            )
-        )
-        self.add_item(
-            Button(
-                label="Lore",
-                emoji="\N{SCROLL}",
-                url="https://canary.discord.com/channels/719343092963999804/1020286550753427478/1020286550753427478",
-                row=0,
-            )
-        )
-        self.add_item(
-            Button(
-                label="OC Submission",
-                emoji="\N{OPEN BOOK}",
-                url="https://canary.discord.com/channels/719343092963999804/852180971985043466/1005387453055639612",
-                row=0,
-            )
-        )
-        self.add_item(
-            Button(
                 label="Support V-Bot!",
                 emoji=KOFI_EMOJI,
                 url="https://ko-fi.com/Vioshim",
