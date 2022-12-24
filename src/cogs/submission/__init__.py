@@ -780,20 +780,29 @@ class Submission(commands.Cog):
         payload : RawMessageDeleteEvent
             Information
         """
-        db = self.bot.mongo_db("Roleplayers")
-        db2 = self.bot.mongo_db("Characters")
-        key = {"id": payload.message_id}
-        key2 = {"server": payload.guild_id}
-        await db.delete_one(key | key2)
-        await db2.delete_many(key2 | {"$or": [key, {"thread": payload.message_id}]})
 
-        db = self.bot.mongo_db("RP Logs")
-        db2 = self.bot.mongo_db("Tupper-logs")
-        if item := await db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
+        ocs_db = self.bot.mongo_db("Characters")
+        if oc_data := await ocs_db.find_one_and_delete({"id": payload.message_id, "server": payload.guild_id}):
+            oc = Character.from_mongo_dict(oc_data)
+            if not await ocs_db.find_one({"author": oc.author, "server": payload.guild_id}):
+                guild = self.bot.get_guild(payload.guild_id)
+                if thread := get(guild.threads, id=oc.thread):
+                    await thread.delete()
+
+                role = get(guild.roles, name="Registered")
+                member = get(guild.members, id=oc.author)
+
+                if role and member and role in member.roles:
+                    await member.remove_roles(role, reason="0 Characters")
+
+        log_db = self.bot.mongo_db("RP Logs")
+        proxy_db = self.bot.mongo_db("Tupper-logs")
+        if item := await log_db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
             log_channel = self.bot.get_channel(item["log-channel"])
             w = await self.bot.webhook(log_channel)
-            await db2.delete_one({"channel": log_channel.id, "id": item["log"]})
-            await w.delete_message(item["log"])
+            await proxy_db.delete_one({"channel": log_channel.id, "id": item["log"]})
+            with suppress(DiscordException):
+                await w.delete_message(item["log"])
 
     @commands.command()
     @commands.guild_only()
