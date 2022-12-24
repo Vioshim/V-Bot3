@@ -402,11 +402,8 @@ class Character:
             except KeyError:
                 self.weight = Size.M
         if isinstance(self.pronoun, str):
-            self.pronoun = Pronoun.deduce_many(self.pronoun)
-        if isinstance(self.pronoun, Pronoun):
-            self.pronoun = frozenset({self.pronoun})
-        else:
-            self.pronoun = frozenset(self.pronoun)
+            self.pronoun = [self.pronoun]
+        self.pronoun = Pronoun.deduce_many(*self.pronoun)
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)

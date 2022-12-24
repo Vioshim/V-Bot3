@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from re import split
 from typing import Iterable, Optional
 
 from src.utils.functions import fix
@@ -95,20 +96,11 @@ class Pronoun(PronounItem, Enum):
                 return Pronoun.Them
 
     @classmethod
-    def deduce_many(cls, item: str) -> frozenset[Pronoun]:
-        if isinstance(item, Pronoun):
-            return frozenset({item})
+    def deduce_many(cls, *elems: str) -> frozenset[Pronoun]:
 
-        if not isinstance(item, str):
+        items = {elem for elem in elems if isinstance(elem, cls)}
+        if aux := ",".join(elem for elem in elems if isinstance(elem, str)):
+            data = split(r"[^A-Za-z0-9 \.'-]", aux)
+            items.update(x for elem in data if (x := cls.deduce(elem)))
 
-            if not isinstance(item, Iterable):
-                name = item.__class__.__name__
-                raise TypeError(f"Expected str but received {name!r} instead.")
-
-            item = "/".join(map(str, item))
-
-        if "ANY" == fix(item):
-            return frozenset(Pronoun)
-
-        data = item.split(",") if "," in item else item.split("/")
-        return frozenset({o for x in data if (o := cls.deduce(x))})
+        return frozenset(items)
