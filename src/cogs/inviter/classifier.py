@@ -277,4 +277,8 @@ class InviterView(View):
         items = {Partner.from_mongo_dict(x) async for x in db.find()}
         data = self.group_method(items)
         view = TagComplex(member=ctx.user, target=ctx, data=data)
-        await view.simple_send(title=btn.custom_id, ephemeral=True)
+        await view.simple_send(
+            title=btn.custom_id,
+            description=f"Currently, we are partnered with {len(items)} servers!",
+            ephemeral=True,
+        )
