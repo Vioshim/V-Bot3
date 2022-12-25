@@ -16,7 +16,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
-from logging import getLogger, setLoggerClass
 from time import mktime
 from typing import Iterable, Optional
 
@@ -46,16 +45,10 @@ from rapidfuzz import process
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character
-from src.structures.logger import ColoredLogger
 from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
-
-setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
-
 
 __all__ = (
     "RoleSelect",
@@ -182,7 +175,7 @@ class AFKSchedule:
 
 class AFKModal(Modal, title="Current Time"):
     def __init__(self, hours: list[int] = None) -> None:
-        super().__init__(timeout=None)
+        super(AFKModal, self).__init__(timeout=None)
 
         data = TextInput(
             label="What time is for you?",
@@ -197,12 +190,13 @@ class AFKModal(Modal, title="Current Time"):
         self.add_item(data)
 
     async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
-        logger.error("Ignoring exception in modal %r", self, exc_info=error)
+        interaction.client.logger.error("Ignoring exception in modal %r", self, exc_info=error)
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         current_date = interaction.created_at
+        member: Member = interaction.client.supporting.get(interaction.user, interaction.user)
         date1 = current_date.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
         ref = abs(date1 - date2).seconds
@@ -227,9 +221,9 @@ class AFKModal(Modal, title="Current Time"):
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("AFK")
         await db.replace_one(
-            {"user": interaction.user.id},
+            {"user": member.id},
             {
-                "user": interaction.user.id,
+                "user": member.id,
                 "hours": sorted(self.hours),
                 "offset": float(self.offset),
             },
@@ -241,12 +235,12 @@ class AFKModal(Modal, title="Current Time"):
 
 class RoleSelect(View):
     async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
-        logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
     @staticmethod
     async def choice(ctx: Interaction, sct: Select, remove_all: bool = False):
         resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
+        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         guild = ctx.guild
 
         roles: set[Role] = set() if remove_all else set(get_role(sct.values, guild))
@@ -390,8 +384,8 @@ class BasicRoleSelect(RoleSelect):
         ],
     )
     async def rp_search_choice(self, ctx: Interaction, sct: Select):
-        member: Member = ctx.user
         roles = await self.choice(ctx, sct)
+        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         roles = [x.name.removesuffix(" RP Search") for x in roles]
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
         if item := await db.find_one({"user": member.id}):
@@ -466,7 +460,7 @@ class RPSearchManage(View):
             member = f"User(ID={self.member_id})"
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
-                logger.info(
+                ctx.client.logger.info(
                     "User %s is currently reading %s's character %s [%s]",
                     str(ctx.user),
                     str(member),
@@ -578,7 +572,7 @@ class RPModal(Modal):
                     self.add_item(item)
 
     async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
-        logger.error("Ignoring exception in Modal %r", self, exc_info=error)
+        interaction.client.logger.error("Ignoring exception in Modal %r", self, exc_info=error)
 
     async def check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
@@ -694,7 +688,7 @@ class RPModal(Modal):
             embed.set_image(url=f"attachment://{file.filename}")
             await msg1.edit(embed=embed, attachments=[file], view=view)
         elif text := ", ".join(str(x.id) for x in items):
-            logger.info("Error Image Parsing OCs: %s", text)
+            interaction.client.logger.info("Error Image Parsing OCs: %s", text)
         self.stop()
 
 
