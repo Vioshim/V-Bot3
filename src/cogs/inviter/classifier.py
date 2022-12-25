@@ -205,12 +205,12 @@ class TagComplex(Complex[str]):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await resp.edit_message(view=self)
-        await ctx.response.defer(ephemeral=True, thinking=True)
-        choices = sorted(self.choices or self.data.keys())
-        items = [self.data.get(x, set()) for x in choices]
-        items = set[Partner].intersection(*items)
-        view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-        await view.simple_send(title="Servers with tags: {}".format(", ".join(self.choices)), ephemeral=True)
+        if choices := sorted(self.choices):
+            await ctx.response.defer(ephemeral=True, thinking=True)
+            items = [self.data.get(x, set()) for x in choices]
+            items = set[Partner].intersection(*items)
+            view = PartnerComplex(member=ctx.user, target=ctx, items=items)
+            await view.simple_send(title="Servers with tags: {}".format(", ".join(choices)), ephemeral=True)
         await self.delete(ctx)
 
 
