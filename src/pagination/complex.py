@@ -654,6 +654,7 @@ class Complex(Simple[_T]):
             deselect_mode=False,
             auto_text_component=self.auto_text_component,
             auto_choice_info=True,
+            auto_conclude=False,
         )
         async with view.send(title="Remove Elements", editing_original=True) as choices:
             self.choices -= choices

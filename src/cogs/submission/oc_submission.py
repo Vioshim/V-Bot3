@@ -727,6 +727,8 @@ class TypesField(TemplateField):
             timeout=None,
             silent_mode=True,
             auto_text_component=True,
+            auto_choice_info=True,
+            auto_conclude=True,
         )
 
         async with view.send(
@@ -902,13 +904,10 @@ class AbilitiesField(TemplateField):
             silent_mode=True,
             auto_text_component=True,
             auto_choice_info=True,
+            auto_conclude=False,
         )
         async with view.send(
             title=f"{template.title} Character's Abilities",
-            description="\n".join(
-                f"**Ability {index} - {item.name}**\n> {item.description}\n"
-                for index, item in enumerate(oc.abilities, start=1)
-            )[:4000],
             ephemeral=ephemeral,
         ) as choices:
             if isinstance(choices, set):

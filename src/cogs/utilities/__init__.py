@@ -56,7 +56,7 @@ class ForumModal(Modal):
         channel: ForumChannel | TextChannel | Message,
         file: Optional[File] = None,
     ) -> None:
-        super().__init__(title="Forum management")
+        super(ForumModal, self).__init__(title="Forum management")
         self.name = TextInput(
             label="Name",
             max_length=100,

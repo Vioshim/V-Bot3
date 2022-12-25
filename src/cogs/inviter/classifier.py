@@ -190,6 +190,7 @@ class TagComplex(Complex[str]):
             deselect_mode=True,
             auto_conclude=False,
             silent_mode=True,
+            auto_choice_info=True,
         )
         self.data = data
 
@@ -205,11 +206,11 @@ class TagComplex(Complex[str]):
             btn.label = f"{btn.label} (Confirm)"
             return await resp.edit_message(view=self)
         await ctx.response.defer(ephemeral=True, thinking=True)
-        if choices := sorted(self.choices):
-            items = [self.data.get(x, set()) for x in choices]
-            items = set[Partner].intersection(*items)
-            view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-            await view.simple_send(title="Servers with tags: {}".format(", ".join(choices)), ephemeral=True)
+        choices = sorted(self.choices or self.data.keys())
+        items = [self.data.get(x, set()) for x in choices]
+        items = set[Partner].intersection(*items)
+        view = PartnerComplex(member=ctx.user, target=ctx, items=items)
+        await view.simple_send(title="Servers with tags: {}".format(", ".join(self.choices)), ephemeral=True)
         await self.delete(ctx)
 
 

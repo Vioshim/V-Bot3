@@ -563,7 +563,7 @@ class TypingEnum(Typing, Enum):
             value
         """
         data = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else TypingEnum(x))]
-        return super().when_attacked_by(*data, inverse=inverse)
+        return super(TypingEnum, self).when_attacked_by(*data, inverse=inverse)
 
     def when_attacking(self, *others: Typing | str, inverse: bool = False) -> float:
         """method to determine multiplier
@@ -574,4 +574,4 @@ class TypingEnum(Typing, Enum):
             value
         """
         data = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else TypingEnum(x))]
-        return super().when_attacking(*data, inverse=inverse)
+        return super(TypingEnum, self).when_attacking(*data, inverse=inverse)

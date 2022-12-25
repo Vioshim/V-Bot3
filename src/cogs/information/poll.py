@@ -16,6 +16,7 @@
 from discord import Interaction, InteractionResponse
 from discord.ui import Select, View, select
 from motor.motor_asyncio import AsyncIOMotorCollection
+
 from src.utils.etc import LIST_EMOJI
 
 
@@ -27,7 +28,7 @@ class PollView(View):
         min_values: int = 1,
         max_values: int = 1,
     ) -> None:
-        super().__init__(timeout=None)
+        super(PollView, self).__init__(timeout=None)
         self.options = options
         self.poll.min_values = min(min_values, len(options))
         self.poll.max_values = min(max_values, len(options))

@@ -76,7 +76,7 @@ def message_parse(message: Message):
 
 class AIModal(Modal):
     def __init__(self, ephemeral: bool = True) -> None:
-        super().__init__(title="Open AI", timeout=None)
+        super(AIModal, self).__init__(title="Open AI", timeout=None)
         self.ephemeral = ephemeral
         self.description = TextInput(label="Description", style=TextStyle.paragraph)
         self.add_item(self.description)

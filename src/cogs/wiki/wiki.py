@@ -282,7 +282,7 @@ class WikiEntry:
 
 class WikiTransformer(Transformer):
     async def autocomplete(self, interaction: Interaction, value: str, /):
-        return await super().autocomplete(interaction, value)
+        return await super(WikiTransformer, self).autocomplete(interaction, value)
 
     async def transform(self, ctx: Interaction, value: str, /):
         bot: CustomBot = ctx.client

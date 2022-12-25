@@ -80,7 +80,7 @@ class HelpExploration(Complex[Cog | Command | Group | SlashCommand | SlashGroup 
         value: Mapping[Cog, list[Command]] | Group | Cog,
     ):
         title, items, parent = self.flatten(value)
-        super().__init__(
+        super(HelpExploration, self).__init__(
             target=target,
             member=member,
             timeout=None,

@@ -82,9 +82,6 @@ class SpeciesComplex(Complex[Species]):
             values.update(ocs)
 
         for oc in values:
-            if not target.guild.get_member(oc.author):
-                continue
-
             mon = oc.species
             if isinstance(mon, (Fusion, Chimera)):
                 for x in mon.bases:
@@ -120,23 +117,16 @@ class SpeciesComplex(Complex[Species]):
             emoji_parser=emoji_parser,
             real_max=max_values,
             auto_text_component=True,
+            auto_choice_info=True,
+            auto_conclude=False,
         )
         self.embed.title = "Select Species"
         self.data = {}
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
-        data = dict(embed=self.embed)
-
         self.values = [x for x in self.values if x not in self.choices] or self.total
         self.max_values = min(self.real_max, len(self.values))
-        self.embed.description = "\n".join(sorted(f"> • {x.name}" for x in self.choices))
-
-        if isinstance(page, int):
-            self.pos = page
-            self.menu_format()
-            data["view"] = self
-
-        return data
+        return super(SpeciesComplex, self).default_params(page)
 
     def menu_format(self) -> None:
         self.select_types.options.clear()
