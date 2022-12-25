@@ -1647,8 +1647,13 @@ class SubmissionView(View):
         key = {"author": member.id, "server": ctx.guild_id}
         values = [Character.from_mongo_dict(x) async for x in db.find(key)]
         values.sort(key=lambda x: x.name)
-        view = BaseCharactersView(member=ctx.user, target=ctx, ocs=values, max_values=len(values))
-        view.auto_conclude = False
+        view = BaseCharactersView(
+            member=ctx.user,
+            target=ctx,
+            ocs=values,
+            max_values=len(values),
+            auto_conclude=False,
+        )
         view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         async with view.send(title="Select Characters to delete") as choices:
             if choices and isinstance(choices, set):

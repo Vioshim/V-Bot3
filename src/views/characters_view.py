@@ -216,6 +216,7 @@ class BaseCharactersView(Complex[Character]):
         ocs: set[Character],
         keep_working: bool = False,
         max_values: int = 1,
+        auto_conclude: bool = True,
     ):
         super(BaseCharactersView, self).__init__(
             member=member,
@@ -227,6 +228,9 @@ class BaseCharactersView(Complex[Character]):
             sort_key=lambda x: (x.name, repr(x)),
             max_values=max_values,
             silent_mode=True,
+            auto_conclude=auto_conclude,
+            auto_choice_info=True,
+            auto_text_component=True,
         )
         self.embed.title = "Select a character"
 
@@ -239,6 +243,7 @@ class CharactersView(BaseCharactersView):
         ocs: set[Character],
         keep_working: bool = False,
         msg_id: Optional[None] = None,
+        auto_conclude: bool = True,
     ):
         super(CharactersView, self).__init__(
             member=member,
@@ -246,6 +251,7 @@ class CharactersView(BaseCharactersView):
             ocs=ocs,
             keep_working=keep_working,
             max_values=1,
+            auto_conclude=auto_conclude,
         )
         self.msg_id = int(msg_id) if msg_id else None
 
