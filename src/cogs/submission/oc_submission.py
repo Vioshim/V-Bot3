@@ -728,7 +728,7 @@ class TypesField(TemplateField):
             silent_mode=True,
             auto_text_component=True,
             auto_choice_info=True,
-            auto_conclude=True,
+            auto_conclude=False,
         )
 
         async with view.send(
