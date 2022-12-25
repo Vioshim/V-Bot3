@@ -13,12 +13,11 @@
 # limitations under the License.
 
 
+import re
 from os import path
 from random import choice
-from re import IGNORECASE
-from re import compile as re_compile
-from re import escape
 from typing import Literal, Optional
+from urllib.parse import quote_plus
 
 from d20 import roll
 from d20.utils import simplify_expr
@@ -43,11 +42,14 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 from discord.utils import MISSING
+from yarl import URL
 
 from src.cogs.utilities.sphinx_reader import SphinxObjectFileReader, to_string
 from src.structures.bot import CustomBot
 from src.structures.move import Move
 from src.utils.etc import WHITE_BAR, RTFMPages
+
+LMGT_URL = URL("https://letmegooglethat.com/")
 
 
 class ForumModal(Modal):
@@ -118,8 +120,8 @@ class Utilities(commands.Cog):
     def finder(text, collection, *, key=None, lazy=True):
         suggestions = []
         text = str(text)
-        pat = ".*?".join(map(escape, text))
-        regex = re_compile(pat, flags=IGNORECASE)
+        pat = ".*?".join(map(re.escape, text))
+        regex = re.compile(pat, flags=re.IGNORECASE)
         for item in collection:
             to_search = key(item) if key else item
             r = regex.search(to_search)
@@ -152,7 +154,7 @@ class Utilities(commands.Cog):
         if "zlib" not in line:
             raise RuntimeError("Invalid objects.inv file, not z-lib compatible.")
 
-        entry_regex = re_compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
+        entry_regex = re.compile(r"(?x)(.+?)\s+(\S*:\S*)\s+(-?\d+)\s+(\S+)\s+(.*)")
         for line in stream.read_compressed_lines():
             match = entry_regex.match(line.rstrip())
             if not match:
@@ -329,6 +331,24 @@ class Utilities(commands.Cog):
 
         item = choice(moves)
         await resp.send_message(content=f"Canon Metronome: {valid}", embed=item.embed, ephemeral=hidden)
+
+    @commands.command()
+    async def google(self, ctx: commands.Context, *, text: str):
+        """Let me google that, as command
+
+        Parameters
+        ----------
+        ctx : commands.Context
+            Context
+        text : str
+            Query
+        """
+        url = LMGT_URL.with_query(q=quote_plus(text))
+        if ctx.message.reference and isinstance(ctx.message.reference.resolved, Message):
+            message = ctx.message.reference.resolved
+        else:
+            message = ctx.message
+        await message.reply(content=str(url))
 
     @commands.command()
     async def roll(self, ctx: commands.Context, *, expression: Optional[str] = None):
