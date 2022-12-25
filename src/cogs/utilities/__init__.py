@@ -17,7 +17,6 @@ import re
 from os import path
 from random import choice
 from typing import Literal, Optional
-from urllib.parse import quote_plus
 
 from d20 import roll
 from d20.utils import simplify_expr
@@ -343,7 +342,7 @@ class Utilities(commands.Cog):
         text : str
             Query
         """
-        url = LMGT_URL.with_query(q=quote_plus(text))
+        url = LMGT_URL.with_query(q=text)
         if ctx.message.reference and isinstance(ctx.message.reference.resolved, Message):
             message = ctx.message.reference.resolved
         else:
