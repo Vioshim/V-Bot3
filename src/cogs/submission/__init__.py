@@ -203,7 +203,7 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
-    async def list_update(self, member: Object | User | Member):
+    async def list_update(self, member: Object | User | Member, data: Optional[dict] = None):
         """This function updates an user's character list message
 
         Parameters
@@ -220,10 +220,14 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Roleplayers")
 
         thread = None
-        if item := await db.find_one({"user": member.id}):
-            if not (thread := channel.guild.get_channel_or_thread(item["id"])):
+
+        if not data:
+            data = await db.find_one({"user": member.id, "server": channel.guild.id})
+
+        if data:
+            if not (thread := channel.guild.get_channel_or_thread(data["id"])):
                 with suppress(DiscordException):
-                    thread: Thread = await channel.guild.fetch_channel(item["id"])
+                    thread: Thread = await channel.guild.fetch_channel(data["id"])
 
         if thread:
             try:
@@ -413,15 +417,7 @@ class Submission(commands.Cog):
     async def oc_update(self, oc: Character):
         embeds = oc.embeds
         embeds[0].set_image(url="attachment://image.png")
-        guild = self.bot.get_guild(oc.server)
-        db = self.bot.mongo_db("Roleplayers")
-        if (item := await db.find_one({"user": oc.author})) or oc.thread:
-            item_id = item["id"] if item else oc.thread
-            if not (thread := guild.get_channel_or_thread(item_id)):
-                thread = await guild.fetch_channel(item_id)
-        else:
-            thread = await self.list_update(oc.author)
-
+        thread = await self.list_update(oc.author)
         msg = thread.get_partial_message(oc.id)
         try:
             if thread.archived:
@@ -626,10 +622,8 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Roleplayers")
 
         thread = None
-        if await db.find_one({"user": member.id, "server": member.guild.id}):
-            thread = await self.list_update(member)
-            message = thread.get_partial_message(thread.id)
-            await message.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
+        if data := await db.find_one({"user": member.id, "server": member.guild.id}):
+            thread = await self.list_update(member, data)
             await thread.edit(
                 name=member.display_name if thread.name != member.display_name else MISSING,
                 reason=f"{thread.name} -> {member.display_name}",
@@ -639,10 +633,8 @@ class Submission(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: Member):
         db = self.bot.mongo_db("Roleplayers")
-        if await db.find_one({"user": member.id, "server": member.guild.id}):
-            thread = await self.list_update(member)
-            message = thread.get_partial_message(thread.id)
-            await message.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
+        if data := await db.find_one({"user": member.id, "server": member.guild.id}):
+            thread = await self.list_update(member, data)
             if thread.name == member.display_name:
                 await thread.edit(reason="Member left", archived=True)
             else:
@@ -654,14 +646,11 @@ class Submission(commands.Cog):
         if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
             return
         db = self.bot.mongo_db("Roleplayers")
-        if await db.find_one({"user": now.id, "server": now.guild.id}):
-            thread = await self.list_update(now)
+        if data := await db.find_one({"user": now.id, "server": now.guild.id}):
+            thread = await self.list_update(now, data)
             if thread.name != now.display_name:
                 reason = f"{thread.name} -> {now.display_name}."
                 await thread.edit(name=now.display_name, reason=reason)
-
-            message = thread.get_partial_message(thread.id)
-            await message.edit(content=f"{now.mention}\n{now.display_avatar.url}", attachments=[])
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
