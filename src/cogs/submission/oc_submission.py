@@ -52,7 +52,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Size
+from src.structures.character import AgeGroup, Character, Nature, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
@@ -955,6 +955,38 @@ class HiddenPowerField(TemplateField):
             ephemeral=ephemeral,
         ) as types:
             oc.hidden_power = types
+            progress.add(cls.name)
+
+
+class NatureField(TemplateField):
+    name = "Nature"
+    description = "OC's Nature"
+    required: bool = False
+
+    @classmethod
+    async def on_submit(
+        cls,
+        ctx: Interaction,
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        view = Complex[Nature](
+            member=ctx.user,
+            target=ctx,
+            values=Nature,
+            timeout=None,
+            parser=lambda x: (x.name, x.description),
+            silent_mode=True,
+            auto_text_component=True,
+        )
+        async with view.send(
+            title=f"{template.title} Character's Nature",
+            single=True,
+            ephemeral=ephemeral,
+        ) as nature:
+            oc.nature = nature
             progress.add(cls.name)
 
 

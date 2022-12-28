@@ -266,6 +266,68 @@ class Size(Enum):
         return f"{value:.2f} kg / {self.kg_to_lbs(value):.2f} lbs"
 
 
+class Stats(Enum):
+    HP = "HP"
+    ATK = "Attack"
+    DEF = "Defense"
+    SPA = "Sp. Attack"
+    SPD = "Sp. Defense"
+    SPE = "Speed"
+
+
+@dataclass
+class NatureItem:
+    high: Stats
+    low: Stats
+
+
+class Nature(Enum):
+    # fmt: off
+    Composed   = NatureItem(Stats.HP,  Stats.HP )  # noqa: E202,E221
+    Cuddly     = NatureItem(Stats.HP,  Stats.ATK)  # noqa: E221
+    Distracted = NatureItem(Stats.HP,  Stats.DEF)  # noqa: E221
+    Proud      = NatureItem(Stats.HP,  Stats.SPA)  # noqa: E221
+    Decisive   = NatureItem(Stats.HP,  Stats.SPD)  # noqa: E221
+    Patient    = NatureItem(Stats.HP,  Stats.SPE)  # noqa: E221
+    Desperate  = NatureItem(Stats.ATK, Stats.HP )  # noqa: E202,E221
+    Hardy      = NatureItem(Stats.ATK, Stats.ATK)  # noqa: E221
+    Lonely     = NatureItem(Stats.ATK, Stats.DEF)  # noqa: E221
+    Adamant    = NatureItem(Stats.ATK, Stats.SPA)  # noqa: E221
+    Naughty    = NatureItem(Stats.ATK, Stats.SPD)  # noqa: E221
+    Brave      = NatureItem(Stats.ATK, Stats.SPE)  # noqa: E221
+    Stark      = NatureItem(Stats.DEF, Stats.HP )  # noqa: E202,E221
+    Bold       = NatureItem(Stats.DEF, Stats.ATK)  # noqa: E221
+    Docile     = NatureItem(Stats.DEF, Stats.DEF)  # noqa: E221
+    Impish     = NatureItem(Stats.DEF, Stats.SPA)  # noqa: E221
+    Lax        = NatureItem(Stats.DEF, Stats.SPD)  # noqa: E221
+    Relaxed    = NatureItem(Stats.DEF, Stats.SPE)  # noqa: E221
+    Curious    = NatureItem(Stats.SPA, Stats.HP )  # noqa: E202,E221
+    Modest     = NatureItem(Stats.SPA, Stats.ATK)  # noqa: E221
+    Mild       = NatureItem(Stats.SPA, Stats.DEF)  # noqa: E221
+    Bashful    = NatureItem(Stats.SPA, Stats.SPA)  # noqa: E221
+    Rash       = NatureItem(Stats.SPA, Stats.SPD)  # noqa: E221
+    Quiet      = NatureItem(Stats.SPA, Stats.SPE)  # noqa: E221
+    Dreamy     = NatureItem(Stats.SPD, Stats.HP )  # noqa: E202,E221
+    Calm       = NatureItem(Stats.SPD, Stats.ATK)  # noqa: E221
+    Gentle     = NatureItem(Stats.SPD, Stats.DEF)  # noqa: E221
+    Careful    = NatureItem(Stats.SPD, Stats.SPA)  # noqa: E221
+    Quirky     = NatureItem(Stats.SPD, Stats.SPD)  # noqa: E221
+    Sassy      = NatureItem(Stats.SPD, Stats.SPE)  # noqa: E221
+    Skittish   = NatureItem(Stats.SPE, Stats.HP )  # noqa: E202,E221
+    Timid      = NatureItem(Stats.SPE, Stats.ATK)  # noqa: E221
+    Hasty      = NatureItem(Stats.SPE, Stats.DEF)  # noqa: E221
+    Jolly      = NatureItem(Stats.SPE, Stats.SPA)  # noqa: E221
+    Naive      = NatureItem(Stats.SPE, Stats.SPD)  # noqa: E221
+    Serious    = NatureItem(Stats.SPE, Stats.SPE)  # noqa: E221
+    # fmt: on
+
+    @property
+    def description(self) -> str:
+        item: NatureItem = self.value
+        high, low = item.low.value, item.high.value
+        return f"\N{UPWARDS BLACK ARROW} {high} | \N{DOWNWARDS BLACK ARROW} {low}"
+
+
 @dataclass(slots=True)
 class Character:
     species: Optional[Species] = None
@@ -290,6 +352,7 @@ class Character:
     weight: Size | float = Size.M
     pokeball: Optional[Pokeball] = None
     last_used: Optional[int] = None
+    nature: Optional[Nature] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -338,6 +401,7 @@ class Character:
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
         data["pokeball"] = self.pokeball.name if self.pokeball else None
+        data["nature"] = self.nature.name if self.nature else None
         if isinstance(self.sp_ability, SpAbility):
             aux = asdict(self.sp_ability)
             aux["kind"] = self.sp_ability.kind.name
@@ -401,6 +465,11 @@ class Character:
                 self.weight = Size[self.weight]
             except KeyError:
                 self.weight = Size.M
+        if isinstance(self.nature, str):
+            try:
+                self.nature = Nature[self.nature]
+            except KeyError:
+                self.nature = None
         if isinstance(self.pronoun, str):
             self.pronoun = [self.pronoun]
         self.pronoun = Pronoun.deduce_many(*self.pronoun)
@@ -765,8 +834,11 @@ class Character:
         else:
             icon_url = None
 
+        footer_text = f"Nature: {self.nature.name if self.nature else None}"
         if species:
-            c_embed.set_footer(text=f"{self.height_text}\n{self.weight_text}", icon_url=icon_url)
+            footer_text += f"\n{self.height_text}\n{self.weight_text}"
+
+        c_embed.set_footer(text=footer_text, icon_url=icon_url)
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
@@ -793,7 +865,7 @@ class Character:
             "Age": self.age.name,
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
             "Pokeball": self.pokeball.label if self.pokeball else None,
-            "Registration": self.created_at.strftime("%x"),
+            "Nature": self.nature.name if self.nature else None,
             "Measure": "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")]),
         }
 
@@ -853,12 +925,16 @@ class Character:
 
                 hdr_cells[index].text = "\n".join(move_args)
 
-        if self.backstory or self.extra:
+        if self.backstory or self.extra or self.personality:
             doc.add_page_break()
 
             if self.backstory:
                 doc.add_heading("Bio", 1)
                 doc.add_paragraph(self.backstory)
+
+            if self.personality:
+                doc.add_heading("Personality", 1)
+                doc.add_paragraph(self.personality)
 
             if self.extra:
                 doc.add_heading("Extra Information", 1)

@@ -225,7 +225,7 @@ class Submission(commands.Cog):
             data = await db.find_one({"user": member.id, "server": channel.guild.id})
 
         if data:
-            if not (thread := channel.guild.get_channel_or_thread(data["id"])):
+            if not (thread := channel.get_thread(data["id"])):
                 with suppress(DiscordException):
                     thread: Thread = await channel.guild.fetch_channel(data["id"])
 
@@ -250,13 +250,12 @@ class Submission(commands.Cog):
                         if (o := get(channel.available_tags, name=x))
                     ]
                     tags.sort(key=lambda x: x.name)
-                    thread = await thread.edit(name=member.display_name, applied_tags=tags[:5])
+                    thread = await thread.edit(name=member.display_name, applied_tags=tags[:5], archived=False)
                     msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
             except DiscordException:
                 thread = None
 
         if thread is None:
-
             if isinstance(member, Object):
                 if member_info := channel.guild.get_member(member.id) or self.bot.get_user(member.id):
                     member = member_info
