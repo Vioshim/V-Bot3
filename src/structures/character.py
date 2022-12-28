@@ -330,7 +330,7 @@ class Nature(Enum):
     @property
     def description(self) -> str:
         item: NatureItem = self.value
-        (high, _), (low, _) = item.low.value, item.high.value
+        (high, _), (low, _) = item.high.value, item.low.value
         return f"\N{UPWARDS BLACK ARROW} {high} | \N{DOWNWARDS BLACK ARROW} {low}"
 
 
