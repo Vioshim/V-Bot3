@@ -267,12 +267,12 @@ class Size(Enum):
 
 
 class Stats(Enum):
-    HP = "HP"
-    ATK = "Attack"
-    DEF = "Defense"
-    SPA = "Sp. Attack"
-    SPD = "Sp. Defense"
-    SPE = "Speed"
+    HP = ("HP", 0)
+    ATK = ("Attack", 1)
+    DEF = ("Defense", 2)
+    SPA = ("Sp. Attack", 3)
+    SPD = ("Sp. Defense", 4)
+    SPE = ("Speed", 5)
 
 
 @dataclass
@@ -322,9 +322,15 @@ class Nature(Enum):
     # fmt: on
 
     @property
+    def key(self):
+        items = {x: int(x.value[1]) for x in Stats}
+        item: NatureItem = self.value
+        return (items.get(item.low.value, 0), items.get(item.high.value, 0))
+
+    @property
     def description(self) -> str:
         item: NatureItem = self.value
-        high, low = item.low.value, item.high.value
+        (high, _), (low, _) = item.low.value, item.high.value
         return f"\N{UPWARDS BLACK ARROW} {high} | \N{DOWNWARDS BLACK ARROW} {low}"
 
 

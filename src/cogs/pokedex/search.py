@@ -28,7 +28,7 @@ from rapidfuzz import process
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.pagination.complex import Complex
 from src.structures.ability import Ability, UTraitKind
-from src.structures.character import AgeGroup, Character, Kind, Size
+from src.structures.character import AgeGroup, Character, Kind, Nature, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.pokeball import Pokeball
@@ -641,6 +641,13 @@ class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball)}
 
 
+class OCGroupByNature(OCGroupBy[Nature | None]):
+    @classmethod
+    def method(cls, _: Interaction, ocs: Iterable[Character]):
+        ocs = sorted(ocs, key=lambda x: x.nature.name if x.nature else "None")
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.nature)}
+
+
 class OCGroupByHeight(OCGroupBy[Size]):
     @classmethod
     def method(cls, _: Interaction, ocs: Iterable[Character]):
@@ -668,6 +675,7 @@ class GroupByArg(Enum):
     Location = OCGroupByLocation
     Member = OCGroupByMember
     HiddenPower = OCGroupByHiddenPower
+    Nature = OCGroupByNature
     UniqueTrait = OCGroupByUniqueTrait
     Pokeball = OCGroupByPokeball
     Height = OCGroupByHeight

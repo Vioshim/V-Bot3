@@ -977,6 +977,7 @@ class NatureField(TemplateField):
             target=ctx,
             values=Nature,
             timeout=None,
+            sort_key=lambda x: x.key,
             parser=lambda x: (x.name, x.description),
             silent_mode=True,
             auto_text_component=True,
