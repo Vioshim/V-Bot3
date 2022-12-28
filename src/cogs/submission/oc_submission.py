@@ -737,7 +737,7 @@ class TypesField(TemplateField):
             ephemeral=ephemeral,
         ) as types:
             types = frozenset(types)
-            if species.types != types:
+            if not isinstance(oc.image, File) and species.types != types:
                 oc.image = None
             species.types = types
             progress.add(cls.name)
