@@ -840,11 +840,17 @@ class Character:
         else:
             icon_url = None
 
-        footer_text = f"Nature: {self.nature.name if self.nature else None}"
-        if species:
-            footer_text += f"\n{self.height_text}\n{self.weight_text}"
+        footer_elements: list[str] = []
 
-        c_embed.set_footer(text=footer_text, icon_url=icon_url)
+        if self.nature:
+            footer_elements.append(f"Nature: {self.nature.name}")
+
+        if species:
+            footer_elements.append(self.height_text)
+            footer_elements.append(self.weight_text)
+
+        if footer_text := "\n".join(footer_elements):
+            c_embed.set_footer(text=footer_text, icon_url=icon_url)
 
         if moves_text:
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
