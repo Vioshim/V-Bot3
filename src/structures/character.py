@@ -755,12 +755,12 @@ class Character:
             Embed with the character's information
         """
         c_embed = Embed(
-            url=self.document_url,
             title=self.name.title(),
             color=Color.blurple(),
             timestamp=self.created_at,
         )
         sp_embed = c_embed.copy()
+        c_embed.url = self.document_url
         embeds = [c_embed]
 
         if backstory := self.backstory:
@@ -823,19 +823,11 @@ class Character:
 
             embeds.append(sp_embed)
 
-        def move_parser(x: Move):
-            item = TypingEnum.Typeless if TypingEnum.Typeless in self.types else x.type
-            return f"> [{x.name}] - {item.name} ({x.category.name})".title()
-
-        moves_text = "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name)))
-
         if pokeball := self.pokeball:
             c_embed.set_thumbnail(url=pokeball.url)
 
         if hidden_power := self.hidden_power:
             embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
-            moves_text = moves_text.replace("[Hidden Power] - Normal", f"[Hidden Power] - {hidden_power.name}")
-            moves_text = moves_text.replace("[Tera Blast] - Normal", f"[Tera Blast] - {hidden_power.name}")
             icon_url = hidden_power.emoji.url
         else:
             icon_url = None
@@ -852,7 +844,12 @@ class Character:
         if footer_text := "\n".join(footer_elements):
             c_embed.set_footer(text=footer_text, icon_url=icon_url)
 
-        if moves_text:
+        def move_parser(x: Move):
+            item = self.hidden_power if x.id in [237, 851] and self.hidden_power else x.type
+            item = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item
+            return f"> [{x.name}] - {item.name} ({x.category.name})".title()
+
+        if moves_text := "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name))):
             c_embed.add_field(name="Moveset", value=moves_text, inline=False)
 
         if image := self.image_url:
