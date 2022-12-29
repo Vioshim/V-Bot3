@@ -787,7 +787,9 @@ class Character:
                 else:
                     name = "Fakemon Species"
                 c_embed.add_field(name=name, value=mon.name)
-            case mon if isinstance(mon, (CustomMega, CustomParadox, Variant)):
+            case mon if isinstance(mon, CustomMega):
+                c_embed.add_field(name="Mega", value=mon.name)
+            case mon if isinstance(mon, (CustomParadox, Variant)):
                 c_embed.add_field(
                     name=f"{mon.base.name} {mon.__class__.__name__.removeprefix('Custom')}",
                     value=mon.name,

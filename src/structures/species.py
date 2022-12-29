@@ -689,7 +689,7 @@ class CustomMega(Species):
 
         super(CustomMega, self).__init__(
             id=base.id,
-            name=f"Mega {base.name}",
+            name=base.name,
             shape=base.shape,
             height=base.height,
             weight=base.weight,
