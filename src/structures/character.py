@@ -1348,6 +1348,7 @@ class Character:
             weight=self.weight,
             pokeball=self.pokeball,
             last_used=self.last_used,
+            nature=self.nature,
         )
 
     def __repr__(self) -> str:
