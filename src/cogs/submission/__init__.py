@@ -603,6 +603,7 @@ class Submission(commands.Cog):
             oc = Character.from_mongo_dict(x)
             for name in oc.name.split(","):
                 if name := name.strip():
+                    kwargs[name.split(" ")[0]] = oc
                     kwargs[name] = oc
 
         for msg in sorted(messages, key=lambda x: x.id):
