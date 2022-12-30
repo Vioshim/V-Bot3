@@ -599,11 +599,16 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Characters")
         kwargs = {}
-        async for x in db.find({"author": message.author.id}):
+        async for x in db.find(
+            {
+                "author": message.author.id,
+                "server": message.guild.id if message.guild else 0,
+            }
+        ):
             oc = Character.from_mongo_dict(x)
             for name in oc.name.split(","):
                 if name := name.strip():
-                    kwargs[name.split(" ")[0]] = oc
+                    kwargs[name.split()[0]] = oc
                     kwargs[name] = oc
 
         for msg in sorted(messages, key=lambda x: x.id):
