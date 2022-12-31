@@ -769,8 +769,7 @@ class Character:
         if pronoun := self.pronoun_text:
             c_embed.add_field(name="Pronoun", value=pronoun)
 
-        if self.age != AgeGroup.Unknown:
-            c_embed.add_field(name="Age", value=self.age.name)
+        c_embed.add_field(name="Age", value=self.age.name)
 
         match species := self.species:
             case mon if isinstance(mon, Fusion):

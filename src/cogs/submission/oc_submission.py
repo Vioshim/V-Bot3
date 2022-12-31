@@ -351,7 +351,7 @@ class NameField(TemplateField):
         )
         async with handler as answer:
             if isinstance(answer, str):
-                oc.name = answer.title()
+                oc.name = " ".join(answer.strip().title().split())
                 progress.add(cls.name)
 
 
@@ -425,8 +425,9 @@ class PronounField(TemplateField):
             description=f"> {oc.pronoun_text}",
             ephemeral=ephemeral,
         ) as pronoun:
-            oc.pronoun = frozenset(pronoun)
-            progress.add(cls.name)
+            if pronoun:
+                oc.pronoun = frozenset(pronoun)
+                progress.add(cls.name)
 
 
 class SpeciesField(TemplateField):
@@ -736,11 +737,12 @@ class TypesField(TemplateField):
             single=single,
             ephemeral=ephemeral,
         ) as types:
-            types = frozenset(types)
-            if not isinstance(oc.image, File) and species.types != types:
-                oc.image = None
-            species.types = types
-            progress.add(cls.name)
+            if types:
+                types = frozenset(types)
+                if not isinstance(oc.image, File) and species.types != types:
+                    oc.image = None
+                species.types = types
+                progress.add(cls.name)
 
 
 class MovesetField(TemplateField):
@@ -795,11 +797,12 @@ class MovesetField(TemplateField):
             title=f"{template.title} Character's Moveset",
             ephemeral=ephemeral,
         ) as choices:
-            oc.moveset = frozenset(choices)
-            if isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and not oc.movepool:
-                oc.species.movepool = Movepool(tutor=oc.moveset.copy())
-                progress.add("Movepool")
-            progress.add(cls.name)
+            if choices:
+                oc.moveset = frozenset(choices)
+                if isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and not oc.movepool:
+                    oc.species.movepool = Movepool(tutor=oc.moveset.copy())
+                    progress.add(MovepoolField.name)
+                progress.add(cls.name)
 
 
 class MovepoolField(TemplateField):
@@ -903,7 +906,7 @@ class AbilitiesField(TemplateField):
             title=f"{template.title} Character's Abilities",
             ephemeral=ephemeral,
         ) as choices:
-            if isinstance(choices, set):
+            if choices:
                 oc.abilities = frozenset(choices)
                 if isinstance(oc.species, (Fakemon, Variant, CustomParadox)):
                     oc.species.abilities = frozenset(choices)
