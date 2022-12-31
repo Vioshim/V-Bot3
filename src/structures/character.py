@@ -24,7 +24,7 @@ from re import match as re_match
 from typing import Any, Iterable, Optional, Type
 
 from asyncpg import Connection
-from discord import Embed, File, Interaction
+from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
@@ -823,11 +823,13 @@ class Character:
             c_embed.set_thumbnail(url=pokeball.url)
 
         if hidden_power := self.hidden_power:
-            embeds[0].color, embeds[-1].color = hidden_power.color, hidden_power.color
+            color = Color(hidden_power.color)
             icon_url = hidden_power.emoji.url
         else:
+            color = Color.blurple()
             icon_url = None
 
+        embeds[0].color, embeds[-1].color = color, color
         footer_elements: list[str] = []
 
         if self.nature:
