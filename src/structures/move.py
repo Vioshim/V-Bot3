@@ -238,8 +238,16 @@ class Move:
         return self.calculated_base(self.type.max_move_range)
 
     @classmethod
-    def all(cls) -> frozenset[Move]:
-        return frozenset(ALL_MOVES.values())
+    def all(cls, banned: Optional[bool] = None, shadow: Optional[bool] = None) -> frozenset[Move]:
+        moves: set[Move] = set(ALL_MOVES.values())
+        if isinstance(banned, bool):
+            moves = {x for x in moves if x.banned == banned}
+        if isinstance(shadow, bool):
+            if shadow:
+                moves = {x for x in moves if TypingEnum.Shadow == x.type}
+            else:
+                moves = {x for x in moves if TypingEnum.Shadow != x.type}
+        return frozenset(moves)
 
     @classmethod
     def find(cls, predicate: Callable[[Move], Any]):

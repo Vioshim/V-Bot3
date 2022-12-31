@@ -750,9 +750,6 @@ class MovesetField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        species = oc.species
-
-        mons = "SMEARGLE", "DITTO", "MEW"
 
         if value := ", ".join(x.name for x in oc.moveset if x.banned):
             value = f"Banned Moves: {value}. "
@@ -760,17 +757,10 @@ class MovesetField(TemplateField):
         if len(oc.moveset) > 6:
             return "Max 6 Preferred Moves."
 
-        if not any(
-            (
-                isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
-                isinstance(species, (CustomMega, Variant, CustomParadox)) and species.base.id in mons,
-                isinstance(species, Fakemon) and species.evolves_from in mons,
-                isinstance(species, Species) and species.id in mons,
-            )
-        ):
-            movepool = DEFAULT_MOVES + oc.total_movepool
-            moves = movepool()
-            value += ", ".join(x.name for x in oc.moveset if x not in moves)
+        m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
+        movepool = DEFAULT_MOVES + oc.total_movepool
+        if m1 not in movepool and m2 not in movepool:
+            value += ", ".join(x.name for x in oc.moveset if x not in movepool)
 
         return value
 
@@ -787,27 +777,11 @@ class MovesetField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        moves = {x for x in oc.total_movepool() if not x.banned}
-        species = oc.species
-        mons = "SMEARGLE", "DITTO", "MEW"
-
+        m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
         movepool = DEFAULT_MOVES.copy()
 
-        if any(
-            (
-                isinstance(species, Fusion) and any(x.id in mons for x in species.bases),
-                isinstance(species, (CustomMega, Variant, CustomParadox)) and species.base.id in mons,
-                isinstance(species, Fakemon) and species.evolves_from in mons,
-                isinstance(species, (Fakemon, Variant)) and not moves,
-                isinstance(species, Species) and species.id in mons,
-            )
-        ):
-            moves_reference = {x for x in Move.all() if not x.banned}
-            if TypingEnum.Shadow in oc.types:
-                moves_reference = {x for x in moves_reference if x.type == TypingEnum.Shadow}
-            else:
-                moves_reference = {x for x in moves_reference if x.type != TypingEnum.Shadow}
-            movepool += Movepool(tm=moves_reference)
+        if m1 in movepool or m2 in movepool:
+            movepool += Movepool(other=Move.all(banned=False, shadow=TypingEnum.Shadow in oc.types))
         else:
             movepool += oc.total_movepool
 
@@ -867,14 +841,19 @@ class AbilitiesField(TemplateField):
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         amount = oc.max_amount_abilities
+        m = Move.get(name="Transform")
 
         if not 1 <= len(oc.abilities) <= amount:
             return f"Abilities, Min: 1, Max: {amount}"
 
-        if isinstance(oc.species, (Fakemon, Variant, CustomMega, CustomParadox)):
-            return None
-
-        return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
+        if (
+            not isinstance(
+                oc.species,
+                (Fakemon, Variant, CustomMega, CustomParadox),
+            )
+            and m not in oc.total_movepool
+        ):
+            return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -889,11 +868,22 @@ class AbilitiesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        abilities, amount = oc.species.abilities, oc.max_amount_abilities
+        abilities, amount, m = (
+            oc.species.abilities,
+            oc.max_amount_abilities,
+            Move.get(name="Transform"),
+        )
         if template == Template.CustomParadox:
             abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
             amount = 1
-        elif isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities):
+        elif (
+            isinstance(
+                oc.species,
+                (Fakemon, Variant, CustomMega),
+            )
+            or (not abilities)
+            or m in oc.total_movepool
+        ):
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](

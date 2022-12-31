@@ -323,12 +323,7 @@ class Utilities(commands.Cog):
             if hidden, by default False
         """
         resp: InteractionResponse = ctx.response
-        moves = [x for x in Move.all() if not x.banned]
-
-        if valid:
-            moves = [x for x in moves if x.metronome]
-
-        item = choice(moves)
+        item = choice([x for x in Move.all(banned=False, shadow=False) if not valid or x.metronome])
         await resp.send_message(content=f"Canon Metronome: {valid}", embed=item.embed, ephemeral=hidden)
 
     @commands.command()
