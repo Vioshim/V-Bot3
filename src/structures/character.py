@@ -24,7 +24,7 @@ from re import match as re_match
 from typing import Any, Iterable, Optional, Type
 
 from asyncpg import Connection
-from discord import Color, Embed, File, Interaction
+from discord import Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
@@ -754,13 +754,7 @@ class Character:
         list[Embed]
             Embed with the character's information
         """
-        c_embed = Embed(
-            title=self.name.title(),
-            color=Color.blurple(),
-            timestamp=self.created_at,
-        )
-        sp_embed = c_embed.copy()
-        c_embed.url = self.document_url
+        c_embed = Embed(title=self.name.title(), url=self.document_url, timestamp=self.created_at)
         embeds = [c_embed]
 
         if backstory := self.backstory:
@@ -804,6 +798,7 @@ class Character:
             )
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
+            sp_embed = Embed(timestamp=self.created_at)
 
             if name := sp_ability.name[:100]:
                 sp_embed.title = name
