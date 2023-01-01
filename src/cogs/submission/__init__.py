@@ -473,7 +473,6 @@ class Submission(commands.Cog):
     ):
         channel = message.channel
         author = message.author.name.title()
-        oc: Optional[Character] = None
 
         if item := process.extractOne(
             author,
