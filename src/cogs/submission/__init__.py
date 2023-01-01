@@ -468,13 +468,12 @@ class Submission(commands.Cog):
     async def on_message_tupper(
         self,
         message: Message,
+        user: Member,
         kwargs: dict[str, Character],
     ):
         channel = message.channel
         author = message.author.name.title()
-
-        if "Npc" in author or "Narrator" in author:
-            return
+        oc: Optional[Character] = None
 
         if item := process.extractOne(
             author,
@@ -485,64 +484,72 @@ class Submission(commands.Cog):
         elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
             key, oc = ocs[0]
         else:
+            key, oc = message.author.name, Character(author=user.id, server=user.guild.id)
+
+        if not (
+            info_channel := find(
+                lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"),
+                channel.category.channels,
+            )
+        ):
             return
 
-        if info_channel := find(
-            lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"),
-            channel.category.channels,
-        ):
-            w = await self.bot.webhook(info_channel)
+        w = await self.bot.webhook(info_channel)
 
-            try:
-                name = message.channel.name.replace("»", "")
-                emoji, name = name.split("〛")
-            except ValueError:
-                emoji, name = SETTING_EMOJI, message.channel.name
-            finally:
-                name = name.replace("-", " ")
+        try:
+            name = message.channel.name.replace("»", "")
+            emoji, name = name.split("〛")
+        except ValueError:
+            emoji, name = SETTING_EMOJI, message.channel.name
+        finally:
+            name = name.replace("-", " ")
 
-            view = View()
-            view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
-            view.add_item(Button(label=key[:80], url=oc.jump_url, emoji=oc.emoji))
+        view = View()
+        view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
+        if oc_jump_url := oc.jump_url:
+            view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.emoji))
+        else:
+            view.add_item(Button(label=key[:80], disabled=True))
 
-            msg = await w.send(
-                content=message.content,
-                username=message.author.display_name,
-                avatar_url=message.author.display_avatar.url,
-                files=[await x.to_file() for x in message.attachments],
-                allowed_mentions=AllowedMentions.none(),
-                view=view,
-                wait=True,
-            )
-
-            db = self.bot.mongo_db("RP Logs")
-            await db.insert_one(
-                {
-                    "id": message.id,
-                    "channel": message.channel.id,
-                    "log": msg.id,
-                    "log-channel": info_channel.id,
-                }
-            )
-            db2 = self.bot.mongo_db("Tupper-logs")
-            await db2.insert_one(
-                {
-                    "channel": info_channel.id,
-                    "id": msg.id,
-                    "author": oc.author,
-                }
-            )
-
-        oc.last_used = message.id
-        if oc.location != channel.id:
-            oc.location = channel.id
-
-        db = self.bot.mongo_db("Characters")
-        await db.update_one(
-            {"id": oc.id, "server": oc.server},
-            {"$set": {"location": oc.location, "last_used": message.id}},
-            upsert=False,
+        msg = await w.send(
+            content=message.content,
+            username=message.author.display_name,
+            avatar_url=message.author.display_avatar.url,
+            files=[await x.to_file() for x in message.attachments],
+            allowed_mentions=AllowedMentions.none(),
+            view=view,
+            wait=True,
         )
+
+        db = self.bot.mongo_db("RP Logs")
+        await db.insert_one(
+            {
+                "id": message.id,
+                "channel": message.channel.id,
+                "log": msg.id,
+                "log-channel": info_channel.id,
+            }
+        )
+        db2 = self.bot.mongo_db("Tupper-logs")
+        await db2.insert_one(
+            {
+                "channel": info_channel.id,
+                "id": msg.id,
+                "author": oc.author,
+            }
+        )
+
+        if oc.id:
+            oc.last_used = message.id
+            if oc.location != channel.id:
+                oc.location = channel.id
+
+            db = self.bot.mongo_db("Characters")
+            await db.update_one(
+                {"id": oc.id, "server": oc.server},
+                {"$set": {"location": oc.location, "last_used": message.id}},
+                upsert=False,
+            )
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
@@ -598,7 +605,7 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("Characters")
-        kwargs = {}
+        kwargs: dict[str, Character] = {}
         async for x in db.find(
             {
                 "author": message.author.id,
@@ -612,7 +619,7 @@ class Submission(commands.Cog):
                     kwargs[name] = oc
 
         for msg in sorted(messages, key=lambda x: x.id):
-            await self.on_message_tupper(msg, kwargs)
+            await self.on_message_tupper(msg, message.author, kwargs)
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
