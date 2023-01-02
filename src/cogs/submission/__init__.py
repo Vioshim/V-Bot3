@@ -539,8 +539,8 @@ class Submission(commands.Cog):
         )
 
         if oc.id:
-            db = self.bot.mongo_db("Characters")
-            await db.update_one(
+            db3 = self.bot.mongo_db("Characters")
+            await db3.update_one(
                 {"id": oc.id, "server": oc.server},
                 {"$set": {"location": channel.id, "last_used": message.id}},
                 upsert=False,

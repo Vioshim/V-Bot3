@@ -117,7 +117,6 @@ RP_SEARCH_ROLES = dict(
     Plot=("If you need a hand with an Arc or plot.", 962719564863508510),
     Action=("Encounters that involve action such as battles, thievery, etc.", 962719565182271590),
     Narrated=("Narrate for others or get narrated.", 962719566402813992),
-    Romance=("Useful for long term planned ships, not instantaneous.", 962719567149408256),
     Drama=("RPs that present a problem for OCs to solve.", 962719567694659604),
     Literate=("Be descriptive and detailed as possible", 962719568172814368),
     Horror=("Scary or mysterious RPs for OCs", 962719570148331560),
