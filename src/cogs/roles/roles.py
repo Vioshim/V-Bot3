@@ -173,18 +173,27 @@ class AFKSchedule:
 
 
 class AFKModal(Modal, title="Current Time"):
-    def __init__(self, hours: list[int] = None) -> None:
+    def __init__(
+        self,
+        hours: list[int] = None,
+        offset: Optional[int] = None,
+    ) -> None:
         super(AFKModal, self).__init__(timeout=None)
+        date = utcnow()
+        if offset:
+            tz = timezone(offset=timedelta(hours=offset))
+            date = date.astimezone(tz)
+        text = date.strftime("%I:00 %p")
 
         data = TextInput(
-            label="What time is for you?",
+            label="What time it is for you?",
             max_length=8,
-            placeholder="01:00 PM",
+            placeholder=text,
+            default=text,
         )
         self.hours = [*map(int, hours or [])]
         self.hours.sort()
-        data.placeholder = data.default = utcnow().strftime("%I:00 %p")
-        self.offset: int = 0
+        self.offset = offset or 0
         self.data = data
         self.add_item(data)
 
@@ -415,7 +424,11 @@ class TimezoneSelect(RoleSelect):
     )
     async def afk_schedule(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
-        modal = AFKModal(hours=sct.values)
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("AFK")
+        if item := await db.find_one({"user": ctx.user.id}):
+            modal = AFKModal(hours=sct.values, offset=item["offset"])
+        else:
+            modal = AFKModal(hours=sct.values)
         await resp.send_modal(modal)
 
     @button(
@@ -428,7 +441,7 @@ class TimezoneSelect(RoleSelect):
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("AFK")
         if item := await db.find_one({"user": ctx.user.id}):
-            modal = AFKModal(hours=item["hours"])
+            modal = AFKModal(hours=item["hours"], offset=item["offset"])
         else:
             modal = AFKModal()
         await resp.send_modal(modal)
