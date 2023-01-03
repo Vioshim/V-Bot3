@@ -690,9 +690,10 @@ class Movepool:
 
     @classmethod
     def default(cls, movepool: Movepool = None):
-        if movepool is None:
-            movepool = cls()
-        return movepool + cls(tm=["TERABLAST"])
+        base = cls.from_dict(tm=["TERABLAST"])
+        if isinstance(movepool, Movepool):
+            base += movepool
+        return base
 
 
 class MovepoolEncoder(JSONEncoder):
