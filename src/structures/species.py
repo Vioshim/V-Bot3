@@ -1048,7 +1048,7 @@ class Fusion(Species):
         return items
 
     @property
-    def possible_types(self):
+    def possible_types(self) -> frozenset[frozenset[TypingEnum]]:
         """This returns a list of valid types for the pokemon
 
         Returns
@@ -1056,11 +1056,9 @@ class Fusion(Species):
         frozenset[frozenset[Typing]]
             List of sets (valid types)
         """
-        types1 = self.mon1.types
-        types2 = self.mon2.types
-        if types1 == types2:
-            return frozenset({types1})
-        return frozenset(frozenset({x, y}) for x in types1 for y in types2)
+        elements = {self.mon1.types, self.mon2.types}
+        elements.update(frozenset({x, y}) for x in self.mon1.types for y in self.mon2.types)
+        return frozenset(elements)
 
     @property
     def requires_image(self) -> bool:
