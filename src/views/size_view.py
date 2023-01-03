@@ -21,6 +21,7 @@ from discord.utils import find
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size
+from src.structures.move import Move
 
 __all__ = (
     "HeightView",
@@ -30,34 +31,37 @@ __all__ = (
 
 class HeightModal1(Modal, title="Height"):
     def __init__(self, oc: Character, info: str) -> None:
-        super().__init__(title="Height", timeout=None)
+        super(Modal, self).__init__(title="Height", timeout=None)
         self.text = TextInput(label="Meters", placeholder=info, default=info)
         self.add_item(self.text)
         self.oc = oc
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        a = Size.XXXS.height_value(self.oc.species.height)
-        b = Size.XXXL.height_value(self.oc.species.height)
+        m = Move.get(name="Transform")
+        condition = m not in self.oc.total_movepool
+        height = self.oc.species.height if condition else 0
+        a = Size.XXXS.height_value(height) if condition else 0.1
+        b = Size.XXXL.height_value(height) if condition else 100
 
         text = self.text.value.removesuffix(".").lower()
 
         if "cm" in text:
             ratio, text = 0.01, text.removesuffix("cm")
         else:
-            ratio, text = 1, text.removesuffix("m")
+            ratio, text = 1.00, text.removesuffix("m")
 
         with suppress(ValueError):
             answer = round(ratio * float(text.strip()), 2)
             if answer <= a:
-                answer = Size.XXXS
+                answer = Size.XXXS if condition else 0.1
             elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: round(x.height_value(self.oc.species.height), 2) == answer, Size):
+                answer = Size.XXXL if condition else 100
+            elif item := find(lambda x: round(x.height_value(height), 2) == answer, Size):
                 answer = item
             self.oc.size = answer
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(self.oc.species.height)
+            info = self.oc.size.height_info(height)
         else:
             info = Size.M.height_info(self.oc.size)
 
@@ -67,7 +71,7 @@ class HeightModal1(Modal, title="Height"):
 
 class HeightModal2(Modal, title="Height"):
     def __init__(self, oc: Character, info: str) -> None:
-        super().__init__(title="Height", timeout=None)
+        super(Modal, self).__init__(title="Height", timeout=None)
         info = info.removesuffix('" ft')
         ft_info, in_info = info.split("' ")
 
@@ -79,9 +83,11 @@ class HeightModal2(Modal, title="Height"):
         self.oc = oc
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        a = Size.XXXS.height_value(self.oc.species.height)
-        b = Size.XXXL.height_value(self.oc.species.height)
-
+        m = Move.get(name="Transform")
+        condition = m not in self.oc.total_movepool
+        height = self.oc.species.height if condition else 0
+        a = Size.XXXS.height_value(height) if condition else 0.1
+        b = Size.XXXL.height_value(height) if condition else 100
         with suppress(ValueError):
             answer = Size.ft_inches_to_meters(
                 feet=float(self.text1.value or "0"),
@@ -89,15 +95,15 @@ class HeightModal2(Modal, title="Height"):
             )
             answer = round(answer, 2)
             if answer <= a:
-                answer = Size.XXXS
+                answer = Size.XXXS if condition else 0.1
             elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: round(x.height_value(self.oc.species.height), 2) == answer, Size):
+                answer = Size.XXXL if condition else 100
+            elif item := find(lambda x: round(x.height_value(height), 2) == answer, Size):
                 answer = item
             self.oc.size = answer
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(self.oc.species.height)
+            info = self.oc.size.height_info(height)
         else:
             info = Size.M.height_info(self.oc.size)
 
@@ -107,14 +113,17 @@ class HeightModal2(Modal, title="Height"):
 
 class WeightModal1(Modal, title="Weight"):
     def __init__(self, oc: Character, info: str) -> None:
-        super().__init__(title="Weight", timeout=None)
+        super(Modal, self).__init__(title="Weight", timeout=None)
         self.text = TextInput(label="kg", placeholder=info, default=info)
         self.add_item(self.text)
         self.oc = oc
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        a = Size.XXXS.weight_value(self.oc.species.weight)
-        b = Size.XXXL.weight_value(self.oc.species.weight)
+        m = Move.get(name="Transform")
+        condition = m not in self.oc.total_movepool
+        weight = self.oc.species.weight if condition else 0
+        a = Size.XXXS.weight_value(weight) if condition else 0.100
+        b = Size.XXXL.weight_value(weight) if condition else 999.9
 
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("kg")
@@ -122,15 +131,15 @@ class WeightModal1(Modal, title="Weight"):
         with suppress(ValueError):
             answer = round(float(text.strip()), 2)
             if answer <= a:
-                answer = Size.XXXS
+                answer = Size.XXXS if condition else 0.100
             elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: round(x.weight_value(self.oc.species.weight), 2) == answer, Size):
+                answer = Size.XXXL if condition else 999.9
+            elif item := find(lambda x: round(x.weight_value(weight), 2) == answer, Size):
                 answer = item
             self.oc.weight = answer
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(self.oc.species.weight)
+            info = self.oc.weight.weight_info(weight)
         else:
             info = Size.M.weight_info(self.oc.weight)
 
@@ -140,14 +149,17 @@ class WeightModal1(Modal, title="Weight"):
 
 class WeightModal2(Modal, title="Weight"):
     def __init__(self, oc: Character, info: str) -> None:
-        super().__init__(title="Weight", timeout=None)
+        super(Modal, self).__init__(title="Weight", timeout=None)
         self.text = TextInput(label="lbs", placeholder=info, default=info)
         self.add_item(self.text)
         self.oc = oc
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        a = Size.XXXS.weight_value(self.oc.species.weight)
-        b = Size.XXXL.weight_value(self.oc.species.weight)
+        m = Move.get(name="Transform")
+        condition = m not in self.oc.total_movepool
+        weight = self.oc.species.weight if condition else 0
+        a = Size.XXXS.weight_value(weight) if condition else 0.100
+        b = Size.XXXL.weight_value(weight) if condition else 999.9
 
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("lbs").removesuffix("lb")
@@ -155,15 +167,15 @@ class WeightModal2(Modal, title="Weight"):
         with suppress(ValueError):
             answer = round(Size.lbs_to_kgs(float(text.strip())), 2)
             if answer <= a:
-                answer = Size.XXXS
+                answer = Size.XXXS if condition else 0.100
             elif answer >= b:
-                answer = Size.XXXL
-            elif item := find(lambda x: round(x.weight_value(self.oc.species.weight), 2) == answer, Size):
+                answer = Size.XXXL if condition else 999.9
+            elif item := find(lambda x: round(x.weight_value(weight), 2) == answer, Size):
                 answer = item
             self.oc.weight = answer
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(self.oc.species.weight)
+            info = self.oc.weight.weight_info(weight)
         else:
             info = Size.M.weight_info(self.oc.weight)
 
@@ -173,12 +185,15 @@ class WeightModal2(Modal, title="Weight"):
 
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
-        super().__init__(target=target, member=member, timeout=None)
+        super(Basic, self).__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
 
+        m = Move.get(name="Transform")
+        height = 0 if m in oc.total_movepool else oc.species.height
+
         if isinstance(oc.size, Size):
-            info = oc.size.height_info(oc.species.height)
+            info = oc.size.height_info(height)
         else:
             info = Size.M.height_info(oc.size)
 
@@ -188,7 +203,7 @@ class HeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
         for item in items:
             self.choice.add_option(
-                label=item.height_info(oc.species.height),
+                label=item.height_info(height),
                 value=item.name,
                 description={Size.M: "Default"}.get(item),
                 default=item == oc.size,
@@ -223,12 +238,15 @@ class HeightView(Basic):
 
 class WeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
-        super().__init__(target=target, member=member, timeout=None)
+        super(Basic, self).__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
 
+        m = Move.get(name="Transform")
+        weight = 0 if m in oc.total_movepool else oc.species.weight
+
         if isinstance(oc.weight, Size):
-            info = oc.weight.weight_info(oc.species.weight)
+            info = oc.weight.weight_info(weight)
         else:
             info = Size.M.weight_info(oc.weight)
 
@@ -238,7 +256,7 @@ class WeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
         for item in items:
             self.choice.add_option(
-                label=item.weight_info(oc.species.weight),
+                label=item.weight_info(weight),
                 value=item.name,
                 description={Size.M: "Default"}.get(item),
                 default=item == oc.weight,

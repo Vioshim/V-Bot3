@@ -677,28 +677,36 @@ class Character:
     @property
     def height_text(self):
         if isinstance(self.size, Size):
-            height = self.species.height if self.species else 0
+            m, height = Move.get(name="Transform"), 0
+            if self.species:
+                height = 0 if m in self.total_movepool else self.species.height
             return self.size.height_info(height)
         return Size.M.height_info(self.size)
 
     @property
     def height_value(self):
         if isinstance(self.size, Size):
-            height = self.species.height if self.species else 0
+            m, height = Move.get(name="Transform"), 0
+            if self.species:
+                height = 0 if m in self.total_movepool else self.species.height
             return self.size.height_value(height)
         return self.size
 
     @property
     def weight_text(self):
         if isinstance(self.weight, Size):
-            weight = self.species.weight if self.species else 0
+            m, weight = Move.get(name="Transform"), 0
+            if self.species:
+                weight = 0 if m in self.total_movepool else self.species.weight
             return self.weight.weight_info(weight)
         return Size.M.weight_info(self.weight)
 
     @property
     def weight_value(self):
         if isinstance(self.weight, Size):
-            weight = self.species.weight if self.species else 0
+            m, weight = Move.get(name="Transform"), 0
+            if self.species:
+                weight = 0 if m in self.total_movepool else self.species.weight
             return self.weight.weight_value(weight)
         return self.weight
 

@@ -530,13 +530,20 @@ class SizeField(TemplateField):
         if not isinstance(oc.size, float):
             return
 
-        if oc.size < Size.XXXS.height_value(oc.species.height):
-            info = Size.XXXS.height_info(oc.species.height)
-            return f"Min {info}"
+        info: list[str] = []
+        m = Move.get(name="Transform")
+        if m not in oc.total_movepool:
+            if oc.size < Size.XXXS.height_value(oc.species.height):
+                info = Size.XXXS.height_info(oc.species.height)
+                info.append(f"Min {info}")
 
-        if oc.size > Size.XXXL.height_value(oc.species.height):
-            info = Size.XXXL.height_info(oc.species.height)
-            return f"Max {info}"
+            if oc.size > Size.XXXL.height_value(oc.species.height):
+                info = Size.XXXL.height_info(oc.species.height)
+                info.append(f"Max {info}")
+        elif not (0.1 <= oc.size <= 100.0):
+            info.append("Invalid height.")
+
+        return ", ".join(info)
 
     @classmethod
     async def on_submit(
@@ -578,13 +585,20 @@ class WeightField(TemplateField):
         if not isinstance(oc.weight, float):
             return
 
-        if oc.weight < Size.XXXS.weight_value(oc.species.weight):
-            info = Size.XXXS.weight_info(oc.species.weight)
-            return f"Min {info}"
+        info: list[str] = []
+        m = Move.get(name="Transform")
+        if m not in oc.total_movepool:
+            if oc.weight < Size.XXXS.weight_value(oc.species.weight):
+                info = Size.XXXS.weight_info(oc.species.weight)
+                info.append(f"Min {info}")
 
-        if oc.weight > Size.XXXL.weight_value(oc.species.weight):
-            info = Size.XXXL.weight_info(oc.species.weight)
-            return f"Max {info}"
+            if oc.weight > Size.XXXL.weight_value(oc.species.weight):
+                info = Size.XXXL.weight_info(oc.species.weight)
+                info.append(f"Max {info}")
+        elif not (0.1 <= oc.weight <= 999.9):
+            info.append("Invalid weight")
+
+        return ", ".join(info)
 
     @classmethod
     async def on_submit(
