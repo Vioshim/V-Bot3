@@ -688,6 +688,12 @@ class Movepool:
     def copy(self):
         return Movepool() + self
 
+    @classmethod
+    def default(cls, movepool: Movepool = None):
+        if movepool is None:
+            movepool = cls()
+        return movepool + cls(tm=["TERABLAST"])
+
 
 class MovepoolEncoder(JSONEncoder):
     """Movepool encoder"""

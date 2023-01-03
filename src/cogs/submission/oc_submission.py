@@ -79,8 +79,6 @@ from src.views.movepool_view import MovepoolView
 from src.views.size_view import HeightView, WeightView
 from src.views.species_view import SpeciesComplex
 
-DEFAULT_MOVES = Movepool.from_dict(tm=["TERABLAST"])
-
 
 @dataclass(unsafe_hash=True, slots=True)
 class TemplateItem:
@@ -752,19 +750,19 @@ class MovesetField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-
-        if value := ", ".join(x.name for x in oc.moveset if x.banned):
-            value = f"Banned Moves: {value}. "
-
         if len(oc.moveset) > 6:
             return "Max 6 Preferred Moves."
 
         m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
-        movepool = DEFAULT_MOVES + oc.total_movepool
-        if m1 not in movepool and m2 not in movepool:
-            value += ", ".join(x.name for x in oc.moveset if x not in movepool)
 
-        return value
+        movepool = Movepool.default(oc.total_movepool)
+        shadow = TypingEnum.Shadow in oc.types
+
+        if m1 in movepool or m2 in movepool or shadow:
+            movepool = Movepool(other=Move.all(banned=False, shadow=shadow))
+
+        moves = movepool()
+        return ", ".join(x.name for x in oc.moveset if x not in moves)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -780,12 +778,11 @@ class MovesetField(TemplateField):
         ephemeral: bool = False,
     ):
         m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
-        movepool = DEFAULT_MOVES.copy()
+        movepool = Movepool.default(oc.total_movepool)
+        shadow = TypingEnum.Shadow in oc.types
 
-        if m1 in movepool or m2 in movepool:
-            movepool += Movepool(other=Move.all(banned=False, shadow=TypingEnum.Shadow in oc.types))
-        else:
-            movepool += oc.total_movepool
+        if m1 in movepool or m2 in movepool or shadow:
+            movepool = Movepool(other=Move.all(banned=False, shadow=shadow))
 
         view = MovepoolMoveComplex(
             member=ctx.user,
@@ -799,7 +796,14 @@ class MovesetField(TemplateField):
         ) as choices:
             if choices:
                 oc.moveset = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and not oc.movepool:
+                if (
+                    isinstance(
+                        oc.species,
+                        (Fakemon, Variant, CustomParadox),
+                    )
+                    and not oc.movepool
+                    and not shadow
+                ):
                     oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                     progress.add(MovepoolField.name)
                 progress.add(cls.name)

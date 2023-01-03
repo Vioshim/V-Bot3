@@ -16,11 +16,11 @@
 from __future__ import annotations
 
 import math
+import random
+import re
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from io import BytesIO
-from random import sample
-from re import match as re_match
 from typing import Any, Iterable, Optional, Type
 
 from asyncpg import Connection
@@ -236,16 +236,15 @@ class Size(Enum):
 
     @staticmethod
     def kg_to_lbs(value: float = 0):
-        return math.ceil(100 * value * 2.20462) / 100
+        return math.ceil(value * 220.462) / 100
 
     @staticmethod
     def ft_inches_to_meters(feet: float = 0, inches: float = 0):
-        value = feet * 0.3048 + inches * 0.0254
-        return math.ceil(100 * value) / 100
+        return math.ceil(feet * 30.48 + inches * 2.54) / 100
 
     @staticmethod
     def lbs_to_kgs(value: float = 0):
-        return math.ceil(100 * value * 0.45359) / 100
+        return math.ceil(value * 45.359) / 100
 
     def height_info(self, value: float = 0):
         value = self.height_value(value)
@@ -320,12 +319,6 @@ class Nature(Enum):
     Naive      = NatureItem(Stats.SPE, Stats.SPD)  # noqa: E221
     Serious    = NatureItem(Stats.SPE, Stats.SPE)  # noqa: E221
     # fmt: on
-
-    @property
-    def key(self):
-        items = {x: int(x.value[1]) for x in Stats}
-        item: NatureItem = self.value
-        return (items.get(item.low.value, 0), items.get(item.high.value, 0))
 
     @property
     def description(self) -> str:
@@ -545,7 +538,7 @@ class Character:
     def image_url(self, url: str):
         if isinstance(url, str) and self.thread:
 
-            if find := re_match(
+            if find := re.match(
                 rf"https:\/\/\w+\.discordapp\.\w+\/attachments\/{self.thread}\/(\d+)\/image\.png",
                 string=url,
             ):
@@ -586,7 +579,7 @@ class Character:
     def randomize_abilities(self) -> frozenset[Ability]:
         if abilities := list(self.usable_abilities):
             amount = min(self.max_amount_abilities, len(abilities))
-            items = sample(abilities, k=amount)
+            items = random.sample(abilities, k=amount)
             return frozenset(items)
         return frozenset(self.abilities)
 
@@ -594,7 +587,7 @@ class Character:
     def randomize_moveset(self) -> frozenset[Move]:
         if moves := list(self.total_movepool()):
             amount = min(6, len(moves))
-            return frozenset(sample(moves, k=amount))
+            return frozenset(random.sample(moves, k=amount))
         return self.moveset
 
     @property
@@ -633,30 +626,10 @@ class Character:
 
     @property
     def total_movepool(self) -> Movepool:
-        if TypingEnum.Shadow in self.types:
-            return Movepool.from_dict(
-                tutor=[
-                    "SHADOWBLAST",
-                    "SHADOWBOLT",
-                    "SHADOWCHILL",
-                    "SHADOWDOWN",
-                    "SHADOWEND",
-                    "SHADOWFIRE",
-                    "SHADOWHALF",
-                    "SHADOWHOLD",
-                    "SHADOWMIST",
-                    "SHADOWPANIC",
-                    "SHADOWRAVE",
-                    "SHADOWRUSH",
-                    "SHADOWSHED",
-                    "SHADOWSKY",
-                    "SHADOWSTORM",
-                    "SHADOWWAVE",
-                ]
-            )
+        movepool = Movepool()
         if self.species:
-            return self.species.total_movepool
-        return Movepool()
+            movepool += self.species.total_movepool
+        return movepool
 
     @property
     def can_have_special_abilities(self) -> bool:
