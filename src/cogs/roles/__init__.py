@@ -54,6 +54,7 @@ from src.cogs.roles.roles import (
     RPModal,
     RPRolesView,
     RPSearchManage,
+    TimezoneSelect,
 )
 from src.structures.bot import CustomBot
 from src.structures.character import Character
@@ -120,8 +121,10 @@ class Roles(commands.Cog):
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
         channel = self.bot.get_partial_messageable(719709333369258015, guild_id=719343092963999804)
-        msg = channel.get_partial_message(1023688500182261850)
-        await msg.edit(view=BasicRoleSelect(timeout=None))
+        msg1 = channel.get_partial_message(1059863286667038772)
+        msg2 = channel.get_partial_message(1059863298285256864)
+        await msg1.edit(view=BasicRoleSelect(timeout=None))
+        await msg2.edit(view=TimezoneSelect(timeout=None))
         self.bot.logger.info("Finished loading Self Roles")
 
     async def load_rp_searches(self):

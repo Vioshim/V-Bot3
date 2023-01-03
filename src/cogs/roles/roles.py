@@ -396,6 +396,19 @@ class BasicRoleSelect(RoleSelect):
             if set(channel.applied_tags) != set(tags):
                 await channel.edit(archived=False, applied_tags=tags)
 
+
+class TimezoneSelect(RoleSelect):
+    @button(
+        label="Set Timezone, what time it is ?",
+        custom_id="timezone",
+        style=ButtonStyle.blurple,
+        emoji="\N{TIMER CLOCK}",
+    )
+    async def tz_schedule(self, ctx: Interaction, _: Button):
+        resp: InteractionResponse = ctx.response
+        modal = AFKModal()
+        await resp.send_modal(modal)
+
     @select(
         placeholder="AFK Schedule (No timezone)",
         custom_id="afk",
