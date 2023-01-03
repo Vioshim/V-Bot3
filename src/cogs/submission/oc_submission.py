@@ -212,10 +212,12 @@ class Template(TemplateItem, Enum):
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
             case self.CustomPokemon:
+                name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label="OC's Species.",
                     required=True,
                     ephemeral=ephemeral,
+                    default=name,
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         if isinstance(oc.species, Fakemon):
