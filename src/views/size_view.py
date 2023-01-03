@@ -40,8 +40,8 @@ class HeightModal1(Modal, title="Height"):
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
         height = self.oc.species.height if condition else 0
-        a = Size.XXXS.height_value(height) if condition else 0.1
-        b = Size.XXXL.height_value(height) if condition else 100
+        a = Size.XXXS.height_value(height if condition else 0.1)
+        b = Size.XXXL.height_value(height if condition else 20)
 
         text = self.text.value.removesuffix(".").lower()
 
@@ -53,9 +53,9 @@ class HeightModal1(Modal, title="Height"):
         with suppress(ValueError):
             answer = round(ratio * float(text.strip()), 2)
             if answer <= a:
-                answer = Size.XXXS if condition else 0.1
+                answer = Size.XXXS if condition else a
             elif answer >= b:
-                answer = Size.XXXL if condition else 100
+                answer = Size.XXXL if condition else b
             elif item := find(lambda x: round(x.height_value(height), 2) == answer, Size):
                 answer = item
             self.oc.size = answer
@@ -86,8 +86,8 @@ class HeightModal2(Modal, title="Height"):
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
         height = self.oc.species.height if condition else 0
-        a = Size.XXXS.height_value(height) if condition else 0.1
-        b = Size.XXXL.height_value(height) if condition else 100
+        a = Size.XXXS.height_value(height if condition else 0.1)
+        b = Size.XXXL.height_value(height if condition else 20)
         with suppress(ValueError):
             answer = Size.ft_inches_to_meters(
                 feet=float(self.text1.value or "0"),
@@ -95,9 +95,9 @@ class HeightModal2(Modal, title="Height"):
             )
             answer = round(answer, 2)
             if answer <= a:
-                answer = Size.XXXS if condition else 0.1
+                answer = Size.XXXS if condition else a
             elif answer >= b:
-                answer = Size.XXXL if condition else 100
+                answer = Size.XXXL if condition else b
             elif item := find(lambda x: round(x.height_value(height), 2) == answer, Size):
                 answer = item
             self.oc.size = answer
@@ -122,8 +122,8 @@ class WeightModal1(Modal, title="Weight"):
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
         weight = self.oc.species.weight if condition else 0
-        a = Size.XXXS.weight_value(weight) if condition else 0.100
-        b = Size.XXXL.weight_value(weight) if condition else 999.9
+        a = Size.XXXS.weight_value(weight if condition else 0.1)
+        b = Size.XXXL.weight_value(weight if condition else 999.9)
 
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("kg")
@@ -131,9 +131,9 @@ class WeightModal1(Modal, title="Weight"):
         with suppress(ValueError):
             answer = round(float(text.strip()), 2)
             if answer <= a:
-                answer = Size.XXXS if condition else 0.100
+                answer = Size.XXXS if condition else a
             elif answer >= b:
-                answer = Size.XXXL if condition else 999.9
+                answer = Size.XXXL if condition else b
             elif item := find(lambda x: round(x.weight_value(weight), 2) == answer, Size):
                 answer = item
             self.oc.weight = answer
@@ -158,8 +158,8 @@ class WeightModal2(Modal, title="Weight"):
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
         weight = self.oc.species.weight if condition else 0
-        a = Size.XXXS.weight_value(weight) if condition else 0.100
-        b = Size.XXXL.weight_value(weight) if condition else 999.9
+        a = Size.XXXS.weight_value(weight if condition else 0.1)
+        b = Size.XXXL.weight_value(weight if condition else 999.9)
 
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("lbs").removesuffix("lb")
@@ -167,9 +167,9 @@ class WeightModal2(Modal, title="Weight"):
         with suppress(ValueError):
             answer = round(Size.lbs_to_kgs(float(text.strip())), 2)
             if answer <= a:
-                answer = Size.XXXS if condition else 0.100
+                answer = Size.XXXS if condition else a
             elif answer >= b:
-                answer = Size.XXXL if condition else 999.9
+                answer = Size.XXXL if condition else b
             elif item := find(lambda x: round(x.weight_value(weight), 2) == answer, Size):
                 answer = item
             self.oc.weight = answer
