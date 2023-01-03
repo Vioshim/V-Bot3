@@ -1589,7 +1589,7 @@ class TemplateView(View):
         self.stop()
 
 
-class SubmissionView(View):
+class SubmissionView(Basic):
     @select(
         placeholder="Click here to read our Templates",
         row=0,
@@ -1620,12 +1620,11 @@ class SubmissionView(View):
         member: Member = sct.values[0] if sct.values else ctx.user
         await resp.defer(ephemeral=True, thinking=True)
         values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})]
-
         values.sort(key=lambda x: x.name)
         view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
         view.embed.set_author(name=member.display_name, icon_url=member.display_avatar)
-        async with view.send(single=True):
-            ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
+        ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
+        await view.simple_send()
 
     @button(label="Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
     async def oc_add(self, ctx: Interaction, _: Button):
@@ -1658,17 +1657,12 @@ class SubmissionView(View):
         member: Member = ctx.user
         await resp.defer(ephemeral=True, thinking=True)
         member = ctx.client.supporting.get(member, member)
-        if values := [
-            Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})
-        ]:
-            values.sort(key=lambda x: x.name)
-            view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
-            view.embed.title = "Select Character to modify"
-            view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            async with view.send(single=True):
-                ctx.client.logger.info("%s is modifying characters", str(ctx.user))
-        else:
-            await ctx.followup.send("You don't have characters to modify", ephemeral=True)
+        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})]
+        values.sort(key=lambda x: x.name)
+        view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+        view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        await view.simple_send(title="Select Character to modify")
+        ctx.client.logger.info("%s is modifying characters", str(ctx.user))
 
     @button(style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=2, custom_id="delete-oc")
     async def oc_delete(self, ctx: Interaction, _: Button):
