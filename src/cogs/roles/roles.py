@@ -183,7 +183,7 @@ class AFKModal(Modal, title="Current Time"):
         if offset:
             tz = timezone(offset=timedelta(hours=offset))
             date = date.astimezone(tz)
-        text = date.strftime("%I:00 %p")
+        text = date.strftime("%I:%M %p")
 
         data = TextInput(
             label="What time it is for you?",
