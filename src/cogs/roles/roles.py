@@ -399,7 +399,7 @@ class BasicRoleSelect(RoleSelect):
 
 class TimezoneSelect(RoleSelect):
     @select(
-        placeholder="AFK Schedule (No timezone)",
+        placeholder="AFK Schedule",
         custom_id="afk",
         min_values=0,
         max_values=24,
