@@ -31,7 +31,7 @@ __all__ = (
 
 class HeightModal1(Modal, title="Height"):
     def __init__(self, oc: Character, info: str) -> None:
-        super(Modal, self).__init__(title="Height", timeout=None)
+        super(HeightModal1, self).__init__(title="Height", timeout=None)
         self.text = TextInput(label="Meters", placeholder=info, default=info)
         self.add_item(self.text)
         self.oc = oc
@@ -71,7 +71,7 @@ class HeightModal1(Modal, title="Height"):
 
 class HeightModal2(Modal, title="Height"):
     def __init__(self, oc: Character, info: str) -> None:
-        super(Modal, self).__init__(title="Height", timeout=None)
+        super(HeightModal2, self).__init__(title="Height", timeout=None)
         info = info.removesuffix('" ft')
         ft_info, in_info = info.split("' ")
 
@@ -113,7 +113,7 @@ class HeightModal2(Modal, title="Height"):
 
 class WeightModal1(Modal, title="Weight"):
     def __init__(self, oc: Character, info: str) -> None:
-        super(Modal, self).__init__(title="Weight", timeout=None)
+        super(WeightModal1, self).__init__(title="Weight", timeout=None)
         self.text = TextInput(label="kg", placeholder=info, default=info)
         self.add_item(self.text)
         self.oc = oc
@@ -149,7 +149,7 @@ class WeightModal1(Modal, title="Weight"):
 
 class WeightModal2(Modal, title="Weight"):
     def __init__(self, oc: Character, info: str) -> None:
-        super(Modal, self).__init__(title="Weight", timeout=None)
+        super(WeightModal2, self).__init__(title="Weight", timeout=None)
         self.text = TextInput(label="lbs", placeholder=info, default=info)
         self.add_item(self.text)
         self.oc = oc
@@ -185,7 +185,7 @@ class WeightModal2(Modal, title="Weight"):
 
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
-        super(Basic, self).__init__(target=target, member=member, timeout=None)
+        super(HeightView, self).__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
 
@@ -238,7 +238,7 @@ class HeightView(Basic):
 
 class WeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
-        super(Basic, self).__init__(target=target, member=member, timeout=None)
+        super(WeightView, self).__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
 
