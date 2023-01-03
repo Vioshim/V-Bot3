@@ -194,6 +194,7 @@ class Template(TemplateItem, Enum):
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"{choices[0].name} Variant"[:45],
                     ephemeral=ephemeral,
+                    default=choices[0].name,
                     required=True,
                 ) as answer:
                     if isinstance(answer, str) and answer:
@@ -202,6 +203,7 @@ class Template(TemplateItem, Enum):
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"Paradox {choices[0].name}"[:45],
                     ephemeral=ephemeral,
+                    default=choices[0].name,
                     required=True,
                 ) as answer:
                     if isinstance(answer, str) and answer:

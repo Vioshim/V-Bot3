@@ -748,18 +748,33 @@ class Character:
                 if name := "\n".join(f"> **•** {name}" for name in mon.name.split("/")).title():
                     c_embed.add_field(name="Chimera", value=name[:1024])
             case mon if isinstance(mon, Fakemon):
-                if evolves_from := mon.species_evolves_from:
-                    name = f"{evolves_from.name} Evo"
+                a1 = Ability.get(name="Beast Boost")
+                if a1 in self.abilities:
+                    name = "Fakemon UB"
+                elif evolves_from := mon.species_evolves_from:
+                    name = "Fakemon Evo" if evolves_from.name == mon.name else f"{evolves_from.name} Evo"
                 else:
                     name = "Fakemon Species"
                 c_embed.add_field(name=name, value=mon.name)
             case mon if isinstance(mon, CustomMega):
                 c_embed.add_field(name="Mega", value=mon.name)
             case mon if isinstance(mon, (CustomParadox, Variant)):
-                c_embed.add_field(
-                    name=f"{mon.base.name} {mon.__class__.__name__.removeprefix('Custom')}",
-                    value=mon.name,
-                )
+                a1 = Ability.get(name="Protosynthesis")
+                a2 = Ability.get(name="Quark Drive")
+
+                if a1 in self.abilities:
+                    phrase = "Past"
+                elif a2 in self.abilities:
+                    phrase = "Future"
+                elif isinstance(mon, CustomParadox):
+                    phrase = "Paradox"
+                else:
+                    phrase = "Variant"
+
+                if mon.base.name == mon.name:
+                    c_embed.add_field(name=phrase, value=mon.name)
+                else:
+                    c_embed.add_field(name=f"{phrase} {mon.base.name}", value=mon.name)
             case mon if isinstance(mon, Species):
                 c_embed.add_field(name="Species", value=mon.name)
 
@@ -1323,6 +1338,20 @@ class Character:
     def __repr__(self) -> str:
         types = "/".join(i.name for i in self.types)
         name = self.kind.title if self.kind else "Error"
+        match self.kind:
+            case Kind.Fakemon:
+                a1 = Ability.get(name="Beast Boost")
+                if a1 in self.abilities:
+                    name = "Fakemon UB"
+                elif self.species.species_evolves_from:
+                    name = "Fakemon Evo"
+            case Kind.Variant | Kind.CustomParadox:
+                a1 = Ability.get(name="Protosynthesis")
+                a2 = Ability.get(name="Quark Drive")
+                if a1 in self.abilities:
+                    name = "Past"
+                elif a2 in self.abilities:
+                    name = "Future"
         species = self.species.name if self.species else None
         return f"{name}: {species}, Age: {self.age.name}, Types: {types}"
 
