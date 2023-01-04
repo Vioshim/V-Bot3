@@ -565,6 +565,7 @@ class Submission(commands.Cog):
         )
 
         if oc.id:
+            oc.location, oc.last_used = message.channel.id, message.id
             await self.register_oc(oc)
 
     async def on_message_proxy(self, message: Message):
