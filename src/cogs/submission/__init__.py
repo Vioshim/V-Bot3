@@ -87,8 +87,8 @@ def comparison_handler(before: Character, now: Character):
         elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
         elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
 
-        e1 = Embed(title=aux1.title, description=aux1.description, color=Color.red())
-        e2 = Embed(description=aux2.description, color=Color.brand_green())
+        e1 = Embed(title=aux1.title, description=aux1.description)
+        e2 = Embed(title=aux2.title, description=aux2.description)
         e1.set_image(url=WHITE_BAR)
         e2.set_image(url=WHITE_BAR)
 
@@ -107,9 +107,6 @@ def comparison_handler(before: Character, now: Character):
             if aux2.thumbnail:
                 e2.set_thumbnail(url=aux2.thumbnail.url)
 
-        if aux1.title != aux2.title:
-            e2.title = aux2.title
-
         if aux1.footer != aux2.footer:
             e1.set_footer(text=aux1.footer.text, icon_url=aux1.footer.icon_url)
             e2.set_footer(text=aux2.footer.text, icon_url=aux2.footer.icon_url)
@@ -127,6 +124,9 @@ def comparison_handler(before: Character, now: Character):
                     e2.add_field(name=key, value=v2, inline=i2)
 
         if e1 != e2:
+            if e1.title == e2.title:
+                e2.title = None
+            e1.color, e2.color = Color.red(), Color.brand_green()
             aux1_new.append(e1)
             aux2_new.append(e2)
 
