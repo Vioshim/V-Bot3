@@ -290,7 +290,7 @@ class Submission(commands.Cog):
 
         return thread
 
-    async def register_oc(self, oc: Character, image_as_is: bool = False):
+    async def register_oc(self, oc: Character, image_as_is: bool = False, logging: bool = True):
         try:
             member = Object(id=oc.author)
             thread = await self.list_update(member)
@@ -361,66 +361,67 @@ class Submission(commands.Cog):
             if former is None and (former := await db.find_one({"id": oc.id})):
                 former = Character.from_mongo_dict(former)
 
-            self.bot.logger.info(
-                "Character has been %s! > %s > %s > %s",
-                word,
-                str(user),
-                repr(oc),
-                oc.document_url or "Manual",
-            )
-
             await db.replace_one({"id": reference_id}, oc.to_mongo_dict(), upsert=True)
 
-            try:
-                if former:
-                    pack_embeds: list[list[Embed]] = []
-                    pack_files: list[list[File]] = []
-                    log = await self.bot.webhook(1020151767532580934, reason="Logging")
-                    if isinstance(user, (User, Member)):
-                        username, avatar_url = user.display_name, user.display_avatar.url
-                    else:
-                        username, avatar_url = MISSING, MISSING
+            if logging:
+                self.bot.logger.info(
+                    "Character has been %s! > %s > %s > %s",
+                    word,
+                    str(user),
+                    repr(oc),
+                    oc.document_url or "Manual",
+                )
 
-                    view = View()
-                    if jump_url := former.jump_url:
-                        view.add_item(
-                            Button(
-                                label=f"{word.title()} - Jump URL",
-                                url=jump_url,
-                                emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
+                try:
+                    if former:
+                        pack_embeds: list[list[Embed]] = []
+                        pack_files: list[list[File]] = []
+                        log = await self.bot.webhook(1020151767532580934, reason="Logging")
+                        if isinstance(user, (User, Member)):
+                            username, avatar_url = user.display_name, user.display_avatar.url
+                        else:
+                            username, avatar_url = MISSING, MISSING
+
+                        view = View()
+                        if jump_url := former.jump_url:
+                            view.add_item(
+                                Button(
+                                    label=f"{word.title()} - Jump URL",
+                                    url=jump_url,
+                                    emoji=PartialEmoji(name="IconBuildoverride", id=815459629869826048),
+                                )
                             )
-                        )
 
-                    if word == "modified":
-                        for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
-                            embeds = [embed1, embed2]
-                            files1, embed1 = await self.bot.embed_raw(embed1, "footer", "thumbnail")
-                            files2, embed2 = await self.bot.embed_raw(embed2, "footer", "thumbnail")
+                        if word == "modified":
+                            for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
+                                embeds = [embed1, embed2]
+                                files1, embed1 = await self.bot.embed_raw(embed1, "footer", "thumbnail")
+                                files2, embed2 = await self.bot.embed_raw(embed2, "footer", "thumbnail")
 
-                            files = files1 + files2
-                            for index, (e, f) in enumerate(zip(embeds, files)):
-                                f.filename = f"image{index}.png"
-                                e.set_image(url=f"attachment://{f.filename}")
+                                files = files1 + files2
+                                for index, (e, f) in enumerate(zip(embeds, files)):
+                                    f.filename = f"image{index}.png"
+                                    e.set_image(url=f"attachment://{f.filename}")
 
+                                pack_embeds.append(embeds)
+                                pack_files.append(files)
+                        else:
+                            embeds = oc.embeds
+                            files, embeds[0] = await self.bot.embed_raw(embeds[0], "footer")
                             pack_embeds.append(embeds)
                             pack_files.append(files)
-                    else:
-                        embeds = oc.embeds
-                        files, embeds[0] = await self.bot.embed_raw(embeds[0], "footer")
-                        pack_embeds.append(embeds)
-                        pack_files.append(files)
 
-                    for embeds, files in zip(pack_embeds, pack_files):
-                        await log.send(
-                            embeds=embeds,
-                            files=files,
-                            thread=Object(id=1020153309425836122),
-                            username=username,
-                            avatar_url=avatar_url,
-                            view=view,
-                        )
-            except Exception as e2:
-                self.bot.logger.exception("Error when logging oc modification", exc_info=e2)
+                        for embeds, files in zip(pack_embeds, pack_files):
+                            await log.send(
+                                embeds=embeds,
+                                files=files,
+                                thread=Object(id=1020153309425836122),
+                                username=username,
+                                avatar_url=avatar_url,
+                                view=view,
+                            )
+                except Exception as e2:
+                    self.bot.logger.exception("Error when logging oc modification", exc_info=e2)
         except Exception as e1:
             self.bot.logger.exception("Error when logging oc modification main", exc_info=e1)
 
@@ -564,7 +565,7 @@ class Submission(commands.Cog):
 
         if oc.id:
             oc.location, oc.last_used = message.channel.id, message.id
-            await self.register_oc(oc)
+            await self.register_oc(oc, logging=False)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
