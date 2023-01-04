@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from contextlib import suppress
 from typing import NamedTuple, Optional
 
 from discord import (
@@ -20,16 +21,21 @@ from discord import (
     DiscordException,
     Interaction,
     InteractionResponse,
+    Member,
     Message,
     Object,
     RawReactionActionEvent,
+    TextChannel,
+    TextStyle,
     Thread,
+    Webhook,
     WebhookMessage,
     app_commands,
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 from discord.utils import MISSING
+from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
@@ -62,9 +68,95 @@ class NameModal(Modal, title="NPC Name"):
         self.stop()
 
 
+class ProxyModal(Modal, title="Edit Proxy Message"):
+    def __init__(self, msg: Message, data: dict[str, int]) -> None:
+        super(ProxyModal, self).__init__(timeout=None)
+        self.text = TextInput(
+            label="Message (Empty = Delete)",
+            placeholder=msg.content,
+            default=msg.content,
+            style=TextStyle.paragraph,
+            required=False,
+            max_length=2000,
+        )
+        self.add_item(self.text)
+        self.msg = msg
+        self.data = data
+
+    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
+
+    async def on_submit(self, interaction: Interaction, /) -> None:
+        resp: InteractionResponse = interaction.response
+        if not self.text.value:
+            await self.msg.delete(delay=0)
+            return await resp.send_message("Message has been deleted.", ephemeral=True)
+
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Tupper-logs")
+        w: Webhook = await interaction.client.webhook(self.msg.channel)
+        thread = self.msg.channel if isinstance(self.msg.channel, Thread) else MISSING
+        try:
+            await w.edit_message(self.msg.id, content=self.text.value, thread=thread)
+            await resp.send_message("Message has been edited successfully.", ephemeral=True)
+        except DiscordException:
+            await db.delete_one(self.data)
+
+
 class Proxy(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
+        self.ctx_menu1 = app_commands.ContextMenu(
+            name="Proxy",
+            callback=self.msg_proxy,
+            guild_ids=[719343092963999804],
+        )
+
+    async def cog_load(self):
+        self.bot.tree.add_command(self.ctx_menu1)
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+
+    async def msg_proxy(self, ctx: Interaction, msg: Message):
+        db1 = self.bot.mongo_db("Tupper-logs")
+        db2 = self.bot.mongo_db("RP Logs")
+        entry: Optional[dict[str, int]] = await db1.find_one({"channel": msg.channel.id, "id": msg.id})
+        member: Member = self.bot.supporting.get(ctx.user, ctx.user)
+
+        if entry and member.id == entry["author"]:
+            return await ctx.response.send_modal(ProxyModal(msg, entry))
+
+        await ctx.response.defer(ephemeral=True, thinking=True)
+
+        view = View()
+        view.add_item(Button(label="Jump URL", url=msg.jump_url))
+        text = "Current associated information to the message."
+
+        if item := await db2.find_one(
+            {
+                "$or": [
+                    {"id": msg.id, "channel": msg.channel.id},
+                    {"log": msg.id, "log-channel": msg.channel.id},
+                ]
+            }
+        ):
+            ch: TextChannel = ctx.guild.get_channel_or_thread(item["log-channel"])
+            with suppress(DiscordException):
+                aux_msg = await ch.fetch_message(item["log"])
+                view = View.from_message(aux_msg)
+        elif not entry:
+            text = "No information associated to the message."
+
+        if entry:
+            if not (user := ctx.guild.get_member(entry["author"])):
+                user = await self.bot.get_or_fetch_user(entry["author"])
+
+            if user:
+                text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
+            else:
+                text = f"That message was sent by a Deleted User (id: {entry['author']})."
+
+        await ctx.response.send_message(text, view=view, ephemeral=True)
 
     async def proxy_handler(self, npc: NPC, message: Message, text: str = None):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
@@ -126,6 +218,9 @@ class Proxy(commands.Cog):
         resp: InteractionResponse = ctx.response
         name = character.name if character else name
 
+        if pokemon and pokemon.banned:
+            pokemon = None
+
         if pokemon and not name:
             name = f"NPC〕{pokemon.name}"
 
@@ -181,7 +276,7 @@ class Proxy(commands.Cog):
         text : str, optional
             _description_, by default None
         """
-        if mon := Species.single_deduce(pokemon):
+        if (mon := Species.single_deduce(pokemon)) and not mon.banned:
             npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
             await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
@@ -201,15 +296,21 @@ class Proxy(commands.Cog):
         """
         db = self.bot.mongo_db("Characters")
         member = self.bot.supporting.get(ctx.author, ctx.author)
-        if (ocs := [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]) and (
-            options := process.extractOne(
-                pokemon,
-                choices=ocs,
-                score_cutoff=60,
-                processor=lambda x: getattr(x, "name", x),
-            )
+        if options := process.extractOne(
+            pokemon,
+            choices=[
+                Character.from_mongo_dict(x)
+                async for x in db.find(
+                    {
+                        "author": member.id,
+                        "server": ctx.guild.id,
+                    }
+                )
+            ],
+            score_cutoff=60,
+            processor=lambda x: getattr(x, "name", x),
         ):
-            oc = options[0]
+            oc: Character = options[0]
             npc = NPC(name=oc.name, avatar=oc.image_url)
             await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
@@ -281,14 +382,14 @@ class Proxy(commands.Cog):
 
             view = View()
             view.add_item(Button(label="Jump URL", url=message.jump_url))
+
             if user:
                 text = f"That message was sent by {user.mention} (tag: {user} - id: {user.id})."
             else:
                 text = f"That message was sent by a Deleted User (id: {author_id})."
-            try:
+
+            with suppress(DiscordException):
                 await payload.member.send(text, view=view)
-            except DiscordException:
-                pass
 
 
 async def setup(bot: CustomBot) -> None:

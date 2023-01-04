@@ -425,7 +425,8 @@ class TimezoneSelect(RoleSelect):
     async def afk_schedule(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("AFK")
-        if item := await db.find_one({"user": ctx.user.id}):
+        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
+        if item := await db.find_one({"user": member.id}):
             modal = AFKModal(hours=sct.values, offset=item["offset"])
         else:
             modal = AFKModal(hours=sct.values)
@@ -440,7 +441,8 @@ class TimezoneSelect(RoleSelect):
     async def tz_schedule(self, ctx: Interaction, _: Button):
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("AFK")
-        if item := await db.find_one({"user": ctx.user.id}):
+        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
+        if item := await db.find_one({"user": member.id}):
             modal = AFKModal(hours=item["hours"], offset=item["offset"])
         else:
             modal = AFKModal()

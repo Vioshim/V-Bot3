@@ -90,6 +90,37 @@ class Roles(commands.Cog):
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
         self.clean_handler.stop()
 
+    async def check_afk(self, ctx: Interaction, member: Member):
+        resp: InteractionResponse = ctx.response
+        db = self.bot.mongo_db("AFK")
+        if item := await db.find_one({"user": ctx.user.id}):
+            current_date = ctx.created_at
+            embed = Embed(title="AFK Schedule", color=member.color)
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
+            if item2 := await db.find_one({"user": member.id}):
+                tz1 = timezone(timedelta(hours=item["offset"]))
+                tz2 = timezone(timedelta(hours=item2["offset"]))
+                user_data = [datetime.combine(current_date, time(hour=x), tz2) for x in item2["hours"]]
+
+                data1 = AFKSchedule(user_data)
+                data2 = data1.astimezone(tz1)
+                desc1, desc2 = data1.text, data2.text
+                if desc1 != desc2 and desc1 and desc2:
+                    embed.add_field(name="In user's timezone", value=desc1, inline=False)
+                    embed.add_field(name="In your timezone", value=desc2, inline=False)
+                else:
+                    embed.description = desc1 or desc2
+
+                date = current_date.astimezone(tz2)
+                text = f"User's time is {date.strftime('%I:%M %p')}"
+            else:
+                text = "No timezone associated to the account."
+            embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={quote_plus(text)}")
+            await resp.send_message(embed=embed, ephemeral=True)
+        else:
+            modal = AFKModal()
+            await resp.send_modal(modal)
+
     @loop(hours=1)
     async def clean_handler(self):
         db = self.bot.mongo_db("RP Search")
@@ -327,37 +358,6 @@ class Roles(commands.Cog):
         ]
         modal = RPModal(user=user, role=role, ocs=ocs, to_user=member)
         if await modal.check(interaction):
-            await resp.send_modal(modal)
-
-    async def check_afk(self, ctx: Interaction, member: Member):
-        resp: InteractionResponse = ctx.response
-        db = self.bot.mongo_db("AFK")
-        if item := await db.find_one({"user": ctx.user.id}):
-            current_date = ctx.created_at
-            embed = Embed(title="AFK Schedule", color=member.color)
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
-            if item2 := await db.find_one({"user": member.id}):
-                tz1 = timezone(timedelta(hours=item["offset"]))
-                tz2 = timezone(timedelta(hours=item2["offset"]))
-                user_data = [datetime.combine(current_date, time(hour=x), tz2) for x in item2["hours"]]
-
-                data1 = AFKSchedule(user_data)
-                data2 = data1.astimezone(tz1)
-                desc1, desc2 = data1.text, data2.text
-                if desc1 != desc2 and desc1 and desc2:
-                    embed.add_field(name="In user's timezone", value=desc1, inline=False)
-                    embed.add_field(name="In your timezone", value=desc2, inline=False)
-                else:
-                    embed.description = desc1 or desc2
-
-                date = current_date.astimezone(tz2)
-                text = f"User's time is {date.strftime('%I:%M %p')}"
-            else:
-                text = "No timezone associated to the account."
-            embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={quote_plus(text)}")
-            await resp.send_message(embed=embed, ephemeral=True)
-        else:
-            modal = AFKModal()
             await resp.send_modal(modal)
 
     @app_commands.command()

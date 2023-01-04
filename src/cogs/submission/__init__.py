@@ -505,7 +505,7 @@ class Submission(commands.Cog):
         ):
             return
 
-        w = await self.bot.webhook(info_channel)
+        log_w = await self.bot.webhook(info_channel)
 
         try:
             name = message.channel.name.replace("»", "")
@@ -525,17 +525,24 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("RP Logs")
         if data := TUPPER_REPLY_PATTERN.search(message.content):
             channel_id, message_id = int(data.group(2)), int(data.group(3))
+            content = data.group(4).strip()
+        else:
+            content = message.content
+            channel_id, message_id = 0, 0
+            aux_view = View.from_message(message)
+            if aux_view.children and isinstance(btn := aux_view.children[0], Button) and btn.url:
+                with suppress(ValueError):
+                    channel_id, message_id = map(int, btn.url.split("/")[-2:])
+
+        if channel_id and message_id:
             if item := await db.find_one({"id": message_id, "channel": channel_id}):
                 aux = info_channel.get_partial_message(item["log"])
             else:
                 ch = self.bot.get_partial_messageable(id=channel_id)
                 aux = ch.get_partial_message(message_id)
             view.add_item(Button(label="Replying", url=aux.jump_url, emoji=LINK_EMOJI))
-            content = data.group(4).strip()
-        else:
-            content = message.content
 
-        msg = await w.send(
+        msg = await log_w.send(
             content=content,
             username=message.author.display_name,
             avatar_url=message.author.display_avatar.url,
