@@ -14,6 +14,7 @@
 
 
 import asyncio
+import re
 from contextlib import suppress
 from typing import Optional
 
@@ -58,11 +59,16 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 
 __all__ = ("Submission", "setup")
+
+TUPPER_REPLY_PATTERN = re.compile(
+    r"> (.+)\n@.+ \(<@!\d+>\) - \[jump\]\(<https:\/\/discord\.com\/channels\/@me\/(\d+)\/(\d+)>\)\n(.*)",
+    re.DOTALL,
+)
 
 
 def comparison_handler(before: Character, now: Character):
@@ -510,8 +516,21 @@ class Submission(commands.Cog):
         else:
             view.add_item(Button(label=key[:80], disabled=True))
 
+        db = self.bot.mongo_db("RP Logs")
+        if data := TUPPER_REPLY_PATTERN.search(message.content):
+            channel_id, message_id = int(data.group(2)), int(data.group(3))
+            if item := await db.find_one({"id": message_id, "channel": channel_id}):
+                aux = info_channel.get_partial_message(item["log"])
+            else:
+                ch = self.bot.get_partial_messageable(id=channel_id)
+                aux = ch.get_partial_message(message_id)
+            view.add_item(Button(label="Replying", url=aux.jump_url, emoji=LINK_EMOJI))
+            content = data.group(4).strip()
+        else:
+            content = message.content
+
         msg = await w.send(
-            content=message.content,
+            content=content,
             username=message.author.display_name,
             avatar_url=message.author.display_avatar.url,
             files=[await x.to_file() for x in message.attachments],
@@ -565,10 +584,13 @@ class Submission(commands.Cog):
             if not (m.webhook_id and message.channel == m.channel):
                 return False
 
+            if data := TUPPER_REPLY_PATTERN.search(m.content):
+                text = data.group(4).strip()
+            else:
+                text = m.content
+
             attachments = message.attachments
-            if (message.content and (m.content in message.content)) or (
-                attachments and len(attachments) == len(m.attachments)
-            ):
+            if (text and (text in message.content)) or (attachments and len(attachments) == len(m.attachments)):
                 messages.append(m)
             return False
 
