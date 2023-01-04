@@ -101,11 +101,11 @@ def comparison_handler(before: Character, now: Character):
             if isinstance(img2, str):
                 e2.set_image(url=img2)
 
-        if before.pokeball != now.pokeball:
-            if before.pokeball:
-                e1.set_thumbnail(url=before.pokeball.url)
-            if now.pokeball:
-                e2.set_thumbnail(url=now.pokeball.url)
+        if aux1.thumbnail != aux2.thumbnail:
+            if aux1.thumbnail:
+                e1.set_thumbnail(url=aux1.thumbnail.url)
+            if aux2.thumbnail:
+                e2.set_thumbnail(url=aux2.thumbnail.url)
 
         if aux1.title != aux2.title:
             e2.title = aux2.title
@@ -126,15 +126,7 @@ def comparison_handler(before: Character, now: Character):
                     v2, i2 = v2
                     e2.add_field(name=key, value=v2, inline=i2)
 
-        conditions = (
-            aux1.title == aux2.title,
-            e1.description == e2.description,
-            before.image == now.image,
-            before.pokeball == now.pokeball,
-            len(e1.fields) == len(e2.fields) == 0,
-            e1.footer == e2.footer,
-        )
-        if not all(conditions):
+        if e1 != e2:
             aux1_new.append(e1)
             aux2_new.append(e2)
 
