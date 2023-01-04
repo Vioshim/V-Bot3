@@ -73,7 +73,7 @@ class ProxyModal(Modal, title="Edit Proxy Message"):
         super(ProxyModal, self).__init__(timeout=None)
         self.text = TextInput(
             label="Message (Empty = Delete)",
-            placeholder=msg.content,
+            placeholder="Once you press submit, the message will be deleted.",
             default=msg.content,
             style=TextStyle.paragraph,
             required=False,
