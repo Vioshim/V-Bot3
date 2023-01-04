@@ -304,11 +304,11 @@ class Submission(commands.Cog):
                 embeds=embeds,
                 allowed_mentions=AllowedMentions(users=True),
             )
+            view = View()
             if oc.location and oc.last_used:
                 if not (ch := guild.get_channel_or_thread(oc.location)):
                     ch = await guild.fetch_channel(oc.location)
                 msg = ch.get_partial_message(oc.last_used)
-
                 try:
                     name = ch.name.replace("»", "")
                     emoji, name = name.split("〛")
@@ -316,10 +316,8 @@ class Submission(commands.Cog):
                     emoji, name = SETTING_EMOJI, ch.name
                 finally:
                     name = name.replace("-", " ")
-
-                view = View()
                 view.add_item(Button(label=name, emoji=emoji, url=msg.jump_url))
-                kwargs["view"] = view
+            kwargs["view"] = view
 
             if not oc.image_url:
                 if image_as_is:

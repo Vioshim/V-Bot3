@@ -1485,7 +1485,7 @@ class CreationOCView(Basic):
             await resp.defer(ephemeral=True, thinking=True)
             cog = ctx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
-            self.oc.last_used = ctx.id
+            self.oc.location, self.oc.last_used = None, ctx.id
             await cog.register_oc(self.oc, image_as_is=True)
             msg = await ctx.followup.send(f"Character {self.oc.name} {word} without Issues!", ephemeral=True, wait=True)
             await msg.delete(delay=2)
