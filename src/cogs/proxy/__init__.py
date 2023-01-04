@@ -90,14 +90,14 @@ class ProxyModal(Modal, title="Edit Proxy Message"):
         resp: InteractionResponse = interaction.response
         if not self.text.value:
             await self.msg.delete(delay=0)
-            return await resp.send_message("Message has been deleted.", ephemeral=True)
+            return await resp.send_message("Message has been deleted.", ephemeral=True, delete_after=3)
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Tupper-logs")
         w: Webhook = await interaction.client.webhook(self.msg.channel)
         thread = self.msg.channel if isinstance(self.msg.channel, Thread) else MISSING
         try:
             await w.edit_message(self.msg.id, content=self.text.value, thread=thread)
-            await resp.send_message("Message has been edited successfully.", ephemeral=True)
+            await resp.send_message("Message has been edited successfully.", ephemeral=True, delete_after=3)
         except DiscordException:
             await db.delete_one(self.data)
 
@@ -156,7 +156,7 @@ class Proxy(commands.Cog):
             else:
                 text = f"That message was sent by a Deleted User (id: {entry['author']})."
 
-        await ctx.response.send_message(text, view=view, ephemeral=True)
+        await ctx.followup.send(text, view=view, ephemeral=True)
 
     async def proxy_handler(self, npc: NPC, message: Message, text: str = None):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
