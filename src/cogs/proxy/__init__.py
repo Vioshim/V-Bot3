@@ -140,14 +140,16 @@ class Proxy(commands.Cog):
                 ]
             }
         ):
+            if not entry:
+                entry = await db1.find_one({"channel": item["log-channel"], "id": item["log"]})
             ch: TextChannel = ctx.guild.get_channel_or_thread(item["log-channel"])
             with suppress(DiscordException):
                 aux_msg = await ch.fetch_message(item["log"])
                 view = View.from_message(aux_msg)
-        elif not entry:
-            text = "No information associated to the message."
 
-        if entry:
+        if not entry:
+            text = "No information associated to the message."
+        else:
             if not (user := ctx.guild.get_member(entry["author"])):
                 user = await self.bot.get_or_fetch_user(entry["author"])
 
