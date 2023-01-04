@@ -123,6 +123,8 @@ class Proxy(commands.Cog):
         entry: Optional[dict[str, int]] = await db1.find_one({"channel": msg.channel.id, "id": msg.id})
         member: Member = self.bot.supporting.get(ctx.user, ctx.user)
 
+        self.bot.logger.info("User %s is checking proxies at %s", str(ctx.user), msg.jump_url)
+
         if entry and member.id == entry["author"]:
             return await ctx.response.send_modal(ProxyModal(msg, entry))
 
