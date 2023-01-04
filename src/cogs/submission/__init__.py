@@ -296,7 +296,6 @@ class Submission(commands.Cog):
             thread = await self.list_update(member)
             oc.thread = thread.id
             guild: Guild = self.bot.get_guild(oc.server)
-
             user = guild.get_member(member.id) or member
             embeds = oc.embeds
             embeds[0].set_image(url="attachment://image.png")
@@ -305,6 +304,22 @@ class Submission(commands.Cog):
                 embeds=embeds,
                 allowed_mentions=AllowedMentions(users=True),
             )
+            if oc.location and oc.last_used:
+                if not (ch := guild.get_channel_or_thread(oc.location)):
+                    ch = await guild.fetch_channel(oc.location)
+                msg = ch.get_partial_message(oc.last_used)
+
+                try:
+                    name = ch.name.replace("»", "")
+                    emoji, name = name.split("〛")
+                except ValueError:
+                    emoji, name = SETTING_EMOJI, ch.name
+                finally:
+                    name = name.replace("-", " ")
+
+                view = View()
+                view.add_item(Button(label=name, emoji=emoji, url=msg.jump_url))
+                kwargs["view"] = view
 
             if not oc.image_url:
                 if image_as_is:
@@ -550,12 +565,7 @@ class Submission(commands.Cog):
         )
 
         if oc.id:
-            db3 = self.bot.mongo_db("Characters")
-            await db3.update_one(
-                {"id": oc.id, "server": oc.server},
-                {"$set": {"location": channel.id, "last_used": message.id}},
-                upsert=False,
-            )
+            await self.register_oc(oc)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
