@@ -134,19 +134,25 @@ class ProxyCog(commands.Cog):
             return
 
         db = self.bot.mongo_db("Proxy")
-        for npc, text in Proxy.lookup(
-            [
-                Proxy.from_mongo_dict(x)
-                async for x in db.find(
-                    {
-                        "server": message.guild.id,
-                        "author": message.author.id,
-                    }
-                )
-            ],
-            message.content,
+        deleting: bool = False
+        for index, (npc, text) in enumerate(
+            Proxy.lookup(
+                [
+                    Proxy.from_mongo_dict(x)
+                    async for x in db.find(
+                        {
+                            "server": message.guild.id,
+                            "author": message.author.id,
+                        }
+                    )
+                ],
+                message.content,
+            )
         ):
-            await self.proxy_handler(npc, message, text)
+            deleting = True
+            await self.proxy_handler(npc, message, text, attachments=index == 0, deleting=False)
+        if deleting:
+            await message.delete(delay=300 if message.mentions else 0)
 
     async def msg_proxy(self, ctx: Interaction, msg: Message):
         db1 = self.bot.mongo_db("Tupper-logs")
@@ -193,7 +199,14 @@ class ProxyCog(commands.Cog):
 
         await ctx.followup.send(text, view=view, ephemeral=True)
 
-    async def proxy_handler(self, npc: Character | NPC | Proxy | ProxyExtra, message: Message, text: str = None):
+    async def proxy_handler(
+        self,
+        npc: Character | NPC | Proxy | ProxyExtra,
+        message: Message,
+        text: str = None,
+        attachments: bool = True,
+        deleting: bool = False,
+    ):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
 
         if isinstance(npc, Character):
@@ -246,12 +259,17 @@ class ProxyCog(commands.Cog):
                             embeds.append(embed)
                             text = text.replace(f"{{{{{aux}}}}}", f"`🎲{value.total}`", 1)
 
+        if attachments:
+            files = [await item.to_file() for item in message.attachments]
+        else:
+            files = []
+
         proxy_msg = await webhook.send(
             username=username[:80],
             avatar_url=avatar_url,
             embeds=embeds,
             content=text,
-            files=[await item.to_file() for item in message.attachments],
+            files=files,
             wait=True,
             view=view,
             thread=thread,
@@ -264,7 +282,8 @@ class ProxyCog(commands.Cog):
                 "author": author_id,
             }
         )
-        await message.delete(delay=300 if message.mentions else 0)
+        if deleting:
+            await message.delete(delay=300 if message.mentions else 0)
 
     @app_commands.command(description="Proxy management")
     @app_commands.guilds(719343092963999804)
