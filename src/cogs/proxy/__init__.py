@@ -293,8 +293,6 @@ class ProxyCog(commands.Cog):
             view=view,
             thread=thread,
         )
-        if isinstance(thread, Thread):
-            proxy_msg.channel = thread
         self.last_names[message.channel.id] = (message.author.id, proxy_msg.author.display_name)
         await self.bot.mongo_db("Tupper-logs").insert_one(
             {
