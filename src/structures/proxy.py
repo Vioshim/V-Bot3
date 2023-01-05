@@ -237,7 +237,7 @@ class Proxy:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
-        dct["extras"] = frozenset(dct.get("extras", []))
+        dct["extras"] = frozenset(map(ProxyExtra.handle, dct.get("extras", [])))
         dct["prefixes"] = frozenset(map(tuple, dct.get("prefixes", [])))
         return cls(**dct)
 
