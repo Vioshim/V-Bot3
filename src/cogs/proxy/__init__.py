@@ -310,7 +310,7 @@ class ProxyCog(commands.Cog):
 
         if data := await db.find_one(key):
             proxy = Proxy.from_mongo_dict(data)
-            var_proxy = get(proxy.extras, name=variant.strip())
+            var_proxy = get(proxy.extras, name=variant.strip()) if variant else None
         else:
             proxy = var_proxy = None
 
