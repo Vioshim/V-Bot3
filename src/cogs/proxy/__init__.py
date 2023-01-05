@@ -13,13 +13,17 @@
 # limitations under the License.
 
 
+import re
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import NamedTuple, Optional
+from typing import Optional
 
+import d20
 from discord import (
     Attachment,
+    Color,
     DiscordException,
+    Embed,
     Interaction,
     InteractionResponse,
     Member,
@@ -43,11 +47,13 @@ from src.cogs.proxy.proxy import ProxyVariantArg
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.pronouns import Pronoun
-from src.structures.proxy import Proxy
+from src.structures.proxy import Proxy, ProxyExtra
 from src.structures.species import Species
 from src.utils.etc import LINK_EMOJI
 
 __all__ = ("Proxy", "setup")
+
+PARSER = re.compile(r"\{\{([^\{\}]+)\}\}")
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -167,7 +173,7 @@ class ProxyCog(commands.Cog):
 
         await ctx.followup.send(text, view=view, ephemeral=True)
 
-    async def proxy_handler(self, npc: NPC, message: Message, text: str = None):
+    async def proxy_handler(self, npc: NPC | Proxy | ProxyExtra, message: Message, text: str = None):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
         text = text or "\u200b"
         thread = view = MISSING
@@ -185,9 +191,32 @@ class ProxyCog(commands.Cog):
             elif data[-1] == npc.name:
                 npc.name = alternate
 
+        embeds = []
+        avatar_url = npc.avatar if isinstance(npc, NPC) else npc.image
+        username = npc.name[:80]
+
+        for item in PARSER.finditer(text):
+            aux = item.group(1)
+            match aux.split(":"):
+                case ["mode", mode]:
+                    if isinstance(npc, Proxy) and (o := get(npc.extras, name=mode)):
+                        username, avatar_url = o.name[:80], o.image
+                    text = text.replace(f"{{{{mode:{mode}}}}}", "", 1)
+                case ["roll", expression]:
+                    with suppress(Exception):
+                        embed = Embed(title=f"roll:{expression}", color=Color.blurple())
+                        value = d20.roll(expr=expression.strip() or "d20", allow_comments=True)
+                        if len(value.result) > 4096:
+                            d20.utils.simplify_expr(value.expr)
+                        embed.description = value.result
+                        if len(embeds) < 10:
+                            embeds.append(embed)
+                            text = text.replace(embed.title, f"`🎲{value.result}`", 1)
+
         proxy_msg = await webhook.send(
-            username=npc.name[:80],
-            avatar_url=npc.avatar,
+            username=username,
+            avatar_url=avatar_url,
+            embeds=embeds,
             content=text,
             files=[await item.to_file() for item in message.attachments],
             wait=True,

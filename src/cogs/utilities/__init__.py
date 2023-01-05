@@ -18,8 +18,7 @@ from os import path
 from random import choice
 from typing import Literal, Optional
 
-from d20 import roll
-from d20.utils import simplify_expr
+import d20
 from discord import (
     Attachment,
     Color,
@@ -372,9 +371,9 @@ class Utilities(commands.Cog):
             embed.set_footer(text=guild.name, icon_url=guild.icon)
 
         try:
-            value = roll(expr=expression, allow_comments=True)
+            value = d20.roll(expr=expression, allow_comments=True)
             if len(value.result) > 4096:
-                simplify_expr(value.expr)
+                d20.utils.simplify_expr(value.expr)
             embed.description = value.result
             embed.set_thumbnail(url=f"https://dummyimage.com/512x512/FFFFFF/000000&text={value.total}")
         except Exception as e:
@@ -414,9 +413,9 @@ class Utilities(commands.Cog):
             embed.set_footer(text=guild.name, icon_url=guild.icon)
 
         try:
-            value = roll(expr=expression, allow_comments=True)
+            value = d20.roll(expr=expression, allow_comments=True)
             if len(value.result) > 4096:
-                simplify_expr(value.expr)
+                d20.utils.simplify_expr(value.expr)
             embed.description = value.result
             embed.set_thumbnail(url=f"https://dummyimage.com/512x512/FFFFFF/000000&text={value.total}")
         except Exception as e:
