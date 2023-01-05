@@ -29,7 +29,7 @@ class ProxyVariantTransformer(Transformer):
     async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Proxy")
         items: list[ProxyExtra] = []
-        if item := db.find_one(
+        if item := await db.find_one(
             {
                 "id": int(oc) if (oc := ctx.namespace.oc) and str(oc).isdigit() else None,
                 "server": ctx.guild_id,
