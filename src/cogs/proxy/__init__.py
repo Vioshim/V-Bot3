@@ -204,14 +204,14 @@ class ProxyCog(commands.Cog):
                     text = text.replace(f"{{{{mode:{mode}}}}}", "", 1)
                 case ["roll", expression]:
                     with suppress(Exception):
-                        embed = Embed(title=f"roll:{expression}", color=Color.blurple())
+                        embed = Embed(color=Color.blurple())
                         value = d20.roll(expr=expression.strip() or "d20", allow_comments=True)
                         if len(value.result) > 4096:
                             d20.utils.simplify_expr(value.expr)
-                        embed.description = value.result
+                        embed = Embed(description=value.result, color=message.author.color)
                         if len(embeds) < 10:
                             embeds.append(embed)
-                            text = text.replace(f"{{{{{embed.title}}}}}", f"`🎲{value.total}`", 1)
+                            text = text.replace(f"{{{{roll:{expression}}}}}", f"`🎲{value.total}`", 1)
 
         proxy_msg = await webhook.send(
             username=username,
