@@ -135,7 +135,7 @@ class ImageView(Basic):
                 future.cancel()
 
             for task in done:
-                if future.exception() or not isinstance(received := task.result(), Message):
+                if not isinstance(received := task.result(), Message):
                     continue
 
                 if attachments := received.attachments:

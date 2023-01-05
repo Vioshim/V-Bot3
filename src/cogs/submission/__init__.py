@@ -485,9 +485,13 @@ class Submission(commands.Cog):
     ):
         channel = message.channel
         author = message.author.name.title()
+        db = self.bot.mongo_db("RP Logs")
+        db2 = self.bot.mongo_db("Tupper-logs")
+        if await db.find_one({"id": message.id, "channel": message.channel.id}):
+            return
 
         if isinstance(kwargs, Character):
-            key, oc = author, kwargs
+            key, oc = kwargs.name, kwargs
         elif item := process.extractOne(
             author,
             choices=kwargs.keys(),
@@ -524,7 +528,6 @@ class Submission(commands.Cog):
         else:
             view.add_item(Button(label=key[:80], disabled=True))
 
-        db = self.bot.mongo_db("RP Logs")
         if data := TUPPER_REPLY_PATTERN.search(message.content):
             channel_id, message_id = int(data.group(2)), int(data.group(3))
             content = data.group(4).strip()
@@ -554,7 +557,6 @@ class Submission(commands.Cog):
             wait=True,
         )
 
-        db = self.bot.mongo_db("RP Logs")
         await db.insert_one(
             {
                 "id": message.id,
@@ -563,7 +565,6 @@ class Submission(commands.Cog):
                 "log-channel": info_channel.id,
             }
         )
-        db2 = self.bot.mongo_db("Tupper-logs")
         await db2.insert_one(
             {
                 "channel": info_channel.id,

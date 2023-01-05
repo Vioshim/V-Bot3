@@ -218,7 +218,8 @@ class ProxyCog(commands.Cog):
         elif isinstance(npc, Proxy) and (oc_data := await db.find_one({"id": npc.id, "author": npc.author})):
             oc = Character.from_mongo_dict(oc_data)
 
-        original_text = text = text.strip() or "\u200b"
+        text = text.strip() or "\u200b"
+        original_text = text
         thread = view = MISSING
         if reference := message.reference:
             view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
