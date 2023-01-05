@@ -42,13 +42,11 @@ _M = TypeVar("_M", bound=Messageable)
 
 def check(ctx: Interaction):
     def inner(message: Message):
-        return (
+        content, attachments = message.content, message.attachments
+        return bool(
             ctx.user == message.author
             and ctx.channel == message.channel
-            and (
-                bool(REGEX_URL.match(message.content or ""))
-                or any((x.content_type or "").startswith("image/") for x in message.attachments)
-            )
+            and (REGEX_URL.match(content) or any(str(x.content_type).startswith("image/") for x in attachments))
         )
 
     return inner
@@ -125,7 +123,7 @@ class ImageView(Basic):
             sct.disabled = True
             await resp.edit_message(content="Alright, now send the URL or Attach an image.", embeds=[], view=self)
 
-            done, _ = await asyncio.wait(
+            done, pending = await asyncio.wait(
                 [
                     asyncio.create_task(ctx.client.wait_for("message", check=check(ctx))),
                     asyncio.create_task(self.wait()),
@@ -133,21 +131,26 @@ class ImageView(Basic):
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
+            for future in pending:
+                future.cancel()
+
             for task in done:
-                if isinstance(received := task.result(), Message):
-                    if attachments := received.attachments:
+                if future.exception() or not isinstance(received := task.result(), Message):
+                    continue
+
+                if attachments := received.attachments:
+                    self.text = attachments[0].proxy_url
+                    self.received = received
+                    await received.delete(delay=0)
+                elif file := await ctx.client.get_file(url=received.content, filename="image"):
+                    await received.delete(delay=0)
+                    self.received = foo = await ctx.channel.send(file=file)
+                    if attachments := self.received.attachments:
                         self.text = attachments[0].proxy_url
-                        self.received = received
-                        await received.delete(delay=0)
-                    elif file := await ctx.client.get_file(url=received.content, filename="image"):
-                        await received.delete(delay=0)
-                        self.received = foo = await ctx.channel.send(file=file)
-                        if attachments := self.received.attachments:
-                            self.text = attachments[0].proxy_url
-                        await foo.delete(delay=0)
-                    elif self.message.embeds and (image := self.message.embeds[0].image):
-                        self.text = image.url
-                    else:
-                        self.text = None
+                    await foo.delete(delay=0)
+                elif self.message.embeds and (image := self.message.embeds[0].image):
+                    self.text = image.url
+                else:
+                    self.text = None
 
         await self.delete(ctx)

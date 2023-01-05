@@ -29,20 +29,22 @@ from discord import (
     TextStyle,
     Thread,
     Webhook,
-    WebhookMessage,
     app_commands,
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING
+from discord.utils import MISSING, find, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.cogs.pokedex.search import DefaultSpeciesArg
+from src.cogs.proxy.proxy import ProxyVariantArg
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.pronouns import Pronoun
+from src.structures.proxy import Proxy
 from src.structures.species import Species
+from src.utils.etc import LINK_EMOJI
 
 __all__ = ("Proxy", "setup")
 
@@ -102,7 +104,7 @@ class ProxyModal(Modal, title="Edit Proxy Message"):
             await db.delete_one(self.data)
 
 
-class Proxy(commands.Cog):
+class ProxyCog(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.ctx_menu1 = app_commands.ContextMenu(
@@ -110,6 +112,7 @@ class Proxy(commands.Cog):
             callback=self.msg_proxy,
             guild_ids=[719343092963999804],
         )
+        self.last_names: dict[int, tuple[int, str]] = {}
 
     async def cog_load(self):
         self.bot.tree.add_command(self.ctx_menu1)
@@ -167,11 +170,21 @@ class Proxy(commands.Cog):
         text = text or "\u200b"
         thread = view = MISSING
         if reference := message.reference:
-            view = View().add_item(Button(label="Replying to", url=reference.jump_url))
+            view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
         if isinstance(message.channel, Thread):
             thread = message.channel
-        proxy_msg: WebhookMessage = await webhook.send(
-            username=npc.name,
+
+        author_id, npc.name = message.author.id, Proxy.clyde(npc.name)
+
+        if data := self.last_names.get(message.channel.id):
+            alternate = Proxy.alternate(npc.name)
+            if data[0] == author_id:
+                npc.name = data[-1] if alternate == data[-1] else npc.name
+            elif data[-1] == npc.name:
+                npc.name = alternate
+
+        proxy_msg = await webhook.send(
+            username=npc.name[:80],
             avatar_url=npc.avatar,
             content=text,
             files=[await item.to_file() for item in message.attachments],
@@ -179,14 +192,130 @@ class Proxy(commands.Cog):
             view=view,
             thread=thread,
         )
+        self.last_names[message.channel.id] = (message.author.id, proxy_msg.author.display_name)
         await self.bot.mongo_db("Tupper-logs").insert_one(
             {
                 "channel": message.channel.id,
                 "id": proxy_msg.id,
-                "author": message.author.id,
+                "author": author_id,
             }
         )
         await message.delete(delay=300 if message.mentions else 0)
+
+    @app_commands.command(description="Proxy management")
+    @app_commands.guilds(719343092963999804)
+    async def proxy(
+        self,
+        ctx: Interaction,
+        oc: CharacterArg,
+        variant: Optional[ProxyVariantArg],
+        image: Optional[Attachment],
+        prefix: Optional[str] = "",
+        delete: bool = False,
+    ):
+        """Proxy Command
+
+        Parameters
+        ----------
+        ctx : Interaction
+            Context
+        oc : CharacterArg
+            Chaaracter
+        variant : Optional[ProxyVariantArg]
+            Emotion Variant
+        image : Optional[Attachment]
+            Image
+        prefix : Optional[str], optional
+            Must include word text
+        delete : bool, optional
+            If deleting proxy/variant
+        """
+
+        await ctx.response.defer(ephemeral=True, thinking=True)
+
+        if prefix and "text" not in prefix:
+            await ctx.followup.send("Invalid Prefix", ephemeral=True)
+
+        member: Member = self.bot.supporting.get(ctx.user, ctx.user)
+        db = self.bot.mongo_db("Proxy")
+        if image and image.content_type.startswith("image/"):
+            w = await self.bot.webhook(1020151767532580934)
+            file = await image.to_file()
+            m = await w.send(
+                f"{oc.name} - {variant}",
+                file=file,
+                wait=True,
+                thread=Object(id=1045687852069040148),
+                username=ctx.user.display_name,
+                avatar_url=ctx.user.display_avatar.url,
+            )
+            image_url = m.attachments[0].url
+        else:
+            image_url = oc.image_url
+
+        key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
+
+        prefixes_arg: list[tuple[str, str]] = []
+        if data := db.find_one(key):
+            proxy = Proxy.from_mongo_dict(data)
+            var_proxy = get(proxy.extras, name=variant)
+        else:
+            proxy = var_proxy = None
+
+        if prefix:
+            prefix_data = Proxy.prefix_handle(prefix)
+            prefix_text = "text".join(prefix_data)
+            prefixes_arg.append(prefix_text)
+        else:
+            prefix_data, prefix_text = None, ""
+
+        if not proxy:  # No Proxy Found
+            message = "No proxy for the character was previously created."
+            if not delete:
+                proxy = Proxy(id=oc.id, author=oc.author, server=oc.server)
+                if variant:  # Creating w/ Variant
+                    proxy.image = oc.image_url
+                    proxy.append_extra(name=variant, image=image_url, prefixes=prefixes_arg)
+                    message = f"Created Proxy {proxy.name} - {variant}"
+                else:  # Creating without Variant
+                    proxy.image = image_url
+                    message = f"Created Proxy {proxy.name}"
+        elif var_proxy:  # Variant Found
+            var_proxy.image = image_url
+            message = f"Updating {oc.name} - {variant}"
+            if delete:  # Remove Variant
+                message = f"Removed variant {variant}"
+                proxy.extras.remove(var_proxy)
+            elif find(lambda x: x == prefix_data, var_proxy.prefixes):
+                message = f"Removed prefix {prefix_text} to {variant}"
+                var_proxy.remove_prefixes(prefix_data)
+            elif prefix_data:
+                message = f"Added prefix {prefix_text} to {variant}"
+                var_proxy.append_prefixes(prefix_data)
+        elif variant:  # No variant was found. Adding one
+            message = f"Proxy didn't have variant {variant}"
+            if not delete:
+                message = f"Added Variant {variant}, prefix is {prefix_text}"
+                proxy.append_extra(name=variant, image=image_url, prefixes=prefixes_arg)
+        else:
+            proxy.image = image_url
+            message = f"Updating Proxy for {oc.name}"
+
+            if delete:
+                await db.delete_one(key)
+                message = f"Deleted Proxy for {oc.name}"
+            elif find(lambda x: x == prefix_data, proxy.prefixes):
+                message = f"Removed prefix {prefix_text}"
+                proxy.remove_prefixes(prefix_data)
+            elif prefix_data:
+                message = f"Added prefix {prefix_text}"
+                proxy.append_prefixes(prefix_data)
+
+        if not delete:
+            proxy.name = oc.name
+            await db.replace_one(key, proxy.to_dict(), upsert=True)
+
+        await ctx.followup.send(message, ephemeral=True)
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
     @app_commands.guilds(719343092963999804)
@@ -404,4 +533,4 @@ async def setup(bot: CustomBot) -> None:
     bot: CustomBot
         Bot
     """
-    await bot.add_cog(Proxy(bot))
+    await bot.add_cog(ProxyCog(bot))
