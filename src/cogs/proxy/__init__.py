@@ -210,11 +210,15 @@ class ProxyCog(commands.Cog):
         deleting: bool = True,
     ):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
-
+        db = self.bot.mongo_db("Characters")
+        oc: Optional[Character] = None
         if isinstance(npc, Character):
+            oc = npc
             npc = NPC(name=npc.name, avatar=npc.image_url)
+        elif isinstance(npc, Proxy) and (oc_data := await db.find_one({"id": npc.id, "author": npc.author})):
+            oc = Character.from_mongo_dict(oc_data)
 
-        text = text or "\u200b"
+        original_text = text = text or "\u200b"
         thread = view = MISSING
         if reference := message.reference:
             view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
@@ -298,6 +302,10 @@ class ProxyCog(commands.Cog):
         )
         if deleting:
             await message.delete(delay=300 if message.mentions else 0)
+        if original_text != text and oc:
+            await self.bot.get_cog("Submission").on_message_tupper(
+                message=message, user=message.author, kwargs={oc.name: oc}
+            )
 
     @app_commands.command(description="Proxy management")
     @app_commands.guilds(719343092963999804)
