@@ -418,9 +418,8 @@ class Utilities(commands.Cog):
                 d20.utils.simplify_expr(value.expr)
             embed.description = value.result
             embed.set_thumbnail(url=f"https://dummyimage.com/512x512/FFFFFF/000000&text={value.total}")
-        except Exception as e:
+        except Exception:
             embed.description = "Invalid expression."
-            self.bot.logger.exception("Error while rolling dice.", exc_info=e)
         finally:
             await ctx.followup.send(embed=embed, ephemeral=hidden)
 

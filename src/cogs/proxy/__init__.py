@@ -219,7 +219,7 @@ class ProxyCog(commands.Cog):
             aux = item.group(1)
             match aux.split(":"):
                 case ["mode", mode]:
-                    if isinstance(npc, Proxy) and (o := get(npc.extras, name=mode)):
+                    if isinstance(npc, Proxy) and (o := get(npc.extras, name=mode.strip())):
                         avatar_url = o.image or avatar_url
                         if len(username := f"{npc.name} ({o.name})") > 80:
                             username = o.name
@@ -310,7 +310,7 @@ class ProxyCog(commands.Cog):
 
         if data := await db.find_one(key):
             proxy = Proxy.from_mongo_dict(data)
-            var_proxy = get(proxy.extras, name=variant)
+            var_proxy = get(proxy.extras, name=variant.strip())
         else:
             proxy = var_proxy = None
 
