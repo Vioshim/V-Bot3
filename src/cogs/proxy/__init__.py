@@ -258,7 +258,7 @@ class ProxyCog(commands.Cog):
         key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
 
         prefixes_arg: list[tuple[str, str]] = []
-        if data := db.find_one(key):
+        if data := await db.find_one(key):
             proxy = Proxy.from_mongo_dict(data)
             var_proxy = get(proxy.extras, name=variant)
         else:
