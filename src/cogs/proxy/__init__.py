@@ -236,12 +236,16 @@ class ProxyCog(commands.Cog):
 
         for item in PARSER.finditer(text):
             aux = item.group(1)
-            match aux.split(":"):
-                case ["metronome" | "Metronome"]:
+            info = aux.split(":")
+            if len(info) == 1:
+                info.append("")
+            match info:
+                case ["metronome" | "Metronome", mute]:
                     item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
-                    if len(embeds) < 10:
+                    condition = mute.strip().lower() == "mute"
+                    if not condition and len(embeds) < 10:
                         embeds.append(item.embed)
-                        text = text.replace(f"{{{{{aux}}}}}", f"`{item.name}`", 1)
+                    text = text.replace(f"{{{{{aux}}}}}", f"{item.emoji if condition else ''}`{item.name}`", 1)
                 case ["mode" | "Mode", mode]:
                     if isinstance(npc, Proxy) and (
                         o := process.extractOne(
@@ -265,7 +269,6 @@ class ProxyCog(commands.Cog):
                         if len(embeds) < 10:
                             embeds.append(embed)
                             text = text.replace(f"{{{{{aux}}}}}", f"`🎲{value.total}`", 1)
-
         if attachments:
             files = [await item.to_file() for item in message.attachments]
         else:
