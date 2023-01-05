@@ -481,12 +481,14 @@ class Submission(commands.Cog):
         self,
         message: Message,
         user: Member,
-        kwargs: dict[str, Character],
+        kwargs: Character | dict[str, Character],
     ):
         channel = message.channel
         author = message.author.name.title()
 
-        if item := process.extractOne(
+        if isinstance(kwargs, Character):
+            key, oc = author, kwargs
+        elif item := process.extractOne(
             author,
             choices=kwargs.keys(),
             score_cutoff=85,

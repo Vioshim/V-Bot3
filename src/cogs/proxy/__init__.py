@@ -304,7 +304,9 @@ class ProxyCog(commands.Cog):
             await message.delete(delay=300 if message.mentions else 0)
         if original_text != text and oc:
             await self.bot.get_cog("Submission").on_message_tupper(
-                message=message, user=message.author, kwargs={oc.name: oc}
+                message=proxy_msg,
+                user=message.author,
+                kwargs=oc,
             )
 
     @app_commands.command(description="Proxy management")
