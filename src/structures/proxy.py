@@ -149,7 +149,7 @@ class Proxy:
     def prefix_handle(text: str = "", prefix_a: str = "", prefix_b: str = ""):
         if "text" in text:
             prefixes = text.split("text")
-            prefix_a, prefix_b = text, "" if len(prefixes) <= 1 else prefixes[0], prefixes[-1]
+            prefix_a, prefix_b = (text, "") if len(prefixes) <= 1 else prefixes[0], prefixes[-1]
         return prefix_a, prefix_b
 
     def prefix_lookup(self, prefix_a: str = "", prefix_b: str = "") -> Optional[Proxy | ProxyExtra]:
