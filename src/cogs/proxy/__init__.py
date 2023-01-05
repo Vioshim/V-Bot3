@@ -211,7 +211,7 @@ class ProxyCog(commands.Cog):
                         embed.description = value.result
                         if len(embeds) < 10:
                             embeds.append(embed)
-                            text = text.replace(embed.title, f"`🎲{value.result}`", 1)
+                            text = text.replace(f"{{{{{embed.title}}}}}", f"`🎲{value.total}`", 1)
 
         proxy_msg = await webhook.send(
             username=username,
