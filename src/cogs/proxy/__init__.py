@@ -280,7 +280,7 @@ class ProxyCog(commands.Cog):
                     proxy.append_extra(name=variant, image=image_url, prefixes=prefixes_arg)
                     message = f"Created Proxy {proxy.name} - {variant}"
                 else:  # Creating without Variant
-                    proxy.image, proxy.prefixes = image_url, prefixes_arg
+                    proxy.image, proxy.prefixes = image_url, frozenset(prefixes_arg)
                     message = f"Created Proxy {proxy.name}"
         elif var_proxy:  # Variant Found
             var_proxy.image = image_url

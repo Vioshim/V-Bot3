@@ -107,7 +107,7 @@ class Proxy:
 
     def append_extra(self, name: str, image: Optional[str], prefixes: frozenset[tuple[str, str]] = None):
         if name != self.name:
-            prefixes = prefixes or frozenset()
+            prefixes = frozenset(prefixes) if prefixes else frozenset()
             image = image or self.image
             self.extras = self.extras.union({ProxyExtra(name=name, image=image, prefixes=prefixes)})
 
