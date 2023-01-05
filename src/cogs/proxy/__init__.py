@@ -218,7 +218,7 @@ class ProxyCog(commands.Cog):
         elif isinstance(npc, Proxy) and (oc_data := await db.find_one({"id": npc.id, "author": npc.author})):
             oc = Character.from_mongo_dict(oc_data)
 
-        original_text = text = text or "\u200b"
+        original_text = text = text.strip() or "\u200b"
         thread = view = MISSING
         if reference := message.reference:
             view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
@@ -292,6 +292,8 @@ class ProxyCog(commands.Cog):
             view=view,
             thread=thread,
         )
+        if isinstance(thread, Thread):
+            proxy_msg.channel = thread
         self.last_names[message.channel.id] = (message.author.id, proxy_msg.author.display_name)
         await self.bot.mongo_db("Tupper-logs").insert_one(
             {
@@ -302,7 +304,7 @@ class ProxyCog(commands.Cog):
         )
         if deleting:
             await message.delete(delay=300 if message.mentions else 0)
-        if original_text != text and oc:
+        if original_text != proxy_msg.content and oc:
             await self.bot.get_cog("Submission").on_message_tupper(
                 message=proxy_msg,
                 user=message.author,
