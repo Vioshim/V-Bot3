@@ -492,7 +492,7 @@ class ProxyCog(commands.Cog):
             proxy = Proxy.from_mongo_dict(x)
             ocs[proxy.name] = proxy
 
-        if options := process.extractOne(pokemon, choices=ocs, score_cutoff=60):
+        if options := process.extractOne(pokemon, choices=list(ocs), score_cutoff=60):
             await self.proxy_handler(npc=ocs[options[0]], message=ctx.message, text=text)
         else:
             await ctx.message.delete(delay=0)
