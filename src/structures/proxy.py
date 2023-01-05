@@ -27,7 +27,7 @@ from discord.utils import snowflake_time, utcnow
 CLYDE = re.compile(r"(c)(lyde)", re.IGNORECASE)
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, unsafe_hash=True)
 class ProxyExtra:
     name: str = ""  # May not have name, therefore use same
     image: str = ""  # May not have image, therefore use same
@@ -78,7 +78,7 @@ class Proxy:
     server: int = 719343092963999804
     name: str = ""  # max 80 Characters
     image: Optional[str] = None
-    extras: list[ProxyExtra] = field(default_factory=list)  # Specific Images
+    extras: frozenset[ProxyExtra] = field(default_factory=frozenset)  # Specific Images
     prefixes: frozenset[tuple[str, str]] = field(default_factory=frozenset)  # Specific prefixes
 
     def __eq__(self, o: object) -> bool:
@@ -92,7 +92,7 @@ class Proxy:
 
     def __post_init__(self):
         self.prefixes = frozenset(self.prefixes)
-        self.extras = sorted(map(ProxyExtra.handle, self.extras), key=lambda x: x.name)
+        self.extras = frozenset(map(ProxyExtra.handle, self.extras))
 
     def to_dict(self):
         return dict(
@@ -109,7 +109,7 @@ class Proxy:
         if name != self.name:
             prefixes = prefixes or frozenset()
             image = image or self.image
-            self.extras.append(ProxyExtra(name=name, image=image, prefixes=prefixes))
+            self.extras = self.extras.union({ProxyExtra(name=name, image=image, prefixes=prefixes)})
 
     def append_prefixes(self, *prefixes: tuple[str, str]):
         self.prefixes = self.prefixes.union(prefixes)

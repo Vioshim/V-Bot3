@@ -35,7 +35,7 @@ class ProxyVariantTransformer(Transformer):
                 "server": ctx.guild_id,
             }
         ):
-            items = Proxy.from_mongo_dict(item).extras
+            items.extend(Proxy.from_mongo_dict(item).extras)
 
         if options := process.extract(
             value,

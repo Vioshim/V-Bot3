@@ -287,7 +287,7 @@ class ProxyCog(commands.Cog):
             message = f"Updating {oc.name} - {variant}"
             if delete:  # Remove Variant
                 message = f"Removed variant {variant}"
-                proxy.extras.remove(var_proxy)
+                proxy.extras = proxy.extras.difference({var_proxy})
             elif find(lambda x: x == prefix_data, var_proxy.prefixes):
                 message = f"Removed prefix {prefix_text} to {variant}"
                 var_proxy.remove_prefixes(prefix_data)
