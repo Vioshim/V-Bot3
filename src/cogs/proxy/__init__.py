@@ -128,6 +128,26 @@ class ProxyCog(commands.Cog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
 
+    @commands.Cog.listener()
+    async def on_message(self, message: Message):
+        if message.webhook_id or message.author.bot or not message.guild:
+            return
+
+        db = self.bot.mongo_db("Proxy")
+        for npc, text in Proxy.lookup(
+            [
+                Proxy.from_mongo_dict(x)
+                async for x in db.find(
+                    {
+                        "server": message.guild.id,
+                        "author": message.author.id,
+                    }
+                )
+            ],
+            message.content,
+        ):
+            await self.proxy_handler(npc, message, text)
+
     async def msg_proxy(self, ctx: Interaction, msg: Message):
         db1 = self.bot.mongo_db("Tupper-logs")
         db2 = self.bot.mongo_db("RP Logs")
@@ -200,7 +220,9 @@ class ProxyCog(commands.Cog):
             match aux.split(":"):
                 case ["mode", mode]:
                     if isinstance(npc, Proxy) and (o := get(npc.extras, name=mode)):
-                        username, avatar_url = o.name[:80], o.image
+                        avatar_url = o.image or avatar_url
+                        if len(username := f"{npc.name} ({o.name})") > 80:
+                            username = o.name
                     text = text.replace(f"{{{{mode:{mode}}}}}", "", 1)
                 case ["roll", expression]:
                     with suppress(Exception):
@@ -214,7 +236,7 @@ class ProxyCog(commands.Cog):
                             text = text.replace(f"{{{{roll:{expression}}}}}", f"`🎲{value.total}`", 1)
 
         proxy_msg = await webhook.send(
-            username=username,
+            username=username[:80],
             avatar_url=avatar_url,
             embeds=embeds,
             content=text,
