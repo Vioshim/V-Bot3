@@ -257,7 +257,6 @@ class ProxyCog(commands.Cog):
 
         key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
 
-        prefixes_arg: list[tuple[str, str]] = []
         if data := await db.find_one(key):
             proxy = Proxy.from_mongo_dict(data)
             var_proxy = get(proxy.extras, name=variant)
@@ -267,20 +266,19 @@ class ProxyCog(commands.Cog):
         if prefix:
             prefix_data = Proxy.prefix_handle(prefix)
             prefix_text = "text".join(prefix_data)
-            prefixes_arg.append(prefix_text)
+            prefixes_arg = frozenset({prefix_data})
         else:
-            prefix_data, prefix_text = None, ""
+            prefix_data, prefix_text, prefixes_arg = None, "", frozenset()
 
         if not proxy:  # No Proxy Found
             message = "No proxy for the character was previously created."
             if not delete:
-                proxy = Proxy(id=oc.id, author=oc.author, server=oc.server)
                 if variant:  # Creating w/ Variant
-                    proxy.image = oc.image_url
+                    proxy = Proxy(id=oc.id, author=oc.author, server=oc.server, image=oc.image_url)
                     proxy.append_extra(name=variant, image=image_url, prefixes=prefixes_arg)
                     message = f"Created Proxy {proxy.name} - {variant}"
                 else:  # Creating without Variant
-                    proxy.image, proxy.prefixes = image_url, frozenset(prefixes_arg)
+                    proxy = Proxy(id=oc.id, author=oc.author, server=oc.server, image=image_url, prefixes=prefixes_arg)
                     message = f"Created Proxy {proxy.name}"
         elif var_proxy:  # Variant Found
             var_proxy.image = image_url
