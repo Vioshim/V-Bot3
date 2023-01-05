@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import random
 import re
 from contextlib import suppress
 from dataclasses import dataclass
@@ -46,6 +47,7 @@ from src.cogs.pokedex.search import DefaultSpeciesArg
 from src.cogs.proxy.proxy import ProxyVariantArg
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
+from src.structures.move import Move
 from src.structures.pronouns import Pronoun
 from src.structures.proxy import Proxy, ProxyExtra
 from src.structures.species import Species
@@ -235,6 +237,11 @@ class ProxyCog(commands.Cog):
         for item in PARSER.finditer(text):
             aux = item.group(1)
             match aux.split(":"):
+                case ["metronome" | "Metronome"]:
+                    item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
+                    if len(embeds) < 10:
+                        embeds.append(item.embed)
+                        text = text.replace(f"{{{{{aux}}}}}", f"`{item.name}`", 1)
                 case ["mode" | "Mode", mode]:
                     if isinstance(npc, Proxy) and (
                         o := process.extractOne(
