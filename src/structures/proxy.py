@@ -91,7 +91,11 @@ class Proxy:
         return self.id >> 22
 
     def __post_init__(self):
-        self.prefixes = frozenset(self.prefixes)
+        try:
+            self.prefixes = frozenset(self.prefixes)
+        except TypeError:
+            print(self.prefixes)
+            self.prefixes = frozenset()
         self.extras = frozenset(map(ProxyExtra.handle, self.extras))
 
     def to_dict(self):
@@ -236,6 +240,8 @@ class Proxy:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
+        dct["extras"] = frozenset(dct.get("extras", []))
+        dct["prefixes"] = frozenset(dct.get("prefixes", []))
         return cls(**dct)
 
     @staticmethod
