@@ -205,7 +205,7 @@ class ProxyCog(commands.Cog):
         message: Message,
         text: str = None,
         attachments: bool = True,
-        deleting: bool = False,
+        deleting: bool = True,
     ):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
 
