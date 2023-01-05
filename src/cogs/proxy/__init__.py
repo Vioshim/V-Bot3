@@ -222,13 +222,20 @@ class ProxyCog(commands.Cog):
         for item in PARSER.finditer(text):
             aux = item.group(1)
             match aux.split(":"):
-                case ["mode", mode]:
-                    if isinstance(npc, Proxy) and (o := get(npc.extras, name=mode.strip())):
-                        avatar_url = o.image or avatar_url
-                        if len(username := f"{npc.name} ({o.name})") > 80:
-                            username = o.name
-                    text = text.replace(f"{{{{mode:{mode}}}}}", "", 1)
-                case ["roll", expression]:
+                case ["mode" | "Mode", mode]:
+                    if isinstance(npc, Proxy) and (
+                        o := process.extractOne(
+                            mode.strip(),
+                            choices=npc.extras,
+                            score_cutoff=60,
+                            processor=lambda x: getattr(x, "name", x),
+                        )
+                    ):
+                        avatar_url = o[0].image or avatar_url
+                        if len(username := f"{npc.name} ({o[0].name})") > 80:
+                            username = o[0].name
+                    text = text.replace(f"{{{{{aux}}}}}", "", 1)
+                case ["roll" | "Roll", expression]:
                     with suppress(Exception):
                         embed = Embed(color=Color.blurple())
                         value = d20.roll(expr=expression.strip() or "d20", allow_comments=True)
@@ -237,7 +244,7 @@ class ProxyCog(commands.Cog):
                         embed = Embed(description=value.result, color=message.author.color)
                         if len(embeds) < 10:
                             embeds.append(embed)
-                            text = text.replace(f"{{{{roll:{expression}}}}}", f"`🎲{value.total}`", 1)
+                            text = text.replace(f"{{{{{aux}}}}}", f"`🎲{value.total}`", 1)
 
         proxy_msg = await webhook.send(
             username=username[:80],
