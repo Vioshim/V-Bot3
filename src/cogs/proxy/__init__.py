@@ -193,8 +193,12 @@ class ProxyCog(commands.Cog):
 
         await ctx.followup.send(text, view=view, ephemeral=True)
 
-    async def proxy_handler(self, npc: NPC | Proxy | ProxyExtra, message: Message, text: str = None):
+    async def proxy_handler(self, npc: Character | NPC | Proxy | ProxyExtra, message: Message, text: str = None):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
+
+        if isinstance(npc, Character):
+            npc = NPC(name=npc.name, avatar=npc.image_url)
+
         text = text or "\u200b"
         thread = view = MISSING
         if reference := message.reference:
@@ -478,25 +482,18 @@ class ProxyCog(commands.Cog):
         text : str, optional
             _description_, by default None
         """
-        db = self.bot.mongo_db("Characters")
+        db1 = self.bot.mongo_db("Characters")
+        db2 = self.bot.mongo_db("Proxy")
         member = self.bot.supporting.get(ctx.author, ctx.author)
-        if options := process.extractOne(
-            pokemon,
-            choices=[
-                Character.from_mongo_dict(x)
-                async for x in db.find(
-                    {
-                        "author": member.id,
-                        "server": ctx.guild.id,
-                    }
-                )
-            ],
-            score_cutoff=60,
-            processor=lambda x: getattr(x, "name", x),
-        ):
-            oc: Character = options[0]
-            npc = NPC(name=oc.name, avatar=oc.image_url)
-            await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+        key = {"author": member.id, "server": ctx.guild.id}
+        ocs = [Character.from_mongo_dict(x) async for x in db1.find(key)]
+        ocs = {oc.name: oc for oc in ocs}
+        async for x in db2.find(key):
+            proxy = Proxy.from_mongo_dict(x)
+            ocs[proxy.name] = proxy
+
+        if options := process.extractOne(pokemon, choices=ocs, score_cutoff=60):
+            await self.proxy_handler(npc=ocs[options[0]], message=ctx.message, text=text)
         else:
             await ctx.message.delete(delay=0)
 
