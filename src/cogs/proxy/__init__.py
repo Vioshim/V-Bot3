@@ -14,6 +14,7 @@
 
 
 from contextlib import suppress
+from dataclasses import dataclass
 from typing import NamedTuple, Optional
 
 from discord import (
@@ -49,7 +50,8 @@ from src.utils.etc import LINK_EMOJI
 __all__ = ("Proxy", "setup")
 
 
-class NPC(NamedTuple):
+@dataclass(unsafe_hash=True, slots=True)
+class NPC:
     name: str = "Narrator"
     avatar: str = "https://hmp.me/dx4a"
 
