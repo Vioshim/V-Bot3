@@ -287,7 +287,7 @@ class ProxyCog(commands.Cog):
             username=username[:80],
             avatar_url=avatar_url,
             embeds=embeds,
-            content=text,
+            content=text or "\u200b",
             files=files,
             wait=True,
             view=view,
