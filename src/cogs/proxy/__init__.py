@@ -240,12 +240,16 @@ class ProxyCog(commands.Cog):
             if len(info) == 1:
                 info.append("")
             match info:
+                case ["move" | "Move", move]:
+                    if (item := Move.deduce(move)) and len(embeds) < 10:
+                        embeds.append(item.embed)
+                        text = text.replace("{{" + aux + "}}", f"{item.emoji}`{item.name}`", 1)
                 case ["metronome" | "Metronome", mute]:
                     item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
                     condition = mute.strip().lower() == "mute"
                     if not condition and len(embeds) < 10:
                         embeds.append(item.embed)
-                    text = text.replace(f"{{{{{aux}}}}}", f"{item.emoji if condition else ''}`{item.name}`", 1)
+                    text = text.replace("{{" + aux + "}}", f"{item.emoji if condition else ''}`{item.name}`", 1)
                 case ["mode" | "Mode", mode]:
                     if isinstance(npc, Proxy) and (
                         o := process.extractOne(
@@ -268,7 +272,7 @@ class ProxyCog(commands.Cog):
                         embed = Embed(description=value.result, color=message.author.color)
                         if len(embeds) < 10:
                             embeds.append(embed)
-                            text = text.replace(f"{{{{{aux}}}}}", f"`🎲{value.total}`", 1)
+                            text = text.replace("{{" + aux + "}}", f"`🎲{value.total}`", 1)
         if attachments:
             files = [await item.to_file() for item in message.attachments]
         else:
