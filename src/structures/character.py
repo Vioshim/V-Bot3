@@ -1475,7 +1475,7 @@ class CharacterTransform(Transformer):
     async def transform(self, interaction: Interaction, value: str, /):
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
-            member = interaction.user
+            member = interaction.client.supporting.get(interaction.user, interaction.user)
         ocs = {
             oc.id: oc
             async for x in db.find({"author": member.id, "server": interaction.guild_id})
@@ -1494,7 +1494,7 @@ class CharacterTransform(Transformer):
     async def autocomplete(self, interaction: Interaction, value: str, /) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
-            member = interaction.user
+            member = interaction.client.supporting.get(interaction.user, interaction.user)
         ocs = {
             oc.id: oc
             async for x in db.find({"author": member.id, "server": interaction.guild_id})

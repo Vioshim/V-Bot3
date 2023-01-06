@@ -518,9 +518,8 @@ class ProxyCog(commands.Cog):
         delete : bool, optional
             If deleting proxy/variant
         """
-        member: Member = self.bot.supporting.get(ctx.user, ctx.user)
         db = self.bot.mongo_db("Proxy")
-        key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
+        key = {"id": oc.id, "server": oc.server, "author": oc.author}
         data = await db.find_one(key)
         proxy = Proxy.from_mongo_dict(data) if data else None
         var_proxy = get(proxy.extras, name=variant) if proxy else variant
