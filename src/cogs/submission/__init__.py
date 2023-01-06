@@ -714,6 +714,7 @@ class Submission(commands.Cog):
 
                 await w.send(
                     content="@everyone",
+                    embed=embed,
                     username=CLYDE.sub("\u200a", thread.owner.display_name),
                     avatar_url=thread.owner.display_avatar.url,
                     allowed_mentions=AllowedMentions(everyone=True),
