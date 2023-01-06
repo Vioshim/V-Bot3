@@ -236,7 +236,7 @@ class ProxyModal(Modal, title="Prefixes"):
         oc: Character,
         proxy: Optional[Proxy],
         variant: Optional[ProxyExtra | str],
-        image_url: str,
+        image_url: Optional[str] = None,
     ) -> None:
         super(ProxyModal, self).__init__(timeout=None)
         self.oc = oc
@@ -247,16 +247,16 @@ class ProxyModal(Modal, title="Prefixes"):
                 id=oc.id,
                 author=oc.author,
                 server=oc.author,
-                image=oc.image,
+                image=oc.image_url,
             )
         )
         self.proxy.name = oc.name
         if isinstance(variant, str):
-            variant = ProxyExtra(name=variant, image=image_url)
+            variant = ProxyExtra(name=variant, image=image_url or oc.image_url)
         elif isinstance(variant, ProxyExtra):
             self.proxy.remove_extra(variant)
-            variant.image = image_url
-        else:
+            variant.image = image_url or oc.image_url
+        elif image_url:
             self.proxy.image = image_url
 
         self.proxy1_data = TextInput(
@@ -299,9 +299,9 @@ class ProxyModal(Modal, title="Prefixes"):
                 if len(o := x.split("text")) > 1
             )
             self.proxy.extras |= {self.variant}
-            await resp.send_message("Changes performed in Proxy's Variant", ephemeral=True, delete_after=3)
+            await resp.send_message(embeds=[self.proxy.embed, self.variant.embed], ephemeral=True)
         else:
-            await resp.send_message("Changes performed in Proxy", ephemeral=True, delete_after=3)
+            await resp.send_message(embed=self.proxy.embed, ephemeral=True)
 
         await db.replace_one(
             {
@@ -516,7 +516,7 @@ class ProxyCog(commands.Cog):
         if delete:
             if data:
                 message = "Proxy not found"
-            elif var_proxy:
+            elif isinstance(var_proxy, ProxyExtra):
                 proxy.remove_extra(var_proxy)
                 await db.update_one(key, proxy.to_dict(), upsert=True)
                 message = "Proxy's Variant was removed"
@@ -540,7 +540,7 @@ class ProxyCog(commands.Cog):
             )
             modal = ProxyModal(oc, proxy, var_proxy or variant, m.attachments[0].url)
         else:
-            modal = ProxyModal(oc, proxy, var_proxy or variant, oc.image_url)
+            modal = ProxyModal(oc, proxy, var_proxy or variant)
         await ctx.response.send_modal(modal)
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
