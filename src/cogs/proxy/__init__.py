@@ -255,7 +255,8 @@ class ProxyModal(Modal, title="Prefixes"):
             variant = ProxyExtra(name=variant, image=image_url or oc.image_url)
         elif isinstance(variant, ProxyExtra):
             self.proxy.remove_extra(variant)
-            variant.image = image_url or oc.image_url
+            if image_url:
+                variant.image = image_url
         elif image_url:
             self.proxy.image = image_url
 
