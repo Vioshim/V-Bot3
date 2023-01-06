@@ -364,11 +364,19 @@ class ProxyCog(commands.Cog):
         db1 = self.bot.mongo_db("Tupper-logs")
         db2 = self.bot.mongo_db("RP Logs")
         entry: Optional[dict[str, int]] = await db1.find_one({"channel": msg.channel.id, "id": msg.id})
+        item: Optional[dict[str, int]] = await db2.find_one(
+            {
+                "$or": [
+                    {"id": msg.id, "channel": msg.channel.id},
+                    {"log": msg.id, "log-channel": msg.channel.id},
+                ]
+            }
+        )
         member: Member = self.bot.supporting.get(ctx.user, ctx.user)
 
         self.bot.logger.info("User %s is checking proxies at %s", str(ctx.user), msg.jump_url)
 
-        if entry and member.id == entry["author"]:
+        if entry and member.id == entry["author"] and not (item and item["log-channel"] == ctx.channel_id):
             return await ctx.response.send_modal(ProxyMessageModal(msg, entry))
 
         await ctx.response.defer(ephemeral=True, thinking=True)
@@ -377,14 +385,7 @@ class ProxyCog(commands.Cog):
         view.add_item(Button(label="Jump URL", url=msg.jump_url))
         text = "Current associated information to the message."
 
-        if item := await db2.find_one(
-            {
-                "$or": [
-                    {"id": msg.id, "channel": msg.channel.id},
-                    {"log": msg.id, "log-channel": msg.channel.id},
-                ]
-            }
-        ):
+        if item:
             if not entry:
                 entry = await db1.find_one({"channel": item["log-channel"], "id": item["log"]})
             ch: TextChannel = ctx.guild.get_channel_or_thread(item["log-channel"])
