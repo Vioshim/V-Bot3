@@ -173,6 +173,8 @@ class Species(metaclass=ABCMeta):
 
     @property
     def total_movepool(self):
+        if TypingEnum.Shadow in self.types:
+            return Movepool.shadow()
         mon = self
         aux = self.movepool
         while mon := mon.species_evolves_from:

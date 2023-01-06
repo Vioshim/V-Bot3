@@ -774,17 +774,16 @@ class MovesetField(TemplateField):
         m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
 
         movepool = Movepool.default(oc.total_movepool)
-        shadow = TypingEnum.Shadow in oc.types
 
-        if m1 in movepool or m2 in movepool or shadow:
-            movepool = Movepool(other=Move.all(banned=False, shadow=shadow))
+        if m1 in movepool or m2 in movepool:
+            movepool = Movepool(other=Move.all(banned=False, shadow=False))
 
         moves = movepool()
         return ", ".join(x.name for x in oc.moveset if x not in moves)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return bool(oc.species)
+        return oc.species and oc.total_movepool
 
     @classmethod
     async def on_submit(
@@ -797,10 +796,9 @@ class MovesetField(TemplateField):
     ):
         m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
         movepool = Movepool.default(oc.total_movepool)
-        shadow = TypingEnum.Shadow in oc.types
 
-        if m1 in movepool or m2 in movepool or shadow:
-            movepool = Movepool(other=Move.all(banned=False, shadow=shadow))
+        if m1 in movepool or m2 in movepool:
+            movepool = Movepool(other=Move.all(banned=False, shadow=False))
 
         view = MovepoolMoveComplex(
             member=ctx.user,
@@ -808,20 +806,10 @@ class MovesetField(TemplateField):
             target=ctx,
             choices={x for x in oc.moveset if x in movepool},
         )
-        async with view.send(
-            title=f"{template.title} Character's Moveset",
-            ephemeral=ephemeral,
-        ) as choices:
+        async with view.send(title=f"{template.title} Character's Moveset", ephemeral=ephemeral) as choices:
             if choices:
                 oc.moveset = frozenset(choices)
-                if (
-                    isinstance(
-                        oc.species,
-                        (Fakemon, Variant, CustomParadox),
-                    )
-                    and not oc.movepool
-                    and not shadow
-                ):
+                if isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and not oc.movepool:
                     oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                     progress.add(MovepoolField.name)
                 progress.add(cls.name)

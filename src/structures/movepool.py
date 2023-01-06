@@ -51,6 +51,10 @@ class Movepool:
         self.other = frozenset(self.other)
 
     @classmethod
+    def shadow(cls):
+        return cls(tm=Move.all(shadow=True))
+
+    @classmethod
     def hook(cls, dct: dict[str, Any]):
         if set(dct).issubsset(Movepool.__slots__):
             return Movepool.from_dict(**dct)
