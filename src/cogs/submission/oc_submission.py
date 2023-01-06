@@ -1141,7 +1141,7 @@ class ImageField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return bool(oc.species)
+        return oc.species and oc.types
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
