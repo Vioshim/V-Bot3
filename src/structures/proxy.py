@@ -24,6 +24,8 @@ from typing import Any, Optional
 from discord import Embed
 from discord.utils import snowflake_time, utcnow
 
+from src.utils.etc import WHITE_BAR
+
 CLYDE = re.compile(r"(c)(lyde)", re.IGNORECASE)
 
 
@@ -64,11 +66,13 @@ class ProxyExtra:
 
     @property
     def embed(self):
-        embed = Embed(title=self.name)
-        for index, (k, v) in enumerate(self.prefixes, start=1):
-            embed.add_field(name=f"Prefix {index}", value=f"{k}text{v}")
+        embed = Embed(
+            title=self.name,
+            description="\n".join(f"{k}text{v}" for k, v in self.prefixes),
+        )
         if self.image and isinstance(self.image, str):
-            embed.set_image(url=self.image)
+            embed.set_thumbnail(url=self.image)
+        embed.set_image(url=WHITE_BAR)
         return embed
 
 
@@ -130,13 +134,18 @@ class Proxy:
 
     @property
     def embed(self):
-        embed = Embed(title=self.name, timestamp=self.created_at)
-        for index, (k, v) in enumerate(self.prefixes, start=1):
-            embed.add_field(name=f"Prefix {index}", value=f"{k}text{v}")
+        embed = Embed(
+            title=self.name,
+            description="\n".join(f"{k}text{v}" for k, v in self.prefixes),
+            timestamp=self.created_at,
+        )
         if self.image and isinstance(self.image, str):
-            embed.set_image(url=self.image)
-        if self.extras:
-            embed.set_footer(text=f"{len(self.extras)} Extras")
+            embed.set_thumbnail(url=self.image)
+
+        if extras := "\n".join(f"• {x.name}" for x in self.extras):
+            embed.add_field(name=f"{len(self.extras)} Extras", value=extras)
+
+        embed.set_image(url=WHITE_BAR)
         return embed
 
     def copy(self):
