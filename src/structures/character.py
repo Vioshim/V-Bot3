@@ -818,10 +818,9 @@ class Character:
 
         if hidden_power := self.hidden_power:
             color = Color(hidden_power.color)
-            icon_url = hidden_power.emoji.url
             moveset_title = f"{hidden_power.emoji} Moveset"
         else:
-            color, icon_url, moveset_title = Color.blurple(), None, "Moveset"
+            color, moveset_title = Color.blurple(), "Moveset"
 
         embeds[0].color, embeds[-1].color = color, color
         footer_elements: list[str] = []
@@ -834,7 +833,7 @@ class Character:
             footer_elements.append(self.weight_text)
 
         if footer_text := "\n".join(footer_elements):
-            c_embed.set_footer(text=footer_text, icon_url=icon_url)
+            c_embed.set_footer(text=footer_text)
 
         def move_parser(x: Move):
             item = self.hidden_power if x.id in [237, 851] and self.hidden_power else x.type
