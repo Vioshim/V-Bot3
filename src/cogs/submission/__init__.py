@@ -664,6 +664,7 @@ class Submission(commands.Cog):
             and thread.parent.category_id in MAP_ELEMENTS2
             and self.bot.user != thread.owner
         ):
+            await asyncio.sleep(1)
             msg = await thread.get_partial_message(thread.id).fetch()
             data = await parent.create_thread(
                 name=thread.name,
