@@ -125,16 +125,13 @@ class ImageView(Basic):
             sct.disabled = True
             await resp.edit_message(content="Alright, now send the URL or Attach an image.", embeds=[], view=self)
 
-            done, pending = await asyncio.wait(
+            done, _ = await asyncio.wait(
                 [
                     asyncio.create_task(ctx.client.wait_for("message", check=check(ctx))),
                     asyncio.create_task(self.wait()),
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
-
-            for future in pending:
-                future.cancel()
 
             for task in done:
                 if isinstance(received := task.result(), Message):
