@@ -15,6 +15,7 @@
 
 import random
 import re
+from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Optional
@@ -47,6 +48,7 @@ from src.cogs.pokedex.search import DefaultSpeciesArg
 from src.cogs.proxy.proxy import ProxyVariantArg
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
+from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.pronouns import Pronoun
 from src.structures.proxy import Proxy, ProxyExtra
@@ -61,7 +63,11 @@ PARSER = re.compile(r"\{\{([^\{\}]+)\}\}")
 @dataclass(unsafe_hash=True, slots=True)
 class NPC:
     name: str = "Narrator"
-    avatar: str = "https://hmp.me/dx4a"
+    image: str = "https://hmp.me/dx4a"
+
+    def __post_init__(self):
+        self.name = self.name or "Narrator"
+        self.image = self.image or "https://hmp.me/dx4a"
 
 
 class NameModal(Modal, title="NPC Name"):
@@ -78,6 +84,116 @@ class NameModal(Modal, title="NPC Name"):
         resp: InteractionResponse = interaction.response
         await resp.pong()
         self.stop()
+
+
+class ProxyFunction(ABC):
+    aliases: list[str]
+
+    @classmethod
+    def lookup(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+        items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
+        aux_text = text.split(":")[0]
+        if x := process.extractOne(aux_text, choices=list(items), score_cutoff=60):
+            return items[x[0]].parse(
+                npc,
+                text.removeprefix(aux_text).strip().removeprefix(":").strip(),
+            )
+
+    @classmethod
+    @abstractmethod
+    def parse(
+        cls,
+        npc: NPC | Proxy | ProxyExtra,
+        text: str,
+    ) -> Optional[tuple[NPC | Proxy | ProxyExtra, str, Optional[Embed]]]:
+        """This is the abstract parsing methods
+
+        Parameters
+        ----------
+        npc : NPC | Proxy | ProxyExtra
+            NPC to keep or replace
+        text : str
+            Text to evaluate
+
+        Returns
+        -------
+        Optional[tuple[NPC | Proxy | ProxyExtra, str, Optional[Embed]]]
+            Result
+        """
+
+
+class MoveFunction(ProxyFunction):
+    aliases = ["Move"]
+
+    @classmethod
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str) -> Optional[tuple[str, Optional[Embed]]]:
+        match text.split(":"):
+            case [move]:
+                if not (item := Move.deduce(move)):
+                    return
+                return npc, f"{item.emoji}`{item.name}`", item.embed
+            case [move, move_type]:
+                if not (item := Move.deduce(move)):
+                    return
+                move_type = TypingEnum.deduce(move_type) or item.type
+                embed = item.embed
+                embed.color = move_type.color
+                if item.type != move_type:
+                    embed.set_author(name=f"Originally {item.type.name} Type ", icon_url=item.type.emoji.url)
+                embed.set_thumbnail(url=move_type.emoji.url)
+                return npc, f"{move_type.emoji}`{item.name}`", item.embed
+
+
+class MetronomeFunction(ProxyFunction):
+    aliases = ["Metronome"]
+
+    @classmethod
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+        item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
+        if "mute" in text.lower():
+            name, embed = f"{item.emoji}`{item.name}`", None
+        else:
+            name, embed = f"`{item.name}`", item.embed
+        return npc, name, embed
+
+
+class TypeFunction(ProxyFunction):
+    aliases = ["Type"]
+
+    @classmethod
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+        if item := TypingEnum.deduce(text):
+            return npc, str(item.emoji), None
+
+
+class MoodFunction(ProxyFunction):
+    aliases = ["Mood", "Mode"]
+
+    @classmethod
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+        if isinstance(npc, Proxy) and (
+            o := process.extractOne(
+                text.strip(),
+                choices=npc.extras,
+                score_cutoff=60,
+                processor=lambda x: getattr(x, "name", x),
+            )
+        ):
+            if len(username := f"{npc.name} ({o[0].name})") > 80:
+                username = o[0].name
+            return NPC(name=username, image=o[0].image or npc.image), "", None
+
+
+class RollFunction(ProxyFunction):
+    aliases = ["Roll"]
+
+    @classmethod
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+        with suppress(Exception):
+            value = d20.roll(expr=text.strip() or "d20", allow_comments=True)
+            if len(value.result) > 4096:
+                d20.utils.simplify_expr(value.expr)
+            return npc, Embed(description=value.result), f"`🎲{value.total}`"
 
 
 class ProxyModal(Modal, title="Edit Proxy Message"):
@@ -130,23 +246,14 @@ class ProxyCog(commands.Cog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
 
-    @commands.Cog.listener()
-    async def on_message(self, message: Message):
-        if message.webhook_id or message.author.bot or not message.guild:
-            return
-
+    async def on_proxy_message(self, message: Message):
         db = self.bot.mongo_db("Proxy")
         deleting: bool = False
         for index, (npc, text) in enumerate(
             Proxy.lookup(
                 [
                     Proxy.from_mongo_dict(x)
-                    async for x in db.find(
-                        {
-                            "server": message.guild.id,
-                            "author": message.author.id,
-                        }
-                    )
+                    async for x in db.find({"server": message.guild.id, "author": message.author.id})
                 ],
                 message.content,
             )
@@ -155,6 +262,18 @@ class ProxyCog(commands.Cog):
             await self.proxy_handler(npc, message, text, attachments=index == 0, deleting=False)
         if deleting:
             await message.delete(delay=300 if message.mentions else 0)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, previous: Message, current: Message):
+        if not (
+            previous.webhook_id or previous.author.bot or not previous.guild or previous.content == current.content
+        ):
+            await self.on_proxy_message(current)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: Message):
+        if not (message.webhook_id or message.author.bot or not message.guild):
+            await self.on_proxy_message(message)
 
     async def msg_proxy(self, ctx: Interaction, msg: Message):
         db1 = self.bot.mongo_db("Tupper-logs")
@@ -214,7 +333,7 @@ class ProxyCog(commands.Cog):
         oc: Optional[Character] = None
         if isinstance(npc, Character):
             oc = npc
-            npc = NPC(name=npc.name, avatar=npc.image_url)
+            npc = NPC(name=npc.name, image=npc.image_url)
         elif isinstance(npc, Proxy) and (oc_data := await db.find_one({"id": npc.id, "author": npc.author})):
             oc = Character.from_mongo_dict(oc_data)
 
@@ -236,56 +355,23 @@ class ProxyCog(commands.Cog):
                 npc.name = alternate
 
         embeds = []
-        avatar_url = npc.avatar if isinstance(npc, NPC) else npc.image
-        username = npc.name[:80]
-
         for item in PARSER.finditer(text):
-            aux = item.group(1)
-            info = aux.split(":")
-            if len(info) == 1:
-                info.append("")
-            match info:
-                case ["move" | "Move", move]:
-                    if (item := Move.deduce(move)) and len(embeds) < 10:
-                        embeds.append(item.embed)
-                        text = text.replace("{{" + aux + "}}", f"{item.emoji}`{item.name}`", 1)
-                case ["metronome" | "Metronome", mute]:
-                    item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
-                    condition = mute.strip().lower() == "mute"
-                    if not condition and len(embeds) < 10:
-                        embeds.append(item.embed)
-                    text = text.replace("{{" + aux + "}}", f"{item.emoji if condition else ''}`{item.name}`", 1)
-                case ["mode" | "Mode" | "mood" | "Mood", mode]:
-                    if isinstance(npc, Proxy) and (
-                        o := process.extractOne(
-                            mode.strip(),
-                            choices=npc.extras,
-                            score_cutoff=60,
-                            processor=lambda x: getattr(x, "name", x),
-                        )
-                    ):
-                        avatar_url = o[0].image or avatar_url
-                        if len(username := f"{npc.name} ({o[0].name})") > 80:
-                            username = o[0].name
-                    text = text.replace(f"{{{{{aux}}}}}", "", 1)
-                case ["roll" | "Roll", expression]:
-                    with suppress(Exception):
-                        embed = Embed(color=Color.blurple())
-                        value = d20.roll(expr=expression.strip() or "d20", allow_comments=True)
-                        if len(value.result) > 4096:
-                            d20.utils.simplify_expr(value.expr)
-                        embed = Embed(description=value.result, color=message.author.color)
-                        if len(embeds) < 10:
-                            embeds.append(embed)
-                            text = text.replace("{{" + aux + "}}", f"`🎲{value.total}`", 1)
+            if proxy_data := ProxyFunction.lookup(npc, aux := item.group(1)):
+                npc, data_text, data_embed = proxy_data
+                if data_embed is None or len(embeds) < 10:
+                    text = text.replace("{{" + aux + "}}", data_text, 1)
+                    if data_embed:
+                        data_embed.color = data_embed.color or message.author.color
+                        embeds.append(data_embed)
+
         if attachments:
             files = [await item.to_file() for item in message.attachments]
         else:
             files = []
 
         proxy_msg = await webhook.send(
-            username=username[:80],
-            avatar_url=avatar_url,
+            username=npc.name[:80],
+            avatar_url=npc.image,
             embeds=embeds,
             content=text or "\u200b",
             files=files,
@@ -492,10 +578,10 @@ class ProxyCog(commands.Cog):
         else:
             context = resp.send_message
 
-        npc = NPC(name, image) if image else NPC(name)
+        npc = NPC(name, image)
         await self.bot.mongo_db("NPC").replace_one(
             {"author": ctx.user.id},
-            {"author": ctx.user.id, "name": npc.name, "avatar": npc.avatar},
+            {"author": ctx.user.id, "name": npc.name, "image": npc.image},
             upsert=True,
         )
         await context(
@@ -516,7 +602,7 @@ class ProxyCog(commands.Cog):
             _description_, by default None
         """
         if (mon := Species.single_deduce(pokemon)) and not mon.banned:
-            npc = NPC(name=f"NPC〕{mon.name}", avatar=mon.base_image)
+            npc = NPC(name=f"NPC〕{mon.name}", image=mon.base_image)
             await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
             await ctx.message.delete(delay=0)
@@ -563,7 +649,7 @@ class ProxyCog(commands.Cog):
             Text, by default None
         """
         if entry := await self.bot.mongo_db("NPC").find_one({"author": ctx.author.id}):
-            npc = NPC(name=entry["name"], avatar=entry["avatar"])
+            npc = NPC(name=entry["name"], image=entry["avatar"] if "avatar" in entry else entry["image"])
             await self.proxy_handler(npc=npc, message=ctx.message, text=text)
         else:
             await ctx.message.delete(delay=0)
