@@ -268,7 +268,7 @@ class ProxyModal(Modal, title="Prefixes"):
             else Proxy(
                 id=oc.id,
                 author=oc.author,
-                server=oc.author,
+                server=oc.server,
                 image=oc.image_url,
             )
         )
