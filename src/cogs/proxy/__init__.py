@@ -139,7 +139,7 @@ class MoveFunction(ProxyFunction):
                 if item.type != move_type:
                     embed.set_author(name=f"Originally {item.type.name} Type ", icon_url=item.type.emoji.url)
                 embed.set_thumbnail(url=move_type.emoji.url)
-                return npc, f"{move_type.emoji}`{item.name}`", item.embed
+                return npc, f"{move_type.emoji}`{item.name}`", embed
 
 
 class MetronomeFunction(ProxyFunction):
