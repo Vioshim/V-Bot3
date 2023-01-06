@@ -91,7 +91,7 @@ class ProxyFunction(ABC):
     def lookup(cls, npc: NPC | Proxy | ProxyExtra, text: str):
         items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
         args = [x for x in text.lower().split(":")]
-        if args and (x := process.extractOne(args[0], choices=list(items), score_cutoff=60)):
+        if args and (x := process.extractOne(args[0], choices=list(items), score_cutoff=90)):
             return items[x[0]].parse(npc, args[1:])
 
     @classmethod
