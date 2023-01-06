@@ -819,9 +819,9 @@ class Character:
         if hidden_power := self.hidden_power:
             color = Color(hidden_power.color)
             icon_url = hidden_power.emoji.url
+            moveset_title = f"{hidden_power.emoji} Moveset"
         else:
-            color = Color.blurple()
-            icon_url = None
+            color, icon_url, moveset_title = Color.blurple(), None, "Moveset"
 
         embeds[0].color, embeds[-1].color = color, color
         footer_elements: list[str] = []
@@ -842,7 +842,7 @@ class Character:
             return f"> [{x.name}] - {item.name} ({x.category.name})".title()
 
         if moves_text := "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name))):
-            c_embed.add_field(name="Moveset", value=moves_text, inline=False)
+            c_embed.add_field(name=moveset_title, value=moves_text, inline=False)
 
         if image := self.image_url:
             c_embed.set_image(url=image)
