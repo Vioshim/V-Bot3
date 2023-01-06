@@ -20,6 +20,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    Object,
 )
 from discord.ui import Button, View, button
 from discord.utils import utcnow
@@ -39,7 +40,7 @@ class RPView(View):
 
     @property
     def url(self):
-        msg_id = self.oc_list.get(self.member_id, 919277769735680050)
+        msg_id = self.oc_list.get(self.member_id, 1019686568644059136)
         return f"https://discord.com/channels/{self.server}/{msg_id}/"
 
     async def interaction_check(self, interaction: Interaction, /) -> bool:
@@ -70,7 +71,7 @@ class RPView(View):
         await resp.pong()
         member: Member = interaction.user
         guild = interaction.guild
-        webhook = await interaction.client.webhook(740568087820238919, reason="Ping")
+        webhook = await interaction.client.webhook(1061008601335992422, reason="Ping")
         embed = Embed(title="User has pinged you.", timestamp=utcnow(), color=member.color)
         embed.set_author(name=member.display_name)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -84,5 +85,6 @@ class RPView(View):
             f"Hello {author.mention}\n\n{member.mention} is interested on Rping with your characters.",
             embed=embed,
             view=view,
+            thread=Object(id=1061010425136828628),
             allowed_mentions=AllowedMentions(users=True),
         )

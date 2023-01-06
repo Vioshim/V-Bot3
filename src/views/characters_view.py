@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from contextlib import suppress
 from typing import Optional
 
 from discord import (
@@ -21,7 +20,6 @@ from discord import (
     ButtonStyle,
     Embed,
     File,
-    Forbidden,
     Guild,
     Interaction,
     InteractionResponse,
@@ -32,10 +30,8 @@ from discord import (
     TextStyle,
     Thread,
     Webhook,
-    WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import MISSING
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
@@ -72,7 +68,7 @@ class PingModal(Modal):
         if self.thread_id:
             thread, channel_id = Object(id=self.thread_id), 958122815171756042
         else:
-            thread, channel_id = MISSING, 740568087820238919
+            thread, channel_id = Object(id=1061008601335992422), 1061008601335992422
 
         channel: TextChannel = interaction.guild.get_channel(channel_id)
         embed = Embed(title=self.oc.name, description=self.message.value, color=user.color)
@@ -97,7 +93,7 @@ class PingModal(Modal):
         webhook: Webhook = await interaction.client.webhook(channel)
         view = View()
         view.add_item(Button(label=self.oc.name[:80], emoji=self.oc.emoji, url=self.oc.jump_url))
-        msg: WebhookMessage = await webhook.send(
+        msg = await webhook.send(
             receiver.mention,
             file=file,
             allowed_mentions=AllowedMentions(users=True),
@@ -108,14 +104,10 @@ class PingModal(Modal):
             view=view,
             wait=True,
         )
-        if thread is MISSING:
-            name = f"{user.display_name} -> {receiver.display_name}"
-            thread = await msg.create_thread(name=name, reason=f"Ping: {name}")
 
-        with suppress(Forbidden):
-            if isinstance(thread, Thread):
-                await thread.add_user(user)
-                await thread.add_user(receiver)
+        if isinstance(thread := msg.channel, Thread):
+            await thread.add_user(user)
+
         await interaction.followup.send("Ping has been successful", ephemeral=True)
         self.stop()
 
