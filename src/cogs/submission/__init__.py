@@ -584,7 +584,10 @@ class Submission(commands.Cog):
             return
 
         messages: list[Message] = []
-        reference_text = BRACKETS_PARSER.sub("", message.content).strip()
+        if (w := self.bot.webhook_lazy(message.channel)) and w.id == message.webhook_id:
+            reference_text = BRACKETS_PARSER.sub("", message.content)
+        else:
+            reference_text = message.content
 
         def checker(m: Message):
             if not (m.webhook_id and message.channel == m.channel):
@@ -595,7 +598,9 @@ class Submission(commands.Cog):
             else:
                 text = m.content
 
-            text = BRACKETS_PARSER.sub("", text).strip()
+            if (w := self.bot.webhook_lazy(m.channel)) and w.id == m.webhook_id:
+                text = BRACKETS_PARSER.sub("", text)
+
             attachments = message.attachments
             if (text and (text in reference_text)) or (attachments and len(attachments) == len(m.attachments)):
                 messages.append(m)
