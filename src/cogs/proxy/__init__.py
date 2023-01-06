@@ -289,20 +289,14 @@ class ProxyModal(Modal, title="Prefixes"):
         """
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Proxy")
-        self.proxy.append_prefixes(
-            *[
-                (o[0].strip(), o[-1].strip())
-                for x in self.proxy1_data.value.split("\n")
-                if len(o := x.split("text")) > 1
-            ]
+        self.proxy.prefixes = frozenset(
+            (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
         )
         if self.variant:
-            self.variant.append_prefixes(
-                *[
-                    (o[0].strip(), o[-1].strip())
-                    for x in self.proxy2_data.value.split("\n")
-                    if len(o := x.split("text")) > 1
-                ]
+            self.variant.prefixes = frozenset(
+                (o[0].strip(), o[-1].strip())
+                for x in self.proxy2_data.value.split("\n")
+                if len(o := x.split("text")) > 1
             )
             self.proxy.extras |= {self.variant}
             await resp.send_message("Changes performed in Proxy's Variant", ephemeral=True, delete_after=3)
@@ -517,7 +511,7 @@ class ProxyCog(commands.Cog):
         key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
         data = await db.find_one(key)
         proxy = Proxy.from_mongo_dict(data) if data else None
-        var_proxy = get(proxy.extras, name=variant) if proxy else None
+        var_proxy = get(proxy.extras, name=variant) if proxy else variant
 
         if delete:
             if data:
