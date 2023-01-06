@@ -191,7 +191,7 @@ class RollFunction(ProxyFunction):
             value = d20.roll(expr=text.strip() or "d20", allow_comments=True)
             if len(value.result) > 4096:
                 d20.utils.simplify_expr(value.expr)
-            return npc, Embed(description=value.result), f"`🎲{value.total}`"
+            return npc, f"`🎲{value.total}`", Embed(description=value.result)
 
 
 class ProxyMessageModal(Modal, title="Edit Proxy Message"):
