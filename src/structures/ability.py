@@ -234,7 +234,7 @@ class SpAbility:
 
     @property
     def valid(self):
-        return self.name and self.description and self.origin
+        return any(self.params)
 
     @property
     def embed(self) -> Embed:
@@ -245,7 +245,7 @@ class SpAbility:
         Embed
             Embed
         """
-        embed = Embed(title=self.name, description=self.description)
+        embed = Embed(title=self.name or "OC's Trait", description=self.description)
         if origin := self.origin:
             embed.add_field(name="Origin", value=origin[:1024], inline=False)
         if pros := self.pros:

@@ -136,8 +136,8 @@ class SPAbilityView(Basic):
     def __init__(self, target: Interaction, member: Member, oc: Character):
         super(SPAbilityView, self).__init__(target=target, member=member, timeout=None)
         self.embed.title = "Unique Trait Settings"
-        self.embed.description = "Unique powers are something that most people have, they don't necessarily have to use pros and cons, they are just traits, but the field is optional if needed."
-        self.sp_ability: SpAbility = oc.sp_ability or SpAbility()
+        self.embed.description = "Everyone is special, traits are something that most if not all people have, all fields are optional based on how they fit your OC."
+        self.sp_ability = oc.sp_ability or SpAbility()
         for x in self.setting.options:
             x.default = x.value == self.sp_ability.kind.name
         self.member = member

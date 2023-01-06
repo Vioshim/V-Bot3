@@ -794,13 +794,11 @@ class Character:
             )
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
-            sp_embed = Embed(timestamp=self.created_at)
-
-            if name := sp_ability.name[:100]:
-                sp_embed.title = name
-
-            if value := sp_ability.description[:1024]:
-                sp_embed.description = value
+            sp_embed = Embed(
+                title=name if (name := sp_ability.name[:100]) else f"{self.name[:92]}'s Trait",
+                description=sp_ability.description[:1024],
+                timestamp=self.created_at,
+            )
 
             if origin := sp_ability.origin[:600]:
                 sp_embed.add_field(name="Origin", value=origin, inline=False)
