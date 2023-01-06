@@ -463,9 +463,9 @@ class Move:
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
-        embed.add_field(name="Max Power", value=self.max_move_base, inline=False)
-        embed.add_field(name="Max Move", value=self.max_move_name, inline=False)
-        embed.add_field(name="Z Power", value=self.z_move_base, inline=False)
+        embed.add_field(name="Max Power", value=self.max_move_base)
+        embed.add_field(name="Max Move", value=self.max_move_name)
+        embed.add_field(name="Z Power", value=self.z_move_base)
         embed.add_field(name="Z Effect", value=self.z_effect, inline=False)
         return embed
 
@@ -477,7 +477,7 @@ class Move:
             description = self.description
 
         embed = Embed(
-            title=self.type.z_move,
+            title=f"{self.z_move_base}〛{self.type.z_move}",
             description=description[:4096],
             color=self.type.color,
             timestamp=utcnow(),
@@ -487,9 +487,6 @@ class Move:
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
-
-        if power := self.z_move_base:
-            embed.add_field(name="Base Power", value=power, inline=False)
         if effect := self.z_effect:
             embed.add_field(name="Effect", value=effect, inline=False)
 
@@ -511,7 +508,7 @@ class Move:
             description = self.description
 
         embed = Embed(
-            title=self.type.max_move,
+            title=f"{self.max_move_base}〛{self.type.max_move}",
             description=description[:4096],
             color=self.type.color,
             timestamp=utcnow(),
@@ -521,9 +518,6 @@ class Move:
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
-
-        if power := self.max_move_base:
-            embed.add_field(name="Base Power", value=power, inline=False)
 
         if cat != Category.STATUS:
             embed.add_field(name="Effect", value=self.type.max_effect, inline=False)

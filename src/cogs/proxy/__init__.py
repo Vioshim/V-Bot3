@@ -283,7 +283,7 @@ class ProxyModal(Modal, title="Prefixes"):
             self.proxy.image = image_url
 
         self.proxy1_data = TextInput(
-            label=proxy.name[:45],
+            label=self.proxy.name[:45],
             placeholder="Each line must include word text",
             default="\n".join(map("text".join, self.proxy.prefixes)),
             style=TextStyle.paragraph,

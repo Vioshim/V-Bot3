@@ -486,7 +486,7 @@ class TypingEnum(Typing, Enum):
         "color": 6856848,
         "z_move": "Wide Slash",
         "max_move": "Vacuum-Cut",
-        "max_effect": "Types get ignored for the rest of the battle.",
+        "max_effect": "Types get ignored for five turns.",
     }
 
     @property
