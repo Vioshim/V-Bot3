@@ -196,9 +196,9 @@ class RollFunction(ProxyFunction):
             return npc, Embed(description=value.result), f"`🎲{value.total}`"
 
 
-class ProxyModal(Modal, title="Edit Proxy Message"):
+class ProxyMessageModal(Modal, title="Edit Proxy Message"):
     def __init__(self, msg: Message, data: dict[str, int]) -> None:
-        super(ProxyModal, self).__init__(timeout=None)
+        super(ProxyMessageModal, self).__init__(timeout=None)
         self.text = TextInput(
             label="Message (Empty = Delete)",
             placeholder="Once you press submit, the message will be deleted.",
@@ -228,6 +228,97 @@ class ProxyModal(Modal, title="Edit Proxy Message"):
             await resp.send_message("Message has been edited successfully.", ephemeral=True, delete_after=3)
         except DiscordException:
             await db.delete_one(self.data)
+
+
+class ProxyModal(Modal, title="Prefixes"):
+    def __init__(
+        self,
+        oc: Character,
+        proxy: Optional[Proxy],
+        variant: Optional[ProxyExtra | str],
+        image_url: str,
+    ) -> None:
+        super(ProxyModal, self).__init__(timeout=None)
+        self.oc = oc
+        self.proxy = (
+            proxy
+            if proxy
+            else Proxy(
+                id=oc.id,
+                author=oc.author,
+                server=oc.author,
+                image=oc.image,
+            )
+        )
+        self.proxy.name = oc.name
+        if isinstance(variant, str):
+            variant = ProxyExtra(name=variant, image=image_url)
+        elif isinstance(variant, ProxyExtra):
+            self.proxy.remove_extra(variant)
+            variant.image = image_url
+        else:
+            self.proxy.image = image_url
+
+        self.proxy1_data = TextInput(
+            label=proxy.name[:45],
+            placeholder="Each line must include word text",
+            default="\n".join(map("text".join, self.proxy.prefixes)),
+            style=TextStyle.paragraph,
+            required=False,
+        )
+        self.add_item(self.proxy1_data)
+        self.proxy2_data = TextInput(
+            label="Variant",
+            placeholder="Each line must include word text",
+            required=False,
+            style=TextStyle.paragraph,
+        )
+        if variant:
+            self.proxy2_data.label = variant.name[:45]
+            self.proxy2_data.default = "\n".join(map("text".join, variant.prefixes))
+            self.add_item(self.proxy2_data)
+        self.variant = variant
+
+    async def on_submit(self, ctx: Interaction):
+        """This is a function that handles the submission of the name.
+
+        Parameters
+        ----------
+        interaction : Interaction
+            Interaction that triggered the submission
+        """
+        resp: InteractionResponse = ctx.response
+        db: AsyncIOMotorCollection = ctx.client.mongo_db("Proxy")
+        self.proxy.append_prefixes(
+            *[
+                (o[0].strip(), o[-1].strip())
+                for x in self.proxy1_data.value.split("\n")
+                if len(o := x.split("text")) > 1
+            ]
+        )
+        if self.variant:
+            self.variant.append_prefixes(
+                *[
+                    (o[0].strip(), o[-1].strip())
+                    for x in self.proxy2_data.value.split("\n")
+                    if len(o := x.split("text")) > 1
+                ]
+            )
+            self.proxy.extras |= {self.variant}
+            await resp.send_message("Changes performed in Proxy's Variant", ephemeral=True, delete_after=3)
+        else:
+            await resp.send_message("Changes performed in Proxy", ephemeral=True, delete_after=3)
+
+        await db.replace_one(
+            {
+                "id": self.oc.id,
+                "server": self.oc.server,
+                "author": self.oc.author,
+            },
+            self.proxy.to_dict(),
+            upsert=True,
+        )
+        self.stop()
 
 
 class ProxyCog(commands.Cog):
@@ -284,7 +375,7 @@ class ProxyCog(commands.Cog):
         self.bot.logger.info("User %s is checking proxies at %s", str(ctx.user), msg.jump_url)
 
         if entry and member.id == entry["author"]:
-            return await ctx.response.send_modal(ProxyModal(msg, entry))
+            return await ctx.response.send_modal(ProxyMessageModal(msg, entry))
 
         await ctx.response.defer(ephemeral=True, thinking=True)
 
@@ -404,7 +495,6 @@ class ProxyCog(commands.Cog):
         oc: CharacterArg,
         variant: Optional[ProxyVariantArg],
         image: Optional[Attachment],
-        prefix: Optional[str] = "",
         delete: bool = False,
     ):
         """Proxy Command
@@ -419,19 +509,30 @@ class ProxyCog(commands.Cog):
             Emotion Variant
         image : Optional[Attachment]
             Image
-        prefix : Optional[str], optional
-            Must include word text
         delete : bool, optional
             If deleting proxy/variant
         """
-
-        await ctx.response.defer(ephemeral=True, thinking=True)
-
-        if prefix and "text" not in prefix:
-            await ctx.followup.send("Invalid Prefix", ephemeral=True)
-
         member: Member = self.bot.supporting.get(ctx.user, ctx.user)
         db = self.bot.mongo_db("Proxy")
+        key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
+        data = await db.find_one(key)
+        proxy = Proxy.from_mongo_dict(data) if data else None
+        var_proxy = get(proxy.extras, name=variant) if proxy else None
+
+        if delete:
+            if data:
+                message = "Proxy not found"
+            elif var_proxy:
+                proxy.remove_extra(var_proxy)
+                await db.update_one(key, proxy.to_dict(), upsert=True)
+                message = "Proxy's Variant was removed"
+            elif variant:
+                message = "Proxy's Variant not Found"
+            else:
+                message = "Proxy was removed"
+                await db.delete_one(key)
+            return await ctx.response.send_message(message, ephemeral=True)
+
         if image and image.content_type.startswith("image/"):
             w = await self.bot.webhook(1020151767532580934)
             file = await image.to_file()
@@ -443,71 +544,10 @@ class ProxyCog(commands.Cog):
                 username=ctx.user.display_name,
                 avatar_url=ctx.user.display_avatar.url,
             )
-            image_url = m.attachments[0].url
+            modal = ProxyModal(oc, proxy, var_proxy, m.attachments[0].url)
         else:
-            image_url = oc.image_url
-
-        key = {"id": oc.id, "server": ctx.guild_id, "author": member.id}
-
-        if data := await db.find_one(key):
-            proxy = Proxy.from_mongo_dict(data)
-            var_proxy = get(proxy.extras, name=variant.strip()) if variant else None
-        else:
-            proxy = var_proxy = None
-
-        if prefix:
-            prefix_data = Proxy.prefix_handle(prefix)
-            prefix_text = "text".join(prefix_data)
-            prefixes_arg = frozenset({prefix_data})
-        else:
-            prefix_data, prefix_text, prefixes_arg = None, "", frozenset()
-
-        if not proxy:  # No Proxy Found
-            message = "No proxy for the character was previously created."
-            if not delete:
-                if variant:  # Creating w/ Variant
-                    proxy = Proxy(id=oc.id, author=oc.author, server=oc.server, image=oc.image_url)
-                    proxy.append_extra(name=variant, image=image_url, prefixes=prefixes_arg)
-                    message = f"Created Proxy {proxy.name} - {variant}"
-                else:  # Creating without Variant
-                    proxy = Proxy(id=oc.id, author=oc.author, server=oc.server, image=image_url, prefixes=prefixes_arg)
-                    message = f"Created Proxy {proxy.name}"
-        elif var_proxy:  # Variant Found
-            var_proxy.image = image_url
-            message = f"Updating {oc.name} - {variant}"
-            if delete:  # Remove Variant
-                message = f"Removed variant {variant}"
-                proxy.extras = proxy.extras.difference({var_proxy})
-            elif find(lambda x: x == prefix_data, var_proxy.prefixes):
-                message = f"Removed prefix {prefix_text} to {variant}"
-                var_proxy.remove_prefixes(prefix_data)
-            elif prefix_data:
-                message = f"Added prefix {prefix_text} to {variant}"
-                var_proxy.append_prefixes(prefix_data)
-        elif variant:  # No variant was found. Adding one
-            message = f"Proxy didn't have variant {variant}"
-            if not delete:
-                message = f"Added Variant {variant}, prefix is {prefix_text}"
-                proxy.append_extra(name=variant, image=image_url, prefixes=prefixes_arg)
-        else:
-            proxy.image = image_url
-            message = f"Updating Proxy for {oc.name}"
-
-            if delete:
-                await db.delete_one(key)
-                message = f"Deleted Proxy for {oc.name}"
-            elif find(lambda x: x == prefix_data, proxy.prefixes):
-                message = f"Removed prefix {prefix_text}"
-                proxy.remove_prefixes(prefix_data)
-            elif prefix_data:
-                message = f"Added prefix {prefix_text}"
-                proxy.append_prefixes(prefix_data)
-
-        if not delete:
-            proxy.name = oc.name
-            await db.replace_one(key, proxy.to_dict(), upsert=True)
-
-        await ctx.followup.send(message, ephemeral=True)
+            modal = ProxyModal(oc, proxy, var_proxy, oc.image_url)
+        await ctx.response.send_modal(modal)
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
     @app_commands.guilds(719343092963999804)

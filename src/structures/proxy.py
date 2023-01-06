@@ -107,10 +107,14 @@ class Proxy:
         )
 
     def append_extra(self, name: str, image: Optional[str], prefixes: frozenset[tuple[str, str]] = None):
-        if name != self.name:
-            prefixes = frozenset(prefixes) if prefixes else frozenset()
-            image = image or self.image
-            self.extras = self.extras.union({ProxyExtra(name=name, image=image, prefixes=prefixes)})
+        prefixes = frozenset(prefixes) if prefixes else frozenset()
+        image = image or self.image
+        x = ProxyExtra(name=name, image=image, prefixes=prefixes)
+        self.extras = self.extras.union({x})
+        return x
+
+    def remove_extra(self, item: ProxyExtra):
+        self.extras = frozenset({x for x in self.extras if x != item})
 
     def append_prefixes(self, *prefixes: tuple[str, str]):
         self.prefixes = self.prefixes.union(prefixes)
