@@ -676,6 +676,7 @@ class Submission(commands.Cog):
             )
             await data.message.pin()
             await data.thread.add_user(thread.owner)
+            await thread.delete()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
