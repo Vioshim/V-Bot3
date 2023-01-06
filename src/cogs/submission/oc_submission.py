@@ -1000,21 +1000,6 @@ class UniqueTraitField(TemplateField):
     required: bool = True
 
     @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if (sp_ability := oc.sp_ability) and (
-            text := ", ".join(
-                k
-                for k, v in dict(
-                    name=sp_ability.name,
-                    origin=sp_ability.origin,
-                    description=sp_ability.description,
-                ).items()
-                if not v
-            )
-        ):
-            return f"Missing {text}."
-
-    @classmethod
     def check(cls, oc: Character) -> bool:
         return oc.species
 
