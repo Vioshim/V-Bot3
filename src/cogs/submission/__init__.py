@@ -486,8 +486,6 @@ class Submission(commands.Cog):
         author = message.author.name.title()
         db = self.bot.mongo_db("RP Logs")
         db2 = self.bot.mongo_db("Tupper-logs")
-        if await db.find_one({"id": message.id, "channel": message.channel.id}):
-            return
 
         if isinstance(kwargs, Character):
             key, oc = kwargs.name, kwargs

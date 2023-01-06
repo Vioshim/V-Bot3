@@ -423,7 +423,6 @@ class ProxyCog(commands.Cog):
             oc = Character.from_mongo_dict(oc_data)
 
         text = (text.strip() if text else None) or "\u200b"
-        original_text = text
         thread = view = MISSING
         if reference := message.reference:
             view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
@@ -474,7 +473,7 @@ class ProxyCog(commands.Cog):
         )
         if deleting:
             await message.delete(delay=300 if message.mentions else 0)
-        if original_text != proxy_msg.content and oc:
+        if proxy_msg.content not in proxy_msg.content and oc:
             await self.bot.get_cog("Submission").on_message_tupper(
                 message=proxy_msg,
                 user=message.author,
@@ -520,7 +519,7 @@ class ProxyCog(commands.Cog):
             elif isinstance(var_proxy, ProxyExtra):
                 proxy.remove_extra(var_proxy)
                 embed = var_proxy.embed.set_footer(text="Proxy's Variant was removed")
-                await db.update_one(key, proxy.to_dict(), upsert=True)
+                await db.replace_one(key, proxy.to_dict(), upsert=True)
             elif variant:
                 embed = Embed(title="Proxy's Variant not Found", description=variant)
                 embed.set_author(name=proxy.name, icon_url=proxy.image)
