@@ -102,6 +102,7 @@ class Typing:
     emoji: PartialEmoji = PartialEmoji(name="\N{MEDIUM BLACK CIRCLE}")
     z_move: str = ""
     max_move: str = ""
+    max_effect: str = ""
     chart: frozendict[int, float] = field(default_factory=frozendict)
     game_id: int = 0
 
@@ -116,6 +117,7 @@ class Typing:
         self.emoji = PartialEmoji.from_str(data.get("emoji", "<:pokeball:952522808435544074>"))
         self.z_move = data.get("z_move", "")
         self.max_move = data.get("max_move", "")
+        self.max_effect = data.get("max_effect", "")
         self.chart = frozendict(data.get("chart", {}))
         self.game_id = data.get("game_id", 0)
 
@@ -242,6 +244,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Normal:952523352839450634>",
         "z_move": "Breakneck Blitz",
         "max_move": "Max Strike",
+        "max_effect": "Decreases the Speed of the target and its allies by one stage.",
         "chart": {7: 2.0, 14: 0, 19: 2},
     }
     Fire = {
@@ -253,6 +256,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Fire:952523352667484160>",
         "z_move": "Inferno Overdrive",
         "max_move": "Max Flare",
+        "max_effect": "Creates harsh sunlight for five turns.",
         "chart": {3: 2.0, 9: 2.0, 13: 2.0, 2: 0.5, 5: 0.5, 6: 0.5, 12: 0.5, 17: 0.5, 18: 0.5, 19: 2},
     }
     Water = {
@@ -264,6 +268,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Water:952523352688451594>",
         "z_move": "Hydro Vortex",
         "max_move": "Max Geyser",
+        "max_effect": "Creates rain for five turns.",
         "chart": {4: 2.0, 5: 2.0, 2: 0.5, 3: 0.5, 6: 0.5, 17: 0.5, 19: 2},
     }
     Electric = {
@@ -275,6 +280,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Electric:952523352646492180>",
         "z_move": "Gigavolt Havoc",
         "max_move": "Max Lightning",
+        "max_effect": "Creates Electric Terrain for five turns.",
         "chart": {9: 2.0, 4: 0.5, 10: 0.5, 17: 0.5, 19: 2},
     }
     Grass = {
@@ -286,6 +292,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Grass:952523352571011072>",
         "z_move": "Bloom Doom",
         "max_move": "Max Overgrowth",
+        "max_effect": "Creates Grassy Terrain for five turns.",
         "chart": {2: 2.0, 6: 2.0, 8: 2.0, 10: 2.0, 12: 2.0, 4: 0.5, 5: 0.5, 9: 0.5, 3: 0.5, 19: 2},
     }
     Ice = {
@@ -297,6 +304,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Ice:952523352587784222>",
         "z_move": "Subzero Slammer",
         "max_move": "Max Hailstorm",
+        "max_effect": "Creates hail for five turns.",
         "chart": {2: 2.0, 7: 2.0, 13: 2.0, 17: 2.0, 6: 0.5, 19: 2},
     }
     Fighting = {
@@ -308,6 +316,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Fighting:952523352533266432>",
         "z_move": "All-Out Pummeling",
         "max_move": "Max Knuckle",
+        "max_effect": "Increases the Attack of the user and its allies by one stage.",
         "chart": {10: 2.0, 11: 2.0, 18: 2.0, 12: 0.5, 13: 0.5, 16: 0.5, 19: 2},
     }
     Poison = {
@@ -319,6 +328,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Poison:952523352633901106>",
         "z_move": "Acid Downpour",
         "max_move": "Max Ooze",
+        "max_effect": "Increases the Special Attack of the user and its allies by one stage.",
         "chart": {9: 2.0, 11: 2.0, 5: 0.5, 7: 0.5, 8: 0.5, 12: 0.5, 18: 0.5, 19: 2},
     }
     Ground = {
@@ -330,6 +340,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Ground:952523352612958239>",
         "z_move": "Tectonic Rage",
         "max_move": "Max Quake",
+        "max_effect": "Increases the Special Defense of the user and its allies by one stage",
         "chart": {3: 2.0, 5: 2.0, 6: 2.0, 8: 0.5, 13: 0.5, 4: 0, 19: 2},
     }
     Flying = {
@@ -341,6 +352,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Flying:952523352994619402>",
         "z_move": "Supersonic Skystrike",
         "max_move": "Max Airstream",
+        "max_effect": "Increases the Speed of the user and its allies by one stage.",
         "chart": {4: 2.0, 6: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 12: 0.5, 9: 0, 19: 2},
     }
     Psychic = {
@@ -352,6 +364,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Psychic:952523352872996934>",
         "z_move": "Shattered Psyche",
         "max_move": "Max Mindstorm",
+        "max_effect": "Creates Psychic Terrain for five turns.",
         "chart": {12: 2.0, 14: 2.0, 16: 2.0, 7: 0.5, 11: 0.5, 19: 2},
     }
     Bug = {
@@ -363,6 +376,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Bug:952523352524877835>",
         "z_move": "Savage Spin-Out",
         "max_move": "Max Flutterby",
+        "max_effect": "Decreases the Special Attack of the target and its allies by one stage.",
         "chart": {2: 2.0, 10: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 9: 0.5, 19: 2},
     }
     Rock = {
@@ -374,6 +388,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Rock:952523352671662140>",
         "z_move": "Continental Crush",
         "max_move": "Max Rockfall",
+        "max_effect": "Creates a sandstorm for five turns.",
         "chart": {3: 2.0, 5: 2.0, 7: 2.0, 9: 2.0, 17: 2.0, 1: 0.5, 2: 0.5, 8: 0.5, 10: 0.5, 19: 2},
     }
     Ghost = {
@@ -385,6 +400,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Ghost:952523352575209573>",
         "z_move": "Never-Ending Nightmare",
         "max_move": "Max Phantasm",
+        "max_effect": "Decreases the Defense of the target and its allies by one stage.",
         "chart": {14: 2.0, 16: 2.0, 8: 0.5, 12: 0.5, 1: 0, 7: 0, 19: 2},
     }
     Dragon = {
@@ -396,6 +412,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Dragon:952523352545837066>",
         "z_move": "Devastating Drake",
         "max_move": "Max Wyrmwind",
+        "max_effect": "Decreases the Attack of the target and its allies by one stage.",
         "chart": {6: 2.0, 15: 2.0, 18: 2.0, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5, 19: 2},
     }
     Dark = {
@@ -407,6 +424,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Dark:952523352617144380>",
         "z_move": "Black Hole Eclipse",
         "max_move": "Max Darkness",
+        "max_effect": "Decreases the Special Defense of the target and its allies by one stage.",
         "chart": {7: 2.0, 12: 2.0, 18: 2.0, 14: 0.5, 16: 0.5, 11: 0, 19: 2},
     }
     Steel = {
@@ -418,6 +436,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Steel:952523352717799454>",
         "z_move": "Corkscrew Crash",
         "max_move": "Max Steelspike",
+        "max_effect": "Increases the Defense of the user and its allies by one stage.",
         "chart": {
             2: 2.0,
             7: 2.0,
@@ -445,6 +464,7 @@ class TypingEnum(Typing, Enum):
         "emoji": "<:Fairy:952523352164159539>",
         "z_move": "Twinkle Tackle",
         "max_move": "Max Starfall",
+        "max_effect": "Creates Misty Terrain for five turns.",
         "chart": {8: 2.0, 17: 2.0, 7: 0.5, 12: 0.5, 16: 0.5, 15: 0, 19: 2},
     }
     Shadow = {
@@ -455,6 +475,7 @@ class TypingEnum(Typing, Enum):
         "color": 4076373,
         "z_move": "Gale of Darkness",
         "max_move": "Max Nightmare",
+        "max_effect": "All Shadow Pokemon in the area to get in Hyper Mode.",
         "chart": {x: 1.0 if x == 19 else 0.5 for x in range(1, 20)},
     }
     Typeless = {
@@ -465,6 +486,7 @@ class TypingEnum(Typing, Enum):
         "color": 6856848,
         "z_move": "Wide Slash",
         "max_move": "Vacuum-Cut",
+        "max_effect": "Types get ignored for the rest of the battle.",
     }
 
     @property

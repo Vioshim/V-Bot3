@@ -183,6 +183,268 @@ class Move:
         return aux
 
     @property
+    def z_effect(self) -> Optional[str]:
+        match self.name:
+            case "Metronome" | "Nature Power" | "Assist":
+                return "Calls a Z Move"
+            case "Healing Wish" | "Lunar Dance":
+                return "None"
+            case (
+                "Tail Whip"
+                | "Leer"
+                | "Meditate"
+                | "Screech"
+                | "Sharpen"
+                | "Will-O-Wisp"
+                | "Taunt"
+                | "Odor Sleuth"
+                | "Howl"
+                | "Bulk Up"
+                | "Power Trick"
+                | "Hone Claws"
+                | "Work Up"
+                | "Rototiller"
+                | "Topsy-Turvy"
+                | "Laser Focus"
+            ):
+                return "Raises Attack by 1 stage"
+            case "Splash":
+                return "Raises Attack by 3 stage"
+            case "Mirror Move":
+                return "Raises Attack by 2 stages, calls a Z-move"
+            case (
+                "Growl"
+                | "Roar"
+                | "Poison Powder"
+                | "Toxic"
+                | "Harden"
+                | "Withdraw"
+                | "Reflect"
+                | "Poison Gas"
+                | "Spider Web"
+                | "Spikes"
+                | "Charm"
+                | "Pain Split"
+                | "Torment"
+                | "Feather Dance"
+                | "Tickle"
+                | "Block"
+                | "Toxic Spikes"
+                | "Aqua Ring"
+                | "Stealth Rock"
+                | "Defend Order"
+                | "Wide Guard"
+                | "Quick Guard"
+                | "Mat Block"
+                | "Noble Roar"
+                | "Flower Shield"
+                | "Grassy Terrain"
+                | "Fairy Lock"
+                | "Play Nice"
+                | "Spiky Shield"
+                | "Venom Drench"
+                | "Baby-Doll Eyes"
+                | "Baneful Bunker"
+                | "Strength Sap"
+                | "Tearful Look"
+            ):
+                return "Raises Defense by 1 stage"
+            case (
+                "Growth"
+                | "Confuse Ray"
+                | "Mind Reader"
+                | "Nightmare"
+                | "Sweet Kiss"
+                | "Teeter Dance"
+                | "Fake Tears"
+                | "Metal Sound"
+                | "Gravity"
+                | "Miracle Eye"
+                | "Embargo"
+                | "Telekinesis"
+                | "Soak"
+                | "Simple Beam"
+                | "Reflect Type"
+                | "Ion Deluge"
+                | "Electrify"
+                | "Gear Up"
+                | "Psychic Terrain"
+                | "Instruct"
+            ):
+                return "Raises Special Attack by 1 stage"
+            case ("Psycho Shift" | "Heal Block"):
+                return "Raises Special Attack by 2 stages"
+            case (
+                "Whirlwind"
+                | "Stun Spore"
+                | "Thunder Wave"
+                | "Light Screen"
+                | "Glare"
+                | "Mean Look"
+                | "Flatter"
+                | "Charge"
+                | "Wish"
+                | "Ingrain"
+                | "Mud Sport"
+                | "Cosmic Power"
+                | "Water Sport"
+                | "Wonder Room"
+                | "Magic Room"
+                | "Entrainment"
+                | "Crafty Shield"
+                | "Misty Terrain"
+                | "Confide"
+                | "Eerie Impulse"
+                | "Magnetic Flux"
+                | "Spotlight"
+            ):
+                return "Raises Special Defense by 1 stage"
+            case ("Magic Coat" | "Imprison" | "Captivate" | "Aromatic Mist" | "Powder"):
+                return "Raises Special Defense by 2 stages"
+            case (
+                "Sing"
+                | "Supersonic"
+                | "Sleep Powder"
+                | "String Shot"
+                | "Hypnosis"
+                | "Lovely Kiss"
+                | "Scary Face"
+                | "Lock-On"
+                | "Sandstorm"
+                | "Safeguard"
+                | "Encore"
+                | "Rain Dance"
+                | "Sunny Day"
+                | "Hail"
+                | "Role Play"
+                | "Yawn"
+                | "Skill Swap"
+                | "Grass Whistle"
+                | "Gastro Acid"
+                | "Power Swap"
+                | "Guard Swap"
+                | "Worry Seed"
+                | "Guard Split"
+                | "Power Split"
+                | "After You"
+                | "Quash"
+                | "Sticky Web"
+                | "Electric Terrain"
+                | "Toxic Thread"
+                | "Speed Swap"
+                | "Aurora Veil"
+            ):
+                return "Raises Speed by 1 stage"
+            case ("Trick" | "Recycle" | "Snatch" | "Switcheroo" | "Ally Switch" | "Bestow"):
+                return "Raises Speed by 2 stages"
+            case "Me First":
+                return "Raises Speed by 2 stages, calls a Z-move"
+            case ("Mimic" | "Defense Curl" | "Focus Energy" | "Sweet Scent" | "Defog" | "Trick Room"):
+                return "Raises accuracy by 1 stage"
+            case "Copycat":
+                return "Raises accuracy by 1 stage, calls a Z-move"
+            case (
+                "Sand Attack"
+                | "Smokescreen"
+                | "Kinesis"
+                | "Flash"
+                | "Detect"
+                | "Camouflage"
+                | "Lucky Chant"
+                | "Magnet Rise"
+            ):
+                return "Raises evasiveness by 1 stage"
+            case (
+                "Conversion"
+                | "Sketch"
+                | "Trick-or-Treat"
+                | "'Forest's Curse"
+                | "Geomancy"
+                | "Happy Hour"
+                | "Celebrate"
+                | "Hold Hands"
+                | "Purify"
+            ):
+                return "Raises Attack, Defense, Sp. Atk, Sp. Def, and Speed by 1 stage"
+            case ("Foresight" | "Tailwind" | "Acupressure" | "Heart Swap" | "Sleep Talk"):
+                return "Boosts critical-hit ratio by 2 stages"
+            case "Sleep Talk":
+                return "Boosts critical-hit ratio by 2 stages, calls a Z-move"
+            case (
+                "Swords Dance"
+                | "Disable"
+                | "Leech Seed"
+                | "Agility"
+                | "Double Team"
+                | "Recover"
+                | "Minimize"
+                | "Barrier"
+                | "Amnesia"
+                | "Soft-Boiled"
+                | "Spore"
+                | "Acid Armor"
+                | "Rest"
+                | "Substitute"
+                | "Cotton Spore"
+                | "Protect"
+                | "Perish Song"
+                | "Endure"
+                | "Swagger"
+                | "Milk Drink"
+                | "Attract"
+                | "Baton Pass"
+                | "Morning Sun"
+                | "Synthesis"
+                | "Moonlight"
+                | "Swallow"
+                | "Follow Me"
+                | "Helping Hand"
+                | "Tail Glow"
+                | "Slack Off"
+                | "Iron Defense"
+                | "Calm Mind"
+                | "Dragon Dance"
+                | "Roost"
+                | "Rock Polish"
+                | "Nasty Plot"
+                | "Heal Order"
+                | "Dark Void"
+                | "Autotomize"
+                | "Rage Powder"
+                | "Quiver Dance"
+                | "Coil"
+                | "Shell Smash"
+                | "Heal Pulse"
+                | "Shift Gear"
+                | "Cotton Guard"
+                | "King's Shield"
+                | "Shore Up"
+                | "Floral Healing"
+            ):
+                return "Resets user's lowered stats"
+            case (
+                "Mist"
+                | "Teleport"
+                | "Haze"
+                | "Transform"
+                | "Conversion 2"
+                | "Spite"
+                | "Belly Drum"
+                | "Heal Bell"
+                | "Psych Up"
+                | "Stockpile"
+                | "Refresh"
+                | "Aromatherapy"
+            ):
+                return "Fully restores user's HP"
+            case ("Memento" | "Parting Shot"):
+                return "Fully restores switched-in ally's HP"
+            case ("Destiny Bond" | "Grudge"):
+                return "User becomes center of attention"
+            case "Curse":
+                return "Fully restores user's HP (Ghost-type), Raises Attack by 1 stage (non Ghost-type)"
+
+    @property
     def description(self):
         return "\n".join(f"• {o}." for k, v in CHECK_FLAGS.items() if k in self.data and (o := v(self.data[k])))
 
@@ -201,6 +463,71 @@ class Move:
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
+        embed.add_field(name="Max Power", value=self.max_move_base, inline=False)
+        embed.add_field(name="Max Move", value=self.max_move_name, inline=False)
+        embed.add_field(name="Z Power", value=self.z_move_base, inline=False)
+        embed.add_field(name="Z Effect", value=self.z_effect, inline=False)
+        return embed
+
+    @property
+    def z_move_embed(self):
+        if move := Move.get(name=self.type.z_move):
+            description = move.description
+        else:
+            description = self.description
+
+        embed = Embed(
+            title=self.type.z_move,
+            description=description[:4096],
+            color=self.type.color,
+            timestamp=utcnow(),
+        )
+        cat = self.category
+        embed.set_author(name=f"Original Move: {self.name}")
+        embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
+        embed.set_thumbnail(url=self.type.emoji.url)
+        embed.set_image(url=WHITE_BAR)
+
+        if power := self.z_move_base:
+            embed.add_field(name="Base Power", value=power, inline=False)
+        if effect := self.z_effect:
+            embed.add_field(name="Effect", value=effect, inline=False)
+
+        return embed
+
+    @property
+    def max_move_name(self):
+        return "Max Guard" if self.category == Category.STATUS else self.type.max_move
+
+    @property
+    def max_move_type(self):
+        return TypingEnum.Normal if self.category == Category.STATUS else self.type
+
+    @property
+    def max_move_embed(self):
+        if move := Move.get(name=self.max_move_name):
+            description = move.description
+        else:
+            description = self.description
+
+        embed = Embed(
+            title=self.type.max_move,
+            description=description[:4096],
+            color=self.type.color,
+            timestamp=utcnow(),
+        )
+        cat = self.category
+        embed.set_author(name=f"Original Move: {self.name}")
+        embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
+        embed.set_thumbnail(url=self.type.emoji.url)
+        embed.set_image(url=WHITE_BAR)
+
+        if power := self.max_move_base:
+            embed.add_field(name="Base Power", value=power, inline=False)
+
+        if cat != Category.STATUS:
+            embed.add_field(name="Effect", value=self.type.max_effect, inline=False)
+
         return embed
 
     def __str__(self):
@@ -229,9 +556,24 @@ class Move:
         index = next(elements, 250)
         return raw[index]
 
+    def calculated_base_z(self, raw: dict[int, int]):
+        return {
+            "Mega Drain": 120,
+            "Weather Ball": 160,
+            "Hex": 160,
+            "Gear Grind": 180,
+            "V-Create": 220,
+            "Flying Press": 170,
+            "Core Enforcer": 140,
+            "Fissure": 180,
+            "Guillotine": 180,
+            "Horn Drill": 180,
+            "Sheer Cold": 180,
+        }.get(self.name, self.calculated_base(raw))
+
     @property
     def z_move_base(self) -> int:
-        return self.calculated_base(self.type.z_move_range)
+        return self.calculated_base_z(self.type.z_move_range)
 
     @property
     def max_move_base(self) -> int:

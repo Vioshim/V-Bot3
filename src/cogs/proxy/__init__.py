@@ -90,19 +90,16 @@ class ProxyFunction(ABC):
     @classmethod
     def lookup(cls, npc: NPC | Proxy | ProxyExtra, text: str):
         items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
-        aux_text = text.split(":")[0]
-        if x := process.extractOne(aux_text, choices=list(items), score_cutoff=60):
-            return items[x[0]].parse(
-                npc,
-                text.removeprefix(aux_text).strip().removeprefix(":").strip(),
-            )
+        args = [x for x in text.lower().split(":")]
+        if args and (x := process.extractOne(args[0], choices=list(items), score_cutoff=60)):
+            return items[x[0]].parse(npc, args[1:])
 
     @classmethod
     @abstractmethod
     def parse(
         cls,
         npc: NPC | Proxy | ProxyExtra,
-        text: str,
+        args: list[str],
     ) -> Optional[tuple[NPC | Proxy | ProxyExtra, str, Optional[Embed]]]:
         """This is the abstract parsing methods
 
@@ -110,8 +107,8 @@ class ProxyFunction(ABC):
         ----------
         npc : NPC | Proxy | ProxyExtra
             NPC to keep or replace
-        text : str
-            Text to evaluate
+        args : list[str]
+            Args to evaluate
 
         Returns
         -------
@@ -124,34 +121,61 @@ class MoveFunction(ProxyFunction):
     aliases = ["Move"]
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str) -> Optional[tuple[str, Optional[Embed]]]:
-        match text.split(":"):
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]) -> Optional[tuple[str, Optional[Embed]]]:
+        match args:
             case [move]:
-                if not (item := Move.deduce(move)):
-                    return
-                return npc, f"{item.emoji}`{item.name}`", item.embed
+                if item := Move.deduce(move):
+                    return npc, f"{item.emoji}`{item.name}`", item.embed
+            case [move, "max"]:
+                if item := Move.deduce(move):
+                    return npc, f"{item.max_move_type.emoji}`{item.max_move_name}`", item.max_move_embed
+            case [move, "z"]:
+                if item := Move.deduce(move):
+                    return npc, f"{item.emoji}`{item.type.z_move}`", item.z_move_embed
             case [move, move_type]:
-                if not (item := Move.deduce(move)):
-                    return
-                move_type = TypingEnum.deduce(move_type) or item.type
-                embed = item.embed
-                embed.color = move_type.color
-                if item.type != move_type:
-                    embed.set_author(name=f"Originally {item.type.name} Type ", icon_url=item.type.emoji.url)
-                embed.set_thumbnail(url=move_type.emoji.url)
-                return npc, f"{move_type.emoji}`{item.name}`", embed
+                if item := Move.deduce(move):
+                    move_type = TypingEnum.deduce(move_type) or item.type
+                    embed = item.embed
+                    embed.color = move_type.color
+                    if item.type != move_type:
+                        embed.set_author(name=f"Originally {item.type.name} Type ", icon_url=item.type.emoji.url)
+                        embed.clear_fields()
+                        embed.add_field(
+                            name="Max Power",
+                            value=item.calculated_base(move_type.max_move_range),
+                            inline=False,
+                        )
+                        embed.add_field(
+                            name="Max Move",
+                            value=item.max_move_name,
+                            inline=False,
+                        )
+                        embed.add_field(
+                            name="Z Power",
+                            value=item.calculated_base_z(move_type.z_move_range),
+                            inline=False,
+                        )
+                        embed.add_field(
+                            name="Z Effect",
+                            value=item.z_effect,
+                            inline=False,
+                        )
+
+                    embed.set_thumbnail(url=move_type.emoji.url)
+                    return npc, f"{move_type.emoji}`{item.name}`", embed
 
 
 class MetronomeFunction(ProxyFunction):
     aliases = ["Metronome"]
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
-        if "mute" in text.lower():
-            name, embed = f"{item.emoji}`{item.name}`", None
-        else:
-            name, embed = f"`{item.name}`", item.embed
+        match args:
+            case ["mute"]:
+                name, embed = f"{item.emoji}`{item.name}`", None
+            case _:
+                name, embed = f"`{item.name}`", item.embed
         return npc, name, embed
 
 
@@ -159,8 +183,8 @@ class TypeFunction(ProxyFunction):
     aliases = ["Type"]
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
-        if item := TypingEnum.deduce(text):
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+        if item := TypingEnum.deduce(",".join(args)):
             return npc, str(item.emoji), None
 
 
@@ -168,10 +192,10 @@ class MoodFunction(ProxyFunction):
     aliases = ["Mood", "Mode"]
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         if isinstance(npc, Proxy) and (
             o := process.extractOne(
-                text.strip(),
+                ":".join(args),
                 choices=npc.extras,
                 score_cutoff=60,
                 processor=lambda x: getattr(x, "name", x),
@@ -186,9 +210,9 @@ class RollFunction(ProxyFunction):
     aliases = ["Roll"]
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         with suppress(Exception):
-            value = d20.roll(expr=text.strip() or "d20", allow_comments=True)
+            value = d20.roll(expr=":".join(args) or "d20", allow_comments=True)
             if len(value.result) > 4096:
                 d20.utils.simplify_expr(value.expr)
             return npc, f"`🎲{value.total}`", Embed(description=value.result)
@@ -291,6 +315,7 @@ class ProxyModal(Modal, title="Prefixes"):
         self.proxy.prefixes = frozenset(
             (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
         )
+        embeds = [self.proxy.embed]
         if self.variant:
             self.variant.prefixes = frozenset(
                 (o[0].strip(), o[-1].strip())
@@ -298,9 +323,8 @@ class ProxyModal(Modal, title="Prefixes"):
                 if len(o := x.split("text")) > 1
             )
             self.proxy.extras |= {self.variant}
-            await resp.send_message(embeds=[self.proxy.embed, self.variant.embed], ephemeral=True)
-        else:
-            await resp.send_message(embed=self.proxy.embed, ephemeral=True)
+            embeds.append(self.variant.embed)
+        await resp.send_message(embeds=embeds, ephemeral=True)
 
         await db.replace_one(
             {
