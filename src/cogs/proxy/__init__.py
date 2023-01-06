@@ -255,7 +255,7 @@ class ProxyCog(commands.Cog):
                     if not condition and len(embeds) < 10:
                         embeds.append(item.embed)
                     text = text.replace("{{" + aux + "}}", f"{item.emoji if condition else ''}`{item.name}`", 1)
-                case ["mode" | "Mode", mode]:
+                case ["mode" | "Mode" | "mood" | "Mood", mode]:
                     if isinstance(npc, Proxy) and (
                         o := process.extractOne(
                             mode.strip(),
