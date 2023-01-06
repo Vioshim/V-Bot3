@@ -538,9 +538,9 @@ class ProxyCog(commands.Cog):
                 username=ctx.user.display_name,
                 avatar_url=ctx.user.display_avatar.url,
             )
-            modal = ProxyModal(oc, proxy, var_proxy, m.attachments[0].url)
+            modal = ProxyModal(oc, proxy, var_proxy or variant, m.attachments[0].url)
         else:
-            modal = ProxyModal(oc, proxy, var_proxy, oc.image_url)
+            modal = ProxyModal(oc, proxy, var_proxy or variant, oc.image_url)
         await ctx.response.send_modal(modal)
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
