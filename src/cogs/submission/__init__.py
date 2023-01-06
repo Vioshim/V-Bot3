@@ -580,29 +580,13 @@ class Submission(commands.Cog):
         """
         context = await self.bot.get_context(message)
 
-        if context.command and context.command.name not in ["npc", "pc"]:
+        if context.command and context.command.name not in ["npc", "pc", "npci"]:
             return
 
         messages: list[Message] = []
-        if (w := self.bot.webhook_lazy(message.channel)) and w.id == message.webhook_id:
-            reference_text = BRACKETS_PARSER.sub("", message.content)
-        else:
-            reference_text = message.content
 
         def checker(m: Message):
-            if not (m.webhook_id and message.channel == m.channel):
-                return False
-
-            if data := TUPPER_REPLY_PATTERN.search(m.content):
-                text = data.group(4).strip()
-            else:
-                text = m.content
-
-            if (w := self.bot.webhook_lazy(m.channel)) and w.id == m.webhook_id:
-                text = BRACKETS_PARSER.sub("", text)
-
-            attachments = message.attachments
-            if (text and (text in reference_text)) or (attachments and len(attachments) == len(m.attachments)):
+            if m.webhook_id and message.channel == m.channel:
                 messages.append(m)
             return False
 
@@ -647,7 +631,25 @@ class Submission(commands.Cog):
                     kwargs[name.split()[0]] = oc
                     kwargs[name] = oc
 
+        attachments = message.attachments
+        db1 = self.bot.mongo_db("Tupper-logs")
         for msg in sorted(messages, key=lambda x: x.id):
+            if not await db1.find_one({"id": msg.id, "channel": msg.channel.id}):
+                if data := TUPPER_REPLY_PATTERN.search(msg.content):
+                    text = data.group(4).strip()
+                else:
+                    text = msg.content
+
+                if not (
+                    (text and (text in message.content))
+                    or (
+                        attachments
+                        and len(attachments) == len(msg.attachments)
+                        and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+                    )
+                ):
+                    continue
+
             await self.on_message_tupper(msg, message.author, kwargs)
 
     async def load_submssions(self):
