@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import functools
 import itertools
-import re
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -25,8 +24,7 @@ from discord import Embed
 from discord.utils import snowflake_time, utcnow
 
 from src.utils.etc import WHITE_BAR
-
-CLYDE = re.compile(r"(c)(lyde)", re.IGNORECASE)
+from src.utils.matches import CLYDE
 
 
 @dataclass(slots=True, unsafe_hash=True)

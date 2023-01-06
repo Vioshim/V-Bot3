@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from re import IGNORECASE, MULTILINE
-from re import compile as re_compile
+import re
 
 __all__ = (
     "ESCAPE_SEQ",
@@ -38,35 +36,42 @@ __all__ = (
     "YAML_HANDLER2",
     "SCAM_FINDER",
     "URL_DOMAIN_MATCH",
+    "TUPPER_REPLY_PATTERN",
+    "BRACKETS_PARSER",
 )
-ESCAPE_SEQ = re_compile(r"\\(.)")
-CLYDE = re_compile(r"C(.)lyde", IGNORECASE)
-ID_DICEBEAR = re_compile(r"https://avatars\.dicebear\.com/api/identicon/(.+)\.png")
-SCAM_FINDER = re_compile(r"hb\.bizmrg\.com", IGNORECASE)
-DATA_FINDER = re_compile(r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", MULTILINE)
-YAML_HANDLER1 = re_compile(r":\s*")
-YAML_HANDLER2 = re_compile(r"\n\s+")
+TUPPER_REPLY_PATTERN = re.compile(
+    r"> (.+)\n@.+ \(<@!\d+>\) - \[jump\]\(<https:\/\/discord\.com\/channels\/@me\/(\d+)\/(\d+)>\)\n(.*)",
+    re.DOTALL,
+)
+BRACKETS_PARSER = re.compile(r"\{\{([^\{\}]+)\}\}")
+ESCAPE_SEQ = re.compile(r"\\(.)")
+CLYDE = re.compile(r"(c)(lyde)", re.IGNORECASE)
+ID_DICEBEAR = re.compile(r"https://avatars\.dicebear\.com/api/identicon/(.+)\.png")
+SCAM_FINDER = re.compile(r"hb\.bizmrg\.com", re.IGNORECASE)
+DATA_FINDER = re.compile(r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", re.MULTILINE)
+YAML_HANDLER1 = re.compile(r":\s*")
+YAML_HANDLER2 = re.compile(r"\n\s+")
 IMAGEKIT_API = "https://ik.imagekit.io/vioshim"
-DISCORD_MATCH = re_compile(r"https://\w+\.discordapp\.\w+/(.*)", IGNORECASE)
-IMAGEKIT_MATCH = re_compile(f"{IMAGEKIT_API}/(.*)", IGNORECASE)
-GOOGLE_IMAGE = re_compile(r"https://lh\d\.googleusercontent\.com/(.+)", IGNORECASE)
-POKEMON_IMAGE = re_compile(
+DISCORD_MATCH = re.compile(r"https://\w+\.discordapp\.\w+/(.*)", re.IGNORECASE)
+IMAGEKIT_MATCH = re.compile(f"{IMAGEKIT_API}/(.*)", re.IGNORECASE)
+GOOGLE_IMAGE = re.compile(r"https://lh\d\.googleusercontent\.com/(.+)", re.IGNORECASE)
+POKEMON_IMAGE = re.compile(
     r"https://projectpokemon\.org/images/sprites-models/homeimg/"
     r"(poke_capture_\d{4}_\d{3}_\w{2}_n_00000000_f_[n|r]\.png)",
-    IGNORECASE,
+    re.IGNORECASE,
 )
-SEREBII_IMAGE = re_compile(r"https://www\.serebii\.net/(.+)", IGNORECASE)
-VISPRONET_IMAGE = re_compile(r"https://images\.vispronet\.com/(.+)", IGNORECASE)
-G_DOCUMENT = re_compile(r"https://docs\.google\.com/document/d/(.+)/", IGNORECASE)
+SEREBII_IMAGE = re.compile(r"https://www\.serebii\.net/(.+)", re.IGNORECASE)
+VISPRONET_IMAGE = re.compile(r"https://images\.vispronet\.com/(.+)", re.IGNORECASE)
+G_DOCUMENT = re.compile(r"https://docs\.google\.com/document/d/(.+)/", re.IGNORECASE)
 
 
-EMOJI_REGEX = re_compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")
-URL_DOMAIN_MATCH = re_compile(r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+")
-REGEX_URL = re_compile(r"http[s]?://((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+)")
-DISCORD_MSG_URL = re_compile(
+EMOJI_REGEX = re.compile(r"(<a?:\s?[\w~]{2,32}:\s?\d{17,19}>|:[\w]{2,32}:)")
+URL_DOMAIN_MATCH = re.compile(r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+")
+REGEX_URL = re.compile(r"http[s]?://((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+)")
+DISCORD_MSG_URL = re.compile(
     r"https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/"
     r"(?:[0-9]{15,20}|@me)"
     r"/(?P<channel_id>[0-9]{15,20})/(?P<message_id>[0-9]{15,20})/?"
 )
-DISCORD_MSG_URL2 = re_compile(r"(?:(?P<channel_id>[0-9]{15,20})-)?(?P<message_id>[0-9]{15,20})$")
-INVITE = re_compile(r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/([a-zA-Z0-9_\-]+)/?", IGNORECASE)
+DISCORD_MSG_URL2 = re.compile(r"(?:(?P<channel_id>[0-9]{15,20})-)?(?P<message_id>[0-9]{15,20})$")
+INVITE = re.compile(r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/([a-zA-Z0-9_\-]+)/?", re.IGNORECASE)

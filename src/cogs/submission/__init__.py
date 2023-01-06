@@ -59,15 +59,11 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
+from src.utils.matches import BRACKETS_PARSER, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 
 __all__ = ("Submission", "setup")
-
-TUPPER_REPLY_PATTERN = re.compile(
-    r"> (.+)\n@.+ \(<@!\d+>\) - \[jump\]\(<https:\/\/discord\.com\/channels\/@me\/(\d+)\/(\d+)>\)\n(.*)",
-    re.DOTALL,
-)
 
 
 def comparison_handler(before: Character, now: Character):
@@ -588,6 +584,7 @@ class Submission(commands.Cog):
             return
 
         messages: list[Message] = []
+        reference_text = BRACKETS_PARSER.sub("", message.content).strip()
 
         def checker(m: Message):
             if not (m.webhook_id and message.channel == m.channel):
@@ -598,8 +595,9 @@ class Submission(commands.Cog):
             else:
                 text = m.content
 
+            text = BRACKETS_PARSER.sub("", text).strip()
             attachments = message.attachments
-            if (text and (text in message.content)) or (attachments and len(attachments) == len(m.attachments)):
+            if (text and (text in reference_text)) or (attachments and len(attachments) == len(m.attachments)):
                 messages.append(m)
             return False
 
