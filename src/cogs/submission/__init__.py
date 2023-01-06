@@ -59,11 +59,17 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
-from src.utils.matches import BRACKETS_PARSER, TUPPER_REPLY_PATTERN
+from src.utils.matches import CLYDE, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 
 __all__ = ("Submission", "setup")
+
+
+PLACEHOLDER_EMBED = Embed(
+    title="Reminder",
+    description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available. </ocs:1017242400705490985> </find:1022520398488817686>",
+).set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/1061019025230016602/image.png")
 
 
 def comparison_handler(before: Character, now: Character):
@@ -664,23 +670,56 @@ class Submission(commands.Cog):
     async def on_thread_create(self, thread: Thread):
         if (
             isinstance(parent := thread.parent, ForumChannel)
-            and thread.parent.category_id in MAP_ELEMENTS2
+            and (thread.parent.category_id in MAP_ELEMENTS2 or thread.parent_id == 1061008601335992422)
             and self.bot.user != thread.owner
         ):
             await asyncio.sleep(1)
             msg = await thread.get_partial_message(thread.id).fetch()
-            data = await parent.create_thread(
-                name=thread.name,
-                content=msg.content[:2000],
-                embeds=msg.embeds,
-                files=[await x.to_file() for x in msg.attachments],
-                applied_tags=thread.applied_tags,
-                view=View.from_message(msg),
-                reason=str(thread.owner),
-            )
-            await data.message.pin()
-            await data.thread.add_user(thread.owner)
-            await thread.delete()
+            if thread.parent_id != 1061008601335992422:
+                data = await parent.create_thread(
+                    name=thread.name,
+                    content=msg.content[:2000],
+                    embeds=msg.embeds,
+                    files=[await x.to_file() for x in msg.attachments],
+                    applied_tags=thread.applied_tags,
+                    view=View.from_message(msg),
+                    reason=str(thread.owner),
+                )
+                await data.message.pin()
+                await data.thread.add_user(thread.owner)
+                await thread.delete()
+            elif notif_thread := parent.get_thread(1061010425136828628):
+                await msg.pin()
+                embed = PLACEHOLDER_EMBED.copy()
+                embed.color, embed.timestamp = thread.owner.color, thread.created_at
+                embed.set_thumbnail(url=self.bot.user.display_avatar)
+                embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
+                await thread.send(embed=embed)
+                w = await self.bot.webhook(thread)
+
+                embed = Embed(
+                    title=thread.name,
+                    description=msg.content,
+                    color=thread.owner.color,
+                    timestamp=thread.created_at,
+                )
+
+                if tags := ", ".join(x.name for x in sorted(thread.applied_tags, key=lambda x: x.name)):
+                    embed.add_field(name="Tags", value=tags)
+
+                embed.set_footer(text="If you don't want notifications unfollow this thread.")
+
+                view = View()
+                view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
+
+                await w.send(
+                    content="@everyone",
+                    username=CLYDE.sub("\u200a", thread.owner.display_name),
+                    avatar_url=thread.owner.display_avatar.url,
+                    allowed_mentions=AllowedMentions(everyone=True),
+                    thread=notif_thread,
+                    view=view,
+                )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
@@ -942,10 +981,7 @@ class Submission(commands.Cog):
         embed.color = member.color
         embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         async with view.send(ephemeral=True):
-            if member == ctx.user:
-                self.bot.logger.info("User %s is reading their OCs", str(member))
-            else:
-                self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
+            self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
@@ -961,13 +997,15 @@ class Submission(commands.Cog):
             Member, if not provided, it's current user.
         """
         resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
         if member is None or ctx.user == member:
-            self.bot.supporting.pop(ctx.user, None)
-            await ctx.followup.send(content="OCs registered now will be assigned to your account.!", ephemeral=True)
+            self.bot.supporting.pop(member := ctx.user, None)
         else:
             self.bot.supporting[ctx.user] = member
-            await ctx.followup.send(content=f"OCs registered now will be assigned to {member.mention}!", ephemeral=True)
+        await resp.send_message(
+            content=f"OCs registered now will be assigned to {member.mention}!",
+            ephemeral=True,
+            delete_after=3,
+        )
 
 
 async def setup(bot: CustomBot) -> None:
