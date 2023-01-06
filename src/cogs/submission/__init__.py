@@ -38,7 +38,6 @@ from discord import (
     RawThreadDeleteEvent,
     RawThreadUpdateEvent,
     Role,
-    Status,
     TextChannel,
     Thread,
     User,
@@ -657,6 +656,26 @@ class Submission(commands.Cog):
         message = channel.get_partial_message(1005387453055639612)
         view.message = await message.edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
+
+    @commands.Cog.listener()
+    async def on_thread_create(self, thread: Thread):
+        if (
+            isinstance(parent := thread.parent, ForumChannel)
+            and thread.parent.category_id in MAP_ELEMENTS2
+            and self.bot.user != thread.owner
+        ):
+            msg = await thread.get_partial_message(thread.id).fetch()
+            data = await parent.create_thread(
+                name=thread.name,
+                content=msg.content[:2000],
+                embeds=msg.embeds,
+                files=[await x.to_file() for x in msg.attachments],
+                applied_tags=thread.applied_tags,
+                view=View.from_message(msg),
+                reason=str(thread.owner),
+            )
+            await data.message.pin()
+            await data.thread.add_user(thread.owner)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
