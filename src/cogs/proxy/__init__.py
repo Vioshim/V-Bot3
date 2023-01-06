@@ -23,7 +23,6 @@ from typing import Optional
 import d20
 from discord import (
     Attachment,
-    Color,
     DiscordException,
     Embed,
     Interaction,
@@ -40,7 +39,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING, find, get
+from discord.utils import MISSING, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -515,18 +514,20 @@ class ProxyCog(commands.Cog):
         var_proxy = get(proxy.extras, name=variant) if proxy else variant
 
         if delete:
-            if data:
-                message = "Proxy not found"
+            if proxy is None:
+                embed = Embed(title="Proxy not found")
+                embed.set_author(name=oc.name, url=oc.jump_url, icon_url=oc.image_url)
             elif isinstance(var_proxy, ProxyExtra):
                 proxy.remove_extra(var_proxy)
+                embed = var_proxy.embed.set_footer(text="Proxy's Variant was removed")
                 await db.update_one(key, proxy.to_dict(), upsert=True)
-                message = "Proxy's Variant was removed"
             elif variant:
-                message = "Proxy's Variant not Found"
+                embed = Embed(title="Proxy's Variant not Found", description=variant)
+                embed.set_author(name=proxy.name, icon_url=proxy.image)
             else:
-                message = "Proxy was removed"
+                embed = proxy.embed.set_footer(text="Proxy was removed")
                 await db.delete_one(key)
-            return await ctx.response.send_message(message, ephemeral=True)
+            return await ctx.response.send_message(embed=embed, ephemeral=True)
 
         if image and image.content_type.startswith("image/"):
             w = await self.bot.webhook(1020151767532580934)
