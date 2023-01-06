@@ -37,14 +37,7 @@ from discord.app_commands import Choice
 from discord.ext import commands
 from discord.ext.tasks import loop
 from discord.ui import Button, View
-from discord.utils import (
-    MISSING,
-    find,
-    format_dt,
-    snowflake_time,
-    time_snowflake,
-    utcnow,
-)
+from discord.utils import snowflake_time, time_snowflake, utcnow
 
 from src.cogs.roles.roles import (
     RP_SEARCH_ROLES,
