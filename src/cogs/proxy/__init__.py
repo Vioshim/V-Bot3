@@ -446,7 +446,7 @@ class ProxyCog(commands.Cog):
             try:
                 npc, extra = npc
             except ValueError:
-                npc, extra = npc[0]
+                npc, extra = npc[0], None
 
             if isinstance(npc, Proxy) and isinstance(extra, ProxyExtra):
                 username = f"{npc.name} ({extra.name})"
