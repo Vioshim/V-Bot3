@@ -261,7 +261,7 @@ class ProxyModal(Modal, title="Prefixes"):
         oc: Character,
         proxy: Optional[Proxy],
         variant: Optional[ProxyExtra | str],
-        image_url: Optional[str] = None,
+        image_url: Optional[Attachment] = None,
     ) -> None:
         super(ProxyModal, self).__init__(timeout=None)
         self.oc = oc
@@ -318,15 +318,39 @@ class ProxyModal(Modal, title="Prefixes"):
         self.proxy.prefixes = frozenset(
             (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
         )
-        embeds = [self.proxy.embed]
-        if self.variant:
+
+        image: Optional[Attachment] = None
+        phrase = f"{self.oc.name}"
+        if item := self.variant:
             self.variant.prefixes = frozenset(
                 (o[0].strip(), o[-1].strip())
                 for x in self.proxy2_data.value.split("\n")
                 if len(o := x.split("text")) > 1
             )
             self.proxy.extras |= {self.variant}
-            embeds.append(self.variant.embed)
+            if isinstance(self.variant.image, Attachment):
+                image = self.variant.image
+                phrase = f"{phrase} - {self.variant.name}"
+        elif isinstance(image := self.proxy.image, Attachment):
+            item = self.proxy
+
+        if isinstance(image, Attachment) and item:
+            w: Webhook = await ctx.client.webhook(1020151767532580934)
+            file = await image.to_file()
+            m = await w.send(
+                phrase,
+                file=file,
+                wait=True,
+                thread=Object(id=1045687852069040148),
+                username=ctx.user.display_name,
+                avatar_url=ctx.user.display_avatar.url,
+            )
+            item.image = m.attachments[0].url
+
+        embeds = [self.proxy.embed]
+        if item := self.variant:
+            embeds.append(item.embed)
+
         await resp.send_message(embeds=embeds, ephemeral=True)
 
         await db.replace_one(
@@ -557,17 +581,7 @@ class ProxyCog(commands.Cog):
             return await ctx.response.send_message(embed=embed, ephemeral=True)
 
         if image and image.content_type.startswith("image/"):
-            w = await self.bot.webhook(1020151767532580934)
-            file = await image.to_file()
-            m = await w.send(
-                f"{oc.name} - {variant}",
-                file=file,
-                wait=True,
-                thread=Object(id=1045687852069040148),
-                username=ctx.user.display_name,
-                avatar_url=ctx.user.display_avatar.url,
-            )
-            modal = ProxyModal(oc, proxy, var_proxy or variant, m.attachments[0].url)
+            modal = ProxyModal(oc, proxy, var_proxy or variant, image)
         else:
             modal = ProxyModal(oc, proxy, var_proxy or variant)
         await ctx.response.send_modal(modal)
