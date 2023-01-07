@@ -112,7 +112,7 @@ RP_SEARCH_ROLES = dict(
     Action=("Encounters that involve action such as battles, thievery, etc.", 1061107917174095924),
     Narrated=("Narrate for others or get narrated.", 1061107918746963970),
     Drama=("RPs that present a problem for OCs to solve.", 1061107922605703218),
-    Literate=("Be descriptive and detailed as possible", 1061107924589621328),
+    Paragraph=("Be descriptive and detailed as possible", 1061107924589621328),
     Horror=("Scary or mysterious RPs for OCs", 1061107926732910724),
 )
 
@@ -384,15 +384,14 @@ class BasicRoleSelect(RoleSelect):
     async def rp_search_choice(self, ctx: Interaction, sct: Select):
         roles = await self.choice(ctx, sct)
         member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        roles = [x.name.removesuffix(" RP Search") for x in roles]
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
         if item := await db.find_one({"user": member.id}):
             if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
                 channel: Thread = await ctx.guild.fetch_channel(item["id"])
             forum: ForumChannel = channel.parent
-            tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
+            tags = [o for x in roles if (o := get(forum.available_tags, name=x.name.removesuffix(" RP Search")))]
             tags.sort(key=lambda x: x.name)
-            await channel.edit(archived=False, applied_tags=tags)
+            await channel.edit(archived=False, applied_tags=tags[:5])
 
 
 class TimezoneSelect(RoleSelect):
