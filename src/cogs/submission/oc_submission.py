@@ -884,17 +884,8 @@ class AbilitiesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        abilities, m = oc.species.abilities.copy(), Move.get(name="Transform")
-        if template == Template.CustomParadox:
-            abilities |= {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
-        elif (
-            isinstance(
-                oc.species,
-                (Fakemon, Variant, CustomMega),
-            )
-            or (not abilities)
-            or m in oc.total_movepool
-        ):
+        abilities, m = oc.species.abilities, Move.get(name="Transform")
+        if isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities) or m in oc.total_movepool:
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](
@@ -1299,12 +1290,6 @@ class CreationOCView(Basic):
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.M
-
-            if self.ref_template == Template.CustomParadox and not (
-                (get(self.oc.abilities, name="Protosynthesis") or get(self.oc.abilities, name="Quark Drive"))
-            ):
-                self.oc.abilities = frozenset()
-
             await self.update(ctx)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)

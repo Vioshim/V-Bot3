@@ -781,7 +781,7 @@ class CustomParadox(Species):
             SPE=base.SPE,
             types=types or base.types.copy(),
             movepool=movepool.copy(),
-            abilities=abilities,
+            abilities=base.abilities | abilities,
             evolves_from=base.id,
         )
         self.base = base
