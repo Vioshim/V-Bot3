@@ -513,7 +513,12 @@ class ProxyCog(commands.Cog):
         else:
             files = []
 
-        for paragraph in wrap(text or "\u200b", 2000):
+        for paragraph in wrap(
+            text or "\u200b",
+            2000,
+            replace_whitespace=False,
+            placeholder="",
+        ):
             proxy_msg = await webhook.send(
                 username=npc.name[:80],
                 avatar_url=npc.image,
