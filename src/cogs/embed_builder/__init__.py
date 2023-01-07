@@ -1004,7 +1004,7 @@ class EmbedBuilder(commands.Cog):
             content = "\n".join(f"• {i}){f.name} > {f.value}" for i, f in enumerate(embed.fields))
             await ctx.send(f"```yaml\n{content}\n```")
 
-    @fields.command(name="add", aliases=["a"])
+    @fields.group(name="add", fallback="add", aliases=["a"], invoke_without_command=True)
     async def fields_add(self, ctx: commands.Context, name: str, *, value: str):
         """Allows to add a field to an embed, given some parameters
 
@@ -1020,7 +1020,35 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx) as embed:
             embed.add_field(name=name, value=value, inline=False)
 
-    @fields.command(name="inline_add", aliases=["iadd", "ia"])
+    @fields_add.command(name="key", aliases=["k"])
+    async def fields_add_key(self, ctx: commands.Context, *, name: str):
+        """Allows to add a field to an embed, given a key
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        name: str
+            Field's name
+        """
+        async with self.edit(ctx) as embed:
+            embed.add_field(name=name, value="\u200b", inline=False)
+
+    @fields_add.command(name="value", aliases=["v"])
+    async def fields_add_value(self, ctx: commands.Context, *, value: str):
+        """Allows to add a field to an embed, given a key
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        value: str
+            Field's value
+        """
+        async with self.edit(ctx) as embed:
+            embed.add_field(name="\u200b", value=value, inline=False)
+
+    @fields.group(name="inline_add", aliases=["iadd", "ia"], invoke_without_command=True)
     async def fields_inline_add(self, ctx: commands.Context, name: str, *, value: str):
         """Allows to add a field to an embed, given some parameters
 
@@ -1035,6 +1063,34 @@ class EmbedBuilder(commands.Cog):
         """
         async with self.edit(ctx) as embed:
             embed.add_field(name=name, value=value, inline=True)
+
+    @fields_inline_add.command(name="key", aliases=["k"])
+    async def fields_inline_add_key(self, ctx: commands.Context, *, name: str):
+        """Allows to add a field to an embed, given a key
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        name: str
+            Field's name
+        """
+        async with self.edit(ctx) as embed:
+            embed.add_field(name=name, value="\u200b", inline=True)
+
+    @fields_inline_add.command(name="value", aliases=["v"])
+    async def fields_inline_add_value(self, ctx: commands.Context, *, value: str):
+        """Allows to add a field to an embed, given a key
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        value: str
+            Field's value
+        """
+        async with self.edit(ctx) as embed:
+            embed.add_field(name="\u200b", value=value, inline=True)
 
     @fields.command(name="name", aliases=["n"])
     async def fields_name(self, ctx: commands.Context, before: str, *, after: str):
@@ -1130,7 +1186,7 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx) as embed:
             await ctx.reply(f"There's {len(embed.fields):02d} fields in the embed.")
 
-    @fields_index.command(name="add", aliases=["a"])
+    @fields_index.group(name="add", aliases=["a"], invoke_without_command=True)
     async def fields_index_add(self, ctx: commands.Context, index: int, name: str, *, value: str):
         """Allows to insert a field to an embed based on its index
 
@@ -1148,7 +1204,43 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx) as embed:
             embed.insert_field_at(index, name=name, value=value, inline=False)
 
-    @fields_index.command(name="inline_add", aliases=["iadd", "ia"])
+    @fields_index_add.command(name="key", aliases=["k"])
+    async def fields_index_add_key(self, ctx: commands.Context, index: int, *, name: str):
+        """Allows to insert a field to an embed based on its index
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        index: int
+            Integer Index
+        name: str
+            Field's Name
+        value: str
+            Field's Value
+        """
+        async with self.edit(ctx) as embed:
+            embed.insert_field_at(index, name=name, value="\u200b", inline=False)
+
+    @fields_index_add.command(name="value", aliases=["v"])
+    async def fields_index_add_value(self, ctx: commands.Context, index: int, *, value: str):
+        """Allows to insert a field to an embed based on its index
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        index: int
+            Integer Index
+        name: str
+            Field's Name
+        value: str
+            Field's Value
+        """
+        async with self.edit(ctx) as embed:
+            embed.insert_field_at(index, name="\u200b", value=value, inline=False)
+
+    @fields_index.group(name="inline_add", aliases=["iadd", "ia"], invoke_without_command=True)
     async def fields_index_inline_add(self, ctx: commands.Context, index: int, name: str, *, value: str):
         """Allows to insert a field to an embed based on its index
 
@@ -1165,6 +1257,42 @@ class EmbedBuilder(commands.Cog):
         """
         async with self.edit(ctx) as embed:
             embed.insert_field_at(index, name=name, value=value, inline=True)
+
+    @fields_index_inline_add.command(name="key", aliases=["k"])
+    async def fields_index_inline_add_key(self, ctx: commands.Context, index: int, *, name: str):
+        """Allows to insert a field to an embed based on its index
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        index: int
+            Integer Index
+        name: str
+            Field's Name
+        value: str
+            Field's Value
+        """
+        async with self.edit(ctx) as embed:
+            embed.insert_field_at(index, name=name, value="\u200b", inline=True)
+
+    @fields_index_inline_add.command(name="value", aliases=["v"])
+    async def fields_index_inline_add_value(self, ctx: commands.Context, index: int, *, value: str):
+        """Allows to insert a field to an embed based on its index
+
+        Parameters
+        ----------
+        ctx: commands.Context
+            commands.Context
+        index: int
+            Integer Index
+        name: str
+            Field's Name
+        value: str
+            Field's Value
+        """
+        async with self.edit(ctx) as embed:
+            embed.insert_field_at(index, name="\u200b", value=value, inline=True)
 
     @fields_index.command(name="name", aliases=["n"])
     async def fields_index_name(self, ctx: commands.Context, index: int, *, name: str):
