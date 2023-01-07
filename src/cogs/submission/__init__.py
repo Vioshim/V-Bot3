@@ -705,19 +705,15 @@ class Submission(commands.Cog):
                 )
 
                 if tags := ", ".join(x.name for x in sorted(thread.applied_tags, key=lambda x: x.name)):
-                    embed.add_field(name="Tags", value=tags)
-
-                embed.set_footer(text="If you don't want notifications unfollow this thread.")
+                    embed.set_footer(text=f"Tags: {tags}")
 
                 view = View()
                 view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
 
                 await w.send(
-                    content="@everyone",
                     embed=embed,
                     username=CLYDE.sub("\u200a", thread.owner.display_name),
                     avatar_url=thread.owner.display_avatar.url,
-                    allowed_mentions=AllowedMentions(everyone=True),
                     thread=notif_thread,
                     view=view,
                 )
