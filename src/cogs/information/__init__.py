@@ -409,18 +409,18 @@ class Information(commands.Cog):
             await db.delete_one(data)
 
         asset = member.display_avatar.replace(format="png", size=4096)
-        if file := await self.bot.get_file(asset.url, filename=str(member.id)):
-            embed.set_thumbnail(url=f"attachment://{file.filename}")
-            log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-            await log.send(
-                content=member.mention,
-                file=file,
-                embed=embed,
-                view=view,
-                username=member.display_name,
-                thread=Object(id=1020153313242665022),
-                avatar_url=member.display_avatar.url,
-            )
+        file = await asset.to_file()
+        embed.set_thumbnail(url=f"attachment://{file.filename}")
+        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+        await log.send(
+            content=member.mention,
+            file=file,
+            embed=embed,
+            view=view,
+            username=member.display_name,
+            thread=Object(id=1020153313242665022),
+            avatar_url=member.display_avatar.url,
+        )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
@@ -437,24 +437,24 @@ class Information(commands.Cog):
         embed.set_footer(text=f"ID: {member.id}")
         asset = member.display_avatar.replace(format="png", size=512)
         log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        if file := await self.bot.get_file(asset.url, filename="image"):
-            embed.set_thumbnail(url=f"attachment://{file.filename}")
-            embed.add_field(name="Account Age", value=format_dt(member.created_at, style="R"))
-            view = View()
-            db1 = self.bot.mongo_db("Roleplayers")
-            if item := await db1.find_one({"user": member.id}):
-                url = f"https://discord.com/channels/{member.guild.id}/{item['id']}"
-                view.add_item(Button(label="Characters", url=url))
+        file = await asset.to_file()
+        embed.set_thumbnail(url=f"attachment://{file.filename}")
+        embed.add_field(name="Account Age", value=format_dt(member.created_at, style="R"))
+        view = View()
+        db1 = self.bot.mongo_db("Roleplayers")
+        if item := await db1.find_one({"user": member.id}):
+            url = f"https://discord.com/channels/{member.guild.id}/{item['id']}"
+            view.add_item(Button(label="Characters", url=url))
 
-            await log.send(
-                content=member.mention,
-                embed=embed,
-                file=file,
-                view=view,
-                thread=Object(id=1020153315255922738),
-                username=member.display_name,
-                avatar_url=member.display_avatar.url,
-            )
+        await log.send(
+            content=member.mention,
+            embed=embed,
+            file=file,
+            view=view,
+            thread=Object(id=1020153315255922738),
+            username=member.display_name,
+            avatar_url=member.display_avatar.url,
+        )
 
     @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
@@ -511,24 +511,24 @@ class Information(commands.Cog):
         embed.set_footer(text=f"ID: {user.id}")
         asset = user.display_avatar.replace(format="png", size=512)
         log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        if file := await self.bot.get_file(asset.url, filename="image"):
-            embed.set_thumbnail(url=f"attachment://{file.filename}")
-            embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
-            view = View()
-            db1 = self.bot.mongo_db("Roleplayers")
-            if item := await db1.find_one({"user": user.id}):
-                url = f"https://discord.com/channels/{guild.id}/{item['id']}"
-                view.add_item(Button(label="Characters", url=url))
+        file = await asset.to_file()
+        embed.set_thumbnail(url=f"attachment://{file.filename}")
+        embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
+        view = View()
+        db1 = self.bot.mongo_db("Roleplayers")
+        if item := await db1.find_one({"user": user.id}):
+            url = f"https://discord.com/channels/{guild.id}/{item['id']}"
+            view.add_item(Button(label="Characters", url=url))
 
-            await log.send(
-                content=user.mention,
-                embed=embed,
-                file=file,
-                view=view,
-                thread=Object(id=1020153286285865000),
-                username=user.display_name,
-                avatar_url=user.display_avatar.url,
-            )
+        await log.send(
+            content=user.mention,
+            embed=embed,
+            file=file,
+            view=view,
+            thread=Object(id=1020153286285865000),
+            username=user.display_name,
+            avatar_url=user.display_avatar.url,
+        )
 
     @commands.Cog.listener()
     async def on_role_create(self, role: Role):
@@ -917,23 +917,23 @@ class Information(commands.Cog):
         embed.set_footer(text=f"ID: {user.id}")
         asset = user.display_avatar.replace(format="png", size=512)
         log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        if file := await self.bot.get_file(asset.url, filename="image"):
-            embed.set_thumbnail(url=f"attachment://{file.filename}")
-            embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
-            db1 = self.bot.mongo_db("Roleplayers")
-            view = View()
-            if item := await db1.find_one({"user": user.id}):
-                url = f"https://discord.com/channels/{guild.id}/{item['id']}"
-                view.add_item(Button(label="Characters", url=url))
-            await log.send(
-                content=user.mention,
-                embed=embed,
-                file=file,
-                view=view,
-                thread=Object(id=1020153286285865000),
-                username=user.display_name,
-                avatar_url=user.display_avatar.url,
-            )
+        file = await asset.to_file()
+        embed.set_thumbnail(url=f"attachment://{file.filename}")
+        embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
+        db1 = self.bot.mongo_db("Roleplayers")
+        view = View()
+        if item := await db1.find_one({"user": user.id}):
+            url = f"https://discord.com/channels/{guild.id}/{item['id']}"
+            view.add_item(Button(label="Characters", url=url))
+        await log.send(
+            content=user.mention,
+            embed=embed,
+            file=file,
+            view=view,
+            thread=Object(id=1020153286285865000),
+            username=user.display_name,
+            avatar_url=user.display_avatar.url,
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):

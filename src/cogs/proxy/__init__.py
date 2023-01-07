@@ -294,6 +294,11 @@ class ProxyModal(Modal, title="Prefixes"):
             required=False,
         )
         self.add_item(self.proxy1_data)
+        self.proxy2_name = TextInput(
+            label="Name",
+            placeholder="Psst, ending with * makes bot only use this name.",
+            required=False,
+        )
         self.proxy2_data = TextInput(
             label="Variant",
             placeholder="Each line must include word text",
@@ -301,8 +306,9 @@ class ProxyModal(Modal, title="Prefixes"):
             style=TextStyle.paragraph,
         )
         if variant:
-            self.proxy2_data.label = variant.name[:45]
+            self.proxy2_name.default = variant.name or oc.name
             self.proxy2_data.default = "\n".join(map("text".join, variant.prefixes))
+            self.add_item(self.proxy2_name)
             self.add_item(self.proxy2_data)
         self.variant = variant
 
@@ -323,6 +329,7 @@ class ProxyModal(Modal, title="Prefixes"):
         image: Optional[Attachment] = None
         phrase = f"{self.oc.name}"
         if item := self.variant:
+            item.name = self.proxy2_name.value
             self.variant.prefixes = frozenset(
                 (o[0].strip(), o[-1].strip())
                 for x in self.proxy2_data.value.split("\n")
