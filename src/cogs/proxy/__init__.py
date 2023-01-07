@@ -442,10 +442,11 @@ class ProxyCog(commands.Cog):
     ):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
 
-        try:
-            npc, extra = npc
-        except (TypeError, ValueError):
-            npc, extra = npc, None
+        if isinstance(npc, list):
+            try:
+                npc, extra = npc
+            except (TypeError, ValueError):
+                npc, extra = npc[0], None
 
         if isinstance(npc, Proxy) and isinstance(extra, ProxyExtra):
             username = f"{npc.name} ({extra.name})"
