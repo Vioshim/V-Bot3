@@ -50,7 +50,7 @@ from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, Ability
+from src.structures.ability import ABILITIES_DEFINING, ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Nature, Size
 from src.structures.mon_typing import TypingEnum
@@ -853,20 +853,23 @@ class AbilitiesField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        amount = oc.max_amount_abilities
         m = Move.get(name="Transform")
 
-        if not 1 <= len(oc.abilities) <= amount:
-            return f"Abilities, Min: 1, Max: {amount}"
+        if not 1 <= len(oc.abilities) <= 2:
+            return "Abilities, Min: 1, Max: 2"
 
-        if (
-            not isinstance(
-                oc.species,
-                (Fakemon, Variant, CustomMega, CustomParadox),
-            )
-            and m not in oc.total_movepool
-        ):
-            return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
+        if len(values := [x.name for x in oc.abilities if x.name in ABILITIES_DEFINING]) > 1:
+            return "Carrying {}".format(", ".join(values))
+
+        abilities = oc.species.abilities.copy()
+        if isinstance(oc.species, CustomParadox):
+            a, b = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
+            if a not in abilities and b not in abilities:
+                return "Protosynthesis/Quark Drive needed."
+            abilities |= {a, b}
+
+        if not isinstance(oc.species, (Fakemon, Variant, CustomMega)) and m not in oc.total_movepool:
+            return ", ".join(x.name for x in oc.abilities if x not in abilities)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -881,14 +884,9 @@ class AbilitiesField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        abilities, amount, m = (
-            oc.species.abilities,
-            oc.max_amount_abilities,
-            Move.get(name="Transform"),
-        )
+        abilities, m = oc.species.abilities.copy(), Move.get(name="Transform")
         if template == Template.CustomParadox:
-            abilities = {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
-            amount = 1
+            abilities |= {Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")}
         elif (
             isinstance(
                 oc.species,
@@ -904,7 +902,7 @@ class AbilitiesField(TemplateField):
             values=abilities,
             timeout=None,
             target=ctx,
-            max_values=amount,
+            max_values=min(len(abilities), 2),
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, x.description),
             silent_mode=True,
@@ -1303,8 +1301,7 @@ class CreationOCView(Basic):
             self.oc.size = self.oc.weight = Size.M
 
             if self.ref_template == Template.CustomParadox and not (
-                len(self.oc.abilities) == 1
-                and (get(self.oc.abilities, name="Protosynthesis") or get(self.oc.abilities, name="Quark Drive"))
+                (get(self.oc.abilities, name="Protosynthesis") or get(self.oc.abilities, name="Quark Drive"))
             ):
                 self.oc.abilities = frozenset()
 

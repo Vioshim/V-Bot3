@@ -27,7 +27,7 @@ from discord.utils import find, get
 from frozendict import frozendict
 from rapidfuzz import process
 
-from src.structures.ability import ABILITIES_DEFINING, Ability
+from src.structures.ability import Ability
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -544,11 +544,11 @@ class Fakemon(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if any(x.name in ABILITIES_DEFINING for x in self.abilities) else 2
+        return 2
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return not any(x.name in ABILITIES_DEFINING for x in self.abilities)
+        return True
 
     @classmethod
     def deduce(cls, item: str):
@@ -890,11 +890,11 @@ class Variant(Species):
 
     @property
     def max_amount_abilities(self) -> int:
-        return 1 if any(x.name in ABILITIES_DEFINING for x in self.abilities) else 2
+        return 2
 
     @property
     def can_have_special_abilities(self) -> bool:
-        return not any(x.name in ABILITIES_DEFINING for x in self.abilities) and self.base.can_have_special_abilities
+        return True
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Variant]:

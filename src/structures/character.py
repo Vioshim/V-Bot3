@@ -578,7 +578,7 @@ class Character:
     @property
     def randomize_abilities(self) -> frozenset[Ability]:
         if abilities := list(self.usable_abilities):
-            amount = min(self.max_amount_abilities, len(abilities))
+            amount = min(2, len(abilities))
             items = random.sample(abilities, k=amount)
             return frozenset(items)
         return frozenset(self.abilities)
@@ -658,11 +658,6 @@ class Character:
             answer
         """
         return isinstance(self.species, (Variant, Fakemon, CustomMega))
-
-    @property
-    def max_amount_abilities(self) -> int:
-        condition = any(x.name in ABILITIES_DEFINING for x in self.abilities)
-        return 1 if condition else 2
 
     @property
     def place_mention(self) -> Optional[str]:
