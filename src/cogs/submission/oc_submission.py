@@ -184,7 +184,7 @@ class Template(TemplateItem, Enum):
         match self:
             case self.Pokemon:
                 oc.species, abilities = choices[0], choices[0].abilities.copy()
-                if len(abilities) <= oc.max_amount_abilities:
+                if len(abilities) <= 2:
                     oc.abilities = abilities
                 else:
                     oc.abilities &= abilities
