@@ -647,7 +647,7 @@ class Submission(commands.Cog):
                     text = msg.content
 
                 if not (
-                    (text and (text in message.content))
+                    (text and (text in message.content or message.content in text))
                     or (
                         attachments
                         and len(attachments) == len(msg.attachments)
