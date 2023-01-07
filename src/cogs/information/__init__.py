@@ -1417,7 +1417,8 @@ class Information(commands.Cog):
             embed.title = f"Error - {type(error).__name__}"
             embed.description = str(error)
 
-        await interaction.followup.send(embed=embed, ephemeral=True)
+        with suppress(NotFound):
+            await interaction.followup.send(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
