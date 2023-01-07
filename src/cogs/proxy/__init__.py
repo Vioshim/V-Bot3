@@ -53,7 +53,6 @@ from src.structures.pronouns import Pronoun
 from src.structures.proxy import Proxy, ProxyExtra
 from src.structures.species import Species
 from src.utils.etc import LINK_EMOJI
-from src.utils.imagekit import ImageKit
 from src.utils.matches import BRACKETS_PARSER
 
 __all__ = ("Proxy", "setup")
@@ -559,25 +558,16 @@ class ProxyCog(commands.Cog):
 
         if image and image.content_type.startswith("image/"):
             w = await self.bot.webhook(1020151767532580934)
-            if file := await self.bot.get_file(
-                ImageKit(
-                    image.url,
-                    height=1024,
-                    width=1024,
-                    format="png",
-                )
-            ):
-                m = await w.send(
-                    f"{oc.name} - {variant}",
-                    file=file,
-                    wait=True,
-                    thread=Object(id=1045687852069040148),
-                    username=ctx.user.display_name,
-                    avatar_url=ctx.user.display_avatar.url,
-                )
-                modal = ProxyModal(oc, proxy, var_proxy or variant, m.attachments[0].url)
-            else:
-                modal = ProxyModal(oc, proxy, var_proxy or variant)
+            file = await image.to_file()
+            m = await w.send(
+                f"{oc.name} - {variant}",
+                file=file,
+                wait=True,
+                thread=Object(id=1045687852069040148),
+                username=ctx.user.display_name,
+                avatar_url=ctx.user.display_avatar.url,
+            )
+            modal = ProxyModal(oc, proxy, var_proxy or variant, m.attachments[0].url)
         else:
             modal = ProxyModal(oc, proxy, var_proxy or variant)
         await ctx.response.send_modal(modal)
@@ -630,25 +620,16 @@ class ProxyCog(commands.Cog):
 
         if image and image.content_type.startswith("image/"):
             w = await self.bot.webhook(1020151767532580934)
-            if file := await self.bot.get_file(
-                ImageKit(
-                    image.url,
-                    height=1024,
-                    width=1024,
-                    format="png",
-                )
-            ):
-                m = await w.send(
-                    name,
-                    file=file,
-                    wait=True,
-                    thread=Object(id=1045687852069040148),
-                    username=ctx.user.display_name,
-                    avatar_url=ctx.user.display_avatar.url,
-                )
-                image = m.attachments[0].url
-            else:
-                image = None
+            file = await image.to_file()
+            m = await w.send(
+                name,
+                file=file,
+                wait=True,
+                thread=Object(id=1045687852069040148),
+                username=ctx.user.display_name,
+                avatar_url=ctx.user.display_avatar.url,
+            )
+            image = m.attachments[0].url
         else:
             image = None
 
