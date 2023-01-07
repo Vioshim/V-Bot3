@@ -298,6 +298,7 @@ class ProxyModal(Modal, title="Prefixes"):
             label="Name",
             placeholder="Psst, ending with * makes bot only use this name.",
             required=False,
+            max_length=80,
         )
         self.proxy2_data = TextInput(
             label="Variant",
@@ -306,7 +307,7 @@ class ProxyModal(Modal, title="Prefixes"):
             style=TextStyle.paragraph,
         )
         if variant:
-            self.proxy2_name.default = variant.name or oc.name
+            self.proxy2_name.default = variant.name[:80] or oc.name
             self.proxy2_data.default = "\n".join(map("text".join, variant.prefixes))
             self.add_item(self.proxy2_name)
             self.add_item(self.proxy2_data)
