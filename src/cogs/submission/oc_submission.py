@@ -861,15 +861,11 @@ class AbilitiesField(TemplateField):
         if len(values := [x.name for x in oc.abilities if x.name in ABILITIES_DEFINING]) > 1:
             return "Carrying {}".format(", ".join(values))
 
-        abilities = oc.species.abilities.copy()
-        if isinstance(oc.species, CustomParadox):
-            a, b = Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")
-            if a not in abilities and b not in abilities:
-                return "Protosynthesis/Quark Drive needed."
-            abilities |= {a, b}
+        if isinstance(oc.species, CustomParadox) and not ("Protosynthesis" in values or "Quark Drive" in values):
+            return "Protosynthesis/Quark Drive needed."
 
         if not isinstance(oc.species, (Fakemon, Variant, CustomMega)) and m not in oc.total_movepool:
-            return ", ".join(x.name for x in oc.abilities if x not in abilities)
+            return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
