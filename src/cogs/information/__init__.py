@@ -461,38 +461,36 @@ class Information(commands.Cog):
         if now.guild.id != 719343092963999804 or past.premium_since == now.premium_since:
             return
 
+        files = []
         if past.premium_since and not now.premium_since:
-            embed = Embed(
-                title="Has un-boosted the Server!",
-                colour=Colour.red(),
-                timestamp=utcnow(),
-            )
-
+            embed = Embed(title="Has un-boosted the Server!", colour=Colour.red(), timestamp=utcnow())
             db = self.bot.mongo_db("Custom Role")
-            if data := await db.find_one({"author": now.id}):
-                if role := get(now.guild.roles, id=data["id"]):
-                    try:
-                        await role.delete(reason="User unboosted")
-                    except DiscordException:
-                        pass
+            if (
+                data := await db.find_one_and_delete(
+                    {"author": now.id, "server": now.guild.id},
+                )
+            ) and (role := get(now.guild.roles, id=data["id"])):
+                if role.icon:
+                    file = await role.icon.to_file()
+                    embed.set_thumbnail(url=f"attachment://{file.filename}")
+                    files.append(file)
+                embed.add_field(name="Name", value=role.name)
+                embed.add_field(name="Color", value=role.color)
 
-                await db.delete_one(data)
+                with suppress(DiscordException):
+                    await role.delete(reason="User unboosted")
         else:
-            embed = Embed(
-                title="Has boosted the Server!",
-                colour=Colour.brand_green(),
-                timestamp=utcnow(),
-            )
+            embed = Embed(title="Has boosted the Server!", colour=Colour.brand_green(), timestamp=utcnow())
 
         embed.set_image(url=WHITE_BAR)
-        asset = now.display_avatar.replace(format="png", size=4096)
-        embed.set_thumbnail(url=asset.url)
+        embed.set_author(name=now.display_name, icon_url=now.display_avatar.url)
         embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
 
         log = await self.bot.webhook(1020151767532580934, reason="Logging")
         await log.send(
             content=now.mention,
             embed=embed,
+            files=files,
             thread=Object(id=1020153311200022528),
             username=now.display_name,
             avatar_url=now.display_avatar.url,

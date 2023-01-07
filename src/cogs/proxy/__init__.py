@@ -53,7 +53,7 @@ from src.structures.move import Move
 from src.structures.pronouns import Pronoun
 from src.structures.proxy import Proxy, ProxyExtra
 from src.structures.species import Species
-from src.utils.etc import LINK_EMOJI
+from src.utils.etc import LINK_EMOJI, WHITE_BAR
 from src.utils.matches import BRACKETS_PARSER
 
 __all__ = ("Proxy", "setup")
@@ -567,6 +567,7 @@ class ProxyCog(commands.Cog):
         """
         db = self.bot.mongo_db("Proxy")
         key = {"id": oc.id, "server": oc.server, "author": oc.author}
+        member = self.bot.supporting.get(ctx.user, ctx.user)
         data = await db.find_one(key)
         proxy = Proxy.from_mongo_dict(data) if data else None
         var_proxy = get(proxy.extras, name=variant) if proxy else variant
@@ -585,12 +586,14 @@ class ProxyCog(commands.Cog):
             else:
                 embed = proxy.embed.set_footer(text="Proxy was removed")
                 await db.delete_one(key)
+            embed.color, embed.timestamp = member.color, ctx.created_at
+            embed.set_image(url=WHITE_BAR)
             return await ctx.response.send_message(embed=embed, ephemeral=True)
 
-        if image and image.content_type.startswith("image/"):
-            modal = ProxyModal(oc, proxy, var_proxy or variant, image)
-        else:
-            modal = ProxyModal(oc, proxy, var_proxy or variant)
+        if not (image and image.content_type.startswith("image/")):
+            image = None
+
+        modal = ProxyModal(oc, proxy, var_proxy or variant, image)
         await ctx.response.send_modal(modal)
 
     @app_commands.command(name="npc", description="Slash command for NPC Narration")
