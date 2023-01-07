@@ -907,7 +907,7 @@ class AbilitiesField(TemplateField):
         ) as choices:
             if choices:
                 oc.abilities = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant, CustomParadox)):
+                if isinstance(oc.species, (Fakemon, Variant)):
                     oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 

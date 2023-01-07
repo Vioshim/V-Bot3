@@ -34,7 +34,7 @@ from docx.shared import Inches
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
-from src.structures.ability import ABILITIES_DEFINING, Ability, SpAbility
+from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
