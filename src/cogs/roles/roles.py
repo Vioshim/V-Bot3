@@ -1,4 +1,4 @@
-# Copyright 2022 Vioshim
+# Copyright 2023 Vioshim
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -106,14 +106,14 @@ def seconds(test: datetime) -> int:
 
 
 RP_SEARCH_ROLES = dict(
-    Any="Useful for finding Any kind of RP",
-    Casual="Ideal for Slice of Life RP",
-    Plot="If you need a hand with an Arc or plot.",
-    Action="Encounters that involve action such as battles, thievery, etc.",
-    Narrated="Narrate for others or get narrated.",
-    Drama="RPs that present a problem for OCs to solve.",
-    Paragraph="Be descriptive and detailed as possible",
-    Horror="Scary or mysterious RPs for OCs",
+    Any=("Useful for finding Any kind of RP", 1061107910593220719),
+    Casual=("Ideal for Slice of Life RP", 1061107912203841628),
+    Plot=("If you need a hand with an Arc or plot.", 1061107915827724319),
+    Action=("Encounters that involve action such as battles, thievery, etc.", 1061107917174095924),
+    Narrated=("Narrate for others or get narrated.", 1061107918746963970),
+    Drama=("RPs that present a problem for OCs to solve.", 1061107922605703218),
+    Literate=("Be descriptive and detailed as possible", 1061107924589621328),
+    Horror=("Scary or mysterious RPs for OCs", 1061107926732910724),
 )
 
 
@@ -372,28 +372,27 @@ class BasicRoleSelect(RoleSelect):
         min_values=0,
         max_values=5,
         options=[
-            SelectOption(label=f"{key} RP Search", emoji="💠", value=key, description=desc)
-            for key, desc in RP_SEARCH_ROLES.items()
+            SelectOption(
+                label=f"{key} RP Search",
+                emoji="💠",
+                value=str(item),
+                description=desc,
+            )
+            for key, (desc, item) in RP_SEARCH_ROLES.items()
         ],
     )
     async def rp_search_choice(self, ctx: Interaction, sct: Select):
+        roles = await self.choice(ctx, sct)
         member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
+        roles = [x.name.removesuffix(" RP Search") for x in roles]
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
-        await ctx.response.defer(ephemeral=True, thinking=True)
-        embed = Embed(title=sct.placeholder, color=member.color, timestamp=ctx.created_at)
-        embed.set_image(url=WHITE_BAR)
-        embed.set_thumbnail(url=member.display_avatar.url)
         if item := await db.find_one({"user": member.id}):
             if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
                 channel: Thread = await ctx.guild.fetch_channel(item["id"])
             forum: ForumChannel = channel.parent
-            tags = [o for x in sct.values if (o := get(forum.available_tags, name=x))][:5]
+            tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
             tags.sort(key=lambda x: x.name)
-            channel = await channel.edit(archived=False, applied_tags=tags)
-            embed.description = "\n".join(f"• {x.name}" for x in channel.applied_tags)
-        else:
-            embed.description = "> You don't have a Roleplayer Profile"
-        await ctx.followup.send(embed=embed, ephemeral=True)
+            await channel.edit(archived=False, applied_tags=tags)
 
 
 class TimezoneSelect(RoleSelect):

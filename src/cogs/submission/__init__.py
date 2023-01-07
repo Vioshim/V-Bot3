@@ -703,14 +703,20 @@ class Submission(commands.Cog):
                     color=thread.owner.color,
                     timestamp=thread.created_at,
                 )
+                applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
 
-                if tags := ", ".join(x.name for x in sorted(thread.applied_tags, key=lambda x: x.name)):
-                    embed.set_footer(text=f"Tags: {tags}")
+                tags = ", ".join(x.name for x in applied_tags) or None
+                embed.set_footer(text=f"Tags: {tags}")
 
                 view = View()
                 view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
+                content = ", ".join(
+                    o.mention for x in applied_tags if (o := get(thread.guild.roles, name=f"{x.name} RP Search"))
+                )
 
                 await w.send(
+                    content=content,
+                    allowed_mentions=AllowedMentions(roles=True),
                     embed=embed,
                     username=CLYDE.sub("\u200a", thread.owner.display_name),
                     avatar_url=thread.owner.display_avatar.url,
