@@ -445,14 +445,14 @@ class ProxyCog(commands.Cog):
         if isinstance(npc, list):
             try:
                 npc, extra = npc
-            except (TypeError, ValueError):
-                npc, extra = npc[0], None
+            except ValueError:
+                npc, extra = npc[0]
 
-        if isinstance(npc, Proxy) and isinstance(extra, ProxyExtra):
-            username = f"{npc.name} ({extra.name})"
-            if extra.name.endswith("*") or len(username) > 80:
-                username = extra.name.removesuffix("*") or npc.name
-            npc = NPC(name=username, image=extra.image or npc.image)
+            if isinstance(npc, Proxy) and isinstance(extra, ProxyExtra):
+                username = f"{npc.name} ({extra.name})"
+                if extra.name.endswith("*") or len(username) > 80:
+                    username = extra.name.removesuffix("*") or npc.name
+                npc = NPC(name=username, image=extra.image or npc.image)
 
         if isinstance(npc, Character):
             npc = NPC(name=npc.name, image=npc.image_url)
