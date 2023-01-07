@@ -18,6 +18,7 @@ import re
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
+from textwrap import wrap
 from typing import Optional
 
 import d20
@@ -512,26 +513,27 @@ class ProxyCog(commands.Cog):
         else:
             files = []
 
-        proxy_msg = await webhook.send(
-            username=npc.name[:80],
-            avatar_url=npc.image,
-            embeds=embeds,
-            content=text or "\u200b",
-            files=files,
-            wait=True,
-            view=view,
-            thread=thread,
-        )
-        self.last_names[message.channel.id] = (message.author.id, proxy_msg.author.display_name)
-        await self.bot.mongo_db("Tupper-logs").insert_one(
-            {
-                "channel": message.channel.id,
-                "id": proxy_msg.id,
-                "author": author_id,
-            }
-        )
-        if deleting:
-            await message.delete(delay=300 if message.mentions else 0)
+        for paragraph in wrap(text or "\u200b", 2000):
+            proxy_msg = await webhook.send(
+                username=npc.name[:80],
+                avatar_url=npc.image,
+                embeds=embeds,
+                content=paragraph.strip() or "\u200b",
+                files=files,
+                wait=True,
+                view=view,
+                thread=thread,
+            )
+            self.last_names[message.channel.id] = (message.author.id, proxy_msg.author.display_name)
+            await self.bot.mongo_db("Tupper-logs").insert_one(
+                {
+                    "channel": message.channel.id,
+                    "id": proxy_msg.id,
+                    "author": author_id,
+                }
+            )
+            if deleting:
+                await message.delete(delay=300 if message.mentions else 0)
 
     @app_commands.command(description="Proxy management")
     @app_commands.guilds(719343092963999804)
