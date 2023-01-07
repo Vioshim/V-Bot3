@@ -31,6 +31,7 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
+    Object,
     Role,
     SelectOption,
     TextStyle,
@@ -379,6 +380,9 @@ class BasicRoleSelect(RoleSelect):
         member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
         await ctx.response.defer(ephemeral=True, thinking=True)
+        embed = Embed(title=sct.placeholder, color=member.color, timestamp=ctx.created_at)
+        embed.set_image(url=WHITE_BAR)
+        embed.set_thumbnail(url=member.display_avatar.url)
         if item := await db.find_one({"user": member.id}):
             if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
                 channel: Thread = await ctx.guild.fetch_channel(item["id"])
@@ -386,10 +390,10 @@ class BasicRoleSelect(RoleSelect):
             tags = [o for x in sct.values if (o := get(forum.available_tags, name=x))][:5]
             tags.sort(key=lambda x: x.name)
             channel = await channel.edit(archived=False, applied_tags=tags)
-            message = "Applied tags: {}".format(", ".join(x.name for x in channel.applied_tags) or "None")
+            embed.description = "\n".join(f"• {x.name}" for x in channel.applied_tags)
         else:
-            message = "You don't have a Roleplayer Profile"
-        await ctx.followup.send(message, ephemeral=True)
+            embed.description = "> You don't have a Roleplayer Profile"
+        await ctx.followup.send(embed=embed, ephemeral=True)
 
 
 class TimezoneSelect(RoleSelect):
@@ -640,10 +644,11 @@ class RPModal(Modal):
             items = self.ocs
         items = sorted(set(items), key=lambda x: x.name)
 
-        webhook: Webhook = await interaction.client.webhook(1061010425136828628, reason="RP Search")
+        webhook: Webhook = await interaction.client.webhook(1061008601335992422, reason="RP Search")
         msg1: WebhookMessage = await webhook.send(
             content=self.to_user.mention,
             allowed_mentions=AllowedMentions(roles=True),
+            thread=Object(id=1061010425136828628),
             embed=embed,
             username=self.user.display_name,
             avatar_url=self.user.display_avatar.url,
