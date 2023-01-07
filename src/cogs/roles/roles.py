@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
 from itertools import groupby
 from time import mktime
-from typing import Iterable, Optional
+from typing import Iterable
 
 from dateparser import parse
 from discord import (
@@ -43,20 +43,13 @@ from discord.utils import get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
-from src.pagination.view_base import Basic
 from src.structures.character import Character
 from src.structures.pronouns import Pronoun
-from src.utils.etc import DEFAULT_TIMEZONE, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
 
-__all__ = (
-    "RoleSelect",
-    "RPSearchManage",
-    "RPRolesView",
-    "hours",
-    "seconds",
-)
+__all__ = ("RoleSelect", "RPSearchManage", "hours", "seconds")
 
 
 INTERVAL = timedelta(days=3)
@@ -112,14 +105,14 @@ def seconds(test: datetime) -> int:
 
 
 RP_SEARCH_ROLES = dict(
-    Any=("Useful for finding Any kind of RP", 962719564167254077),
-    Casual=("Ideal for Slice of Life RP", 1017897677423378512),
-    Plot=("If you need a hand with an Arc or plot.", 962719564863508510),
-    Action=("Encounters that involve action such as battles, thievery, etc.", 962719565182271590),
-    Narrated=("Narrate for others or get narrated.", 962719566402813992),
-    Drama=("RPs that present a problem for OCs to solve.", 962719567694659604),
-    Literate=("Be descriptive and detailed as possible", 962719568172814368),
-    Horror=("Scary or mysterious RPs for OCs", 962719570148331560),
+    Any="Useful for finding Any kind of RP",
+    Casual="Ideal for Slice of Life RP",
+    Plot="If you need a hand with an Arc or plot.",
+    Action="Encounters that involve action such as battles, thievery, etc.",
+    Narrated="Narrate for others or get narrated.",
+    Drama="RPs that present a problem for OCs to solve.",
+    Paragraph="Be descriptive and detailed as possible",
+    Horror="Scary or mysterious RPs for OCs",
 )
 
 
@@ -173,16 +166,9 @@ class AFKSchedule:
 
 
 class AFKModal(Modal, title="Current Time"):
-    def __init__(
-        self,
-        hours: list[int] = None,
-        offset: Optional[int] = None,
-    ) -> None:
+    def __init__(self, hours: list[int] = None, offset: int = 0) -> None:
         super(AFKModal, self).__init__(timeout=None)
-        date = utcnow()
-        if offset:
-            tz = timezone(offset=timedelta(hours=offset))
-            date = date.astimezone(tz)
+        date = utcnow().astimezone(timezone(offset=timedelta(hours=offset)))
         text = date.strftime("%I:%M %p")
 
         data = TextInput(
@@ -191,9 +177,12 @@ class AFKModal(Modal, title="Current Time"):
             placeholder=text,
             default=text,
         )
-        self.hours = [*map(int, hours or [])]
+        items = []
+        if hours:
+            items.extend(map(int, hours))
+        self.hours: list[int] = items
         self.hours.sort()
-        self.offset = offset or 0
+        self.offset = offset
         self.data = data
         self.add_item(data)
 
@@ -382,28 +371,25 @@ class BasicRoleSelect(RoleSelect):
         min_values=0,
         max_values=5,
         options=[
-            SelectOption(
-                label=f"{key} RP Search",
-                emoji="💠",
-                value=str(item),
-                description=desc,
-            )
-            for key, (desc, item) in RP_SEARCH_ROLES.items()
+            SelectOption(label=f"{key} RP Search", emoji="💠", value=key, description=desc)
+            for key, desc in RP_SEARCH_ROLES.items()
         ],
     )
     async def rp_search_choice(self, ctx: Interaction, sct: Select):
-        roles = await self.choice(ctx, sct)
         member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        roles = [x.name.removesuffix(" RP Search") for x in roles]
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
+        await ctx.response.defer(ephemeral=True, thinking=True)
         if item := await db.find_one({"user": member.id}):
             if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
                 channel: Thread = await ctx.guild.fetch_channel(item["id"])
             forum: ForumChannel = channel.parent
-            tags = [o for x in roles if (o := get(forum.available_tags, name=x))][:5]
+            tags = [o for x in sct.values if (o := get(forum.available_tags, name=x))][:5]
             tags.sort(key=lambda x: x.name)
-            if set(channel.applied_tags) != set(tags):
-                await channel.edit(archived=False, applied_tags=tags)
+            channel = await channel.edit(archived=False, applied_tags=tags)
+            message = "Applied tags: {}".format(", ".join(x.name for x in channel.applied_tags) or "None")
+        else:
+            message = "You don't have a Roleplayer Profile"
+        await ctx.followup.send(message, ephemeral=True)
 
 
 class TimezoneSelect(RoleSelect):
@@ -546,14 +532,12 @@ class RPModal(Modal):
     def __init__(
         self,
         user: Member,
-        role: Role,
         ocs: set[Character],
-        to_user: Optional[Member] = None,
+        to_user: Member,
         mobile: bool = True,
     ) -> None:
-        super(RPModal, self).__init__(title=f"Pinging {role.name}")
+        super(RPModal, self).__init__(title="Pinging")
         self.user = user
-        self.role = role
         self.ocs = ocs
         self.to_user = to_user
 
@@ -566,12 +550,11 @@ class RPModal(Modal):
         self.message = TextInput(
             style=TextStyle.paragraph,
             label="Message",
-            placeholder=f"Describe what you're looking for in this {self.role.name} (Optional)",
+            placeholder="Describe what you're looking for in this RP (Optional)",
             default=f"{user.display_name} is looking to RP with their registered characters.",
             required=False,
         )
-        if isinstance(to_user, Member):
-            self.message.default = self.message.default.replace("their", f"{to_user.display_name}'s ")
+        self.message.default = self.message.default.replace("their", f"{to_user.display_name}'s ")
         self.add_item(self.message)
 
         self.select_ocs1 = Select(placeholder="Select Characters", min_values=0)
@@ -608,13 +591,12 @@ class RPModal(Modal):
     async def check(self, interaction: Interaction) -> bool:
         resp: InteractionResponse = interaction.response
         cog = interaction.client.get_cog("Roles")
-        reference = self.to_user or self.role
         if (val := cog.cool_down.get(self.user.id)) and hours(val) < 1:
             msg = f"{self.user.mention} is in cool down, user pinged one recently."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
-        if (val := cog.role_cool_down.get(reference.id)) and hours(val) < 1:
-            msg = f"Pinging {reference.mention} is in cool down, check the pings at <#958122815171756042>."
+        if (val := cog.role_cool_down.get(self.to_user.id)) and hours(val) < 1:
+            msg = f"Pinging {self.to_user.mention} is in cool down, check the pings at <#1061010425136828628>."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
         return True
@@ -641,15 +623,16 @@ class RPModal(Modal):
 
         cog1 = interaction.client.get_cog("Roles")
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
-        data = [
-            Character.from_mongo_dict(x)
-            async for x in db.find(
-                {"id": {"$in": [int(value) for item in self.select_ocs_group for value in item.values]}}
-            )
-        ]
-        items.extend(data)
+        items.extend(
+            [
+                Character.from_mongo_dict(x)
+                async for x in db.find(
+                    {"id": {"$in": [int(value) for item in self.select_ocs_group for value in item.values]}}
+                )
+            ]
+        )
 
-        embed = Embed(title=self.role.name, color=self.user.color, description=self.message.value)
+        embed = Embed(title=self.to_user.display_name, color=self.user.color, description=self.message.value)
         guild: Guild = self.user.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -657,59 +640,31 @@ class RPModal(Modal):
             items = self.ocs
         items = sorted(set(items), key=lambda x: x.name)
 
-        reference = self.role
-        name = f"{self.role.name} - {self.user.display_name}"
-        if self.to_user:
-            reference = self.to_user
-            name += f" - {self.to_user.display_name}"
-        webhook: Webhook = await interaction.client.webhook(958122815171756042, reason="RP Search")
+        webhook: Webhook = await interaction.client.webhook(1061010425136828628, reason="RP Search")
         msg1: WebhookMessage = await webhook.send(
-            content=reference.mention,
+            content=self.to_user.mention,
             allowed_mentions=AllowedMentions(roles=True),
             embed=embed,
             username=self.user.display_name,
             avatar_url=self.user.display_avatar.url,
             wait=True,
         )
-        thread = await msg1.create_thread(name=name)
+
         embed.set_image(url=WHITE_BAR)
         view = RPSearchManage(msg1.id, self.user, items)
         for idx, x in enumerate(items[:6]):
             view.add_item(Button(label=x.name[:80], emoji=x.emoji, url=x.jump_url, row=idx // 3))
-        msg2 = await thread.send(
-            content=reference.mention,
-            allowed_mentions=AllowedMentions(users=True),
-            embed=embed,
-            view=view,
-        )
-        await thread.add_user(self.user)
 
-        cog1.cool_down[reference.id] = interaction.created_at
-        cog1.role_cool_down[reference.id] = interaction.created_at
-
-        ocs = {x["id"] async for x in db.find({"author": self.user.id, "server": guild.id})}
-        ocs2 = {x.id if isinstance(x, Character) else x for x in self.ocs}
-        if ocs == ocs2:
-            ocs2 = set()
-
-        ocs = ocs2
-
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("RP Search")
-        await db.insert_one(
-            {
-                "id": msg1.id,
-                "member": self.user.id,
-                "role": reference.id,
-                "server": self.user.guild.id,
-                "message": msg2.id,
-                "ocs": list(ocs),
-            }
-        )
+        cog1.cool_down[self.to_user.id] = interaction.created_at
+        cog1.role_cool_down[self.to_user.id] = interaction.created_at
 
         aux_embed = RP_SEARCH_EMBED.copy()
         aux_embed.clear_fields()
         aux_embed.title = "Ping has been done successfully!"
-        await interaction.followup.send(embed=aux_embed, ephemeral=True)
+
+        aux_view = View()
+        aux_view.add_item(Button(label="Go to Ping", emoji=LINK_EMOJI, url=msg1.jump_url))
+        await interaction.followup.send(embed=aux_embed, ephemeral=True, view=aux_view)
 
         db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
         if img := await db.find_one({"author": self.user.id}):
@@ -719,31 +674,6 @@ class RPModal(Modal):
             embed.set_image(url=f"attachment://{file.filename}")
             await msg1.edit(embed=embed, attachments=[file], view=view)
         elif text := ", ".join(str(x.id) for x in items):
+            await msg1.edit(view=view)
             interaction.client.logger.info("Error Image Parsing OCs: %s", text)
         self.stop()
-
-
-class RPRolesView(Basic):
-    @select(
-        placeholder="Make a new Ping",
-        custom_id="rp-view",
-        options=[
-            SelectOption(
-                label=f"{key} RP Search",
-                emoji="\N{LEFT-POINTING MAGNIFYING GLASS}",
-                value=str(item),
-                description=desc,
-            )
-            for key, (desc, item) in RP_SEARCH_ROLES.items()
-        ],
-    )
-    async def choice(self, interaction: Interaction, sct: Select):
-        role: Role = interaction.guild.get_role(int(sct.values[0]))
-        resp: InteractionResponse = interaction.response
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
-        user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": interaction.guild_id})]
-        modal = RPModal(user=user, role=role, ocs=ocs)
-        if await modal.check(interaction):
-            await resp.send_modal(modal)
-            await modal.wait()
