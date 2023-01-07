@@ -193,17 +193,20 @@ class MoodFunction(ProxyFunction):
 
     @classmethod
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
-        if isinstance(npc, Proxy) and (
-            o := process.extractOne(
-                ":".join(args),
-                choices=npc.extras,
-                score_cutoff=60,
-                processor=lambda x: getattr(x, "name", x),
-            )
-        ):
-            if len(username := f"{npc.name} ({o[0].name})") > 80:
-                username = o[0].name
-            return NPC(name=username, image=o[0].image or npc.image), "", None
+        if not isinstance(npc, Proxy):
+            return
+        item = process.extractOne(
+            ":".join(args),
+            choices=list(npc.extras),
+            score_cutoff=60,
+            processor=lambda x: x.name if isinstance(x, ProxyExtra) else x,
+        )
+        if item:
+            item = item[0]
+            username = f"{npc.name} ({item.name})"
+            if item.name.endswith("*") or len(username) > 80:
+                username = item.name.removesuffix("*") or npc.name
+            return NPC(name=username, image=item.image or npc.image), "", None
 
 
 class RollFunction(ProxyFunction):
@@ -431,13 +434,25 @@ class ProxyCog(commands.Cog):
 
     async def proxy_handler(
         self,
-        npc: Character | NPC | Proxy | ProxyExtra,
+        npc: Character | NPC | list[Proxy | ProxyExtra],
         message: Message,
         text: str = None,
         attachments: bool = True,
         deleting: bool = True,
     ):
         webhook = await self.bot.webhook(message.channel, reason="NPC")
+
+        try:
+            npc, extra = npc
+        except (TypeError, ValueError):
+            npc, extra = npc, None
+
+        if isinstance(npc, Proxy) and isinstance(extra, ProxyExtra):
+            username = f"{npc.name} ({extra.name})"
+            if extra.name.endswith("*") or len(username) > 80:
+                username = extra.name.removesuffix("*") or npc.name
+            npc = NPC(name=username, image=extra.image or npc.image)
+
         if isinstance(npc, Character):
             npc = NPC(name=npc.name, image=npc.image_url)
 

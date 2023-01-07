@@ -1112,7 +1112,7 @@ class ImageField(TemplateField):
     async def on_submit(
         cls,
         ctx: Interaction,
-        template: Template,
+        _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,

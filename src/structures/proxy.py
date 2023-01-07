@@ -187,7 +187,7 @@ class Proxy:
             if aux := item.prefix_lookup(a, b):
                 return aux
 
-    def text_prefix_lookup(self, text: str, strip: bool = True) -> Optional[tuple[Proxy | ProxyExtra, str]]:
+    def text_prefix_lookup(self, text: str, strip: bool = True):
         if not text:
             return
 
@@ -208,7 +208,7 @@ class Proxy:
                     text = text.removeprefix(k).removesuffix(v)
                     if strip:
                         text = text.strip()
-                    return item, text
+                    return self, item, text
 
     @staticmethod
     def first_lookup(items: list[Proxy], text: str, strip: bool = True):
@@ -219,12 +219,12 @@ class Proxy:
     @classmethod
     def lookup(cls, items: list[Proxy], text: str):
         current = None
-        values: list[tuple[Proxy | ProxyExtra, str]] = []
+        values: list[tuple[list[Proxy | ProxyExtra], str]] = []
 
         for paragraph in text.split("\n"):
             if aux := cls.first_lookup(items, paragraph, strip=False):
-                proxy, paragraph = aux
-                values.append(aux)
+                *proxy, paragraph = aux
+                values.append((proxy, paragraph))
                 current = proxy
             elif current:
                 item = current, paragraph
@@ -232,18 +232,21 @@ class Proxy:
             else:
                 break
 
-        proxy_msgs: list[tuple[Proxy | ProxyExtra, str]] = []
+        proxy_msgs: list[tuple[list[Proxy | ProxyExtra], str]] = []
         for key, paragraphs in itertools.groupby(values, key=lambda x: x[0]):
             entry = functools.reduce(lambda x, y: f"{x}\n{y}", map(lambda z: z[1], paragraphs))
             proxy_msgs.append((key, entry.strip()))
 
         if not proxy_msgs and (aux := cls.first_lookup(items, text)):
-            proxy_msgs.append(aux)
+            *proxy, paragraph = aux
+            proxy_msgs.append((proxy, paragraph))
 
-        return [
-            aux if proxy is None and (aux := cls.first_lookup(items, paragraph)) else (proxy, paragraph)
-            for proxy, paragraph in proxy_msgs
-        ]
+        result: list[tuple[list[Proxy | ProxyExtra], str]] = []
+        for proxy, paragraph in proxy_msgs:
+            if (not proxy or None in proxy) and (aux := cls.first_lookup(items, paragraph)):
+                *proxy, paragraph = aux
+            result.append((proxy, paragraph))
+        return result
 
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
