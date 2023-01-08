@@ -99,11 +99,11 @@ class ProxyFunction(ABC):
     @classmethod
     async def lookup(cls, bot: CustomBot, user: Member, npc: NPC | Proxy | ProxyExtra, text: str):
         items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
-        args = [x for x in text.lower().split(":")]
-        if args and (x := process.extractOne(args[0], choices=list(items), score_cutoff=90)):
-            return await (item := items[x[0]]).parse(
-                bot, user, npc, [x if item.keep_caps else x.lower() for x in args[1:]]
-            )
+        name, *args = text.split(":")
+        if name and (x := process.extractOne(name, choices=list(items), score_cutoff=90)):
+            if (item := items[x[0]]) and not item.keep_caps:
+                args = [x.lower() for x in args]
+            return await (item := items[x[0]]).parse(bot, user, npc, args)
 
     @classmethod
     @abstractmethod
