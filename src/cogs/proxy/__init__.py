@@ -788,6 +788,7 @@ class ProxyCog(commands.Cog):
         else:
             files = []
 
+        delay: float = 0.25
         for index, paragraph in enumerate(
             wrap(
                 text or "\u200b",
@@ -797,7 +798,7 @@ class ProxyCog(commands.Cog):
             )
         ):
             if index % 5 == 0:
-                await asyncio.sleep(1)
+                await asyncio.sleep(delay := delay * 2)
 
             proxy_msg = await webhook.send(
                 username=npc.name[:80],
