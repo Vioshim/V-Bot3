@@ -284,7 +284,8 @@ class DateFunction(ProxyFunction):
                     settings["TO_TIMEZONE"] = tz_info
                     tz = timezone(offset=timedelta(hours=time))
                 if item := dateparser.parse(":".join(date), settings=settings):
-                    return npc, format_dt(item.astimezone(tz), style=mode), None
+                    item = item.combine(item, item.time(), tzinfo=tz)
+                    return npc, format_dt(item, style=mode), None
             case [*date]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
@@ -295,7 +296,8 @@ class DateFunction(ProxyFunction):
                     settings["TO_TIMEZONE"] = tz_info
                     tz = timezone(offset=timedelta(hours=time))
                 if item := dateparser.parse(":".join(date), settings=settings):
-                    return npc, format_dt(item.astimezone(tz)), None
+                    item = item.combine(item, item.time(), tzinfo=tz)
+                    return npc, format_dt(item), None
 
 
 class MetronomeFunction(ProxyFunction):
