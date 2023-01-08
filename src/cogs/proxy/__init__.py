@@ -123,6 +123,33 @@ class MoveFunction(ProxyFunction):
 
     @classmethod
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]) -> Optional[tuple[str, Optional[Embed]]]:
+        """
+        :<any>                 | move
+        :<any>:embed           | move w/embed
+        :<any>:max             | max move
+        :<any>:max:embed       | max move w/embed
+        :<any>:max:<any>       | max move different type
+        :<any>:max:<any>:embed | max move different type w/embed
+        :<any>:z               | z move
+        :<any>:z:embed         | z move w/embed
+        :<any>:z:<any>         | z move different type
+        :<any>:z:<any>:embed   | z move different type w/embed
+        :<any>:<any>           | move different type
+        :<any>:<any>:embed     | move different type w/embed
+        Examples
+        • {{move:ember}}
+        • {{move:ember:embed}}
+        • {{move:ember:max}}
+        • {{move:ember:max:embed}}
+        • {{move:ember:max:water}}
+        • {{move:ember:max:water:embed}}
+        • {{move:ember:z}}
+        • {{move:ember:z:embed}}
+        • {{move:ember:z:water}}
+        • {{move:ember:z:water:embed}}
+        • {{move:ember:water}}
+        • {{move:ember:water:embed}}
+        """
         match args:
             case [move]:
                 if item := Move.deduce(move):
@@ -192,42 +219,140 @@ class MetronomeFunction(ProxyFunction):
 
     @classmethod
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
-        item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
+        """
+        :           | random metronome move
+        :embed      | random metronome move w/embed
+        :full       | random full metronome move
+        :full:embed | random full metronome move w/embed
+        :z          | random metronome z move
+        :z:embed    | random metronome z move w/embed
+        :max        | random metronome max move
+        :max:embed  | random metronome max move w/embed
+        Examples
+        • {{metronome}}
+        • {{metronome:embed}}
+        • {{metronome:full}}
+        • {{metronome:full:embed}}
+        • {{metronome:z}}
+        • {{metronome:z:embed}}
+        • {{metronome:max}}
+        • {{metronome:max:embed}}
+        """
         match args:
-            case ["embed"]:
-                return npc, f"`{item.name}`", item.embed
-            case _:
+            case []:
+                item = random.choice([x for x in Move.all() if x.metronome])
                 return npc, f"{item.emoji}`{item.name}`", None
+            case ["embed"]:
+                item = random.choice([x for x in Move.all() if x.metronome])
+                return npc, f"`{item.name}`", item.embed
+            case ["full"]:
+                item = random.choice([x for x in Move.all() if not (x.is_max_move() or x.is_z_move())])
+                return npc, f"{item.emoji}`{item.name}`", None
+            case ["full", "embed"]:
+                item = random.choice([x for x in Move.all() if not (x.is_max_move() or x.is_z_move())])
+                return npc, f"`{item.name}`", item.embed
+            case ["z"]:
+                item = random.choice([x for x in Move.all() if x.metronome])
+                if effect := item.z_effect:
+                    effect, _ = effect
+                else:
+                    effect = item.z_move_base
+                return npc, f"{item.emoji}`{effect}〛{item.type.z_move}`", None
+            case ["z", "embed"]:
+                item = random.choice([x for x in Move.all() if x.metronome])
+                return npc, f"{item.emoji}`{item.type.z_move}`", item.z_move_embed
+            case ["max"]:
+                item = random.choice([x for x in Move.all() if x.metronome])
+                return npc, f"{item.max_move_type.emoji}`{item.max_move_base}〛{item.max_move_name}`", None
+            case ["max", "embed"]:
+                item = random.choice([x for x in Move.all() if x.metronome])
+                return npc, f"{item.max_move_type.emoji}`{item.max_move_name}`", item.max_move_embed
 
 
 class TypeFunction(ProxyFunction):
-    aliases = ["Type"]
+    aliases = ["Type", "Chart"]
 
     @classmethod
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
-        if item := TypingEnum.deduce(",".join(args)):
-            return npc, str(item.emoji), None
+        """
+        :                            | returns a random type
+        :<any>                       | returns a type's emoji
+        :<any>:attack:<any>*         | calculates damage against types
+        :<any>:attack:inverse:<any>* | calculates inverse damage against types
+        :<any>:defend:<any>*         | calculates resistance against types
+        :<any>:defend:inverse:<any>* | calculates inverse resistance against types
+        Examples
+        • {{type}}
+        • {{type:Dragon}}
+        • {{type:Fairy:attack:Dragon:Dark}}
+        • {{type:Fairy:attack:inverse:Dragon}}
+        • {{Chart:Rock:defend:Normal}}
+        • {{Chart:Rock:defend:inverse:Normal}}
+        """
+        match args:
+            case [item_type]:
+                if item := TypingEnum.deduce(item_type):
+                    return npc, str(item.emoji), None
+            case [item_type, "attack" | "attacking", "inverse", *item_types]:
+                item = TypingEnum.deduce(item_type)
+                data = TypingEnum.deduce_many(*item_types)
+                if item and data:
+                    calc = item.when_attacking(*data, inverse=True)
+                    text = "".join(x.emoji for x in data)
+                    return npc, f"{item.emoji} > {text} = {calc:.0%}", None
+            case [item_type, "defend" | "defense" | "defending", "inverse", *item_types]:
+                item = TypingEnum.deduce(item_type)
+                data = TypingEnum.deduce_many(*item_types)
+                if item and data:
+                    calc = item.when_attacked_by(*data, inverse=True)
+                    text = "".join(x.emoji for x in data)
+                    return npc, f"{item.emoji} < {text} = {calc:.0%}", None
+            case [item_type, "attack" | "attacking", *item_types]:
+                item = TypingEnum.deduce(item_type)
+                data = TypingEnum.deduce_many(*item_types)
+                if item and data:
+                    calc = item.when_attacking(*data, inverse=False)
+                    text = "".join(x.emoji for x in data)
+                    return npc, f"{item.emoji} > {text} = {calc:.0%}", None
+            case [item_type, "defend" | "defense" | "defending", *item_types]:
+                item = TypingEnum.deduce(item_type)
+                data = TypingEnum.deduce_many(*item_types)
+                if item and data:
+                    calc = item.when_attacked_by(*data, inverse=False)
+                    text = "".join(x.emoji for x in data)
+                    return npc, f"{item.emoji} < {text} = {calc:.0%}", None
 
 
 class MoodFunction(ProxyFunction):
-    aliases = ["Mood", "Mode"]
+    aliases = ["Mood", "Mode", "Form"]
 
     @classmethod
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+        """
+        :<any> | checks for a variant that matches
+        Examples
+        • {{mood:Happy}}
+        • {{mood:Angry}}
+        • {{mode:Mega}}
+        • {{mode:Devolved}}
+        • {{Form:Midnight}}
+        """
         if not isinstance(npc, Proxy):
             return
-        item = process.extractOne(
-            ":".join(args),
-            choices=list(npc.extras),
-            score_cutoff=60,
-            processor=lambda x: x.name if isinstance(x, ProxyExtra) else x,
-        )
-        if item:
-            item = item[0]
-            username = f"{npc.name} ({item.name})" if npc.name != item.name else npc.name
-            if item.name.endswith("*") or len(username) > 80:
-                username = item.name.removesuffix("*") or npc.name
-            return NPC(name=username, image=item.image or npc.image), "", None
+
+        match args:
+            case [item]:
+                if data := process.extractOne(
+                    item,
+                    choices=list(npc.extras),
+                    score_cutoff=60,
+                    processor=lambda x: x.name if isinstance(x, ProxyExtra) else x,
+                ):
+                    item = data[0]
+                    username = f"{npc.name} ({item.name})" if npc.name != item.name else npc.name
+                    if item.name.endswith("*") or len(username) > 80:
+                        username = item.name.removesuffix("*") or npc.name
+                    return NPC(name=username, image=item.image or npc.image), "", None
 
 
 class RollFunction(ProxyFunction):
@@ -235,11 +360,40 @@ class RollFunction(ProxyFunction):
 
     @classmethod
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
-        with suppress(Exception):
-            value = d20.roll(expr=":".join(args) or "d20", allow_comments=True)
-            if len(value.result) > 4096:
-                d20.utils.simplify_expr(value.expr)
-            return npc, f"`🎲{value.total}`", Embed(description=value.result)
+        """
+        :             | rolls a d20
+        :embed        | rolls a d20 w/embed
+        :<any>        | rolls a given expression
+        :<any>:embed  | rolls a given expression w/embed
+        :<any>:<any>* | randomly selects a choice
+        Examples
+        • {{roll}}
+        • {{roll:embed}}
+        • {{roll:d6}}
+        • {{roll:d3+2:embed}}
+        • {{roll:North:South:East:West}}
+        """
+        match args:
+            case []:
+                value = d20.roll(expr="d20", allow_comments=True)
+                return npc, f"`🎲{value.total}`", None
+            case ["embed"]:
+                value = d20.roll(expr="d20", allow_comments=True)
+                return npc, f"`🎲{value.total}`", Embed(description=value.result)
+            case [item]:
+                with suppress(Exception):
+                    value = d20.roll(expr=item, allow_comments=True)
+                    if len(value.result) > 4096:
+                        d20.utils.simplify_expr(value.expr)
+                    return npc, f"`🎲{value.total}`", None
+            case [item, "embed"]:
+                with suppress(Exception):
+                    value = d20.roll(expr=item, allow_comments=True)
+                    if len(value.result) > 4096:
+                        d20.utils.simplify_expr(value.expr)
+                    return npc, f"`🎲{value.total}`", Embed(description=value.result)
+            case [*items]:
+                return npc, f"`🎲{random.choice(items)}`", None
 
 
 class ProxyMessageModal(Modal, title="Edit Proxy Message"):

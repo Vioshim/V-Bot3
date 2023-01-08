@@ -176,11 +176,18 @@ class Move:
     def banned(self) -> bool:
         move_id: int = self.move_id
         aux = move_id in [165, 449, 875, 876]  # Struggle, Judgement + UNKNOWN moves
-        aux |= 622 <= move_id <= 658  # Z-Moves
-        aux |= 757 <= move_id <= 774  # Max-Moves
-        aux |= 695 <= move_id <= 703 or move_id == 719 or 723 <= move_id <= 728  # Unique Z-Moves
+        aux |= self.is_z_move()
+        aux |= self.is_max_move()
         aux |= move_id == 0  # No ID
         return aux
+
+    def is_z_move(self):
+        aux = 622 <= self.move_id <= 658  # Z-Moves
+        aux |= 695 <= self.move_id <= 703 or self.move_id == 719 or 723 <= self.move_id <= 728  # Unique Z-Moves
+        return aux
+
+    def is_max_move(self):
+        return 757 <= self.move_id <= 774  # Max-Moves
 
     @property
     def z_effect(self) -> Optional[tuple[str, str]]:
