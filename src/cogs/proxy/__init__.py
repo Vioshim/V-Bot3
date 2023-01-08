@@ -135,7 +135,7 @@ class ProxyFunction(ABC):
 
 class MoveFunction(ProxyFunction):
     aliases = ["Move"]
-    keep_caps: False
+    keep_caps = False
 
     @classmethod
     async def parse(
@@ -238,7 +238,7 @@ class MoveFunction(ProxyFunction):
 
 class DateFunction(ProxyFunction):
     aliases = ["Date", "Time"]
-    keep_caps: True
+    keep_caps = True
 
     @classmethod
     async def parse(
@@ -275,7 +275,7 @@ class DateFunction(ProxyFunction):
 
 class MetronomeFunction(ProxyFunction):
     aliases = ["Metronome"]
-    keep_caps: False
+    keep_caps = False
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -331,7 +331,7 @@ class MetronomeFunction(ProxyFunction):
 
 class TypeFunction(ProxyFunction):
     aliases = ["Type", "Chart"]
-    keep_caps: False
+    keep_caps = False
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -386,7 +386,7 @@ class TypeFunction(ProxyFunction):
 
 class MoodFunction(ProxyFunction):
     aliases = ["Mood", "Mode", "Form"]
-    keep_caps: True
+    keep_caps = True
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -419,7 +419,7 @@ class MoodFunction(ProxyFunction):
 
 class RollFunction(ProxyFunction):
     aliases = ["Roll"]
-    keep_caps: True
+    keep_caps = True
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
