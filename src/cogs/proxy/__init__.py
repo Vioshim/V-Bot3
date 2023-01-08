@@ -126,14 +126,32 @@ class MoveFunction(ProxyFunction):
         match args:
             case [move]:
                 if item := Move.deduce(move):
+                    return npc, f"{item.emoji}`{item.name}`", None
+            case [move, "embed"]:
+                if item := Move.deduce(move):
                     return npc, f"{item.emoji}`{item.name}`", item.embed
             case [move, "max"]:
+                if item := Move.deduce(move):
+                    return npc, f"{item.max_move_type.emoji}`{item.max_move_base}〛{item.max_move_name}`", None
+            case [move, "max", "embed"]:
                 if item := Move.deduce(move):
                     return npc, f"{item.max_move_type.emoji}`{item.max_move_name}`", item.max_move_embed
             case [move, "z"]:
                 if item := Move.deduce(move):
+                    if effect := item.z_effect:
+                        effect, _ = effect
+                    else:
+                        effect = item.z_move_base
+                    return npc, f"{item.emoji}`{effect}〛{item.type.z_move}`", None
+            case [move, "z", "embed"]:
+                if item := Move.deduce(move):
                     return npc, f"{item.emoji}`{item.type.z_move}`", item.z_move_embed
             case [move, move_type]:
+                if item := Move.deduce(move):
+                    move_type = TypingEnum.deduce(move_type) or item.type
+                    name = f"{item.name}*" if move_type != item.type else item.name
+                    return npc, f"{move_type.emoji}`{name}`", None
+            case [move, move_type, "embed"]:
                 if item := Move.deduce(move):
                     move_type = TypingEnum.deduce(move_type) or item.type
                     embed = item.embed
@@ -173,11 +191,10 @@ class MetronomeFunction(ProxyFunction):
     def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         item = random.choice([x for x in Move.all(banned=False, shadow=False) if x.metronome])
         match args:
-            case ["mute"]:
-                name, embed = f"{item.emoji}`{item.name}`", None
+            case ["embed"]:
+                return npc, f"`{item.name}`", item.embed
             case _:
-                name, embed = f"`{item.name}`", item.embed
-        return npc, name, embed
+                return npc, f"{item.emoji}`{item.name}`", None
 
 
 class TypeFunction(ProxyFunction):
@@ -204,7 +221,7 @@ class MoodFunction(ProxyFunction):
         )
         if item:
             item = item[0]
-            username = f"{npc.name} ({item.name})"
+            username = f"{npc.name} ({item.name})" if npc.name != item.name else npc.name
             if item.name.endswith("*") or len(username) > 80:
                 username = item.name.removesuffix("*") or npc.name
             return NPC(name=username, image=item.image or npc.image), "", None
@@ -482,7 +499,7 @@ class ProxyCog(commands.Cog):
                 npc, extra = npc[0], None
 
             if isinstance(npc, Proxy) and isinstance(extra, ProxyExtra):
-                username = f"{npc.name} ({extra.name})"
+                username = f"{npc.name} ({extra.name})" if npc.name != extra.name else npc.name
                 if extra.name.endswith("*") or len(username) > 80:
                     username = extra.name.removesuffix("*") or npc.name
                 npc = NPC(name=username, image=extra.image or npc.image)

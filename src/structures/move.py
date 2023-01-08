@@ -183,12 +183,12 @@ class Move:
         return aux
 
     @property
-    def z_effect(self) -> Optional[str]:
+    def z_effect(self) -> Optional[tuple[str, str]]:
         match self.name:
             case "Metronome" | "Nature Power" | "Assist":
-                return "Calls a Z Move"
+                return "None", "Calls a Z Move"
             case "Healing Wish" | "Lunar Dance":
-                return "None"
+                return "None", "None"
             case (
                 "Tail Whip"
                 | "Leer"
@@ -207,11 +207,11 @@ class Move:
                 | "Topsy-Turvy"
                 | "Laser Focus"
             ):
-                return "Raises Attack by 1 stage"
+                return "Attack ↑", "Raises Attack by 1 stage"
             case "Splash":
-                return "Raises Attack by 3 stage"
+                return "Attack ↑↑↑", "Raises Attack by 3 stage"
             case "Mirror Move":
-                return "Raises Attack by 2 stages, calls a Z-move"
+                return "Attack ↑↑", "Raises Attack by 2 stages, calls a Z-move"
             case (
                 "Growl"
                 | "Roar"
@@ -248,7 +248,7 @@ class Move:
                 | "Strength Sap"
                 | "Tearful Look"
             ):
-                return "Raises Defense by 1 stage"
+                return "Defense ↑", "Raises Defense by 1 stage"
             case (
                 "Growth"
                 | "Confuse Ray"
@@ -271,9 +271,9 @@ class Move:
                 | "Psychic Terrain"
                 | "Instruct"
             ):
-                return "Raises Special Attack by 1 stage"
+                return "Special Attack ↑", "Raises Special Attack by 1 stage"
             case ("Psycho Shift" | "Heal Block"):
-                return "Raises Special Attack by 2 stages"
+                return "Special Attack ↑↑", "Raises Special Attack by 2 stages"
             case (
                 "Whirlwind"
                 | "Stun Spore"
@@ -298,9 +298,9 @@ class Move:
                 | "Magnetic Flux"
                 | "Spotlight"
             ):
-                return "Raises Special Defense by 1 stage"
+                return "Special Defense ↑", "Raises Special Defense by 1 stage"
             case ("Magic Coat" | "Imprison" | "Captivate" | "Aromatic Mist" | "Powder"):
-                return "Raises Special Defense by 2 stages"
+                return "Special Defense ↑↑", "Raises Special Defense by 2 stages"
             case (
                 "Sing"
                 | "Supersonic"
@@ -334,15 +334,15 @@ class Move:
                 | "Speed Swap"
                 | "Aurora Veil"
             ):
-                return "Raises Speed by 1 stage"
+                return "Speed ↑", "Raises Speed by 1 stage"
             case ("Trick" | "Recycle" | "Snatch" | "Switcheroo" | "Ally Switch" | "Bestow"):
-                return "Raises Speed by 2 stages"
+                return "Speed ↑↑", "Raises Speed by 2 stages"
             case "Me First":
-                return "Raises Speed by 2 stages, calls a Z-move"
+                return "Speed ↑↑", "Raises Speed by 2 stages, calls a Z-move"
             case ("Mimic" | "Defense Curl" | "Focus Energy" | "Sweet Scent" | "Defog" | "Trick Room"):
-                return "Raises accuracy by 1 stage"
+                return "Accuracy ↑", "Raises accuracy by 1 stage"
             case "Copycat":
-                return "Raises accuracy by 1 stage, calls a Z-move"
+                return "Accuracy ↑", "Raises accuracy by 1 stage, calls a Z-move"
             case (
                 "Sand Attack"
                 | "Smokescreen"
@@ -353,7 +353,7 @@ class Move:
                 | "Lucky Chant"
                 | "Magnet Rise"
             ):
-                return "Raises evasiveness by 1 stage"
+                return "Evasiveness ↑", "Raises evasiveness by 1 stage"
             case (
                 "Conversion"
                 | "Sketch"
@@ -365,11 +365,11 @@ class Move:
                 | "Hold Hands"
                 | "Purify"
             ):
-                return "Raises Attack, Defense, Sp. Atk, Sp. Def, and Speed by 1 stage"
+                return "Stats ↑", "Raises Attack, Defense, Sp. Atk, Sp. Def, and Speed by 1 stage"
             case ("Foresight" | "Tailwind" | "Acupressure" | "Heart Swap" | "Sleep Talk"):
-                return "Boosts critical-hit ratio by 2 stages"
+                return "Boosts critical-hit ratio", "Boosts critical-hit ratio by 2 stages"
             case "Sleep Talk":
-                return "Boosts critical-hit ratio by 2 stages, calls a Z-move"
+                return "Boosts critical-hit ratio", "Boosts critical-hit ratio by 2 stages, calls a Z-move"
             case (
                 "Swords Dance"
                 | "Disable"
@@ -421,7 +421,7 @@ class Move:
                 | "Shore Up"
                 | "Floral Healing"
             ):
-                return "Resets user's lowered stats"
+                return "Reset Stats", "Resets user's lowered stats"
             case (
                 "Mist"
                 | "Teleport"
@@ -436,13 +436,16 @@ class Move:
                 | "Refresh"
                 | "Aromatherapy"
             ):
-                return "Fully restores user's HP"
+                return "Restores HP", "Fully restores user's HP"
             case ("Memento" | "Parting Shot"):
-                return "Fully restores switched-in ally's HP"
+                return "Restores replacement's HP", "Fully restores switched-in ally's HP"
             case ("Destiny Bond" | "Grudge"):
-                return "User becomes center of attention"
+                return "Center of attention", "User becomes center of attention"
             case "Curse":
-                return "Fully restores user's HP (Ghost-type), Raises Attack by 1 stage (non Ghost-type)"
+                return (
+                    "Changes depending on the type",
+                    "Fully restores user's HP (Ghost-type), Raises Attack by 1 stage (non Ghost-type)",
+                )
 
     @property
     def description(self):
@@ -466,7 +469,9 @@ class Move:
         embed.add_field(name="Max Power", value=self.max_move_base)
         embed.add_field(name="Max Move", value=self.max_move_name)
         embed.add_field(name="Z Power", value=self.z_move_base)
-        embed.add_field(name="Z Effect", value=self.z_effect, inline=False)
+        if effect := self.z_effect:
+            _, effect = effect
+            embed.add_field(name="Z Effect", value=effect, inline=False)
         return embed
 
     @property
