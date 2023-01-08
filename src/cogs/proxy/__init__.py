@@ -480,11 +480,20 @@ class RollFunction(ProxyFunction):
                 if len(value.result) > 4096:
                     d20.utils.simplify_expr(value.expr)
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
-            case [*items]:
+            case ["choices", amount, *items]:
+                if items := [o for x in items if (o := x.strip())]:
+                    amount = int(amount) if amount.isdigit() else 1
+                    return npc, f"`🎲{'|'.join(random.choices(items, k=amount))}`", None
+            case ["sample", amount, *items]:
+                if items := [o for x in items if (o := x.strip())]:
+                    amount = int(amount) if amount.isdigit() else 1
+                    return npc, f"`🎲{'|'.join(random.sample(items, k=amount))}`", None
+            case ["choices", *items] | ["sample", *items] | [*items]:
                 if items := [o for x in items if (o := x.strip())]:
                     return npc, f"`🎲{random.choice(items)}`", None
-                value = d20.roll(expr="d20")
-                return npc, f"`🎲{value.total}`", None
+                if args == items:
+                    value = d20.roll(expr="d20")
+                    return npc, f"`🎲{value.total}`", None
 
 
 class ProxyMessageModal(Modal, title="Edit Proxy Message"):
