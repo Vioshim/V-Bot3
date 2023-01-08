@@ -18,7 +18,7 @@ import re
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from textwrap import wrap
 from typing import Optional
 
@@ -263,13 +263,15 @@ class DateFunction(ProxyFunction):
                 with suppress(ValueError, TypeError):
                     if item := dateparser.parse(":".join(date)):
                         if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
-                            item = item.astimezone(timezone(offset=timedelta(hours=aux["offset"])))
+                            tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
+                            item = item.combine(item, time=item.time(), tzinfo=tzinfo)
                         return npc, format_dt(item, mode), None
             case [*date]:
                 with suppress(ValueError, TypeError):
                     if item := dateparser.parse(":".join(date)):
                         if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
-                            item = item.astimezone(timezone(offset=timedelta(hours=aux["offset"])))
+                            tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
+                            item = item.combine(item, time=item.time(), tzinfo=tzinfo)
                         return npc, format_dt(item), None
 
 
