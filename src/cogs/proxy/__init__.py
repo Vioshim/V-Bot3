@@ -463,7 +463,7 @@ class RollFunction(ProxyFunction):
         • {{roll:d3+2:embed}}
         • {{roll:North:South:East:West}}
         """
-        match args:
+        match args := [x.strip() for x in args]:
             case []:
                 value = d20.roll(expr="d20")
                 return npc, f"`🎲{value.total}`", None
@@ -488,7 +488,7 @@ class RollFunction(ProxyFunction):
                 if items := [o for x in items if (o := x.strip())]:
                     amount = int(amount) if amount.isdigit() else 1
                     return npc, f"`🎲{'|'.join(random.sample(items, k=amount))}`", None
-            case ["choices", *items] | ["sample", *items] | [*items]:
+            case [*items]:
                 if items := [o for x in items if (o := x.strip())]:
                     return npc, f"`🎲{random.choice(items)}`", None
                 if args == items:
