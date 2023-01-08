@@ -451,20 +451,24 @@ class Move:
     def description(self):
         return "\n".join(f"• {o}." for k, v in CHECK_FLAGS.items() if k in self.data and (o := v(self.data[k])))
 
-    @property
-    def embed(self):
+    def embed_for(self, item: TypingEnum):
         title = self.name
         if self.banned:
             title += " - Banned Move"
+
         embed = Embed(
             title=title,
             description=self.description[:4096],
-            color=self.type.color,
+            color=item.color,
             timestamp=utcnow(),
         )
+
+        if self.type != item:
+            embed.set_author(name=f"Originally {self.type.name} Type ", icon_url=self.type.emoji.url)
+
         cat = self.category
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
-        embed.set_thumbnail(url=self.type.emoji.url)
+        embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
         embed.add_field(name="Max Power", value=self.max_move_base)
         embed.add_field(name="Max Move", value=self.max_move_name)
@@ -475,59 +479,79 @@ class Move:
         return embed
 
     @property
-    def z_move_embed(self):
-        if move := Move.get(name=self.type.z_move):
+    def embed(self):
+        return self.embed_for(self.type)
+
+    def z_move_embed_for(self, item: TypingEnum):
+        if move := Move.get(name=item.z_move):
             description = move.description
         else:
             description = self.description
 
         embed = Embed(
-            title=f"{self.z_move_base}〛{self.type.z_move}",
+            title=f"{self.calculated_base_z(item.z_move_range)}〛{self.type.z_move}",
             description=description[:4096],
-            color=self.type.color,
+            color=item.color,
             timestamp=utcnow(),
         )
+        embed.set_author(
+            name=f"Original Move: {self.name}",
+            icon_url=self.type.emoji.url if self.type != item else None,
+        )
         cat = self.category
-        embed.set_author(name=f"Original Move: {self.name}")
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
         if effect := self.z_effect:
+            _, effect = effect
             embed.add_field(name="Effect", value=effect, inline=False)
 
         return embed
 
     @property
+    def z_move_embed(self):
+        return self.z_move_embed_for(self.type)
+
+    @property
     def max_move_name(self):
         return "Max Guard" if self.category == Category.STATUS else self.type.max_move
 
-    @property
-    def max_move_type(self):
-        return TypingEnum.Normal if self.category == Category.STATUS else self.type
+    def max_move_type_for(self, item: TypingEnum):
+        return TypingEnum.Normal if self.category == Category.STATUS else item
 
     @property
-    def max_move_embed(self):
-        if move := Move.get(name=self.max_move_name):
+    def max_move_type(self):
+        return self.max_move_type_for(self.type)
+
+    def max_move_embed_for(self, item: TypingEnum):
+        if move := Move.get(name=item.max_move):
             description = move.description
         else:
             description = self.description
 
         embed = Embed(
-            title=f"{self.max_move_base}〛{self.type.max_move}",
+            title=f"{self.calculated_base(item.max_move_range)}〛{item.max_move}",
             description=description[:4096],
-            color=self.type.color,
+            color=item.color,
             timestamp=utcnow(),
         )
         cat = self.category
-        embed.set_author(name=f"Original Move: {self.name}")
+        embed.set_author(
+            name=f"Original Move: {self.name}",
+            icon_url=item.emoji.url if item != self.type else None,
+        )
         embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
-        embed.set_thumbnail(url=self.type.emoji.url)
+        embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
 
         if cat != Category.STATUS:
-            embed.add_field(name="Effect", value=self.type.max_effect, inline=False)
+            embed.add_field(name="Effect", value=item.max_effect, inline=False)
 
         return embed
+
+    @property
+    def max_move_embed(self):
+        return self.max_move_embed_for(self.type)
 
     def __str__(self):
         return self.name

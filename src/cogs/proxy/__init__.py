@@ -136,6 +136,18 @@ class MoveFunction(ProxyFunction):
             case [move, "max", "embed"]:
                 if item := Move.deduce(move):
                     return npc, f"{item.max_move_type.emoji}`{item.max_move_name}`", item.max_move_embed
+            case [move, "max", move_type]:
+                if item := Move.deduce(move):
+                    move_type = TypingEnum.deduce(move_type) or item.type
+                    name = item.max_move_name if item.type == move_type else f"{item.max_move_name}*"
+                    emoji, effect = item.max_move_type_for(item).emoji, item.calculated_base(move_type.max_move_range)
+                    return npc, f"{emoji}`{effect}〛{name}`", None
+            case [move, "max", move_type, "embed"]:
+                if item := Move.deduce(move):
+                    move_type = TypingEnum.deduce(move_type) or item.type
+                    embed = item.max_move_embed_for(move_type)
+                    name = item.max_move_name if item.type == move_type else f"{item.max_move_name}*"
+                    return npc, f"{item.max_move_type_for(item).emoji}`{name}`", embed
             case [move, "z"]:
                 if item := Move.deduce(move):
                     if effect := item.z_effect:
@@ -146,6 +158,24 @@ class MoveFunction(ProxyFunction):
             case [move, "z", "embed"]:
                 if item := Move.deduce(move):
                     return npc, f"{item.emoji}`{item.type.z_move}`", item.z_move_embed
+            case [move, "z", move_type]:
+                if item := Move.deduce(move):
+                    move_type = TypingEnum.deduce(move_type) or item.type
+                    if effect := item.z_effect:
+                        effect, _ = effect
+                    else:
+                        effect = item.calculated_base_z(move_type.z_move_range)
+                    name = move_type.z_move if item.type == move_type else f"{move_type.z_move}*"
+                    return npc, f"{move_type.emoji}`{effect}〛{name}`", None
+            case [move, "z", move_type, "embed"]:
+                if item := Move.deduce(move):
+                    move_type = TypingEnum.deduce(move_type) or item.type
+                    if effect := item.z_effect:
+                        effect, _ = effect
+                    else:
+                        effect = item.calculated_base_z(move_type.z_move_range)
+                    name = move_type.z_move if item.type == move_type else f"{move_type.z_move}*"
+                    return npc, f"{move_type.emoji}`{effect}〛{name}`", item.z_move_embed_for(move_type)
             case [move, move_type]:
                 if item := Move.deduce(move):
                     move_type = TypingEnum.deduce(move_type) or item.type
@@ -154,34 +184,7 @@ class MoveFunction(ProxyFunction):
             case [move, move_type, "embed"]:
                 if item := Move.deduce(move):
                     move_type = TypingEnum.deduce(move_type) or item.type
-                    embed = item.embed
-                    embed.color = move_type.color
-                    if item.type != move_type:
-                        embed.set_author(name=f"Originally {item.type.name} Type ", icon_url=item.type.emoji.url)
-                        embed.clear_fields()
-                        embed.add_field(
-                            name="Max Power",
-                            value=item.calculated_base(move_type.max_move_range),
-                            inline=False,
-                        )
-                        embed.add_field(
-                            name="Max Move",
-                            value=item.max_move_name,
-                            inline=False,
-                        )
-                        embed.add_field(
-                            name="Z Power",
-                            value=item.calculated_base_z(move_type.z_move_range),
-                            inline=False,
-                        )
-                        embed.add_field(
-                            name="Z Effect",
-                            value=item.z_effect,
-                            inline=False,
-                        )
-
-                    embed.set_thumbnail(url=move_type.emoji.url)
-                    return npc, f"{move_type.emoji}`{item.name}`", embed
+                    return npc, f"{move_type.emoji}`{item.name}`", item.embed_for(move_type)
 
 
 class MetronomeFunction(ProxyFunction):
