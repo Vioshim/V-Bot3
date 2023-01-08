@@ -270,21 +270,13 @@ class DateFunction(ProxyFunction):
             case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 if aux := await db.find_one({"user": user.id}):
                     settings["TIMEZONE"] = timezone(offset=timedelta(hours=aux["offset"]))
-                with suppress(ValueError, TypeError):
-                    if item := dateparser.parse(":".join(date), settings=settings):
-                        if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
-                            tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
-                            item = datetime.combine(item, time=item.time(), tzinfo=tzinfo)
-                        return npc, format_dt(item, mode), None
+                if item := dateparser.parse(":".join(date), settings=settings):
+                    return npc, format_dt(item, style=mode), None
             case [*date]:
                 if aux := await db.find_one({"user": user.id}):
                     settings["TIMEZONE"] = timezone(offset=timedelta(hours=aux["offset"]))
-                with suppress(ValueError, TypeError):
-                    if item := dateparser.parse(":".join(date), settings=settings):
-                        if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
-                            tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
-                            item = datetime.combine(item, time=item.time(), tzinfo=tzinfo)
-                        return npc, format_dt(item), None
+                if item := dateparser.parse(":".join(date), settings=settings):
+                    return npc, format_dt(item), None
 
 
 class MetronomeFunction(ProxyFunction):
