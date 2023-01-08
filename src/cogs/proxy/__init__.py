@@ -17,6 +17,7 @@ import random
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import timedelta, timezone
 from itertools import chain
 from textwrap import wrap
 from typing import Optional
@@ -55,7 +56,7 @@ from src.structures.move import Move
 from src.structures.pronouns import Pronoun
 from src.structures.proxy import Proxy, ProxyExtra
 from src.structures.species import Species
-from src.utils.etc import LINK_EMOJI, WHITE_BAR
+from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
 from src.utils.matches import BRACKETS_PARSER
 
 __all__ = ("Proxy", "setup")
@@ -267,6 +268,7 @@ class DateFunction(ProxyFunction):
             TIMEZONE="utc",
             TO_TIMEZONE="utc",
         )
+        tz = DEFAULT_TIMEZONE
         match args:
             case []:
                 return npc, format_dt(utcnow()), None
@@ -277,19 +279,23 @@ class DateFunction(ProxyFunction):
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
                 ):
-                    settings["TIMEZONE"] = o[0]
-                    settings["TO_TIMEZONE"] = o[0]
+                    tz_info, time = o
+                    settings["TIMEZONE"] = tz_info
+                    settings["TO_TIMEZONE"] = tz_info
+                    tz = timezone(offset=timedelta(hours=time))
                 if item := dateparser.parse(":".join(date), settings=settings):
-                    return npc, format_dt(item, style=mode), None
+                    return npc, format_dt(item.astimezone(tz), style=mode), None
             case [*date]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
                 ):
-                    settings["TIMEZONE"] = o[0]
-                    settings["TO_TIMEZONE"] = o[0]
+                    tz_info, time = o
+                    settings["TIMEZONE"] = tz_info
+                    settings["TO_TIMEZONE"] = tz_info
+                    tz = timezone(offset=timedelta(hours=time))
                 if item := dateparser.parse(":".join(date), settings=settings):
-                    return npc, format_dt(item), None
+                    return npc, format_dt(item.astimezone(tz)), None
 
 
 class MetronomeFunction(ProxyFunction):
