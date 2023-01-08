@@ -322,7 +322,6 @@ description = "Date parsing library designed to parse dates from HTML pages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
-develop = false
 
 [package.dependencies]
 python-dateutil = "*"
@@ -334,12 +333,6 @@ tzlocal = "*"
 calendars = ["hijri-converter", "convertdate"]
 fasttext = ["fasttext"]
 langdetect = ["langdetect"]
-
-[package.source]
-type = "git"
-url = "https://github.com/Vioshim/dateparser.git"
-reference = "master"
-resolved_reference = "4adf8133bb7a4a95381de28be0a7bfec9bded2c1"
 
 [[package]]
 name = "discord.py"
@@ -665,7 +658,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "packaging"
-version = "22.0"
+version = "23.0"
 description = "Core utilities for Python packages"
 category = "dev"
 optional = false
@@ -1086,7 +1079,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.11.1"
-content-hash = "ca75c838bd9f70cd10618d24e08b95d6b984a3d1c8d2e1b2e38d943828091305"
+content-hash = "7c6271b064f6c17ffa2d6e1b181929f520edc3e1203f1d64bf5c0012a05cd4f7"
 
 [metadata.files]
 aiodns = []

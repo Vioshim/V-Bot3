@@ -16,7 +16,6 @@ jishaku = "^2.5.1"
 uvloop = { version = "^0.17.0", platform = "linux" }
 frozendict = "^2.3.4"
 rapidfuzz = "^2.6.0"
-dateparser = { git = "https://github.com/Vioshim/dateparser.git", rev = "master" }
 motor = { extras = ["srv"], version = "^3.0.0" }
 colour = "^0.1.5"
 pyaml = "^21.10.1"
@@ -31,6 +30,7 @@ python-dotenv = "^0.20.0"
 pymongo = { extras = ["srv"], version = "^4.2.0" }
 chronological = "^0.1.1"
 aiogoogle = "^4.5.0"
+dateparser = "^1.1.5"
 
 
 [tool.poetry.dev-dependencies]

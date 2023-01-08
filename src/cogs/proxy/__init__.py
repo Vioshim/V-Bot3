@@ -14,16 +14,16 @@
 
 
 import random
-import re
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from itertools import chain
 from textwrap import wrap
 from typing import Optional
 
 import d20
 import dateparser
+from dateparser.timezones import timezone_info_list
 from discord import (
     Attachment,
     DiscordException,
@@ -42,7 +42,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING, format_dt, get, utcnow
+from discord.utils import MISSING, find, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -261,20 +261,30 @@ class DateFunction(ProxyFunction):
         • {{date:in two hours and one minute:T}}
         """
         db = bot.mongo_db("AFK")
-        settings = dict(RETURN_AS_TIMEZONE_AWARE=True)
+        settings = {}
         match args:
             case []:
                 return npc, format_dt(utcnow()), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 return npc, format_dt(utcnow(), mode), None
             case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                if aux := await db.find_one({"user": user.id}):
-                    settings["TIMEZONE"] = timezone(offset=timedelta(hours=aux["offset"]))
+                if aux := await db.find_one({"user": user.id}) and (
+                    o := find(
+                        lambda x: x[1] == aux["offset"] * 3600,
+                        chain(*[x["timezones"] for x in timezone_info_list]),
+                    )
+                ):
+                    settings["TIMEZONE"] = o[0]
                 if item := dateparser.parse(":".join(date), settings=settings):
                     return npc, format_dt(item, style=mode), None
             case [*date]:
-                if aux := await db.find_one({"user": user.id}):
-                    settings["TIMEZONE"] = timezone(offset=timedelta(hours=aux["offset"]))
+                if aux := await db.find_one({"user": user.id}) and (
+                    o := find(
+                        lambda x: x[1] == aux["offset"] * 3600,
+                        chain(*[x["timezones"] for x in timezone_info_list]),
+                    )
+                ):
+                    settings["TIMEZONE"] = o[0]
                 if item := dateparser.parse(":".join(date), settings=settings):
                     return npc, format_dt(item), None
 
@@ -450,17 +460,15 @@ class RollFunction(ProxyFunction):
                 value = d20.roll(expr="d20", allow_comments=True)
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [item]:
-                with suppress(Exception):
-                    value = d20.roll(expr=item, allow_comments=True)
-                    if len(value.result) > 4096:
-                        d20.utils.simplify_expr(value.expr)
-                    return npc, f"`🎲{value.total}`", None
+                value = d20.roll(expr=item, allow_comments=True)
+                if len(value.result) > 4096:
+                    d20.utils.simplify_expr(value.expr)
+                return npc, f"`🎲{value.total}`", None
             case [item, "embed" | "Embed"]:
-                with suppress(Exception):
-                    value = d20.roll(expr=item, allow_comments=True)
-                    if len(value.result) > 4096:
-                        d20.utils.simplify_expr(value.expr)
-                    return npc, f"`🎲{value.total}`", Embed(description=value.result)
+                value = d20.roll(expr=item, allow_comments=True)
+                if len(value.result) > 4096:
+                    d20.utils.simplify_expr(value.expr)
+                return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [*items]:
                 return npc, f"`🎲{random.choice([o for x in items if (o := x.strip())])}`", None
 
@@ -751,13 +759,16 @@ class ProxyCog(commands.Cog):
 
         embeds = []
         for item in BRACKETS_PARSER.finditer(text):
-            if proxy_data := await ProxyFunction.lookup(self.bot, message.author, npc, aux := item.group(1)):
-                npc, data_text, data_embed = proxy_data
-                if data_embed is None or len(embeds) < 10:
-                    text = text.replace("{{" + aux + "}}", data_text, 1)
-                    if data_embed:
-                        data_embed.color = data_embed.color or message.author.color
-                        embeds.append(data_embed)
+            try:
+                if proxy_data := await ProxyFunction.lookup(self.bot, message.author, npc, aux := item.group(1)):
+                    npc, data_text, data_embed = proxy_data
+                    if data_embed is None or len(embeds) < 10:
+                        text = text.replace("{{" + aux + "}}", data_text, 1)
+                        if data_embed:
+                            data_embed.color = data_embed.color or message.author.color
+                            embeds.append(data_embed)
+            except Exception:
+                continue
 
         if attachments:
             files = [await item.to_file() for item in message.attachments]
