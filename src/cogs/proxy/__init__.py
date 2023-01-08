@@ -261,22 +261,26 @@ class DateFunction(ProxyFunction):
         • {{date:in two hours and one minute:T}}
         """
         db = bot.mongo_db("AFK")
-        user = bot.supporting.get(user, user)
+        settings = dict(PREFER_DATES_FROM="future")
         match args:
             case []:
                 return npc, format_dt(utcnow()), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 return npc, format_dt(utcnow(), mode), None
             case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
+                if aux := await db.find_one({"user": user.id}):
+                    settings["TIMEZONE"] = timezone(offset=timedelta(hours=aux["offset"]))
                 with suppress(ValueError, TypeError):
-                    if item := dateparser.parse(":".join(date)):
+                    if item := dateparser.parse(":".join(date), settings=settings):
                         if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
                             tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
                             item = datetime.combine(item, time=item.time(), tzinfo=tzinfo)
                         return npc, format_dt(item, mode), None
             case [*date]:
+                if aux := await db.find_one({"user": user.id}):
+                    settings["TIMEZONE"] = timezone(offset=timedelta(hours=aux["offset"]))
                 with suppress(ValueError, TypeError):
-                    if item := dateparser.parse(":".join(date)):
+                    if item := dateparser.parse(":".join(date), settings=settings):
                         if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
                             tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
                             item = datetime.combine(item, time=item.time(), tzinfo=tzinfo)
