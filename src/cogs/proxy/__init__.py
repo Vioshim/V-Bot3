@@ -18,10 +18,12 @@ import re
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import timedelta, timezone
 from textwrap import wrap
 from typing import Optional
 
 import d20
+import dateparser
 from discord import (
     Attachment,
     DiscordException,
@@ -40,7 +42,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING, get
+from discord.utils import MISSING, format_dt, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -87,18 +89,27 @@ class NameModal(Modal, title="NPC Name"):
 
 class ProxyFunction(ABC):
     aliases: list[str]
+    keep_caps: bool
 
     @classmethod
-    def lookup(cls, npc: NPC | Proxy | ProxyExtra, text: str):
+    def all(cls):
+        return cls.__subclasses__()
+
+    @classmethod
+    async def lookup(cls, bot: CustomBot, user: Member, npc: NPC | Proxy | ProxyExtra, text: str):
         items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
         args = [x for x in text.lower().split(":")]
         if args and (x := process.extractOne(args[0], choices=list(items), score_cutoff=90)):
-            return items[x[0]].parse(npc, args[1:])
+            return await (item := items[x[0]]).parse(
+                bot, user, npc, [x if item.keep_caps else x.lower() for x in args[1:]]
+            )
 
     @classmethod
     @abstractmethod
-    def parse(
+    async def parse(
         cls,
+        bot: CustomBot,
+        user: Member,
         npc: NPC | Proxy | ProxyExtra,
         args: list[str],
     ) -> Optional[tuple[NPC | Proxy | ProxyExtra, str, Optional[Embed]]]:
@@ -106,6 +117,10 @@ class ProxyFunction(ABC):
 
         Parameters
         ----------
+        bot : CustomBot
+            Client Instance
+        user : Member
+            User that interacts
         npc : NPC | Proxy | ProxyExtra
             NPC to keep or replace
         args : list[str]
@@ -120,9 +135,16 @@ class ProxyFunction(ABC):
 
 class MoveFunction(ProxyFunction):
     aliases = ["Move"]
+    keep_caps: False
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]) -> Optional[tuple[str, Optional[Embed]]]:
+    async def parse(
+        cls,
+        _bot: CustomBot,
+        _user: Member,
+        npc: NPC | Proxy | ProxyExtra,
+        args: list[str],
+    ) -> Optional[tuple[str, Optional[Embed]]]:
         """
         :<any>                 | move
         :<any>:embed           | move w/embed
@@ -214,11 +236,49 @@ class MoveFunction(ProxyFunction):
                     return npc, f"{move_type.emoji}`{item.name}`", item.embed_for(move_type)
 
 
-class MetronomeFunction(ProxyFunction):
-    aliases = ["Metronome"]
+class DateFunction(ProxyFunction):
+    aliases = ["Date", "Time"]
+    keep_caps: True
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(
+        cls,
+        bot: CustomBot,
+        user: Member,
+        npc: NPC | Proxy | ProxyExtra,
+        args: list[str],
+    ) -> Optional[tuple[str, Optional[Embed]]]:
+        """
+        :<any>        | date, if tz not specified, will use database
+        :<any>:<mode> | date w/ discord mode
+        Examples
+        • {{date:Dec 13th 2020:R}}
+        • {{date:in 1 minute:R}}
+        • {{date:in two hours and one minute:T}}
+        """
+        db = bot.mongo_db("AFK")
+        user = bot.supporting.get(user, user)
+        match args:
+            case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
+                with suppress(ValueError, TypeError):
+                    if item := dateparser.parse(":".join(date)):
+                        if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
+                            item = item.astimezone(timezone(offset=timedelta(hours=aux["offset"])))
+                        return npc, format_dt(item, mode), None
+            case [*date]:
+                with suppress(ValueError, TypeError):
+                    if item := dateparser.parse(":".join(date)):
+                        if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
+                            item = item.astimezone(timezone(offset=timedelta(hours=aux["offset"])))
+                        return npc, format_dt(item), None
+
+
+class MetronomeFunction(ProxyFunction):
+    aliases = ["Metronome"]
+    keep_caps: False
+
+    @classmethod
+    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :           | random metronome move
         :embed      | random metronome move w/embed
@@ -271,9 +331,10 @@ class MetronomeFunction(ProxyFunction):
 
 class TypeFunction(ProxyFunction):
     aliases = ["Type", "Chart"]
+    keep_caps: False
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :                            | returns a random type
         :<any>                       | returns a type's emoji
@@ -325,9 +386,10 @@ class TypeFunction(ProxyFunction):
 
 class MoodFunction(ProxyFunction):
     aliases = ["Mood", "Mode", "Form"]
+    keep_caps: True
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :<any> | checks for a variant that matches
         Examples
@@ -357,9 +419,10 @@ class MoodFunction(ProxyFunction):
 
 class RollFunction(ProxyFunction):
     aliases = ["Roll"]
+    keep_caps: True
 
     @classmethod
-    def parse(cls, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :             | rolls a d20
         :embed        | rolls a d20 w/embed
@@ -377,7 +440,7 @@ class RollFunction(ProxyFunction):
             case []:
                 value = d20.roll(expr="d20", allow_comments=True)
                 return npc, f"`🎲{value.total}`", None
-            case ["embed"]:
+            case ["embed" | "Embed"]:
                 value = d20.roll(expr="d20", allow_comments=True)
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [item]:
@@ -386,14 +449,14 @@ class RollFunction(ProxyFunction):
                     if len(value.result) > 4096:
                         d20.utils.simplify_expr(value.expr)
                     return npc, f"`🎲{value.total}`", None
-            case [item, "embed"]:
+            case [item, "embed" | "Embed"]:
                 with suppress(Exception):
                     value = d20.roll(expr=item, allow_comments=True)
                     if len(value.result) > 4096:
                         d20.utils.simplify_expr(value.expr)
                     return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [*items]:
-                return npc, f"`🎲{random.choice(items)}`", None
+                return npc, f"`🎲{random.choice([o for x in items if (o := x.strip())])}`", None
 
 
 class ProxyMessageModal(Modal, title="Edit Proxy Message"):
@@ -682,7 +745,7 @@ class ProxyCog(commands.Cog):
 
         embeds = []
         for item in BRACKETS_PARSER.finditer(text):
-            if proxy_data := ProxyFunction.lookup(npc, aux := item.group(1)):
+            if proxy_data := await ProxyFunction.lookup(self.bot, message.author, npc, aux := item.group(1)):
                 npc, data_text, data_embed = proxy_data
                 if data_embed is None or len(embeds) < 10:
                     text = text.replace("{{" + aux + "}}", data_text, 1)
