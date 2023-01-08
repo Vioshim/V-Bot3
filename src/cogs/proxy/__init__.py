@@ -268,21 +268,17 @@ class DateFunction(ProxyFunction):
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 return npc, format_dt(utcnow(), mode), None
             case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                if aux := await db.find_one({"user": user.id}) and (
-                    o := find(
-                        lambda x: x[1] == aux["offset"] * 3600,
-                        chain(*[x["timezones"] for x in timezone_info_list]),
-                    )
+                data = chain(*[x["timezones"] for x in timezone_info_list])
+                if (aux := await db.find_one({"user": user.id})) and (
+                    o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
                 ):
                     settings["TIMEZONE"] = o[0]
                 if item := dateparser.parse(":".join(date), settings=settings):
                     return npc, format_dt(item, style=mode), None
             case [*date]:
-                if aux := await db.find_one({"user": user.id}) and (
-                    o := find(
-                        lambda x: x[1] == aux["offset"] * 3600,
-                        chain(*[x["timezones"] for x in timezone_info_list]),
-                    )
+                data = chain(*[x["timezones"] for x in timezone_info_list])
+                if (aux := await db.find_one({"user": user.id})) and (
+                    o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
                 ):
                     settings["TIMEZONE"] = o[0]
                 if item := dateparser.parse(":".join(date), settings=settings):
@@ -759,15 +755,17 @@ class ProxyCog(commands.Cog):
 
         embeds = []
         for item in BRACKETS_PARSER.finditer(text):
+            aux = item.group(1)
             try:
-                if proxy_data := await ProxyFunction.lookup(self.bot, message.author, npc, aux := item.group(1)):
+                if proxy_data := await ProxyFunction.lookup(self.bot, message.author, npc, aux):
                     npc, data_text, data_embed = proxy_data
                     if data_embed is None or len(embeds) < 10:
                         text = text.replace("{{" + aux + "}}", data_text, 1)
                         if data_embed:
                             data_embed.color = data_embed.color or message.author.color
                             embeds.append(data_embed)
-            except Exception:
+            except Exception as e:
+                self.bot.logger.exception("Failed to parse %s", aux, exc_info=e)
                 continue
 
         if attachments:
