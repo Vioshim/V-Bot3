@@ -272,9 +272,9 @@ class DateFunction(ProxyFunction):
         match args:
             case []:
                 return npc, format_dt(utcnow()), None
-            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                return npc, format_dt(utcnow(), mode), None
-            case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
+            case ["t" | "T" | "d" | "D" | "f" | "F" | "R"]:
+                return npc, format_dt(utcnow(), style=args[-1]), None
+            case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R"]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
@@ -285,7 +285,7 @@ class DateFunction(ProxyFunction):
                     tz = timezone(offset=timedelta(hours=time))
                 if item := dateparser.parse(":".join(date), settings=settings):
                     item = item.combine(item, item.time(), tzinfo=tz)
-                    return npc, format_dt(item, style=mode), None
+                    return npc, format_dt(item, style=args[-1]), None
             case [*date]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
