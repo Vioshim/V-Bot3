@@ -261,7 +261,7 @@ class DateFunction(ProxyFunction):
         • {{date:in two hours and one minute:T}}
         """
         db = bot.mongo_db("AFK")
-        settings = dict(RETURN_AS_TIMEZONE_AWARE=True)
+        settings = dict(RETURN_AS_TIMEZONE_AWARE=True, TO_TIMEZONE="GMT")
         match args:
             case []:
                 return npc, format_dt(utcnow()), None
