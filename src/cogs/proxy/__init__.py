@@ -253,13 +253,13 @@ class DateFunction(ProxyFunction):
         :             | today's date
         :<mode>       | today's date w/ discord mode
         :<any>        | date, if tz not specified, will use database
-        :<any>:<mode> | date w/ discord mode
+        :<mode>:<any> | date w/ discord mode
         Examples
         • {{date}}
         • {{date:R}}
-        • {{date:Dec 13th 2020:R}}
-        • {{date:in 1 minute:R}}
-        • {{date:in two hours and one minute:T}}
+        • {{date:R:Dec 13th 2020}}
+        • {{date:T:in 16 minutes}}
+        • {{date:D:in two hours and one minute}}
         """
         db = bot.mongo_db("AFK")
         settings = dict(
@@ -268,12 +268,17 @@ class DateFunction(ProxyFunction):
             TIMEZONE="utc",
             TO_TIMEZONE="utc",
         )
-        match args:
-            case []:
-                return npc, format_dt(utcnow()), None
+
+        try:
+            mode, *rest = args
+            rest.insert(0, mode := mode.strip())
+        except ValueError:
+            return npc, format_dt(utcnow()), None
+
+        match rest:
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 return npc, format_dt(utcnow(), mode), None
-            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode, *date]:
+            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode, *params]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
@@ -281,7 +286,7 @@ class DateFunction(ProxyFunction):
                     tz_info, _ = o
                     settings["TIMEZONE"] = tz_info
                     settings["TO_TIMEZONE"] = tz_info
-                if item := dateparser.parse(":".join(date), settings=settings):
+                if item := dateparser.parse(":".join(params), settings=settings):
                     return npc, format_dt(item, style=mode), None
             case _:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
