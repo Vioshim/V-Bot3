@@ -322,6 +322,7 @@ description = "Date parsing library designed to parse dates from HTML pages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
+develop = false
 
 [package.dependencies]
 python-dateutil = "*"
@@ -334,9 +335,15 @@ calendars = ["hijri-converter", "convertdate"]
 fasttext = ["fasttext"]
 langdetect = ["langdetect"]
 
+[package.source]
+type = "git"
+url = "https://github.com/Vioshim/dateparser.git"
+reference = "master"
+resolved_reference = "4adf8133bb7a4a95381de28be0a7bfec9bded2c1"
+
 [[package]]
 name = "discord.py"
-version = "2.2.0a4664+gd257b0c0"
+version = "2.2.0a4667+gd609c78a"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -360,7 +367,7 @@ voice = ["PyNaCl (>=1.3.0,<1.6)"]
 type = "git"
 url = "https://github.com/Rapptz/discord.py.git"
 reference = "master"
-resolved_reference = "d257b0c07b8a550240c3e6bcc31e11ffb3adbd7f"
+resolved_reference = "d609c78a9e7a0b97465c21c131b68284b6d23e90"
 
 [[package]]
 name = "dnspython"
@@ -377,14 +384,6 @@ doh = ["h2 (>=4.1.0)", "httpx (>=0.21.1)", "requests (>=2.23.0,<3.0.0)", "reques
 idna = ["idna (>=2.1,<4.0)"]
 trio = ["trio (>=0.14,<0.20)"]
 wmi = ["wmi (>=1.5.1,<2.0.0)"]
-
-[[package]]
-name = "et-xmlfile"
-version = "1.1.0"
-description = "An implementation of lxml.xmlfile for the standard library"
-category = "main"
-optional = false
-python-versions = ">=3.6"
 
 [[package]]
 name = "flake8"
@@ -638,45 +637,23 @@ requests = ["requests (>=2.24.0,<3.0.0)"]
 docs = ["sphinx (>=4.0.0,<5.0.0)", "sphinxcontrib-trio", "furo"]
 
 [[package]]
-name = "numpy"
-version = "1.24.1"
-description = "Fundamental package for array computing in Python"
-category = "main"
-optional = false
-python-versions = ">=3.8"
-
-[[package]]
 name = "openai"
-version = "0.25.0"
+version = "0.26.0"
 description = "Python client library for the OpenAI API"
 category = "main"
 optional = false
 python-versions = ">=3.7.1"
 
 [package.dependencies]
-numpy = "*"
-openpyxl = ">=3.0.7"
-pandas = ">=1.2.3"
-pandas-stubs = ">=1.1.0.11"
+aiohttp = "*"
 requests = ">=2.20"
 tqdm = "*"
-typing_extensions = "*"
 
 [package.extras]
-dev = ["black (>=21.6b0,<22.0.0)", "pytest (>=6.0.0,<7.0.0)"]
-embeddings = ["scikit-learn (>=1.0.2)", "tenacity (>=8.0.1)", "matplotlib", "sklearn", "plotly"]
-wandb = ["wandb"]
-
-[[package]]
-name = "openpyxl"
-version = "3.0.10"
-description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-et-xmlfile = "*"
+datalib = ["numpy", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)", "openpyxl (>=3.0.7)"]
+dev = ["black (>=21.6b0,<22.0.0)", "pytest (>=6.0.0,<7.0.0)", "pytest-asyncio", "pytest-mock"]
+embeddings = ["scikit-learn (>=1.0.2)", "tenacity (>=8.0.1)", "matplotlib", "sklearn", "plotly", "numpy", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)", "openpyxl (>=3.0.7)"]
+wandb = ["wandb", "numpy", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)", "openpyxl (>=3.0.7)"]
 
 [[package]]
 name = "orjson"
@@ -693,36 +670,6 @@ description = "Core utilities for Python packages"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
-
-[[package]]
-name = "pandas"
-version = "1.5.2"
-description = "Powerful data structures for data analysis, time series, and statistics"
-category = "main"
-optional = false
-python-versions = ">=3.8"
-
-[package.dependencies]
-numpy = [
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
-    {version = ">=1.23.2", markers = "python_version >= \"3.11\""},
-]
-python-dateutil = ">=2.8.1"
-pytz = ">=2020.1"
-
-[package.extras]
-test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
-
-[[package]]
-name = "pandas-stubs"
-version = "1.5.2.230105"
-description = "Type annotations for pandas"
-category = "main"
-optional = false
-python-versions = ">=3.8,<3.12"
-
-[package.dependencies]
-types-pytz = ">=2022.1.1"
 
 [[package]]
 name = "pathspec"
@@ -1056,22 +1003,6 @@ slack = ["slack-sdk"]
 telegram = ["requests"]
 
 [[package]]
-name = "types-pytz"
-version = "2022.7.0.0"
-description = "Typing stubs for pytz"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "typing-extensions"
-version = "4.4.0"
-description = "Backported and Experimental Type Hints for Python 3.7+"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-
-[[package]]
 name = "tzdata"
 version = "2022.7"
 description = "Provider of IANA time zone data"
@@ -1155,7 +1086,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.11.1"
-content-hash = "b9f791f77afd2e036d433f87789dcfb7dca6587af585a50834c795e26f383b6e"
+content-hash = "ca75c838bd9f70cd10618d24e08b95d6b984a3d1c8d2e1b2e38d943828091305"
 
 [metadata.files]
 aiodns = []
@@ -1186,7 +1117,6 @@ d20 = []
 dateparser = []
 "discord.py" = []
 dnspython = []
-et-xmlfile = []
 flake8 = []
 frozendict = []
 frozenlist = []
@@ -1207,13 +1137,9 @@ motor-stubs = []
 multidict = []
 mypy-extensions = []
 mystbin-py = []
-numpy = []
 openai = []
-openpyxl = []
 orjson = []
 packaging = []
-pandas = []
-pandas-stubs = []
 pathspec = []
 platformdirs = []
 pluggy = []
@@ -1244,8 +1170,6 @@ soupsieve = []
 tenacity = []
 tonyg-rfc3339 = []
 tqdm = []
-types-pytz = []
-typing-extensions = []
 tzdata = []
 tzlocal = []
 urllib3 = []

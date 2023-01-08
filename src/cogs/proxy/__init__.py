@@ -42,7 +42,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING, format_dt, get
+from discord.utils import MISSING, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -249,9 +249,13 @@ class DateFunction(ProxyFunction):
         args: list[str],
     ) -> Optional[tuple[str, Optional[Embed]]]:
         """
+        :             | today's date
+        :<mode>       | today's date w/ discord mode
         :<any>        | date, if tz not specified, will use database
         :<any>:<mode> | date w/ discord mode
         Examples
+        • {{date}}
+        • {{date:R}}
         • {{date:Dec 13th 2020:R}}
         • {{date:in 1 minute:R}}
         • {{date:in two hours and one minute:T}}
@@ -259,19 +263,23 @@ class DateFunction(ProxyFunction):
         db = bot.mongo_db("AFK")
         user = bot.supporting.get(user, user)
         match args:
+            case []:
+                return npc, format_dt(utcnow()), None
+            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
+                return npc, format_dt(utcnow(), mode), None
             case [*date, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 with suppress(ValueError, TypeError):
                     if item := dateparser.parse(":".join(date)):
                         if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
                             tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
-                            item = item.combine(item, time=item.time(), tzinfo=tzinfo)
+                            item = datetime.combine(item, time=item.time(), tzinfo=tzinfo)
                         return npc, format_dt(item, mode), None
             case [*date]:
                 with suppress(ValueError, TypeError):
                     if item := dateparser.parse(":".join(date)):
                         if item.tzinfo is None and (aux := await db.find_one({"user": user.id})):
                             tzinfo = timezone(offset=timedelta(hours=aux["offset"]))
-                            item = item.combine(item, time=item.time(), tzinfo=tzinfo)
+                            item = datetime.combine(item, time=item.time(), tzinfo=tzinfo)
                         return npc, format_dt(item), None
 
 
