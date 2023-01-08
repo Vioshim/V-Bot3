@@ -13,11 +13,11 @@
 # limitations under the License.
 
 
+import asyncio
 import random
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta, timezone
 from itertools import chain
 from textwrap import wrap
 from typing import Optional
@@ -788,12 +788,17 @@ class ProxyCog(commands.Cog):
         else:
             files = []
 
-        for paragraph in wrap(
-            text or "\u200b",
-            2000,
-            replace_whitespace=False,
-            placeholder="",
+        for index, paragraph in enumerate(
+            wrap(
+                text or "\u200b",
+                2000,
+                replace_whitespace=False,
+                placeholder="",
+            )
         ):
+            if index % 5 == 0:
+                await asyncio.sleep(1)
+
             proxy_msg = await webhook.send(
                 username=npc.name[:80],
                 avatar_url=npc.image,
