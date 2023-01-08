@@ -91,6 +91,7 @@ class NameModal(Modal, title="NPC Name"):
 class ProxyFunction(ABC):
     aliases: list[str]
     keep_caps: bool
+    requires_strip: bool
 
     @classmethod
     def all(cls):
@@ -101,8 +102,11 @@ class ProxyFunction(ABC):
         items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
         name, *args = text.split(":")
         if name and (x := process.extractOne(name, choices=list(items), score_cutoff=90)):
-            if (item := items[x[0]]) and not item.keep_caps:
+            item = items[x[0]]
+            if item.keep_caps:
                 args = [x.lower() for x in args]
+            if item.requires_strip:
+                args = [x.strip() for x in args]
             return await (item := items[x[0]]).parse(bot, user, npc, args)
 
     @classmethod
@@ -137,6 +141,7 @@ class ProxyFunction(ABC):
 class MoveFunction(ProxyFunction):
     aliases = ["Move"]
     keep_caps = False
+    requires_strip = True
 
     @classmethod
     async def parse(
@@ -240,6 +245,7 @@ class MoveFunction(ProxyFunction):
 class DateFunction(ProxyFunction):
     aliases = ["Date", "Time"]
     keep_caps = True
+    requires_strip = True
 
     @classmethod
     async def parse(
@@ -257,9 +263,9 @@ class DateFunction(ProxyFunction):
         Examples
         • {{date}}
         • {{date:R}}
-        • {{date:R:Dec 13th 2020}}
-        • {{date:T:in 16 minutes}}
-        • {{date:D:in two hours and one minute}}
+        • {{date:Dec 13th 2020:R}}
+        • {{date:in 16 minutes:T}}
+        • {{date:in two hours and one minute:D}}
         """
         db = bot.mongo_db("AFK")
         settings = dict(
@@ -269,16 +275,12 @@ class DateFunction(ProxyFunction):
             TO_TIMEZONE="utc",
         )
 
-        try:
-            mode, *rest = args
-            rest.insert(0, mode := mode.strip())
-        except ValueError:
-            return npc, format_dt(utcnow()), None
-
-        match rest:
+        match args:
+            case []:
+                return npc, format_dt(utcnow()), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 return npc, format_dt(utcnow(), mode), None
-            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode, *params]:
+            case [*params, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
@@ -288,7 +290,7 @@ class DateFunction(ProxyFunction):
                     settings["TO_TIMEZONE"] = tz_info
                 if item := dateparser.parse(":".join(params), settings=settings):
                     return npc, format_dt(item, style=mode), None
-            case _:
+            case [*params]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
@@ -296,13 +298,14 @@ class DateFunction(ProxyFunction):
                     tz_info, _ = o
                     settings["TIMEZONE"] = tz_info
                     settings["TO_TIMEZONE"] = tz_info
-                if item := dateparser.parse(":".join(args), settings=settings):
+                if item := dateparser.parse(":".join(params), settings=settings):
                     return npc, format_dt(item), None
 
 
 class MetronomeFunction(ProxyFunction):
     aliases = ["Metronome"]
     keep_caps = False
+    requires_strip = True
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -359,6 +362,7 @@ class MetronomeFunction(ProxyFunction):
 class TypeFunction(ProxyFunction):
     aliases = ["Type", "Chart"]
     keep_caps = False
+    requires_strip = True
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -414,6 +418,7 @@ class TypeFunction(ProxyFunction):
 class MoodFunction(ProxyFunction):
     aliases = ["Mood", "Mode", "Form"]
     keep_caps = True
+    requires_strip = True
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -447,6 +452,7 @@ class MoodFunction(ProxyFunction):
 class RollFunction(ProxyFunction):
     aliases = ["Roll"]
     keep_caps = True
+    requires_strip = True
 
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
@@ -463,7 +469,7 @@ class RollFunction(ProxyFunction):
         • {{roll:d3+2:embed}}
         • {{roll:North:South:East:West}}
         """
-        match args := [x.strip() for x in args]:
+        match args:
             case []:
                 value = d20.roll(expr="d20")
                 return npc, f"`🎲{value.total}`", None
