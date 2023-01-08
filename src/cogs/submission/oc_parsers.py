@@ -26,6 +26,7 @@ from docx import Document
 from docx.document import Document as DocumentType
 from jishaku.codeblocks import codeblock_converter
 from yaml import safe_load
+from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
 from src.structures.bot import CustomBot
@@ -278,7 +279,7 @@ class DiscordOCParser(OCParser):
         if REGEX_URL.match(content) or G_DOCUMENT.match(content):
             return
         content = yaml_handler(content)
-        with suppress(ScannerError):
+        with suppress(ScannerError, ParserError):
             if isinstance(msg_data := safe_load(content), dict):
                 if images:
                     msg_data["image"] = await images[0].to_file(use_cached=True)

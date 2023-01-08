@@ -261,7 +261,12 @@ class DateFunction(ProxyFunction):
         • {{date:in two hours and one minute:T}}
         """
         db = bot.mongo_db("AFK")
-        settings = dict(TO_TIMEZONE="GMT")
+        settings = dict(
+            RETURN_AS_TIMEZONE_AWARE=True,
+            PREFER_DATES_FROM="future",
+            TIMEZONE="utc",
+            TO_TIMEZONE="utc",
+        )
         match args:
             case []:
                 return npc, format_dt(utcnow()), None
@@ -272,6 +277,7 @@ class DateFunction(ProxyFunction):
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
                 ):
+                    settings["TIMEZONE"] = o[0]
                     settings["TO_TIMEZONE"] = o[0]
                 if item := dateparser.parse(":".join(date), settings=settings):
                     return npc, format_dt(item, style=mode), None
@@ -280,6 +286,7 @@ class DateFunction(ProxyFunction):
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
                 ):
+                    settings["TIMEZONE"] = o[0]
                     settings["TO_TIMEZONE"] = o[0]
                 if item := dateparser.parse(":".join(date), settings=settings):
                     return npc, format_dt(item), None
