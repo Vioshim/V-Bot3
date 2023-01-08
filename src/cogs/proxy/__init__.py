@@ -465,10 +465,10 @@ class RollFunction(ProxyFunction):
         """
         match args:
             case []:
-                value = d20.roll(expr="d20", allow_comments=True)
+                value = d20.roll(expr="d20")
                 return npc, f"`🎲{value.total}`", None
             case ["embed" | "Embed"]:
-                value = d20.roll(expr="d20", allow_comments=True)
+                value = d20.roll(expr="d20")
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [item]:
                 value = d20.roll(expr=item, allow_comments=True)
@@ -481,7 +481,10 @@ class RollFunction(ProxyFunction):
                     d20.utils.simplify_expr(value.expr)
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [*items]:
-                return npc, f"`🎲{random.choice([o for x in items if (o := x.strip())])}`", None
+                if items := [o for x in items if (o := x.strip())]:
+                    return npc, f"`🎲{random.choice(items)}`", None
+                value = d20.roll(expr="d20")
+                return npc, f"`🎲{value.total}`", None
 
 
 class ProxyMessageModal(Modal, title="Edit Proxy Message"):
