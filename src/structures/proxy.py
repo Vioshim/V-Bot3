@@ -24,7 +24,7 @@ from discord import Embed
 from discord.utils import snowflake_time, utcnow
 
 from src.utils.etc import WHITE_BAR
-from src.utils.matches import CLYDE, EMOJI_MATCHER
+from src.utils.matches import CLYDE
 
 
 @dataclass(slots=True, unsafe_hash=True)
@@ -233,10 +233,10 @@ class Proxy:
                 break
 
         proxy_msgs: list[tuple[list[Proxy | ProxyExtra], str]] = []
+
         for key, paragraphs in itertools.groupby(values, key=lambda x: x[0]):
-            for _, paragraph in itertools.groupby(paragraphs, key=lambda x: bool(EMOJI_MATCHER.match(x[1]))):
-                entry = functools.reduce(lambda x, y: f"{x}\n{y}", map(lambda z: z[1], paragraphs))
-                proxy_msgs.append((key, entry.strip()))
+            entry = functools.reduce(lambda x, y: f"{x}\n{y}", map(lambda z: z[1], paragraphs))
+            proxy_msgs.append((key, entry.strip()))
 
         if not proxy_msgs and (aux := cls.first_lookup(items, text)):
             *proxy, paragraph = aux
