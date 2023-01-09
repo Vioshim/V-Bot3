@@ -773,7 +773,7 @@ class CustomParadox(Species):
 
         super(CustomParadox, self).__init__(
             id=base.id,
-            name=name or f"Paradox {base.name}",
+            name=name or base.name,
             shape=base.shape,
             height=base.height,
             weight=base.weight,
@@ -787,6 +787,10 @@ class CustomParadox(Species):
             movepool=movepool.copy(),
             abilities=base.abilities | abilities,
             evolves_from=base.id,
+            base_image=base.base_image,
+            base_image_shiny=base.base_image_shiny,
+            female_image=base.female_image,
+            female_image_shiny=base.female_image_shiny,
         )
         self.base = base
 
