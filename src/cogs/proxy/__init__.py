@@ -270,7 +270,7 @@ class DateFunction(ProxyFunction, aliases=["Date", "Time"], keep_caps=True):
         """
         db = bot.mongo_db("AFK")
         settings = dict(
-            RETURN_AS_TIMEZONE_AWARE=True,
+            # RETURN_AS_TIMEZONE_AWARE=True,
             PREFER_DATES_FROM="future",
             TIMEZONE="utc",
             TO_TIMEZONE="utc",
