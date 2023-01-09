@@ -705,6 +705,10 @@ class CustomMega(Species):
             movepool=base.movepool,
             abilities=base.abilities.copy(),
             evolves_from=base.id,
+            base_image=base.base_image,
+            base_image_shiny=base.base_image_shiny,
+            female_image=base.female_image,
+            female_image_shiny=base.female_image_shiny,
         )
         self.base = base
 
