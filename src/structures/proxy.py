@@ -240,7 +240,7 @@ class Proxy:
             if emoji_mode:
                 proxy_msgs.extend((key, entry.strip()) for key, entry in paragraphs)
             elif paragraphs:
-                entry = functools.reduce(lambda x, y: f"{x}\n{y}", map(lambda z: z[1], paragraphs))
+                entry = functools.reduce(lambda x, y: f"{x}\n{y.strip()}", map(lambda z: z[1], paragraphs))
                 proxy_msgs.append((key, entry.strip()))
 
         if not proxy_msgs and (aux := cls.first_lookup(items, text)):
