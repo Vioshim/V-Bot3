@@ -98,6 +98,6 @@ EMOJI_MATCHER = re.compile(
     r"-\u1F5C4\u1F5D1-\u1F5D3\u1F5DC-\u1F5DE\u1F5E1\u1F5E3\u1F5EF\u1F5F3\u1F5FA"
     r"-\u1F64F\u1F680-\u1F6C5\u1F6CB-\u1F6D0\u1F6E0-\u1F6E5\u1F6E9\u1F6EB"
     r"-\u1F6EC\u1F6F0\u1F6F3\u1F910-\u1F918\u1F980-\u1F984\u1F9C0}]"
-    r"|((:([a-zA-Z0-9_]{2,32}):)\s*)"
-    r"|(<(a?):([a-zA-Z0-9_]{2,32}):([0-9]{18,22})>)\s*)+$"
+    r"|(\s*(:([a-zA-Z0-9_]{2,32}):)\s*)"
+    r"|(\s*<(a?):([a-zA-Z0-9_]{2,32}):([0-9]{18,22})>)\s*)+$"
 )
