@@ -18,7 +18,7 @@ import random
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from textwrap import wrap
 from typing import Optional
 
@@ -89,17 +89,17 @@ class NameModal(Modal, title="NPC Name"):
 
 class ProxyFunction(ABC):
     aliases: list[str]
-    keep_caps: bool
+    ignore_caps: bool
     requires_strip: bool
 
     def __init_subclass__(
         cls,
         *,
         aliases: list[str] = None,
-        keep_caps: bool = True,
+        ignore_caps: bool = True,
         requires_strip: bool = True,
     ) -> None:
-        cls.aliases, cls.keep_caps, cls.requires_strip = aliases or [], keep_caps, requires_strip
+        cls.aliases, cls.ignore_caps, cls.requires_strip = aliases or [], ignore_caps, requires_strip
 
     @classmethod
     def all(cls):
@@ -111,7 +111,7 @@ class ProxyFunction(ABC):
         name, *args = text.split(":")
         if name and (x := process.extractOne(name, choices=list(items), score_cutoff=90)):
             item = items[x[0]]
-            if not item.keep_caps:
+            if item.ignore_caps:
                 args = [x.lower() for x in args]
             if item.requires_strip:
                 args = [x.strip() for x in args]
@@ -146,7 +146,7 @@ class ProxyFunction(ABC):
         """
 
 
-class MoveFunction(ProxyFunction, aliases=["Move"], keep_caps=False):
+class MoveFunction(ProxyFunction, aliases=["Move"]):
     @classmethod
     async def parse(
         cls,
@@ -246,7 +246,7 @@ class MoveFunction(ProxyFunction, aliases=["Move"], keep_caps=False):
                     return npc, f"{move_type.emoji}`{item.name}`", item.embed_for(move_type)
 
 
-class DateFunction(ProxyFunction, aliases=["Date", "Time"], keep_caps=True):
+class DateFunction(ProxyFunction, aliases=["Date", "Time"], ignore_caps=False):
     @classmethod
     async def parse(
         cls,
@@ -268,46 +268,37 @@ class DateFunction(ProxyFunction, aliases=["Date", "Time"], keep_caps=True):
         • {{date:in two hours and one minute:D}}
         """
         db = bot.mongo_db("AFK")
+        now = utcnow()
         settings = dict(
-            # RETURN_AS_TIMEZONE_AWARE=True,
+            RETURN_AS_TIMEZONE_AWARE=True,
             PREFER_DATES_FROM="future",
             TIMEZONE="utc",
             TO_TIMEZONE="utc",
+            RELATIVE_BASE=now,
         )
-        bot.logger.info("ARGS: %s", args)
         match args:
             case []:
-                bot.logger.info("ARGS 1: %s", args)
                 return npc, format_dt(utcnow()), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                bot.logger.info("ARGS 2: %s", mode)
                 return npc, format_dt(utcnow(), mode), None
             case [*params, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                bot.logger.info("ARGS 3: %s - %s", mode, params)
-                if item := dateparser.parse(":".join(params), settings=settings):
-                    return npc, format_dt(item, style=mode), None
-            case _:
                 if aux := await db.find_one({"user": user.id}):
                     tz_info = timezone(offset=timedelta(hours=aux["offset"]))
-                else:
-                    tz_info = None
+                    settings["RELATIVE_BASE"] = now.astimezone(tz=tz_info)
+                    settings["TIMEZONE"] = str(tz_info)
+                if item := dateparser.parse(":".join(params), settings=settings):
+                    return npc, format_dt(item, style=mode), None
+            case [*params]:
+                if aux := await db.find_one({"user": user.id}):
+                    tz_info = timezone(offset=timedelta(hours=aux["offset"]))
+                    settings["RELATIVE_BASE"] = now.astimezone(tz=tz_info)
+                    settings["TIMEZONE"] = str(tz_info)
 
-                bot.logger.info("ARGS 4: %s", args)
-                test = []
-                if item := dateparser.parse(":".join(args), settings=settings):
-                    if tz_info:
-                        test.append(format_dt(item.replace(tzinfo=tz_info)))
-                        test.append(format_dt(item.astimezone(tz_info)))
-                    test.append(format_dt(item))
-
-                if text := "\n".join(f"{i} - {x}" for i, x in enumerate(test, start=1)):
-                    return npc, text, None
-
-                # if item := dateparser.parse(":".join(args), settings=settings):
-                # return npc, format_dt(item), None
+                if item := dateparser.parse(":".join(params), settings=settings):
+                    return npc, format_dt(item), None
 
 
-class MetronomeFunction(ProxyFunction, aliases=["Metronome"], keep_caps=False):
+class MetronomeFunction(ProxyFunction, aliases=["Metronome"]):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -360,7 +351,7 @@ class MetronomeFunction(ProxyFunction, aliases=["Metronome"], keep_caps=False):
                 return npc, f"{item.max_move_type.emoji}`{item.max_move_name}`", item.max_move_embed
 
 
-class TypeFunction(ProxyFunction, aliases=["Type", "Chart"], keep_caps=False):
+class TypeFunction(ProxyFunction, aliases=["Type", "Chart"]):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -412,7 +403,7 @@ class TypeFunction(ProxyFunction, aliases=["Type", "Chart"], keep_caps=False):
                     return npc, f"{item.emoji} < {text} = {calc:.0%}", None
 
 
-class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"]):
+class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"], ignore_case=False):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -442,7 +433,7 @@ class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"]):
                     return NPC(name=username, image=item.image or npc.image), "", None
 
 
-class RollFunction(ProxyFunction, aliases=["Roll"]):
+class RollFunction(ProxyFunction, aliases=["Roll"], ignore_caps=False):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
