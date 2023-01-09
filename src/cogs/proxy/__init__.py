@@ -403,7 +403,7 @@ class TypeFunction(ProxyFunction, aliases=["Type", "Chart"]):
                     return npc, f"{item.emoji} < {text} = {calc:.0%}", None
 
 
-class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"], ignore_case=False):
+class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"], ignore_caps=False):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
