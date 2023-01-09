@@ -93,6 +93,15 @@ class ProxyFunction(ABC):
     keep_caps: bool
     requires_strip: bool
 
+    def __init_subclass__(
+        cls,
+        *,
+        aliases: list[str] = None,
+        keep_caps: bool = True,
+        requires_strip: bool = True,
+    ) -> None:
+        cls.aliases, cls.keep_caps, cls.requires_strip = aliases or [], keep_caps, requires_strip
+
     @classmethod
     def all(cls):
         return cls.__subclasses__()
@@ -138,11 +147,7 @@ class ProxyFunction(ABC):
         """
 
 
-class MoveFunction(ProxyFunction):
-    aliases = ["Move"]
-    keep_caps = False
-    requires_strip = True
-
+class MoveFunction(ProxyFunction, aliases=["Move"], keep_caps=False):
     @classmethod
     async def parse(
         cls,
@@ -242,11 +247,7 @@ class MoveFunction(ProxyFunction):
                     return npc, f"{move_type.emoji}`{item.name}`", item.embed_for(move_type)
 
 
-class DateFunction(ProxyFunction):
-    aliases = ["Date", "Time"]
-    keep_caps = True
-    requires_strip = True
-
+class DateFunction(ProxyFunction, aliases=["Date", "Time"]):
     @classmethod
     async def parse(
         cls,
@@ -263,9 +264,9 @@ class DateFunction(ProxyFunction):
         Examples
         • {{date}}
         • {{date:R}}
-        • {{date:R:Dec 13th 2020}}
-        • {{date:T:in 16 minutes}}
-        • {{date:D:in two hours and one minute}}
+        • {{date:Dec 13th 2020:R}}
+        • {{date:in 16 minutes:T}}
+        • {{date:in two hours and one minute:D}}
         """
         db = bot.mongo_db("AFK")
         settings = dict(
@@ -274,13 +275,15 @@ class DateFunction(ProxyFunction):
             TIMEZONE="utc",
             TO_TIMEZONE="utc",
         )
-
+        bot.logger.info("ARGS: %s", args)
         match args:
             case []:
+                bot.logger.info("ARGS 1: %s", args)
                 return npc, format_dt(utcnow()), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
+                bot.logger.info("ARGS 2: %s", mode)
                 return npc, format_dt(utcnow(), mode), None
-            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode, *params]:
+            case [*params, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
@@ -288,9 +291,10 @@ class DateFunction(ProxyFunction):
                     tz_info, _ = o
                     settings["TIMEZONE"] = tz_info
                     settings["TO_TIMEZONE"] = tz_info
+                bot.logger.info("ARGS 3: %s - %s", mode, params)
                 if item := dateparser.parse(":".join(params), settings=settings):
                     return npc, format_dt(item, style=mode), None
-            case [*params]:
+            case _:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
@@ -298,15 +302,12 @@ class DateFunction(ProxyFunction):
                     tz_info, _ = o
                     settings["TIMEZONE"] = tz_info
                     settings["TO_TIMEZONE"] = tz_info
-                if item := dateparser.parse(":".join(params), settings=settings):
+                bot.logger.info("ARGS 4: %s", args)
+                if item := dateparser.parse(":".join(args), settings=settings):
                     return npc, format_dt(item), None
 
 
-class MetronomeFunction(ProxyFunction):
-    aliases = ["Metronome"]
-    keep_caps = False
-    requires_strip = True
-
+class MetronomeFunction(ProxyFunction, aliases=["Metronome"], keep_caps=False):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -359,11 +360,7 @@ class MetronomeFunction(ProxyFunction):
                 return npc, f"{item.max_move_type.emoji}`{item.max_move_name}`", item.max_move_embed
 
 
-class TypeFunction(ProxyFunction):
-    aliases = ["Type", "Chart"]
-    keep_caps = False
-    requires_strip = True
-
+class TypeFunction(ProxyFunction, aliases=["Type", "Chart"], keep_caps=False):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -415,11 +412,7 @@ class TypeFunction(ProxyFunction):
                     return npc, f"{item.emoji} < {text} = {calc:.0%}", None
 
 
-class MoodFunction(ProxyFunction):
-    aliases = ["Mood", "Mode", "Form"]
-    keep_caps = True
-    requires_strip = True
-
+class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"]):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -449,11 +442,7 @@ class MoodFunction(ProxyFunction):
                     return NPC(name=username, image=item.image or npc.image), "", None
 
 
-class RollFunction(ProxyFunction):
-    aliases = ["Roll"]
-    keep_caps = True
-    requires_strip = True
-
+class RollFunction(ProxyFunction, aliases=["Roll"]):
     @classmethod
     async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
@@ -477,12 +466,16 @@ class RollFunction(ProxyFunction):
                 value = d20.roll(expr="d20")
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
             case [item]:
-                value = d20.roll(expr=item, allow_comments=True)
-                if len(value.result) > 4096:
-                    d20.utils.simplify_expr(value.expr)
+                try:
+                    value = d20.roll(expr=item, allow_comments=True)
+                except Exception as e:
+                    return npc, f"`🎲 {e}`", None
                 return npc, f"`🎲{value.total}`", None
             case [item, "embed" | "Embed"]:
-                value = d20.roll(expr=item, allow_comments=True)
+                try:
+                    value = d20.roll(expr=item, allow_comments=True)
+                except Exception as e:
+                    return npc, f"`🎲 {e}`", None
                 if len(value.result) > 4096:
                     d20.utils.simplify_expr(value.expr)
                 return npc, f"`🎲{value.total}`", Embed(description=value.result)
