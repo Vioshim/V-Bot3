@@ -18,7 +18,7 @@ import random
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from textwrap import wrap
 from typing import Optional
 
@@ -42,7 +42,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING, format_dt, get, utcnow
+from discord.utils import MISSING, format_dt, get
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -106,7 +106,12 @@ class ProxyFunction(ABC):
         return cls.__subclasses__()
 
     @classmethod
-    async def lookup(cls, bot: CustomBot, user: Member, npc: NPC | Proxy | ProxyExtra, text: str):
+    async def lookup(
+        cls,
+        ctx: commands.Context,
+        npc: NPC | Proxy | ProxyExtra,
+        text: str,
+    ) -> Optional[tuple[NPC | Proxy | ProxyExtra, str, Optional[Embed]]]:
         items = {alias: item for item in cls.__subclasses__() for alias in item.aliases}
         name, *args = text.split(":")
         if name and (x := process.extractOne(name, choices=list(items), score_cutoff=90)):
@@ -115,17 +120,11 @@ class ProxyFunction(ABC):
                 args = [x.lower() for x in args]
             if item.requires_strip:
                 args = [x.strip() for x in args]
-            return await (item := items[x[0]]).parse(bot, user, npc, args)
+            return await item.parse(ctx, npc, args)
 
     @classmethod
     @abstractmethod
-    async def parse(
-        cls,
-        bot: CustomBot,
-        user: Member,
-        npc: NPC | Proxy | ProxyExtra,
-        args: list[str],
-    ) -> Optional[tuple[NPC | Proxy | ProxyExtra, str, Optional[Embed]]]:
+    async def parse(cls, ctx: commands.Context, npc: NPC | Proxy | ProxyExtra, text: str, args: list[str]):
         """This is the abstract parsing methods
 
         Parameters
@@ -148,13 +147,7 @@ class ProxyFunction(ABC):
 
 class MoveFunction(ProxyFunction, aliases=["Move"]):
     @classmethod
-    async def parse(
-        cls,
-        _bot: CustomBot,
-        _user: Member,
-        npc: NPC | Proxy | ProxyExtra,
-        args: list[str],
-    ) -> Optional[tuple[str, Optional[Embed]]]:
+    async def parse(cls, _: commands.Context, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :<any>                 | move
         :<any>:embed           | move w/embed
@@ -248,13 +241,7 @@ class MoveFunction(ProxyFunction, aliases=["Move"]):
 
 class DateFunction(ProxyFunction, aliases=["Date", "Time"], ignore_caps=False):
     @classmethod
-    async def parse(
-        cls,
-        bot: CustomBot,
-        user: Member,
-        npc: NPC | Proxy | ProxyExtra,
-        args: list[str],
-    ) -> Optional[tuple[str, Optional[Embed]]]:
+    async def parse(cls, ctx: commands.Context, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :             | today's date
         :<mode>       | today's date w/ discord mode
@@ -267,40 +254,38 @@ class DateFunction(ProxyFunction, aliases=["Date", "Time"], ignore_caps=False):
         • {{date:in 16 minutes:T}}
         • {{date:in two hours and one minute:D}}
         """
-        db = bot.mongo_db("AFK")
-        now = utcnow()
+        db: AsyncIOMotorCollection = ctx.bot.mongo_db("AFK")
+        now = ctx.message.created_at
         settings = dict(
-            RETURN_AS_TIMEZONE_AWARE=True,
             PREFER_DATES_FROM="future",
             TIMEZONE="utc",
-            TO_TIMEZONE="utc",
             RELATIVE_BASE=now,
         )
+        tz_info: Optional[timezone] = None
         match args:
             case []:
-                return npc, format_dt(utcnow()), None
+                return npc, format_dt(now), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                return npc, format_dt(utcnow(), mode), None
+                return npc, format_dt(now, mode), None
             case [*params, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                if aux := await db.find_one({"user": user.id}):
+                if aux := await db.find_one({"user": ctx.author.id}):
                     tz_info = timezone(offset=timedelta(hours=aux["offset"]))
                     settings["RELATIVE_BASE"] = now.astimezone(tz=tz_info)
                     settings["TIMEZONE"] = str(tz_info)
                 if item := dateparser.parse(":".join(params), settings=settings):
-                    return npc, format_dt(item, style=mode), None
+                    return npc, format_dt(item.replace(tzinfo=tz_info), style=mode), None
             case [*params]:
-                if aux := await db.find_one({"user": user.id}):
+                if aux := await db.find_one({"user": ctx.author.id}):
                     tz_info = timezone(offset=timedelta(hours=aux["offset"]))
                     settings["RELATIVE_BASE"] = now.astimezone(tz=tz_info)
                     settings["TIMEZONE"] = str(tz_info)
-
                 if item := dateparser.parse(":".join(params), settings=settings):
-                    return npc, format_dt(item), None
+                    return npc, format_dt(item.replace(tzinfo=tz_info)), None
 
 
 class MetronomeFunction(ProxyFunction, aliases=["Metronome"]):
     @classmethod
-    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _: commands.Context, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :           | random metronome move
         :embed      | random metronome move w/embed
@@ -353,7 +338,7 @@ class MetronomeFunction(ProxyFunction, aliases=["Metronome"]):
 
 class TypeFunction(ProxyFunction, aliases=["Type", "Chart"]):
     @classmethod
-    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _: commands.Context, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :                            | returns a random type
         :<any>                       | returns a type's emoji
@@ -405,7 +390,7 @@ class TypeFunction(ProxyFunction, aliases=["Type", "Chart"]):
 
 class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"], ignore_caps=False):
     @classmethod
-    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _: commands.Context, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :<any> | checks for a variant that matches
         Examples
@@ -435,7 +420,7 @@ class MoodFunction(ProxyFunction, aliases=["Mood", "Mode", "Form"], ignore_caps=
 
 class RollFunction(ProxyFunction, aliases=["Roll"], ignore_caps=False):
     @classmethod
-    async def parse(cls, _bot: CustomBot, _user: Member, npc: NPC | Proxy | ProxyExtra, args: list[str]):
+    async def parse(cls, _: commands.Context, npc: NPC | Proxy | ProxyExtra, args: list[str]):
         """
         :             | rolls a d20
         :embed        | rolls a d20 w/embed
@@ -506,18 +491,27 @@ class ProxyMessageModal(Modal, title="Edit Proxy Message"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         resp: InteractionResponse = interaction.response
-        if not self.text.value:
-            await self.msg.delete(delay=0)
-            return await resp.send_message("Message has been deleted.", ephemeral=True, delete_after=3)
-
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Tupper-logs")
+
+        if not self.text.value:
+            try:
+                await self.msg.delete()
+                await resp.send_message("Message has been deleted.", ephemeral=True, delete_after=3)
+            except DiscordException:
+                await resp.send_message("Can't delete message.", ephemeral=True, delete_after=3)
+            finally:
+                return await db.delete_one(self.data)
+
         w: Webhook = await interaction.client.webhook(self.msg.channel)
-        thread = self.msg.channel if isinstance(self.msg.channel, Thread) else MISSING
+        if not isinstance(thread := self.msg.channel, Thread):
+            thread = MISSING
+
         try:
             await w.edit_message(self.msg.id, content=self.text.value, thread=thread)
             await resp.send_message("Message has been edited successfully.", ephemeral=True, delete_after=3)
         except DiscordException:
             await db.delete_one(self.data)
+            await resp.send_message("Can't edit message.", ephemeral=True, delete_after=3)
 
 
 class ProxyModal(Modal, title="Prefixes"):
@@ -667,7 +661,8 @@ class ProxyCog(commands.Cog):
             )
         ):
             deleting = True
-            await self.proxy_handler(npc, message, text, attachments=index == 0, deleting=False)
+            ctx = await self.bot.get_context(message)
+            await self.proxy_handler(npc, ctx, text, attachments=index == 0, deleting=False)
         if deleting:
             await message.delete(delay=300 if message.mentions else 0)
 
@@ -732,12 +727,12 @@ class ProxyCog(commands.Cog):
     async def proxy_handler(
         self,
         npc: Character | NPC | list[Proxy | ProxyExtra],
-        message: Message,
+        ctx: commands.Context,
         text: str = None,
         attachments: bool = True,
         deleting: bool = True,
     ):
-        webhook = await self.bot.webhook(message.channel, reason="NPC")
+        webhook = await self.bot.webhook(ctx.channel, reason="NPC")
 
         if isinstance(npc, list):
             try:
@@ -756,14 +751,14 @@ class ProxyCog(commands.Cog):
 
         text = (text.strip() if text else None) or "\u200b"
         thread = view = MISSING
-        if reference := message.reference:
+        if reference := ctx.message.reference:
             view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
-        if isinstance(message.channel, Thread):
-            thread = message.channel
+        if isinstance(ctx.channel, Thread):
+            thread = ctx.channel
 
-        author_id, npc.name = message.author.id, Proxy.clyde(npc.name)
+        author_id, npc.name = ctx.author.id, Proxy.clyde(npc.name)
 
-        if data := self.last_names.get(message.channel.id):
+        if data := self.last_names.get(ctx.channel.id):
             alternate = Proxy.alternate(npc.name)
             if data[0] == author_id:
                 npc.name = data[-1] if alternate == data[-1] else npc.name
@@ -774,19 +769,19 @@ class ProxyCog(commands.Cog):
         for item in BRACKETS_PARSER.finditer(text):
             aux = item.group(1)
             try:
-                if proxy_data := await ProxyFunction.lookup(self.bot, message.author, npc, aux):
+                if proxy_data := await ProxyFunction.lookup(ctx, npc, aux):
                     npc, data_text, data_embed = proxy_data
                     if data_embed is None or len(embeds) < 10:
                         text = text.replace("{{" + aux + "}}", data_text, 1)
                         if data_embed:
-                            data_embed.color = data_embed.color or message.author.color
+                            data_embed.color = data_embed.color or ctx.author.color
                             embeds.append(data_embed)
             except Exception as e:
                 self.bot.logger.exception("Failed to parse %s", aux, exc_info=e)
                 continue
 
         if attachments:
-            files = [await item.to_file() for item in message.attachments]
+            files = [await item.to_file() for item in ctx.message.attachments]
         else:
             files = []
 
@@ -812,16 +807,16 @@ class ProxyCog(commands.Cog):
                 view=view,
                 thread=thread,
             )
-            self.last_names[message.channel.id] = (message.author.id, proxy_msg.author.display_name)
+            self.last_names[ctx.channel.id] = (ctx.author.id, proxy_msg.author.display_name)
             await self.bot.mongo_db("Tupper-logs").insert_one(
                 {
-                    "channel": message.channel.id,
+                    "channel": ctx.channel.id,
                     "id": proxy_msg.id,
                     "author": author_id,
                 }
             )
             if deleting:
-                await message.delete(delay=300 if message.mentions else 0)
+                await ctx.message.delete(delay=300 if ctx.message.mentions else 0)
 
     @app_commands.command(description="Proxy management")
     @app_commands.guilds(719343092963999804)
@@ -973,7 +968,7 @@ class ProxyCog(commands.Cog):
         """
         if (mon := Species.single_deduce(pokemon)) and not mon.banned:
             npc = NPC(name=f"NPC〕{mon.name}", image=mon.base_image)
-            await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+            await self.proxy_handler(npc=npc, ctx=ctx, text=text)
         else:
             await ctx.message.delete(delay=0)
 
@@ -1000,7 +995,7 @@ class ProxyCog(commands.Cog):
             ocs[proxy.name] = proxy
 
         if options := process.extractOne(pokemon, choices=list(ocs), score_cutoff=60):
-            await self.proxy_handler(npc=ocs[options[0]], message=ctx.message, text=text)
+            await self.proxy_handler(npc=ocs[options[0]], ctx=ctx, text=text)
         else:
             await ctx.message.delete(delay=0)
 
@@ -1020,7 +1015,7 @@ class ProxyCog(commands.Cog):
         """
         if entry := await self.bot.mongo_db("NPC").find_one({"author": ctx.author.id}):
             npc = NPC(name=entry["name"], image=entry["avatar"] if "avatar" in entry else entry["image"])
-            await self.proxy_handler(npc=npc, message=ctx.message, text=text)
+            await self.proxy_handler(npc=npc, ctx=ctx, text=text)
         else:
             await ctx.message.delete(delay=0)
 
