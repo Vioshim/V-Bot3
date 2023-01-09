@@ -263,9 +263,9 @@ class DateFunction(ProxyFunction):
         Examples
         • {{date}}
         • {{date:R}}
-        • {{date:Dec 13th 2020:R}}
-        • {{date:in 16 minutes:T}}
-        • {{date:in two hours and one minute:D}}
+        • {{date:R:Dec 13th 2020}}
+        • {{date:T:in 16 minutes}}
+        • {{date:D:in two hours and one minute}}
         """
         db = bot.mongo_db("AFK")
         settings = dict(
@@ -280,7 +280,7 @@ class DateFunction(ProxyFunction):
                 return npc, format_dt(utcnow()), None
             case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
                 return npc, format_dt(utcnow(), mode), None
-            case [*params, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
+            case ["t" | "T" | "d" | "D" | "f" | "F" | "R" as mode, *params]:
                 data = chain(*[x["timezones"] for x in timezone_info_list])
                 if (aux := await db.find_one({"user": user.id})) and (
                     o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
