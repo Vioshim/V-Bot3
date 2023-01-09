@@ -714,8 +714,7 @@ class Character:
         Optional[str]
             Image it defaults to
         """
-        if self.species and not self.species.requires_image:
-            return self.species.base_image
+        return self.species and self.species.base_image
 
     @property
     def embed(self) -> Embed:
