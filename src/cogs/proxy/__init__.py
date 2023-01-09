@@ -112,7 +112,7 @@ class ProxyFunction(ABC):
         name, *args = text.split(":")
         if name and (x := process.extractOne(name, choices=list(items), score_cutoff=90)):
             item = items[x[0]]
-            if item.keep_caps:
+            if not item.keep_caps:
                 args = [x.lower() for x in args]
             if item.requires_strip:
                 args = [x.strip() for x in args]
@@ -247,7 +247,7 @@ class MoveFunction(ProxyFunction, aliases=["Move"], keep_caps=False):
                     return npc, f"{move_type.emoji}`{item.name}`", item.embed_for(move_type)
 
 
-class DateFunction(ProxyFunction, aliases=["Date", "Time"]):
+class DateFunction(ProxyFunction, aliases=["Date", "Time"], keep_caps=True):
     @classmethod
     async def parse(
         cls,
@@ -302,9 +302,61 @@ class DateFunction(ProxyFunction, aliases=["Date", "Time"]):
                     tz_info, _ = o
                     settings["TIMEZONE"] = tz_info
                     settings["TO_TIMEZONE"] = tz_info
+                else:
+                    tz_info = "utc"
                 bot.logger.info("ARGS 4: %s", args)
-                if item := dateparser.parse(":".join(args), settings=settings):
-                    return npc, format_dt(item), None
+                test = []
+                if item := dateparser.parse(
+                    ":".join(args),
+                    settings=settings
+                    | dict(
+                        TIMEZONE=tz_info,
+                        TO_TIMEZONE=tz_info,
+                    ),
+                ):
+                    test.append(format_dt(item))
+                if item := dateparser.parse(
+                    ":".join(args),
+                    settings=settings
+                    | dict(
+                        TIMEZONE="utc",
+                        TO_TIMEZONE=tz_info,
+                    ),
+                ):
+                    test.append(format_dt(item))
+                if item := dateparser.parse(
+                    ":".join(args),
+                    settings=settings
+                    | dict(
+                        TIMEZONE=tz_info,
+                        TO_TIMEZONE="utc",
+                    ),
+                ):
+                    test.append(format_dt(item))
+                if item := dateparser.parse(
+                    ":".join(args),
+                    settings=settings
+                    | dict(
+                        TIMEZONE="utc",
+                        TO_TIMEZONE="utc",
+                    ),
+                ):
+                    test.append(format_dt(item))
+                if item := dateparser.parse(
+                    ":".join(args),
+                    settings=settings
+                    | dict(
+                        TIMEZONE="utc",
+                        TO_TIMEZONE="utc",
+                    ),
+                ):
+                    test.append(format_dt(item.combine(item, item.time(), DEFAULT_TIMEZONE)))
+
+                if text := "\n".join(f"{i} - {x}" for i, x in enumerate(test, start=1)):
+                    return npc, text, None
+
+                # if item := dateparser.parse(":".join(args), settings=settings):
+                # return npc, format_dt(item), None
 
 
 class MetronomeFunction(ProxyFunction, aliases=["Metronome"], keep_caps=False):
