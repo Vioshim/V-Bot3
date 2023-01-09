@@ -18,13 +18,12 @@ import random
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from itertools import chain
+from datetime import timedelta, timezone
 from textwrap import wrap
 from typing import Optional
 
 import d20
 import dateparser
-from dateparser.timezones import timezone_info_list
 from discord import (
     Attachment,
     DiscordException,
@@ -43,7 +42,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
-from discord.utils import MISSING, find, format_dt, get, utcnow
+from discord.utils import MISSING, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
@@ -56,7 +55,7 @@ from src.structures.move import Move
 from src.structures.pronouns import Pronoun
 from src.structures.proxy import Proxy, ProxyExtra
 from src.structures.species import Species
-from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
+from src.utils.etc import LINK_EMOJI, WHITE_BAR
 from src.utils.matches import BRACKETS_PARSER
 
 __all__ = ("Proxy", "setup")
@@ -284,73 +283,22 @@ class DateFunction(ProxyFunction, aliases=["Date", "Time"], keep_caps=True):
                 bot.logger.info("ARGS 2: %s", mode)
                 return npc, format_dt(utcnow(), mode), None
             case [*params, "t" | "T" | "d" | "D" | "f" | "F" | "R" as mode]:
-                data = chain(*[x["timezones"] for x in timezone_info_list])
-                if (aux := await db.find_one({"user": user.id})) and (
-                    o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
-                ):
-                    tz_info, _ = o
-                    settings["TIMEZONE"] = tz_info
-                    settings["TO_TIMEZONE"] = tz_info
                 bot.logger.info("ARGS 3: %s - %s", mode, params)
                 if item := dateparser.parse(":".join(params), settings=settings):
                     return npc, format_dt(item, style=mode), None
             case _:
-                data = chain(*[x["timezones"] for x in timezone_info_list])
-                if (aux := await db.find_one({"user": user.id})) and (
-                    o := find(lambda x: x[1] == (aux["offset"] * 3600), data)
-                ):
-                    tz_info, _ = o
-                    settings["TIMEZONE"] = tz_info
-                    settings["TO_TIMEZONE"] = tz_info
+                if aux := await db.find_one({"user": user.id}):
+                    tz_info = timezone(offset=timedelta(hours=aux["offset"]))
                 else:
-                    tz_info = "utc"
+                    tz_info = None
+
                 bot.logger.info("ARGS 4: %s", args)
                 test = []
-                if item := dateparser.parse(
-                    ":".join(args),
-                    settings=settings
-                    | dict(
-                        TIMEZONE=tz_info,
-                        TO_TIMEZONE=tz_info,
-                    ),
-                ):
+                if item := dateparser.parse(":".join(args), settings=settings):
+                    if tz_info:
+                        test.append(format_dt(item.replace(tzinfo=tz_info)))
+                        test.append(format_dt(item.astimezone(tz_info)))
                     test.append(format_dt(item))
-                if item := dateparser.parse(
-                    ":".join(args),
-                    settings=settings
-                    | dict(
-                        TIMEZONE="utc",
-                        TO_TIMEZONE=tz_info,
-                    ),
-                ):
-                    test.append(format_dt(item))
-                if item := dateparser.parse(
-                    ":".join(args),
-                    settings=settings
-                    | dict(
-                        TIMEZONE=tz_info,
-                        TO_TIMEZONE="utc",
-                    ),
-                ):
-                    test.append(format_dt(item))
-                if item := dateparser.parse(
-                    ":".join(args),
-                    settings=settings
-                    | dict(
-                        TIMEZONE="utc",
-                        TO_TIMEZONE="utc",
-                    ),
-                ):
-                    test.append(format_dt(item))
-                if item := dateparser.parse(
-                    ":".join(args),
-                    settings=settings
-                    | dict(
-                        TIMEZONE="utc",
-                        TO_TIMEZONE="utc",
-                    ),
-                ):
-                    test.append(format_dt(item.combine(item, item.time(), DEFAULT_TIMEZONE)))
 
                 if text := "\n".join(f"{i} - {x}" for i, x in enumerate(test, start=1)):
                     return npc, text, None
