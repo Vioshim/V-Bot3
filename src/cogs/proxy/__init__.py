@@ -18,22 +18,8 @@ from contextlib import suppress
 from textwrap import wrap
 from typing import Optional
 
-from discord import (
-    Attachment,
-    DiscordException,
-    Embed,
-    Interaction,
-    InteractionResponse,
-    Member,
-    Message,
-    Object,
-    RawReactionActionEvent,
-    TextChannel,
-    TextStyle,
-    Thread,
-    Webhook,
-    app_commands,
-)
+import discord
+from discord import app_commands
 from discord.ext import commands
 from discord.ui import Button, Modal, TextInput, View
 from discord.utils import MISSING, get
@@ -48,7 +34,7 @@ from src.structures.pronouns import Pronoun
 from src.structures.proxy import NPC, Proxy, ProxyExtra
 from src.structures.species import Species
 from src.utils.etc import LINK_EMOJI, WHITE_BAR
-from src.utils.matches import BRACKETS_PARSER, EMOJI_MATCHER, EMOJI_REGEX
+from src.utils.matches import BRACKETS_PARSER, EMOJI_REGEX
 
 __all__ = ("Proxy", "setup")
 
@@ -56,7 +42,7 @@ __all__ = ("Proxy", "setup")
 class NameModal(Modal, title="NPC Name"):
     name = TextInput(label="Name", placeholder="Name", default="Narrator", required=True)
 
-    async def on_submit(self, interaction: Interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         """This is a function that handles the submission of the name.
 
         Parameters
@@ -64,19 +50,19 @@ class NameModal(Modal, title="NPC Name"):
         interaction : Interaction
             Interaction that triggered the submission
         """
-        resp: InteractionResponse = interaction.response
+        resp = interaction.response
         await resp.pong()
         self.stop()
 
 
 class ProxyMessageModal(Modal, title="Edit Proxy Message"):
-    def __init__(self, msg: Message, data: dict[str, int]) -> None:
+    def __init__(self, msg: discord.Message, data: dict[str, int]) -> None:
         super(ProxyMessageModal, self).__init__(timeout=None)
         self.text = TextInput(
             label="Message (Empty = Delete)",
             placeholder="Once you press submit, the message will be deleted.",
             default=msg.content,
-            style=TextStyle.paragraph,
+            style=discord.TextStyle.paragraph,
             required=False,
             max_length=2000,
         )
@@ -84,32 +70,41 @@ class ProxyMessageModal(Modal, title="Edit Proxy Message"):
         self.msg = msg
         self.data = data
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+    async def on_error(self, interaction: discord.Interaction, error: Exception, /) -> None:
         interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
-    async def on_submit(self, interaction: Interaction, /) -> None:
-        resp: InteractionResponse = interaction.response
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("Tupper-logs")
+    async def on_submit(self, interaction: discord.Interaction, /) -> None:
+        resp = interaction.response
+        db: AsyncIOMotorCollection = interaction.client.db("Tupper-logs")
 
         if not self.text.value:
             try:
                 await self.msg.delete()
                 await resp.send_message("Message has been deleted.", ephemeral=True, delete_after=3)
-            except DiscordException:
-                await resp.send_message("Can't delete message.", ephemeral=True, delete_after=3)
-            finally:
-                return await db.delete_one(self.data)
+                await db.delete_one(self.data)
+            except discord.Forbidden as e:
+                await resp.send_message(str(e), ephemeral=True)
+            except discord.NotFound:
+                await resp.send_message("Message has been deleted.", ephemeral=True, delete_after=3)
+                await db.delete_one(self.data)
+            except discord.HTTPException as e:
+                await resp.send_message(str(e), ephemeral=True)
+            return
 
-        w: Webhook = await interaction.client.webhook(self.msg.channel)
-        if not isinstance(thread := self.msg.channel, Thread):
+        w: discord.Webhook = await interaction.client.webhook(self.msg.channel)
+        if not isinstance(thread := self.msg.channel, discord.Thread):
             thread = MISSING
 
         try:
             await w.edit_message(self.msg.id, content=self.text.value, thread=thread)
             await resp.send_message("Message has been edited successfully.", ephemeral=True, delete_after=3)
-        except DiscordException:
-            await db.delete_one(self.data)
-            await resp.send_message("Can't edit message.", ephemeral=True, delete_after=3)
+        except discord.Forbidden:
+            await resp.send_message(
+                "Webhooks restart when bot is re-added. Can't edit this message.",
+                ephemeral=True,
+            )
+        except discord.HTTPException as e:
+            await resp.send_message(str(e), ephemeral=True)
 
 
 class ProxyModal(Modal, title="Prefixes"):
@@ -118,7 +113,7 @@ class ProxyModal(Modal, title="Prefixes"):
         oc: Character,
         proxy: Optional[Proxy],
         variant: Optional[ProxyExtra | str],
-        image_url: Optional[Attachment] = None,
+        image_url: Optional[discord.Attachment] = None,
     ) -> None:
         super(ProxyModal, self).__init__(timeout=None)
         self.oc = oc
@@ -146,7 +141,7 @@ class ProxyModal(Modal, title="Prefixes"):
             label=self.proxy.name[:45],
             placeholder="Each line must include word text",
             default="\n".join(map("text".join, self.proxy.prefixes)),
-            style=TextStyle.paragraph,
+            style=discord.TextStyle.paragraph,
             required=False,
         )
         self.add_item(self.proxy1_data)
@@ -160,7 +155,7 @@ class ProxyModal(Modal, title="Prefixes"):
             label="Variant",
             placeholder="Each line must include word text",
             required=False,
-            style=TextStyle.paragraph,
+            style=discord.TextStyle.paragraph,
         )
         if variant:
             self.proxy2_name.default = variant.name[:80] or oc.name
@@ -169,7 +164,7 @@ class ProxyModal(Modal, title="Prefixes"):
             self.add_item(self.proxy2_data)
         self.variant = variant
 
-    async def on_submit(self, ctx: Interaction):
+    async def on_submit(self, ctx: discord.Interaction):
         """This is a function that handles the submission of the name.
 
         Parameters
@@ -177,13 +172,13 @@ class ProxyModal(Modal, title="Prefixes"):
         interaction : Interaction
             Interaction that triggered the submission
         """
-        resp: InteractionResponse = ctx.response
+        resp = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Proxy")
         self.proxy.prefixes = frozenset(
             (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
         )
 
-        image: Optional[Attachment] = None
+        image: Optional[discord.Attachment] = None
         phrase = f"{self.oc.name}"
         if item := self.variant:
             item.name = self.proxy2_name.value
@@ -193,20 +188,20 @@ class ProxyModal(Modal, title="Prefixes"):
                 if len(o := x.split("text")) > 1
             )
             self.proxy.extras |= {self.variant}
-            if isinstance(self.variant.image, Attachment):
+            if isinstance(self.variant.image, discord.Attachment):
                 image = self.variant.image
                 phrase = f"{phrase} - {self.variant.name}"
-        elif isinstance(image := self.proxy.image, Attachment):
+        elif isinstance(image := self.proxy.image, discord.Attachment):
             item = self.proxy
 
-        if isinstance(image, Attachment) and item:
-            w: Webhook = await ctx.client.webhook(1020151767532580934)
+        if isinstance(image, discord.Attachment) and item:
+            w: discord.Webhook = await ctx.client.webhook(1020151767532580934)
             file = await image.to_file()
             m = await w.send(
                 phrase,
                 file=file,
                 wait=True,
-                thread=Object(id=1045687852069040148),
+                thread=discord.Object(id=1045687852069040148),
                 username=ctx.user.display_name,
                 avatar_url=ctx.user.display_avatar.url,
             )
@@ -246,7 +241,7 @@ class ProxyCog(commands.Cog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
 
-    async def on_proxy_message(self, message: Message):
+    async def on_proxy_message(self, message: discord.Message):
         db = self.bot.mongo_db("Proxy")
         deleting: bool = False
         for index, (npc, text) in enumerate(
@@ -265,18 +260,18 @@ class ProxyCog(commands.Cog):
             await message.delete(delay=300 if message.mentions else 0)
 
     @commands.Cog.listener()
-    async def on_message_edit(self, previous: Message, current: Message):
+    async def on_message_edit(self, previous: discord.Message, current: discord.Message):
         if not (
             previous.webhook_id or previous.author.bot or not previous.guild or previous.content == current.content
         ):
             await self.on_proxy_message(current)
 
     @commands.Cog.listener()
-    async def on_message(self, message: Message):
+    async def on_message(self, message: discord.Message):
         if not (message.webhook_id or message.author.bot or not message.guild):
             await self.on_proxy_message(message)
 
-    async def msg_proxy(self, ctx: Interaction, msg: Message):
+    async def msg_proxy(self, ctx: discord.Interaction, msg: discord.Message):
         db1 = self.bot.mongo_db("Tupper-logs")
         db2 = self.bot.mongo_db("RP Logs")
         entry: Optional[dict[str, int]] = await db1.find_one({"channel": msg.channel.id, "id": msg.id})
@@ -288,7 +283,7 @@ class ProxyCog(commands.Cog):
                 ]
             }
         )
-        member: Member = self.bot.supporting.get(ctx.user, ctx.user)
+        member: discord.Member = self.bot.supporting.get(ctx.user, ctx.user)
 
         self.bot.logger.info("User %s is checking proxies at %s", str(ctx.user), msg.jump_url)
 
@@ -304,8 +299,8 @@ class ProxyCog(commands.Cog):
         if item:
             if not entry:
                 entry = await db1.find_one({"channel": item["log-channel"], "id": item["log"]})
-            ch: TextChannel = ctx.guild.get_channel_or_thread(item["log-channel"])
-            with suppress(DiscordException):
+            ch: discord.TextChannel = ctx.guild.get_channel_or_thread(item["log-channel"])
+            with suppress(discord.DiscordException):
                 aux_msg = await ch.fetch_message(item["log"])
                 view = View.from_message(aux_msg)
 
@@ -351,7 +346,7 @@ class ProxyCog(commands.Cog):
         thread = view = MISSING
         if reference := ctx.message.reference:
             view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
-        if isinstance(ctx.channel, Thread):
+        if isinstance(ctx.channel, discord.Thread):
             thread = ctx.channel
 
         author_id, npc.name = ctx.author.id, Proxy.clyde(npc.name)
@@ -389,7 +384,7 @@ class ProxyCog(commands.Cog):
                         url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless)"
                         text = EMOJI_REGEX.sub(url, text)
 
-        if attachments:
+        if ctx.message.attachments and attachments:
             files = [await item.to_file() for item in ctx.message.attachments]
         else:
             files = []
@@ -426,10 +421,10 @@ class ProxyCog(commands.Cog):
     @app_commands.guilds(719343092963999804)
     async def proxy(
         self,
-        ctx: Interaction,
+        ctx: discord.Interaction,
         oc: CharacterArg,
         variant: Optional[ProxyVariantArg],
-        image: Optional[Attachment],
+        image: Optional[discord.Attachment],
         delete: bool = False,
     ):
         """Proxy Command
@@ -456,14 +451,14 @@ class ProxyCog(commands.Cog):
 
         if delete:
             if proxy is None:
-                embed = Embed(title="Proxy not found")
+                embed = discord.Embed(title="Proxy not found")
                 embed.set_author(name=oc.name, url=oc.jump_url, icon_url=oc.image_url)
             elif isinstance(var_proxy, ProxyExtra):
                 proxy.remove_extra(var_proxy)
                 embed = var_proxy.embed.set_footer(text="Proxy's Variant was removed")
                 await db.replace_one(key, proxy.to_dict(), upsert=True)
             elif variant:
-                embed = Embed(title="Proxy's Variant not Found", description=variant)
+                embed = discord.Embed(title="Proxy's Variant not Found", description=variant)
                 embed.set_author(name=proxy.name, icon_url=proxy.image)
             else:
                 embed = proxy.embed.set_footer(text="Proxy was removed")
@@ -482,13 +477,13 @@ class ProxyCog(commands.Cog):
     @app_commands.guilds(719343092963999804)
     async def slash_npc(
         self,
-        ctx: Interaction,
+        ctx: discord.Interaction,
         name: Optional[str],
         pokemon: Optional[DefaultSpeciesArg],
         shiny: Optional[bool],
         pronoun: Optional[Pronoun],
         character: Optional[CharacterArg],
-        image: Optional[Attachment],
+        image: Optional[discord.Attachment],
     ):
         """Slash command for NPC Narration
 
@@ -509,7 +504,7 @@ class ProxyCog(commands.Cog):
         image : Optional[Attachment]
             Image to use
         """
-        resp: InteractionResponse = ctx.response
+        resp = ctx.response
         name = character.name if character else name
 
         if pokemon and pokemon.banned:
@@ -531,7 +526,7 @@ class ProxyCog(commands.Cog):
                 name,
                 file=file,
                 wait=True,
-                thread=Object(id=1045687852069040148),
+                thread=discord.Object(id=1045687852069040148),
                 username=ctx.user.display_name,
                 avatar_url=ctx.user.display_avatar.url,
             )
@@ -624,7 +619,7 @@ class ProxyCog(commands.Cog):
             await ctx.message.delete(delay=0)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """On raw reaction added
 
         Parameters
@@ -675,7 +670,7 @@ class ProxyCog(commands.Cog):
             else:
                 text = f"That message was sent by a Deleted User (id: {author_id})."
 
-            with suppress(DiscordException):
+            with suppress(discord.DiscordException):
                 await payload.member.send(text, view=view)
 
 
