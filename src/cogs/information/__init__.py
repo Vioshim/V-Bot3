@@ -1266,10 +1266,10 @@ class Information(commands.Cog):
     async def embed_info(self, message: Message):
         files = []
         embeds: list[Embed] = []
-        if message.content:
+        if content := message.content:
             embed = Embed(
                 title="Message",
-                description=message.content,
+                description=content,
                 color=Colour.blurple(),
             )
             embed.set_image(url=WHITE_BAR)
