@@ -378,17 +378,16 @@ class ProxyCog(commands.Cog):
                 self.bot.logger.exception("Failed to parse %s", aux, exc_info=e)
                 continue
 
-        if EMOJI_MATCHER.match(text):
-            for item in EMOJI_REGEX.finditer(text):
-                match item.groupdict():
-                    case {"animated": "a", "name": _, "id": id}:
-                        if not self.bot.get_emoji(id.isdigit() and int(id)):
-                            url = f"https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless"
-                            text = EMOJI_REGEX.sub(url, text)
-                    case {"name": _, "id": id}:
-                        if not self.bot.get_emoji(id.isdigit() and int(id)):
-                            url = f"https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless"
-                            text = EMOJI_REGEX.sub(url, text)
+        for item in EMOJI_REGEX.finditer(text):
+            match item.groupdict():
+                case {"animated": "a", "name": _, "id": id}:
+                    if not self.bot.get_emoji(id.isdigit() and int(id)):
+                        url = f"https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless"
+                        text = EMOJI_REGEX.sub(url, text)
+                case {"name": _, "id": id}:
+                    if not self.bot.get_emoji(id.isdigit() and int(id)):
+                        url = f"https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless"
+                        text = EMOJI_REGEX.sub(url, text)
 
         if attachments:
             files = [await item.to_file() for item in ctx.message.attachments]
