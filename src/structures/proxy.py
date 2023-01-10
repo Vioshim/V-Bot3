@@ -27,6 +27,16 @@ from src.utils.etc import WHITE_BAR
 from src.utils.matches import CLYDE, EMOJI_MATCHER
 
 
+@dataclass(unsafe_hash=True, slots=True)
+class NPC:
+    name: str = "Narrator"
+    image: str = "https://hmp.me/dx4a"
+
+    def __post_init__(self):
+        self.name = self.name or "Narrator"
+        self.image = self.image or "https://hmp.me/dx4a"
+
+
 @dataclass(slots=True, unsafe_hash=True)
 class ProxyExtra:
     name: str = ""  # May not have name, therefore use same
