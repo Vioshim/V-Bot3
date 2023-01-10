@@ -380,13 +380,13 @@ class ProxyCog(commands.Cog):
 
         for item in EMOJI_REGEX.finditer(text):
             match item.groupdict():
-                case {"animated": "a", "name": _, "id": id}:
-                    if not self.bot.get_emoji(id.isdigit() and int(id)):
-                        url = f"https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless"
+                case {"animated": "a", "name": name, "id": id}:
+                    if id.isdigit() and not self.bot.get_emoji(int(id)):
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless)"
                         text = EMOJI_REGEX.sub(url, text)
-                case {"name": _, "id": id}:
-                    if not self.bot.get_emoji(id.isdigit() and int(id)):
-                        url = f"https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless"
+                case {"name": name, "id": id}:
+                    if id.isdigit() and not self.bot.get_emoji(int(id)):
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless)"
                         text = EMOJI_REGEX.sub(url, text)
 
         if attachments:
