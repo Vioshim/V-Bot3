@@ -75,7 +75,7 @@ class ProxyMessageModal(Modal, title="Edit Proxy Message"):
 
     async def on_submit(self, interaction: discord.Interaction, /) -> None:
         resp = interaction.response
-        db: AsyncIOMotorCollection = interaction.client.db("Tupper-logs")
+        db: AsyncIOMotorCollection = interaction.client.mongo_db("Tupper-logs")
 
         if not self.text.value:
             try:
@@ -418,7 +418,7 @@ class ProxyCog(commands.Cog):
                 }
             )
             if deleting:
-                await ctx.message.delete(delay=300 if ctx.message.mentions else 0)
+                await ctx.message.delete(delay=0)
 
     @app_commands.command(description="Proxy management")
     @app_commands.guilds(719343092963999804)
