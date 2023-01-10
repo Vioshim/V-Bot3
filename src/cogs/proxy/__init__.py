@@ -244,6 +244,7 @@ class ProxyCog(commands.Cog):
     async def on_proxy_message(self, message: discord.Message):
         db = self.bot.mongo_db("Proxy")
         deleting: bool = False
+        ctx = await self.bot.get_context(message)
         for index, (npc, text) in enumerate(
             Proxy.lookup(
                 [
@@ -254,8 +255,7 @@ class ProxyCog(commands.Cog):
             )
         ):
             deleting = True
-            ctx = await self.bot.get_context(message)
-            await self.proxy_handler(npc, ctx, text, attachments=index == 0, deleting=False)
+            await self.proxy_handler(npc, ctx, text, index, deleting=False)
         if deleting:
             await message.delete(delay=300 if message.mentions else 0)
 
@@ -322,7 +322,7 @@ class ProxyCog(commands.Cog):
         npc: Character | NPC | list[Proxy | ProxyExtra],
         ctx: commands.Context,
         text: str = None,
-        attachments: bool = True,
+        index: int = 0,
         deleting: bool = True,
     ):
         webhook = await self.bot.webhook(ctx.channel, reason="NPC")
@@ -384,7 +384,10 @@ class ProxyCog(commands.Cog):
                         url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless)"
                         text = EMOJI_REGEX.sub(url, text)
 
-        if ctx.message.attachments and attachments:
+        if index == 0:
+            # Webhooks can't send stickers
+            if stickers := "\n".join(f"[{sticker.name}]({sticker.url})" for sticker in ctx.message.stickers):
+                text += f"\n{stickers}"
             files = [await item.to_file() for item in ctx.message.attachments]
         else:
             files = []
