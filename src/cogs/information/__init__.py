@@ -1362,10 +1362,10 @@ class Information(commands.Cog):
         if message.author.bot and "〕" not in username:
             username = f"Bot〕{username}"
 
-        embeds = embeds[1:11] if embeds[0] == Embed() else embeds[:10]
-        last_embed = embeds[-1]
-        last_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
-        last_embed.timestamp = utcnow()
+        if embeds := embeds[1:11] if embeds[0] == Embed() else embeds[:10]:
+            last_embed = embeds[-1]
+            last_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
+            last_embed.timestamp = utcnow()
 
         return dict(
             embeds=embeds,
