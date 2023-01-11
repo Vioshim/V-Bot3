@@ -197,8 +197,9 @@ class ProxyModal(Modal, title="Prefixes"):
             if result.deleted_count:
                 embed.set_author(name="Base proxy has been deleted")
             else:
-                embed.set_author(name="No name was provided.")
+                embed.set_author(name="Proxy wasn't registered.")
             return await ctx.followup.send(embed=embed, ephemeral=True)
+        self.proxy.name = self.proxy1_name.value
 
         self.proxy.prefixes = frozenset(
             (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
@@ -240,11 +241,7 @@ class ProxyModal(Modal, title="Prefixes"):
         await ctx.followup.send(embeds=embeds, ephemeral=True)
 
         await db.replace_one(
-            {
-                "id": self.oc.id,
-                "server": self.oc.server,
-                "author": self.oc.author,
-            },
+            {"id": self.oc.id, "server": self.oc.server, "author": self.oc.author},
             self.proxy.to_dict(),
             upsert=True,
         )
