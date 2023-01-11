@@ -538,7 +538,7 @@ class SizeField(TemplateField):
         else:
             height_a = height_b = oc.species.height
 
-        if not (Size.XXXS.height_value(height_a) <= oc.size <= Size.XXXS.height_value(height_b)):
+        if not (Size.XXXS.height_value(height_a) <= oc.size <= Size.XXXL.height_value(height_b)):
             info1 = Size.XXXS.height_info(height_a)
             info2 = Size.XXXL.height_info(height_b)
             return f"Min {info1}, Max: {info2}"
@@ -584,9 +584,9 @@ class WeightField(TemplateField):
         else:
             weight_a = weight_b = oc.species.weight
 
-        if not (Size.XXXS.height_value(weight_a) <= oc.size <= Size.XXXS.height_value(weight_b)):
-            info1 = Size.XXXS.height_info(weight_a)
-            info2 = Size.XXXL.height_info(weight_b)
+        if not (Size.XXXS.weight_value(weight_a) <= oc.size <= Size.XXXL.weight_value(weight_b)):
+            info1 = Size.XXXS.weight_info(weight_a)
+            info2 = Size.XXXL.weight_info(weight_b)
             return f"Min {info1}, Max: {info2}"
 
     @classmethod
