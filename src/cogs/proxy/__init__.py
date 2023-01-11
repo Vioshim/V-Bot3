@@ -122,12 +122,12 @@ class ProxyModal(Modal, title="Prefixes"):
             if proxy
             else Proxy(
                 id=oc.id,
+                name=oc.name,
                 author=oc.author,
                 server=oc.server,
                 image=oc.image_url,
             )
         )
-        self.proxy.name = oc.name
         if isinstance(variant, str):
             variant = ProxyExtra(name=variant, image=image_url or oc.image_url)
         elif isinstance(variant, ProxyExtra):
