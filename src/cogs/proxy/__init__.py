@@ -137,22 +137,29 @@ class ProxyModal(Modal, title="Prefixes"):
         elif image_url:
             self.proxy.image = image_url
 
+        self.proxy1_name = TextInput(
+            label="Proxy's Name (Empty = Delete)",
+            default=proxy.name,
+            required=False,
+            max_length=80,
+        )
         self.proxy1_data = TextInput(
-            label=self.proxy.name[:45],
+            label="Proxy's Prefixes (Empty = No msg proxying)",
             placeholder="Each line must include word text",
             default="\n".join(map("text".join, self.proxy.prefixes)),
             style=discord.TextStyle.paragraph,
             required=False,
         )
+        self.add_item(self.proxy1_name)
         self.add_item(self.proxy1_data)
         self.proxy2_name = TextInput(
-            label="Name",
+            label="Variant's Name (Empty = Delete)",
             placeholder="Psst, ending with * makes bot only use this name.",
             required=False,
             max_length=80,
         )
         self.proxy2_data = TextInput(
-            label="Variant",
+            label="Variant's Prefixes (Empty = No msg proxying)",
             placeholder="Each line must include word text",
             required=False,
             style=discord.TextStyle.paragraph,
@@ -173,14 +180,33 @@ class ProxyModal(Modal, title="Prefixes"):
             Interaction that triggered the submission
         """
         resp = ctx.response
+
+        await resp.defer(ephemeral=True, thinking=True)
+
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Proxy")
+
+        if not self.proxy1_name.value:
+            embed = self.proxy.embed
+            result = await db.delete_one(
+                {
+                    "id": self.proxy.id,
+                    "author": self.proxy.author,
+                    "server": self.proxy.server,
+                }
+            )
+            if result.deleted_count:
+                embed.set_author(name="Base proxy has been deleted")
+            else:
+                embed.set_author(name="No name was provided.")
+            return await ctx.followup.send(embed=embed, ephemeral=True)
+
         self.proxy.prefixes = frozenset(
             (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
         )
 
         image: Optional[discord.Attachment] = None
         phrase = f"{self.oc.name}"
-        if item := self.variant:
+        if (item := self.variant) and self.proxy2_name.value:
             item.name = self.proxy2_name.value
             self.variant.prefixes = frozenset(
                 (o[0].strip(), o[-1].strip())
@@ -211,7 +237,7 @@ class ProxyModal(Modal, title="Prefixes"):
         if item := self.variant:
             embeds.append(item.embed)
 
-        await resp.send_message(embeds=embeds, ephemeral=True)
+        await ctx.followup.send(embeds=embeds, ephemeral=True)
 
         await db.replace_one(
             {
@@ -428,7 +454,6 @@ class ProxyCog(commands.Cog):
         oc: CharacterArg,
         variant: Optional[ProxyVariantArg],
         image: Optional[discord.Attachment],
-        delete: bool = False,
     ):
         """Proxy Command
 
@@ -442,33 +467,11 @@ class ProxyCog(commands.Cog):
             Emotion Variant
         image : Optional[Attachment]
             Image
-        delete : bool, optional
-            If deleting proxy/variant
         """
         db = self.bot.mongo_db("Proxy")
-        key = {"id": oc.id, "server": oc.server, "author": oc.author}
-        member = self.bot.supporting.get(ctx.user, ctx.user)
-        data = await db.find_one(key)
+        data = await db.find_one({"id": oc.id, "server": oc.server, "author": oc.author})
         proxy = Proxy.from_mongo_dict(data) if data else None
         var_proxy = get(proxy.extras, name=variant) if proxy else variant
-
-        if delete:
-            if proxy is None:
-                embed = discord.Embed(title="Proxy not found")
-                embed.set_author(name=oc.name, url=oc.jump_url, icon_url=oc.image_url)
-            elif isinstance(var_proxy, ProxyExtra):
-                proxy.remove_extra(var_proxy)
-                embed = var_proxy.embed.set_footer(text="Proxy's Variant was removed")
-                await db.replace_one(key, proxy.to_dict(), upsert=True)
-            elif variant:
-                embed = discord.Embed(title="Proxy's Variant not Found", description=variant)
-                embed.set_author(name=proxy.name, icon_url=proxy.image)
-            else:
-                embed = proxy.embed.set_footer(text="Proxy was removed")
-                await db.delete_one(key)
-            embed.color, embed.timestamp = member.color, ctx.created_at
-            embed.set_image(url=WHITE_BAR)
-            return await ctx.response.send_message(embed=embed, ephemeral=True)
 
         if not (image and image.content_type.startswith("image/")):
             image = None

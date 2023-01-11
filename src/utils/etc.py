@@ -115,5 +115,11 @@ MAP_ELEMENTS = [
         emoji="\N{TANABATA TREE}",
         desc="Territory nature reliant and rich in agriculture.",
     ),
+    MapPair(
+        name="Wilderness",
+        category=1062584769159888906,
+        emoji="\N{EVERGREEN TREE}",
+        desc="A vast area of land with no civilization.",
+    ),
 ]
 MAP_ELEMENTS2 = {x.category: x for x in MAP_ELEMENTS}
