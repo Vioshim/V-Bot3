@@ -527,7 +527,7 @@ class SizeField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        if not isinstance(oc.size, float):
+        if isinstance(oc.size, Size):
             return
 
         if Move.get(name="Transform") in oc.total_movepool:
@@ -573,7 +573,7 @@ class WeightField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        if not isinstance(oc.weight, float):
+        if isinstance(oc.weight, Size):
             return
 
         if Move.get(name="Transform") in oc.total_movepool:
@@ -584,7 +584,7 @@ class WeightField(TemplateField):
         else:
             weight_a = weight_b = oc.species.weight
 
-        if not (Size.XXXS.weight_value(weight_a) <= oc.size <= Size.XXXL.weight_value(weight_b)):
+        if not (Size.XXXS.weight_value(weight_a) <= oc.weight <= Size.XXXL.weight_value(weight_b)):
             info1 = Size.XXXS.weight_info(weight_a)
             info2 = Size.XXXL.weight_info(weight_b)
             return f"Min {info1}, Max: {info2}"
