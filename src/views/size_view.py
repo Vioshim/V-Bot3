@@ -22,6 +22,7 @@ from discord.utils import find
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size
 from src.structures.move import Move
+from src.structures.species import Fusion
 
 __all__ = (
     "HeightView",
@@ -39,9 +40,18 @@ class HeightModal1(Modal, title="Height"):
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
-        height = self.oc.species.height if condition else 0
-        a = Size.XXXS.height_value(height if condition else 0.1)
-        b = Size.XXXL.height_value(height if condition else 20)
+        height = self.oc.species.height
+
+        if not condition:
+            height_a, height_b = 0.1, 20
+        elif isinstance(self.oc.species, Fusion):
+            s_a, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+            height_a, height_b = s_a.height, s_b.height
+        else:
+            height_a = height_b = height
+
+        a = Size.XXXS.height_value(height_a)
+        b = Size.XXXL.height_value(height_b)
 
         text = self.text.value.removesuffix(".").lower()
 
@@ -85,9 +95,19 @@ class HeightModal2(Modal, title="Height"):
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
-        height = self.oc.species.height if condition else 0
-        a = Size.XXXS.height_value(height if condition else 0.1)
-        b = Size.XXXL.height_value(height if condition else 20)
+        height = self.oc.species.height
+
+        if not condition:
+            height_a, height_b = 0.1, 20
+        elif isinstance(self.oc.species, Fusion):
+            s_a, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+            height_a, height_b = s_a.height, s_b.height
+        else:
+            height_a = height_b = height
+
+        a = Size.XXXS.height_value(height_a)
+        b = Size.XXXL.height_value(height_b)
+
         with suppress(ValueError):
             answer = Size.ft_inches_to_meters(
                 feet=float(self.text1.value or "0"),
@@ -121,9 +141,18 @@ class WeightModal1(Modal, title="Weight"):
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
-        weight = self.oc.species.weight if condition else 0
-        a = Size.XXXS.weight_value(weight if condition else 0.1)
-        b = Size.XXXL.weight_value(weight if condition else 999.9)
+        weight = self.oc.species.weight
+
+        if not condition:
+            weight_a, weight_b = 0.1, 999.9
+        elif isinstance(self.oc.species, Fusion):
+            s_a, s_b = sorted(self.oc.species.bases, key=lambda x: x.weight)
+            weight_a, weight_b = s_a.weight, s_b.weight
+        else:
+            weight_a = weight_b = weight
+
+        a = Size.XXXS.weight_value(weight_a)
+        b = Size.XXXL.weight_value(weight_b)
 
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("kg")
@@ -157,9 +186,18 @@ class WeightModal2(Modal, title="Weight"):
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
         condition = m not in self.oc.total_movepool
-        weight = self.oc.species.weight if condition else 0
-        a = Size.XXXS.weight_value(weight if condition else 0.1)
-        b = Size.XXXL.weight_value(weight if condition else 999.9)
+        weight = self.oc.species.weight
+
+        if not condition:
+            weight_a, weight_b = 0.1, 999.9
+        elif isinstance(self.oc.species, Fusion):
+            s_a, s_b = sorted(self.oc.species.bases, key=lambda x: x.weight)
+            weight_a, weight_b = s_a.weight, s_b.weight
+        else:
+            weight_a = weight_b = weight
+
+        a = Size.XXXS.weight_value(weight_a)
+        b = Size.XXXL.weight_value(weight_b)
 
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("lbs").removesuffix("lb")

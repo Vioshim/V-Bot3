@@ -530,20 +530,18 @@ class SizeField(TemplateField):
         if not isinstance(oc.size, float):
             return
 
-        info: list[str] = []
-        m = Move.get(name="Transform")
-        if m not in oc.total_movepool:
-            if oc.size < Size.XXXS.height_value(oc.species.height):
-                info = Size.XXXS.height_info(oc.species.height)
-                info.append(f"Min {info}")
+        if Move.get(name="Transform") in oc.total_movepool:
+            height_a, height_b = 0.1, 20.0
+        elif isinstance(oc.species, Fusion):
+            s_a, s_b = sorted(oc.species.bases, key=lambda x: x.height)
+            height_a, height_b = s_a.height, s_b.height
+        else:
+            height_a = height_b = oc.species.height
 
-            if oc.size > Size.XXXL.height_value(oc.species.height):
-                info = Size.XXXL.height_info(oc.species.height)
-                info.append(f"Max {info}")
-        elif not (0.1 <= oc.size <= 100.0):
-            info.append("Invalid height.")
-
-        return ", ".join(info)
+        if not (Size.XXXS.height_value(height_a) <= oc.size <= Size.XXXS.height_value(height_b)):
+            info1 = Size.XXXS.height_info(height_a)
+            info2 = Size.XXXL.height_info(height_b)
+            return f"Min {info1}, Max: {info2}"
 
     @classmethod
     async def on_submit(
@@ -554,17 +552,10 @@ class SizeField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-
-        if isinstance(oc.size, Size):
-            height = oc.species.height if oc.species else 0
-            info = oc.size.height_info(height)
-        else:
-            info = Size.M.height_info(oc.size)
-
         view = HeightView(target=ctx, member=ctx.user, oc=oc)
         await view.send(
             title=f"{template.title} Character's Size.",
-            description=f"> {info}",
+            description=f"> {oc.height_text}",
             ephemeral=ephemeral,
         )
         await view.wait()
@@ -585,20 +576,18 @@ class WeightField(TemplateField):
         if not isinstance(oc.weight, float):
             return
 
-        info: list[str] = []
-        m = Move.get(name="Transform")
-        if m not in oc.total_movepool:
-            if oc.weight < Size.XXXS.weight_value(oc.species.weight):
-                info = Size.XXXS.weight_info(oc.species.weight)
-                info.append(f"Min {info}")
+        if Move.get(name="Transform") in oc.total_movepool:
+            weight_a, weight_b = 0.1, 999.9
+        elif isinstance(oc.species, Fusion):
+            s_a, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
+            weight_a, weight_b = s_a.weight, s_b.weight
+        else:
+            weight_a = weight_b = oc.species.weight
 
-            if oc.weight > Size.XXXL.weight_value(oc.species.weight):
-                info = Size.XXXL.weight_info(oc.species.weight)
-                info.append(f"Max {info}")
-        elif not (0.1 <= oc.weight <= 999.9):
-            info.append("Invalid weight")
-
-        return ", ".join(info)
+        if not (Size.XXXS.height_value(weight_a) <= oc.size <= Size.XXXS.height_value(weight_b)):
+            info1 = Size.XXXS.height_info(weight_a)
+            info2 = Size.XXXL.height_info(weight_b)
+            return f"Min {info1}, Max: {info2}"
 
     @classmethod
     async def on_submit(
@@ -610,17 +599,10 @@ class WeightField(TemplateField):
         ephemeral: bool = False,
     ):
 
-        if isinstance(oc.weight, Size):
-            weight = oc.species.weight if oc.species else 0
-            info = oc.weight.weight_info(weight)
-        else:
-            info = Size.M.weight_info(oc.weight)
-
-        weight = oc.species.weight if oc.species else 0
         view = WeightView(target=ctx, member=ctx.user, oc=oc)
         await view.send(
             title=f"{template.title} Character's Weight.",
-            description=f"> {info}",
+            description=f"> {oc.weight_text}",
             ephemeral=ephemeral,
         )
         await view.wait()
