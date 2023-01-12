@@ -24,7 +24,7 @@ from discord import Embed
 from discord.utils import snowflake_time, utcnow
 
 from src.utils.etc import WHITE_BAR
-from src.utils.matches import CLYDE, EMOJI_MATCHER
+from src.utils.matches import BRACKETS_PARSER, CLYDE, EMOJI_MATCHER
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -35,6 +35,10 @@ class NPC:
     def __post_init__(self):
         self.name = self.name or "Narrator"
         self.image = self.image or "https://hmp.me/dx4a"
+
+
+def splitter_function(x: tuple[list[Proxy | ProxyExtra], str]):
+    return (x[0], bool(EMOJI_MATCHER.match(x[1]) or BRACKETS_PARSER.search(x[1])))
 
 
 @dataclass(slots=True, unsafe_hash=True)
@@ -244,10 +248,8 @@ class Proxy:
 
         proxy_msgs: list[tuple[list[Proxy | ProxyExtra], str]] = []
 
-        for (key, emoji_mode), paragraphs in itertools.groupby(
-            values, key=lambda x: (x[0], bool(EMOJI_MATCHER.match(x[1])))
-        ):
-            if emoji_mode:
+        for (key, split_mode), paragraphs in itertools.groupby(values, key=splitter_function):
+            if split_mode:
                 proxy_msgs.extend((key, entry.strip()) for key, entry in paragraphs)
             elif paragraphs:
                 entry = functools.reduce(lambda x, y: f"{x}\n{y.strip()}", map(lambda z: z[1], paragraphs))
