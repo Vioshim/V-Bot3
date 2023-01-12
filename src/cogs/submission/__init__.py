@@ -14,8 +14,8 @@
 
 
 import asyncio
-import re
 from contextlib import suppress
+from textwrap import wrap
 from typing import Optional
 
 from discord import (
@@ -59,7 +59,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
-from src.utils.matches import CLYDE, TUPPER_REPLY_PATTERN
+from src.utils.matches import CLYDE, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 
@@ -538,6 +538,17 @@ class Submission(commands.Cog):
                 with suppress(ValueError):
                     channel_id, message_id = map(int, btn.url.split("/")[-2:])
 
+        for item in EMOJI_REGEX.finditer(content):
+            match item.groupdict():
+                case {"animated": "a", "name": name, "id": id}:
+                    if id.isdigit() and not self.bot.get_emoji(int(id)):
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless)"
+                        content = EMOJI_REGEX.sub(url, content)
+                case {"name": name, "id": id}:
+                    if id.isdigit() and not self.bot.get_emoji(int(id)):
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless)"
+                        content = EMOJI_REGEX.sub(url, content)
+
         if channel_id and message_id:
             if item := await db.find_one({"id": message_id, "channel": channel_id}):
                 aux = info_channel.get_partial_message(item["log"])
@@ -546,35 +557,42 @@ class Submission(commands.Cog):
                 aux = ch.get_partial_message(message_id)
             view.add_item(Button(label="Replying", url=aux.jump_url, emoji=LINK_EMOJI))
 
-        msg = await log_w.send(
-            content=content,
-            username=message.author.display_name,
-            avatar_url=message.author.display_avatar.url,
-            files=[await x.to_file() for x in message.attachments],
-            allowed_mentions=AllowedMentions.none(),
-            view=view,
-            wait=True,
-        )
+        for index, paragraph in enumerate(
+            text := wrap(
+                content or "\u200b",
+                2000,
+                replace_whitespace=False,
+                placeholder="",
+            )
+        ):
+            msg = await log_w.send(
+                content=paragraph,
+                username=message.author.display_name,
+                avatar_url=message.author.display_avatar.url,
+                files=[await x.to_file() for x in message.attachments],
+                allowed_mentions=AllowedMentions.none(),
+                view=view if len(text) == index + 1 else MISSING,
+                wait=True,
+            )
 
-        await db.insert_one(
-            {
-                "id": message.id,
-                "channel": message.channel.id,
-                "log": msg.id,
-                "log-channel": info_channel.id,
-            }
-        )
-        await db2.insert_one(
-            {
-                "channel": info_channel.id,
-                "id": msg.id,
-                "author": oc.author,
-            }
-        )
-
-        if oc.id:
-            oc.location, oc.last_used = message.channel.id, message.id
-            await self.register_oc(oc, logging=False)
+            await db.insert_one(
+                {
+                    "id": message.id,
+                    "channel": message.channel.id,
+                    "log": msg.id,
+                    "log-channel": info_channel.id,
+                }
+            )
+            await db2.insert_one(
+                {
+                    "channel": info_channel.id,
+                    "id": msg.id,
+                    "author": oc.author,
+                }
+            )
+            if oc.id:
+                oc.location, oc.last_used = message.channel.id, message.id
+                await self.register_oc(oc, logging=False)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages

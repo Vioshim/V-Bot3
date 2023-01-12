@@ -139,7 +139,7 @@ class ProxyModal(Modal, title="Prefixes"):
 
         self.proxy1_name = TextInput(
             label="Proxy's Name (Empty = Delete)",
-            default=proxy.name,
+            default=self.proxy.name,
             required=False,
             max_length=80,
         )
@@ -199,8 +199,8 @@ class ProxyModal(Modal, title="Prefixes"):
             else:
                 embed.set_author(name="Proxy wasn't registered.")
             return await ctx.followup.send(embed=embed, ephemeral=True)
-        self.proxy.name = self.proxy1_name.value
 
+        self.proxy.name = self.proxy1_name.value
         self.proxy.prefixes = frozenset(
             (o[0].strip(), o[-1].strip()) for x in self.proxy1_data.value.split("\n") if len(o := x.split("text")) > 1
         )
@@ -415,11 +415,13 @@ class ProxyCog(commands.Cog):
         else:
             files = []
 
-        for paragraph in wrap(
-            text or "\u200b",
-            2000,
-            replace_whitespace=False,
-            placeholder="",
+        for index, paragraph in enumerate(
+            data := wrap(
+                text or "\u200b",
+                2000,
+                replace_whitespace=False,
+                placeholder="",
+            )
         ):
             await asyncio.sleep(0.5)
             proxy_msg = await webhook.send(
@@ -429,7 +431,7 @@ class ProxyCog(commands.Cog):
                 content=paragraph.strip() or "\u200b",
                 files=files,
                 wait=True,
-                view=view,
+                view=view if len(data) == index + 1 else MISSING,
                 thread=thread,
             )
             self.last_names[ctx.channel.id] = (ctx.author.id, proxy_msg.author.display_name)
