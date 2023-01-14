@@ -278,7 +278,7 @@ class Inviter(commands.Cog):
                     tags=choices,
                 )
 
-                await db.replace_one({"id": invite_guild}, partner.data, upsert=True)
+                await db.replace_one({"id": invite_guild.id}, partner.data, upsert=True)
                 if msg := self.message:
                     self.message = await msg.delete(delay=0)
                 await self.load_partners()
