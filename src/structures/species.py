@@ -757,7 +757,7 @@ class CustomMega(Species):
 @dataclass(unsafe_hash=True, slots=True)
 class CustomParadox(Species):
     """
-    This class Represents a Custom Mega
+    This class Represents a Custom Paradox
     """
 
     base: Optional[Species] = None
@@ -834,6 +834,88 @@ class CustomParadox(Species):
         """
         if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return CustomParadox(base=mon)
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomUltraBeast(Species):
+    """
+    This class Represents a Custom Ultra Beast
+    """
+
+    base: Optional[Species] = None
+
+    def __init__(self, base: Species, name: str = None, movepool: Movepool = None, types: frozenset[TypingEnum] = None):
+
+        if isinstance(base, str):
+            base = Species.single_deduce(base)
+
+        movepool = movepool or base.movepool
+
+        abilities = frozenset({Ability.get(name="Beast Boost")})
+
+        super(CustomUltraBeast, self).__init__(
+            id=base.id,
+            name=name or base.name,
+            shape=base.shape,
+            height=base.height,
+            weight=base.weight,
+            HP=base.HP,
+            ATK=base.ATK,
+            DEF=base.DEF,
+            SPA=base.SPA,
+            SPD=base.SPD,
+            SPE=base.SPE,
+            types=types or base.types.copy(),
+            movepool=movepool.copy(),
+            abilities=base.abilities | abilities,
+            evolves_from=base.id,
+            base_image=base.base_image,
+            base_image_shiny=base.base_image_shiny,
+            female_image=base.female_image,
+            female_image_shiny=base.female_image_shiny,
+        )
+        self.base = base
+
+    @property
+    def requires_image(self) -> bool:
+        return True
+
+    @property
+    def max_amount_abilities(self) -> int:
+        return 1
+
+    @property
+    def can_have_special_abilities(self) -> bool:
+        return False
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[CustomUltraBeast]:
+        """Method deduce but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[CustomMega]
+            Result
+        """
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
+            return cls(base=mon)
+
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[CustomUltraBeast]:
+        """Method from ID but filtered
+
+        Parameters
+        ----------
+        item : str
+            placeholder
+        """
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
+            return CustomUltraBeast(base=mon)
 
 
 @dataclass(unsafe_hash=True, slots=True)

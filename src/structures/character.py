@@ -45,6 +45,7 @@ from src.structures.species import (
     Chimera,
     CustomMega,
     CustomParadox,
+    CustomUltraBeast,
     Fakemon,
     Fusion,
     Legendary,
@@ -131,6 +132,7 @@ class Kind(Enum):
     CustomMega = CustomMega
     CustomParadox = CustomParadox
     Chimera = Chimera
+    CustomUltraBeast = CustomUltraBeast
 
     @property
     def title(self):
@@ -164,6 +166,8 @@ class Kind(Enum):
                 return "CUSTOM MEGA"
             case self.Chimera:
                 return "CHIMERA"
+            case self.CustomUltraBeast:
+                return "CUSTOM ULTRA BEAST"
 
     @classmethod
     def associated(cls, name: str) -> Optional[Kind]:
@@ -190,6 +194,8 @@ class Kind(Enum):
                 return cls.CustomMega
             case "CHIMERA":
                 return cls.Chimera
+            case "CUSTOMULTRABEAST":
+                return cls.CustomUltraBeast
 
     def all(self) -> frozenset[Species]:
         return self.value.all()
@@ -361,12 +367,18 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
-        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera, Fusion, CustomParadox)):
+        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera, Fusion, CustomParadox, CustomUltraBeast)):
             aux = {"types": [x.name for x in self.types]}
             if isinstance(self.species, Chimera):
                 aux |= {"chimera": [x.id for x in self.species.bases]}
             elif isinstance(self.species, CustomMega):
                 aux |= {"mega": self.species.id}
+            elif isinstance(self.species, CustomUltraBeast):
+                aux |= {
+                    "ub": self.species.id,
+                    "name": self.species.name,
+                    "movepool": self.species.movepool.as_dict,
+                }
             elif isinstance(self.species, CustomParadox):
                 aux |= {
                     "paradox": self.species.id,
@@ -420,6 +432,9 @@ class Character:
             elif mega := species.pop("mega", ""):
                 species["base"] = mega
                 dct["species"] = CustomMega(**species)
+            elif ub := species.pop("ub", ""):
+                species["base"] = ub
+                dct["species"] = CustomUltraBeast(**species)
             elif paradox := species.pop("paradox", ""):
                 species["base"] = paradox
                 dct["species"] = CustomParadox(**species)
@@ -748,11 +763,14 @@ class Character:
                 c_embed.add_field(name=name, value=mon.name)
             case mon if isinstance(mon, CustomMega):
                 c_embed.add_field(name="Mega", value=mon.name)
-            case mon if isinstance(mon, (CustomParadox, Variant)):
+            case mon if isinstance(mon, (CustomParadox, CustomUltraBeast, Variant)):
+                a0 = Ability.get(name="Beast Boost")
                 a1 = Ability.get(name="Protosynthesis")
                 a2 = Ability.get(name="Quark Drive")
 
-                if a1 in self.abilities:
+                if a0 in self.abilities:
+                    phrase = "UB"
+                elif a1 in self.abilities:
                     phrase = "Past"
                 elif a2 in self.abilities:
                     phrase = "Future"
@@ -865,7 +883,7 @@ class Character:
                 else:
                     name = "Fakemon"
                 params_header[name] = mon.name
-            case mon if isinstance(mon, (CustomMega, CustomParadox, Variant)):
+            case mon if isinstance(mon, (CustomMega, CustomParadox, CustomUltraBeast, Variant)):
                 params_header[f"{mon.base.name} {mon.__class__.__name__.removeprefix('Custom')}"] = mon.name
             case mon if isinstance(mon, Species):
                 params_header["Species"] = mon.name
@@ -1422,7 +1440,9 @@ class Character:
             data.pop("moveset", None)
         else:
             if type_info and (types := TypingEnum.deduce_many(*type_info)):
-                if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera, CustomParadox)):
+                if isinstance(
+                    species, (Fakemon, Fusion, Variant, CustomMega, Chimera, CustomParadox, CustomUltraBeast)
+                ):
                     species.types = types
                 elif species.types != types:
                     types_txt = "/".join(i.name for i in types)
@@ -1435,7 +1455,9 @@ class Character:
                 if abilities := Ability.deduce_many(*ability_info):
                     data["abilities"] = abilities
 
-                if isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
+                if isinstance(
+                    species, (Fakemon, Fusion, Variant, CustomMega, Chimera, CustomParadox, CustomUltraBeast)
+                ):
                     species.abilities = abilities
                 elif isinstance(species, CustomParadox):
                     pass

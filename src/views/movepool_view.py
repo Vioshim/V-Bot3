@@ -19,7 +19,7 @@ from discord.ui import Button, Modal, TextInput, button
 from src.pagination.view_base import Basic
 from src.structures.character import Character
 from src.structures.movepool import Movepool
-from src.structures.species import CustomParadox, Fakemon, Variant
+from src.structures.species import CustomParadox, CustomUltraBeast, Fakemon, Variant
 from src.utils.functions import yaml_handler
 
 __all__ = ("MovepoolView", "MovepoolModal")
@@ -75,7 +75,7 @@ class MovepoolModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
-        if not isinstance(self.oc.species, (Fakemon, Variant, CustomParadox)):
+        if not isinstance(self.oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast)):
             await resp.send_message("Movepool can't be changed for the Species.", ephemeral=True)
             return
 

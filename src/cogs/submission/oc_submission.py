@@ -62,6 +62,7 @@ from src.structures.species import (
     Chimera,
     CustomMega,
     CustomParadox,
+    CustomUltraBeast,
     Fakemon,
     Fusion,
     Mega,
@@ -156,6 +157,14 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
         },
     )
+    CustomUltraBeast = dict(
+        description="Fan-made. From other dimensions, somehow ended up here.",
+        modifier={"Species": ("Fakemon", "Ultra Beast Species")},
+        docs={
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+    )
 
     async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
         choices: list[Species] = []
@@ -208,6 +217,15 @@ class Template(TemplateItem, Enum):
                 ) as answer:
                     if isinstance(answer, str) and answer:
                         oc.species = CustomParadox(choices[0], name=answer)
+            case self.CustomUltraBeast:
+                async with ModernInput(member=ctx.user, target=ctx).handle(
+                    label=f"UB {choices[0].name}"[:45],
+                    ephemeral=ephemeral,
+                    default=choices[0].name,
+                    required=True,
+                ) as answer:
+                    if isinstance(answer, str) and answer:
+                        oc.species = CustomUltraBeast(choices[0], name=answer)
             case self.CustomMega:
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
@@ -251,7 +269,7 @@ class Template(TemplateItem, Enum):
         match self:
             case self.Pokemon | self.Fusion:
                 mon_total = Species.all()
-            case (self.CustomMega | self.Variant | self.CustomParadox):
+            case self.CustomMega | self.Variant | self.CustomParadox | self.CustomUltraBeast:
                 mon_total = Species.all(exclude=(Mega, Paradox))
             case _:
                 mon_total = []
@@ -445,7 +463,15 @@ class SpeciesField(TemplateField):
         if species.banned or isinstance(species, Chimera):
             return f"{species.name} as species are banned."
 
-        if isinstance(species, (Variant, CustomMega, CustomParadox)) and isinstance(species.base, (Paradox, Mega)):
+        if isinstance(
+            species,
+            (
+                Variant,
+                CustomMega,
+                CustomParadox,
+                CustomUltraBeast,
+            ),
+        ) and isinstance(species.base, (Paradox, Mega)):
             return f"{species.base.name} can't have variants."
 
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
@@ -685,7 +711,7 @@ class TypesField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, CustomParadox))
+        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, CustomParadox, CustomUltraBeast))
 
     @classmethod
     async def on_submit(
@@ -791,7 +817,7 @@ class MovesetField(TemplateField):
         async with view.send(title=f"{template.title} Character's Moveset", ephemeral=ephemeral) as choices:
             if choices:
                 oc.moveset = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and not oc.movepool:
+                if isinstance(oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast)) and not oc.movepool:
                     oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                     progress.add(MovepoolField.name)
                 progress.add(cls.name)
@@ -808,7 +834,10 @@ class MovepoolField(TemplateField):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant, CustomParadox)) and TypingEnum.Shadow not in oc.types
+        return (
+            isinstance(oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast, CustomUltraBeast))
+            and TypingEnum.Shadow not in oc.types
+        )
 
     @classmethod
     async def on_submit(
@@ -845,6 +874,9 @@ class AbilitiesField(TemplateField):
 
         if isinstance(oc.species, CustomParadox) and not ("Protosynthesis" in values or "Quark Drive" in values):
             return "Protosynthesis/Quark Drive needed."
+
+        if isinstance(oc.species, CustomUltraBeast) and "Beast Boost" not in values:
+            return "Beast boost needed."
 
         if not isinstance(oc.species, (Fakemon, Variant, CustomMega)) and m not in oc.total_movepool:
             return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)

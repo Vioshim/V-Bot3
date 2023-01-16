@@ -37,6 +37,7 @@ from src.structures.species import (
     Chimera,
     CustomMega,
     CustomParadox,
+    CustomUltraBeast,
     Fakemon,
     Fusion,
     Species,
@@ -433,7 +434,7 @@ class OCGroupByShape(OCGroupBy[str]):
                     data.setdefault(mon.shape, set())
                     data[mon.shape].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant, CustomParadox)):
+                if isinstance(species, (CustomMega, Variant, CustomParadox, CustomUltraBeast)):
                     shape = species.base.shape
                 elif isinstance(species, Fakemon):
                     if mon := species.species_evolves_from:
@@ -493,7 +494,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
                     data.setdefault(mon, set())
                     data[mon].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant, CustomParadox)):
+                if isinstance(species, (CustomMega, Variant, CustomParadox, CustomUltraBeast)):
                     mon = species.base.first_evo
                 elif isinstance(species, Fakemon):
                     mon = species.species_evolves_from

@@ -193,35 +193,28 @@ class Pokedex(commands.Cog):
                     base = species
                     height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
 
-                if isinstance(base, Fusion):
-                    mon1 = Fusion(base.mon1, base.mon2, ratio=0.1)
-                    mon2 = Fusion(base.mon1, base.mon2, ratio=0.5)
-                    mon3 = Fusion(base.mon1, base.mon2, ratio=0.9)
-                    items = [mon1, mon2, mon3]
-                    item_heights = {x.height: x for x in items}
-                    item_weights = {x.weight: x for x in items}
-                    for k, v in sorted(item_heights.items(), key=lambda x: x[0]):
-                        if inline := len(item_heights) != 1:
-                            name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1 - v.ratio:.0%}〛{v.mon2.name}"
-                        else:
-                            name = "Height"
-                        entries = Size.XXXS.height_info(k), height.height_info(k), Size.XXXL.height_info(k)
-                        embed.add_field(name=name, value="\n".join(entries), inline=inline)
-                    for k, v in sorted(item_weights.items(), key=lambda x: x[0]):
-                        if inline := len(item_weights) != 1:
-                            name = f"{v.ratio:.0%}〛{v.mon1.name}\n{1 - v.ratio:.0%}〛{v.mon2.name}"
-                        else:
-                            name = "Weight"
-                        entries = Size.XXXS.weight_info(k), weight.weight_info(k), Size.XXXL.weight_info(k)
-                        embed.add_field(name=name, value="\n".join(entries), inline=inline)
-                elif isinstance(base, Fakemon):
-                    embed.add_field(name="Height", value=height.height_info(val1), inline=False)
-                    embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
+                if isinstance(base, Fakemon):
+                    entries1 = (height.height_info(val1),)
+                    entries2 = (weight.weight_info(val2),)
+                elif isinstance(base, (Fusion, Chimera)) and len(base.bases) >= 2:
+                    h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
+                    w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
+                    entries1 = (
+                        Size.XXXS.height_info(h1.height),
+                        height.height_info(val1),
+                        Size.XXXL.height_info(h2.height),
+                    )
+                    entries2 = (
+                        Size.XXXS.weight_info(w1.weight),
+                        weight.weight_info(val2),
+                        Size.XXXL.weight_info(w2.weight),
+                    )
                 else:
                     entries1 = Size.XXXS.height_info(val1), height.height_info(val1), Size.XXXL.height_info(val1)
                     entries2 = Size.XXXS.weight_info(val2), weight.weight_info(val2), Size.XXXL.weight_info(val2)
-                    embed.add_field(name="Height", value="\n".join(entries1), inline=False)
-                    embed.add_field(name="Weight", value="\n".join(entries2), inline=False)
+
+                embed.add_field(name="Height", value="\n".join(entries1), inline=False)
+                embed.add_field(name="Weight", value="\n".join(entries2), inline=False)
 
                 if isinstance(species, Species):
 

@@ -25,6 +25,7 @@ from src.structures.species import (
     Chimera,
     CustomMega,
     CustomParadox,
+    CustomUltraBeast,
     Fusion,
     Legendary,
     Mega,
@@ -87,7 +88,7 @@ class SpeciesComplex(Complex[Species]):
                 for x in mon.bases:
                     self.reference1.setdefault(x, 0)
                     self.reference1[x] += 1
-            elif isinstance(mon, (Variant, CustomMega, CustomParadox)):
+            elif isinstance(mon, (Variant, CustomMega, CustomParadox, CustomUltraBeast)):
                 self.reference2.setdefault(mon.base, 0)
                 self.reference2[mon.base] += 1
             elif isinstance(mon, Species):
