@@ -42,7 +42,7 @@ def splitter_function(x: tuple[list[Proxy | ProxyExtra], str]):
     return (x[0], bool(EMOJI_MATCHER.match(x[1]) or BRACKETS_PARSER.search(x[1])))
 
 
-@dataclass(slots=True, unsafe_hash=True)
+@dataclass(slots=True)
 class ProxyExtra:
     name: str = ""  # May not have name, therefore use same
     image: str = ""  # May not have image, therefore use same
