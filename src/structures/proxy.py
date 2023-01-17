@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import functools
 import itertools
+from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
@@ -45,19 +46,29 @@ def splitter_function(x: tuple[list[Proxy | ProxyExtra], str]):
 class ProxyExtra:
     name: str = ""  # May not have name, therefore use same
     image: str = ""  # May not have image, therefore use same
-    prefixes: frozenset[tuple[str, str]] = field(default_factory=frozenset)  # Specific prefixes
+    prefixes: set[tuple[str, str]] = field(default_factory=set)  # Specific prefixes
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, ProxyExtra) and self.name == o.name
+
+    def __ne__(self, o: object) -> bool:
+        return isinstance(o, ProxyExtra) and self.name != o.name
+
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     def append_prefixes(self, *prefixes: tuple[str, str]):
-        self.prefixes = self.prefixes.union(prefixes)
+        self.prefixes |= {(x.rstrip(), y.lstrip()) for x, y in prefixes}
 
     def append_prefix(self, a: str, b: str):
-        return self.append_prefixes((a, b))
+        return self.prefixes.add((a.rstrip(), b.lstrip()))
 
     def remove_prefixes(self, *prefixes: tuple[str, str]):
-        self.prefixes = self.prefixes.difference(prefixes)
+        self.prefixes -= {(x.rstrip(), y.lstrip()) for x, y in prefixes}
 
     def remove_prefix(self, a: str, b: str):
-        return self.remove_prefixes((a, b))
+        with suppress(KeyError):
+            self.prefixes.remove((a.rstrip(), b.lstrip()))
 
     def to_dict(self):
         return dict(
@@ -70,7 +81,7 @@ class ProxyExtra:
     def handle(cls, item: dict[str, Any] | ProxyExtra):
         if isinstance(item, cls):
             return item
-        item["prefixes"] = frozenset(map(tuple, item.get("prefixes", [])))
+        item["prefixes"] = {(x.rstrip(), y.lstrip()) for x, y in item.get("prefixes", [])}
         return cls(**item)
 
     def copy(self):
@@ -95,8 +106,8 @@ class Proxy:
     server: int = 719343092963999804
     name: str = ""  # max 80 Characters
     image: Optional[str] = None
-    extras: frozenset[ProxyExtra] = field(default_factory=frozenset)  # Specific Images
-    prefixes: frozenset[tuple[str, str]] = field(default_factory=frozenset)  # Specific prefixes
+    extras: set[ProxyExtra] = field(default_factory=set)  # Specific Images
+    prefixes: set[tuple[str, str]] = field(default_factory=set)  # Specific prefixes
 
     def __eq__(self, o: object) -> bool:
         return isinstance(o, Proxy) and self.id == o.id
@@ -108,8 +119,8 @@ class Proxy:
         return self.id >> 22
 
     def __post_init__(self):
-        self.prefixes = frozenset(self.prefixes)
-        self.extras = frozenset(map(ProxyExtra.handle, self.extras))
+        self.prefixes = {(x.rstrip(), y.lstrip()) for x, y in self.prefixes}
+        self.extras = set(map(ProxyExtra.handle, self.extras))
 
     def to_dict(self):
         return dict(
@@ -123,26 +134,27 @@ class Proxy:
         )
 
     def append_extra(self, name: str, image: Optional[str], prefixes: frozenset[tuple[str, str]] = None):
-        prefixes = frozenset(prefixes) if prefixes else frozenset()
+        prefixes = set((x.rstrip(), y.lstrip()) for x, y in prefixes) if prefixes else set()
         image = image or self.image
-        x = ProxyExtra(name=name, image=image, prefixes=prefixes)
-        self.extras = self.extras.union({x})
+        self.extras.add(x := ProxyExtra(name=name, image=image, prefixes=prefixes))
         return x
 
-    def remove_extra(self, item: ProxyExtra):
-        self.extras = frozenset({x for x in self.extras if x != item})
+    def remove_extra(self, *item: ProxyExtra):
+        names = {x.name if isinstance(x, ProxyExtra) else x for x in item}
+        self.extras = {x for x in self.extras if x.name not in names}
 
     def append_prefixes(self, *prefixes: tuple[str, str]):
-        self.prefixes = self.prefixes.union(prefixes)
+        self.prefixes |= {(x.rstrip(), y.lstrip()) for x, y in prefixes}
 
     def append_prefix(self, a: str, b: str):
-        return self.append_prefixes((a, b))
+        self.prefixes.add((a.rstrip(), b.lstrip()))
 
     def remove_prefixes(self, *prefixes: tuple[str, str]):
-        self.prefixes = self.prefixes.difference(prefixes)
+        self.prefixes -= {(x.rstrip(), y.lstrip()) for x, y in prefixes}
 
     def remove_prefix(self, a: str, b: str):
-        return self.remove_prefixes((a, b))
+        with suppress(KeyError):
+            self.prefixes.remove((a.rstrip(), b.lstrip()))
 
     @property
     def embed(self):
@@ -154,7 +166,7 @@ class Proxy:
         if self.image and isinstance(self.image, str):
             embed.set_thumbnail(url=self.image)
 
-        if extras := "\n".join(f"• {x.name}" for x in self.extras):
+        if extras := "\n".join(f"• {x.name}" for x in sorted(self.extras, key=lambda x: x.name)):
             embed.add_field(name=f"{len(self.extras)} Extras", value=extras)
 
         embed.set_image(url=WHITE_BAR)
