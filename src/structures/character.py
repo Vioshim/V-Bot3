@@ -16,14 +16,12 @@
 from __future__ import annotations
 
 import math
-import random
 import re
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
-from asyncpg import Connection
 from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
@@ -42,7 +40,6 @@ from src.structures.movepool import Movepool
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    Chimera,
     CustomMega,
     CustomParadox,
     CustomUltraBeast,
@@ -131,7 +128,6 @@ class Kind(Enum):
     Paradox = Paradox
     CustomMega = CustomMega
     CustomParadox = CustomParadox
-    Chimera = Chimera
     CustomUltraBeast = CustomUltraBeast
 
     @property
@@ -164,8 +160,6 @@ class Kind(Enum):
                 return "FUSION"
             case self.CustomMega:
                 return "CUSTOM MEGA"
-            case self.Chimera:
-                return "CHIMERA"
             case self.CustomUltraBeast:
                 return "CUSTOM ULTRA BEAST"
 
@@ -192,8 +186,6 @@ class Kind(Enum):
                 return cls.Fusion
             case "CUSTOMMEGA":
                 return cls.CustomMega
-            case "CHIMERA":
-                return cls.Chimera
             case "CUSTOMULTRABEAST":
                 return cls.CustomUltraBeast
 
@@ -367,44 +359,7 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
-        if isinstance(self.species, (Fakemon, Variant, CustomMega, Chimera, Fusion, CustomParadox, CustomUltraBeast)):
-            aux = {"types": [x.name for x in self.types]}
-            if isinstance(self.species, Chimera):
-                aux |= {"chimera": [x.id for x in self.species.bases]}
-            elif isinstance(self.species, CustomMega):
-                aux |= {"mega": self.species.id}
-            elif isinstance(self.species, CustomUltraBeast):
-                aux |= {
-                    "ub": self.species.id,
-                    "name": self.species.name,
-                    "movepool": self.species.movepool.as_dict,
-                }
-            elif isinstance(self.species, CustomParadox):
-                aux |= {
-                    "paradox": self.species.id,
-                    "name": self.species.name,
-                    "movepool": self.species.movepool.as_dict,
-                }
-            elif isinstance(self.species, Fusion):
-                aux |= {
-                    "fusion": {
-                        "species": [x.id for x in self.species.bases],
-                        "ratio": self.species.ratio,
-                    }
-                }
-            else:
-                aux |= {
-                    "name": self.species.name,
-                    "evolves_from": self.species.evolves_from,
-                    "movepool": self.species.movepool.as_dict,
-                }
-                if isinstance(self.species, Variant):
-                    aux["base"] = self.species.id
-
-            data["species"] = aux
-        elif self.species:
-            data["species"] = self.species.id
-
+        data["species"] = self.species and self.species.as_data()
         data["age"] = self.age.name
         data["size"] = self.size.name if isinstance(self.size, Size) else self.size
         data["weight"] = self.weight.name if isinstance(self.weight, Size) else self.weight
@@ -424,35 +379,8 @@ class Character:
     @classmethod
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
-        species: Optional[dict[str, Any]] = dct.get("species", None)
-        if isinstance(species, dict):
-            if chimera := species.pop("chimera", []):
-                species["bases"] = chimera
-                dct["species"] = Chimera(**species)
-            elif mega := species.pop("mega", ""):
-                species["base"] = mega
-                dct["species"] = CustomMega(**species)
-            elif ub := species.pop("ub", ""):
-                species["base"] = ub
-                dct["species"] = CustomUltraBeast(**species)
-            elif paradox := species.pop("paradox", ""):
-                species["base"] = paradox
-                dct["species"] = CustomParadox(**species)
-            elif "base" in species:
-                dct["species"] = Variant(**species)
-            elif "fusion" in species:
-                data = species.get("fusion", [])
-                if isinstance(data, dict):
-                    (mon1, mon2), ratio = data.get("species"), data.get("ratio", 0.5)
-                    fusion = Fusion(mon1, mon2, ratio=ratio)
-                else:
-                    fusion = Fusion(*data, ratio=0.5)
-                if not fusion.types:
-                    fusion.types = TypingEnum.deduce_many(*species.get("types", []))
-                dct["species"] = fusion
-            else:
-                dct["species"] = Fakemon(**species)
-
+        species = dct.pop("species", None)
+        dct["species"] = species and Species.from_data(species)
         return Character(**dct)
 
     def __post_init__(self):
@@ -507,21 +435,11 @@ class Character:
 
     @property
     def min_amount_species(self):
-        match self.species:
-            case x if isinstance(x, Fusion):
-                return 2
-            case _:
-                return 1
+        return 2 if isinstance(self.species, Fusion) else 1
 
     @property
     def max_amount_species(self):
-        match self.species:
-            case x if isinstance(x, Chimera):
-                return 3
-            case x if isinstance(x, Fusion):
-                return 2
-            case _:
-                return 1
+        return 2 if isinstance(self.species, Fusion) else 1
 
     @property
     def last_used_at(self):
@@ -585,35 +503,12 @@ class Character:
         self.url = None
 
     @property
-    def usable_abilities(self) -> frozenset[Ability]:
-        if self.any_ability_at_first:
-            return Ability.all()
-        return self.species.abilities
-
-    @property
-    def randomize_abilities(self) -> frozenset[Ability]:
-        if abilities := list(self.usable_abilities):
-            amount = min(2, len(abilities))
-            items = random.sample(abilities, k=amount)
-            return frozenset(items)
-        return frozenset(self.abilities)
-
-    @property
-    def randomize_moveset(self) -> frozenset[Move]:
-        if moves := list(self.total_movepool()):
-            amount = min(6, len(moves))
-            return frozenset(random.sample(moves, k=amount))
-        return self.moveset
-
-    @property
     def evolves_from(self):
-        if self.species:
-            return self.species.species_evolves_from
+        return self.species and self.species.species_evolves_from
 
     @property
     def evolves_to(self):
-        if self.species:
-            return self.species.species_evolves_to
+        return self.species and self.species.species_evolves_to
 
     @property
     def emoji(self):
@@ -647,37 +542,9 @@ class Character:
         return movepool
 
     @property
-    def can_have_special_abilities(self) -> bool:
-        if self.species:
-            return self.species.can_have_special_abilities
-        return True
-
-    @property
-    def any_move_at_first(self) -> bool:
-        """Wether if the species can start with any move at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return isinstance(self.species, (Variant, Fakemon, CustomParadox))
-
-    @property
-    def any_ability_at_first(self) -> bool:
-        """Wether if the species can start with any ability at first
-
-        Returns
-        -------
-        bool
-            answer
-        """
-        return isinstance(self.species, (Variant, Fakemon, CustomMega))
-
-    @property
-    def place_mention(self) -> Optional[str]:
-        if location := self.location:
-            return f"<#{location}>"
+    def place_mention(self):
+        if self.location:
+            return f"<#{self.location}>"
 
     @property
     def jump_url(self):
@@ -749,13 +616,10 @@ class Character:
                 b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
                 name = f"{b1}{mon.mon1.name}\n{b2}{mon.mon2.name}"
                 c_embed.add_field(name="Fusion", value=name[:1024])
-            case mon if isinstance(mon, Chimera):
-                if name := "\n".join(f"> **•** {name}" for name in mon.name.split("/")).title():
-                    c_embed.add_field(name="Chimera", value=name[:1024])
             case mon if isinstance(mon, Fakemon):
                 a1 = Ability.get(name="Beast Boost")
                 if a1 in self.abilities:
-                    name = "Fakemon UB"
+                    name = "Fakemon Ultra Beast"
                 elif evolves_from := mon.species_evolves_from:
                     name = "Fakemon Evo" if evolves_from.name == mon.name else f"{evolves_from.name} Evo"
                 else:
@@ -764,27 +628,26 @@ class Character:
             case mon if isinstance(mon, CustomMega):
                 c_embed.add_field(name="Mega", value=mon.name)
             case mon if isinstance(mon, (CustomParadox, CustomUltraBeast, Variant)):
-                a0 = Ability.get(name="Beast Boost")
                 a1 = Ability.get(name="Protosynthesis")
                 a2 = Ability.get(name="Quark Drive")
 
-                if a0 in self.abilities:
-                    phrase = "UB"
-                elif a1 in self.abilities:
+                phrase = mon.__class__.__name__.removeprefix("Custom")
+
+                if a1 in self.abilities:
                     phrase = "Past"
                 elif a2 in self.abilities:
                     phrase = "Future"
-                elif isinstance(mon, CustomParadox):
-                    phrase = "Paradox"
-                else:
-                    phrase = "Variant"
 
                 if mon.base.name == mon.name:
                     c_embed.add_field(name=phrase, value=mon.name)
                 else:
+                    phrase = {"UltraBeast": "UB"}.get(phrase, phrase)
                     c_embed.add_field(name=f"{phrase} {mon.base.name}", value=mon.name)
+
             case mon if isinstance(mon, Species):
-                c_embed.add_field(name="Species", value=mon.name)
+                phrase = mon.__class__.__name__.removeprefix("Custom")
+                phrase = phrase.replace("Pokemon", "Species")
+                c_embed.add_field(name=phrase, value=mon.name)
 
         for index, ability in enumerate(sorted(self.abilities, key=lambda x: x.name), start=1):
             c_embed.add_field(
@@ -875,8 +738,6 @@ class Character:
                 ratio1, ratio2 = mon.ratio, 1 - mon.ratio
                 b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("", "")
                 params_header["Fusion"] = f"{b1}{mon.mon1.name}, {b2}{mon.mon2.name}"
-            case mon if isinstance(mon, Chimera):
-                params_header["Chimera"] = ", ".join(name for name in mon.name.split("/")).title()
             case mon if isinstance(mon, Fakemon):
                 if evolves_from := mon.species_evolves_from:
                     name = f"{evolves_from.name} Evo"
@@ -959,7 +820,7 @@ class Character:
                 doc.add_heading("How does it make the character's life harder?", 2)
                 doc.add_paragraph(cons)
 
-        if isinstance(species, (Variant, CustomParadox, Fakemon)) and (movepool := species.movepool):
+        if isinstance(species, (Variant, CustomParadox, CustomUltraBeast, Fakemon)) and (movepool := species.movepool):
             doc.add_heading("Movepool", level=1)
 
             if movepool.level:
@@ -1092,226 +953,6 @@ class Character:
                     )
         return kit.url
 
-    async def update(self, connection: Connection, idx: int = None, thread_id: int = None) -> None:
-        """Method for updating data in database
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection object
-        idx : int, optional
-            Index if it will be modified, by default None
-        thread_id : int, Optional
-            Thread to move if needed
-        """
-        new_index = idx or self.id
-        if self.id != new_index:
-            await connection.execute(
-                """--sql
-                UPDATE CHARACTER
-                SET ID = $2, THREAD = $4
-                WHERE ID = $1 AND SERVER = $3;
-                """,
-                self.id,
-                new_index,
-                self.server,
-                thread_id or self.thread,
-            )
-        self.id = new_index
-        await self.upsert(connection)
-
-    @classmethod
-    async def fetch_all(cls, connection: Connection):
-        """This should return a list of Characters
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-
-        Yields
-        -------
-        Character
-        """
-        async for item in connection.cursor(
-            """--sql
-            SELECT
-                C.*,
-                TO_JSONB(F.*) AS FAKEMON,
-                TO_JSONB(S.*) AS SP_ABILITY,
-                TO_JSON(M.*) AS MOVEPOOL
-            FROM CHARACTER C
-            LEFT JOIN FAKEMON F ON C.ID = F.ID
-            LEFT JOIN SPECIAL_ABILITIES S ON C.ID = S.ID
-            LEFT JOIN MOVEPOOL M ON C.ID = M.ID;
-            """
-        ):
-            data = dict(item)
-            kind = Kind.associated(data.pop("kind", "COMMON"))
-
-            mon_type = TypingEnum.deduce_many(*data.pop("types"))
-
-            if kind == Kind.Chimera:
-                key = data.pop("species", "")
-                species = Chimera(key.split("_"))
-            else:
-                species = Species.from_ID(data.pop("species", None))
-
-            if fakemon_data := Fakemon.from_record(data.pop("fakemon")):
-                if kind == Kind.Variant:
-                    if not species:
-                        print(fakemon_data)
-                        continue
-                    species = Variant(base=species, name=fakemon_data.name)
-                elif kind == Kind.Fakemon:
-                    species = fakemon_data
-
-            if mon_type and isinstance(species, (Fakemon, Fusion, Variant, CustomMega, Chimera)):
-                species.types = mon_type
-
-            movepool = data.pop("movepool")
-
-            if species:
-                if kind == Kind.CustomMega:
-                    species = CustomMega(species)
-                elif movepool := Movepool.from_record(movepool):
-                    if species.movepool != movepool and kind in [Kind.Variant, Kind.Fakemon]:
-                        species.movepool = movepool
-                    else:
-                        await connection.execute("DELETE FROM MOVEPOOL WHERE ID = $1", data["id"])
-                data["species"] = species
-            else:
-                await connection.execute("DELETE FROM FAKEMON WHERE ID = $1", data["id"])
-
-            sp_data = data.pop("sp_ability", {})
-            mon = Character(**data)
-            if sp_data:
-                sp_data.pop("id", None)
-                mon.sp_ability = SpAbility(**sp_data)
-            yield mon
-
-    async def upsert(self, connection: Connection) -> None:
-        """This is the standard upsert method which must be added
-        in all character classes.
-
-        Attributes
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        await connection.execute(
-            """--sql
-            INSERT INTO CHARACTER(
-                ID, NAME, AGE, PRONOUN, BACKSTORY, EXTRA,
-                KIND, AUTHOR, SERVER, URL, IMAGE, LOCATION,
-                THREAD, MOVESET, TYPES, ABILITIES, SPECIES, HIDDEN_POWER
-            )
-            VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
-            )
-            ON CONFLICT (ID) DO UPDATE
-            SET
-                ID = $1, NAME = $2, AGE = $3, PRONOUN = $4, BACKSTORY = $5,
-                EXTRA = $6, KIND = $7, AUTHOR = $8, SERVER = $9, URL = $10,
-                IMAGE = $11, LOCATION = $12, THREAD = $13, MOVESET = $14,
-                TYPES = $15, ABILITIES = $16, SPECIES = $17, HIDDEN_POWER = $18;
-            """,
-            self.id,
-            self.name,
-            self.age.name,
-            [x.name for x in self.pronoun],
-            self.backstory,
-            self.extra,
-            self.kind.to_db,
-            self.author,
-            self.server,
-            self.url,
-            self.image,
-            self.location,
-            self.thread,
-            [x.id for x in self.moveset],
-            [x.name for x in self.types],
-            [x.id for x in self.abilities],
-            None if isinstance(self.species.id, int) else self.species.id,
-            self.hidden_power.name if self.hidden_power else None,
-        )
-        if (sp_ability := self.sp_ability) is None:
-            sp_ability = SpAbility()
-        await sp_ability.upsert(connection, idx=self.id)
-        movepool = self.movepool.db_dict
-        match self.kind:
-            case Kind.Fakemon:
-                await connection.execute(
-                    """--sql
-                    INSERT INTO FAKEMON(ID, NAME, EVOLVES_FROM)
-                    VALUES ($1, $2, $3) ON CONFLICT (ID) DO UPDATE SET
-                    NAME = $2, EVOLVES_FROM = $3;
-                    """,
-                    self.id,
-                    self.species.name,
-                    getattr(self.evolves_from, "id", None),
-                )
-                await connection.execute(
-                    """--sql
-                    INSERT INTO MOVEPOOL(ID, LEVEL, TM, EVENT, TUTOR, EGG, LEVELUP, OTHER)
-                    VALUES ($1, $2::JSONB, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
-                    LEVEL = $2::JSONB, TM = $3, EVENT = $4, TUTOR = $5, EGG = $6, LEVELUP = $7, OTHER = $8;
-                    """,
-                    self.id,
-                    movepool["level"],
-                    movepool["tm"],
-                    movepool["event"],
-                    movepool["tutor"],
-                    movepool["egg"],
-                    movepool["levelup"],
-                    movepool["other"],
-                )
-            case Kind.Variant:
-                if self.movepool == self.species.base.movepool:
-                    await connection.execute("DELETE FROM MOVEPOOL WHERE ID = $1", self.id)
-                else:
-                    await connection.execute(
-                        """--sql
-                        INSERT INTO MOVEPOOL(ID, LEVEL, TM, EVENT, TUTOR, EGG, LEVELUP, OTHER)
-                        VALUES ($1, $2::JSONB, $3, $4, $5, $6, $7, $8) ON CONFLICT (ID) DO UPDATE SET
-                        LEVEL = $2::JSONB, TM = $3, EVENT = $4, TUTOR = $5, EGG = $6, LEVELUP = $7, OTHER = $8;
-                        """,
-                        self.id,
-                        movepool["level"],
-                        movepool["tm"],
-                        movepool["event"],
-                        movepool["tutor"],
-                        movepool["egg"],
-                        movepool["levelup"],
-                        movepool["other"],
-                    )
-                await connection.execute(
-                    """--sql
-                    INSERT INTO FAKEMON(ID, NAME) VALUES ($1, $2)
-                    ON CONFLICT (ID) DO UPDATE SET NAME = $2;
-                    """,
-                    self.id,
-                    self.species.name,
-                )
-
-    async def delete(self, connection: Connection) -> None:
-        """Delete in database
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-        """
-        if oc_id := self.id:
-            await connection.execute(
-                """--sql
-                DELETE FROM CHARACTER
-                WHERE ID = $1 AND SERVER = $2;
-                """,
-                oc_id,
-                self.server,
-            )
-
     def copy(self):
         sp_ability = self.sp_ability.copy() if self.sp_ability else None
         return Character(
@@ -1385,6 +1026,10 @@ class Character:
             species = CustomParadox.deduce(base)
             species.name = paradox
             data["species"] = species
+        elif (ub := data.pop("ub", "")) and base:
+            species = CustomUltraBeast.deduce(base)
+            species.name = ub
+            data["species"] = species
         elif fakemon := data.pop("fakemon", ""):
 
             name: str = fakemon.title()
@@ -1404,20 +1049,13 @@ class Character:
                         break
 
             data["species"] = species
-        elif (
-            (species := Fusion.deduce(",".join(data.pop("fusion", []))))
-            or (species := Chimera.deduce(",".join(data.pop("chimera", []))))
-            or (
-                (aux := common_pop_get(data, "species", "pokemon"))
-                and (species := Species.any_deduce(aux, chimera=True))
-            )
+        elif (species := Fusion.deduce(",".join(data.pop("fusion", [])))) or (
+            (aux := common_pop_get(data, "species", "pokemon")) and (species := Species.any_deduce(aux, chimera=True))
         ):
             data["species"] = species
 
         if isinstance(age := common_pop_get(data, "age", "years"), str):
-            if age.isdigit():
-                age = int_check(age, 13, 100)
-            data["age"] = AgeGroup.parse(age)
+            data["age"] = AgeGroup.parse(int_check(age))
 
         if pronoun_info := common_pop_get(data, "pronoun", "gender", "pronouns"):
             data["pronoun"] = Pronoun.deduce_many(pronoun_info)
@@ -1441,7 +1079,15 @@ class Character:
         else:
             if type_info and (types := TypingEnum.deduce_many(*type_info)):
                 if isinstance(
-                    species, (Fakemon, Fusion, Variant, CustomMega, Chimera, CustomParadox, CustomUltraBeast)
+                    species,
+                    (
+                        Fakemon,
+                        Fusion,
+                        Variant,
+                        CustomMega,
+                        CustomParadox,
+                        CustomUltraBeast,
+                    ),
                 ):
                     species.types = types
                 elif species.types != types:
@@ -1456,11 +1102,17 @@ class Character:
                     data["abilities"] = abilities
 
                 if isinstance(
-                    species, (Fakemon, Fusion, Variant, CustomMega, Chimera, CustomParadox, CustomUltraBeast)
+                    species,
+                    (
+                        Fakemon,
+                        Fusion,
+                        Variant,
+                        CustomMega,
+                        CustomParadox,
+                        CustomUltraBeast,
+                    ),
                 ):
                     species.abilities = abilities
-                elif isinstance(species, CustomParadox):
-                    pass
                 elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
                     species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
                     species.abilities = abilities

@@ -34,7 +34,6 @@ from src.structures.move import Move
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    Chimera,
     CustomMega,
     CustomParadox,
     CustomUltraBeast,
@@ -429,7 +428,7 @@ class OCGroupByShape(OCGroupBy[str]):
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[str, set[Character]] = {}
         for oc in ocs:
-            if isinstance(species := oc.species, (Fusion, Chimera)):
+            if isinstance(species := oc.species, Fusion):
                 for mon in species.bases:
                     data.setdefault(mon.shape, set())
                     data[mon.shape].add(oc)
@@ -488,7 +487,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
     def method(cls, _: Interaction, ocs: Iterable[Character]):
         data: dict[Species, set[Character]] = {}
         for oc in ocs:
-            if isinstance(species := oc.species, (Fusion, Chimera)):
+            if isinstance(species := oc.species, Fusion):
                 for mon in species.bases:
                     mon = mon.first_evo
                     data.setdefault(mon, set())

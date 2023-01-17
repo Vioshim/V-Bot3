@@ -59,7 +59,6 @@ from src.structures.movepool import Movepool
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    Chimera,
     CustomMega,
     CustomParadox,
     CustomUltraBeast,
@@ -69,6 +68,7 @@ from src.structures.species import (
     Paradox,
     Pokemon,
     Species,
+    UltraBeast,
     Variant,
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
@@ -267,9 +267,11 @@ class Template(TemplateItem, Enum):
     @property
     def total_species(self) -> frozenset[Species]:
         match self:
+            case self.CustomUltraBeast:
+                mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast))
             case self.Pokemon | self.Fusion:
                 mon_total = Species.all()
-            case self.CustomMega | self.Variant | self.CustomParadox | self.CustomUltraBeast:
+            case self.CustomMega | self.Variant | self.CustomParadox:
                 mon_total = Species.all(exclude=(Mega, Paradox))
             case _:
                 mon_total = []
@@ -309,9 +311,10 @@ class Template(TemplateItem, Enum):
 
 
 class TemplateField(ABC):
-    name: str = ""
-    description: str = ""
-    required: bool = False
+    def __init_subclass__(cls, name: str, required: bool = False) -> None:
+        cls.name = name
+        cls.required = required
+        cls.description = cls.__doc__.strip() or ""
 
     @classmethod
     def all(cls):
@@ -342,10 +345,8 @@ class TemplateField(ABC):
         """Abstract method which affects progress and the character"""
 
 
-class NameField(TemplateField):
-    name = "Name"
-    description = "Modify the OC's Name"
-    required: bool = True
+class NameField(TemplateField, name="Name", required=True):
+    "Modify the OC's Name"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -375,10 +376,8 @@ class NameField(TemplateField):
                 progress.add(cls.name)
 
 
-class AgeField(TemplateField):
-    name = "Age"
-    description = "Modify the OC's Age"
-    required: bool = True
+class AgeField(TemplateField, name="Age", required=True):
+    "Modify the OC's Age"
 
     @classmethod
     async def on_submit(
@@ -409,10 +408,8 @@ class AgeField(TemplateField):
                 progress.add(cls.name)
 
 
-class PronounField(TemplateField):
-    name = "Pronoun"
-    description = "He, She, Them"
-    required: bool = True
+class PronounField(TemplateField, name="Pronoun", required=True):
+    "He, She, Them"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -450,17 +447,15 @@ class PronounField(TemplateField):
                 progress.add(cls.name)
 
 
-class SpeciesField(TemplateField):
-    name = "Species"
-    description = "Modify the OC's Species"
-    required: bool = True
+class SpeciesField(TemplateField, name="Species", required=True):
+    "Modify the OC's Species"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         if not (species := oc.species):
             return "Missing Species"
 
-        if species.banned or isinstance(species, Chimera):
+        if species.banned:
             return f"{species.name} as species are banned."
 
         if isinstance(
@@ -473,6 +468,9 @@ class SpeciesField(TemplateField):
             ),
         ) and isinstance(species.base, (Paradox, Mega)):
             return f"{species.base.name} can't have variants."
+
+        if isinstance(species, CustomUltraBeast) and isinstance(species.base, UltraBeast):
+            return f"{species.base.name} is already an ultra beast."
 
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
@@ -500,10 +498,8 @@ class SpeciesField(TemplateField):
             oc.size = oc.weight = Size.M
 
 
-class FusionRatioField(TemplateField):
-    name = "Proportion"
-    description = "Modify the OC's Fusion Ratio"
-    required: bool = False
+class FusionRatioField(TemplateField, name="Proportion"):
+    "Modify the OC's Fusion Ratio"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -542,10 +538,8 @@ class FusionRatioField(TemplateField):
                 progress.add(cls.name)
 
 
-class SizeField(TemplateField):
-    name = "Size"
-    description = "Modify the OC's Size"
-    required: bool = False
+class SizeField(TemplateField, name="Size"):
+    "Modify the OC's Size"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -588,10 +582,8 @@ class SizeField(TemplateField):
         progress.add(cls.name)
 
 
-class WeightField(TemplateField):
-    name = "Weight"
-    description = "Modify the OC's Weight"
-    required: bool = False
+class WeightField(TemplateField, name="Weight"):
+    "Modify the OC's Weight"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -635,10 +627,8 @@ class WeightField(TemplateField):
         progress.add(cls.name)
 
 
-class PreEvoSpeciesField(TemplateField):
-    name = "Pre-Evolution"
-    description = "Modify the OC's Pre evo Species"
-    required: bool = False
+class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
+    "Modify the OC's Pre evo Species"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -679,10 +669,8 @@ class PreEvoSpeciesField(TemplateField):
                 oc.moveset = frozenset(moves)
 
 
-class TypesField(TemplateField):
-    name = "Types"
-    description = "Modify the OC's Types"
-    required: bool = True
+class TypesField(TemplateField, name="Types", required=True):
+    "Modify the OC's Types"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -769,10 +757,8 @@ class TypesField(TemplateField):
                 progress.add(cls.name)
 
 
-class MovesetField(TemplateField):
-    name = "Moveset"
-    description = "Modify the OC's fav. moves"
-    required: bool = True
+class MovesetField(TemplateField, name="Moveset", required=True):
+    "Modify the OC's fav. moves"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -823,10 +809,8 @@ class MovesetField(TemplateField):
                 progress.add(cls.name)
 
 
-class MovepoolField(TemplateField):
-    name = "Movepool"
-    description = "Modify the OC's movepool"
-    required: bool = True
+class MovepoolField(TemplateField, name="Movepool", required=True):
+    "Modify the OC's movepool"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -835,7 +819,7 @@ class MovepoolField(TemplateField):
     @classmethod
     def check(cls, oc: Character) -> bool:
         return (
-            isinstance(oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast, CustomUltraBeast))
+            isinstance(oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast))
             and TypingEnum.Shadow not in oc.types
         )
 
@@ -857,10 +841,8 @@ class MovepoolField(TemplateField):
         progress.add(cls.name)
 
 
-class AbilitiesField(TemplateField):
-    name = "Abilities"
-    description = "Modify the OC's Abilities"
-    required: bool = True
+class AbilitiesField(TemplateField, name="Abilities", required=True):
+    "Modify the OC's Abilities"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -922,10 +904,8 @@ class AbilitiesField(TemplateField):
                 progress.add(cls.name)
 
 
-class HiddenPowerField(TemplateField):
-    name = "Hidden Power"
-    description = "Typing that matches with their soul's"
-    required: bool = False
+class HiddenPowerField(TemplateField, name="Hidden Power"):
+    "Typing that matches with their soul's"
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
@@ -960,10 +940,8 @@ class HiddenPowerField(TemplateField):
             progress.add(cls.name)
 
 
-class NatureField(TemplateField):
-    name = "Nature"
-    description = "OC's Nature"
-    required: bool = False
+class NatureField(TemplateField, name="Nature"):
+    "OC's Nature"
 
     @classmethod
     async def on_submit(
@@ -993,10 +971,8 @@ class NatureField(TemplateField):
             progress.add(cls.name)
 
 
-class UniqueTraitField(TemplateField):
-    name = "Unique Trait"
-    description = "No other in species but OC can do it."
-    required: bool = True
+class UniqueTraitField(TemplateField, name="Unique Trait", required=True):
+    "No other in species but OC can do it."
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -1022,10 +998,8 @@ class UniqueTraitField(TemplateField):
         progress.add(cls.name)
 
 
-class BackstoryField(TemplateField):
-    name = "Bio"
-    description = "Define who is the character."
-    required: bool = True
+class BackstoryField(TemplateField, name="Bio", required=True):
+    "Define who is the character."
 
     @classmethod
     async def on_submit(
@@ -1050,10 +1024,8 @@ class BackstoryField(TemplateField):
                 progress.add(cls.name)
 
 
-class PersonalityField(TemplateField):
-    name = "Personality"
-    description = "Modify the OC's Personality"
-    required: bool = False
+class PersonalityField(TemplateField, name="Personality", required=False):
+    "Modify the OC's Personality"
 
     @classmethod
     async def on_submit(
@@ -1078,10 +1050,8 @@ class PersonalityField(TemplateField):
                 progress.add(cls.name)
 
 
-class ExtraField(TemplateField):
-    name = "Extra Information"
-    description = "Modify the OC's Extra Information"
-    required: bool = False
+class ExtraField(TemplateField, name="Extra Information", required=False):
+    "Modify the OC's Extra Information"
 
     @classmethod
     async def on_submit(
@@ -1106,10 +1076,8 @@ class ExtraField(TemplateField):
                 progress.add(cls.name)
 
 
-class ImageField(TemplateField):
-    name = "Image"
-    description = "Modify the OC's Image"
-    required: bool = True
+class ImageField(TemplateField, name="Image", required=True):
+    "Modify the OC's Image"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -1156,10 +1124,8 @@ class ImageField(TemplateField):
         return None
 
 
-class PokeballField(TemplateField):
-    name = "Pokeball"
-    description = "Specify if OC has a pokeball or not"
-    required: bool = False
+class PokeballField(TemplateField, name="Pokeball"):
+    "Specify if OC has a pokeball or not"
 
     @classmethod
     def check(cls, oc: Character) -> bool:

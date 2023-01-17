@@ -22,7 +22,6 @@ from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.mon_typing import TypingEnum
 from src.structures.species import (
-    Chimera,
     CustomMega,
     CustomParadox,
     CustomUltraBeast,
@@ -70,7 +69,6 @@ class SpeciesComplex(Complex[Species]):
         keep_working: bool = False,
         ocs: set[Character] = None,
     ):
-
         self.total = mon_total = sorted({x for x in mon_total if not x.banned}, key=lambda x: x.name)
         max_values = min(len(self.total), max_values)
 
@@ -82,9 +80,8 @@ class SpeciesComplex(Complex[Species]):
         if ocs:
             values.update(ocs)
 
-        for oc in values:
-            mon = oc.species
-            if isinstance(mon, (Fusion, Chimera)):
+        for mon in map(lambda x: x.species, values):
+            if isinstance(mon, Fusion):
                 for x in mon.bases:
                     self.reference1.setdefault(x, 0)
                     self.reference1[x] += 1

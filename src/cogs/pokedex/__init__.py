@@ -49,7 +49,7 @@ from src.structures.character import AgeGroup, Character, Kind, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
-from src.structures.species import Chimera, Fakemon, Fusion, Species
+from src.structures.species import Fakemon, Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
@@ -110,7 +110,6 @@ class Pokedex(commands.Cog):
         ctx: Interaction,
         species: Optional[DefaultSpeciesArg],
         fused: Optional[DefaultSpeciesArg],
-        chimera: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
         move_id: Optional[MoveArg],
         level: int = 0,
@@ -127,8 +126,6 @@ class Pokedex(commands.Cog):
             Species to look up info about
         fused : Optional[DefaultSpeciesArg]
             To check when fused
-        chimera : Optional[DefaultSpeciesArg]
-            To check when chimera
         fakemon : Optional[FakemonArg]
             Search fakemon species
         move_id : Optional[MoveArg]
@@ -149,12 +146,10 @@ class Pokedex(commands.Cog):
         )
         await resp.defer(ephemeral=True, thinking=True)
 
-        mons: set[Optional[Species]] = {species, fused, chimera}
+        mons: set[Optional[Species]] = {species, fused}
         if aux := {x for x in mons if x is not None}:
             if len(aux) == 2:
                 mon = Fusion(*aux, ratio=0.5)
-            elif len(aux) == 3:
-                mon = Chimera(aux)
             else:
                 mon = aux.pop()
 
@@ -196,7 +191,7 @@ class Pokedex(commands.Cog):
                 if isinstance(base, Fakemon):
                     entries1 = (height.height_info(val1),)
                     entries2 = (weight.weight_info(val2),)
-                elif isinstance(base, (Fusion, Chimera)) and len(base.bases) >= 2:
+                elif isinstance(base, Fusion) and len(base.bases) >= 2:
                     h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
                     w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
                     entries1 = (

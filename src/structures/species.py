@@ -15,14 +15,11 @@
 
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from itertools import combinations_with_replacement
 from json import JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional, Type
 
-from asyncpg import Record
 from discord.utils import find, get
 from frozendict import frozendict
 from rapidfuzz import process
@@ -44,7 +41,8 @@ __all__ = (
     "Pokemon",
     "CustomMega",
     "Variant",
-    "Chimera",
+    "CustomParadox",
+    "CustomUltraBeast",
     "ALL_SPECIES",
     "SPECIES_BY_NAME",
 )
@@ -75,7 +73,7 @@ PHRASES = {
 
 
 @dataclass(unsafe_hash=True, slots=True)
-class Species(metaclass=ABCMeta):
+class Species:
     __dict__ = {}
     id: str = ""
     name: str = ""
@@ -194,42 +192,6 @@ class Species(metaclass=ABCMeta):
         if mon := self.evolves_from:
             return Species.from_ID(mon)
 
-    @property
-    @abstractmethod
-    def requires_image(self) -> bool:
-        """This is a method that determines whether
-        if a kind requires image
-
-        Returns
-        -------
-        bool
-            value
-        """
-
-    @property
-    @abstractmethod
-    def can_have_special_abilities(self) -> bool:
-        """This is a method that determines whether
-        if a kind can or not have a special ability
-
-        Returns
-        -------
-        bool
-            value
-        """
-
-    @property
-    @abstractmethod
-    def max_amount_abilities(self) -> int:
-        """This is a method that determines
-        how many abilities can be carried as max
-
-        Returns
-        -------
-        int
-            value
-        """
-
     @classmethod
     def deduce(cls, item: str):
         """This is a function which allows to obtain the species given
@@ -337,7 +299,7 @@ class Species(metaclass=ABCMeta):
                 return elements[0]
 
     @classmethod
-    def any_deduce(cls, item: str, chimera: bool = False):
+    def any_deduce(cls, item: str):
         """This is a function which allows to obtain the species given
         an ID or multiple values.
 
@@ -353,12 +315,10 @@ class Species(metaclass=ABCMeta):
         """
         if "," not in item and "_" not in item:
             return cls.single_deduce(item)
-        if items := set(cls.deduce(item)):
-            if len(items) == 3 and chimera:
-                return Chimera(items)
-            if len(items) == 2:
-                mon1, mon2 = items
-                return Fusion(mon1=mon1, mon2=mon2, ratio=0.5)
+        if len(items := set(cls.deduce(item))) == 2:
+            mon1, mon2 = items
+            return Fusion(mon1=mon1, mon2=mon2, ratio=0.5)
+        if items:
             return items.pop()
 
     @classmethod
@@ -411,144 +371,73 @@ class Species(metaclass=ABCMeta):
                     return Pokemon(**dct)
         return default
 
+    def as_data(self) -> dict[str, str] | str:
+        return self.id
+
+    @classmethod
+    def from_data(cls, value: str | dict[str, str]):
+        if not value or isinstance(value, str):
+            return cls.from_ID(value)
+
+        item = value.copy()
+        for k, v in {
+            "mega": CustomMega,
+            "ub": UltraBeast,
+            "paradox": CustomParadox,
+            "base": Variant,
+        }.items():
+            if data := item.pop(k, None):
+                return v(base=data, **item)
+
+        if data := item.get("fusion", []):
+
+            if isinstance(data, dict):
+                (mon1, mon2), ratio = data.get("species"), data.get("ratio", 0.5)
+                fusion = Fusion(mon1, mon2, ratio=ratio)
+            else:
+                fusion = Fusion(*data, ratio=0.5)
+
+            if not fusion.types:
+                fusion.types = TypingEnum.deduce_many(*item.get("types", []))
+
+            return fusion
+
+        return Fakemon(**item)
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class Pokemon(Species):
-    """
-    This class Represents a common Pokemon
-    """
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def can_have_special_abilities(self):
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return min(len(self.abilities), 2)
+    "This class Represents a common Pokemon"
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class Legendary(Species):
-    """
-    This class Represents a legendary
-    """
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def can_have_special_abilities(self):
-        return False
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return min(len(self.abilities), 2)
+    "This class Represents a legendary"
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class Mythical(Species):
-    """
-    This class Represents a Mythical
-    """
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def can_have_special_abilities(self):
-        return False
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return min(len(self.abilities), 2)
+    "This class Represents a Mythical"
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class Mega(Species):
-    """
-    This class Represents a Mega
-    """
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def can_have_special_abilities(self):
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
+    "This class Represents a Mega"
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class UltraBeast(Species):
-    """
-    This class Represents an UltraBeast
-    """
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def can_have_special_abilities(self):
-        return False
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
+    "This class Represents an UltraBeast"
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class Paradox(Species):
-    """
-    This class Represents a Paradox
-    """
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def can_have_special_abilities(self):
-        return False
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
+    "This class Represents a Paradox"
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class Fakemon(Species):
-    """
-    This class Represents a fakemon
-    """
-
-    @classmethod
-    def from_record(cls, record: Record):
-        if not record:
-            return
-        return Fakemon(id=record["id"], name=record["name"], evolves_from=record["evolves_from"])
-
-    @property
-    def requires_image(self) -> bool:
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 2
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return True
+    "This class Represents a fakemon"
 
     @classmethod
     def deduce(cls, item: str):
@@ -579,108 +468,18 @@ class Fakemon(Species):
         if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return Fakemon(evolves_from=mon.id)
 
-
-@dataclass(unsafe_hash=True, slots=True)
-class Chimera(Species):
-    """
-    This class Represents a Chimera
-    """
-
-    bases: frozenset[Species] = field(default_factory=frozenset)
-
-    def __init__(self, bases: frozenset[Species], types: frozenset[TypingEnum] = None):
-        types = types or []
-        bases = {o for x in bases if (o := Species.single_deduce(x) if isinstance(x, str) else x)}
-        self.bases = frozenset(bases)
-        amount = len(bases) or 1
-
-        abilities = frozenset().union(*[frozenset(x.abilities) for x in bases])
-
-        movepool = Movepool()
-        for base in self.bases:
-            movepool += base.total_movepool
-
-        super(Chimera, self).__init__(
-            id="_".join(sorted(x.id for x in bases)),
-            name="/".join(sorted(x.name for x in bases)),
-            height=round(sum(x.height for x in bases) / amount),
-            weight=round(sum(x.weight for x in bases) / amount),
-            HP=round(sum(x.HP for x in bases) / amount),
-            ATK=round(sum(x.ATK for x in bases) / amount),
-            DEF=round(sum(x.DEF for x in bases) / amount),
-            SPA=round(sum(x.SPA for x in bases) / amount),
-            SPD=round(sum(x.SPD for x in bases) / amount),
-            SPE=round(sum(x.SPE for x in bases) / amount),
-            types=types,
-            banned=any(x.banned for x in bases),
-            movepool=movepool,
-            abilities=abilities,
-        )
-
-        if len(items := list(self.possible_types)) == 1:
-            self.types = frozenset(items[0])
-
-        shapes = {x.shape for x in bases}
-        if len(shapes) == 1:
-            self.shape = shapes.pop()
-
-    def __eq__(self, other: Chimera):
-        if isinstance(other, Chimera):
-            return self.bases == other.bases
-        return super(Chimera, self).__eq__(other)
-
-    @property
-    def possible_types(self):
-        """This returns a list of valid types for the pokemon
-
-        Returns
-        -------
-        frozenset[frozenset[Typing]]
-            List of sets (valid types)
-        """
-        mon_types = frozenset().union(*[x.types for x in self.bases])
-        return frozenset(map(frozenset[TypingEnum], combinations_with_replacement(mon_types, 2)))
-
-    @property
-    def evol_line(self):
-        return []
-
-    @property
-    def requires_image(self) -> bool:
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return False
-
-    @classmethod
-    def deduce(cls, item: str) -> Optional[Chimera]:
-        """This is a function which allows to obtain the species given
-        an ID or multiple values.
-
-        Parameters
-        ----------
-        item : str
-            Item to look for
-
-        Returns
-        -------
-        Optional[Chimera]
-            result
-        """
-        if isinstance(mon := Species.any_deduce(item, chimera=True), cls):
-            return mon
+    def as_data(self):
+        return {
+            "name": self.name,
+            "types": [x.name for x in self.types],
+            "evolves_from": self.evolves_from,
+            "movepool": self.movepool.as_dict,
+        }
 
 
 @dataclass(unsafe_hash=True, slots=True)
 class CustomMega(Species):
-    """
-    This class Represents a Custom Mega
-    """
+    "This class Represents a Custom Mega"
 
     base: Optional[Species] = None
 
@@ -712,18 +511,6 @@ class CustomMega(Species):
         )
         self.base = base
 
-    @property
-    def requires_image(self) -> bool:
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return True
-
     @classmethod
     def deduce(cls, item: str) -> Optional[CustomMega]:
         """Method deduce but filtered
@@ -753,12 +540,16 @@ class CustomMega(Species):
         if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return CustomMega(base=mon)
 
+    def as_data(self):
+        return {
+            "mega": self.id,
+            "types": [x.name for x in self.types],
+        }
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class CustomParadox(Species):
-    """
-    This class Represents a Custom Paradox
-    """
+    "This class Represents a Custom Paradox"
 
     base: Optional[Species] = None
 
@@ -794,18 +585,6 @@ class CustomParadox(Species):
         )
         self.base = base
 
-    @property
-    def requires_image(self) -> bool:
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return False
-
     @classmethod
     def deduce(cls, item: str) -> Optional[CustomParadox]:
         """Method deduce but filtered
@@ -835,12 +614,18 @@ class CustomParadox(Species):
         if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return CustomParadox(base=mon)
 
+    def as_data(self):
+        return {
+            "paradox": self.id,
+            "name": self.name,
+            "movepool": self.movepool.as_dict,
+            "types": [x.name for x in self.types],
+        }
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class CustomUltraBeast(Species):
-    """
-    This class Represents a Custom Ultra Beast
-    """
+    "This class Represents a Custom Ultra Beast"
 
     base: Optional[Species] = None
 
@@ -876,18 +661,6 @@ class CustomUltraBeast(Species):
         )
         self.base = base
 
-    @property
-    def requires_image(self) -> bool:
-        return True
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return False
-
     @classmethod
     def deduce(cls, item: str) -> Optional[CustomUltraBeast]:
         """Method deduce but filtered
@@ -917,12 +690,18 @@ class CustomUltraBeast(Species):
         if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return CustomUltraBeast(base=mon)
 
+    def as_data(self):
+        return {
+            "ub": self.id,
+            "name": self.name,
+            "movepool": self.movepool.as_dict,
+            "types": [x.name for x in self.types],
+        }
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class Variant(Species):
-    """
-    This class Represents a Variant
-    """
+    "This class Represents a Variant"
 
     base: Optional[Species] = None
 
@@ -964,29 +743,6 @@ class Variant(Species):
         self.base = base
 
     @classmethod
-    def from_record(cls, record: Record):
-        if not record:
-            return
-        species = Species.from_ID(record["species"])
-        species = Variant(base=species, name=record["name"])
-        movepool_data = record["movepool"]
-        if movepool := Movepool.from_dict(**movepool_data):
-            species.movepool = movepool
-        return species
-
-    @property
-    def requires_image(self) -> bool:
-        return False
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 2
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return True
-
-    @classmethod
     def deduce(cls, item: str) -> Optional[Variant]:
         """Method deduce but filtered
 
@@ -1022,12 +778,19 @@ class Variant(Species):
         if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
             return Variant(base=mon, name=f"Variant {mon.name.title()}")
 
+    def as_data(self):
+        return {
+            "name": self.name,
+            "evolves_from": self.evolves_from,
+            "movepool": self.movepool.as_dict,
+            "types": [x.name for x in self.types],
+            "base": self.base.id,
+        }
+
 
 @dataclass(unsafe_hash=True, slots=True)
 class Fusion(Species):
-    """
-    This class Represents a fusion
-    """
+    "This class Represents a fusion"
 
     mon1: Optional[Species] = None
     mon2: Optional[Species] = None
@@ -1152,18 +915,6 @@ class Fusion(Species):
         elements.update(frozenset({x, y}) for x in self.mon1.types for y in self.mon2.types)
         return frozenset(elements)
 
-    @property
-    def requires_image(self) -> bool:
-        return True
-
-    @property
-    def can_have_special_abilities(self) -> bool:
-        return all(x.can_have_special_abilities for x in self.bases)
-
-    @property
-    def max_amount_abilities(self) -> int:
-        return 1
-
     @classmethod
     def deduce(cls, item: str) -> Optional[Fusion]:
         """This is a function which allows to obtain the species given
@@ -1181,6 +932,15 @@ class Fusion(Species):
         """
         if isinstance(mon := Species.any_deduce(item), cls):
             return mon
+
+    def as_data(self):
+        return {
+            "fusion": {
+                "species": [x.id for x in self.bases],
+                "ratio": self.ratio,
+            },
+            "types": [x.name for x in self.types],
+        }
 
 
 class SpeciesEncoder(JSONEncoder):
