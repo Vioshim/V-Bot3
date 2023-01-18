@@ -33,7 +33,7 @@ from src.structures.character import Character, CharacterArg
 from src.structures.pronouns import Pronoun
 from src.structures.proxy import NPC, Proxy, ProxyExtra
 from src.structures.species import Species
-from src.utils.etc import LINK_EMOJI, WHITE_BAR
+from src.utils.etc import REPLY_EMOJI
 from src.utils.matches import BRACKETS_PARSER, EMOJI_REGEX
 
 __all__ = ("Proxy", "setup")
@@ -368,7 +368,22 @@ class ProxyCog(commands.Cog):
         text = (text.strip() if text else None) or "\u200b"
         thread = view = MISSING
         if reference := ctx.message.reference:
-            view = View().add_item(Button(label="Replying", url=reference.jump_url, emoji=LINK_EMOJI))
+
+            if not (msg := reference.cached_message) and isinstance(reference.resolved, discord.Message):
+                msg = reference.resolved
+
+            if msg is None and not isinstance(reference.resolved, discord.DeletedReferencedMessage):
+                with suppress(discord.DiscordException):
+                    msg = await ctx.channel.fetch_message(reference.message_id)
+
+            if isinstance(msg, discord.Message):
+                view = View().add_item(
+                    Button(
+                        label=msg.author.display_name[:80],
+                        url=reference.jump_url,
+                        emoji=REPLY_EMOJI,
+                    )
+                )
         if isinstance(ctx.channel, discord.Thread):
             thread = ctx.channel
 

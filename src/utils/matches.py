@@ -40,7 +40,9 @@ __all__ = (
     "BRACKETS_PARSER",
 )
 TUPPER_REPLY_PATTERN = re.compile(
-    r"> (.+)\n@.+ \(<@!\d+>\) - \[jump\]\(<https:\/\/discord\.com\/channels\/@me\/(\d+)\/(\d+)>\)\n(.*)",
+    r"^> (?P<response>.+)\n"
+    r"@(?P<user>.*) \(<@!(?P<user_id>\d+)>\) - \[jump\]\(<https:\/\/discord\.com\/channels\/@me\/(?P<channel>\d+)\/(?P<message>\d+)>\)\n"
+    r"(?P<content>.*)$",
     re.DOTALL,
 )
 BRACKETS_PARSER = re.compile(r"\{\{([^\{\}]+)\}\}")

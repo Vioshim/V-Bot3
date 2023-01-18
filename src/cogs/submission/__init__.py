@@ -58,7 +58,13 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import (
+    LINK_EMOJI,
+    MAP_ELEMENTS2,
+    REPLY_EMOJI,
+    SETTING_EMOJI,
+    WHITE_BAR,
+)
 from src.utils.matches import CLYDE, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
@@ -527,16 +533,26 @@ class Submission(commands.Cog):
         else:
             view.add_item(Button(label=key[:80], disabled=True))
 
+        phrase = "Replying"
+        channel_id, message_id = 0, 0
         if data := TUPPER_REPLY_PATTERN.search(message.content):
-            channel_id, message_id = int(data.group(2)), int(data.group(3))
-            content = data.group(4).strip()
-        else:
+            phrase = data.group("user").strip() or phrase
+            content = data.group("content").strip()
+            with suppress(ValueError):
+                channel_id, message_id = int(data.group("channel")), int(data.group("message"))
+
+        if channel_id == message_id == 0:
             content = message.content
-            channel_id, message_id = 0, 0
             aux_view = View.from_message(message)
-            if aux_view.children and isinstance(btn := aux_view.children[0], Button) and btn.url:
+            if items := [
+                x
+                for x in aux_view.children
+                if isinstance(x, Button) and x.url and x.url.startswith("https://discord.com/channels/")
+            ]:
                 with suppress(ValueError):
+                    btn = items[0]
                     channel_id, message_id = map(int, btn.url.split("/")[-2:])
+                    phrase = btn.label or phrase
 
         for item in EMOJI_REGEX.finditer(content):
             match item.groupdict():
@@ -555,7 +571,7 @@ class Submission(commands.Cog):
             else:
                 ch = self.bot.get_partial_messageable(id=channel_id)
                 aux = ch.get_partial_message(message_id)
-            view.add_item(Button(label="Replying", url=aux.jump_url, emoji=LINK_EMOJI))
+            view.add_item(Button(label=phrase[:80], url=aux.jump_url, emoji=REPLY_EMOJI))
 
         for index, paragraph in enumerate(
             text := wrap(
@@ -660,7 +676,7 @@ class Submission(commands.Cog):
         for msg in sorted(messages, key=lambda x: x.id):
             if not await db1.find_one({"id": msg.id, "channel": msg.channel.id}):
                 if data := TUPPER_REPLY_PATTERN.search(msg.content):
-                    text = data.group(4).strip()
+                    text = data.group("content").strip()
                 else:
                     text = msg.content
 

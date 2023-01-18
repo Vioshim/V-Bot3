@@ -39,6 +39,7 @@ __all__ = (
     "KOFI_EMOJI",
     "RTFMPages",
 )
+REPLY_EMOJI = PartialEmoji(name="IconReply", id=816772114639487057)
 EMOTE_CREATE_EMOJI = PartialEmoji(name="emotecreate", id=460538984263581696)
 EMOTE_REMOVE_EMOJI = PartialEmoji(name="emoteremove", id=460538983965786123)
 EMOTE_UPDATE_EMOJI = PartialEmoji(name="emoteupdate", id=460539246508507157)
