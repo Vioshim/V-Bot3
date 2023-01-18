@@ -672,23 +672,21 @@ class Submission(commands.Cog):
                     kwargs[name] = oc
 
         attachments = message.attachments
-        db1 = self.bot.mongo_db("Tupper-logs")
         for msg in sorted(messages, key=lambda x: x.id):
-            if not await db1.find_one({"id": msg.id, "channel": msg.channel.id}):
-                if data := TUPPER_REPLY_PATTERN.search(msg.content):
-                    text = data.group("content").strip()
-                else:
-                    text = msg.content
+            if data := TUPPER_REPLY_PATTERN.search(msg.content):
+                text = data.group("content").strip()
+            else:
+                text = msg.content
 
-                if not (
-                    (text and (text in message.content or message.content in text))
-                    or (
-                        attachments
-                        and len(attachments) == len(msg.attachments)
-                        and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
-                    )
-                ):
-                    continue
+            if not (
+                (text and (text in message.content or message.content in text))
+                or (
+                    attachments
+                    and len(attachments) == len(msg.attachments)
+                    and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+                )
+            ):
+                continue
 
             await self.on_message_tupper(msg, message.author, kwargs)
 
