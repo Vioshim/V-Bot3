@@ -631,12 +631,14 @@ class Character:
                 a1 = Ability.get(name="Protosynthesis")
                 a2 = Ability.get(name="Quark Drive")
 
-                phrase = mon.__class__.__name__.removeprefix("Custom")
-
                 if a1 in self.abilities:
                     phrase = "Past"
                 elif a2 in self.abilities:
                     phrase = "Future"
+                elif TypingEnum.Typeless in mon.types:
+                    phrase = "Typeless"
+                else:
+                    phrase = mon.__class__.__name__.removeprefix("Custom")
 
                 if mon.base.name == mon.name:
                     c_embed.add_field(name=phrase, value=mon.name)
