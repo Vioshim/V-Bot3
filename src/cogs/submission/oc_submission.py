@@ -190,6 +190,8 @@ class Template(TemplateItem, Enum):
                 else:
                     return
 
+        default_measure: bool = False
+
         match self:
             case self.Pokemon:
                 oc.species, abilities = choices[0], choices[0].abilities.copy()
@@ -197,8 +199,10 @@ class Template(TemplateItem, Enum):
                     oc.abilities = abilities
                 else:
                     oc.abilities &= abilities
+                default_measure = True
             case self.Fusion:
                 oc.species = Fusion(*choices, ratio=0.5)
+                default_measure = True
             case self.Variant:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"{choices[0].name} Variant"[:45],
@@ -211,6 +215,7 @@ class Template(TemplateItem, Enum):
                             oc.species.name = answer
                         else:
                             oc.species = Variant(base=choices[0], name=answer)
+                            default_measure = True
             case self.CustomParadox:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"Paradox {choices[0].name}"[:45],
@@ -223,6 +228,7 @@ class Template(TemplateItem, Enum):
                             oc.species.name = answer
                         else:
                             oc.species = CustomParadox(base=choices[0], name=answer)
+                            default_measure = True
             case self.CustomUltraBeast:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"UB {choices[0].name}"[:45],
@@ -235,7 +241,9 @@ class Template(TemplateItem, Enum):
                             oc.species.name = answer
                         else:
                             oc.species = CustomUltraBeast(base=choices[0], name=answer)
+                            default_measure = True
             case self.CustomMega:
+                default_measure = not (isinstance(oc.species, CustomMega) and oc.species.base == choices[0])
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
             case self.CustomPokemon:
@@ -250,12 +258,24 @@ class Template(TemplateItem, Enum):
                         if isinstance(oc.species, Fakemon):
                             oc.species.name = answer
                         else:
+                            default_measure = True
                             oc.species = Fakemon(
                                 name=answer,
                                 abilities=oc.abilities,
                                 base_image=oc.image_url,
                                 movepool=Movepool(other=oc.moveset.copy()),
                             )
+
+        if species := oc.species:
+            moves = species.total_movepool()
+            if not oc.moveset and len(moves) <= 6:
+                oc.moveset = frozenset(moves)
+            if not oc.abilities and len(species.abilities) == 1:
+                oc.abilities = species.abilities.copy()
+
+        if default_measure:
+            oc.size = Size.M
+            oc.weight = Size.M
 
     @property
     def min_values(self):
@@ -497,14 +517,8 @@ class SpeciesField(TemplateField, name="Species", required=True):
         ephemeral: bool = False,
     ):
         await template.process(oc=oc, ctx=ctx, ephemeral=ephemeral)
-        if species := oc.species:
+        if oc.species:
             progress.add(cls.name)
-            moves = species.total_movepool()
-            if not oc.moveset and len(moves) <= 6:
-                oc.moveset = frozenset(moves)
-            if not oc.abilities and len(species.abilities) == 1:
-                oc.abilities = species.abilities.copy()
-            oc.size = oc.weight = Size.M
 
 
 class FusionRatioField(TemplateField, name="Proportion"):
