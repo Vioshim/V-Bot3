@@ -66,7 +66,11 @@ class ProxyFunction(ABC):
                 args = [x.lower() for x in args]
             if item.requires_strip:
                 args = [x.strip() for x in args]
-            return await item.parse(ctx, npc, args)
+            try:
+                return await item.parse(ctx, npc, args)
+            except Exception as e:
+                ctx.bot.logger.exception("ProxyFunction error: %s", args, exc_info=e)
+                return npc, f"`Error: {e}`", None
 
     @classmethod
     @abstractmethod

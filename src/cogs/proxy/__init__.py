@@ -216,29 +216,25 @@ class ProxyCog(commands.Cog):
 
         embeds = []
         for item in BRACKETS_PARSER.finditer(text):
-            aux = item.group(1)
-            try:
-                if proxy_data := await ProxyFunction.lookup(ctx, npc, aux):
-                    npc, data_text, data_embed = proxy_data
-                    if data_embed is None or len(embeds) < 10:
-                        text = text.replace("{{" + aux + "}}", data_text, 1)
-                        if data_embed:
-                            data_embed.color = data_embed.color or ctx.author.color
-                            embeds.append(data_embed)
-            except Exception as e:
-                self.bot.logger.exception("Failed to parse %s", aux, exc_info=e)
-                continue
+            if proxy_data := await ProxyFunction.lookup(ctx, npc, item.group("command")):
+                npc, data_text, data_embed = proxy_data
+                if data_embed is None or len(embeds) < 10:
+                    text = text.replace(item.string, data_text, 1)
+                    if data_embed:
+                        data_embed.color = data_embed.color or ctx.author.color
+                        embeds.append(data_embed)
 
-        for item in EMOJI_REGEX.finditer(text):
-            match item.groupdict():
-                case {"animated": "a", "name": name, "id": id}:
-                    if id.isdigit() and not self.bot.get_emoji(int(id)):
-                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless)"
-                        text = EMOJI_REGEX.sub(url, text)
-                case {"name": name, "id": id}:
-                    if id.isdigit() and not self.bot.get_emoji(int(id)):
-                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless)"
-                        text = EMOJI_REGEX.sub(url, text)
+        emoji_item: tuple[str, str, str]
+        for emoji_item in EMOJI_REGEX.findall(text):
+            match emoji_item:
+                case ("a", name, emoji_id):
+                    if emoji_id.isdigit() and not self.bot.get_emoji(int(emoji_id)):
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{emoji_id}.gif?size=60&quality=lossless)"
+                        text = text.replace(f"<a:{name}:{emoji_id}>", url, 1)
+                case ("", name, emoji_id):
+                    if emoji_id.isdigit() and not self.bot.get_emoji(int(emoji_id)):
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{emoji_id}.webp?size=60&quality=lossless)"
+                        text = text.replace(f"<:{name}:{emoji_id}>", url, 1)
 
         if index == 0:
             # Webhooks can't send stickers
