@@ -252,14 +252,14 @@ class HeightView(Basic):
         self.oc.size = Size[sct.values[0]]
         await self.delete(itx)
 
-    @button(label="Meters", style=ButtonStyle.blurple)
+    @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_1(self, itx: Interaction, btn: Button):
         modal = HeightModal1(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
 
-    @button(label="Feet & Inches", style=ButtonStyle.blurple)
+    @button(label="Feet & Inches", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
         modal = HeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
@@ -305,14 +305,14 @@ class WeightView(Basic):
         self.oc.weight = Size[sct.values[0]]
         await self.delete(itx)
 
-    @button(label="Kg", style=ButtonStyle.blurple)
+    @button(label="Kg", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_1(self, itx: Interaction, btn: Button):
         modal = WeightModal1(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
 
-    @button(label="Lbs", style=ButtonStyle.blurple)
+    @button(label="Lbs", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
         modal = WeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)

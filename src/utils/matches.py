@@ -68,6 +68,7 @@ G_DOCUMENT = re.compile(r"https://docs\.google\.com/document/d/(.+)/", re.IGNORE
 
 
 EMOJI_REGEX = re.compile(r"<(?P<animated>a?):(?P<name>[a-zA-Z0-9_]{2,32}):(?P<id>[0-9]{18,22})>")
+PARTIAL_EMOJI_REGEX = re.compile(r":(?P<name>[a-zA-Z0-9_]{2,32}):")
 URL_DOMAIN_MATCH = re.compile(r"(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+")
 REGEX_URL = re.compile(r"http[s]?://((?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]| %[0-9a-fA-F][0-9a-fA-F])+)")
 DISCORD_MSG_URL = re.compile(
