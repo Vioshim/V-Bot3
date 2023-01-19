@@ -207,7 +207,10 @@ class Template(TemplateItem, Enum):
                     required=True,
                 ) as answer:
                     if isinstance(answer, str) and answer:
-                        oc.species = Variant(base=choices[0], name=answer)
+                        if isinstance(oc.species, Variant) and oc.species.base == choices[0]:
+                            oc.species.name = answer
+                        else:
+                            oc.species = Variant(base=choices[0], name=answer)
             case self.CustomParadox:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"Paradox {choices[0].name}"[:45],
@@ -216,7 +219,10 @@ class Template(TemplateItem, Enum):
                     required=True,
                 ) as answer:
                     if isinstance(answer, str) and answer:
-                        oc.species = CustomParadox(choices[0], name=answer)
+                        if isinstance(oc.species, CustomParadox) and oc.species.base == choices[0]:
+                            oc.species.name = answer
+                        else:
+                            oc.species = CustomParadox(base=choices[0], name=answer)
             case self.CustomUltraBeast:
                 async with ModernInput(member=ctx.user, target=ctx).handle(
                     label=f"UB {choices[0].name}"[:45],
@@ -225,7 +231,10 @@ class Template(TemplateItem, Enum):
                     required=True,
                 ) as answer:
                     if isinstance(answer, str) and answer:
-                        oc.species = CustomUltraBeast(choices[0], name=answer)
+                        if isinstance(oc.species, CustomUltraBeast) and oc.species.base == choices[0]:
+                            oc.species.name = answer
+                        else:
+                            oc.species = CustomUltraBeast(base=choices[0], name=answer)
             case self.CustomMega:
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
