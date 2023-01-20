@@ -45,7 +45,7 @@ TUPPER_REPLY_PATTERN = re.compile(
     r"(?P<content>.*)$",
     re.DOTALL,
 )
-BRACKETS_PARSER = re.compile(r"\{\{(?P<command>[^\{\}]+)\}\}")
+BRACKETS_PARSER = re.compile(r"\{\{([^\{\}]+)\}\}")
 ESCAPE_SEQ = re.compile(r"\\(.)")
 CLYDE = re.compile(r"(c)(lyde)", re.IGNORECASE)
 ID_DICEBEAR = re.compile(r"https://avatars\.dicebear\.com/api/identicon/(.+)\.png")

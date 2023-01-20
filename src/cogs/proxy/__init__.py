@@ -215,11 +215,11 @@ class ProxyCog(commands.Cog):
                 npc.name = alternate
 
         embeds = []
-        for item in BRACKETS_PARSER.finditer(text):
-            if proxy_data := await ProxyFunction.lookup(ctx, npc, item.group("command")):
+        for item in BRACKETS_PARSER.findall(text):
+            if proxy_data := await ProxyFunction.lookup(ctx, npc, item):
                 npc, data_text, data_embed = proxy_data
                 if data_embed is None or len(embeds) < 10:
-                    text = text.replace(item.string, data_text, 1)
+                    text = text.replace("{{" + item + "}}", data_text, 1)
                     if data_embed:
                         data_embed.color = data_embed.color or ctx.author.color
                         embeds.append(data_embed)
