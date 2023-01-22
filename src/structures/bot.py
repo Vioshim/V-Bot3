@@ -293,15 +293,14 @@ class CustomBot(Bot):
         """
         with suppress(Exception):
             async with self.session.get(str(url)) as resp:
-                if resp.status == 200:
-                    data = await resp.read()
-                    fp = BytesIO(data)
-                    text = resp.content_type.split("/")
-                    if filename and "." not in filename:
-                        filename = f"{filename}.{text[-1]}"
-                    if not filename:
-                        filename = ".".join(text)
-                    return File(fp=fp, filename=filename, spoiler=spoiler)
+                data = await resp.read()
+                fp = BytesIO(data)
+                text = resp.content_type.split("/")
+                if filename and "." not in filename:
+                    filename = f"{filename}.{text[-1]}"
+                if not filename:
+                    filename = ".".join(text)
+                return File(fp=fp, filename=filename, spoiler=spoiler)
 
     def webhook_lazy(self, channel: Messageable | int) -> Optional[Webhook]:
         """Function which returns first webhook if cached
