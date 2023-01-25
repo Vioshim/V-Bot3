@@ -13,8 +13,9 @@
 # limitations under the License.
 
 
+from __future__ import annotations
+
 import asyncio
-import sys
 from logging import getLogger, setLoggerClass
 from os import getenv
 
@@ -35,6 +36,13 @@ setLoggerClass(ColoredLogger)
 logger = getLogger(__name__)
 
 load_dotenv()
+
+try:
+    import uvloop  # type: ignore
+
+    uvloop.install()
+except ModuleNotFoundError:
+    logger.error("Not using uvloop")
 
 
 async def main() -> None:
@@ -65,16 +73,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-
-        import uvloop  # type: ignore
-
-        if sys.version_info >= (3, 11):
-            with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
-                runner.run(main())
-        else:
-            uvloop.install()
-            asyncio.run(main())
-    except ModuleNotFoundError:
-        logger.error("Not using uvloop")
-        asyncio.run(main())
+    asyncio.run(main())
