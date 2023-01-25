@@ -69,8 +69,6 @@ class CustomBot(Bot):
         aiohttp's session
     m_bin : MystBinClient
         client for posting requests
-    pool : Pool
-        asyncpg's Pool instance
     msg_cache : set[int]
         messages IDs to ignore
     dagpi : DagpiClient:

@@ -73,7 +73,6 @@ class RTFMPages(Enum):
     Apscheduler = "https://apscheduler.readthedocs.io/en/3.x/"
     BS4 = "https://www.crummy.com/software/BeautifulSoup/bs4/doc/"
     Dateparser = "https://dateparser.readthedocs.io/en/latest/"
-    Asyncpg = "https://magicstack.github.io/asyncpg/current/"
     Black = "https://black.readthedocs.io/en/stable/"
     Uvloop = "https://uvloop.readthedocs.io/"
     D20 = "https://d20.readthedocs.io/en/latest/"

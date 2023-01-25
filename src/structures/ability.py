@@ -21,7 +21,6 @@ from json import JSONEncoder, load
 from re import split
 from typing import Any, Callable, Optional
 
-from asyncpg import Connection, Record
 from discord import Embed
 from discord.utils import find, get
 from frozendict import frozendict
@@ -257,24 +256,6 @@ class SpAbility:
             embed.description = embed.description[:2000]
         return embed
 
-    @classmethod
-    def convert(cls, record: Record) -> SpAbility:
-        """Method that converts a record into a SpAbility instance
-
-        Parameters
-        ----------
-        record : Record
-            record to convert
-
-        Returns
-        -------
-        SpAbility
-            converted element
-        """
-        items = dict(record)
-        items.pop("id", None)
-        return SpAbility(**items)
-
     def copy(self):
         return SpAbility(
             name=self.name,
@@ -283,70 +264,6 @@ class SpAbility:
             pros=self.pros,
             cons=self.cons,
             kind=self.kind,
-        )
-
-    @classmethod
-    async def fetch(cls, connection: Connection, idx: int) -> Optional[SpAbility]:
-        """This method calls database to obtain information
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-        idx : int
-            ID to look for
-
-        Returns
-        -------
-        Optional[SpAbility]
-            Fetched element
-        """
-        if entry := await connection.fetchrow(
-            """--sql
-            SELECT *
-            FROM SPECIAL_ABILITIES
-            WHERE ID = $1;
-            """,
-            idx,
-        ):
-            return cls.convert(entry)
-
-    async def upsert(self, connection: Connection, idx: int) -> str:
-        """This method calls database to set information
-
-        Parameters
-        ----------
-        connection : Connection
-            asyncpg connection
-        idx : int
-            id of the special ability
-
-        Returns
-        -------
-        str
-            Result of the query
-        """
-        if not self or self == SpAbility():
-            return await connection.execute(
-                """--sql
-                DELETE FROM SPECIAL_ABILITIES
-                WHERE ID = $1;
-                """,
-                idx,
-            )
-        return await connection.execute(
-            """--sql
-            INSERT INTO SPECIAL_ABILITIES(ID, NAME, DESCRIPTION, ORIGIN, PROS, CONS)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            ON CONFLICT (ID) DO UPDATE
-            SET NAME = $2, DESCRIPTION = $3, ORIGIN = $4, PROS = $5, CONS = $6;
-            """,
-            idx,
-            self.name,
-            self.description,
-            self.origin,
-            self.pros,
-            self.cons,
         )
 
     @classmethod

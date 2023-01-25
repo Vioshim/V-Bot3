@@ -23,7 +23,6 @@ apscheduler = { git = "https://github.com/agronholm/apscheduler.git", rev = "mas
 beautifulsoup4 = "^4.11.1"
 python-docx = "^0.8.11"
 d20 = "^1.1.2"
-asyncpg = "^0.26.0"
 mystbin-py = "^5.0.2"
 humanize = "^4.3.0"
 python-dotenv = "^0.20.0"
