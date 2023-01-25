@@ -111,7 +111,6 @@ class CustomBot(Bot):
         return self.mongodb.discord[db]
 
     async def setup_hook(self) -> None:
-        await self.load_extension("jishaku")
         path = Path("src/cogs")
         for cog in map(PurePath, path.glob("*/__init__.py")):
             route = ".".join(cog.parts[:-1])

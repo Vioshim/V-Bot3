@@ -37,13 +37,6 @@ logger = getLogger(__name__)
 
 load_dotenv()
 
-try:
-    import uvloop  # type: ignore
-
-    uvloop.install()
-except ModuleNotFoundError:
-    logger.error("Not using uvloop")
-
 
 async def main() -> None:
     """Main Execution function"""
@@ -73,4 +66,16 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+
+        import uvloop  # type: ignore
+
+        with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
+            runner.run(main())
+    except ModuleNotFoundError:
+        logger.error("Not using uvloop")
+        asyncio.run(main())
+    else:
+        logger.info("Using uvloop")
+
+        asyncio.run(main())
