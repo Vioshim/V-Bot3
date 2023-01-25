@@ -371,6 +371,7 @@ class Complex(Simple[_T]):
         thread: Optional[Snowflake] = None,
         single: bool = False,
         editing_original: bool = False,
+        deleting: bool = True,
         **kwargs,
     ):
         """Sends the paginator towards the defined destination
@@ -442,7 +443,8 @@ class Complex(Simple[_T]):
             else:
                 yield self.choices
         finally:
-            await self.delete()
+            if deleting:
+                await self.delete()
 
     async def simple_send(
         self,
@@ -617,12 +619,7 @@ class Complex(Simple[_T]):
         await response.send_modal(component)
         await component.wait()
 
-    @button(
-        label="Finish",
-        custom_id="finish",
-        style=ButtonStyle.blurple,
-        row=4,
-    )
+    @button(label="Finish", custom_id="finish", style=ButtonStyle.blurple, row=4)
     async def finish(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
         if "Confirm" not in btn.label:
@@ -639,27 +636,45 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def element_remove(self, interaction: Interaction, _: Button):
-        view = Complex(
-            member=self.member,
-            values=self.choices,
+        inner = InnerComplex(self, interaction)
+        async with inner.send(editing_original=True, deleting=False) as choices:
+            self.choices -= choices
+            self.values.extend(choices)
+            self.menu_format()
+            interaction = inner.target or interaction
+            original = self.modifying_embed
+            self.modifying_embed = True
+            await self.edit(interaction=interaction, page=self.pos)
+            self.modifying_embed = original
+
+
+class InnerComplex(Complex):
+    def __init__(self, main: Complex, interaction: Interaction):
+        self.main = main
+        super(InnerComplex, self).__init__(
+            member=main.member,
+            values=main.choices,
             target=interaction,
             timeout=None,
-            max_values=len(self.choices),
-            entries_per_page=self.entries_per_page,
-            emoji_parser=self.emoji_parser,
-            parser=self.parser,
+            embed=self.main.embed.copy(),
+            max_values=len(main.choices),
+            entries_per_page=main.entries_per_page,
+            emoji_parser=main._emoji_parser,
+            parser=main.parser,
             silent_mode=True,
-            sort_key=self._sort_key,
-            text_component=self.text_component,
+            sort_key=main._sort_key,
+            text_component=main.text_component,
             deselect_mode=False,
-            auto_text_component=self.auto_text_component,
+            auto_text_component=main.auto_text_component,
             auto_choice_info=True,
             auto_conclude=False,
         )
-        async with view.send(title="Remove Elements", editing_original=True) as choices:
-            self.choices -= choices
-            self.values.extend(choices)
-            self.sort()
+        self.embed.description = ""
 
-        self.menu_format()
-        await self.edit(interaction, page=0)
+    @button(label="Finish", custom_id="finish", style=ButtonStyle.blurple, row=4)
+    async def finish(self, ctx: Interaction, btn: Button):
+        resp: InteractionResponse = ctx.response
+        if "Confirm" not in btn.label:
+            btn.label = f"{btn.label} (Confirm)"
+            return await resp.edit_message(view=self)
+        self.stop()
