@@ -217,9 +217,9 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
 
 
 class OCParser(metaclass=ABCMeta):
-    @classmethod
+    @staticmethod
     @abstractmethod
-    async def parse(cls, text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
+    async def parse(text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
         """Parser method if possible
 
         Parameters
@@ -237,8 +237,8 @@ class OCParser(metaclass=ABCMeta):
 
 
 class GoogleDocsOCParser(OCParser):
-    @classmethod
-    async def parse(cls, text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
+    @staticmethod
+    async def parse(text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
         if isinstance(text, Message):
             content = text.content
         else:
@@ -252,8 +252,8 @@ class GoogleDocsOCParser(OCParser):
 
 
 class WordOCParser(OCParser):
-    @classmethod
-    async def parse(cls, text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
+    @staticmethod
+    async def parse(text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
         if isinstance(text, Message):
             for attachment in text.attachments:
                 if attachment.content_type == DriveFormat.DOCX.value:
@@ -267,8 +267,8 @@ class WordOCParser(OCParser):
 
 
 class DiscordOCParser(OCParser):
-    @classmethod
-    async def parse(cls, text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
+    @staticmethod
+    async def parse(text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
         if isinstance(text, Message):
             content = text.content
             images = [x for x in text.attachments if x.content_type.startswith("image/")]

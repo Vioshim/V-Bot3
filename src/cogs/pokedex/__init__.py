@@ -189,27 +189,25 @@ class Pokedex(commands.Cog):
                     height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
 
                 if isinstance(base, Fakemon):
-                    entries1 = (height.height_info(val1),)
-                    entries2 = (weight.weight_info(val2),)
-                elif isinstance(base, Fusion) and len(base.bases) >= 2:
-                    h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
-                    w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
-                    entries1 = (
-                        Size.XXXS.height_info(h1.height),
-                        height.height_info(val1),
-                        Size.XXXL.height_info(h2.height),
-                    )
-                    entries2 = (
-                        Size.XXXS.weight_info(w1.weight),
-                        weight.weight_info(val2),
-                        Size.XXXL.weight_info(w2.weight),
-                    )
+                    embed.add_field(name="Height", value=height.height_info(val1), inline=False)
+                    embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
                 else:
-                    entries1 = Size.XXXS.height_info(val1), height.height_info(val1), Size.XXXL.height_info(val1)
-                    entries2 = Size.XXXS.weight_info(val2), weight.weight_info(val2), Size.XXXL.weight_info(val2)
+                    if isinstance(base, Fusion) and len(base.bases) >= 2:
+                        h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
+                        w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
+                        h1, h2, h3 = h1.height, val1, h2.height
+                        w1, w2, w3 = w1.height, val2, w2.height
+                    else:
+                        h1, h2, h3 = val1, val1, val1
+                        w1, w2, w3 = val2, val2, val2
 
-                embed.add_field(name="Height", value="\n".join(entries1), inline=False)
-                embed.add_field(name="Weight", value="\n".join(entries2), inline=False)
+                    embed.add_field(name="Height (Min)", value=Size.XXXS.height_info(h1))
+                    embed.add_field(name="Height (Avg)", value=height.height_info(h2))
+                    embed.add_field(name="Height (Max)", value=Size.XXXL.height_info(h3))
+
+                    embed.add_field(name="Weight (Min)", value=Size.XXXS.weight_info(w1))
+                    embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
+                    embed.add_field(name="Weight (Max)", value=Size.XXXL.weight_info(w3))
 
                 if isinstance(species, Species):
 
