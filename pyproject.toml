@@ -30,6 +30,7 @@ pymongo = { extras = ["srv"], version = "^4.2.0" }
 chronological = "^0.1.1"
 aiogoogle = "^4.5.0"
 dateparser = "^1.1.5"
+pluralkit = "^1.1.1"
 
 
 [tool.poetry.dev-dependencies]
