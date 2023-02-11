@@ -735,6 +735,14 @@ class Submission(commands.Cog):
                     color=thread.owner.color,
                     timestamp=thread.created_at,
                 )
+
+                if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
+                    embed.set_thumbnail(url=images[0].url)
+
+                db = self.bot.mongo_db("RP Search Banner")
+                if item := await db.find_one({"author": thread.owner.id}):
+                    embed.set_image(url=item["image"])
+
                 applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
 
                 tags = ", ".join(x.name for x in applied_tags) or None

@@ -338,11 +338,7 @@ class ProxyCog(commands.Cog):
         if pokemon and not image:
             image = pokemon.image(shiny=shiny, gender=pronoun)
 
-        if resp.is_done():
-            context = ctx.followup.send
-        else:
-            context = resp.send_message
-
+        context = ctx.followup.send if resp.is_done() else resp.send_message
         npc = NPC(name, image)
         await self.bot.mongo_db("NPC").replace_one(
             {"author": ctx.user.id},

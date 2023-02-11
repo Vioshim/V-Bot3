@@ -96,11 +96,7 @@ class CustomRoleModal(Modal, title="Custom Role"):
         elif name := self.name.value:
             color = Colour.from_str(self.color.value) if self.color else Colour.default()
 
-            if self.icon:
-                icon_data = await self.icon.read()
-            else:
-                icon_data = None
-
+            icon_data = await self.icon.read() if self.icon else None
             role = self.role
 
             if not role:
@@ -144,7 +140,7 @@ class CustomRolePerk(Perk):
         resp: InteractionResponse = ctx.response
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Custom Role")
         role: Optional[Role] = None
-        if role_data := await db.find_one({"author": ctx.user.id, "server": ctx.guild_id}):
+        if role_data := await db.find_one({"author": ctx.user.id}):
             role = ctx.guild.get_role(role_data["id"])
             if not role:
                 await db.delete_one(role_data)
