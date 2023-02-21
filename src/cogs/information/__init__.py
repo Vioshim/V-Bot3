@@ -1369,7 +1369,7 @@ class Information(commands.Cog):
         )
 
     @commands.Cog.listener()
-    async def on_command(self, ctx: commands.Context):
+    async def on_command(self, ctx: commands.Context[CustomBot]):
         """This allows me to check when commands are being used.
 
         Parameters
@@ -1412,7 +1412,7 @@ class Information(commands.Cog):
             await interaction.followup.send(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError):
+    async def on_command_error(self, ctx: commands.Context[CustomBot], error: commands.CommandError):
         """Command error handler
 
         Parameters
