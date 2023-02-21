@@ -354,11 +354,7 @@ class CustomBot(Bot):
 
         if isinstance(channel, int):
             aux = self.get_channel(channel)
-            if aux is None:
-                channel = await self.fetch_channel(channel)
-            else:
-                channel = aux
-
+            channel = await self.fetch_channel(channel) if aux is None else aux
         channel = getattr(channel, "parent", channel)
 
         if isinstance(channel, (TextChannel, ForumChannel, VoiceChannel)):

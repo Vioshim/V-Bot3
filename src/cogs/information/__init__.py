@@ -170,8 +170,7 @@ class AnnouncementModal(Modal):
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         webhook: Webhook = await interaction.client.webhook(interaction.channel)
-        embeds: list[Embed] = self.kwargs.get("embeds")
-        if embeds:
+        if embeds := self.kwargs.get("embeds"):
             embeds[0].title = self.thread_name.value
 
         msg = await webhook.send(**self.kwargs, allowed_mentions=AllowedMentions(everyone=True, roles=True), wait=True)
@@ -204,9 +203,8 @@ class AnnouncementView(View):
         self.format()
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
         if interaction.user != self.member:
-            await resp.send_message(f"Message requested by {self.member.mention}", ephemeral=True)
+            await interaction.response.send_message(f"Message requested by {self.member.mention}", ephemeral=True)
             return False
         return True
 
@@ -304,7 +302,7 @@ class TicketModal(Modal, title="Ticket"):
         await thread.add_user(member)
 
         channel = interaction.client.get_partial_messageable(
-            id=1020157013126283284,
+            id=1077697010490167308,
             guild_id=interaction.guild.id,
         )
 
@@ -401,10 +399,8 @@ class Information(commands.Cog):
         db = self.bot.mongo_db("Custom Role")
         if data := await db.find_one({"author": member.id}):
             if role := get(member.guild.roles, id=data["id"]):
-                try:
+                with suppress(DiscordException):
                     await role.delete(reason="User left")
-                except DiscordException:
-                    pass
 
             await db.delete_one(data)
 
@@ -853,15 +849,12 @@ class Information(commands.Cog):
                     items.append(f"+ {item}")
                 elif item not in after.overwrites:
                     items.append(f"- {item}")
-                elif not (item in before.overwrites and item in after.overwrites):
-                    continue
-
                 value1 = dict(before.overwrites.get(item, PermissionOverwrite()))
                 value2 = dict(after.overwrites.get(item, PermissionOverwrite()))
 
                 if text := "\n".join(
                     f"{icon1} -> {icon2}: {key.replace('_', ' ').title()}"
-                    for key in value1.keys()
+                    for key in value1
                     if value1[key] != value2[key]
                     and (icon1 := ICON_VALUES[value1[key]])
                     and (icon2 := ICON_VALUES[value2[key]])
@@ -1184,7 +1177,7 @@ class Information(commands.Cog):
                 and message.author != payload.member
                 and bool(channel.permissions_for(everyone).add_reactions)
                 and channel.category_id not in DISABLED_CATEGORIES
-                and not any(x.type == "rich" for x in message.embeds)
+                and all(x.type != "rich" for x in message.embeds)
                 and (not message.author.bot or message.webhook_id)
             ):
                 if reaction.count >= STARS_AMOUNT and not message.pinned:
@@ -1217,7 +1210,7 @@ class Information(commands.Cog):
                 and message.author != payload.member
                 and bool(channel.permissions_for(everyone).add_reactions)
                 and channel.category_id not in DISABLED_CATEGORIES
-                and not any(x.type == "rich" for x in message.embeds)
+                and all(x.type != "rich" for x in message.embeds)
                 and (not message.author.bot or message.webhook_id)
                 and reaction.count < STARS_AMOUNT
                 and message.pinned

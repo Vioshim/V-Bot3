@@ -159,10 +159,10 @@ class Wiki(commands.Cog):
         view = WikiComplex(tree=page, target=ctx)
         if tags or search:
             page.embeds = [view.embed]
-            if search:
-                page.embeds[0].title = f"Search: {search.title()}"
-            if tags:
-                page.embeds[0].description = tags
+        if search:
+            page.embeds[0].title = f"Search: {search.title()}"
+        if tags:
+            page.embeds[0].description = tags
 
         async with view.send(ephemeral=True, embeds=page.embeds, content=page.content):
             self.bot.logger.info(

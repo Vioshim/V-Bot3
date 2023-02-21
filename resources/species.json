@@ -186,7 +186,9 @@
 		"SPE": 90,
 		"evolves_to": ["KADABRA"],
 		"movepool": {
-			"level": { "1": ["TELEPORT"] },
+			"level": {
+				"1": ["TELEPORT"]
+			},
 			"egg": [
 				"ALLYSWITCH",
 				"BARRIER",
@@ -2757,7 +2759,9 @@
 		"SPE": 20,
 		"evolves_to": ["APPLETUN", "FLAPPLE"],
 		"movepool": {
-			"level": { "1": ["ASTONISH", "WITHDRAW"] },
+			"level": {
+				"1": ["ASTONISH", "WITHDRAW"]
+			},
 			"egg": ["DEFENSECURL", "RECYCLE", "ROLLOUT", "SUCKERPUNCH"],
 			"tm": ["ATTRACT", "POUNCE", "TERABLAST"],
 			"tutor": ["DRACOMETEOR", "GRASSYGLIDE"]
@@ -7922,7 +7926,9 @@
 		"SPE": 30,
 		"evolves_to": ["METANG"],
 		"movepool": {
-			"level": { "1": ["TACKLE", "TAKEDOWN"] },
+			"level": {
+				"1": ["TACKLE", "TAKEDOWN"]
+			},
 			"event": ["HOLDBACK", "IRONDEFENSE", "IRONHEAD", "ZENHEADBUTT"],
 			"tm": ["IRONDEFENSE", "IRONHEAD", "ZENHEADBUTT"],
 			"tutor": [
@@ -9115,7 +9121,10 @@
 		"SPE": 95,
 		"evolves_from": "KYUREM",
 		"movepool": {
-			"level": { "48": ["FUSIONBOLT"], "80": ["FREEZESHOCK"] }
+			"level": {
+				"48": ["FUSIONBOLT"],
+				"80": ["FREEZESHOCK"]
+			}
 		},
 		"abilities": ["TERAVOLT"],
 		"kind": "Legendary"
@@ -9546,7 +9555,9 @@
 		"SPE": 45,
 		"evolves_to": ["DOTTLER"],
 		"movepool": {
-			"level": { "1": ["STRUGGLEBUG"] },
+			"level": {
+				"1": ["STRUGGLEBUG"]
+			},
 			"egg": ["INFESTATION", "RECOVER", "STICKYWEB", "SUPERSONIC"]
 		},
 		"abilities": ["COMPOUNDEYES", "SWARM", "TELEPATHY"],
@@ -13762,7 +13773,10 @@
 		"evolves_from": "WURMPLE",
 		"evolves_to": ["DUSTOX"],
 		"movepool": {
-			"level": { "1": ["HARDEN", "POISONSTING"], "6": ["TACKLE"] },
+			"level": {
+				"1": ["HARDEN", "POISONSTING"],
+				"6": ["TACKLE"]
+			},
 			"tutor": ["BUGBITE", "ELECTROWEB", "IRONDEFENSE", "STRINGSHOT"],
 			"levelup": ["HARDEN", "IRONDEFENSE"]
 		},
@@ -13961,7 +13975,10 @@
 		"SPE": 45,
 		"evolves_to": ["METAPOD"],
 		"movepool": {
-			"level": { "1": ["STRINGSHOT", "TACKLE"], "9": ["BUGBITE"] },
+			"level": {
+				"1": ["STRINGSHOT", "TACKLE"],
+				"9": ["BUGBITE"]
+			},
 			"tm": ["ELECTROWEB"],
 			"tutor": ["BUGBITE", "ELECTROWEB", "SNORE", "STRINGSHOT"]
 		},
@@ -20069,7 +20086,9 @@
 		"evolves_from": "COSMOG",
 		"evolves_to": ["LUNALA", "SOLGALEO"],
 		"movepool": {
-			"level": { "1": ["COSMICPOWER", "TELEPORT"] },
+			"level": {
+				"1": ["COSMICPOWER", "TELEPORT"]
+			},
 			"tm": ["COSMICPOWER"],
 			"levelup": ["COSMICPOWER"]
 		},
@@ -20095,7 +20114,9 @@
 		"SPE": 37,
 		"evolves_to": ["COSMOEM"],
 		"movepool": {
-			"level": { "1": ["SPLASH", "TELEPORT"] },
+			"level": {
+				"1": ["SPLASH", "TELEPORT"]
+			},
 			"event": ["SPLASH", "TELEPORT"]
 		},
 		"abilities": ["UNAWARE"],
@@ -24155,7 +24176,10 @@
 		"SPD": 45,
 		"SPE": 75,
 		"movepool": {
-			"level": { "1": ["PRESENT"], "25": ["DRILLPECK"] },
+			"level": {
+				"1": ["PRESENT"],
+				"25": ["DRILLPECK"]
+			},
 			"egg": [
 				"AURORABEAM",
 				"AURORAVEIL",
@@ -26029,7 +26053,12 @@
 		"SPA": 48,
 		"SPD": 48,
 		"SPE": 48,
-		"movepool": { "level": { "1": ["TRANSFORM"] }, "event": ["TRANSFORM"] },
+		"movepool": {
+			"level": {
+				"1": ["TRANSFORM"]
+			},
+			"event": ["TRANSFORM"]
+		},
 		"abilities": ["IMPOSTER", "LIMBER"],
 		"kind": "Pokemon"
 	},
@@ -35046,7 +35075,11 @@
 		"SPE": 80,
 		"evolves_to": ["MILOTIC"],
 		"movepool": {
-			"level": { "1": ["SPLASH"], "15": ["TACKLE"], "25": ["FLAIL"] },
+			"level": {
+				"1": ["SPLASH"],
+				"15": ["TACKLE"],
+				"25": ["FLAIL"]
+			},
 			"egg": [
 				"BRINE",
 				"CAPTIVATE",
@@ -55789,7 +55822,9 @@
 		"evolves_from": "WEEDLE",
 		"evolves_to": ["BEEDRILL"],
 		"movepool": {
-			"level": { "1": ["HARDEN", "POISONSTING"] },
+			"level": {
+				"1": ["HARDEN", "POISONSTING"]
+			},
 			"tutor": ["BUGBITE", "ELECTROWEB", "IRONDEFENSE", "STRINGSHOT"],
 			"levelup": ["HARDEN"]
 		},
@@ -66412,7 +66447,11 @@
 		"SPE": 80,
 		"evolves_to": ["GYARADOS"],
 		"movepool": {
-			"level": { "1": ["SPLASH"], "15": ["TACKLE"], "25": ["FLAIL"] },
+			"level": {
+				"1": ["SPLASH"],
+				"15": ["TACKLE"],
+				"25": ["FLAIL"]
+			},
 			"event": [
 				"BOUNCE",
 				"CELEBRATE",
@@ -73248,7 +73287,9 @@
 		"evolves_from": "CATERPIE",
 		"evolves_to": ["BUTTERFREE"],
 		"movepool": {
-			"level": { "1": ["HARDEN"] },
+			"level": {
+				"1": ["HARDEN"]
+			},
 			"tm": ["ELECTROWEB", "IRONDEFENSE"],
 			"tutor": ["BUGBITE", "ELECTROWEB", "IRONDEFENSE", "STRINGSHOT"],
 			"levelup": ["HARDEN"]
@@ -80298,7 +80339,10 @@
 		"SPE": 100,
 		"evolves_from": "VULPIX",
 		"movepool": {
-			"level": { "1": ["SAFEGUARD", "WILLOWISP"], "45": ["FIRESPIN"] },
+			"level": {
+				"1": ["SAFEGUARD", "WILLOWISP"],
+				"45": ["FIRESPIN"]
+			},
 			"event": ["HEATWAVE", "PSYSHOCK", "SOLARBEAM", "WILLOWISP"],
 			"tm": [
 				"AGILITY",
@@ -105489,7 +105533,10 @@
 		"evolves_from": "WURMPLE",
 		"evolves_to": ["BEAUTIFLY"],
 		"movepool": {
-			"level": { "1": ["HARDEN", "POISONSTING"], "6": ["TACKLE"] },
+			"level": {
+				"1": ["HARDEN", "POISONSTING"],
+				"6": ["TACKLE"]
+			},
 			"tutor": ["BUGBITE", "ELECTROWEB", "IRONDEFENSE", "STRINGSHOT"],
 			"levelup": ["HARDEN", "IRONDEFENSE"]
 		},
@@ -105732,7 +105779,9 @@
 		"SPE": 101,
 		"evolves_from": "PANPOUR",
 		"movepool": {
-			"level": { "1": ["FURYSWIPES", "LEER", "LICK", "SCALD"] },
+			"level": {
+				"1": ["FURYSWIPES", "LEER", "LICK", "SCALD"]
+			},
 			"egg": [
 				"AQUARING",
 				"AQUATAIL",
@@ -105838,7 +105887,9 @@
 		"SPE": 101,
 		"evolves_from": "PANSAGE",
 		"movepool": {
-			"level": { "1": ["FURYSWIPES", "LEER", "LICK", "SEEDBOMB"] },
+			"level": {
+				"1": ["FURYSWIPES", "LEER", "LICK", "SEEDBOMB"]
+			},
 			"egg": [
 				"ASTONISH",
 				"BULLETSEED",
@@ -105942,7 +105993,9 @@
 		"SPE": 101,
 		"evolves_from": "PANSEAR",
 		"movepool": {
-			"level": { "1": ["FLAMEBURST", "FURYSWIPES", "LEER", "LICK"] },
+			"level": {
+				"1": ["FLAMEBURST", "FURYSWIPES", "LEER", "LICK"]
+			},
 			"egg": [
 				"ASTONISH",
 				"BELCH",
@@ -109852,7 +109905,9 @@
 		"SPE": 20,
 		"evolves_to": ["FROSMOTH"],
 		"movepool": {
-			"level": { "1": ["POWDERSNOW", "STRUGGLEBUG"] },
+			"level": {
+				"1": ["POWDERSNOW", "STRUGGLEBUG"]
+			},
 			"egg": ["BUGBITE", "FAIRYWIND", "MIRRORCOAT"],
 			"tm": [
 				"ATTRACT",
@@ -111303,7 +111358,9 @@
 		"evolves_from": "SCATTERBUG",
 		"evolves_to": ["VIVILLON"],
 		"movepool": {
-			"level": { "1": ["HARDEN", "PROTECT"] },
+			"level": {
+				"1": ["HARDEN", "PROTECT"]
+			},
 			"egg": ["POISONPOWDER", "RAGEPOWDER", "STUNSPORE"],
 			"tm": [
 				"IRONDEFENSE",
@@ -122823,7 +122880,9 @@
 		"SPE": 60,
 		"evolves_to": ["EELEKTRIK"],
 		"movepool": {
-			"level": { "1": ["CHARGEBEAM", "SPARK", "TACKLE", "THUNDERWAVE"] },
+			"level": {
+				"1": ["CHARGEBEAM", "SPARK", "TACKLE", "THUNDERWAVE"]
+			},
 			"tm": ["CHARGEBEAM", "TERABLAST", "THUNDERWAVE"],
 			"tutor": ["MAGNETRISE"]
 		},
@@ -124238,7 +124297,9 @@
 		"SPD": 48,
 		"SPE": 48,
 		"movepool": {
-			"level": { "1": ["HIDDENPOWER"] },
+			"level": {
+				"1": ["HIDDENPOWER"]
+			},
 			"tm": ["HIDDENPOWER"]
 		},
 		"abilities": ["LEVITATE"],
@@ -129572,7 +129633,10 @@
 		"SPE": 50,
 		"evolves_to": ["KAKUNA"],
 		"movepool": {
-			"level": { "1": ["POISONSTING", "STRINGSHOT"], "9": ["BUGBITE"] },
+			"level": {
+				"1": ["POISONSTING", "STRINGSHOT"],
+				"9": ["BUGBITE"]
+			},
 			"tutor": ["BUGBITE", "ELECTROWEB", "STRINGSHOT"]
 		},
 		"abilities": ["RUNAWAY", "SHIELDDUST"],
@@ -130504,7 +130568,12 @@
 		"SPD": 100,
 		"SPE": 95,
 		"evolves_from": "KYUREM",
-		"movepool": { "level": { "48": ["FUSIONFLARE"], "80": ["ICEBURN"] } },
+		"movepool": {
+			"level": {
+				"48": ["FUSIONFLARE"],
+				"80": ["ICEBURN"]
+			}
+		},
 		"abilities": ["TURBOBLAZE"],
 		"kind": "Legendary"
 	},
@@ -130779,7 +130848,9 @@
 		"SPE": 80,
 		"evolves_to": ["GOLISOPOD"],
 		"movepool": {
-			"level": { "1": ["DEFENSECURL", "SANDATTACK", "STRUGGLEBUG"] },
+			"level": {
+				"1": ["DEFENSECURL", "SANDATTACK", "STRUGGLEBUG"]
+			},
 			"egg": [
 				"AQUAJET",
 				"HARDEN",
@@ -135618,7 +135689,6 @@
 		"abilities": ["AURABREAK", "POWERCONSTRUCT"],
 		"kind": "Legendary"
 	},
-
 	{
 		"id": "SPRIGATITO",
 		"name": "Sprigatito",
@@ -140775,7 +140845,9 @@
 		"SPE": 10,
 		"kind": "Pokemon",
 		"movepool": {
-			"level": { "1": ["ASTONISH", "TACKLE"] },
+			"level": {
+				"1": ["ASTONISH", "TACKLE"]
+			},
 			"tm": [
 				"CONFUSERAY",
 				"ENDURE",

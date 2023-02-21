@@ -317,7 +317,7 @@ class BasicRoleSelect(RoleSelect):
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=7,
+        max_values=4,
         options=[
             SelectOption(
                 label="Archive",
@@ -332,28 +332,10 @@ class BasicRoleSelect(RoleSelect):
                 description="Get informed of RP Events, Missions and Storylines.",
             ),
             SelectOption(
-                label="Supporter",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="967980442919784488",
-                description="Get pings when people need a hand.",
-            ),
-            SelectOption(
                 label="Announcements",
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
                 value="908809235012419595",
                 description="Get pinged during announcements.",
-            ),
-            SelectOption(
-                label="MysteryCord",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="974410022845038673",
-                description="Gives access to PMDiscord's category.",
-            ),
-            SelectOption(
-                label="Art Fight",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="998937033068253309",
-                description="Enables PVP ON (Art Fight wise)",
             ),
             SelectOption(
                 label="Bump Reminder",

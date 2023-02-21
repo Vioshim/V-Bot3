@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from contextlib import suppress
 from datetime import timedelta
 from re import MULTILINE, compile
 from typing import Optional
@@ -131,8 +132,8 @@ class Meeting(View):
     async def process(self, method: Optional[bool] = None):
         sus: Member = self.imposter
         hero: Member = self.reporter
-        if not (channel := self.guild.get_channel_or_thread(1020157013126283284)):
-            channel = await self.guild.fetch_channel(1020157013126283284)
+        if not (channel := self.guild.get_channel_or_thread(1077697010490167308)):
+            channel = await self.guild.fetch_channel(1077697010490167308)
         embed = Embed(
             title=f"Users that Agreed with {sus}'s Votation",
             description="\n".join(i.mention for i in self.attack),
@@ -403,10 +404,8 @@ class Moderation(commands.Cog):
         if member.top_role >= ctx.author.top_role:
             await ctx.reply("You can't kick someone with same or higher role than yours.")
             return
-        try:
+        with suppress(DiscordException):
             await member.send(f"Kicked from {ctx.guild} by the reason: {reason}")
-        except DiscordException:
-            pass
         await ctx.reply(f"Kicked from {ctx.guild} by the reason: {reason}")
         await member.kick(reason=f"Reason: {reason}| By {ctx.author.display_name}/{ctx.author.id}")
 
@@ -449,10 +448,8 @@ class Moderation(commands.Cog):
                     delete_after=3,
                 )
             else:
-                try:
+                with suppress(DiscordException):
                     await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
-                except DiscordException:
-                    pass
                 await user.ban(
                     reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                     delete_message_days=0,
@@ -490,10 +487,8 @@ class Moderation(commands.Cog):
                             delete_after=3,
                         )
                     else:
-                        try:
+                        with suppress(DiscordException):
                             await user.send(content=f"You've been banned from {ctx.guild} by: {reason}")
-                        except DiscordException:
-                            pass
                         await user.ban(
                             reason=f"{user.display_name} banned for: {reason}. By {ctx.author}|{ctx.author.id}.",
                             delete_message_days=0,
