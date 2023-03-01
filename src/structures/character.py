@@ -701,7 +701,7 @@ class Character:
             c_embed.set_footer(text=footer_text)
 
         def move_parser(x: Move):
-            item = self.hidden_power if x.id in [237, 851] and self.hidden_power else x.type
+            item = self.hidden_power if x.move_id in {237, 851} and self.hidden_power else x.type
             item = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item
             return f"> [{x.name}] - {item.name} ({x.category.name})".title()
 

@@ -75,10 +75,8 @@ CHECK_FLAGS: dict[str, Callable[[Any], Optional[str]]] = {
     "CritStage": lambda x: f"Crit. Stages: {x}" if x != 0 else None,
     "Flinch": lambda x: f"Flinch Chance: {x}%" if x != 0 else None,
     "Recoil": lambda x: f"Recoil: {x}%" if x != 0 else None,
-    "RawHealing": lambda x: (f"Raw Healing: {x}%" if x > 0 else f"Drains {x}% from User's HP")
-    if x != 0
-    else None,  # Check
-    "RawTarget": lambda x: f"Raw Target: {x}" if x != 0 else None,  # Investigate
+    "RawHealing": lambda x: (f"Raw Healing: {x}%" if x > 0 else f"Drains {x}% from User's HP") if x != 0 else None,
+    "RawTarget": lambda x: f"Raw Target: {x}" if x != 0 else None,
     "StatAmps": lambda x: f"Stat Amps: {x}" if x != "0|0|0|0|0|0|0|0|0" else None,
     "Affinity": lambda x: f"Affinity: {x}" if x != "None" else None,
     "Flag_MakesContact": lambda x: "It makes Contact" if x else None,
@@ -98,7 +96,7 @@ CHECK_FLAGS: dict[str, Callable[[Any], Optional[str]]] = {
     "Flag_IgnoreSubstitute": lambda x: "Ignores Substitute" if x else None,
     "Flag_FailSkyBattle": lambda x: "Fails in Sky Battles" if x else None,
     "Flag_AnimateAlly": lambda x: "Can target ally" if x else None,
-    "Flag_Metronome": lambda x: "Can't be used by metronome" if not x else None,
+    "Flag_Metronome": lambda x: None if x else "Can't be used by metronome",
     "Flag_FailEncore": lambda x: "Encore fails against it" if x else None,
     "Flag_FailMeFirst": lambda x: "Me first fails against it" if x else None,
     "Flag_FutureAttack": lambda x: "Hits some time after" if x else None,
@@ -145,8 +143,8 @@ class Move:
         return self.move_id
 
     @property
-    def id(self) -> int:
-        return self.data.get("id", 0)
+    def id(self):
+        return fix(self.name)
 
     @property
     def metronome(self) -> bool:
@@ -175,7 +173,7 @@ class Move:
     @property
     def banned(self) -> bool:
         move_id: int = self.move_id
-        aux = move_id in [165, 449, 875, 876]  # Struggle, Judgement + UNKNOWN moves
+        aux = move_id in {165, 449}  # Struggle, Judgement
         aux |= self.is_z_move()
         aux |= self.is_max_move()
         aux |= move_id == 0  # No ID
