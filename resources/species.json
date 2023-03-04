@@ -57143,10 +57143,10 @@
 		"height": 1.8,
 		"weight": 89,
 		"HP": 70,
-		"ATK": 130,
+		"ATK": 135,
 		"DEF": 95,
 		"SPA": 45,
-		"SPD": 75,
+		"SPD": 70,
 		"SPE": 85,
 		"evolves_from": "SCYTHER",
 		"movepool": {
@@ -58629,7 +58629,7 @@
 			],
 			"tutor": ["COACHING"]
 		},
-		"abilities": ["INNERFOCUS", "NOGUARD"],
+		"abilities": ["INNERFOCUS"],
 		"kind": "Legendary"
 	},
 	{
@@ -61539,6 +61539,7 @@
 				"28": ["AMNESIA"],
 				"32": ["GASTROACID"],
 				"36": ["GIGADRAIN"],
+				"39": ["EARTHPOWER"],
 				"41": ["SPITUP", "STOCKPILE", "SWALLOW"],
 				"44": ["ENERGYBALL"],
 				"52": ["WRINGOUT"]
@@ -134930,12 +134931,12 @@
 		"types": ["GHOST", "NORMAL"],
 		"height": 1.6,
 		"weight": 73,
-		"HP": 60,
-		"ATK": 105,
+		"HP": 55,
+		"ATK": 100,
 		"DEF": 60,
-		"SPA": 120,
+		"SPA": 125,
 		"SPD": 60,
-		"SPE": 105,
+		"SPE": 110,
 		"evolves_from": "ZORUAHISUI",
 		"movepool": {
 			"level": {
