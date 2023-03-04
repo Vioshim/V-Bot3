@@ -237,6 +237,17 @@ class Moderation(commands.Cog):
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Registered")
     async def vote(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
+        """Starts a votation to report a member
+
+        Parameters
+        ----------
+        interaction : Interaction
+            Interaction
+        member : Member
+            Member to report
+        reason : Optional[str], optional
+            Reason for the votation, by default None
+        """
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=False, thinking=True)
 
@@ -276,12 +287,15 @@ class Moderation(commands.Cog):
     @commands.command(name="cooldown", aliases=["sleep"])
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
-    async def cooldown(self, ctx: Context, time: int = 21600) -> None:
+    async def cooldown(self, ctx: Context, *, time: int = 21600):
         """Makes the channel have cool down
 
-        :param ctx: Context
-        :param time: Time in seconds, defaults to 21600 seconds (12 hours)
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        time : int, optional
+            Time in seconds. Defaults to 21600 (6 hours)
         """
         await ctx.channel.edit(slowmode_delay=time)
         await ctx.reply(content=f"Cool down set to {time} seconds")
@@ -289,12 +303,15 @@ class Moderation(commands.Cog):
     @commands.group(name="clean", aliases=["purge"], invoke_without_command=True)
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
-    async def clean(self, ctx: Context, amount: int = 5) -> None:
+    async def clean(self, ctx: Context, *, amount: int = 5):
         """Cleans a channel's messages by a given amount, 5 as default
 
-        :param ctx: Context
-        :param amount: Amount of messages. Defaults to 5
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        amount : int, optional
+            Amount to clean. Defaults to 5
         """
         async with ctx.typing():
             await ctx.message.delete(delay=0)
@@ -307,9 +324,12 @@ class Moderation(commands.Cog):
     async def clean_bot(self, ctx: Context, amount: int = 5):
         """Cleans a channel's bot messages by a given amount
 
-        :param ctx: Context
-        :param amount: Amount to clean. Default 5
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        amount : int, optional
+            Amount to clean. Defaults to 5
         """
         async with ctx.typing():
             await ctx.message.delete(delay=0)
@@ -319,7 +339,7 @@ class Moderation(commands.Cog):
     @clean.command(name="user")
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
-    async def clean_user(self, ctx: Context, user: Member | User, amount: int = None) -> None:
+    async def clean_user(self, ctx: Context, user: Member | User, amount: int = None):
         """Cleans a channel's user messages by a given amount
 
         Parameters
@@ -330,10 +350,6 @@ class Moderation(commands.Cog):
             Target User
         amount: int, optional
             Amount to clean. Defaults to None
-
-        Returns
-        -------
-
         """
         channel: TextChannel = ctx.channel
         async with ctx.typing():
@@ -349,13 +365,17 @@ class Moderation(commands.Cog):
         ctx: Context,
         regex: codeblock_converter = Codeblock("re", ".*"),
         amount: int = None,
-    ) -> None:
+    ):
         """Cleans a channel's messages that match a regex by a given amount
 
-        :param ctx: Context
-        :param regex: Regex code block expression
-        :param amount: Amount to delete. Defaults to None
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        regex : codeblock_converter, optional
+            Regex to match, by default Codeblock("re", ".*")
+        amount : int, optional
+            Amount to clean, by default None
         """
         _, content = regex
         comparator = compile(content, MULTILINE)
@@ -373,13 +393,17 @@ class Moderation(commands.Cog):
     @clean.command(name="after")
     @commands.has_guild_permissions(manage_messages=True)
     @commands.bot_has_guild_permissions(manage_messages=True)
-    async def clean_after(self, ctx: Context, amount: int = None, *, message: Message = None) -> None:
+    async def clean_after(self, ctx: Context, amount: int = 5, *, message: Message = None):
         """Cleans a channel's user messages after a message.
 
-        :param ctx: Context
-        :param amount: Amount. Defaults to 5
-        :param message: Message. Defaults to None
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        amount : int, optional
+            Amount to clean, by default 5
+        message : Message, optional
+            Message to clean after, by default None
         """
         message = message or ctx.message
         channel: TextChannel = ctx.channel
@@ -393,13 +417,17 @@ class Moderation(commands.Cog):
     @commands.command(name="kick")
     @commands.has_guild_permissions(kick_members=True)
     @commands.bot_has_guild_permissions(kick_members=True)
-    async def kick(self, ctx: Context, member: Member, *, reason: str = None) -> None:
+    async def kick(self, ctx: Context, member: Member, *, reason: str = None):
         """Kicks a member from the server.
 
-        :param ctx: Context
-        :param member: Member
-        :param reason: Reason. Defaults to None
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        member : Member
+            Member to kick
+        reason : str, optional
+            Reason, by default None
         """
         if member.top_role >= ctx.author.top_role:
             await ctx.reply("You can't kick someone with same or higher role than yours.")
@@ -428,13 +456,17 @@ class Moderation(commands.Cog):
     @commands.command(name="ban")
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
-    async def ban(self, ctx: Context, user: Member | User, *, reason: str = None) -> None:
+    async def ban(self, ctx: Context, user: Member | User, *, reason: str = None):
         """Bans an user from the guild
 
-        :param ctx: Context
-        :param user: User
-        :param reason: Reason. Defaults to None
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        user : Member | User
+            User to ban from the guild
+        reason : str, optional
+            Reason for the ban, by default None
         """
         if isinstance(user, Member):
             if user.top_role >= ctx.author.top_role:
@@ -465,13 +497,15 @@ class Moderation(commands.Cog):
     @commands.command(name="massban")
     @commands.has_guild_permissions(ban_members=True)
     @commands.bot_has_guild_permissions(ban_members=True)
-    async def mass_ban(self, ctx: Context, reason: str, *users: User | Member) -> None:
+    async def mass_ban(self, ctx: Context, reason: str, *users: User | Member):
         """Bans many users from the guild
 
-        :param ctx: Context
-        :param reason: Reason
-        :param users: Members/Users
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        reason : str
+            Reason
         """
         async with ctx.typing():
             for user in users:
@@ -505,13 +539,17 @@ class Moderation(commands.Cog):
     @commands.command(name="unban")
     @commands.bot_has_guild_permissions(ban_members=True)
     @commands.has_guild_permissions(ban_members=True)
-    async def unban(self, ctx: Context, user: User, *, reason: str = None) -> None:
+    async def unban(self, ctx: Context, user: User, *, reason: str = None):
         """Removes a ban to an a user from the server.
 
-        :param ctx: Context
-        :param user: User
-        :param reason: Reason
-        :return:
+        Parameters
+        ----------
+        ctx : Context
+            Context
+        user : User
+            User
+        reason : str, optional
+            Reason, by default None
         """
         if isinstance(user, User):
             await ctx.guild.unban(
@@ -524,7 +562,7 @@ class Moderation(commands.Cog):
         await ctx.message.delete(delay=0)
 
 
-async def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot):
     """Default Cog loader
 
     Parameters

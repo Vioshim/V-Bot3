@@ -322,7 +322,7 @@ class InformationView(View):
             )
         )
 
-    async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
+    async def on_error(self, interaction: Interaction, error: Exception, item, /):
         interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)

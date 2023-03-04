@@ -148,11 +148,7 @@ class Pokedex(commands.Cog):
 
         mons: set[Optional[Species]] = {species, fused}
         if aux := {x for x in mons if x is not None}:
-            if len(aux) == 2:
-                mon = Fusion(*aux, ratio=0.5)
-            else:
-                mon = aux.pop()
-
+            mon = Fusion(*aux, ratio=0.5) if len(aux) == 2 else aux.pop()
             species = mon
             movepool = mon.total_movepool
         elif fakemon:
@@ -196,7 +192,7 @@ class Pokedex(commands.Cog):
                         h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
                         w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
                         h1, h2, h3 = h1.height, val1, h2.height
-                        w1, w2, w3 = w1.height, val2, w2.height
+                        w1, w2, w3 = w1.weight, val2, w2.weight
                     else:
                         h1, h2, h3 = val1, val1, val1
                         w1, w2, w3 = val2, val2, val2
@@ -517,7 +513,7 @@ class Pokedex(commands.Cog):
         await ctx.response.send_message(embed=embed, ephemeral=True)
 
 
-async def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot):
     """Default Cog loader
 
     Parameters

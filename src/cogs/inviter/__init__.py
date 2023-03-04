@@ -147,7 +147,7 @@ class Inviter(commands.Cog):
         await ctx.message.delete(delay=3)
 
     @commands.Cog.listener()
-    async def on_message(self, ctx: Message) -> None:
+    async def on_message(self, ctx: Message):
         """Discord invite detection
 
         Parameters
@@ -284,19 +284,19 @@ class Inviter(commands.Cog):
                 await self.load_partners()
 
     @commands.Cog.listener()
-    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
+    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
         db = self.bot.mongo_db("Partnerships")
         if payload.channel_id == 957602085753458708:
             await db.delete_one({"msg_id": payload.message_id})
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent) -> None:
+    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
         db = self.bot.mongo_db("Partnerships")
         if payload.channel_id == 957602085753458708:
             await db.delete_many({"msg_id": {"$in": list(payload.message_ids)}})
 
 
-async def setup(bot: CustomBot) -> None:
+async def setup(bot: CustomBot):
     """Default Cog loader
 
     Parameters
