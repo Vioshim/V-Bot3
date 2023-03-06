@@ -106,7 +106,7 @@ class Pokedex(commands.Cog):
     @app_commands.guilds(719343092963999804)
     async def movepool(
         self,
-        ctx: Interaction[CustomBot][CustomBot],
+        ctx: Interaction[CustomBot],
         species: Optional[DefaultSpeciesArg],
         fused: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
