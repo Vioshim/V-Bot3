@@ -22,7 +22,6 @@ from discord import ForumChannel, Guild, Interaction, Member, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ui import Select, select
-from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.cogs.submission.oc_submission import ModCharactersView
@@ -33,6 +32,7 @@ from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
+from src.structures.bot import CustomBot
 from src.structures.species import (
     CustomMega,
     CustomParadox,
@@ -138,13 +138,13 @@ def age_parser(text: str, oc: Character):
 
 
 class MoveTransformer(Transformer):
-    async def transform(self, _: Interaction, value: Optional[str], /):
-        move = Move.deduce(value)
-        if not move:
-            raise ValueError(f"Move {value!r} Not found.")
-        return move
+    async def transform(self, _: Interaction[CustomBot], value: Optional[str], /):
+        if move := Move.deduce(value):
+            return move
 
-    async def autocomplete(self, _: Interaction, value: str, /) -> list[Choice[str]]:
+        raise ValueError(f"Move {value!r} Not found.")
+
+    async def autocomplete(self, _: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         items = list(Move.all())
         if options := process.extract(value, choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
@@ -157,10 +157,10 @@ MoveArg = Transform[Move, MoveTransformer]
 
 
 class ABCTransformer(Transformer):
-    async def on_submit(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
+    async def on_submit(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         return []
 
-    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         items = await self.on_submit(ctx, value)
         if options := process.extract(
             value or "",
@@ -174,17 +174,17 @@ class ABCTransformer(Transformer):
 
 
 class SpeciesTransformer(Transformer):
-    async def transform(self, ctx: Interaction, value: Optional[str], /):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+    async def transform(self, ctx: Interaction[CustomBot], value: Optional[str], /):
+        db = ctx.client.mongo_db("Characters")
         value = value or ""
         if value.isdigit() and (item := await db.find_one({"id": int(value)})):
             return Character.from_mongo_dict(item)
-        elif oc := Species.single_deduce(value):
+        if oc := Species.single_deduce(value):
             return oc
         raise ValueError(f"Species {value!r} not found")
 
-    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+    async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
+        db = ctx.client.mongo_db("Characters")
         guild: Guild = ctx.guild
         key = {"server": ctx.guild_id}
         pk_filters: list[Callable[[Species], bool]] = []
@@ -241,14 +241,14 @@ class SpeciesTransformer(Transformer):
 class DefaultSpeciesTransformer(Transformer):
     cache: dict = {}
 
-    async def transform(self, _: Interaction, value: Optional[str], /):
+    async def transform(self, _: Interaction[CustomBot], value: Optional[str], /):
         if not (item := Species.single_deduce(value)):
             raise ValueError(f"Species {value!r} not found")
         return item
 
-    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
-            db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+            db = ctx.client.mongo_db("Characters")
             items = [
                 base
                 async for x in db.find(
@@ -279,13 +279,13 @@ DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
 
 
 class AbilityTransformer(Transformer):
-    async def transform(self, _: Interaction, value: Optional[str], /):
-        item = Ability.from_ID(value)
-        if not item:
-            raise ValueError(f"Ability {item!r} not found")
-        return item
+    async def transform(self, _: Interaction[CustomBot], value: Optional[str], /):
+        if item := Ability.from_ID(value):
+            return item
 
-    async def autocomplete(self, _: Interaction, value: str, /) -> list[Choice[str]]:
+        raise ValueError(f"Ability {value!r} not found")
+
+    async def autocomplete(self, _: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         items = list(Ability.all())
         if options := process.extract(value or "", choices=items, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in options]
@@ -298,8 +298,8 @@ AbilityArg = Transform[Ability, AbilityTransformer]
 
 
 class FakemonTransformer(Transformer):
-    async def transform(self, ctx: Interaction, value: Optional[str], /):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+    async def transform(self, ctx: Interaction[CustomBot], value: Optional[str], /):
+        db = ctx.client.mongo_db("Characters")
         oc: Optional[Character] = None
         if value.isdigit() and (item := await db.find_one({"id": int(value)})):
             oc = Character.from_mongo_dict(item)
@@ -317,9 +317,9 @@ class FakemonTransformer(Transformer):
             raise ValueError(f"Fakemon {value!r} not found.")
         return oc
 
-    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
+    async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         guild: Guild = ctx.guild
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        db = ctx.client.mongo_db("Characters")
         mons = [
             Character.from_mongo_dict(x)
             async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
@@ -339,7 +339,7 @@ class GroupByComplex(Complex[tuple[str, list[Character]]]):
     def __init__(
         self,
         member: Member,
-        target: Interaction,
+        target: Interaction[CustomBot],
         data: dict[str, list[Character]],
         inner_parser: Callable[[Any, list[Character]], tuple[str, str]],
     ):
@@ -354,7 +354,7 @@ class GroupByComplex(Complex[tuple[str, list[Character]]]):
         )
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         key = self.current_choice
         ocs = self.data.get(key, [])
         view = ModCharactersView(member=interaction.user, target=interaction, ocs=ocs, keep_working=True)
@@ -368,7 +368,7 @@ D = TypeVar("D")
 class OCGroupBy(Generic[D], ABC):
     @classmethod
     @abstractmethod
-    def method(cls, ctx: Interaction, ocs: Iterable[Character]) -> dict[D, frozenset[Character]]:
+    def method(cls, ctx: Interaction[CustomBot], ocs: Iterable[Character]) -> dict[D, frozenset[Character]]:
         """Abstract method for grouping
 
         Parameters
@@ -398,7 +398,7 @@ class OCGroupBy(Generic[D], ABC):
     @classmethod
     def generate(
         cls,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot],
         ocs: Iterable[Character],
         amount: Optional[str] = None,
     ):
@@ -418,14 +418,14 @@ class OCGroupByKind(OCGroupBy[Kind]):
         return group.title, f"Kind has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
 
 
 class OCGroupByShape(OCGroupBy[str]):
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         data: dict[str, set[Character]] = {}
         for oc in ocs:
             if isinstance(species := oc.species, Fusion):
@@ -452,7 +452,7 @@ class OCGroupByShape(OCGroupBy[str]):
 
 class OCGroupByAge(OCGroupBy[AgeGroup]):
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.age.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
 
@@ -465,16 +465,19 @@ class OCGroupBySpecies(OCGroupBy[Kind | Species]):
         return group.name, f"Species has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         data = {}
         for k, v in groupby(ocs, lambda x: x.kind):
             if k not in STANDARD:
                 data[k] = frozenset(v)
             elif items := sorted(v, key=lambda x: getattr(x.species, "base", x.species).id):
-                data.update(
-                    {i: frozenset(j) for i, j in groupby(items, key=lambda x: getattr(x.species, "base", x.species))}
-                )
+                data |= {
+                    i: frozenset(j)
+                    for i, j in groupby(
+                        items, key=lambda x: getattr(x.species, "base", x.species)
+                    )
+                }
         return data
 
 
@@ -484,7 +487,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
         return group.name, f"Evo line has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         data: dict[Species, set[Character]] = {}
         for oc in ocs:
             if isinstance(species := oc.species, Fusion):
@@ -513,7 +516,7 @@ class OCGroupByType(OCGroupBy[TypingEnum]):
         return group.name, f"Included in {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         data: dict[TypingEnum, set[Character]] = {}
         for oc in ocs:
             for x in oc.types:
@@ -528,7 +531,7 @@ class OCGroupByPronoun(OCGroupBy[Pronoun]):
         return group.name, f"Used by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         data: dict[Pronoun, set[Character]] = {}
         for oc in ocs:
             for x in oc.pronoun:
@@ -543,7 +546,7 @@ class OCGroupByMove(OCGroupBy[Move]):
         return group.name, f"Learned by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         data: dict[Move, set[Character]] = {}
         for oc in ocs:
             for x in oc.moveset:
@@ -558,7 +561,7 @@ class OCGroupByAbility(OCGroupBy[Ability]):
         return group.name, f"Carried by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         data: dict[Ability, set[Character]] = {}
         for oc in ocs:
             for x in oc.abilities:
@@ -575,7 +578,7 @@ class OCGroupByLocation(OCGroupBy[ForumChannel | None]):
         return group.name, f"Explored by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+    def method(cls, ctx: Interaction[CustomBot], ocs: Iterable[Character]):
         guild: Guild = ctx.guild
 
         def foo(oc: Character):
@@ -596,7 +599,7 @@ class OCGroupByMember(OCGroupBy[Member]):
         return group.display_name, f"Has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, ctx: Interaction, ocs: Iterable[Character]):
+    def method(cls, ctx: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
         return {m: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))}
@@ -610,7 +613,7 @@ class OCGroupByHiddenPower(OCGroupBy[TypingEnum | None]):
         return group.name, f"Granted to {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: getattr(x.hidden_power, "name", "Unknown"))
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.hidden_power)}
 
@@ -623,7 +626,7 @@ class OCGroupByUniqueTrait(OCGroupBy[UTraitKind | None]):
         return group.name, f"Used by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.sp_ability.kind.name if x.sp_ability else "Unknown")
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.sp_ability.kind if x.sp_ability else None)}
 
@@ -636,28 +639,28 @@ class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
         return group.label, f"Obtained by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.pokeball.name if x.pokeball else "None")
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball)}
 
 
 class OCGroupByNature(OCGroupBy[Nature | None]):
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.nature.name if x.nature else "None")
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.nature)}
 
 
 class OCGroupByHeight(OCGroupBy[Size]):
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.height_value, reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.height_text) if k}
 
 
 class OCGroupByWeight(OCGroupBy[Size]):
     @classmethod
-    def method(cls, _: Interaction, ocs: Iterable[Character]):
+    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.weight_value, reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight_text) if k}
 
@@ -683,7 +686,7 @@ class GroupByArg(Enum):
 
     def generate(
         self,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot],
         ocs: Iterable[Character],
         amount: Optional[str] = None,
     ):

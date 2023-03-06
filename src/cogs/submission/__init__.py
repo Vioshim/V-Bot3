@@ -146,28 +146,28 @@ class Submission(commands.Cog):
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
         guild_ids = [719343092963999804]
-        self.ctx_menu1 = app_commands.ContextMenu(
+        self.itx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
             callback=self.info_checker,
             guild_ids=guild_ids,
         )
-        self.ctx_menu2 = app_commands.ContextMenu(
+        self.itx_menu2 = app_commands.ContextMenu(
             name="Check User's OCs",
             callback=self.check_ocs,
             guild_ids=guild_ids,
         )
 
     async def cog_load(self) -> None:
-        self.bot.tree.add_command(self.ctx_menu1)
-        self.bot.tree.add_command(self.ctx_menu2)
+        self.bot.tree.add_command(self.itx_menu1)
+        self.bot.tree.add_command(self.itx_menu2)
         await self.load_submssions()
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
-        self.bot.tree.remove_command(self.ctx_menu2.name, type=self.ctx_menu2.type)
+        self.bot.tree.remove_command(self.itx_menu1.name, type=self.itx_menu1.type)
+        self.bot.tree.remove_command(self.itx_menu2.name, type=self.itx_menu2.type)
 
-    async def info_checker(self, ctx: Interaction, message: Message):
-        resp: InteractionResponse = ctx.response
+    async def info_checker(self, itx: Interaction[CustomBot], message: Message):
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         moves: list[SpAbility | Ability | Move] = []
         db = self.bot.mongo_db("Characters")
@@ -188,25 +188,25 @@ class Submission(commands.Cog):
             ]
 
         moves.sort(key=lambda x: x.name)
-        view = MoveView(member=ctx.user, moves=moves, target=ctx, keep_working=True)
+        view = MoveView(member=itx.user, moves=moves, target=itx, keep_working=True)
         async with view.send(ephemeral=True):
             self.bot.logger.info(
                 "User %s is reading the abilities/moves at %s",
-                str(ctx.user),
+                str(itx.user),
                 message.jump_url,
             )
 
-    async def check_ocs(self, ctx: Interaction, member: Member):
-        resp: InteractionResponse = ctx.response
+    async def check_ocs(self, itx: Interaction[CustomBot], member: Member):
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         db = self.bot.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
-        view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+        view = ModCharactersView(member=itx.user, ocs=ocs, target=itx, keep_working=True)
         embed = view.embed
         embed.color = member.color
         embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         async with view.send(ephemeral=True):
-            self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
+            self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
     async def list_update(self, member: Object | User | Member, data: Optional[dict] = None):
         """This function updates an user's character list message
@@ -444,7 +444,7 @@ class Submission(commands.Cog):
         except NotFound:
             await self.register_oc(oc)
 
-    async def submission_handler(self, message: Interaction | Message, **msg_data):
+    async def submission_handler(self, message: Interaction[CustomBot] | Message, **msg_data):
         if isinstance(message, Interaction):
             refer_author = message.user
         else:
@@ -452,7 +452,7 @@ class Submission(commands.Cog):
         if msg_data:
             author = self.bot.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
-                view = CreationOCView(bot=self.bot, ctx=message, user=author, oc=oc)
+                view = CreationOCView(bot=self.bot, itx=message, user=author, oc=oc)
                 if isinstance(message, Message):
                     await message.delete(delay=0)
                 await view.handler_send()
@@ -701,68 +701,70 @@ class Submission(commands.Cog):
     @commands.Cog.listener()
     async def on_thread_create(self, thread: Thread):
         if (
-            isinstance(parent := thread.parent, ForumChannel)
-            and (thread.parent.category_id in MAP_ELEMENTS2 or thread.parent_id == 1061008601335992422)
-            and self.bot.user != thread.owner
+            not isinstance(parent := thread.parent, ForumChannel)
+            or thread.parent.category_id not in MAP_ELEMENTS2
+            and thread.parent_id != 1061008601335992422
+            or self.bot.user == thread.owner
         ):
-            await asyncio.sleep(1)
-            msg = await thread.get_partial_message(thread.id).fetch()
-            if thread.parent_id != 1061008601335992422:
-                data = await parent.create_thread(
-                    name=thread.name,
-                    content=msg.content[:2000],
-                    embeds=msg.embeds,
-                    files=[await x.to_file() for x in msg.attachments],
-                    applied_tags=thread.applied_tags,
-                    view=View.from_message(msg),
-                    reason=str(thread.owner),
-                )
-                await data.message.pin()
-                await data.thread.add_user(thread.owner)
-                await thread.delete()
-            elif notif_thread := parent.get_thread(1061010425136828628):
-                await msg.pin()
-                embed = PLACEHOLDER_EMBED.copy()
-                embed.color, embed.timestamp = thread.owner.color, thread.created_at
-                embed.set_thumbnail(url=self.bot.user.display_avatar)
-                embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
-                await thread.send(embed=embed)
-                w = await self.bot.webhook(thread)
+            return
+        await asyncio.sleep(1)
+        msg = await thread.get_partial_message(thread.id).fetch()
+        if thread.parent_id != 1061008601335992422:
+            data = await parent.create_thread(
+                name=thread.name,
+                content=msg.content[:2000],
+                embeds=msg.embeds,
+                files=[await x.to_file() for x in msg.attachments],
+                applied_tags=thread.applied_tags,
+                view=View.from_message(msg),
+                reason=str(thread.owner),
+            )
+            await data.message.pin()
+            await data.thread.add_user(thread.owner)
+            await thread.delete()
+        elif notif_thread := parent.get_thread(1061010425136828628):
+            await msg.pin()
+            embed = PLACEHOLDER_EMBED.copy()
+            embed.color, embed.timestamp = thread.owner.color, thread.created_at
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
+            embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
+            await thread.send(embed=embed)
+            w = await self.bot.webhook(thread)
 
-                embed = Embed(
-                    title=thread.name,
-                    description=msg.content,
-                    color=thread.owner.color,
-                    timestamp=thread.created_at,
-                )
+            embed = Embed(
+                title=thread.name,
+                description=msg.content,
+                color=thread.owner.color,
+                timestamp=thread.created_at,
+            )
 
-                if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
-                    embed.set_thumbnail(url=images[0].url)
+            if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
+                embed.set_thumbnail(url=images[0].url)
 
-                db = self.bot.mongo_db("RP Search Banner")
-                if item := await db.find_one({"author": thread.owner.id}):
-                    embed.set_image(url=item["image"])
+            db = self.bot.mongo_db("RP Search Banner")
+            if item := await db.find_one({"author": thread.owner.id}):
+                embed.set_image(url=item["image"])
 
-                applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
+            applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
 
-                tags = ", ".join(x.name for x in applied_tags) or None
-                embed.set_footer(text=f"Tags: {tags}")
+            tags = ", ".join(x.name for x in applied_tags) or None
+            embed.set_footer(text=f"Tags: {tags}")
 
-                view = View()
-                view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
-                content = ", ".join(
-                    o.mention for x in applied_tags if (o := get(thread.guild.roles, name=f"{x.name} RP Search"))
-                )
+            view = View()
+            view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
+            content = ", ".join(
+                o.mention for x in applied_tags if (o := get(thread.guild.roles, name=f"{x.name} RP Search"))
+            )
 
-                await w.send(
-                    content=content,
-                    allowed_mentions=AllowedMentions(roles=True),
-                    embed=embed,
-                    username=CLYDE.sub("\u200a", thread.owner.display_name),
-                    avatar_url=thread.owner.display_avatar.url,
-                    thread=notif_thread,
-                    view=view,
-                )
+            await w.send(
+                content=content,
+                allowed_mentions=AllowedMentions(roles=True),
+                embed=embed,
+                username=CLYDE.sub("\u200a", thread.owner.display_name),
+                avatar_url=thread.owner.display_avatar.url,
+                thread=notif_thread,
+                view=view,
+            )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
@@ -942,23 +944,23 @@ class Submission(commands.Cog):
 
     @commands.command()
     @commands.guild_only()
-    async def oc_image(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
-        async with ctx.typing():
-            data = [x for x in ctx.message.attachments if x.content_type.startswith("image/")]
+    async def oc_image(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
+        async with itx.typing():
+            data = [x for x in itx.message.attachments if x.content_type.startswith("image/")]
             image = data[0].proxy_url if data else None
             db = self.bot.mongo_db("Characters")
             ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
             ocs.sort(key=lambda x: x.id)
             url = Character.collage(ocs, background=image, font=font)
             if file := await self.bot.get_file(url):
-                await ctx.reply(file=file)
+                await itx.reply(file=file)
             else:
-                await ctx.reply(content=url)
+                await itx.reply(content=url)
 
     @commands.command()
     @commands.guild_only()
-    async def oc_rack(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
-        async with ctx.typing():
+    async def oc_rack(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
+        async with itx.typing():
             db = self.bot.mongo_db("Characters")
             ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
             ocs.sort(key=lambda x: x.id)
@@ -967,14 +969,14 @@ class Submission(commands.Cog):
             for oc in ocs:
                 view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.emoji))
             if file := await self.bot.get_file(url):
-                await ctx.reply(file=file, view=view)
+                await itx.reply(file=file, view=view)
             else:
-                await ctx.reply(content=url, view=view)
+                await itx.reply(content=url, view=view)
 
     @commands.command()
     @commands.guild_only()
-    async def oc_rack2(self, ctx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
-        async with ctx.typing():
+    async def oc_rack2(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
+        async with itx.typing():
             db = self.bot.mongo_db("Characters")
             ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
             ocs.sort(key=lambda x: x.id)
@@ -983,67 +985,67 @@ class Submission(commands.Cog):
             for index, oc in enumerate(ocs):
                 view.add_item(Button(label=oc.name[:80], url=oc.jump_url, row=index // 2, emoji=oc.emoji))
             if file := await self.bot.get_file(url):
-                await ctx.reply(file=file, view=view)
+                await itx.reply(file=file, view=view)
             else:
-                await ctx.reply(content=url, view=view)
+                await itx.reply(content=url, view=view)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
-    async def get_ocs(self, ctx: Interaction, member: Optional[Member | User], character: Optional[CharacterArg]):
+    async def get_ocs(self, itx: Interaction[CustomBot], member: Optional[Member | User], character: Optional[CharacterArg]):
         """Allows to show characters
 
         Parameters
         ----------
-        ctx : Interaction
+        itx : Interaction
             Interaction
         member : Optional[Member | User]
             Member, if not provided it's current user.
         character : Optional[CharacterArg]
             Search by name, directly
         """
-        resp: InteractionResponse = ctx.response
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         if member is None:
-            member = ctx.user
-        user = self.bot.supporting.get(ctx.user, ctx.user)
+            member = itx.user
+        user = self.bot.supporting.get(itx.user, itx.user)
 
         if character:
-            if character.author in [ctx.user.id, user.id]:
-                view = CreationOCView(bot=self.bot, ctx=ctx, user=user, oc=character)
+            if character.author in [itx.user.id, user.id]:
+                view = CreationOCView(bot=self.bot, itx=itx, user=user, oc=character)
                 await view.handler_send(ephemeral=True)
             else:
-                view = PingView(oc=character, reference=ctx)
-                await ctx.followup.send(content=character.id, embeds=character.embeds, view=view, ephemeral=True)
+                view = PingView(oc=character, reference=itx)
+                await itx.followup.send(content=character.id, embeds=character.embeds, view=view, ephemeral=True)
             return
 
         db = self.bot.mongo_db("Characters")
         ocs = [Character.from_mongo_dict(item) async for item in db.find({"author": member.id})]
         ocs.sort(key=lambda x: x.name)
-        view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+        view = ModCharactersView(member=itx.user, ocs=ocs, target=itx, keep_working=True)
         embed = view.embed
         embed.color = member.color
         embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         async with view.send(ephemeral=True):
-            self.bot.logger.info("User %s is reading the OCs of %s", str(ctx.user), str(member))
+            self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Moderation")
-    async def submit_as(self, ctx: Interaction, member: Optional[User]):
+    async def submit_as(self, itx: Interaction[CustomBot], member: Optional[User]):
         """Allows to create OCs as an user
 
         Parameters
         ----------
-        ctx : Interaction
+        itx : Interaction
             Interaction
         member : Optional[User]
             Member, if not provided, it's current user.
         """
-        resp: InteractionResponse = ctx.response
-        if member is None or ctx.user == member:
-            self.bot.supporting.pop(member := ctx.user, None)
+        resp: InteractionResponse = itx.response
+        if member is None or itx.user == member:
+            self.bot.supporting.pop(member := itx.user, None)
         else:
-            self.bot.supporting[ctx.user] = member
+            self.bot.supporting[itx.user] = member
         await resp.send_message(
             content=f"OCs registered now will be assigned to {member.mention}!",
             ephemeral=True,

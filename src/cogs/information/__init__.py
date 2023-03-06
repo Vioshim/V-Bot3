@@ -16,6 +16,7 @@
 from contextlib import suppress
 from os import getenv
 from typing import Optional
+from datetime import timedelta
 
 from aiohttp import ClientResponseError
 from discord import (
@@ -51,7 +52,7 @@ from discord import (
 from discord.abc import GuildChannel
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import format_dt, get, utcnow
+from discord.utils import format_dt, get, utcnow, time_snowflake
 from motor.motor_asyncio import AsyncIOMotorCollection
 from yaml import dump
 
@@ -328,7 +329,19 @@ class InformationView(View):
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
     async def see_map(self, ctx: Interaction, _: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id, "location": {"$type": 18}})]
+        date_value = time_snowflake(ctx.created_at - timedelta(days=14))
+        key = {
+            "server": ctx.guild_id,
+            "$or": [
+                {"id": {"$gte": date_value}},
+                {"location": {"$gte": date_value}},
+                {"last_used": {"$gte": date_value}},
+            ],
+            "location": {"$type": 18},
+        }
+        if role := get(ctx.guild.roles, name="Registered"):
+            key["author"] = {"$in": [x.id for x in role.members]}
+        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
         view = RegionViewComplex(member=ctx.user, target=ctx, ocs=ocs)
         await view.simple_send(ephemeral=True)
 

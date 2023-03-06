@@ -85,7 +85,7 @@ class Inviter(commands.Cog):
     @commands.guild_only()
     async def update(
         self,
-        ctx: commands.Context,
+        ctx: commands.Context[CustomBot],
         invite: Optional[Invite] = None,
         reference: Optional[Message] = None,
     ):

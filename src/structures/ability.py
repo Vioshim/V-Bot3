@@ -155,9 +155,7 @@ class Ability:
         Optional[Ability]
             Obtained result
         """
-        if isinstance(item, Ability):
-            return item
-        return ALL_ABILITIES.get(item)
+        return item if isinstance(item, Ability) else ALL_ABILITIES.get(item)
 
     @classmethod
     def hook(cls, data: dict[str, str]):

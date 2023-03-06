@@ -194,10 +194,10 @@ class Kind(Enum):
 
     @classmethod
     def from_class(cls, item: Type[Species]):
-        for element in cls:
-            if isinstance(item, element.value):
-                return element
-        return cls.Fakemon
+        return next(
+            (element for element in cls if isinstance(item, element.value)),
+            cls.Fakemon,
+        )
 
 
 class Size(Enum):
@@ -448,15 +448,11 @@ class Character:
 
     @property
     def types(self) -> frozenset[TypingEnum]:
-        if self.species:
-            return frozenset(self.species.types)
-        return frozenset()
+        return frozenset(self.species.types) if self.species else frozenset()
 
     @property
     def possible_types(self) -> frozenset[frozenset[TypingEnum]]:
-        if self.species:
-            return self.species.possible_types
-        return frozenset()
+        return self.species.possible_types if self.species else frozenset()
 
     @property
     def kind(self):
@@ -475,7 +471,7 @@ class Character:
                 rf"https:\/\/\w+\.discordapp\.\w+\/attachments\/{self.thread}\/(\d+)\/image\.png",
                 string=url,
             ):
-                url = int(find.group(1))
+                url = int(find[1])
 
         self.image = url
 
@@ -530,9 +526,7 @@ class Character:
 
     @property
     def movepool(self) -> Movepool:
-        if self.species:
-            return self.species.movepool
-        return Movepool()
+        return self.species.movepool if self.species else Movepool()
 
     @property
     def total_movepool(self) -> Movepool:
@@ -791,17 +785,17 @@ class Character:
         if self.backstory or self.extra or self.personality:
             doc.add_page_break()
 
-            if self.backstory:
-                doc.add_heading("Bio", 1)
-                doc.add_paragraph(self.backstory)
+        if self.backstory:
+            doc.add_heading("Bio", 1)
+            doc.add_paragraph(self.backstory)
 
-            if self.personality:
-                doc.add_heading("Personality", 1)
-                doc.add_paragraph(self.personality)
+        if self.personality:
+            doc.add_heading("Personality", 1)
+            doc.add_paragraph(self.personality)
 
-            if self.extra:
-                doc.add_heading("Extra Information", 1)
-                doc.add_paragraph(self.extra)
+        if self.extra:
+            doc.add_heading("Extra Information", 1)
+            doc.add_paragraph(self.extra)
 
         if sp_ability := self.sp_ability:
             doc.add_page_break()
@@ -907,8 +901,7 @@ class Character:
         items: list[Character | None] = list(ocs)[:4]
         kit = ImageKit(base="Rack_FgmVfIYZs.png", width=2000, height=500, format="png")
         for index, oc in enumerate(items):
-            x = 500 * index + 25
-            y = 25
+            x, y = 500 * index + 25, 25
             if oc is None:
                 kit.add_image(image="placeholder_uSDglnt-E.png", height=450, width=450, x=x, y=y)
             elif isinstance(oc, Character):
@@ -1130,7 +1123,7 @@ class Character:
 
 
 class CharacterTransform(Transformer):
-    async def transform(self, interaction: Interaction, value: str, /):
+    async def transform(self, interaction: Interaction[CustomBot], value: str, /):
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.client.supporting.get(interaction.user, interaction.user)
@@ -1149,7 +1142,7 @@ class CharacterTransform(Transformer):
         ):
             return options[0]
 
-    async def autocomplete(self, interaction: Interaction, value: str, /) -> list[Choice[str]]:
+    async def autocomplete(self, interaction: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
         if not (member := interaction.namespace.member):
             member = interaction.client.supporting.get(interaction.user, interaction.user)

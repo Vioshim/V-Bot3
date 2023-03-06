@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import contextlib
 from datetime import datetime
 from typing import Union
 
@@ -133,12 +134,9 @@ class ImageURL(Converter[str]):
             return message.content
 
         converter = PartialEmojiConverter()
-        try:
+        with contextlib.suppress(PartialEmojiConversionFailure):
             emoji = await converter.convert(ctx, argument)
             return emoji.url
-        except PartialEmojiConversionFailure:
-            pass
-
         raise NoImageFound(argument)
 
 
@@ -341,10 +339,8 @@ class UserCaller(Converter[Union[Member, User]]):
                     return user
                 if argument in str(user).lower():
                     return user
-            try:
+            with contextlib.suppress(MemberNotFound):
                 converter = MemberConverter()
                 return await converter.convert(ctx=ctx, argument=argument)
-            except MemberNotFound:
-                pass
         converter = UserConverter()
         return await converter.convert(ctx=ctx, argument=argument)

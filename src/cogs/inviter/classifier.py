@@ -117,7 +117,7 @@ class Partner:
         }
 
     @classmethod
-    def from_mongo_dict(self, kwargs: dict[str, str]):
+    def from_mongo_dict(cls, kwargs: dict[str, str]):
         del kwargs["_id"]
         return Partner(**kwargs)
 
@@ -210,7 +210,9 @@ class TagComplex(Complex[str]):
             items = [self.data.get(x, set()) for x in choices]
             items = set[Partner].intersection(*items)
             view = PartnerComplex(member=ctx.user, target=ctx, items=items)
-            await view.simple_send(title="Servers with tags: {}".format(", ".join(choices)), ephemeral=True)
+            await view.simple_send(
+                title=f"Servers with tags: {', '.join(choices)}", ephemeral=True,
+            )
         await self.delete(ctx)
 
 

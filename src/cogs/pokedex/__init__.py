@@ -26,14 +26,13 @@ from discord import (
     ForumChannel,
     Guild,
     Interaction,
-    InteractionResponse,
     Member,
     Thread,
     User,
     app_commands,
 )
 from discord.ext import commands
-from discord.utils import get
+from discord.utils import get, time_snowflake
 from yarl import URL
 
 from src.cogs.pokedex.search import (
@@ -75,13 +74,13 @@ class Pokedex(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def random_oc(self, ctx: Interaction):
+    async def random_oc(self, ctx: Interaction[CustomBot]):
         """Generate a Random OC
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
         """
         await ctx.response.defer(thinking=True)
         embed = Embed(title="Pokémon Mystery Dungeon OC Generator", color=ctx.user.color)
@@ -107,7 +106,7 @@ class Pokedex(commands.Cog):
     @app_commands.guilds(719343092963999804)
     async def movepool(
         self,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot][CustomBot],
         species: Optional[DefaultSpeciesArg],
         fused: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
@@ -120,8 +119,8 @@ class Pokedex(commands.Cog):
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
         species : Optional[DefaultSpeciesArg]
             Species to look up info about
         fused : Optional[DefaultSpeciesArg]
@@ -137,14 +136,13 @@ class Pokedex(commands.Cog):
         evs : int
             EVs to calculate stats for
         """
-        resp: InteractionResponse = ctx.response
         embed = Embed(
             title="See Movepool",
             description="To use this command, provide Species and/or Move.",
             color=ctx.user.color,
             timestamp=ctx.created_at,
         )
-        await resp.defer(ephemeral=True, thinking=True)
+        await ctx.response.defer(ephemeral=True, thinking=True)
 
         mons: set[Optional[Species]] = {species, fused}
         if aux := {x for x in mons if x is not None}:
@@ -245,8 +243,16 @@ class Pokedex(commands.Cog):
 
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
-            db = self.bot.mongo_db("Characters")
-            key = {"server": ctx.guild_id}
+            db = ctx.client.mongo_db("Characters")
+            date_value = time_snowflake(ctx.created_at - timedelta(days=14))
+            key = {
+                "server": ctx.guild_id,
+                "$or": [
+                    {"id": {"$gte": date_value}},
+                    {"location": {"$gte": date_value}},
+                    {"last_used": {"$gte": date_value}},
+                ],
+            }
             if role := get(ctx.guild.roles, name="Registered"):
                 key["author"] = {"$in": [x.id for x in role.members]}
             ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
@@ -275,7 +281,7 @@ class Pokedex(commands.Cog):
     @app_commands.rename(_type="type", sp_ability="unique_trait")
     async def find(
         self,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot],
         name: Optional[str],
         kind: Optional[Kind],
         _type: Optional[TypingEnum],
@@ -299,7 +305,7 @@ class Pokedex(commands.Cog):
 
         Parameters
         ----------
-        ctx : Interaction
+        ctx : Interaction[CustomBot]
             Context
         name : Optional[str]
             Any name that matches(regex works).
@@ -338,10 +344,9 @@ class Pokedex(commands.Cog):
         active : bool
             modified/used since last 2 weeks. True by default
         """
-        resp: InteractionResponse = ctx.response
         text: str = ""
         guild: Guild = ctx.guild
-        await resp.defer(ephemeral=True, thinking=True)
+        await ctx.response.defer(ephemeral=True, thinking=True)
         embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
@@ -467,7 +472,7 @@ class Pokedex(commands.Cog):
     @app_commands.guilds(719343092963999804)
     async def chart(
         self,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot],
         type1: TypingEnum,
         type2: Optional[TypingEnum],
         mode: Literal["Attacking", "Defending"] = "Defending",
@@ -477,8 +482,8 @@ class Pokedex(commands.Cog):
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
         type1 : Optional[TypingArg]
             Type 1
         type2 : Optional[TypingArg]

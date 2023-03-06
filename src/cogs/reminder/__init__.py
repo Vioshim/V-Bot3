@@ -32,7 +32,7 @@ from discord import (
 from discord.ext import commands
 from discord.ext.tasks import loop
 from discord.ui import Modal, TextInput
-from discord.utils import MISSING
+from discord.utils import MISSING, utcnow
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
@@ -49,11 +49,11 @@ class ReminderModal(Modal, title="Reminder"):
         placeholder="This is what I'll be reminding you of.",
     )
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
         interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
     @classmethod
-    async def send(cls, interaction: Interaction, date: Optional[str], message: str):
+    async def send(cls, interaction: Interaction[CustomBot], date: Optional[str], message: str):
         bot: CustomBot = interaction.client
         embed = Embed(title="Reminder Command", color=Color.blurple())
         embed.set_image(url=WHITE_BAR)
@@ -79,7 +79,7 @@ class ReminderModal(Modal, title="Reminder"):
             )
         await interaction.followup.send(embed=embed, ephemeral=True)
 
-    async def on_submit(self, interaction: Interaction) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot]) -> None:
         await interaction.response.defer(ephemeral=True, thinking=True)
         await self.send(interaction, self.due.value, self.message.value)
         self.stop()
@@ -99,7 +99,7 @@ class Reminder(commands.Cog):
     async def remind_action(self):
         remind = self.bot.mongo_db("Reminder")
         tupper_log = self.bot.mongo_db("Tupper-logs")
-        condition = {"due": {"$lte": datetime.utcnow()}}
+        condition = {"due": {"$lte": utcnow()}}
         embed = Embed(title="Reminder!", color=Color.blurple())
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text="You can react with ❌ to delete this message.")
@@ -134,17 +134,15 @@ class Reminder(commands.Cog):
                 await msg.add_reaction("\N{CROSS MARK}")
                 await tupper_log.insert_one({"channel": msg.channel.id, "id": msg.id, "author": author_id})
 
-        await remind.delete_many(condition)
-
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def remind(self, ctx: Interaction, message: Optional[str], due: Optional[str]):
+    async def remind(self, ctx: Interaction[CustomBot], message: Optional[str], due: Optional[str]):
         """Fennekin Reminder System
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
         message : str
             Message to remind
         due : str

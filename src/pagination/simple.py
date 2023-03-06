@@ -26,7 +26,6 @@ from discord import (
     GuildSticker,
     HTTPException,
     Interaction,
-    InteractionResponse,
     Member,
     Message,
     MessageReference,
@@ -159,9 +158,7 @@ class Simple(Generic[_T], Basic):
 
     @property
     def parser(self):
-        if self._parser:
-            return self._parser
-        return default_parser
+        return self._parser or default_parser
 
     @parser.setter
     def parser(self, parser: Callable[[_T], tuple[str, str]]):
@@ -330,14 +327,13 @@ class Simple(Generic[_T], Basic):
         page : int, optional
             page's index, defaults to None
         """
-        resp: InteractionResponse = interaction.response
 
         if self.is_finished():
             return
 
         data = self.default_params(page=page)
-        if not resp.is_done():
-            await resp.edit_message(**data)
+        if not interaction.response.is_done():
+            await interaction.response.edit_message(**data)
         elif message := self.message:
             # if not message.flags.ephemeral:
             #       message = message.channel.get_partial_message(message.id)
@@ -411,9 +407,8 @@ class SimplePaged(Simple[_T]):
         _: discord.ui.Button
             Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
         if interaction.message.flags.ephemeral:
-            await resp.edit_message(view=None)
+            await interaction.response.edit_message(view=None)
         else:
             await interaction.message.delete(delay=0)
         self.stop()

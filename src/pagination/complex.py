@@ -30,7 +30,6 @@ from discord import (
     File,
     GuildSticker,
     Interaction,
-    InteractionResponse,
     Member,
     Message,
     MessageReference,
@@ -68,13 +67,11 @@ class DefaultModal(Modal):
             self.add_item(self.item)
 
     async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
-        resp: InteractionResponse = interaction.response
-        await resp.send_message("An error has occurred.", ephemeral=True)
+        await interaction.response.send_message("An error has occurred.", ephemeral=True)
         logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
     async def on_submit(self, interaction: Interaction) -> None:
-        resp: InteractionResponse = interaction.response
-        await resp.pong()
+        await interaction.response.pong()
         current = set()
         elements = [o for x in str(self.item.value or "").split(",") if (o := x.strip())]
         choices = self.view.choices
@@ -261,7 +258,7 @@ class Complex(Simple[_T]):
             pages.add_option(label="Last Pages", value=str(len(elements) - 1), emoji=ArrowEmotes.END)
 
         if min_range > 0:
-            if min_range - 20 > 0:
+            if min_range > 20:
                 pages.add_option(label="Previous Pages", value=str(max_range - 20), emoji=ArrowEmotes.BACK)
             pages.add_option(label="First Pages", value="0", emoji=ArrowEmotes.START)
 
@@ -552,12 +549,10 @@ class Complex(Simple[_T]):
         interaction: Interaction
             Current interaction of the user
         """
-        response: InteractionResponse = interaction.response
-
         items = self.current_choices
-        if not response.is_done() and not self.silent_mode and all(x.isdigit() for x in sct.values):
+        if not interaction.response.is_done() and not self.silent_mode and all(x.isdigit() for x in sct.values):
             member: Member | User = interaction.user
-            await response.defer(ephemeral=True, thinking=True)
+            await interaction.response.defer(ephemeral=True, thinking=True)
             embed = Embed(
                 description="\n".join(f"> **•** {x}" for x, _ in map(self.parser, items)),
                 color=Color.blurple(),
@@ -612,19 +607,17 @@ class Complex(Simple[_T]):
         row=4,
     )
     async def message_handler(self, interaction: Interaction, _: Button):
-        response: InteractionResponse = interaction.response
         component = self.text_component
         if isinstance(component, TextInput):
             component = DefaultModal(view=self)
-        await response.send_modal(component)
+        await interaction.response.send_modal(component)
         await component.wait()
 
     @button(label="Finish", custom_id="finish", style=ButtonStyle.blurple, row=4)
     async def finish(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
-            return await resp.edit_message(view=self)
+            return await ctx.response.edit_message(view=self)
         await self.delete(ctx)
 
     @button(
@@ -673,8 +666,7 @@ class InnerComplex(Complex):
 
     @button(label="Finish", custom_id="finish", style=ButtonStyle.blurple, row=4)
     async def finish(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
-            return await resp.edit_message(view=self)
+            return await ctx.response.edit_message(view=self)
         self.stop()

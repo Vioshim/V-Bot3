@@ -81,11 +81,11 @@ class AIModal(Modal):
         self.description = TextInput(label="Description", style=TextStyle.paragraph)
         self.add_item(self.description)
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
         interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
     @classmethod
-    async def send(cls, interaction: Interaction, text: str, ephemeral: bool = False):
+    async def send(cls, interaction: Interaction[CustomBot], text: str, ephemeral: bool = False):
         answer = await interaction.client.loop.run_in_executor(None, ai_completition, text)
         if len(text) <= 256:
             embeds = [Embed(title=text, description=answer, color=interaction.user.color)]
@@ -106,7 +106,7 @@ class AIModal(Modal):
             thread=Object(id=1020153295622373437),
         )
 
-    async def on_submit(self, interaction: Interaction, /) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot], /) -> None:
         await interaction.response.defer(ephemeral=self.ephemeral, thinking=True)
         await self.send(interaction, text=self.description.value, ephemeral=self.ephemeral)
         self.stop()
@@ -166,7 +166,7 @@ class AiCog(commands.Cog):
             self.msg_cache.pop(item, None)
 
     @staticmethod
-    async def ai(interaction: Interaction, text: str, ephemeral: bool = True):
+    async def ai(interaction: Interaction[CustomBot], text: str, ephemeral: bool = True):
         """Open AI Generator
 
         Parameters

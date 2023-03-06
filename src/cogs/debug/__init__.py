@@ -99,10 +99,7 @@ class Debug(Feature):
         If retention is on, this is the internal stored scope,
         otherwise it is always a new Scope.
         """
-
-        if self.retain:
-            return self._scope
-        return Scope()
+        return self._scope if self.retain else Scope()
 
     @Feature.Command(name="retain")
     async def retain_cmd(self, ctx: commands.Context, *, toggle: bool = None):

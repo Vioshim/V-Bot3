@@ -75,10 +75,10 @@ class ForumModal(Modal):
         self.channel = channel
         self.file = file
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
         interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
-    async def on_submit(self, itx: Interaction, /) -> None:
+    async def on_submit(self, itx: Interaction[CustomBot], /) -> None:
         view = View(timeout=None)
         if isinstance(msg := self.channel, Message):
             try:
@@ -127,9 +127,7 @@ class Utilities(commands.Cog):
                 suggestions.append((len(r.group()), r.start(), item))
 
         def sort_key(tup):
-            if key:
-                return tup[0], tup[1], key(tup[2])
-            return tup
+            return (tup[0], tup[1], key(tup[2])) if key else tup
 
         if lazy:
             return (z for _, _, z in sorted(suggestions, key=sort_key))
@@ -189,7 +187,7 @@ class Utilities(commands.Cog):
 
         self._rtfm_cache = cache
 
-    async def do_rtfm(self, ctx: Interaction, key: RTFMPages, obj: Optional[str]):
+    async def do_rtfm(self, ctx: Interaction[CustomBot], key: RTFMPages, obj: Optional[str]):
 
         if obj is None:
             return await ctx.followup.send(key.value)
@@ -260,7 +258,7 @@ class Utilities(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_permissions(manage_messages=True)
-    async def rtfm(self, ctx: Interaction, key: Optional[RTFMPages], query: Optional[str]):
+    async def rtfm(self, ctx: Interaction[CustomBot], key: Optional[RTFMPages], query: Optional[str]):
         """Executes a manual query
 
         Parameters
@@ -281,7 +279,7 @@ class Utilities(commands.Cog):
     @app_commands.checks.has_permissions(manage_messages=True)
     async def forum(
         self,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot],
         forum: Optional[ForumChannel | Thread] = None,
         image: Optional[Attachment] = None,
     ):
@@ -309,7 +307,7 @@ class Utilities(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def metronome(self, ctx: Interaction, valid: bool = True, hidden: bool = False):
+    async def metronome(self, ctx: Interaction[CustomBot], valid: bool = True, hidden: bool = False):
         """Allows to use Metronome
 
         Parameters
@@ -384,7 +382,7 @@ class Utilities(commands.Cog):
 
     @app_commands.command(name="roll")
     @app_commands.guilds(719343092963999804)
-    async def slash_roll(self, ctx: Interaction, expression: Optional[str] = None, hidden: bool = True):
+    async def slash_roll(self, ctx: Interaction[CustomBot], expression: Optional[str] = None, hidden: bool = True):
         """Allows to roll dice based on 20
 
         Parameters

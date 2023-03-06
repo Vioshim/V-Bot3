@@ -22,15 +22,13 @@ from discord import (
     Colour,
     Embed,
     Interaction,
-    InteractionResponse,
     Object,
     Role,
     Webhook,
 )
 from discord.ui import Modal, TextInput
 from discord.utils import MISSING, find
-from motor.motor_asyncio import AsyncIOMotorCollection
-
+from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
 __all__ = ("CustomPerks",)
@@ -39,7 +37,7 @@ __all__ = ("CustomPerks",)
 class Perk(ABC):
     @classmethod
     @abstractmethod
-    async def method(cls, ctx: Interaction, msg: Optional[Attachment] = None):
+    async def method(cls, ctx: Interaction[CustomBot], msg: Optional[Attachment] = None):
         "Method that uses the interaction"
 
 
@@ -67,25 +65,23 @@ class CustomRoleModal(Modal, title="Custom Role"):
         self.add_item(self.name)
         self.add_item(self.color)
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
+    async def interaction_check(self, interaction: Interaction[CustomBot]) -> bool:
         try:
             if self.color.value:
                 Colour.from_str(self.color.value)
         except ValueError:
-            await resp.send_message("Invalid Color", ephemeral=True)
+            await interaction.response.send_message("Invalid Color", ephemeral=True)
             return False
         return True
 
-    async def on_submit(self, ctx: Interaction) -> None:
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=True, thinking=True)
+    async def on_submit(self, ctx: Interaction[CustomBot]) -> None:
+        await ctx.response.defer(ephemeral=True, thinking=True)
 
         embed = Embed(title="Custom Role", timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
         embed.set_image(url=WHITE_BAR)
 
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Custom Role")
+        db = ctx.client.mongo_db("Custom Role")
         if not self.name.value and self.role:
             await self.role.delete()
             embed.title = "Custom Role - Removed"
@@ -136,9 +132,8 @@ class CustomRoleModal(Modal, title="Custom Role"):
 
 class CustomRolePerk(Perk):
     @classmethod
-    async def method(cls, ctx: Interaction, img: Optional[Attachment] = None):
-        resp: InteractionResponse = ctx.response
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Custom Role")
+    async def method(cls, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        db = ctx.client.mongo_db("Custom Role")
         role: Optional[Role] = None
         if role_data := await db.find_one({"author": ctx.user.id}):
             role = ctx.guild.get_role(role_data["id"])
@@ -147,15 +142,14 @@ class CustomRolePerk(Perk):
             elif role not in ctx.user.roles:
                 await ctx.user.add_roles(role)
         modal = CustomRoleModal(role=role, icon=img)
-        await resp.send_modal(modal)
+        await ctx.response.send_modal(modal)
 
 
 class RPSearchBannerPerk(Perk):
     @classmethod
-    async def method(cls, ctx: Interaction, img: Optional[Attachment] = None):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(thinking=True, ephemeral=True)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search Banner")
+    async def method(cls, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        await ctx.response.defer(thinking=True, ephemeral=True)
+        db = ctx.client.mongo_db("RP Search Banner")
         key = {"author": ctx.user.id}
         embed = Embed(title="RP Search Banner", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
@@ -185,10 +179,9 @@ class RPSearchBannerPerk(Perk):
 
 class OCBackgroundPerk(Perk):
     @classmethod
-    async def method(cls, ctx: Interaction, img: Optional[Attachment] = None):
-        resp: InteractionResponse = ctx.response
-        await resp.defer(thinking=True, ephemeral=True)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Background")
+    async def method(cls, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        await ctx.response.defer(thinking=True, ephemeral=True)
+        db = ctx.client.mongo_db("OC Background")
         key = {"author": ctx.user.id}
         embed = Embed(title="OC Background", color=ctx.user.color, timestamp=ctx.created_at)
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
@@ -222,5 +215,5 @@ class CustomPerks(Enum):
     RP_Search_Banner = RPSearchBannerPerk
     OC_Background = OCBackgroundPerk
 
-    async def method(self, ctx: Interaction, img: Optional[Attachment] = None):
+    async def method(self, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
         await self.value.method(ctx, img)

@@ -22,7 +22,6 @@ from discord import (
     DiscordException,
     Embed,
     Interaction,
-    InteractionResponse,
     Member,
     Message,
     PartialEmoji,
@@ -97,9 +96,8 @@ class ModernInput(Basic):
         row=0,
     )
     async def confirm2(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
         modal = TextModal(self.input_text)
-        await resp.send_modal(modal)
+        await interaction.response.send_modal(modal)
         await modal.wait()
         self.text = modal.text
         self.stop()
@@ -110,10 +108,9 @@ class ModernInput(Basic):
         row=0,
     )
     async def empty(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
         self.text = ""
         try:
-            await resp.edit_message(
+            await interaction.response.edit_message(
                 content="Default Value has been chosen",
                 view=None,
             )
@@ -129,8 +126,7 @@ class ModernInput(Basic):
 
     @button(label="Cancel the Process", style=ButtonStyle.red, row=0)
     async def cancel(self, interaction: Interaction, _: Button):
-        resp: InteractionResponse = interaction.response
-        await resp.edit_message(
+        await interaction.response.edit_message(
             content="Process Concluded",
             view=None,
             embed=None,
@@ -148,9 +144,8 @@ class TextModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         """Runs whenever the modal is closed."""
-        resp: InteractionResponse = interaction.response
         self.text = self.item.value or ""
-        await resp.send_message("Parameter has been added.", ephemeral=True, delete_after=1)
+        await interaction.response.send_message("Parameter has been added.", ephemeral=True, delete_after=1)
         if message := interaction.message:
             await message.delete(delay=0)
         self.stop()

@@ -20,12 +20,12 @@ from discord import (
     Embed,
     ForumChannel,
     Interaction,
-    InteractionResponse,
     Member,
     Thread,
     User,
 )
 from discord.ui import Select, select
+from src.structures.bot import CustomBot
 
 from src.pagination.complex import Complex
 from src.structures.character import Character
@@ -38,7 +38,7 @@ __all__ = ("RegionViewComplex",)
 class LocationSelection(Complex[Thread]):
     def __init__(
         self,
-        target: Interaction,
+        target: Interaction[CustomBot],
         base: ForumChannel,
         ocs: set[Character],
     ):
@@ -70,10 +70,9 @@ class LocationSelection(Complex[Thread]):
         )
 
     @select(row=1, placeholder="Select a location to check", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         try:
-            resp: InteractionResponse = interaction.response
-            await resp.defer(ephemeral=True, thinking=True)
+            await interaction.response.defer(ephemeral=True, thinking=True)
             channel: Thread = self.current_choice
             ocs = self.entries.get(channel.id, set())
             view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
@@ -101,7 +100,7 @@ class LocationSelection(Complex[Thread]):
 class AreaSelection(Complex[ForumChannel]):
     def __init__(
         self,
-        target: Interaction,
+        target: Interaction[CustomBot],
         cat: CategoryChannel,
         ocs: set[Character],
         emoji: str,
@@ -141,10 +140,9 @@ class AreaSelection(Complex[ForumChannel]):
         )
 
     @select(row=1, placeholder="Select an area to check", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         try:
-            resp: InteractionResponse = interaction.response
-            await resp.defer(ephemeral=True, thinking=True)
+            await interaction.response.defer(ephemeral=True, thinking=True)
             channel: ForumChannel = self.current_choice
             ocs = self.entries.get(channel.id, set())
             view = LocationSelection(target=interaction, base=channel, ocs=ocs)
@@ -164,7 +162,7 @@ class AreaSelection(Complex[ForumChannel]):
 
 
 class RegionViewComplex(Complex[MapPair]):
-    def __init__(self, *, member: Member | User, target: Interaction, ocs: list[Character]):
+    def __init__(self, *, member: Member | User, target: Interaction[CustomBot], ocs: list[Character]):
         def foo4(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
             return ch.category_id if isinstance(ch, Thread) else 0
@@ -190,10 +188,9 @@ class RegionViewComplex(Complex[MapPair]):
         self.embed.description = "Tool will also show you how many characters have been in certain areas."
 
     @select(row=1, placeholder="Select region to read about", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         try:
-            resp: InteractionResponse = interaction.response
-            await resp.defer(ephemeral=True, thinking=True)
+            await interaction.response.defer(ephemeral=True, thinking=True)
             info = self.current_choice
             cat = interaction.guild.get_channel(info.category)
             embed = Embed(

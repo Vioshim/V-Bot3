@@ -166,24 +166,24 @@ class Template(TemplateItem, Enum):
         },
     )
 
-    async def process(self, oc: Character, ctx: Interaction, ephemeral: bool):
+    async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
         choices: list[Species] = []
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
 
         if mons := self.total_species:
-            date_value = time_snowflake(ctx.created_at - timedelta(days=14))
+            date_value = time_snowflake(itx.created_at - timedelta(days=14))
             key = {
-                "server": ctx.guild_id,
+                "server": itx.guild_id,
                 "$or": [
                     {"id": {"$gte": date_value}},
                     {"location": {"$gte": date_value}},
                     {"last_used": {"$gte": date_value}},
                 ],
             }
-            if role := get(ctx.guild.roles, name="Registered"):
+            if role := get(itx.guild.roles, name="Registered"):
                 key["author"] = {"$in": [x.id for x in role.members]}
             ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, max_values=self.max_values, ocs=ocs)
+            view = SpeciesComplex(member=itx.user, target=itx, mon_total=mons, max_values=self.max_values, ocs=ocs)
             async with view.send(ephemeral=ephemeral) as data:
                 if self.min_values <= len(data) <= self.max_values:
                     choices.extend(data)
@@ -204,7 +204,7 @@ class Template(TemplateItem, Enum):
                 oc.species = Fusion(*choices, ratio=0.5)
                 default_measure = True
             case self.Variant:
-                async with ModernInput(member=ctx.user, target=ctx).handle(
+                async with ModernInput(member=itx.user, target=itx).handle(
                     label=f"{choices[0].name} Variant"[:45],
                     ephemeral=ephemeral,
                     default=choices[0].name,
@@ -217,7 +217,7 @@ class Template(TemplateItem, Enum):
                             oc.species = Variant(base=choices[0], name=answer)
                             default_measure = True
             case self.CustomParadox:
-                async with ModernInput(member=ctx.user, target=ctx).handle(
+                async with ModernInput(member=itx.user, target=itx).handle(
                     label=f"Paradox {choices[0].name}"[:45],
                     ephemeral=ephemeral,
                     default=choices[0].name,
@@ -230,7 +230,7 @@ class Template(TemplateItem, Enum):
                             oc.species = CustomParadox(base=choices[0], name=answer)
                             default_measure = True
             case self.CustomUltraBeast:
-                async with ModernInput(member=ctx.user, target=ctx).handle(
+                async with ModernInput(member=itx.user, target=itx).handle(
                     label=f"UB {choices[0].name}"[:45],
                     ephemeral=ephemeral,
                     default=choices[0].name,
@@ -248,7 +248,7 @@ class Template(TemplateItem, Enum):
                 oc.abilities &= oc.species.abilities
             case self.CustomPokemon:
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
-                async with ModernInput(member=ctx.user, target=ctx).handle(
+                async with ModernInput(member=itx.user, target=itx).handle(
                     label="OC's Species.",
                     required=True,
                     ephemeral=ephemeral,
@@ -365,7 +365,7 @@ class TemplateField(ABC):
     @abstractmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
@@ -385,13 +385,13 @@ class NameField(TemplateField, name="Name", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        text_view = ModernInput(member=ctx.user, target=ctx)
+        text_view = ModernInput(member=itx.user, target=itx)
         handler = text_view.handle(
             label="OC's Name.",
             placeholder=f"> {oc.name}",
@@ -411,15 +411,15 @@ class AgeField(TemplateField, name="Age", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         view = Complex[AgeGroup](
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             timeout=None,
             values=AgeGroup,
             parser=lambda x: (x.name, x.description),
@@ -448,15 +448,15 @@ class PronounField(TemplateField, name="Pronoun", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         view = Complex[Pronoun](
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             timeout=None,
             values=Pronoun,
             max_values=len(Pronoun),
@@ -510,13 +510,13 @@ class SpeciesField(TemplateField, name="Species", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        await template.process(oc=oc, ctx=ctx, ephemeral=ephemeral)
+        await template.process(oc=oc, itx=itx, ephemeral=ephemeral)
         if oc.species:
             progress.add(cls.name)
 
@@ -531,7 +531,7 @@ class FusionRatioField(TemplateField, name="Proportion"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
@@ -539,8 +539,8 @@ class FusionRatioField(TemplateField, name="Proportion"):
     ):
         mon: Fusion = oc.species
         view = Complex[Fusion](
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             timeout=None,
             values=mon.ratios,
             emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x.ratio == mon.ratio else "\N{BLACK LARGE SQUARE}",
@@ -588,13 +588,13 @@ class SizeField(TemplateField, name="Size"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = HeightView(target=ctx, member=ctx.user, oc=oc)
+        view = HeightView(target=itx, member=itx.user, oc=oc)
         await view.send(
             title=f"{template.title} Character's Size.",
             description=f"> {oc.height_text}",
@@ -632,14 +632,14 @@ class WeightField(TemplateField, name="Weight"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
 
-        view = WeightView(target=ctx, member=ctx.user, oc=oc)
+        view = WeightView(target=itx, member=itx.user, oc=oc)
         await view.send(
             title=f"{template.title} Character's Weight.",
             description=f"> {oc.weight_text}",
@@ -666,19 +666,27 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         mon_total = {x for x in Species.all(exclude=(Paradox, Mega)) if not x.banned}
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        key = {"server": ctx.guild_id}
-        if role := get(ctx.guild.roles, name="Registered"):
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        date_value = time_snowflake(itx.created_at - timedelta(days=14))
+        key = {
+            "server": itx.guild_id,
+            "$or": [
+                {"id": {"$gte": date_value}},
+                {"location": {"$gte": date_value}},
+                {"last_used": {"$gte": date_value}},
+            ],
+        }
+        if role := get(itx.guild.roles, name="Registered"):
             key["author"] = {"$in": [x.id for x in role.members]}
         ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-        view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mon_total, ocs=ocs)
+        view = SpeciesComplex(member=itx.user, target=itx, mon_total=mon_total, ocs=ocs)
         async with view.send(
             title="Select if it has a canon Pre-Evo (Skip if not needed)",
             single=True,
@@ -726,7 +734,7 @@ class TypesField(TemplateField, name="Types", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
@@ -753,8 +761,8 @@ class TypesField(TemplateField, name="Types", required=True):
             values, max_values = TypingEnum.all(*ignore), 2
 
         view = Complex(
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             values=values,
             parser=parser,
             sort_key=parser,
@@ -804,7 +812,7 @@ class MovesetField(TemplateField, name="Moveset", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
@@ -817,9 +825,9 @@ class MovesetField(TemplateField, name="Moveset", required=True):
             movepool = Movepool(other=Move.all(banned=False, shadow=False))
 
         view = MovepoolMoveComplex(
-            member=ctx.user,
+            member=itx.user,
             movepool=movepool,
-            target=ctx,
+            target=itx,
             choices={x for x in oc.moveset if x in movepool},
         )
         async with view.send(title=f"{template.title} Character's Moveset", ephemeral=ephemeral) as choices:
@@ -848,13 +856,13 @@ class MovepoolField(TemplateField, name="Movepool", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = MovepoolView(ctx, ctx.user, oc)
+        view = MovepoolView(itx, itx.user, oc)
         await view.send(
             title=f"{template.title} OC's Movepool"[:45],
             ephemeral=ephemeral,
@@ -874,9 +882,9 @@ class AbilitiesField(TemplateField, name="Abilities", required=True):
             return "Abilities, Min: 1, Max: 2"
 
         if len(values := [x.name for x in oc.abilities if x.name in ABILITIES_DEFINING]) > 1:
-            return "Carrying {}".format(", ".join(values))
+            return f"Carrying {', '.join(values)}"
 
-        if isinstance(oc.species, CustomParadox) and not ("Protosynthesis" in values or "Quark Drive" in values):
+        if isinstance(oc.species, CustomParadox) and "Protosynthesis" not in values and "Quark Drive" not in values:
             return "Protosynthesis/Quark Drive needed."
 
         if isinstance(oc.species, CustomUltraBeast) and "Beast Boost" not in values:
@@ -892,7 +900,7 @@ class AbilitiesField(TemplateField, name="Abilities", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
@@ -903,10 +911,10 @@ class AbilitiesField(TemplateField, name="Abilities", required=True):
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](
-            member=ctx.user,
+            member=itx.user,
             values=abilities,
             timeout=None,
-            target=ctx,
+            target=itx,
             max_values=min(len(abilities), 2),
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, x.description),
@@ -937,15 +945,15 @@ class HiddenPowerField(TemplateField, name="Hidden Power"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         view = Complex[TypingEnum](
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             values=TypingEnum.all(TypingEnum.Shadow, TypingEnum.Typeless),
             timeout=None,
             sort_key=lambda x: x.name,
@@ -968,15 +976,15 @@ class NatureField(TemplateField, name="Nature"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         view = Complex[Nature](
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             values=Nature,
             timeout=None,
             sort_key=lambda x: x.name,
@@ -1003,20 +1011,17 @@ class UniqueTraitField(TemplateField, name="Unique Trait", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = SPAbilityView(ctx, ctx.user, oc)
+        view = SPAbilityView(itx, itx.user, oc)
         await view.send(ephemeral=ephemeral)
         await view.wait()
 
-        if view.sp_ability.valid:
-            oc.sp_ability = view.sp_ability
-        else:
-            oc.sp_ability = None
+        oc.sp_ability = view.sp_ability if view.sp_ability.valid else None
         progress.add(cls.name)
 
 
@@ -1026,13 +1031,13 @@ class BackstoryField(TemplateField, name="Bio", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        text_view = ModernInput(member=ctx.user, target=ctx)
+        text_view = ModernInput(member=itx.user, target=itx)
         async with text_view.handle(
             label="OC's Bio.",
             placeholder=oc.backstory,
@@ -1052,13 +1057,13 @@ class PersonalityField(TemplateField, name="Personality", required=False):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        text_view = ModernInput(member=ctx.user, target=ctx)
+        text_view = ModernInput(member=itx.user, target=itx)
         async with text_view.handle(
             label="OC's Personality.",
             placeholder=oc.personality,
@@ -1078,13 +1083,13 @@ class ExtraField(TemplateField, name="Extra Information", required=False):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
-        text_view = ModernInput(member=ctx.user, target=ctx)
+        text_view = ModernInput(member=itx.user, target=itx)
         async with text_view.handle(
             label="OC's Extra Information.",
             placeholder=oc.extra,
@@ -1115,30 +1120,30 @@ class ImageField(TemplateField, name="Image", required=True):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         _: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         default_image = oc.image_url or oc.image or oc.default_image
-        view = ImageView(member=ctx.user, default_img=default_image, target=ctx)
+        view = ImageView(member=itx.user, default_img=default_image, target=itx)
         async with view.send(ephemeral=ephemeral) as text:
             if text and isinstance(text, str):
                 oc.image = text
                 progress.add(cls.name)
 
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
-            db: AsyncIOMotorCollection = ctx.client.mongo_db("OC Background")
+            db: AsyncIOMotorCollection = itx.client.mongo_db("OC Background")
             if img := await db.find_one({"author": oc.author, "server": oc.server}):
                 url = oc.generated_image(img["image"])
-                ctx.client.logger.info(url)
-                img = await ctx.client.get_file(url)
+                itx.client.logger.info(url)
+                img = await itx.client.get_file(url)
 
             if img is None:
                 url = oc.generated_image()
-                ctx.client.logger.info(url)
-                img = await ctx.client.get_file(url)
+                itx.client.logger.info(url)
+                img = await itx.client.get_file(url)
 
             if img:
                 oc.image = img
@@ -1156,15 +1161,15 @@ class PokeballField(TemplateField, name="Pokeball"):
     @classmethod
     async def on_submit(
         cls,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         template: Template,
         progress: set[str],
         oc: Character,
         ephemeral: bool = False,
     ):
         view = Complex[Pokeball](
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             timeout=None,
             values=Pokeball,
             parser=lambda x: (x.label, None),
@@ -1187,31 +1192,27 @@ class CreationOCView(Basic):
     def __init__(
         self,
         bot: CustomBot,
-        ctx: Interaction,
+        itx: Interaction[CustomBot],
         user: Member,
         oc: Optional[Character] = None,
         template: Optional[Template] = None,
         progress: set[str] = None,
     ):
-        super(CreationOCView, self).__init__(target=ctx, member=user, timeout=None)
+        super(CreationOCView, self).__init__(target=itx, member=user, timeout=None)
         self.embed.title = "Character Creation"
         self.bot = bot
         oc = oc.copy() if oc else Character()
         if not oc.author:
             oc.author = user.id
         if not oc.server:
-            oc.server = ctx.guild_id
+            oc.server = itx.guild_id
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
-        message = getattr(ctx, "message", ctx)
+        message = getattr(itx, "message", itx)
         self.ephemeral = isinstance(message, Message) and message.flags.ephemeral
         if not isinstance(template, Template):
-            if isinstance(template, str):
-                name = template
-            else:
-                name = type(oc.species).__name__
-
+            name = template if isinstance(template, str) else type(oc.species).__name__
             name = name.replace("Fakemon", "CustomPokemon")
             if name == "CustomPokemon":
                 if get(oc.abilities, name="Beast Boost"):
@@ -1281,14 +1282,14 @@ class CreationOCView(Basic):
             self.embeds = embeds
 
     @select(placeholder="Select Kind", row=0)
-    async def kind(self, ctx: Interaction, sct: Select):
+    async def kind(self, itx: Interaction[CustomBot], sct: Select):
         try:
             self.oc.species = None
             items: list[TemplateField] = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.M
-            await self.update(ctx)
+            await self.update(itx)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)
             self.stop()
@@ -1308,8 +1309,8 @@ class CreationOCView(Basic):
             server=self.oc.server,
         )
 
-    async def update(self, ctx: Interaction):
-        resp: InteractionResponse = ctx.response
+    async def update(self, itx: Interaction):
+        resp: InteractionResponse = itx.response
         if self.is_finished():
             return
         self.setup()
@@ -1318,18 +1319,18 @@ class CreationOCView(Basic):
 
         try:
             if resp.is_done():
-                message = self.message or ctx.message
+                message = self.message or itx.message
                 if not message.flags.ephemeral:
                     message = message.channel.get_partial_message(message.id)
                 try:
                     m = await message.edit(embeds=embeds, view=self, attachments=files)
                 except DiscordException:
-                    m = await ctx.edit_original_response(embeds=embeds, view=self, attachments=files)
+                    m = await itx.edit_original_response(embeds=embeds, view=self, attachments=files)
             else:
                 await resp.edit_message(embeds=embeds, view=self, attachments=files)
-                m = await ctx.original_response()
+                m = await itx.original_response()
         except (DiscordException, AttributeError):
-            await self.help_method(ctx)
+            await self.help_method(itx)
         else:
             if files and m.embeds[0].image.proxy_url:
                 self.oc.image = m.embeds[0].image.proxy_url
@@ -1346,63 +1347,63 @@ class CreationOCView(Basic):
         return await self.send(embeds=self.embeds, ephemeral=ephemeral, content=str(self.oc.id or ""))
 
     @select(placeholder="Essentials. Click here!", row=1)
-    async def fields1(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
+    async def fields1(self, itx: Interaction[CustomBot], sct: Select):
+        resp: InteractionResponse = itx.response
         if item := TemplateField.get(name=sct.values[0]):
-            self.ephemeral = ctx.message.flags.ephemeral or self.ephemeral
+            self.ephemeral = itx.message.flags.ephemeral or self.ephemeral
             await resp.defer(ephemeral=self.ephemeral, thinking=True)
-            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
-        await self.update(ctx)
+            await item.on_submit(itx, self.ref_template, self.progress, self.oc, self.ephemeral)
+        await self.update(itx)
 
     @select(placeholder="Extras. Click here!", row=2)
-    async def fields2(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
+    async def fields2(self, itx: Interaction[CustomBot], sct: Select):
+        resp: InteractionResponse = itx.response
         if item := TemplateField.get(name=sct.values[0]):
-            self.ephemeral = ctx.message.flags.ephemeral or self.ephemeral
+            self.ephemeral = itx.message.flags.ephemeral or self.ephemeral
             await resp.defer(ephemeral=self.ephemeral, thinking=True)
-            await item.on_submit(ctx, self.ref_template, self.progress, self.oc, self.ephemeral)
-        await self.update(ctx)
+            await item.on_submit(itx, self.ref_template, self.progress, self.oc, self.ephemeral)
+        await self.update(itx)
 
-    async def delete(self, ctx: Optional[Interaction] = None) -> None:
+    async def delete(self, itx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
-        if m := self.message or ctx.message:
-            guild_id = ctx.guild_id if ctx else self.oc.server
+        if m := self.message or itx.message:
+            guild_id = itx.guild_id if itx else self.oc.server
             await db.delete_one({"id": m.id, "server": guild_id})
-        return await super(CreationOCView, self).delete(ctx)
+        return await super(CreationOCView, self).delete(itx)
 
     @button(label="Delete OC", emoji="\N{PUT LITTER IN ITS PLACE SYMBOL}", style=ButtonStyle.red, row=3)
-    async def finish_oc(self, ctx: Interaction, btn: Button):
+    async def finish_oc(self, itx: Interaction[CustomBot], btn: Button):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
-            return await ctx.response.edit_message(view=self)
+            return await itx.response.edit_message(view=self)
 
         if self.oc.id and self.oc.thread:
-            if not (channel := ctx.guild.get_channel_or_thread(self.oc.thread)):
-                channel = await ctx.guild.fetch_channel(self.oc.thread)
+            if not (channel := itx.guild.get_channel_or_thread(self.oc.thread)):
+                channel = await itx.guild.fetch_channel(self.oc.thread)
             await channel.edit(archived=False)
             await channel.get_partial_message(self.oc.id).delete(delay=0)
-        await self.delete(ctx)
+        await self.delete(itx)
 
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple, row=3)
-    async def printer(self, ctx: Interaction, _: Button):
-        await ctx.response.defer(ephemeral=True, thinking=True)
-        file = await self.oc.to_docx(ctx.client)
-        await ctx.followup.send(file=file, ephemeral=True)
-        ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
+    async def printer(self, itx: Interaction[CustomBot], _: Button):
+        await itx.response.defer(ephemeral=True, thinking=True)
+        file = await self.oc.to_docx(itx.client)
+        await itx.followup.send(file=file, ephemeral=True)
+        itx.client.logger.info("User %s printed %s", str(itx.user), repr(self.oc))
 
     @button(label="Close this Menu", row=3)
-    async def cancel(self, ctx: Interaction, btn: Button):
+    async def cancel(self, itx: Interaction[CustomBot], btn: Button):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
-            return await ctx.response.edit_message(view=self)
-        await self.delete(ctx)
+            return await itx.response.edit_message(view=self)
+        await self.delete(itx)
 
-    async def help_method(self, ctx: Interaction):
-        channel = ctx.guild.get_channel(852180971985043466)
+    async def help_method(self, itx: Interaction):
+        channel = itx.guild.get_channel(852180971985043466)
 
         view = CreationOCView(
             bot=self.bot,
-            ctx=channel,
+            itx=channel,
             user=self.member,
             oc=self.oc,
             template=self.ref_template,
@@ -1410,7 +1411,7 @@ class CreationOCView(Basic):
         )
         await view.handler_send(ephemeral=False)
 
-        if isinstance(self.oc.image, str) and isinstance(file := await ctx.client.get_file(self.oc.image), File):
+        if isinstance(self.oc.image, str) and isinstance(file := await itx.client.get_file(self.oc.image), File):
             embeds = view.embeds
             attachments = [file]
             embeds[0].set_image(url=f"attachment://{file.filename}")
@@ -1418,39 +1419,39 @@ class CreationOCView(Basic):
             if image := message.embeds[0].image:
                 self.oc.image = image.url
 
-        await self.delete(ctx)
+        await self.delete(itx)
 
     @button(label="Request Help", row=3)
-    async def help(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
+    async def help(self, itx: Interaction[CustomBot], btn: Button):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
+            resp: InteractionResponse = itx.response
             return await resp.edit_message(view=self)
-        await self.help_method(ctx)
+        await self.help_method(itx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=3)
-    async def submit(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
+    async def submit(self, itx: Interaction[CustomBot], btn: Button):
+        resp: InteractionResponse = itx.response
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await resp.edit_message(view=self)
         try:
             await resp.defer(ephemeral=True, thinking=True)
-            cog = ctx.client.get_cog("Submission")
+            cog = itx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
-            self.oc.location, self.oc.last_used = None, ctx.id
+            self.oc.location, self.oc.last_used = None, itx.id
             await cog.register_oc(self.oc, image_as_is=True)
-            msg = await ctx.followup.send(f"Character {self.oc.name} {word} without Issues!", ephemeral=True, wait=True)
+            msg = await itx.followup.send(f"Character {self.oc.name} {word} without Issues!", ephemeral=True, wait=True)
             await msg.delete(delay=2)
         except Exception as e:
             self.bot.logger.exception("Error in oc %s", btn.label, exc_info=e)
         finally:
-            await self.delete(ctx)
+            await self.delete(itx)
 
 
 class ModCharactersView(CharactersView):
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         try:
@@ -1464,7 +1465,7 @@ class ModCharactersView(CharactersView):
                     or interaction.user.id == interaction.guild.owner_id
                     or item.author in [interaction.user.id, user.id]
                 ):
-                    view = CreationOCView(bot=interaction.client, ctx=interaction, user=user, oc=item)
+                    view = CreationOCView(bot=interaction.client, itx=Interaction[CustomBot], user=user, oc=item)
                     await view.handler_send(ephemeral=True, embeds=embeds)
                 else:
                     view = PingView(oc=item, reference=interaction)
@@ -1473,7 +1474,7 @@ class ModCharactersView(CharactersView):
         except Exception as e:
             interaction.client.logger.exception("Error in ModOCView", exc_info=e)
         finally:
-            await super(CharactersView, self).select_choice(interaction, sct)
+            await super(CharactersView, self).select_choice(Interaction[CustomBot], sct)
 
 
 class SubmissionModal(Modal):
@@ -1496,7 +1497,7 @@ class SubmissionModal(Modal):
             author = interaction.client.supporting.get(refer_author, refer_author)
             async for item in ParserMethods.parse(text=self.text.value, bot=interaction.client):
                 oc = Character.process(**item)
-                view = CreationOCView(bot=interaction.client, ctx=interaction, user=author, oc=oc)
+                view = CreationOCView(bot=interaction.client, itx=Interaction[CustomBot], user=author, oc=oc)
                 if self.ephemeral:
                     await resp.edit_message(embeds=view.embeds, view=view)
                 else:
@@ -1543,11 +1544,11 @@ class TemplateView(View):
             ),
         ],
     )
-    async def method(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
+    async def method(self, itx: Interaction[CustomBot], sct: Select):
+        resp: InteractionResponse = itx.response
         match sct.values[0]:
             case "Form":
-                ephemeral = bool(get(ctx.user.roles, name="Registered"))
+                ephemeral = bool(get(itx.user.roles, name="Registered"))
                 modal = SubmissionModal(self.template.text, ephemeral=ephemeral)
                 await resp.send_modal(modal)
                 await modal.wait()
@@ -1575,79 +1576,79 @@ class SubmissionView(Basic):
             for x in Template
         ],
     )
-    async def show_template(self, ctx: Interaction, sct: Select) -> None:
-        resp: InteractionResponse = ctx.response
+    async def show_template(self, itx: Interaction[CustomBot], sct: Select) -> None:
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
         template = Template[sct.values[0]]
         embed.set_image(url="https://hmp.me/dx38")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
-        await ctx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
+        await itx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
 
     @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0, row=1)
-    async def user_ocs(self, ctx: Interaction, sct: UserSelect):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        resp: InteractionResponse = ctx.response
-        member: Member = sct.values[0] if sct.values else ctx.user
+    async def user_ocs(self, itx: Interaction[CustomBot], sct: UserSelect):
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        resp: InteractionResponse = itx.response
+        member: Member = sct.values[0] if sct.values else itx.user
         await resp.defer(ephemeral=True, thinking=True)
-        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})]
+        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": itx.guild_id})]
         values.sort(key=lambda x: x.name)
-        view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+        view = ModCharactersView(member=itx.user, target=itx, ocs=values)
         view.embed.set_author(name=member.display_name, icon_url=member.display_avatar)
-        ctx.client.logger.info("%s is reading/modifying characters", str(ctx.user))
+        itx.client.logger.info("%s is reading/modifying characters", str(itx.user))
         await view.simple_send()
 
     @button(label="Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
-    async def oc_add(self, ctx: Interaction, _: Button):
-        cog = ctx.client.get_cog("Submission")
-        user: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        resp: InteractionResponse = ctx.response
-        ephemeral = bool((role := ctx.guild.get_role(719642423327719434)) and role in ctx.user.roles)
+    async def oc_add(self, itx: Interaction[CustomBot], _: Button):
+        cog = itx.client.get_cog("Submission")
+        user: Member = itx.client.supporting.get(itx.user, itx.user)
+        resp: InteractionResponse = itx.response
+        ephemeral = bool((role := itx.guild.get_role(719642423327719434)) and role in itx.user.roles)
         await resp.defer(ephemeral=ephemeral, thinking=True)
-        users = {ctx.user.id, user.id}
+        users = {itx.user.id, user.id}
         try:
             cog.ignore |= users
             view = CreationOCView(
-                bot=ctx.client,
-                ctx=ctx,
+                bot=itx.client,
+                itx=itx,
                 user=user,
                 template=Template.Pokemon,
             )
             await view.handler_send(ephemeral=ephemeral)
             await view.wait()
         except Exception as e:
-            await ctx.followup.send(str(e), ephemeral=ephemeral)
-            ctx.client.logger.exception("Character Creation Exception", exc_info=e)
+            await itx.followup.send(str(e), ephemeral=ephemeral)
+            itx.client.logger.exception("Character Creation Exception", exc_info=e)
         finally:
             cog.ignore -= users
 
     @button(label="Modification", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
-    async def oc_update(self, ctx: Interaction, _: Button):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
+    async def oc_update(self, itx: Interaction[CustomBot], _: Button):
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        resp: InteractionResponse = itx.response
+        member: Member = itx.user
         await resp.defer(ephemeral=True, thinking=True)
-        member = ctx.client.supporting.get(member, member)
-        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": ctx.guild_id})]
+        member = itx.client.supporting.get(member, member)
+        values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": itx.guild_id})]
         values.sort(key=lambda x: x.name)
-        view = ModCharactersView(member=ctx.user, target=ctx, ocs=values)
+        view = ModCharactersView(member=itx.user, target=itx, ocs=values)
         view.embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         await view.simple_send(title="Select Character to modify")
-        ctx.client.logger.info("%s is modifying characters", str(ctx.user))
+        itx.client.logger.info("%s is modifying characters", str(itx.user))
 
     @button(style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=2, custom_id="delete-oc")
-    async def oc_delete(self, ctx: Interaction, _: Button):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.user
+    async def oc_delete(self, itx: Interaction[CustomBot], _: Button):
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        resp: InteractionResponse = itx.response
+        member: Member = itx.user
         await resp.defer(ephemeral=True, thinking=True)
-        member = ctx.client.supporting.get(member, member)
-        key = {"author": member.id, "server": ctx.guild_id}
+        member = itx.client.supporting.get(member, member)
+        key = {"author": member.id, "server": itx.guild_id}
         values = [Character.from_mongo_dict(x) async for x in db.find(key)]
         values.sort(key=lambda x: x.name)
         view = BaseCharactersView(
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             ocs=values,
             max_values=len(values),
             auto_conclude=False,
@@ -1656,10 +1657,10 @@ class SubmissionView(Basic):
         async with view.send(title="Select Characters to delete") as choices:
             if choices and isinstance(choices, set):
                 thread_id = values[0].thread
-                if not (channel := ctx.guild.get_channel_or_thread(thread_id)):
-                    channel = await ctx.guild.fetch_channel(thread_id)
+                if not (channel := itx.guild.get_channel_or_thread(thread_id)):
+                    channel = await itx.guild.fetch_channel(thread_id)
                 await channel.edit(archived=False)
                 for oc in choices:
                     msg = channel.get_partial_message(oc.id)
                     await msg.delete(delay=0)
-                ctx.client.logger.info("%s is deleting %s characters", str(ctx.user), len(choices))
+                itx.client.logger.info("%s is deleting %s characters", str(itx.user), len(choices))

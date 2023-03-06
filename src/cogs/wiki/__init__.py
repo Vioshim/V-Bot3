@@ -39,7 +39,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.add_item(self.order)
         self.add_item(self.tags)
 
-    async def on_submit(self, interaction: Interaction) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot]) -> None:
         resp: InteractionResponse = interaction.response
         path = self.folder.value
         try:
@@ -101,7 +101,7 @@ class Wiki(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    async def wiki_add(ctx: Interaction, msg: Message):
+    async def wiki_add(ctx: Interaction[CustomBot], msg: Message):
         resp: InteractionResponse = ctx.response
         role = ctx.guild.get_role(996542547155497082)
         if not (role and role in ctx.user.roles):
@@ -113,7 +113,7 @@ class Wiki(commands.Cog):
 
     async def wiki(
         self,
-        ctx: Interaction,
+        ctx: Interaction[CustomBot],
         group: Optional[WikiTreeArg],
         page: Optional[WikiNodeArg],
         search: Optional[str],

@@ -49,6 +49,7 @@ from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
+from src.structures.bot import CustomBot
 
 __all__ = ("RoleSelect", "RPSearchManage", "hours", "seconds")
 
@@ -187,14 +188,14 @@ class AFKModal(Modal, title="Current Time"):
         self.data = data
         self.add_item(data)
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
-        interaction.client.logger.error("Ignoring exception in modal %r", self, exc_info=error)
+    async def on_error(self, itx: Interaction[CustomBot], error: Exception, /) -> None:
+        itx.client.logger.error("Ignoring exception in modal %r", self, exc_info=error)
 
-    async def on_submit(self, interaction: Interaction) -> None:
-        resp: InteractionResponse = interaction.response
+    async def on_submit(self, itx: Interaction[CustomBot]) -> None:
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
-        current_date = interaction.created_at
-        member: Member = interaction.client.supporting.get(interaction.user, interaction.user)
+        current_date = itx.created_at
+        member: Member = itx.client.supporting.get(itx.user, itx.user)
         date1 = current_date.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
         ref = abs(date1 - date2).seconds
@@ -215,9 +216,9 @@ class AFKModal(Modal, title="Current Time"):
             text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them.",
         )
 
-        await interaction.followup.send(embed=embed)
+        await itx.followup.send(embed=embed)
 
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("AFK")
+        db: AsyncIOMotorCollection = itx.client.mongo_db("AFK")
         await db.replace_one(
             {"user": member.id},
             {
@@ -232,14 +233,14 @@ class AFKModal(Modal, title="Current Time"):
 
 
 class RoleSelect(View):
-    async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
-        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
+    async def on_error(self, itx: Interaction[CustomBot], error: Exception, item, /) -> None:
+        itx.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
     @staticmethod
-    async def choice(ctx: Interaction, sct: Select, remove_all: bool = False):
-        resp: InteractionResponse = ctx.response
-        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        guild = ctx.guild
+    async def choice(itx: Interaction[CustomBot], sct: Select, remove_all: bool = False):
+        resp: InteractionResponse = itx.response
+        member: Member = itx.client.supporting.get(itx.user, itx.user)
+        guild = itx.guild
 
         roles: set[Role] = set() if remove_all else set(get_role(sct.values, guild))
         total: set[Role] = set(get_role(sct.options, guild))
@@ -249,7 +250,7 @@ class RoleSelect(View):
         embed = Embed(
             title=sct.placeholder.removeprefix("Select "),
             color=Color.blurple(),
-            timestamp=ctx.created_at,
+            timestamp=itx.created_at,
         )
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
@@ -263,7 +264,7 @@ class RoleSelect(View):
             embed.add_field(name="**__Roles Removed__**", value=text, inline=False)
             await member.remove_roles(*remove)
 
-        await ctx.followup.send(embed=embed, ephemeral=True)
+        await itx.followup.send(embed=embed, ephemeral=True)
 
         return roles
 
@@ -284,8 +285,8 @@ class BasicRoleSelect(RoleSelect):
             for pronoun in Pronoun
         ],
     )
-    async def pronouns_choice(self, ctx: Interaction, sct: Select):
-        await self.choice(ctx, sct)
+    async def pronouns_choice(self, itx: Interaction[CustomBot], sct: Select):
+        await self.choice(itx, sct)
 
     @select(
         placeholder="Select Color Roles",
@@ -310,27 +311,15 @@ class BasicRoleSelect(RoleSelect):
         ],
         min_values=0,
     )
-    async def colors_choice(self, ctx: Interaction, sct: Select):
-        await self.choice(ctx, sct)
+    async def colors_choice(self, itx: Interaction[CustomBot], sct: Select):
+        await self.choice(itx, sct)
 
     @select(
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=4,
+        max_values=3,
         options=[
-            SelectOption(
-                label="Archive",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="1051564303901261934",
-                description="Read RPs from 2020 - 2022",
-            ),
-            SelectOption(
-                label="RP Events",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="805878418225889280",
-                description="Get informed of RP Events, Missions and Storylines.",
-            ),
             SelectOption(
                 label="Announcements",
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
@@ -343,10 +332,16 @@ class BasicRoleSelect(RoleSelect):
                 value="1008443862559240312",
                 description="Reminds you to bump the server",
             ),
+            SelectOption(
+                label="RP Events",
+                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
+                value="805878418225889280",
+                description="Get informed of RP Events, Missions and Storylines.",
+            ),
         ],
     )
-    async def basic_choice(self, ctx: Interaction, sct: Select):
-        await self.choice(ctx, sct)
+    async def basic_choice(self, itx: Interaction[CustomBot], sct: Select):
+        await self.choice(itx, sct)
 
     @select(
         placeholder="Select RP Search Roles",
@@ -363,13 +358,13 @@ class BasicRoleSelect(RoleSelect):
             for key, (desc, item) in RP_SEARCH_ROLES.items()
         ],
     )
-    async def rp_search_choice(self, ctx: Interaction, sct: Select):
-        roles = await self.choice(ctx, sct)
-        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Roleplayers")
+    async def rp_search_choice(self, itx: Interaction[CustomBot], sct: Select):
+        roles = await self.choice(itx, sct)
+        member: Member = itx.client.supporting.get(itx.user, itx.user)
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Roleplayers")
         if item := await db.find_one({"user": member.id}):
-            if not (channel := ctx.guild.get_channel_or_thread(item["id"])):
-                channel: Thread = await ctx.guild.fetch_channel(item["id"])
+            if not (channel := itx.guild.get_channel_or_thread(item["id"])):
+                channel: Thread = await itx.guild.fetch_channel(item["id"])
             forum: ForumChannel = channel.parent
             tags = [o for x in roles if (o := get(forum.available_tags, name=x.name.removesuffix(" RP Search")))]
             tags.sort(key=lambda x: x.name)
@@ -392,10 +387,10 @@ class TimezoneSelect(RoleSelect):
             for lapse in map(time, range(24))
         ],
     )
-    async def afk_schedule(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("AFK")
-        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
+    async def afk_schedule(self, itx: Interaction[CustomBot], sct: Select):
+        resp: InteractionResponse = itx.response
+        db: AsyncIOMotorCollection = itx.client.mongo_db("AFK")
+        member: Member = itx.client.supporting.get(itx.user, itx.user)
         if item := await db.find_one({"user": member.id}):
             modal = AFKModal(hours=sct.values, offset=item["offset"])
         else:
@@ -408,10 +403,10 @@ class TimezoneSelect(RoleSelect):
         style=ButtonStyle.blurple,
         emoji="\N{TIMER CLOCK}",
     )
-    async def tz_schedule(self, ctx: Interaction, _: Button):
-        resp: InteractionResponse = ctx.response
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("AFK")
-        member: Member = ctx.client.supporting.get(ctx.user, ctx.user)
+    async def tz_schedule(self, itx: Interaction[CustomBot], _: Button):
+        resp: InteractionResponse = itx.response
+        db: AsyncIOMotorCollection = itx.client.mongo_db("AFK")
+        member: Member = itx.client.supporting.get(itx.user, itx.user)
         if item := await db.find_one({"user": member.id}):
             modal = AFKModal(hours=item["hours"], offset=item["offset"])
         else:
@@ -435,10 +430,10 @@ class RPSearchManage(View):
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
     )
-    async def check_ocs(self, ctx: Interaction, btn: Button):
-        resp: InteractionResponse = ctx.response
+    async def check_ocs(self, itx: Interaction[CustomBot], btn: Button):
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         if not (
             ocs := [
                 Character.from_mongo_dict(x)
@@ -448,22 +443,22 @@ class RPSearchManage(View):
             ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": self.member_id})]
 
         view = CharactersView(
-            member=ctx.user,
-            target=ctx,
+            member=itx.user,
+            target=itx,
             ocs=ocs,
             keep_working=True,
             msg_id=int(btn.custom_id) if btn.custom_id.isdigit() else None,
         )
         embed = view.embed
-        if member := ctx.guild.get_member(self.member_id) or ctx.client.get_user(self.member_id):
+        if member := itx.guild.get_member(self.member_id) or itx.client.get_user(self.member_id):
             embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
         else:
             member = f"User(ID={self.member_id})"
         async with view.send(ephemeral=True, single=True) as data:
             if isinstance(data, Character):
-                ctx.client.logger.info(
+                itx.client.logger.info(
                     "User %s is currently reading %s's character %s [%s]",
-                    str(ctx.user),
+                    str(itx.user),
                     str(member),
                     data.name,
                     repr(data),
@@ -475,10 +470,10 @@ class RPSearchManage(View):
         custom_id="archive_thread",
         style=ButtonStyle.red,
     )
-    async def conclude(self, ctx: Interaction, btn: Button):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("RP Search")
-        resp: InteractionResponse = ctx.response
-        if ctx.user.id != self.member_id and not ctx.user.guild_permissions.moderate_members:
+    async def conclude(self, itx: Interaction, btn: Button):
+        db: AsyncIOMotorCollection = itx.client.mongo_db("RP Search")
+        resp: InteractionResponse = itx.response
+        if itx.user.id != self.member_id and not itx.user.guild_permissions.moderate_members:
             return await resp.send_message(
                 f"Only <@{self.member_id}> can archive it",
                 ephemeral=True,
@@ -487,18 +482,18 @@ class RPSearchManage(View):
             btn.label = f"{btn.label} (Confirm)"
             return await resp.edit_message(view=self)
         await resp.pong()
-        if (message := ctx.message) and (
+        if (message := itx.message) and (
             item := await db.find_one_and_delete(
                 {
-                    "server": ctx.guild_id,
+                    "server": itx.guild_id,
                     "$or": [{"id": message.id}, {"message": message.id}],
                 }
             )
         ):
-            channel = ctx.guild.get_channel(958122815171756042)
+            channel = itx.guild.get_channel(958122815171756042)
             message = channel.get_partial_message(item["id"])
             await message.delete(delay=0)
-            if thread := ctx.guild.get_thread(item["id"]):
+            if thread := itx.guild.get_thread(item["id"]):
                 message = thread.get_partial_message(item["message"])
                 try:
                     await message.edit(view=None)
@@ -569,12 +564,12 @@ class RPModal(Modal):
                     item.max_values = len(characters)
                     self.add_item(item)
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
-        interaction.client.logger.error("Ignoring exception in Modal %r", self, exc_info=error)
+    async def on_error(self, itx: Interaction[CustomBot], error: Exception, /) -> None:
+        itx.client.logger.error("Ignoring exception in Modal %r", self, exc_info=error)
 
-    async def check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
-        cog = interaction.client.get_cog("Roles")
+    async def check(self, itx: Interaction[CustomBot]) -> bool:
+        resp: InteractionResponse = itx.response
+        cog = itx.client.get_cog("Roles")
         if (val := cog.cool_down.get(self.user.id)) and hours(val) < 1:
             msg = f"{self.user.mention} is in cool down, user pinged one recently."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
@@ -585,8 +580,8 @@ class RPModal(Modal):
             return False
         return True
 
-    async def on_submit(self, interaction: Interaction):
-        resp: InteractionResponse = interaction.response
+    async def on_submit(self, itx: Interaction[CustomBot]):
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
 
         items = [
@@ -605,8 +600,8 @@ class RPModal(Modal):
             )
         ]
 
-        cog1 = interaction.client.get_cog("Roles")
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("Characters")
+        cog1 = itx.client.get_cog("Roles")
+        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         items.extend(
             [
                 Character.from_mongo_dict(x)
@@ -624,7 +619,7 @@ class RPModal(Modal):
             items = self.ocs
         items = sorted(set(items), key=lambda x: x.name)
 
-        webhook: Webhook = await interaction.client.webhook(1061008601335992422, reason="RP Search")
+        webhook: Webhook = await itx.client.webhook(1061008601335992422, reason="RP Search")
         msg1: WebhookMessage = await webhook.send(
             content=self.to_user.mention,
             allowed_mentions=AllowedMentions(roles=True),
@@ -640,8 +635,8 @@ class RPModal(Modal):
         for idx, x in enumerate(items[:6]):
             view.add_item(Button(label=x.name[:80], emoji=x.emoji, url=x.jump_url, row=idx // 3))
 
-        cog1.cool_down[self.to_user.id] = interaction.created_at
-        cog1.role_cool_down[self.to_user.id] = interaction.created_at
+        cog1.cool_down[self.to_user.id] = itx.created_at
+        cog1.role_cool_down[self.to_user.id] = itx.created_at
 
         aux_embed = RP_SEARCH_EMBED.copy()
         aux_embed.clear_fields()
@@ -649,16 +644,16 @@ class RPModal(Modal):
 
         aux_view = View()
         aux_view.add_item(Button(label="Go to Ping", emoji=LINK_EMOJI, url=msg1.jump_url))
-        await interaction.followup.send(embed=aux_embed, ephemeral=True, view=aux_view)
+        await itx.followup.send(embed=aux_embed, ephemeral=True, view=aux_view)
 
-        db: AsyncIOMotorCollection = interaction.client.mongo_db("OC Background")
+        db: AsyncIOMotorCollection = itx.client.mongo_db("OC Background")
         if img := await db.find_one({"author": self.user.id}):
             img = img["image"]
 
-        if file := await interaction.client.get_file(Character.collage(items, background=img)):
+        if file := await itx.client.get_file(Character.collage(items, background=img)):
             embed.set_image(url=f"attachment://{file.filename}")
             await msg1.edit(embed=embed, attachments=[file], view=view)
         elif text := ", ".join(str(x.id) for x in items):
             await msg1.edit(view=view)
-            interaction.client.logger.info("Error Image Parsing OCs: %s", text)
+            itx.client.logger.info("Error Image Parsing OCs: %s", text)
         self.stop()

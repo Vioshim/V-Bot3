@@ -151,7 +151,7 @@ class WikiEntry:
             root = self
         levelMarkers = levelMarkers or []
         placeholder = " " * len(levelMarkers)
-        connection = "|" + placeholder[:-1]
+        connection = f"|{placeholder[:-1]}"
         level = len(levelMarkers)
         markers = "".join(map(lambda x: connection if x else placeholder, levelMarkers[:-1]))
         markers += markerStr if level > 0 else ""
@@ -222,10 +222,7 @@ class WikiEntry:
         route = list(ref_route.values())
         if elements := [x for x in path.removeprefix(aux.path).split("/") if x]:
             for index, _ in enumerate(elements):
-                if elements[: index + 1] == route:
-                    ref = node
-                else:
-                    ref = WikiEntry()
+                ref = node if elements[: index + 1] == route else WikiEntry()
                 ref.path = elements[index]
                 ref.parent = aux
                 aux.children[elements[index]] = aux = ref
@@ -276,24 +273,23 @@ class WikiEntry:
     def to_list(cls, parent: WikiEntry):
         yield parent
         for child in parent.children.values():
-            for item in cls.to_list(child):
-                yield item
+            yield from cls.to_list(child)
 
 
 class WikiTransformer(Transformer):
-    async def autocomplete(self, interaction: Interaction, value: str, /):
+    async def autocomplete(self, interaction: Interaction[CustomBot], value: str, /):
         return await super(WikiTransformer, self).autocomplete(interaction, value)
 
-    async def transform(self, ctx: Interaction, value: str, /):
-        bot: CustomBot = ctx.client
+    async def transform(self, itx: Interaction[CustomBot], value: str, /):
+        bot: CustomBot = itx.client
         entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
         return tree.lookup(value.removeprefix("/"))
 
 
 class WikiTreeTransformer(WikiTransformer):
-    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
-        bot: CustomBot = ctx.client
+    async def autocomplete(self, itx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
+        bot: CustomBot = itx.client
         entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
         aux_tree = tree.lookup(value)
@@ -308,11 +304,11 @@ class WikiTreeTransformer(WikiTransformer):
 
 
 class WikiNodeTransformer(WikiTransformer):
-    async def autocomplete(self, ctx: Interaction, value: str, /) -> list[Choice[str]]:
-        bot: CustomBot = ctx.client
+    async def autocomplete(self, itx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
+        bot: CustomBot = itx.client
         entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
-        value = (ctx.namespace.group or "").removeprefix("/")
+        value = (itx.namespace.group or "").removeprefix("/")
         aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]
         value = value.removeprefix(aux_tree.route.removeprefix("/"))

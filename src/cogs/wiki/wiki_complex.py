@@ -20,6 +20,7 @@ from typing import Any, Optional
 from discord import Embed, Interaction, InteractionResponse, PartialEmoji, TextStyle
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from motor.motor_asyncio import AsyncIOMotorCollection
+from src.structures.bot import CustomBot
 
 from src.cogs.wiki.wiki import WikiEntry
 from src.pagination.complex import Complex
@@ -42,7 +43,7 @@ class WikiModal(Modal, title="Wiki Route"):
         self.folder = TextInput(label="Wiki Folder", style=TextStyle.paragraph, required=True, default=tree.route)
         self.add_item(self.folder)
 
-    async def on_submit(self, interaction: Interaction, /) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot], /) -> None:
         resp: InteractionResponse = interaction.response
         await resp.defer(ephemeral=True, thinking=True)
         db: AsyncIOMotorCollection = interaction.client.mongo_db("Wiki")
@@ -63,7 +64,7 @@ class WikiModal(Modal, title="Wiki Route"):
 
 
 class WikiComplex(Complex[WikiEntry]):
-    def __init__(self, *, tree: WikiEntry, target: Interaction):
+    def __init__(self, *, tree: WikiEntry, target: Interaction[CustomBot]):
         super(WikiComplex, self).__init__(
             member=target.user,
             values=tree.ordered_children,
@@ -102,7 +103,7 @@ class WikiComplex(Complex[WikiEntry]):
 
         return data
 
-    async def selection(self, interaction: Interaction, tree: WikiEntry):
+    async def selection(self, interaction: Interaction[CustomBot], tree: WikiEntry):
         interaction.client.logger.info("%s is reading %s", interaction.user.display_name, tree.route)
         content, embeds = tree.content, tree.embeds
         if not (content or embeds):
@@ -112,11 +113,11 @@ class WikiComplex(Complex[WikiEntry]):
         await self.edit(interaction=interaction, page=0)
 
     @select(row=1, placeholder="Select the elements", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         await self.selection(interaction, self.current_choice)
 
     @button(label="Use Tags", custom_id="tags")
-    async def select_tags(self, interaction: Interaction, btn: Button):
+    async def select_tags(self, interaction: Interaction[CustomBot], btn: Button):
         data = self.tree.current_tags_raw()
         view: Complex[str] = Complex(
             member=interaction.user,
@@ -139,5 +140,5 @@ class WikiComplex(Complex[WikiEntry]):
             await self.selection(interaction, tree)
 
     @button(label="Parent Folder", emoji=PartialEmoji(name="IconReply", id=816772114639487057), custom_id="parent")
-    async def parent_folder(self, interaction: Interaction, _: Button) -> None:
+    async def parent_folder(self, interaction: Interaction[CustomBot], _: Button) -> None:
         await self.selection(interaction, self.tree.parent)

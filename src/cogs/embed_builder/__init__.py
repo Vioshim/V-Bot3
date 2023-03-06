@@ -91,7 +91,7 @@ class EmbedBuilder(commands.Cog):
             return
 
         if data := discord_url_msg(message):
-            try:
+            with suppress(DiscordException):
                 guild_id, message_id, channel_id = data
                 if guild := self.bot.get_guild(guild_id):
                     if not (channel := guild.get_channel_or_thread(channel_id)):
@@ -118,8 +118,6 @@ class EmbedBuilder(commands.Cog):
                 kwargs["view"] = view
                 kwargs["username"] = f"URL〕{name}"
                 await self.webhook_send(message, **kwargs)
-            except DiscordException:
-                pass
         elif message.content.startswith("https://replay.pokemonshowdown.com/"):
             content = message.content.split(" ")[0]
             async with self.bot.session.get(url=f"{content}.json") as session:

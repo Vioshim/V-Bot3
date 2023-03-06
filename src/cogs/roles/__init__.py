@@ -51,24 +51,23 @@ class Roles(commands.Cog):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
-        self.ctx_menu1 = app_commands.ContextMenu(
+        self.itx_menu1 = app_commands.ContextMenu(
             name="AFK Schedule",
             callback=self.check_afk,
             guild_ids=[719343092963999804],
         )
 
     async def cog_load(self):
-        self.bot.tree.add_command(self.ctx_menu1)
+        self.bot.tree.add_command(self.itx_menu1)
         await self.load_self_roles()
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu1.name, type=self.ctx_menu1.type)
+        self.bot.tree.remove_command(self.itx_menu1.name, type=self.itx_menu1.type)
 
-    async def check_afk(self, ctx: Interaction, member: Member):
-        resp: InteractionResponse = ctx.response
+    async def check_afk(self, itx: Interaction[CustomBot], member: Member):
         db = self.bot.mongo_db("AFK")
-        if item := await db.find_one({"user": ctx.user.id}):
-            current_date = ctx.created_at
+        if item := await db.find_one({"user": itx.user.id}):
+            current_date = itx.created_at
             embed = Embed(title="AFK Schedule", color=member.color)
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
             if item2 := await db.find_one({"user": member.id}):
@@ -90,10 +89,10 @@ class Roles(commands.Cog):
             else:
                 text = "No timezone associated to the account."
             embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={quote_plus(text)}")
-            await resp.send_message(embed=embed, ephemeral=True)
+            await itx.response.send_message(embed=embed, ephemeral=True)
         else:
             modal = AFKModal()
-            await resp.send_modal(modal)
+            await itx.response.send_modal(modal)
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
@@ -198,38 +197,37 @@ class Roles(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def ping(self, interaction: Interaction, member: Member | User):
+    async def ping(self, itx: Interaction[CustomBot], member: Member | User):
         """Command used to ping roles, and even users.
 
         Parameters
         ----------
-        interaction : Interaction
-            Interaction
+        itx : Interaction[CustomBot],
+            Interaction[CustomBot],
         member : Member | User
             Member to ping
         """
-        resp: InteractionResponse = interaction.response
         db = self.bot.mongo_db("Characters")
-        guild = interaction.guild
-        user = self.bot.supporting.get(interaction.user, interaction.user)
+        guild = itx.guild
+        user = self.bot.supporting.get(itx.user, itx.user)
         ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": user.id, "server": guild.id})]
         modal = RPModal(user=user, ocs=ocs, to_user=member)
-        if await modal.check(interaction):
-            await resp.send_modal(modal)
+        if await modal.check(itx):
+            await itx.response.send_modal(modal)
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    async def afk(self, ctx: Interaction, member: Member | User):
+    async def afk(self, itx: Interaction[CustomBot], member: Member | User):
         """Check users' AFK Schedule
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        itx : Interaction[CustomBot],
+            Interaction[CustomBot],
         member : Member
             User to Check
         """
-        await self.check_afk(ctx, member)
+        await self.check_afk(itx, member)
 
 
 async def setup(bot: CustomBot) -> None:

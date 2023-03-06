@@ -138,6 +138,12 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
     text = [x for item in content_values if (x := item.replace("\u2019", "'").strip())]
     raw_kwargs = dict(url=getattr(doc, "url", None))
 
+    def doc_handle_kwarg(arg1: str, arg2: str):
+        raw_kwargs.setdefault(arg1, set())
+        if isinstance(raw_kwargs[arg1], str):
+            raw_kwargs[arg1] = {raw_kwargs[arg1]}
+        raw_kwargs[arg1].add(arg2)
+
     for index, item in enumerate(text[:-1], start=1):
         next_value = text[index]
         data = f"{next_value}".title().strip() not in IGNORE_MOVE
@@ -171,20 +177,11 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                     info: set[str] = raw_kwargs["movepool"]["level"][idx]
                     info.update(o for x in argument.split(",") if (o := x.title().strip()) and o not in IGNORE_MOVE)
                 case ["Move", _]:
-                    raw_kwargs.setdefault("moveset", set())
-                    if isinstance(raw_kwargs["moveset"], str):
-                        raw_kwargs["moveset"] = {raw_kwargs["moveset"]}
-                    raw_kwargs["moveset"].add(argument)
+                    doc_handle_kwarg("moveset", argument)
                 case ["Ability", _]:
-                    raw_kwargs.setdefault("abilities", set())
-                    if isinstance(raw_kwargs["abilities"], str):
-                        raw_kwargs["abilities"] = {raw_kwargs["abilities"]}
-                    raw_kwargs["abilities"].add(next_value)
+                    doc_handle_kwarg("abilities", argument)
                 case ["Species", _]:
-                    raw_kwargs.setdefault("fusion", set())
-                    if isinstance(raw_kwargs["fusion"], str):
-                        raw_kwargs["fusion"] = {raw_kwargs["fusion"]}
-                    raw_kwargs["fusion"].add(next_value)
+                    doc_handle_kwarg("fusion", argument)
                 case ["Type", _]:
                     raw_kwargs.setdefault("types", set())
                     if isinstance(raw_kwargs["types"], str):
@@ -197,7 +194,7 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
                         raw_kwargs["movepool"][x.lower()] = {raw_kwargs["movepool"][x.lower()]}
                     raw_kwargs["movepool"][x.lower()].add(argument)
 
-    try:
+    with suppress(Exception):
         if img := list(doc.inline_shapes):
             item = img[0]
             pic = item._inline.graphic.graphicData.pic
@@ -207,9 +204,6 @@ def doc_convert(doc: DocumentType) -> dict[str, Any]:
             image_part = doc_part.related_parts[rid]
             fp = BytesIO(image_part._blob)  # skipcq: PYL-W0212
             raw_kwargs["image"] = File(fp=fp, filename="image.png")
-    except Exception:
-        pass
-
     raw_kwargs.pop("artist", None)
     raw_kwargs.pop("website", None)
 
@@ -239,10 +233,7 @@ class OCParser(metaclass=ABCMeta):
 class GoogleDocsOCParser(OCParser):
     @staticmethod
     async def parse(text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
-        if isinstance(text, Message):
-            content = text.content
-        else:
-            content = text
+        content = text.content if isinstance(text, Message) else text
         content: str = codeblock_converter(content or "").content
         if doc_data := G_DOCUMENT.match(content):
             doc = await docs_aioreader(url := doc_data.group(1), bot.aiogoogle)
@@ -254,16 +245,17 @@ class GoogleDocsOCParser(OCParser):
 class WordOCParser(OCParser):
     @staticmethod
     async def parse(text: str | Message, bot: Optional[CustomBot] = None) -> Optional[dict[str, Any]]:
-        if isinstance(text, Message):
-            for attachment in text.attachments:
-                if attachment.content_type == DriveFormat.DOCX.value:
-                    file = await attachment.to_file(use_cached=True)
-                    doc: DocumentType = Document(file.fp)
-                    if doc.tables:
-                        return doc_convert(doc)
-                    text = yaml_handler("\n".join(element for p in doc.paragraphs if (element := p.text.strip())))
-                    with suppress(ScannerError):
-                        return safe_load(text)
+        if not isinstance(text, Message):
+            return
+        for attachment in text.attachments:
+            if attachment.content_type == DriveFormat.DOCX.value:
+                file = await attachment.to_file(use_cached=True)
+                doc: DocumentType = Document(file.fp)
+                if doc.tables:
+                    return doc_convert(doc)
+                text = yaml_handler("\n".join(element for p in doc.paragraphs if (element := p.text.strip())))
+                with suppress(ScannerError):
+                    return safe_load(text)
 
 
 class DiscordOCParser(OCParser):

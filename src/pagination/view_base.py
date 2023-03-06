@@ -321,9 +321,8 @@ class BasicStop(Basic):
         _: discord.ui.Button
             Button which interacts with the User
         """
-        resp: InteractionResponse = interaction.response
         if interaction.message.flags.ephemeral:
-            await resp.edit_message(view=None)
+            await interaction.response.edit_message(view=None)
         else:
             await interaction.message.delete(delay=0)
         self.stop()

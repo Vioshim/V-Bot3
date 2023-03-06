@@ -236,7 +236,7 @@ class Moderation(commands.Cog):
     @app_commands.command(description="Starts a meeting to report a raider")
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Registered")
-    async def vote(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
+    async def vote(self, interaction: Interaction, member: Member, *, reason: Optional[str] = None):
         """Starts a votation to report a member
 
         Parameters

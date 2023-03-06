@@ -13,10 +13,9 @@
 # limitations under the License.
 
 
-from discord import Interaction, InteractionResponse
+from discord import Interaction
 from discord.ui import Select, View, select
-from motor.motor_asyncio import AsyncIOMotorCollection
-
+from src.structures.bot import CustomBot
 from src.utils.etc import LIST_EMOJI
 
 
@@ -43,7 +42,7 @@ class PollView(View):
         )
 
     @classmethod
-    def parse(cls, text: str, min_values: int = 1, max_values: int = 1):
+    def parse(cls, text: str, min_values: str | int = 1, max_values: str | int = 1):
         return cls(
             options={o: [] for x in text.split(",") if (o := x.strip())},
             min_values=int(min_values),
@@ -76,12 +75,11 @@ class PollView(View):
         )
 
     @select(placeholder="Poll", custom_id="poll")
-    async def poll(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Poll")
+    async def poll(self, ctx: Interaction[CustomBot], sct: Select):
+        db = ctx.client.mongo_db("Poll")
         self.options = {k: [x for x in v if x != ctx.user.id] for k, v in self.options.items()}
         for item in sct.values:
             self.options.setdefault(item, [])
             self.options[item].append(ctx.user.id)
-        await resp.edit_message(view=self.format())
+        await ctx.response.edit_message(view=self.format())
         await db.replace_one(key := {"id": ctx.message.id}, key | self.data, upsert=True)
