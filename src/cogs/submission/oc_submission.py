@@ -1451,30 +1451,30 @@ class CreationOCView(Basic):
 
 class ModCharactersView(CharactersView):
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
-    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
-        resp: InteractionResponse = interaction.response
+    async def select_choice(self, itx: Interaction[CustomBot], sct: Select) -> None:
+        resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         try:
             if item := self.current_choice:
-                user: Member = interaction.client.supporting.get(interaction.user, interaction.user)
+                user: Member = itx.client.supporting.get(itx.user, itx.user)
                 embeds = item.embeds
-                if author := interaction.guild.get_member(item.author):
+                if author := itx.guild.get_member(item.author):
                     embeds[0].set_author(name=author.display_name, icon_url=author.display_avatar)
                 if (
-                    interaction.user.guild_permissions.manage_messages
-                    or interaction.user.id == interaction.guild.owner_id
-                    or item.author in [interaction.user.id, user.id]
+                    itx.user.guild_permissions.manage_messages
+                    or itx.user.id == itx.guild.owner_id
+                    or item.author in [itx.user.id, user.id]
                 ):
-                    view = CreationOCView(bot=interaction.client, itx=Interaction[CustomBot], user=user, oc=item)
+                    view = CreationOCView(bot=itx.client, itx=itx, user=user, oc=item)
                     await view.handler_send(ephemeral=True, embeds=embeds)
                 else:
-                    view = PingView(oc=item, reference=interaction)
-                    await interaction.followup.send(content=item.id, embeds=embeds, view=view, ephemeral=True)
+                    view = PingView(oc=item, reference=itx)
+                    await itx.followup.send(content=item.id, embeds=embeds, view=view, ephemeral=True)
 
         except Exception as e:
-            interaction.client.logger.exception("Error in ModOCView", exc_info=e)
+            itx.client.logger.exception("Error in ModOCView", exc_info=e)
         finally:
-            await super(CharactersView, self).select_choice(Interaction[CustomBot], sct)
+            await super(CharactersView, self).select_choice(itx, sct)
 
 
 class SubmissionModal(Modal):
@@ -1490,14 +1490,14 @@ class SubmissionModal(Modal):
         )
         self.add_item(self.text)
 
-    async def on_submit(self, interaction: Interaction):
-        resp: InteractionResponse = interaction.response
-        refer_author = interaction.user
+    async def on_submit(self, itx: Interaction[CustomBot]):
+        resp: InteractionResponse = itx.response
+        refer_author = itx.user
         try:
-            author = interaction.client.supporting.get(refer_author, refer_author)
-            async for item in ParserMethods.parse(text=self.text.value, bot=interaction.client):
+            author = itx.client.supporting.get(refer_author, refer_author)
+            async for item in ParserMethods.parse(text=self.text.value, bot=itx.client):
                 oc = Character.process(**item)
-                view = CreationOCView(bot=interaction.client, itx=Interaction[CustomBot], user=author, oc=oc)
+                view = CreationOCView(bot=itx.client, itx=itx, user=author, oc=oc)
                 if self.ephemeral:
                     await resp.edit_message(embeds=view.embeds, view=view)
                 else:
@@ -1505,10 +1505,10 @@ class SubmissionModal(Modal):
         except Exception as e:
             if not resp.is_done():
                 await resp.defer(ephemeral=True, thinking=True)
-            await interaction.followup.send(str(e), ephemeral=True)
-            interaction.client.logger.exception(
+            await itx.followup.send(str(e), ephemeral=True)
+            itx.client.logger.exception(
                 "Exception when registering, user: %s",
-                str(interaction.user),
+                str(itx.user),
                 exc_info=e,
             )
         else:

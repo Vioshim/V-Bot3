@@ -39,6 +39,7 @@ from discord import (
     TextStyle,
     User,
 )
+from src.structures.bot import CustomBot
 from discord.abc import Messageable, Snowflake
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from rapidfuzz import process
@@ -66,11 +67,11 @@ class DefaultModal(Modal):
             self.item = item
             self.add_item(self.item)
 
-    async def on_error(self, interaction: Interaction, error: Exception, /) -> None:
+    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
         await interaction.response.send_message("An error has occurred.", ephemeral=True)
         logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
-    async def on_submit(self, interaction: Interaction) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot]) -> None:
         await interaction.response.pong()
         current = set()
         elements = [o for x in str(self.item.value or "").split(",") if (o := x.strip())]
@@ -323,17 +324,17 @@ class Complex(Simple[_T]):
         elif self.deselect_mode and self.element_remove not in self.children:
             self.add_item(self.element_remove)
 
-    async def update(self, interaction: Interaction) -> None:
+    async def update(self, interaction: Interaction[CustomBot]) -> None:
         """Method used to edit the pagination
 
         Parameters
         ----------
-        interaction : Interaction
-            Interaction to use
+        interaction : Interaction[CustomBot]
+            Interaction[CustomBot] to use
         """
         await self.edit(interaction=interaction)
 
-    async def edit(self, interaction: Interaction, page: Optional[int] = None) -> None:
+    async def edit(self, interaction: Interaction[CustomBot], page: Optional[int] = None) -> None:
         """Method used to edit the pagination
 
         Parameters
@@ -539,14 +540,14 @@ class Complex(Simple[_T]):
         return next(iter(self.current_choices), None)
 
     @select(placeholder="Select the elements", row=1, custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         """Method used to select values from the pagination
 
         Parameters
         ----------
         sct: Select
             Button which interacts with the User
-        interaction: Interaction
+        interaction: Interaction[CustomBot]
             Current interaction of the user
         """
         items = self.current_choices
@@ -586,14 +587,14 @@ class Complex(Simple[_T]):
         await self.edit(interaction=interaction, page=self.pos)
 
     @select(placeholder="Press to scroll pages", row=2, custom_id="navigate")
-    async def navigate(self, interaction: Interaction, sct: Select) -> None:
+    async def navigate(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         """Method used to select values from the pagination
 
         Parameters
         ----------
         sct: Select
             Button which interacts with the User
-        interaction: Interaction
+        interaction: Interaction[CustomBot]
             Current interaction of the user
         """
         return await self.edit(interaction=interaction, page=int(sct.values[0]))
@@ -606,7 +607,7 @@ class Complex(Simple[_T]):
         disabled=False,
         row=4,
     )
-    async def message_handler(self, interaction: Interaction, _: Button):
+    async def message_handler(self, interaction: Interaction[CustomBot], _: Button):
         component = self.text_component
         if isinstance(component, TextInput):
             component = DefaultModal(view=self)
@@ -614,7 +615,7 @@ class Complex(Simple[_T]):
         await component.wait()
 
     @button(label="Finish", custom_id="finish", style=ButtonStyle.blurple, row=4)
-    async def finish(self, ctx: Interaction, btn: Button):
+    async def finish(self, ctx: Interaction[CustomBot], btn: Button):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await ctx.response.edit_message(view=self)
@@ -628,7 +629,7 @@ class Complex(Simple[_T]):
         disabled=False,
         row=4,
     )
-    async def element_remove(self, interaction: Interaction, _: Button):
+    async def element_remove(self, interaction: Interaction[CustomBot], _: Button):
         inner = InnerComplex(self, interaction)
         async with inner.send(editing_original=True, deleting=False) as choices:
             self.choices -= choices
@@ -642,7 +643,7 @@ class Complex(Simple[_T]):
 
 
 class InnerComplex(Complex):
-    def __init__(self, main: Complex, interaction: Interaction):
+    def __init__(self, main: Complex, interaction: Interaction[CustomBot]):
         self.main = main
         super(InnerComplex, self).__init__(
             member=main.member,
@@ -665,7 +666,7 @@ class InnerComplex(Complex):
         self.embed.description = ""
 
     @button(label="Finish", custom_id="finish", style=ButtonStyle.blurple, row=4)
-    async def finish(self, ctx: Interaction, btn: Button):
+    async def finish(self, ctx: Interaction[CustomBot], btn: Button):
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await ctx.response.edit_message(view=self)

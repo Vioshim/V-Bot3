@@ -473,10 +473,7 @@ class OCGroupBySpecies(OCGroupBy[Kind | Species]):
                 data[k] = frozenset(v)
             elif items := sorted(v, key=lambda x: getattr(x.species, "base", x.species).id):
                 data |= {
-                    i: frozenset(j)
-                    for i, j in groupby(
-                        items, key=lambda x: getattr(x.species, "base", x.species)
-                    )
+                    i: frozenset(j) for i, j in groupby(items, key=lambda x: getattr(x.species, "base", x.species))
                 }
         return data
 

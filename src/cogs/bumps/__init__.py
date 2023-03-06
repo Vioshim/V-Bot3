@@ -68,11 +68,7 @@ class Bump(Cog):
         after : Message
             Message after editing
         """
-        if (
-            after.author == self.bot.user
-            or not after.author.bot
-            or not after.embeds
-        ):
+        if after.author == self.bot.user or not after.author.bot or not after.embeds:
             return
 
         if item := BumpBot.get(id=after.author.id):

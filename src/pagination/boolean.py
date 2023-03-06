@@ -45,7 +45,12 @@ class BooleanView(Basic):
         timeout: Optional[float] = None,
         embed: Optional[Embed] = None,
     ):
-        super(BooleanView, self).__init__(member=member, target=target, timeout=timeout, embed=embed,)
+        super(BooleanView, self).__init__(
+            member=member,
+            target=target,
+            timeout=timeout,
+            embed=embed,
+        )
         self.value: Optional[bool] = None
 
     @asynccontextmanager

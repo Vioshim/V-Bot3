@@ -211,7 +211,8 @@ class TagComplex(Complex[str]):
             items = set[Partner].intersection(*items)
             view = PartnerComplex(member=ctx.user, target=ctx, items=items)
             await view.simple_send(
-                title=f"Servers with tags: {', '.join(choices)}", ephemeral=True,
+                title=f"Servers with tags: {', '.join(choices)}",
+                ephemeral=True,
             )
         await self.delete(ctx)
 
