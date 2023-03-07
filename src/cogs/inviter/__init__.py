@@ -161,7 +161,7 @@ class Inviter(commands.Cog):
             or not ctx.guild
             or not ctx.content
             or ctx.author == self.bot.user
-            or ctx.channel.id == 1020157013126283284
+            or ctx.channel.id == 1077697010490167308
         ):
             return
 
@@ -194,7 +194,7 @@ class Inviter(commands.Cog):
             return
 
         partner_channel = ctx.guild.get_channel(957602085753458708)
-        mod_ch = self.bot.get_partial_messageable(id=1020157013126283284, guild_id=guild.id)
+        mod_ch = self.bot.get_partial_messageable(id=1077697010490167308, guild_id=guild.id)
 
         db = self.bot.mongo_db("Partnerships")
 
