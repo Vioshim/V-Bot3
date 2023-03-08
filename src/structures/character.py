@@ -547,26 +547,26 @@ class Character:
 
     @property
     def height_text(self):
-        if self.species and isinstance(self.size, Size):
-            return self.size.height_info(self.species.height)
+        if isinstance(self.size, Size):
+            return self.size.height_info(self.species and self.species.height)
         return Size.M.height_info(self.size)
 
     @property
     def height_value(self):
-        if self.species and isinstance(self.size, Size):
-            return self.size.height_value(self.species.height)
+        if isinstance(self.size, Size):
+            return self.size.height_value(self.species and self.species.height)
         return self.size
 
     @property
     def weight_text(self):
-        if self.species and isinstance(self.weight, Size):
-            return self.weight.weight_info(self.species.weight)
+        if isinstance(self.weight, Size):
+            return self.weight.weight_info(self.species and self.species.weight)
         return Size.M.weight_info(self.weight)
 
     @property
     def weight_value(self):
-        if self.species and isinstance(self.weight, Size):
-            return self.weight.weight_value(self.species.weight)
+        if isinstance(self.weight, Size):
+            return self.weight.weight_value(self.species and self.species.weight)
         return self.weight
 
     @property
