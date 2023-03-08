@@ -44,6 +44,9 @@ isort = { version = "^5.10.1", extras = [
 ] }
 
 
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
