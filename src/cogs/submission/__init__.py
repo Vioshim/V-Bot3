@@ -65,7 +65,7 @@ from src.utils.etc import (
     SETTING_EMOJI,
     WHITE_BAR,
 )
-from src.utils.matches import CLYDE, EMOJI_REGEX, TUPPER_REPLY_PATTERN
+from src.utils.matches import CLYDE, EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
 
@@ -488,25 +488,24 @@ class Submission(commands.Cog):
         self,
         message: Message,
         user: Member,
-        kwargs: Character | dict[str, Character],
+        kwargs: Character | dict[str, Character] = None,
     ):
         channel = message.channel
         author = message.author.name.title()
         db = self.bot.mongo_db("RP Logs")
         db2 = self.bot.mongo_db("Tupper-logs")
-
-        if isinstance(kwargs, Character):
-            key, oc = kwargs.name, kwargs
-        elif item := process.extractOne(
-            author,
-            choices=kwargs.keys(),
-            score_cutoff=85,
-        ):
-            key, oc = item[0], kwargs[item[0]]
-        elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
-            key, oc = ocs[0]
-        else:
-            key, oc = message.author.name, Character(author=user.id, server=user.guild.id)
+        key, oc = message.author.name, Character(author=user.id, server=user.guild.id)
+        if kwargs := kwargs or {}:
+            if isinstance(kwargs, Character):
+                key, oc = kwargs.name, kwargs
+            elif item := process.extractOne(
+                author,
+                choices=kwargs.keys(),
+                score_cutoff=85,
+            ):
+                key, oc = item[0], kwargs[item[0]]
+            elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
+                key, oc = ocs[0]
 
         if not (
             info_channel := find(
@@ -554,15 +553,16 @@ class Submission(commands.Cog):
                     channel_id, message_id = map(int, btn.url.split("/")[-2:])
                     phrase = btn.label or phrase
 
+        size = 60 if EMOJI_MATCHER.match(content) else 44
         for item in EMOJI_REGEX.finditer(content):
             match item.groupdict():
                 case {"animated": "a", "name": name, "id": id}:
                     if id.isdigit() and not self.bot.get_emoji(int(id)):
-                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?size=60&quality=lossless)"
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?{size=})"
                         content = EMOJI_REGEX.sub(url, content)
                 case {"name": name, "id": id}:
                     if id.isdigit() and not self.bot.get_emoji(int(id)):
-                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?size=60&quality=lossless)"
+                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?{size=})"
                         content = EMOJI_REGEX.sub(url, content)
 
         if channel_id and message_id:
@@ -656,6 +656,9 @@ class Submission(commands.Cog):
 
         if any(task == future for future in done):
             return
+
+        if not messages:
+            return await self.on_message_tupper(message, message.author)
 
         db = self.bot.mongo_db("Characters")
         kwargs: dict[str, Character] = {}
@@ -859,11 +862,11 @@ class Submission(commands.Cog):
             and message.channel.category_id in MAP_ELEMENTS2
             and not message.channel.name.endswith("OOC")
         ):
-            if not message.webhook_id:
-                await self.on_message_proxy(message)
-            elif item := await db.find_one({"id": message.id, "channel": message.channel.id}):
+            if item := await db.find_one({"id": message.id, "channel": message.channel.id}):
                 w = await self.bot.webhook(item["log-channel"])
                 await w.edit_message(item["log"], content=message.content)
+            elif not message.webhook_id:
+                await self.on_message_proxy(message)
 
     @commands.Cog.listener()
     async def on_raw_thread_update(self, payload: RawThreadUpdateEvent):
