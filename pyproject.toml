@@ -37,15 +37,12 @@ pluralkit = "^1.1.1"
 pytest = "^5.2"
 flake8 = "^6.0.0"
 motor-stubs = "^1.7.1"
-black = { version = "^22.8.0", allow-prereleases = true }
+black = { version = "^23.1.0", allow-prereleases = true }
 isort = { version = "^5.10.1", extras = [
     "requirements_deprecated_finder",
     "pipfile_deprecated_finder",
 ] }
 
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
 
 [build-system]
 requires = ["poetry-core"]
