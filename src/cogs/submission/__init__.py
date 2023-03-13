@@ -620,7 +620,7 @@ class Submission(commands.Cog):
         """
         context = await self.bot.get_context(message)
 
-        if context.command and context.command.name not in ["npc", "pc", "npci"]:
+        if context.command:
             return
 
         messages: list[Message] = []
@@ -633,15 +633,15 @@ class Submission(commands.Cog):
         done, pending = await asyncio.wait(
             [
                 asyncio.create_task(
-                    self.bot.wait_for("message", check=checker),
+                    self.bot.wait_for("message", check=checker, timeout=2),
                     name="Message",
                 ),
-                task := asyncio.create_task(
+                asyncio.create_task(
                     self.bot.wait_for("message_edit", check=lambda x, _: x == message),
                     name="Edit",
                 ),
                 asyncio.create_task(
-                    self.bot.wait_for("message_delete", check=lambda x: x == message, timeout=3),
+                    self.bot.wait_for("message_delete", check=lambda x: x == message),
                     name="Delete",
                 ),
             ],
@@ -654,11 +654,13 @@ class Submission(commands.Cog):
         for future in done:
             future.exception()
 
-        if any(task == future for future in done):
+        if any(future.get_name() == "Edit" for future in done):
             return
 
         if not messages:
-            return await self.on_message_tupper(message, message.author)
+            if any(future.get_name() == "Message" for future in done):
+                await self.on_message_tupper(message, message.author)
+            return
 
         db = self.bot.mongo_db("Characters")
         kwargs: dict[str, Character] = {}
