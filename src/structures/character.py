@@ -28,6 +28,7 @@ from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
 from docx import Document as document
 from docx.document import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
@@ -509,11 +510,9 @@ class Character:
     @property
     def emoji(self):
         match self.pronoun:
-            case x if len(x) == len(Pronoun) or (Pronoun.He in x and Pronoun.She in x):
-                return Pronoun.Them.emoji
-            case x if Pronoun.He in x:
+            case x if Pronoun.He in x and Pronoun.She not in x:
                 return Pronoun.He.emoji
-            case x if Pronoun.She in x:
+            case x if Pronoun.She in x and Pronoun.He not in x:
                 return Pronoun.She.emoji
             case _:
                 return Pronoun.Them.emoji
@@ -581,6 +580,46 @@ class Character:
         return self.species and self.species.base_image
 
     @property
+    def species_data(self):
+        match self.species:
+            case mon if isinstance(mon, Fusion):
+                ratio1, ratio2 = mon.ratio, 1 - mon.ratio
+                b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
+                name = f"{b1}{mon.mon1.name}\n{b2}{mon.mon2.name}"
+                return "Fusion", name[:1024]
+            case mon if isinstance(mon, Fakemon):
+                a1 = Ability.get(name="Beast Boost")
+                if a1 in self.abilities:
+                    name = "Fakemon Ultra Beast"
+                elif evolves_from := mon.species_evolves_from:
+                    name = "Fakemon Evo" if evolves_from.name == mon.name else f"{evolves_from.name} Evo"
+                else:
+                    name = "Fakemon Species"
+                return name, mon.name
+            case mon if isinstance(mon, CustomMega):
+                return "Mega", mon.name
+            case mon if isinstance(mon, (CustomParadox, CustomUltraBeast, Variant)):
+                a1 = Ability.get(name="Protosynthesis")
+                a2 = Ability.get(name="Quark Drive")
+
+                if a1 in self.abilities:
+                    phrase = "Past"
+                elif a2 in self.abilities:
+                    phrase = "Future"
+                elif TypingEnum.Typeless in mon.types:
+                    phrase = "Typeless"
+                else:
+                    phrase = mon.__class__.__name__.removeprefix("Custom")
+
+                if mon.base.name != mon.name:
+                    phrase = {"UltraBeast": "UB"}.get(phrase, phrase)
+                    phrase = f"{phrase} {mon.base.name}"
+                return phrase, mon.name
+            case mon if isinstance(mon, Species):
+                phrase = mon.__class__.__name__.removeprefix("Custom")
+                return phrase.replace("Pokemon", "Species"), mon.name
+
+    @property
     def embed(self) -> Embed:
         return self.embeds[0]
 
@@ -604,46 +643,8 @@ class Character:
 
         c_embed.add_field(name="Age", value=self.age.name)
 
-        match species := self.species:
-            case mon if isinstance(mon, Fusion):
-                ratio1, ratio2 = mon.ratio, 1 - mon.ratio
-                b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
-                name = f"{b1}{mon.mon1.name}\n{b2}{mon.mon2.name}"
-                c_embed.add_field(name="Fusion", value=name[:1024])
-            case mon if isinstance(mon, Fakemon):
-                a1 = Ability.get(name="Beast Boost")
-                if a1 in self.abilities:
-                    name = "Fakemon Ultra Beast"
-                elif evolves_from := mon.species_evolves_from:
-                    name = "Fakemon Evo" if evolves_from.name == mon.name else f"{evolves_from.name} Evo"
-                else:
-                    name = "Fakemon Species"
-                c_embed.add_field(name=name, value=mon.name)
-            case mon if isinstance(mon, CustomMega):
-                c_embed.add_field(name="Mega", value=mon.name)
-            case mon if isinstance(mon, (CustomParadox, CustomUltraBeast, Variant)):
-                a1 = Ability.get(name="Protosynthesis")
-                a2 = Ability.get(name="Quark Drive")
-
-                if a1 in self.abilities:
-                    phrase = "Past"
-                elif a2 in self.abilities:
-                    phrase = "Future"
-                elif TypingEnum.Typeless in mon.types:
-                    phrase = "Typeless"
-                else:
-                    phrase = mon.__class__.__name__.removeprefix("Custom")
-
-                if mon.base.name == mon.name:
-                    c_embed.add_field(name=phrase, value=mon.name)
-                else:
-                    phrase = {"UltraBeast": "UB"}.get(phrase, phrase)
-                    c_embed.add_field(name=f"{phrase} {mon.base.name}", value=mon.name)
-
-            case mon if isinstance(mon, Species):
-                phrase = mon.__class__.__name__.removeprefix("Custom")
-                phrase = phrase.replace("Pokemon", "Species")
-                c_embed.add_field(name=phrase, value=mon.name)
+        if species_data := self.species_data:
+            c_embed.add_field(name=species_data[0], value=species_data[1])
 
         for index, ability in enumerate(sorted(self.abilities, key=lambda x: x.name), start=1):
             c_embed.add_field(
@@ -687,7 +688,7 @@ class Character:
         if self.nature:
             footer_elements.append(f"Nature: {self.nature.name}")
 
-        if species:
+        if self.species:
             footer_elements.append(self.height_text)
             footer_elements.append(self.weight_text)
 
@@ -729,21 +730,9 @@ class Character:
         }
 
         doc.add_heading(f"{self.emoji}〛{self.name}", 0)
-        match species := self.species:
-            case mon if isinstance(mon, Fusion):
-                ratio1, ratio2 = mon.ratio, 1 - mon.ratio
-                b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("", "")
-                params_header["Fusion"] = f"{b1}{mon.mon1.name}, {b2}{mon.mon2.name}"
-            case mon if isinstance(mon, Fakemon):
-                if evolves_from := mon.species_evolves_from:
-                    name = f"{evolves_from.name} Evo"
-                else:
-                    name = "Fakemon"
-                params_header[name] = mon.name
-            case mon if isinstance(mon, (CustomMega, CustomParadox, CustomUltraBeast, Variant)):
-                params_header[f"{mon.base.name} {mon.__class__.__name__.removeprefix('Custom')}"] = mon.name
-            case mon if isinstance(mon, Species):
-                params_header["Species"] = mon.name
+
+        if species_data := self.species_data:
+            params_header[species_data[0]] = species_data[1]
 
         table = doc.add_table(rows=1, cols=len(params_header))
         hdr_cells = table.rows[0].cells
@@ -787,61 +776,63 @@ class Character:
 
         if self.backstory:
             doc.add_heading("Bio", 1)
-            doc.add_paragraph(self.backstory)
+            doc.add_paragraph(self.backstory).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         if self.personality:
             doc.add_heading("Personality", 1)
-            doc.add_paragraph(self.personality)
+            doc.add_paragraph(self.personality).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         if self.extra:
             doc.add_heading("Extra Information", 1)
-            doc.add_paragraph(self.extra)
+            doc.add_paragraph(self.extra).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         if sp_ability := self.sp_ability:
             doc.add_page_break()
             doc.add_heading(f"Unique Trait: {sp_ability.name}", 1)
             doc.add_heading(sp_ability.kind.phrase, 2)
             if sp_ability.description:
-                doc.add_paragraph(sp_ability.description)
+                doc.add_paragraph(sp_ability.description).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if origin := sp_ability.origin:
                 doc.add_heading("How was it obtained?", 2)
-                doc.add_paragraph(origin)
+                doc.add_paragraph(origin).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if pros := sp_ability.pros:
                 doc.add_heading("How does it make the character's life easier?", 2)
-                doc.add_paragraph(pros)
+                doc.add_paragraph(pros).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if cons := sp_ability.cons:
                 doc.add_heading("How does it make the character's life harder?", 2)
-                doc.add_paragraph(cons)
+                doc.add_paragraph(cons).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-        if isinstance(species, (Variant, CustomParadox, CustomUltraBeast, Fakemon)) and (movepool := species.movepool):
+        if isinstance(self.species, (Variant, CustomParadox, CustomUltraBeast, Fakemon)) and (
+            movepool := self.species.movepool
+        ):
+            doc.add_page_break()
             doc.add_heading("Movepool", level=1)
-
             if movepool.level:
                 doc.add_heading("Level Moves", level=2)
                 for k, v in movepool.level.items():
                     if o := ", ".join(x.name for x in sorted(v, key=lambda x: x.name)):
-                        p = doc.add_paragraph()
+                        p = doc.add_paragraph(style="List Bullet")
                         p.add_run(f"Level {k:02d}: ").bold = True
                         p.add_run(o)
 
             if tm := ", ".join(x.name for x in sorted(movepool.tm, key=lambda x: x.name)):
                 doc.add_heading("TM Moves", level=2)
-                doc.add_paragraph(tm)
+                doc.add_paragraph(tm).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if tutor := ", ".join(x.name for x in sorted(movepool.tutor, key=lambda x: x.name)):
                 doc.add_heading("Tutor Moves", level=2)
-                doc.add_paragraph(tutor)
+                doc.add_paragraph(tutor).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if egg := ", ".join(x.name for x in sorted(movepool.egg, key=lambda x: x.name)):
                 doc.add_heading("Egg Moves", level=2)
-                doc.add_paragraph(egg)
+                doc.add_paragraph(egg).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
             if other := ", ".join(x.name for x in sorted(movepool.other, key=lambda x: x.name)):
                 doc.add_heading("Other Moves", level=2)
-                doc.add_paragraph(other)
+                doc.add_paragraph(other).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
         doc.save(fp := BytesIO())
         fp.seek(0)
