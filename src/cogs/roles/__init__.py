@@ -139,7 +139,7 @@ class Roles(commands.Cog):
                 embed.set_footer(text=guild.name, icon_url=guild.icon)
                 await webhook.send(
                     content=f"{author.mention} pinged by {member.mention}",
-                    allowed_mentions=AllowedMentions(users=True),
+                    allowed_mentions=AllowedMentions(users=[author, member]),
                     avatar_url=member.display_avatar.url,
                     username=member.display_name,
                     embed=embed,
