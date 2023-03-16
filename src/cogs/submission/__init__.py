@@ -534,7 +534,10 @@ class Submission(commands.Cog):
 
         phrase = "Replying"
         channel_id, message_id = 0, 0
-        if data := TUPPER_REPLY_PATTERN.search(message.content):
+
+        if reference := message.reference:
+            channel_id, message_id = reference.channel_id, reference.message_id
+        elif data := TUPPER_REPLY_PATTERN.search(message.content):
             phrase = data.group("user").strip() or phrase
             content = data.group("content").strip()
             with suppress(ValueError):
@@ -711,7 +714,7 @@ class Submission(commands.Cog):
     async def on_thread_create(self, thread: Thread):
         if (
             not isinstance(parent := thread.parent, ForumChannel)
-            or thread.parent.category_id not in MAP_ELEMENTS2
+            or thread.category_id not in MAP_ELEMENTS2
             and thread.parent_id != 1061008601335992422
             or self.bot.user == thread.owner
         ):
