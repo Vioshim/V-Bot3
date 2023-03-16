@@ -819,7 +819,7 @@ class Submission(commands.Cog):
         if message.channel.id == 852180971985043466:
             await self.on_message_submission(message)
         elif (
-            message.channel.category_id in MAP_ELEMENTS2
+            (message.channel.category_id in MAP_ELEMENTS2 if hasattr(message.channel, "category_id") else True)
             and not message.channel.name.endswith("OOC")
             and not message.webhook_id
         ):
