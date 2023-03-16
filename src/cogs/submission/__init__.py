@@ -633,7 +633,7 @@ class Submission(commands.Cog):
         done, pending = await asyncio.wait(
             [
                 asyncio.create_task(
-                    self.bot.wait_for("message", check=checker, timeout=2),
+                    self.bot.wait_for("message", check=checker),
                     name="Message",
                 ),
                 asyncio.create_task(
@@ -643,6 +643,10 @@ class Submission(commands.Cog):
                 asyncio.create_task(
                     self.bot.wait_for("message_delete", check=lambda x: x == message),
                     name="Delete",
+                ),
+                asyncio.create_task(
+                    asyncio.sleep(2),
+                    name="Timeout",
                 ),
             ],
             return_when=asyncio.FIRST_COMPLETED,
@@ -658,7 +662,7 @@ class Submission(commands.Cog):
             return
 
         if not messages:
-            if any(future.get_name() == "Message" for future in done):
+            if any(future.get_name() == "Timeout" for future in done):
                 await self.on_message_tupper(message, message.author)
             return
 
@@ -728,7 +732,7 @@ class Submission(commands.Cog):
             await data.thread.add_user(thread.owner)
             await thread.delete()
         elif notif_thread := parent.get_thread(1061010425136828628):
-            await msg.pin()
+            await msg.pin(reason=f"Thread created by {thread.owner}")
             embed = PLACEHOLDER_EMBED.copy()
             embed.color, embed.timestamp = thread.owner.color, thread.created_at
             embed.set_thumbnail(url=self.bot.user.display_avatar)
@@ -757,13 +761,11 @@ class Submission(commands.Cog):
 
             view = View()
             view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
-            content = ", ".join(
-                o.mention for x in applied_tags if (o := get(thread.guild.roles, name=f"{x.name} RP Search"))
-            )
+            roles = {o for x in applied_tags if (o := get(thread.guild.roles, name=f"{x.name} RP Search"))}
 
             await w.send(
-                content=content,
-                allowed_mentions=AllowedMentions(roles=True),
+                content=", ".join(x.mention for x in roles),
+                allowed_mentions=AllowedMentions(roles=roles),
                 embed=embed,
                 username=CLYDE.sub("\u200a", thread.owner.display_name),
                 avatar_url=thread.owner.display_avatar.url,
@@ -789,11 +791,7 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Roleplayers")
         if data := await db.find_one({"user": member.id, "server": member.guild.id}):
             thread = await self.list_update(member, data)
-            if thread.name == member.display_name:
-                await thread.edit(reason="Member left", archived=True)
-            else:
-                reason = f"Member left: {member.display_name}"
-                await thread.edit(name=member.display_name, reason=reason, archived=True)
+            await thread.edit(name=member.display_name, reason=f"Member left: {member.display_name}", archived=True)
 
     @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
@@ -910,9 +908,8 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Roleplayers")
         db2 = self.bot.mongo_db("Characters")
-        key = {"server": payload.guild_id}
-        await db.delete_one(key | {"id": payload.thread_id})
-        await db2.delete_many(key | {"thread": payload.thread_id})
+        await db.delete_one({"server": payload.guild_id, "id": payload.thread_id})
+        await db2.delete_many({"server": payload.guild_id, "thread": payload.thread_id})
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: RawMessageDeleteEvent) -> None:
