@@ -90,12 +90,12 @@ class Meeting(View):
             await resp.send_message("You are the one reported.", ephemeral=True)
             return False
         if not get(member.roles, name="Registered"):
-            await resp.send_message("Only registered members vote.", ephemeral=True)
+            await resp.send_message("Only registered members can vote.", ephemeral=True)
             return False
         if member in self.attack:
-            self.attack.remove(member)
-        if interaction.user in self.defend:
-            self.defend.remove(member)
+            self.attack.discard(member)
+        if member in self.defend:
+            self.defend.discard(member)
         return True
 
     @button(label="Agreed")
@@ -263,9 +263,9 @@ class Moderation(commands.Cog):
         if member.bot:
             return interaction.followup.send(content="That's a bot, if it's here was added by staff.", ephemeral=True)
         moderation: Role = get(interaction.guild.roles, name="Moderation")
-        if member.top_role >= interaction.user.top_role:
+        if moderation in member.roles:
             return await interaction.followup.send(
-                content="Member has a higher or same role than yours.",
+                content="That user is already a moderator. You can't report them",
                 ephemeral=True,
             )
 
