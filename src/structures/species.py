@@ -882,18 +882,10 @@ class Fusion(Species):
         items: list[Fusion] = []
 
         if mon1 := self.mon1.species_evolves_from:
-            if mon1 != self.mon2:
-                mon = Fusion(mon1=mon1, mon2=self.mon2)
-            else:
-                mon = mon1
-            items.append(mon)
+            items.append(Fusion(mon1=mon1, mon2=self.mon2) if mon1 != self.mon2 else mon1)
 
         if mon2 := self.mon2.species_evolves_from:
-            if self.mon1 != mon2:
-                mon = Fusion(mon1=self.mon1, mon2=mon2)
-            else:
-                mon = mon2
-            items.append(mon)
+            items.append(Fusion(mon1=self.mon1, mon2=mon2) if self.mon1 != mon2 else mon2)
 
         if mon1 and mon2:
             if mon1 != mon2:

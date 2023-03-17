@@ -1134,21 +1134,61 @@ class ImageField(TemplateField, name="Image", required=True):
                 progress.add(cls.name)
 
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
-            db: AsyncIOMotorCollection = itx.client.mongo_db("OC Background")
-            if img := await db.find_one({"author": oc.author, "server": oc.server}):
-                url = oc.generated_image(img["image"])
-                itx.client.logger.info(url)
-                img = await itx.client.get_file(url)
 
-            if img is None:
-                url = oc.generated_image()
-                itx.client.logger.info(url)
-                img = await itx.client.get_file(url)
+            class BackgroundImage(Basic):
+                async def on_error(self, interaction: Interaction[CustomBot], error: Exception, item, /) -> None:
+                    interaction.client.logger.error(f"Error on {self.__class__.__name__}: {error} {item}")
 
-            if img:
-                oc.image = img
+                @select(
+                    options=[
+                        SelectOption(
+                            label="Generate background",
+                            value="default",
+                            description="Sets either /perks or a default background.",
+                            emoji="🎨",
+                        ),
+                        SelectOption(
+                            label="Keep as is",
+                            value="keep",
+                            description="Keep the current image",
+                            emoji="🎨",
+                        ),
+                    ],
+                    custom_id="OC Background",
+                )
+                async def background_choice(self, itx: Interaction[CustomBot], sct: Select):
 
-        return None
+                    img = None
+                    if sct.values[0] == "default":
+                        db = itx.client.mongo_db(sct.custom_id)
+                        if img := await db.find_one({"author": oc.author, "server": oc.server}):
+                            url = oc.generated_image(img["image"])
+                            img = await itx.client.get_file(url)
+
+                    if img is None and isinstance(oc.image, str):
+                        url = oc.generated_image() if sct.values[0] == "default" else oc.image
+                        img = await itx.client.get_file(url)
+
+                    if img:
+                        oc.image = img
+
+                    await self.delete(itx)
+
+            view = BackgroundImage(
+                target=itx,
+                member=itx.user,
+                embed=Embed(
+                    title="Do you want to use a custom background?",
+                    description="If you don't have a custom background, you can use the default one.",
+                    color=itx.user.color,
+                ).set_image(
+                    url="https://cdn.discordapp.com/attachments/918716594157400084/1086104504237305876/image.png"
+                ),
+            )
+
+            msg = await view.send(ephemeral=ephemeral)
+            await view.wait()
+            await msg.delete(delay=0)
 
 
 class PokeballField(TemplateField, name="Pokeball"):

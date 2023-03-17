@@ -77,9 +77,7 @@ class ImageView(Basic):
 
     @asynccontextmanager
     async def send(self, **kwargs):
-        file: Optional[file] = None
-        if isinstance(self.text, File):
-            file = self.text
+        file = self.text if isinstance(self.text, File) else None
         try:
             await super(ImageView, self).send(file=file, **kwargs)
         except HTTPException:

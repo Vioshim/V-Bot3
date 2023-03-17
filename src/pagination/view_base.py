@@ -98,7 +98,8 @@ class Basic(View):
             guild = guilds[0]
             member = guild.get_member(member.id)
 
-        embed.set_image(url=WHITE_BAR)
+        if not embed.image:
+            embed.set_image(url=WHITE_BAR)
         if isinstance(member, (User, Member)):
             embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         if isinstance(member, Member):

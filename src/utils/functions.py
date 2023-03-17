@@ -181,10 +181,7 @@ def embed_modifier(embed: Embed = None, **kwargs):
     Embed
         copy of the embed with the modifications
     """
-    if embed:
-        embed = embed.copy()
-    else:
-        embed = Embed()
+    embed = embed.copy() if embed else Embed()
     embed.title = kwargs.get("title", embed.title)
     embed.description = kwargs.get("description", embed.description)
     embed.url = kwargs.get("url", embed.url)
@@ -228,7 +225,7 @@ def embed_modifier(embed: Embed = None, **kwargs):
     return embed
 
 
-def int_check(data: str, a: int = None, b: int = None) -> Optional[int]:
+def int_check(data: str | list, a: int = None, b: int = None) -> Optional[int]:
     """This is a method that checks the integer out of a string given a range
 
     Parameters
@@ -261,7 +258,7 @@ def int_check(data: str, a: int = None, b: int = None) -> Optional[int]:
         return value
 
 
-def float_check(data: str, a: float = None, b: float = None) -> Optional[float]:
+def float_check(data: str | list, a: float = None, b: float = None) -> Optional[float]:
     """This is a method that checks the float out of a string given a range
 
     Parameters
@@ -310,7 +307,7 @@ def stats_check(*args: str) -> int:
     int
         The desired value
     """
-    if data := int_check("".join(item for item in args), 1, 5):
+    if data := int_check("".join(args), 1, 5):
         return data
     return sum(bool(item.strip()) for item in args)
 

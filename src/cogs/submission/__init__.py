@@ -543,8 +543,8 @@ class Submission(commands.Cog):
             with suppress(ValueError):
                 channel_id, message_id = int(data.group("channel")), int(data.group("message"))
 
+        content = message.content
         if channel_id == message_id == 0:
-            content = message.content
             aux_view = View.from_message(message)
             if items := [
                 x
