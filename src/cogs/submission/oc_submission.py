@@ -1129,16 +1129,20 @@ class ImageField(TemplateField, name="Image", required=True):
         default_image = oc.image_url or oc.image or oc.default_image
         view = ImageView(member=itx.user, default_img=default_image, target=itx)
         async with view.send(ephemeral=ephemeral) as text:
-            if not text:
-                if text is None:
-                    oc.image = None
-                    progress.discard(cls.name)
+            if text is None:
+                oc.image = None
+                progress.discard(cls.name)
                 return
 
-            oc.image = text
-            progress.add(cls.name)
+            oc.image_url = text or default_image
+            if oc.image:
+                progress.add(cls.name)
 
-        if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
+        if (
+            oc.image
+            and oc.image == oc.default_image
+            or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image))
+        ):
 
             class BackgroundImage(Basic):
                 async def on_error(self, interaction: Interaction[CustomBot], error: Exception, item, /) -> None:
