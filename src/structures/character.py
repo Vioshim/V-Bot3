@@ -474,7 +474,7 @@ class Character:
             ):
                 url = int(find[1])
 
-        self.image = url
+        self.image = url or None
 
     @image_url.deleter
     def image_url(self):

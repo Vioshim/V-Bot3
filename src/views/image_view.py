@@ -59,10 +59,10 @@ class ImageView(Basic):
         self,
         member: Member | User,
         target: _M,
-        default_img: File | str | Asset = None,
+        default_img: File | str | Asset = "",
     ):
         super(ImageView, self).__init__(member=member, target=target, timeout=None)
-        if isinstance(default_img, str):
+        if isinstance(default_img, str) and default_img:
             self.embed.set_image(url=default_img)
         elif isinstance(default_img, File):
             self.embed.set_image(url=f"attachment://{default_img.filename}")
@@ -117,6 +117,7 @@ class ImageView(Basic):
         resp: InteractionResponse = ctx.response
 
         if "keep" in sct.values:
+            self.text = ""
             await resp.edit_message(content="Keeping default image.", embeds=[], view=None)
         elif "remove" in sct.values:
             self.text = None

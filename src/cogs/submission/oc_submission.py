@@ -1129,9 +1129,11 @@ class ImageField(TemplateField, name="Image", required=True):
         default_image = oc.image_url or oc.image or oc.default_image
         view = ImageView(member=itx.user, default_img=default_image, target=itx)
         async with view.send(ephemeral=ephemeral) as text:
-            if text and isinstance(text, str):
-                oc.image = text
-                progress.add(cls.name)
+            if not isinstance(text, str):
+                return
+
+            oc.image_url = text
+            progress.add(cls.name)
 
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
 
