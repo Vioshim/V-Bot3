@@ -1151,15 +1151,9 @@ class ImageField(TemplateField, name="Image", required=True):
                 @select(
                     options=[
                         SelectOption(
-                            label="Default Background",
+                            label="Generated Background",
                             value="default",
                             description="Sets either /perks or a default background.",
-                            emoji="🎨",
-                        ),
-                        SelectOption(
-                            label="Provide Background",
-                            value="background",
-                            description="Sets a custom background.",
                             emoji="🎨",
                         ),
                         SelectOption(
@@ -1173,11 +1167,10 @@ class ImageField(TemplateField, name="Image", required=True):
                 )
                 async def background_choice(self, itx: Interaction[CustomBot], sct: Select):
                     bg = "https://ik.imagekit.io/vioshim/background_Y8q8PAtEV.png"
-                    db = itx.client.mongo_db(sct.custom_id)
-                    if aux := await db.find_one({"author": oc.author, "server": oc.server}):
-                        bg = aux["image"]
-
-                    if sct.values[0] == "background":
+                    if sct.values[0] == "default":
+                        db = itx.client.mongo_db(sct.custom_id)
+                        if aux := await db.find_one({"author": oc.author, "server": oc.server}):
+                            bg = aux["image"]
                         view = ImageView(member=itx.user, target=itx, default_img=bg)
                         async with view.send(ephemeral=ephemeral) as text:
                             bg = text or bg
@@ -1185,7 +1178,7 @@ class ImageField(TemplateField, name="Image", required=True):
                         await itx.response.pong()
 
                     if isinstance(oc.image, str):
-                        url = oc.generated_image(bg) if sct.values[0] != "keep" else oc.image
+                        url = oc.image if sct.values[0] == "keep" else oc.generated_image(bg)
                         if not (img := await itx.client.get_file(url)) and sct.values[0] != "keep":
                             img = await itx.client.get_file(oc.generated_image())
 
