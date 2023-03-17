@@ -115,10 +115,10 @@ class ImageView(Basic):
         resp: InteractionResponse = ctx.response
 
         if "keep" in sct.values:
-            self.text = None
+            self.text = ""
             await resp.edit_message(content="Keeping default image.", embeds=[], view=None)
         elif "remove" in sct.values:
-            self.text = ""
+            self.text = None
             await resp.edit_message(content="Removed default image.", embeds=[], view=None)
         else:
             sct.disabled = True
