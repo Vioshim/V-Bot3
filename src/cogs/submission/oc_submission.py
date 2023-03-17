@@ -1365,7 +1365,11 @@ class CreationOCView(Basic):
             return
         self.setup()
         embeds = self.embeds
-        files = [self.oc.image] if "Image" in self.progress and isinstance(self.oc.image, File) else MISSING
+        files = (
+            [self.oc.image]
+            if "Image" in self.progress and isinstance(self.oc.image, File)
+            else (MISSING if self.oc.image else [])
+        )
 
         try:
             if resp.is_done():
@@ -1382,12 +1386,13 @@ class CreationOCView(Basic):
         except (DiscordException, AttributeError):
             await self.help_method(itx)
         else:
-            if files and m.embeds[0].image.proxy_url:
-                self.oc.image = m.embeds[0].image.proxy_url
-                self.setup(embed_update=False)
-                m = await m.edit(view=self)
+            if self.oc.image:
+                if files and m.embeds[0].image.proxy_url:
+                    self.oc.image = m.embeds[0].image.proxy_url
+                    self.setup(embed_update=False)
+                    m = await m.edit(view=self)
 
-            self.message = m
+                self.message = m
 
     async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
         self.ephemeral = ephemeral
