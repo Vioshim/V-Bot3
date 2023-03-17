@@ -1151,9 +1151,15 @@ class ImageField(TemplateField, name="Image", required=True):
                 @select(
                     options=[
                         SelectOption(
-                            label="Generate background",
+                            label="Default Background",
                             value="default",
                             description="Sets either /perks or a default background.",
+                            emoji="🎨",
+                        ),
+                        SelectOption(
+                            label="Provide Background",
+                            value="background",
+                            description="Sets a custom background.",
                             emoji="🎨",
                         ),
                         SelectOption(
@@ -1166,21 +1172,25 @@ class ImageField(TemplateField, name="Image", required=True):
                     custom_id="OC Background",
                 )
                 async def background_choice(self, itx: Interaction[CustomBot], sct: Select):
-                    await itx.response.pong()
+                    bg = "https://ik.imagekit.io/vioshim/background_Y8q8PAtEV.png"
+                    db = itx.client.mongo_db(sct.custom_id)
+                    if aux := await db.find_one({"author": oc.author, "server": oc.server}):
+                        bg = aux["image"]
 
-                    img = None
-                    if sct.values[0] == "default":
-                        db = itx.client.mongo_db(sct.custom_id)
-                        if img := await db.find_one({"author": oc.author, "server": oc.server}):
-                            url = oc.generated_image(img["image"])
-                            img = await itx.client.get_file(url)
+                    if sct.values[0] == "background":
+                        view = ImageView(member=itx.user, target=itx, default_img=bg)
+                        async with view.send(ephemeral=ephemeral) as text:
+                            bg = text or bg
+                    else:
+                        await itx.response.pong()
 
-                    if img is None and isinstance(oc.image, str):
-                        url = oc.generated_image() if sct.values[0] == "default" else oc.image
-                        img = await itx.client.get_file(url)
+                    if isinstance(oc.image, str):
+                        url = oc.generated_image(bg) if sct.values[0] != "keep" else oc.image
+                        if not (img := await itx.client.get_file(url)) and sct.values[0] != "keep":
+                            img = await itx.client.get_file(oc.generated_image())
 
-                    if img:
-                        oc.image = img
+                        if img:
+                            oc.image = img
 
                     await self.delete(itx)
 
