@@ -84,8 +84,6 @@ class ImageView(Basic):
             self.embed.set_image(url=None)
             await super(ImageView, self).send(file=file, **kwargs)
         finally:
-            if self.message:
-                self.text = self.message.embeds[0].image.url
             await self.wait()
             await self.delete()
             yield self.text
