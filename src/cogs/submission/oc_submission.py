@@ -1567,7 +1567,7 @@ class SubmissionModal(Modal):
                         thread=Object(id=1045687852069040148),
                     )
                     if msg.attachments:
-                        oc.image_url = msg.attachments[0].url
+                        oc.image = msg.attachments[0].url
 
                 view = CreationOCView(bot=itx.client, itx=itx, user=author, oc=oc)
                 if self.ephemeral:

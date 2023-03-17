@@ -463,7 +463,7 @@ class Submission(commands.Cog):
                         wait=True,
                     )
                     if msg.attachments:
-                        oc.image_url = msg.attachments[0].url
+                        oc.image = msg.attachments[0].url
                 view = CreationOCView(bot=self.bot, itx=message, user=author, oc=oc)
                 if isinstance(message, Message):
                     await message.delete(delay=0)
