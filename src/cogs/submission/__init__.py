@@ -452,6 +452,18 @@ class Submission(commands.Cog):
         if msg_data:
             author = self.bot.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
+                if isinstance(oc.image, File):
+                    w = await self.bot.webhook(1020151767532580934)
+                    msg = await w.send(
+                        content=oc.document_url,
+                        file=oc.image,
+                        username=author.display_name,
+                        avatar_url=author.display_avatar.url,
+                        thread=Object(id=1045687852069040148),
+                        wait=True,
+                    )
+                    if msg.attachments:
+                        oc.image_url = msg.attachments[0].url
                 view = CreationOCView(bot=self.bot, itx=message, user=author, oc=oc)
                 if isinstance(message, Message):
                     await message.delete(delay=0)

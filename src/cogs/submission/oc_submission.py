@@ -29,6 +29,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    Object,
     SelectOption,
     TextStyle,
 )
@@ -1555,6 +1556,19 @@ class SubmissionModal(Modal):
             author = itx.client.supporting.get(refer_author, refer_author)
             async for item in ParserMethods.parse(text=self.text.value, bot=itx.client):
                 oc = Character.process(**item)
+
+                if isinstance(oc.image, File):
+                    w = await itx.client.webhook(1020151767532580934)
+                    msg = await w.send(
+                        file=oc.image,
+                        wait=True,
+                        username=author.display_name,
+                        avatar_url=author.display_avatar.url,
+                        thread=Object(id=1045687852069040148),
+                    )
+                    if msg.attachments:
+                        oc.image_url = msg.attachments[0].url
+
                 view = CreationOCView(bot=itx.client, itx=itx, user=author, oc=oc)
                 if self.ephemeral:
                     await resp.edit_message(embeds=view.embeds, view=view)
