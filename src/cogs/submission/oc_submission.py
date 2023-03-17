@@ -1132,7 +1132,7 @@ class ImageField(TemplateField, name="Image", required=True):
             if not isinstance(text, str):
                 return
 
-            oc.image_url = text
+            oc.image = text
             progress.add(cls.name)
 
         if oc.image == oc.default_image or (oc.image != default_image and (isinstance(oc.image, str) or not oc.image)):
@@ -1159,6 +1159,7 @@ class ImageField(TemplateField, name="Image", required=True):
                     custom_id="OC Background",
                 )
                 async def background_choice(self, itx: Interaction[CustomBot], sct: Select):
+                    await itx.response.defer(ephemeral=True, thinking=True)
 
                     img = None
                     if sct.values[0] == "default":
