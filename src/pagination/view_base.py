@@ -238,7 +238,7 @@ class Basic(View):
             reference=reference,
             mention_author=mention_author,
             view=self,
-            username=safe_username(username),
+            username=safe_username(username) if username else None,
             avatar_url=avatar_url,
             thread=thread,
             ephemeral=ephemeral,
