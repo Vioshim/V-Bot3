@@ -21,7 +21,6 @@ from discord import (
     AllowedMentions,
     Embed,
     Interaction,
-    InteractionResponse,
     Member,
     Message,
     Object,
@@ -32,13 +31,7 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, View
 
-from src.cogs.roles.roles import (
-    AFKModal,
-    AFKSchedule,
-    BasicRoleSelect,
-    RPModal,
-    TimezoneSelect,
-)
+from src.cogs.roles.roles import AFKModal, AFKSchedule, BasicRoleSelect, RPModal
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
@@ -97,10 +90,8 @@ class Roles(commands.Cog):
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
         channel = self.bot.get_partial_messageable(719709333369258015, guild_id=719343092963999804)
-        msg1 = channel.get_partial_message(1059863286667038772)
-        msg2 = channel.get_partial_message(1059863298285256864)
-        await msg1.edit(view=BasicRoleSelect(timeout=None))
-        await msg2.edit(view=TimezoneSelect(timeout=None))
+        msg = channel.get_partial_message(1086478795520872478)
+        await msg.edit(view=BasicRoleSelect(timeout=None))
         self.bot.logger.info("Finished loading Self Roles")
 
     @commands.Cog.listener()

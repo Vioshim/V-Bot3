@@ -26,7 +26,6 @@ from discord import (
     Color,
     DiscordException,
     Embed,
-    ForumChannel,
     Guild,
     Interaction,
     InteractionResponse,
@@ -35,21 +34,20 @@ from discord import (
     Role,
     SelectOption,
     TextStyle,
-    Thread,
     Webhook,
     WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import get, utcnow
+from discord.utils import utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
+from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split
 from src.views.characters_view import CharactersView
-from src.structures.bot import CustomBot
 
 __all__ = ("RoleSelect", "RPSearchManage", "hours", "seconds")
 
@@ -104,18 +102,6 @@ def seconds(test: datetime) -> int:
     Difference in seconds
     """
     return int((utcnow() - test).total_seconds())
-
-
-RP_SEARCH_ROLES = dict(
-    Any=("Useful for finding Any kind of RP", 1061107910593220719),
-    Casual=("Ideal for Slice of Life RP", 1061107912203841628),
-    Plot=("If you need a hand with an Arc or plot.", 1061107915827724319),
-    Action=("Encounters that involve action such as battles, thievery, etc.", 1061107917174095924),
-    Narrated=("Narrate for others or get narrated.", 1061107918746963970),
-    Drama=("RPs that present a problem for OCs to solve.", 1061107922605703218),
-    Paragraph=("Be descriptive and detailed as possible", 1061107924589621328),
-    Horror=("Scary or mysterious RPs for OCs", 1061107926732910724),
-)
 
 
 def get_role(items: Iterable[SelectOption | str], guild: Guild):
@@ -423,35 +409,6 @@ class BasicRoleSelect(RoleSelect):
     async def basic_choice(self, itx: Interaction[CustomBot], sct: Select):
         await self.choice(itx, sct)
 
-    @select(
-        placeholder="Select RP Search Roles",
-        custom_id="rp-search",
-        min_values=0,
-        max_values=5,
-        options=[
-            SelectOption(
-                label=f"{key} RP Search",
-                emoji="💠",
-                value=str(item),
-                description=desc,
-            )
-            for key, (desc, item) in RP_SEARCH_ROLES.items()
-        ],
-    )
-    async def rp_search_choice(self, itx: Interaction[CustomBot], sct: Select):
-        roles = await self.choice(itx, sct)
-        member: Member = itx.client.supporting.get(itx.user, itx.user)
-        db: AsyncIOMotorCollection = itx.client.mongo_db("Roleplayers")
-        if item := await db.find_one({"user": member.id}):
-            if not (channel := itx.guild.get_channel_or_thread(item["id"])):
-                channel: Thread = await itx.guild.fetch_channel(item["id"])
-            forum: ForumChannel = channel.parent
-            tags = [o for x in roles if (o := get(forum.available_tags, name=x.name.removesuffix(" RP Search")))]
-            tags.sort(key=lambda x: x.name)
-            await channel.edit(archived=False, applied_tags=tags[:5])
-
-
-class TimezoneSelect(RoleSelect):
     @select(
         placeholder="AFK Schedule",
         custom_id="afk",
