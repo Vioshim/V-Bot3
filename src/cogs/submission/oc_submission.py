@@ -1332,7 +1332,9 @@ class CreationOCView(Basic):
             embeds = self.oc.embeds
             embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
             if not self.oc.image_url:
-                embeds[0].set_image(url="attachment://image.png")
+                embeds[0].set_image(
+                    url=self.oc.image if self.oc.image and isinstance(self.oc.image, str) else "attachment://image.png"
+                )
             self.embeds = embeds
 
     @select(placeholder="Select Kind", row=0)
