@@ -37,6 +37,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
+from src.utils.functions import safe_username
 from src.utils.imagekit import Fonts, ImageKit
 
 __all__ = ("BaseCharactersView", "CharactersView", "PingView")
@@ -98,7 +99,7 @@ class PingModal(Modal):
             file=file,
             allowed_mentions=AllowedMentions(users=True),
             embed=embed,
-            username=user.display_name,
+            username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
             thread=thread,
             view=view,
@@ -163,12 +164,9 @@ class PingView(View):
         else:
             options = [{"id": ctx.channel_id}]
             if ctx.message:
-                options.append({"id": ctx.message.id})
-                options.append({"message": ctx.message.id})
+                options.extend(({"id": ctx.message.id}, {"message": ctx.message.id}))
             if self.reference.message:
-                options.append({"id": self.reference.message.id})
-                options.append({"message": self.reference.message.id})
-
+                options.extend(({"id": self.reference.message.id}, {"message": self.reference.message.id}))
             if data := await db.find_one({"$and": [{"member": self.oc.author}, {"$or": options}]}):
                 modal = PingModal(oc=self.oc, thread_id=data["id"])
             else:
@@ -260,10 +258,7 @@ class CharactersView(BaseCharactersView):
                     url=item.jump_url,
                     icon_url=author.display_avatar.url,
                 )
-            if isinstance(self.target, Interaction):
-                target = self.target
-            else:
-                target = interaction
+            target = self.target if isinstance(self.target, Interaction) else interaction
             view = PingView(oc=item, reference=target, msg_id=self.msg_id)
             await interaction.followup.send(content=item.id, embeds=embeds, view=view, ephemeral=True)
             await view.wait()

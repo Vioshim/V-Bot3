@@ -44,7 +44,7 @@ from discord.ext.commands import Context
 from discord.ui import Button, View, button
 
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import embed_modifier
+from src.utils.functions import embed_modifier, safe_username
 
 __all__ = ("Basic",)
 
@@ -238,7 +238,7 @@ class Basic(View):
             reference=reference,
             mention_author=mention_author,
             view=self,
-            username=username,
+            username=safe_username(username),
             avatar_url=avatar_url,
             thread=thread,
             ephemeral=ephemeral,

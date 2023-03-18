@@ -46,7 +46,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
-from src.utils.functions import chunks_split
+from src.utils.functions import chunks_split, safe_username
 from src.views.characters_view import CharactersView
 
 __all__ = ("RoleSelect", "RPSearchManage", "hours", "seconds")
@@ -662,7 +662,7 @@ class RPModal(Modal):
             allowed_mentions=AllowedMentions(roles=True),
             thread=Object(id=1061010425136828628),
             embed=embed,
-            username=self.user.display_name,
+            username=safe_username(self.user.display_name),
             avatar_url=self.user.display_avatar.url,
             wait=True,
         )

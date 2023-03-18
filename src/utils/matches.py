@@ -48,6 +48,7 @@ TUPPER_REPLY_PATTERN = re.compile(
 BRACKETS_PARSER = re.compile(r"\{\{([^\{\}]+)\}\}")
 ESCAPE_SEQ = re.compile(r"\\(.)")
 CLYDE = re.compile(r"(c)(lyde)", re.IGNORECASE)
+DISCORD = re.compile(r"(d)(iscord)", re.IGNORECASE)
 ID_DICEBEAR = re.compile(r"https://avatars\.dicebear\.com/api/identicon/(.+)\.png")
 SCAM_FINDER = re.compile(r"hb\.bizmrg\.com", re.IGNORECASE)
 DATA_FINDER = re.compile(r"(Move|Level|Egg|TM|Tutor|Event|Species|Ability|Type) (\d+)", re.MULTILINE)

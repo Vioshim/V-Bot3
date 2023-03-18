@@ -45,7 +45,7 @@ from src.cogs.information import Information
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import SETTING_EMOJI, WHITE_BAR
-from src.utils.functions import discord_url_msg, embed_handler
+from src.utils.functions import discord_url_msg, embed_handler, safe_username
 
 PLAYER_FINDER = compile(r"\|raw\|(.*)'s rating: \d+ &rarr; <strong>\d+</strong><br />\((.*)\)")
 POKEMON_FINDER = compile(r"\|poke\|p(\d)\|(.*)\|")
@@ -116,7 +116,7 @@ class EmbedBuilder(commands.Cog):
                 cog: Information = self.bot.get_cog("Information")
                 kwargs = await cog.embed_info(reference)
                 kwargs["view"] = view
-                kwargs["username"] = f"URL〕{name}"
+                kwargs["username"] = f"URL〕{safe_username(name)}"
                 await self.webhook_send(message, **kwargs)
         elif message.content.startswith("https://replay.pokemonshowdown.com/"):
             content = message.content.split(" ")[0]
@@ -159,7 +159,7 @@ class EmbedBuilder(commands.Cog):
                     await self.webhook_send(
                         message,
                         embed=embed,
-                        username=f"URL〕{author.display_name}",
+                        username=f"URL〕{safe_username(author.display_name)}",
                         avatar_url=author.display_avatar.url,
                         view=view,
                     )
@@ -333,7 +333,7 @@ class EmbedBuilder(commands.Cog):
         message: WebhookMessage = await webhook.send(
             embed=embed,
             wait=True,
-            username=author.display_name,
+            username=safe_username(author.display_name),
             avatar_url=author.display_avatar.url,
             files=[await x.to_file() for x in attachments],
             thread=thread,
@@ -441,7 +441,7 @@ class EmbedBuilder(commands.Cog):
             if not message:
                 message = await webhook.send(
                     embed=embed,
-                    username=ctx.author.display_name,
+                    username=safe_username(ctx.author.display_name),
                     avatar_url=ctx.author.display_avatar.url,
                     thread=thread,
                     wait=True,
@@ -489,7 +489,7 @@ class EmbedBuilder(commands.Cog):
                 message = await webhook.send(
                     files=files,
                     embed=embed_aux,
-                    username=ctx.author.display_name,
+                    username=safe_username(ctx.author.display_name),
                     avatar_url=ctx.author.display_avatar.url,
                     thread=thread,
                     wait=True,

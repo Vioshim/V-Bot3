@@ -17,19 +17,13 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional
 
-from discord import (
-    Attachment,
-    Colour,
-    Embed,
-    Interaction,
-    Object,
-    Role,
-    Webhook,
-)
+from discord import Attachment, Colour, Embed, Interaction, Object, Role, Webhook
 from discord.ui import Modal, TextInput
 from discord.utils import MISSING, find
+
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
+from src.utils.functions import safe_username
 
 __all__ = ("CustomPerks",)
 
@@ -122,7 +116,7 @@ class CustomRoleModal(Modal, title="Custom Role"):
         await w.send(
             embed=embed,
             thread=Object(id=1020153311200022528),
-            username=ctx.user.display_name,
+            username=safe_username(ctx.user.display_name),
             avatar_url=ctx.user.display_avatar.url,
         )
 
@@ -168,7 +162,7 @@ class RPSearchBannerPerk(Perk):
             file=file,
             thread=Object(id=1020153311200022528),
             wait=True,
-            username=ctx.user.display_name,
+            username=safe_username(ctx.user.display_name),
             avatar_url=ctx.user.display_avatar.url,
         )
         image = m.embeds[0].image.url
@@ -201,7 +195,7 @@ class OCBackgroundPerk(Perk):
             file=file,
             thread=Object(id=1020153311200022528),
             wait=True,
-            username=ctx.user.display_name,
+            username=safe_username(ctx.user.display_name),
             avatar_url=ctx.user.display_avatar.url,
         )
         image = m.embeds[0].image.url

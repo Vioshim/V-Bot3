@@ -35,6 +35,7 @@ from src.cogs.roles.roles import AFKModal, AFKSchedule, BasicRoleSelect, RPModal
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
+from src.utils.functions import safe_username
 
 __all__ = ("Roles", "setup")
 
@@ -132,7 +133,7 @@ class Roles(commands.Cog):
                     content=f"{author.mention} pinged by {member.mention}",
                     allowed_mentions=AllowedMentions(users=[author, member]),
                     avatar_url=member.display_avatar.url,
-                    username=member.display_name,
+                    username=safe_username(member.display_name),
                     embed=embed,
                     view=view,
                     thread=Object(id=1061010425136828628),

@@ -33,6 +33,7 @@ from discord.ui import Button, View, button
 from discord.utils import MISSING, get, utcnow
 
 from src.utils.etc import WHITE_BAR
+from src.utils.functions import safe_username
 
 __all__ = ("BumpBot", "PingBump")
 
@@ -229,7 +230,7 @@ class PingBump(View):
             view=view,
             wait=wait,
             thread=thread,
-            username=self.after.author.display_name,
+            username=safe_username(self.after.author.display_name),
             avatar_url=avatar_url,
             allowed_mentions=AllowedMentions(users=True, roles=True),
         )

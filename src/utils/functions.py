@@ -20,6 +20,8 @@ from discord.ext.commands import Context
 from discord.utils import remove_markdown
 
 from src.utils.matches import (
+    CLYDE,
+    DISCORD,
     DISCORD_MSG_URL,
     DISCORD_MSG_URL2,
     ESCAPE_SEQ,
@@ -47,7 +49,15 @@ __all__ = (
     "message_line",
     "embed_handler",
     "yaml_handler",
+    "safe_username",
 )
+
+
+def safe_username(text: str):
+    # Helps with Discord and Clyde
+    text = CLYDE.sub("\\1\N{KHMER VOWEL INHERENT AA}\\2", text)
+    text = DISCORD.sub("\\1\N{KHMER VOWEL INHERENT AA}\\2", text)
+    return text
 
 
 def chunks_split(items: Iterable[_T], chunk_size: int):
@@ -82,7 +92,7 @@ def discord_url_msg(message: Message):
         return guild_id, message_id, channel_id
 
 
-def fix(text: str) -> str:
+def fix(text) -> str:
     """This function removes special characters, and capitalizes an string
 
     Parameters

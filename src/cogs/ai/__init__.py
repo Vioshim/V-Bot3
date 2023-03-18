@@ -33,6 +33,7 @@ from rapidfuzz import process
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
+from src.utils.functions import safe_username
 
 
 def ai_completition(prompt: str):
@@ -100,7 +101,7 @@ class AIModal(Modal):
         view.add_item(Button(label="Jump URL", url=message.jump_url))
         await w.send(
             embeds=embeds,
-            username=interaction.user.display_name,
+            username=safe_username(interaction.user.display_name),
             avatar_url=interaction.user.display_avatar.url,
             view=view,
             thread=Object(id=1020153295622373437),

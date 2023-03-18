@@ -73,6 +73,7 @@ from src.structures.species import (
     Variant,
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
+from src.utils.functions import safe_username
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import BaseCharactersView, CharactersView, PingView
 from src.views.image_view import ImageView
@@ -1564,7 +1565,7 @@ class SubmissionModal(Modal):
                     msg = await w.send(
                         file=oc.image,
                         wait=True,
-                        username=author.display_name,
+                        username=safe_username(author.display_name),
                         avatar_url=author.display_avatar.url,
                         thread=Object(id=1045687852069040148),
                     )

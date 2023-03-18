@@ -69,7 +69,7 @@ from src.utils.etc import (
     STICKER_EMOJI,
     WHITE_BAR,
 )
-from src.utils.functions import message_line
+from src.utils.functions import message_line, safe_username
 
 __all__ = ("Information", "setup")
 
@@ -426,7 +426,7 @@ class Information(commands.Cog):
             file=file,
             embed=embed,
             view=view,
-            username=member.display_name,
+            username=safe_username(member.display_name),
             thread=Object(id=1020153313242665022),
             avatar_url=member.display_avatar.url,
         )
@@ -465,7 +465,7 @@ class Information(commands.Cog):
             file=file,
             view=view,
             thread=Object(id=1020153315255922738),
-            username=member.display_name,
+            username=safe_username(member.display_name),
             avatar_url=member.display_avatar.url,
         )
 
@@ -505,7 +505,7 @@ class Information(commands.Cog):
             embed=embed,
             files=files,
             thread=Object(id=1020153311200022528),
-            username=now.display_name,
+            username=safe_username(now.display_name),
             avatar_url=now.display_avatar.url,
         )
 
@@ -539,7 +539,7 @@ class Information(commands.Cog):
             file=file,
             view=view,
             thread=Object(id=1020153286285865000),
-            username=user.display_name,
+            username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
         )
 
@@ -941,7 +941,7 @@ class Information(commands.Cog):
             file=file,
             view=view,
             thread=Object(id=1020153286285865000),
-            username=user.display_name,
+            username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
         )
 
@@ -1056,7 +1056,7 @@ class Information(commands.Cog):
 
         log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
         await log.send(
-            username=member.display_name,
+            username=safe_username(member.display_name),
             avatar_url=member.display_avatar,
             files=files,
             embeds=embeds,
@@ -1381,7 +1381,7 @@ class Information(commands.Cog):
             embeds=embeds,
             files=files,
             view=view,
-            username=username,
+            username=safe_username(username),
             avatar_url=message.author.display_avatar.url,
         )
 
