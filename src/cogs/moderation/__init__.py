@@ -183,6 +183,18 @@ class Moderation(commands.Cog):
         """
         self.bot = bot
         self.loaded: bool = False
+        guild_ids = [719343092963999804]
+        self.itx_menu = app_commands.ContextMenu(
+            name="Vote to Ban",
+            callback=self.vote_user,
+            guild_ids=guild_ids,
+        )
+
+    async def cog_load(self) -> None:
+        self.bot.tree.add_command(self.itx_menu)
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.itx_menu.name, type=self.itx_menu.type)
 
     async def scam_all(self):
         """Function to load all API data"""
@@ -233,11 +245,8 @@ class Moderation(commands.Cog):
             trigger=CronTrigger(minute="0,5,10,15,20,25,30,35,40,45,50,55", second=0),
         )
 
-    @app_commands.command(description="Starts a meeting to report a raider")
-    @app_commands.guilds(719343092963999804)
-    @app_commands.checks.has_role("Registered")
-    async def vote(self, interaction: Interaction, member: Member, *, reason: Optional[str] = None):
-        """Starts a votation to report a member
+    async def vote_process(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
+        """Function to process a votation
 
         Parameters
         ----------
@@ -262,6 +271,10 @@ class Moderation(commands.Cog):
             )
         if member.bot:
             return interaction.followup.send(content="That's a bot, if it's here was added by staff.", ephemeral=True)
+
+        if not get(interaction.user.roles, name="Registered"):
+            return await interaction.followup.send(content="You need to be registered to report users", ephemeral=True)
+
         moderation: Role = get(interaction.guild.roles, name="Moderation")
         if moderation in member.roles:
             return await interaction.followup.send(
@@ -283,6 +296,25 @@ class Moderation(commands.Cog):
         view.message = msg
         await msg.edit(view=view)
         await view.wait()
+
+    async def vote_user(self, interaction: Interaction, member: Member):
+        await self.vote_process(interaction, member)
+
+    @app_commands.command(description="Starts a meeting to report a raider")
+    @app_commands.guilds(719343092963999804)
+    async def vote(self, interaction: Interaction, member: Member, *, reason: Optional[str] = None):
+        """Starts a votation to report a member
+
+        Parameters
+        ----------
+        interaction : Interaction
+            Interaction
+        member : Member
+            Member to report
+        reason : Optional[str], optional
+            Reason for the votation, by default None
+        """
+        await self.vote_process(interaction, member, reason)
 
     @commands.command(name="cooldown", aliases=["sleep"])
     @commands.has_guild_permissions(manage_messages=True)
