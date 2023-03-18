@@ -14,9 +14,9 @@
 
 
 from contextlib import suppress
+from datetime import timedelta
 from os import getenv
 from typing import Optional
-from datetime import timedelta
 
 from aiohttp import ClientResponseError
 from discord import (
@@ -52,7 +52,7 @@ from discord import (
 from discord.abc import GuildChannel
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import format_dt, get, utcnow, time_snowflake
+from discord.utils import format_dt, get, time_snowflake, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from yaml import dump
 
@@ -436,12 +436,16 @@ class Information(commands.Cog):
         if member.guild.id != 719343092963999804:
             return
 
-        embed = Embed(
-            title="Member Joined",
-            colour=Colour.green(),
-            description=f"{member.mention} - {member}",
-            timestamp=utcnow(),
-        )
+        date = utcnow()
+        embed = Embed(description=f"{member.mention} - {member}", timestamp=date)
+        if member.created_at >= date - timedelta(days=30):
+            embed.title = "Member Joined - Account Created Recently"
+            embed.color = Colour.orange()
+            await member.timeout(timedelta(days=7), reason="Account created less than 30 days ago.")
+        else:
+            embed.title = "Member Joined"
+            embed.color = Colour.green()
+
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {member.id}")
         asset = member.display_avatar.replace(format="png", size=512)
