@@ -1214,22 +1214,20 @@ class Information(commands.Cog):
             if not (channel := guild.get_channel_or_thread(payload.channel_id)):
                 channel = await guild.fetch_channel(payload.channel_id)
 
-            message = await channel.fetch_message(payload.message_id)
-            everyone = guild.get_role(guild.id)
-
-            reactions = [x for x in message.reactions if str(x.emoji) == str(payload.emoji)]
-            reaction = reactions[0]
+            if not (message := get(self.bot.cached_messages, id=payload.message_id)):
+                message = await channel.fetch_message(payload.message_id)
 
             if (
-                not message.is_system()
+                (reactions := {x for x in message.reactions if str(x.emoji) == str(payload.emoji)})
+                and not message.is_system()
                 and channel.category_id is not None
                 and message.author != self.bot.user
                 and message.author != payload.member
-                and bool(channel.permissions_for(everyone).add_reactions)
+                and bool(channel.permissions_for(guild.default_role).add_reactions)
                 and channel.category_id not in DISABLED_CATEGORIES
                 and all(x.type != "rich" for x in message.embeds)
                 and (not message.author.bot or message.webhook_id)
-                and reaction.count < STARS_AMOUNT
+                and reactions.pop().count < STARS_AMOUNT
                 and message.pinned
             ):
                 await message.unpin()

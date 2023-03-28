@@ -139,7 +139,7 @@ class Inviter(commands.Cog):
             content=msg.embeds[0].description,
             icon_url=msg.embeds[0].thumbnail.url,
             image_url=msg.embeds[0].image.url,
-            tags=sorted((msg.embeds[0].footer.text or "").split(", ")),
+            tags=sorted(x for x in (msg.embeds[0].footer.text or "").split(", ") if x),
         )
 
         db = self.bot.mongo_db("Partnerships")

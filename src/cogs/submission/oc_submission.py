@@ -1374,7 +1374,7 @@ class CreationOCView(Basic):
         embeds = self.embeds
         files = (
             [self.oc.image]
-            if "Image" in self.progress and isinstance(self.oc.image, File)
+            if "Image" in self.progress and isinstance(self.oc.image, File) and self.oc.image
             else (MISSING if self.oc.image else [])
         )
 
@@ -1383,8 +1383,11 @@ class CreationOCView(Basic):
                 message = self.message or itx.message
                 if not message.flags.ephemeral:
                     message = message.channel.get_partial_message(message.id)
+
                 try:
                     m = await message.edit(embeds=embeds, view=self, attachments=files)
+                except ValueError:
+                    m = await message.edit(embeds=embeds, view=self)
                 except DiscordException:
                     m = await itx.edit_original_response(embeds=embeds, view=self, attachments=files)
             else:
