@@ -640,7 +640,6 @@ class WeightField(TemplateField, name="Weight"):
         oc: Character,
         ephemeral: bool = False,
     ):
-
         view = WeightView(target=itx, member=itx.user, oc=oc)
         await view.send(
             title=f"{template.title} Character's Weight.",
@@ -719,7 +718,6 @@ class TypesField(TemplateField, name="Types", required=True):
             return "Shadow typing is not valid"
 
         if TypingEnum.Typeless in oc.types:
-
             if len(oc.types) != 1:
                 return "Typeless can't have types, duh."
 

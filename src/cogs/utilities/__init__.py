@@ -135,7 +135,6 @@ class Utilities(commands.Cog):
 
     @staticmethod
     def parse_object_inv(stream: SphinxObjectFileReader, url: str):
-
         result: dict[str, str] = {}
 
         inv_version = stream.readline().rstrip()
@@ -159,7 +158,6 @@ class Utilities(commands.Cog):
             name, directive, _, location, dispname = match.groups()
             domain, _, subdirective = directive.partition(":")
             if directive == "py:module" and name in result:
-
                 continue
 
             if directive == "std:doc":
@@ -188,7 +186,6 @@ class Utilities(commands.Cog):
         self._rtfm_cache = cache
 
     async def do_rtfm(self, ctx: Interaction[CustomBot], key: RTFMPages, obj: Optional[str]):
-
         if obj is None:
             return await ctx.followup.send(key.value)
 

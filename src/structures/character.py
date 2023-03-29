@@ -463,11 +463,14 @@ class Character:
     def image_url(self):
         if isinstance(self.image, int) and self.thread:
             return f"https://media.discordapp.net/attachments/{self.thread}/{self.image}/image.png"
+        if isinstance(self.image, str) and self.image.startswith(
+            "https://media.discordapp.net/attachments/1045687852069040148/"
+        ):
+            return self.image
 
     @image_url.setter
     def image_url(self, url: str):
         if isinstance(url, str) and self.thread:
-
             if find := re.match(
                 rf"https:\/\/\w+\.discordapp\.\w+\/attachments\/{self.thread}\/(\d+)\/image\.png",
                 string=url,
@@ -1027,7 +1030,6 @@ class Character:
             species.name = ub
             data["species"] = species
         elif fakemon := data.pop("fakemon", ""):
-
             name: str = fakemon.title()
             if species := Fakemon.deduce(base):
                 species.name = name

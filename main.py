@@ -67,15 +67,12 @@ async def main() -> None:
 
 if __name__ == "__main__":
     try:
-
         import uvloop  # type: ignore
 
-        with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
-            runner.run(main())
+        loop_factory = uvloop.new_event_loop
     except ModuleNotFoundError:
+        loop_factory = None
         logger.error("Not using uvloop")
-        asyncio.run(main())
-    else:
-        logger.info("Using uvloop")
 
-        asyncio.run(main())
+    with asyncio.Runner(loop_factory=loop_factory) as runner:
+        runner.run(main())

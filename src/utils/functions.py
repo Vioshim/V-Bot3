@@ -71,7 +71,6 @@ def unescape(text: str):
 
 
 def discord_url_msg(message: Message):
-
     content: str = message.content or ""
 
     if match := DISCORD_MSG_URL.match(content) or DISCORD_MSG_URL2.match(content):

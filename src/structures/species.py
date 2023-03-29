@@ -144,7 +144,6 @@ class Species:
         include: Iterable[Type[Species]] | Type[Species] = None,
         exclude: Iterable[Type[Species]] | Type[Species] = None,
     ) -> frozenset[Species]:
-
         include = tuple(include) if isinstance(include, Iterable) else (include or cls)
         exclude = tuple(exclude) if isinstance(exclude, Iterable) else (exclude or None)
 
@@ -390,7 +389,6 @@ class Species:
                 return v(base=data, **item)
 
         if data := item.get("fusion", []):
-
             if isinstance(data, dict):
                 (mon1, mon2), ratio = data.get("species"), data.get("ratio", 0.5)
                 fusion = Fusion(mon1, mon2, ratio=ratio)
@@ -484,7 +482,6 @@ class CustomMega(Species):
     base: Optional[Species] = None
 
     def __init__(self, base: Species, types: frozenset[TypingEnum] = None):
-
         if isinstance(base, str):
             base = Species.single_deduce(base)
 
@@ -554,7 +551,6 @@ class CustomParadox(Species):
     base: Optional[Species] = None
 
     def __init__(self, base: Species, name: str = None, movepool: Movepool = None, types: frozenset[TypingEnum] = None):
-
         if isinstance(base, str):
             base = Species.single_deduce(base)
 
@@ -630,7 +626,6 @@ class CustomUltraBeast(Species):
     base: Optional[Species] = None
 
     def __init__(self, base: Species, name: str = None, movepool: Movepool = None, types: frozenset[TypingEnum] = None):
-
         if isinstance(base, str):
             base = Species.single_deduce(base)
 
@@ -714,7 +709,6 @@ class Variant(Species):
         abilities: frozenset[Ability] = None,
         movepool: Optional[Movepool] = None,
     ):
-
         if isinstance(base, str):
             base = Species.single_deduce(base)
 

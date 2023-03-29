@@ -40,7 +40,6 @@ class WikiEntry:
         emoji: Optional[PartialEmoji | str] = None,
         tags: Iterable[str] = None,
     ) -> None:
-
         if not embeds:
             embeds = []
         if not tags:
@@ -281,16 +280,14 @@ class WikiTransformer(Transformer):
         return await super(WikiTransformer, self).autocomplete(interaction, value)
 
     async def transform(self, itx: Interaction[CustomBot], value: str, /):
-        bot: CustomBot = itx.client
-        entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
+        entries = await itx.client.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
         return tree.lookup(value.removeprefix("/"))
 
 
 class WikiTreeTransformer(WikiTransformer):
     async def autocomplete(self, itx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
-        bot: CustomBot = itx.client
-        entries = await bot.mongo_db("Wiki").find({}).to_list(length=None)
+        entries = await itx.client.mongo_db("Wiki").find({}).to_list(length=None)
         tree = WikiEntry.from_list(entries)
         aux_tree = tree.lookup(value)
         items: list[WikiEntry] = [aux_tree]

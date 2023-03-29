@@ -78,7 +78,6 @@ class Pronoun(PronounItem, Enum):
             return item
 
         if not isinstance(item, str):
-
             if not isinstance(item, Iterable):
                 name = item.__class__.__name__
                 raise TypeError(f"Expected str but received {name!r} instead.")
@@ -97,7 +96,6 @@ class Pronoun(PronounItem, Enum):
 
     @classmethod
     def deduce_many(cls, *elems: str) -> frozenset[Pronoun]:
-
         items = {elem for elem in elems if isinstance(elem, cls)}
         if aux := ",".join(elem for elem in elems if isinstance(elem, str)):
             data = split(r"[^A-Za-z0-9 \.'-]", aux)

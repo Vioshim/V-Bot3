@@ -715,7 +715,6 @@ class Information(commands.Cog):
         )
 
         for item, perms in channel.overwrites.items():
-
             if len(embed.fields) >= 25:
                 break
 
@@ -769,7 +768,6 @@ class Information(commands.Cog):
         )
 
         for item, perms in channel.overwrites.items():
-
             if len(embed.fields) >= 25:
                 break
 
@@ -858,7 +856,6 @@ class Information(commands.Cog):
             items = []
 
             for item in before.overwrites | after.overwrites:
-
                 if len(differences.fields) >= 25:
                     break
 
@@ -947,7 +944,6 @@ class Information(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
-
         if message.mention_everyone or message.role_mentions:
             return
         channel = message.channel

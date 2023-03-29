@@ -161,7 +161,6 @@ class Pokedex(commands.Cog):
             if move_id is None:
                 view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
             if species:
-
                 if move_id is None:
                     embed.title = f"{species.name}'s movepool"
                 elif description := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
@@ -204,7 +203,6 @@ class Pokedex(commands.Cog):
                     embed.add_field(name="Weight (Max)", value=Size.XXXL.weight_info(w3))
 
                 if isinstance(species, Species):
-
                     if evs or ivs:
                         level = level or 100
 
