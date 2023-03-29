@@ -34,6 +34,7 @@ from discord.abc import Messageable
 from discord.ui import Select, select
 
 from src.pagination.view_base import Basic
+from src.structures.bot import CustomBot
 from src.utils.etc import STICKER_EMOJI
 from src.utils.matches import REGEX_URL
 
@@ -111,7 +112,7 @@ class ImageView(Basic):
             ),
         ],
     )
-    async def insert_image(self, ctx: Interaction, sct: Select):
+    async def insert_image(self, ctx: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = ctx.response
 
         if "keep" in sct.values:
@@ -133,20 +134,22 @@ class ImageView(Basic):
             )
 
             for task in done:
-                if isinstance(received := task.result(), Message):
-                    if attachments := received.attachments:
+                if not isinstance(received := task.result(), Message):
+                    continue
+
+                if attachments := received.attachments:
+                    self.text = attachments[0].proxy_url
+                    self.received = received
+                    await received.delete(delay=0)
+                elif file := await ctx.client.get_file(url=received.content, filename="image"):
+                    await received.delete(delay=0)
+                    self.received = foo = await ctx.channel.send(file=file)
+                    if attachments := self.received.attachments:
                         self.text = attachments[0].proxy_url
-                        self.received = received
-                        await received.delete(delay=0)
-                    elif file := await ctx.client.get_file(url=received.content, filename="image"):
-                        await received.delete(delay=0)
-                        self.received = foo = await ctx.channel.send(file=file)
-                        if attachments := self.received.attachments:
-                            self.text = attachments[0].proxy_url
-                        await foo.delete(delay=0)
-                    elif self.message.embeds and (image := self.message.embeds[0].image):
-                        self.text = image.url
-                    else:
-                        self.text = None
+                    await foo.delete(delay=0)
+                elif self.message.embeds and (image := self.message.embeds[0].image):
+                    self.text = image.proxy_url
+                else:
+                    self.text = None
 
         await self.delete(ctx)

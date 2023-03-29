@@ -74,6 +74,7 @@ from src.structures.species import (
 )
 from src.utils.etc import RICH_PRESENCE_EMOJI, WHITE_BAR
 from src.utils.functions import safe_username
+from src.utils.imagekit import ImageKit
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import BaseCharactersView, CharactersView, PingView
 from src.views.image_view import ImageView
@@ -1153,22 +1154,21 @@ class ImageField(TemplateField, name="Image", required=True):
                         SelectOption(
                             label="Generated Background",
                             value="default",
-                            description="Sets either /perks or a default background.",
+                            description="The image is added with a background.",
                             emoji="🎨",
                         ),
                         SelectOption(
-                            label="Keep as is",
+                            label="Eh, I pass from using that",
                             value="keep",
-                            description="Keep the current image",
+                            description="Keep the current image as is",
                             emoji="🎨",
                         ),
                     ],
-                    custom_id="OC Background",
                 )
                 async def background_choice(self, itx: Interaction[CustomBot], sct: Select):
                     bg = "https://ik.imagekit.io/vioshim/background_Y8q8PAtEV.png"
                     if sct.values[0] == "default":
-                        db = itx.client.mongo_db(sct.custom_id)
+                        db = itx.client.mongo_db("OC Background")
                         if aux := await db.find_one({"author": oc.author, "server": oc.server}):
                             bg = aux["image"]
                         view = ImageView(member=itx.user, target=itx, default_img=bg)
@@ -1178,7 +1178,11 @@ class ImageField(TemplateField, name="Image", required=True):
                         await itx.response.pong()
 
                     if isinstance(oc.image, str):
-                        url = oc.image if sct.values[0] == "keep" else oc.generated_image(bg)
+                        if sct.values[0] == "keep":
+                            url = ImageKit(oc.image, format="png").url
+                        else:
+                            url = oc.generated_image(bg)
+
                         if not (img := await itx.client.get_file(url)) and sct.values[0] != "keep":
                             img = await itx.client.get_file(oc.generated_image())
 
@@ -1255,10 +1259,8 @@ class CreationOCView(Basic):
         self.embed.title = "Character Creation"
         self.bot = bot
         oc = oc.copy() if oc else Character()
-        if not oc.author:
-            oc.author = user.id
-        if not oc.server:
-            oc.server = itx.guild_id
+        oc.author = oc.author or user.id
+        oc.server = oc.server or itx.guild_id
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
@@ -1377,23 +1379,19 @@ class CreationOCView(Basic):
         )
 
         try:
-            if resp.is_done():
-                message = self.message or itx.message
-                if not message.flags.ephemeral:
-                    message = message.channel.get_partial_message(message.id)
-
+            if resp.is_done() and (message := self.message or itx.message):
+                # if not message.flags.ephemeral:
+                # message = message.channel.get_partial_message(message.id)
                 try:
                     m = await message.edit(embeds=embeds, view=self, attachments=files)
                 except ValueError:
+                    embeds[0].set_image(url="attachment://image.png")
                     m = await message.edit(embeds=embeds, view=self)
                 except DiscordException:
                     m = await itx.edit_original_response(embeds=embeds, view=self, attachments=files)
             else:
                 await resp.edit_message(embeds=embeds, view=self, attachments=files)
                 m = await itx.original_response()
-        except (DiscordException, AttributeError):
-            await self.help_method(itx)
-        else:
             if self.oc.image:
                 if files and m.embeds[0].image.proxy_url:
                     self.oc.image = m.embeds[0].image.proxy_url
@@ -1401,6 +1399,8 @@ class CreationOCView(Basic):
                     m = await m.edit(view=self)
 
                 self.message = m
+        except DiscordException:
+            await self.help_method(itx)
 
     async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
         self.ephemeral = ephemeral
