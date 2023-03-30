@@ -720,8 +720,10 @@ class Character:
             c_embed.set_image(url=image)
         elif isinstance(self.image, File):
             c_embed.set_image(url=f"attachment://{self.image.filename}")
-        elif isinstance(self.image, str):
+        elif isinstance(self.image, str) and self.image:
             c_embed.set_image(url=self.image)
+        else:
+            c_embed.set_image(url="attachment://image.png")
 
         if self.personality:
             c_embed.add_field(name="Personality", value=self.personality[:200], inline=False)

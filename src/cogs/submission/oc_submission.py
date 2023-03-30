@@ -343,8 +343,8 @@ class Template(TemplateItem, Enum):
 
 
 class TemplateField(ABC):
-    def __init_subclass__(cls, name: str, required: bool = False) -> None:
-        cls.name = name
+    def __init_subclass__(cls, name: Optional[str] = None, required: bool = False) -> None:
+        cls.name = name or cls.__name__.removesuffix("Field")
         cls.required = required
         cls.description = cls.__doc__.strip() or ""
 
@@ -377,7 +377,7 @@ class TemplateField(ABC):
         """Abstract method which affects progress and the character"""
 
 
-class NameField(TemplateField, name="Name", required=True):
+class NameField(TemplateField, required=True):
     "Modify the OC's Name"
 
     @classmethod
@@ -408,7 +408,7 @@ class NameField(TemplateField, name="Name", required=True):
                 progress.add(cls.name)
 
 
-class AgeField(TemplateField, name="Age", required=True):
+class AgeField(TemplateField, required=True):
     "Modify the OC's Age"
 
     @classmethod
@@ -440,7 +440,7 @@ class AgeField(TemplateField, name="Age", required=True):
                 progress.add(cls.name)
 
 
-class PronounField(TemplateField, name="Pronoun", required=True):
+class PronounField(TemplateField, required=True):
     "He, She, Them"
 
     @classmethod
@@ -479,7 +479,7 @@ class PronounField(TemplateField, name="Pronoun", required=True):
                 progress.add(cls.name)
 
 
-class SpeciesField(TemplateField, name="Species", required=True):
+class SpeciesField(TemplateField, required=True):
     "Modify the OC's Species"
 
     @classmethod
@@ -563,7 +563,7 @@ class FusionRatioField(TemplateField, name="Proportion"):
                 progress.add(cls.name)
 
 
-class SizeField(TemplateField, name="Size"):
+class SizeField(TemplateField):
     "Modify the OC's Size"
 
     @classmethod
@@ -607,7 +607,7 @@ class SizeField(TemplateField, name="Size"):
         progress.add(cls.name)
 
 
-class WeightField(TemplateField, name="Weight"):
+class WeightField(TemplateField):
     "Modify the OC's Weight"
 
     @classmethod
@@ -701,7 +701,7 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
                 oc.moveset = frozenset(moves)
 
 
-class TypesField(TemplateField, name="Types", required=True):
+class TypesField(TemplateField, required=True):
     "Modify the OC's Types"
 
     @classmethod
@@ -788,7 +788,7 @@ class TypesField(TemplateField, name="Types", required=True):
                 progress.add(cls.name)
 
 
-class MovesetField(TemplateField, name="Moveset", required=True):
+class MovesetField(TemplateField, required=True):
     "Modify the OC's fav. moves"
 
     @classmethod
@@ -840,7 +840,7 @@ class MovesetField(TemplateField, name="Moveset", required=True):
                 progress.add(cls.name)
 
 
-class MovepoolField(TemplateField, name="Movepool", required=True):
+class MovepoolField(TemplateField, required=True):
     "Modify the OC's movepool"
 
     @classmethod
@@ -872,7 +872,7 @@ class MovepoolField(TemplateField, name="Movepool", required=True):
         progress.add(cls.name)
 
 
-class AbilitiesField(TemplateField, name="Abilities", required=True):
+class AbilitiesField(TemplateField, required=True):
     "Modify the OC's Abilities"
 
     @classmethod
@@ -971,7 +971,7 @@ class HiddenPowerField(TemplateField, name="Hidden Power"):
             progress.add(cls.name)
 
 
-class NatureField(TemplateField, name="Nature"):
+class NatureField(TemplateField):
     "OC's Nature"
 
     @classmethod
@@ -1026,7 +1026,7 @@ class UniqueTraitField(TemplateField, name="Unique Trait", required=True):
         progress.add(cls.name)
 
 
-class BackstoryField(TemplateField, name="Bio", required=True):
+class BioField(TemplateField, required=True):
     "Define who is the character."
 
     @classmethod
@@ -1052,7 +1052,7 @@ class BackstoryField(TemplateField, name="Bio", required=True):
                 progress.add(cls.name)
 
 
-class PersonalityField(TemplateField, name="Personality", required=False):
+class PersonalityField(TemplateField, required=False):
     "Modify the OC's Personality"
 
     @classmethod
@@ -1104,7 +1104,7 @@ class ExtraField(TemplateField, name="Extra Information", required=False):
                 progress.add(cls.name)
 
 
-class ImageField(TemplateField, name="Image", required=True):
+class ImageField(TemplateField, required=True):
     "Modify the OC's Image"
 
     @classmethod
@@ -1208,7 +1208,7 @@ class ImageField(TemplateField, name="Image", required=True):
             await msg.delete(delay=0)
 
 
-class PokeballField(TemplateField, name="Pokeball"):
+class PokeballField(TemplateField):
     "Specify if OC has a pokeball or not"
 
     @classmethod
@@ -1323,7 +1323,7 @@ class CreationOCView(Basic):
                 y.placeholder = f"{x}. Click here!"
             errors += count
 
-        self.submit.label = "Save Changes" if self.oc.id else "Submit"
+        self.submit.label = "Save Changes" if self.oc.id else "Submit OC"
         self.cancel.label = "Close this Menu"
         self.finish_oc.label = "Delete OC"
         self.help.label = "Request Help"
@@ -1332,10 +1332,6 @@ class CreationOCView(Basic):
         if embed_update:
             embeds = self.oc.embeds
             embeds[0].set_author(name=self.user.display_name, icon_url=self.user.display_avatar)
-            if not self.oc.image_url:
-                embeds[0].set_image(
-                    url=self.oc.image if self.oc.image and isinstance(self.oc.image, str) else "attachment://image.png"
-                )
             self.embeds = embeds
 
     @select(placeholder="Select Kind", row=0)
@@ -1368,13 +1364,14 @@ class CreationOCView(Basic):
 
     async def update(self, itx: Interaction):
         resp: InteractionResponse = itx.response
+        condition = ImageField.name not in self.progress
         if self.is_finished():
             return
-        self.setup()
+        self.setup(condition)
         embeds = self.embeds
         files = (
             [self.oc.image]
-            if "Image" in self.progress and isinstance(self.oc.image, File) and self.oc.image
+            if not condition and isinstance(self.oc.image, File) and self.oc.image
             else (MISSING if self.oc.image else [])
         )
 
