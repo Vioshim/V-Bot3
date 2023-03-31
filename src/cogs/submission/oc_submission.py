@@ -1364,16 +1364,17 @@ class CreationOCView(Basic):
 
     async def update(self, itx: Interaction):
         resp: InteractionResponse = itx.response
-        condition = ImageField.name not in self.progress
         if self.is_finished():
             return
+
+        condition = ImageField.name not in self.progress
         self.setup(condition)
-        embeds = self.embeds
-        files = (
-            [self.oc.image]
-            if not condition and isinstance(self.oc.image, File) and self.oc.image
-            else (MISSING if self.oc.image else [])
-        )
+        embeds, files = self.embeds, MISSING
+
+        if not condition:
+            embeds[0].set_image(url="attachment://image.png")
+        elif self.oc.image:
+            files = [self.oc.image] if isinstance(self.oc.image, File) else []
 
         try:
             if resp.is_done() and (message := self.message or itx.message):
