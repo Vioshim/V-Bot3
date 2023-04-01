@@ -1373,8 +1373,9 @@ class CreationOCView(Basic):
 
         if not condition:
             embeds[0].set_image(url="attachment://image.png")
-        elif self.oc.image:
-            files = [self.oc.image] if isinstance(self.oc.image, File) else []
+
+        if isinstance(self.oc.image, File):
+            files = [self.oc.image]
 
         try:
             if resp.is_done() and (message := self.message or itx.message):
