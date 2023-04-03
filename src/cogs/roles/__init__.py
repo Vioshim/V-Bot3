@@ -146,23 +146,24 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("AFK")
-        users = {
-            x.id: x for x in msg.mentions if x != msg.author and isinstance(x, Member) and str(x.status) == "offline"
-        }
-        if not users:
+        if not (users := {x for x in msg.mentions if x != msg.author and isinstance(x, Member)}):
             return
 
         no_ping_role = get(msg.guild.roles, id=1092498088347844649)
-        if no_ping_role and (no_ping_users := ", ".join(str(x) for x in msg.mentions if x != no_ping_role)):
+        if no_ping_role and (no_ping_users := ", ".join(str(x) for x in users if x != no_ping_role)):
             await msg.reply(embed="https://media.tenor.com/kJhT6VC2tzEAAAAC/pings-off-reply-pings-off.gif")
             await msg.author.timeout(timedelta(seconds=5), reason=f"Pinged {no_ping_users}")
+
+        offline_users = [x.id for x in users if str(x.status) == "offline"]
+        if not offline_users:
+            return
 
         embeds = []
         if reference_tz := await db.find_one({"user": msg.author.id}):
             reference_tz: Optional[timezone] = timezone(offset=timedelta(hours=reference_tz["offset"]))
 
-        async for item in db.find({"user": {"$in": [*users]}}):
-            user = users[item["user"]]
+        async for item in db.find({"user": {"$in": offline_users}}):
+            user = get(users, id=item["user"])
             tz = timezone(offset=timedelta(hours=item["offset"]))
             ref_date = msg.created_at.astimezone(tz)
             if ref_date.hour not in item["hours"]:
