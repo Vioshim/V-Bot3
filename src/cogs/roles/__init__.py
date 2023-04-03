@@ -150,7 +150,7 @@ class Roles(commands.Cog):
             return
 
         no_ping_role = get(msg.guild.roles, id=1092498088347844649)
-        if no_ping_role and (no_ping_users := ", ".join(str(x) for x in users if x != no_ping_role)):
+        if no_ping_role and (no_ping_users := ", ".join(str(x) for x in users if no_ping_role in x.roles)):
             await msg.reply("https://media.tenor.com/kJhT6VC2tzEAAAAC/pings-off-reply-pings-off.gif")
             await msg.author.timeout(timedelta(seconds=5), reason=f"Pinged {no_ping_users}")
 
