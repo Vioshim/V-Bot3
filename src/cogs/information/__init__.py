@@ -312,22 +312,11 @@ class TicketModal(Modal, title="Ticket"):
 
 
 class InformationView(View):
-    def __init__(self):
-        super(InformationView, self).__init__(timeout=None)
-        self.add_item(
-            Button(
-                label="Support V-Bot!",
-                emoji=KOFI_EMOJI,
-                url="https://ko-fi.com/Vioshim",
-                row=1,
-            )
-        )
-
-    async def on_error(self, interaction: Interaction, error: Exception, item, /):
+    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, item, /):
         interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
     @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
-    async def see_map(self, ctx: Interaction, _: Button):
+    async def see_map(self, ctx: Interaction[CustomBot], _: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
         date_value = time_snowflake(ctx.created_at - timedelta(days=14))
         key = {
@@ -346,7 +335,7 @@ class InformationView(View):
         await view.simple_send(ephemeral=True)
 
     @button(label="Make a Ticket", emoji=STICKER_EMOJI, row=1, style=ButtonStyle.blurple)
-    async def create_ticket(self, ctx: Interaction, _: Button):
+    async def create_ticket(self, ctx: Interaction[CustomBot], _: Button):
         resp: InteractionResponse = ctx.response
         await resp.send_modal(TicketModal(timeout=None))
 
@@ -361,7 +350,7 @@ class Information(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Booster")
-    async def perks(self, ctx: Interaction, perk: CustomPerks, icon: Optional[Attachment] = None):
+    async def perks(self, ctx: Interaction[CustomBot], perk: CustomPerks, icon: Optional[Attachment] = None):
         """Custom Functions for Supporters!
 
         Parameters
@@ -1493,7 +1482,7 @@ class Information(commands.Cog):
 
         channel = self.bot.get_partial_messageable(860590339327918100, guild_id=719343092963999804)
         message = channel.get_partial_message(1056291757517705367)
-        await message.edit(view=InformationView())
+        await message.edit(view=InformationView(timeout=None))
 
         self.ready = True
 
