@@ -212,11 +212,6 @@ class AnnouncementView(View):
     def format(self):
         self.features.options.clear()
         self.features.add_option(
-            label="Pinging @supporters",
-            value="supporters",
-            emoji=PartialEmoji(name="memberjoin", id=432986578755911680),
-        )
-        self.features.add_option(
             label="Add a thread",
             value="thread",
             emoji=PartialEmoji(name="messageupdate", id=432986578927747073),
@@ -247,8 +242,6 @@ class AnnouncementView(View):
             self.kwargs["content"] = "@everyone"
         elif roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := ctx.guild.get_role(int(x)))):
             self.kwargs["content"] = roles
-        elif "supporters" in sct.values:
-            self.kwargs["content"] = "<@&967980442919784488>"
         else:
             self.kwargs["content"] = None
 

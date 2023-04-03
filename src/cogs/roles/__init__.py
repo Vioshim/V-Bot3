@@ -33,6 +33,7 @@ from discord.ui import Button, View
 
 from src.cogs.roles.roles import AFKModal, AFKSchedule, BasicRoleSelect, RPModal
 from src.structures.bot import CustomBot
+from discord.utils import get
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import safe_username
@@ -150,6 +151,11 @@ class Roles(commands.Cog):
         }
         if not users:
             return
+
+        no_ping_role = get(msg.guild.roles, id=1092498088347844649)
+        if no_ping_role and (no_ping_users := ", ".join(str(x) for x in msg.mentions if x != no_ping_role)):
+            await msg.reply(embed="https://media.tenor.com/kJhT6VC2tzEAAAAC/pings-off-reply-pings-off.gif")
+            await msg.author.timeout(timedelta(seconds=5), reason=f"Pinged {no_ping_users}")
 
         embeds = []
         if reference_tz := await db.find_one({"user": msg.author.id}):

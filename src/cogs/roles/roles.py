@@ -384,7 +384,7 @@ class BasicRoleSelect(RoleSelect):
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=3,
+        max_values=4,
         options=[
             SelectOption(
                 label="Announcements",
@@ -404,6 +404,12 @@ class BasicRoleSelect(RoleSelect):
                 value="805878418225889280",
                 description="Get informed of RP Events, Missions and Storylines.",
             ),
+            SelectOption(
+                label="Don't Ping Me!",
+                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
+                value="1092498088347844649",
+                description="Warns people not to ping you.",
+            )
         ],
     )
     async def basic_choice(self, itx: Interaction[CustomBot], sct: Select):
