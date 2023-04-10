@@ -277,7 +277,7 @@ class Moderation(commands.Cog):
                 continue
 
             try:
-                ban_data = await channel.guild.fetch_ban(entry.id)
+                ban_data = await channel.guild.fetch_ban(entry)
             except NotFound:
                 continue
 
