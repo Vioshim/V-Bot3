@@ -269,7 +269,7 @@ class Moderation(commands.Cog):
             channel: ForumChannel = await self.bot.fetch_channel(1094921401942687944)
 
         data = await self.bot.aiogoogle.as_service_account(self.check_query)
-        responses = BanAppeal.from_values(data["values"])
+        responses = BanAppeal.from_values(data["values"][1:])
         db = self.bot.mongo_db("Appeal")
 
         for entry in responses - self.responses:
