@@ -267,7 +267,7 @@ class Moderation(commands.Cog):
         else:
             await self.scam_changes()
 
-    @loop(seconds=1)
+    @loop(seconds=5)
     async def check_appeal(self):
         if not self.check_query:
             storage = await self.bot.aiogoogle.discover("sheets", "v4")
