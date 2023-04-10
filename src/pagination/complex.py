@@ -39,13 +39,13 @@ from discord import (
     TextStyle,
     User,
 )
-from src.structures.bot import CustomBot
 from discord.abc import Messageable, Snowflake
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from rapidfuzz import process
 
 from src.pagination.simple import Simple
 from src.pagination.view_base import ArrowEmotes
+from src.structures.bot import CustomBot
 from src.structures.logger import ColoredLogger
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 

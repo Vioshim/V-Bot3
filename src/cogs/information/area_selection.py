@@ -25,9 +25,9 @@ from discord import (
     User,
 )
 from discord.ui import Select, select
-from src.structures.bot import CustomBot
 
 from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import MAP_ELEMENTS, MAP_ELEMENTS2, WHITE_BAR, MapPair
 from src.views.characters_view import CharactersView

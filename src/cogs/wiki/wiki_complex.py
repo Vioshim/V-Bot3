@@ -20,10 +20,10 @@ from typing import Any, Optional
 from discord import Embed, Interaction, InteractionResponse, PartialEmoji, TextStyle
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from motor.motor_asyncio import AsyncIOMotorCollection
-from src.structures.bot import CustomBot
 
 from src.cogs.wiki.wiki import WikiEntry
 from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
 __all__ = ("WikiModal", "WikiComplex")

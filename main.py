@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import asyncio
+from json import loads
 from logging import getLogger, setLoggerClass
 from os import getenv
 
@@ -25,7 +26,7 @@ from apscheduler.schedulers.async_ import AsyncScheduler
 from discord import Streaming
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
-from orjson import loads
+
 from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger

@@ -15,6 +15,7 @@
 
 from discord import Interaction
 from discord.ui import Select, View, select
+
 from src.structures.bot import CustomBot
 from src.utils.etc import LIST_EMOJI
 

@@ -30,10 +30,10 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, View
+from discord.utils import get
 
 from src.cogs.roles.roles import AFKModal, AFKSchedule, BasicRoleSelect, RPModal
 from src.structures.bot import CustomBot
-from discord.utils import get
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import safe_username

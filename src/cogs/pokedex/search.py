@@ -27,12 +27,12 @@ from rapidfuzz import process
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.pagination.complex import Complex
 from src.structures.ability import Ability, UTraitKind
+from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Kind, Nature, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
-from src.structures.bot import CustomBot
 from src.structures.species import (
     CustomMega,
     CustomParadox,
