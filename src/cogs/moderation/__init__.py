@@ -297,7 +297,6 @@ class Moderation(commands.Cog):
 
             base_embed = (
                 Embed(title="Ban Appeal", color=0x2F3136)
-                .set_image(url=WHITE_BAR)
                 .set_author(
                     name=ban_data.user.display_name,
                     icon_url=ban_data.user.display_avatar.url,
