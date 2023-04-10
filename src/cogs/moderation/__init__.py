@@ -182,7 +182,6 @@ class BanAppeal:
     id: int
     ban_reason: str = ""
     unban_reason: str = ""
-    email_address: str = ""
 
     def __post_init__(self):
         self.id = int(self.id)
@@ -303,7 +302,7 @@ class Moderation(commands.Cog):
                     name=ban_data.user.display_name,
                     icon_url=ban_data.user.display_avatar.url,
                 )
-                .set_footer(text="{0.id} | {0.email_address}".format(entry))
+                .set_footer(text=str(entry.id))
             )
 
             ban_e, unban_e = base_embed.copy(), base_embed.copy()
