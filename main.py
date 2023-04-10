@@ -26,7 +26,6 @@ from discord import Streaming
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
 from orjson import loads
-
 from src.structures.bot import CustomBot
 from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
@@ -41,8 +40,15 @@ load_dotenv()
 async def main() -> None:
     """Main Execution function"""
     try:
-        google_kwargs = loads(getenv("GOOGLE_API", "{}"))
-        creds = ServiceAccountCreds(**google_kwargs)
+        google_kwargs = loads(open("service-account-key.json"))
+        creds = ServiceAccountCreds(
+            **google_kwargs,
+            scopes=[
+                "https://www.googleapis.com/auth/documents",
+                "https://www.googleapis.com/auth/drive",
+                "https://www.googleapis.com/auth/spreadsheets.readonly",
+            ],
+        )
         async with (
             Aiogoogle(service_account_creds=creds) as aiogoogle,
             AsyncScheduler() as scheduler,
