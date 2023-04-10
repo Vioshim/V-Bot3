@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import asyncio
-from json import loads
+from orjson import loads
 from logging import getLogger, setLoggerClass
 from os import getenv
 
@@ -41,7 +41,7 @@ load_dotenv()
 async def main() -> None:
     """Main Execution function"""
     try:
-        google_kwargs = loads(open("service-account-key.json"))
+        google_kwargs = loads(open("service-account-key.json", "r").read())
         creds = ServiceAccountCreds(
             **google_kwargs,
             scopes=[
