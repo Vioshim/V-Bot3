@@ -41,6 +41,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ext.commands import Context
+from discord.ext.tasks import loop
 from discord.ui import Button, View, button
 from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
@@ -220,9 +221,11 @@ class Moderation(commands.Cog):
         self.responses: set[BanAppeal] = set()
 
     async def cog_load(self) -> None:
+        self.check_appeal.start()
         self.bot.tree.add_command(self.itx_menu)
 
     async def cog_unload(self) -> None:
+        self.check_appeal.stop()
         self.bot.tree.remove_command(self.itx_menu.name, type=self.itx_menu.type)
 
     async def scam_all(self):
@@ -264,7 +267,15 @@ class Moderation(commands.Cog):
         else:
             await self.scam_changes()
 
+    @loop(seconds=1)
     async def check_appeal(self):
+        if not self.check_query:
+            storage = await self.bot.aiogoogle.discover("sheets", "v4")
+            self.check_query = storage.spreadsheets.values.get(
+                spreadsheetId="1OYI3sLKs9fFIoZ6v7RyM7KE7oFcbSOjffoMXFMVsC8s",
+                range="Form Responses 1",
+            )
+
         if not (channel := self.bot.get_channel(1094921401942687944)):
             channel: ForumChannel = await self.bot.fetch_channel(1094921401942687944)
 
@@ -272,7 +283,11 @@ class Moderation(commands.Cog):
         responses = BanAppeal.from_values(data["values"][1:])
         db = self.bot.mongo_db("Appeal")
 
-        for entry in responses - self.responses:
+        if new_reports := responses - self.responses:
+            self.bot.logger.info(f"New Ban Appeals: {len(new_reports)}")
+            self.responses |= new_reports
+
+        for entry in new_reports:
             if await db.find_one({"id": entry.id}):
                 continue
 
@@ -313,26 +328,10 @@ class Moderation(commands.Cog):
                 upsert=True,
             )
 
-        self.responses.update(responses)
-
     @commands.Cog.listener()
     async def on_ready(self):
         """Initialize the scam urls and schedule each 5 minutes"""
         await self.scam_all()
-
-        aio = self.bot.aiogoogle
-        storage = await aio.discover("sheets", "v4")
-        self.check_query = storage.spreadsheets.values.get(
-            spreadsheetId="1OYI3sLKs9fFIoZ6v7RyM7KE7oFcbSOjffoMXFMVsC8s",
-            range="Form Responses 1",
-        )
-
-        await self.bot.scheduler.add_schedule(
-            self.check_appeal,
-            id="Ban Appeal Check",
-            trigger=IntervalTrigger(seconds=5),
-        )
-
         await self.bot.scheduler.add_schedule(
             self.scam_load,
             id="Nitro Scam List",

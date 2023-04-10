@@ -409,7 +409,7 @@ class BasicRoleSelect(RoleSelect):
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
                 value="1092498088347844649",
                 description="Warns people not to ping you.",
-            )
+            ),
         ],
     )
     async def basic_choice(self, itx: Interaction[CustomBot], sct: Select):
