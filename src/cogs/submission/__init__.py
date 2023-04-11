@@ -73,6 +73,7 @@ from src.views.move_view import MoveView
 __all__ = ("Submission", "setup")
 
 
+ENTRIES = set(MAP_ELEMENTS2) | {740552350703550545, 740567496721039401}
 PLACEHOLDER_EMBED = Embed(
     title="Reminder",
     description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available. </ocs:1017242400705490985> </find:1022520398488817686>",
@@ -727,13 +728,14 @@ class Submission(commands.Cog):
     async def on_thread_create(self, thread: Thread):
         if (
             not isinstance(parent := thread.parent, ForumChannel)
-            or thread.category_id not in MAP_ELEMENTS2
-            and thread.parent_id != 1061008601335992422
+            or thread.category_id not in ENTRIES
             or self.bot.user == thread.owner
         ):
             return
+
         await asyncio.sleep(1)
         msg = await thread.get_partial_message(thread.id).fetch()
+
         if thread.parent_id != 1061008601335992422:
             data = await parent.create_thread(
                 name=thread.name,
@@ -743,51 +745,49 @@ class Submission(commands.Cog):
                 applied_tags=thread.applied_tags,
                 view=View.from_message(msg),
                 reason=str(thread.owner),
+                allowed_mentions=AllowedMentions.none(),
             )
             await data.message.pin()
             await data.thread.add_user(thread.owner)
-            await thread.delete()
-        elif notif_thread := parent.get_thread(1061010425136828628):
-            await msg.pin(reason=f"Thread created by {thread.owner}")
-            embed = PLACEHOLDER_EMBED.copy()
-            embed.color, embed.timestamp = thread.owner.color, thread.created_at
-            embed.set_thumbnail(url=self.bot.user.display_avatar)
-            embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
-            await thread.send(embed=embed)
-            w = await self.bot.webhook(thread)
+            return await thread.delete()
 
-            embed = Embed(
-                title=thread.name,
-                description=msg.content,
-                color=thread.owner.color,
-                timestamp=thread.created_at,
-            )
+        await msg.pin(reason=f"Thread created by {thread.owner}")
+        embed = PLACEHOLDER_EMBED.copy()
+        embed.color, embed.timestamp = thread.owner.color, thread.created_at
+        embed.set_thumbnail(url=self.bot.user.display_avatar)
+        embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
+        await thread.send(embed=embed)
+        w = await self.bot.webhook(thread)
 
-            if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
-                embed.set_thumbnail(url=images[0].url)
+        embed = Embed(
+            title=thread.name,
+            description=msg.content,
+            color=thread.owner.color,
+            timestamp=thread.created_at,
+        )
 
-            db = self.bot.mongo_db("RP Search Banner")
-            if item := await db.find_one({"author": thread.owner.id}):
-                embed.set_image(url=item["image"])
+        if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
+            embed.set_thumbnail(url=images[0].url)
 
-            applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
+        db = self.bot.mongo_db("RP Search Banner")
+        if item := await db.find_one({"author": thread.owner.id}):
+            embed.set_image(url=item["image"])
 
-            tags = ", ".join(x.name for x in applied_tags) or None
-            embed.set_footer(text=f"Tags: {tags}")
+        applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
 
-            view = View()
-            view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
-            roles = {o for x in applied_tags if (o := get(thread.guild.roles, name=f"{x.name} RP Search"))}
+        tags = ", ".join(x.name for x in applied_tags) or None
+        embed.set_footer(text=f"Tags: {tags}")
 
-            await w.send(
-                content=", ".join(x.mention for x in roles),
-                allowed_mentions=AllowedMentions(roles=roles),
-                embed=embed,
-                username=safe_username(thread.owner.display_name),
-                avatar_url=thread.owner.display_avatar.url,
-                thread=notif_thread,
-                view=view,
-            )
+        view = View()
+        view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
+
+        await w.send(
+            embed=embed,
+            username=safe_username(thread.owner.display_name),
+            avatar_url=thread.owner.display_avatar.url,
+            thread=Object(id=1061010425136828628),
+            view=view,
+        )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
