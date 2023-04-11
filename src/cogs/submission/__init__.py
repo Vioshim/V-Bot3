@@ -46,7 +46,7 @@ from discord import (
 from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import MISSING, find, get
-from rapidfuzz import process
+from rapidfuzz import fuzz, process
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import (
@@ -700,12 +700,12 @@ class Submission(commands.Cog):
         attachments = message.attachments
         for msg in sorted(messages, key=lambda x: x.id):
             if data := TUPPER_REPLY_PATTERN.search(msg.content):
-                text = data.group("content").strip()
+                text = str(data.group("content")).strip()
             else:
                 text = msg.content
 
             if not (
-                (text and (text in message.content or message.content in text))
+                fuzz.WRatio(text, message.content, score_cutoff=95)
                 or (
                     attachments
                     and len(attachments) == len(msg.attachments)
