@@ -62,59 +62,43 @@ __all__ = ("Character", "CharacterArg", "Kind", "Size")
 
 
 class AgeGroup(Enum):
-    Unknown = None, None
-    Child = None, 14
-    Adolescent = 14, 25
-    Adult = 25, 50
-    Elderly = 50, 100
-    Ancient = 100, None
-
-    @property
-    def key(self) -> tuple[int, int]:
-        a, b = self.value
-        return a or 0, b or 0
+    Unknown = 0, "The age is Unknown."
+    Child = 14, "Considered a child."
+    Adolescent = 25, "14 - 24 (Rough equivalent in human years)"
+    Adult = 50, "25 - 49 (Rough equivalent in human years)"
+    Elderly = 100, "50 - 99 (Rough equivalent in human years)"
+    Ancient = 100, "Magic, pokeball from past or lived long enough."
 
     @classmethod
     def parse(cls, item: AgeGroup | Optional[int] | str):
         if isinstance(item, AgeGroup):
             return item
-        if isinstance(item, int) or item is None:
-            return cls.from_number(item)
-        if isinstance(item, str) and (
-            foo := process.extractOne(
+
+        if isinstance(item, str):
+            if item.isdigit():
+                item = int(item)
+            elif foo := process.extractOne(
                 item,
                 cls,
-                processor=lambda x: getattr(x, "name", x),
+                processor=lambda x: x.name if isinstance(x, cls) else x,
                 score_cutoff=85,
-            )
-        ):
-            return foo[0]
+            ):
+                return foo[0]
+
+        if isinstance(item, int) or item is None:
+            return cls.from_number(item)
+
         return cls.Unknown
 
     @classmethod
     def from_number(cls, item: Optional[int]):
-        data = cls.Unknown
-        if item:
-            for x in cls:
-                a, b = x.value
-                a = a or 0
-                b = b or item
-
-                if a <= item < b:
-                    data = x
-        return data
+        base = item or 0
+        return next((x for x in cls if x.value[0] >= base), cls.Ancient)
 
     @property
     def description(self):
-        match self.value:
-            case (None, None):
-                return "The age is Unknown."
-            case (a, None):
-                return "Has lived for long enough."
-            case (None, b):
-                return "Considered a child."
-            case (a, b):
-                return f"{a} - {b - 1} (Rough equivalent in human years)"
+        _, desc = self.value
+        return desc
 
 
 class Kind(Enum):
