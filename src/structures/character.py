@@ -96,6 +96,11 @@ class AgeGroup(Enum):
         return next((x for x in cls if x.value[0] >= base), cls.Ancient)
 
     @property
+    def key(self):
+        value, _ = self.value
+        return value
+
+    @property
     def description(self):
         _, desc = self.value
         return desc
