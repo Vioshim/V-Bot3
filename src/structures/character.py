@@ -74,6 +74,7 @@ class AgeGroup(Enum):
         if isinstance(item, AgeGroup):
             return item
 
+        item = item or 0
         if isinstance(item, str):
             if item.isdigit():
                 item = int(item)
@@ -85,10 +86,7 @@ class AgeGroup(Enum):
             ):
                 return foo[0]
 
-        if isinstance(item, int) or item is None:
-            return cls.from_number(item)
-
-        return cls.Unknown
+        return cls.from_number(item) if isinstance(item, int) else cls.Unknown
 
     @classmethod
     def from_number(cls, item: Optional[int]):
