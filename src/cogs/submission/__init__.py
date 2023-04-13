@@ -74,10 +74,6 @@ __all__ = ("Submission", "setup")
 
 
 ENTRIES = set(MAP_ELEMENTS2) | {740552350703550545, 740567496721039401}
-PLACEHOLDER_EMBED = Embed(
-    title="Reminder",
-    description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available. </ocs:1017242400705490985> </find:1022520398488817686>",
-).set_image(url="https://cdn.discordapp.com/attachments/748384705098940426/1061019025230016602/image.png")
 
 
 def comparison_handler(before: Character, now: Character):
@@ -751,9 +747,19 @@ class Submission(commands.Cog):
             await data.thread.add_user(thread.owner)
             return await thread.delete()
 
+        db = self.bot.mongo_db("RP Search Banner")
+        if item := await db.find_one({"author": thread.owner.id}):
+            image = item["image"]
+        else:
+            image = "https://cdn.discordapp.com/attachments/748384705098940426/1096165342608380054/image.png"
+
         await msg.pin(reason=f"Thread created by {thread.owner}")
-        embed = PLACEHOLDER_EMBED.copy()
+        embed = Embed(
+            title="Reminder",
+            description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available. </ocs:1017242400705490985> </find:1022520398488817686>",
+        )
         embed.color, embed.timestamp = thread.owner.color, thread.created_at
+        embed.set_image(url=image)
         embed.set_thumbnail(url=self.bot.user.display_avatar)
         embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
         await thread.send(embed=embed)
@@ -769,10 +775,7 @@ class Submission(commands.Cog):
         if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
             embed.set_thumbnail(url=images[0].url)
 
-        db = self.bot.mongo_db("RP Search Banner")
-        if item := await db.find_one({"author": thread.owner.id}):
-            embed.set_image(url=item["image"])
-
+        embed.set_image(url=image)
         applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
 
         tags = ", ".join(x.name for x in applied_tags) or None
