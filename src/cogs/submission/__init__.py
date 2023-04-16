@@ -15,6 +15,7 @@
 
 import asyncio
 from contextlib import suppress
+from itertools import zip_longest
 from textwrap import wrap
 from typing import Optional
 
@@ -77,65 +78,47 @@ ENTRIES = set(MAP_ELEMENTS2) | {740552350703550545, 740567496721039401}
 
 
 def comparison_handler(before: Character, now: Character):
-    aux1_new: list[Embed] = []
-    aux2_new: list[Embed] = []
-
-    before_embeds, now_embeds = before.embeds, now.embeds
-
-    if len(before_embeds) != len(now_embeds):
-        if len(before_embeds) == 1:
-            before_embeds.append(Embed())
-        if len(now_embeds) == 1:
-            now_embeds.append(Embed())
-
-    for aux1, aux2 in zip(before_embeds, now_embeds):
+    for aux1, aux2 in zip_longest(before.embeds, now.embeds, fillvalue=Embed()):
         elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
         elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
 
-        e1 = Embed(title=aux1.title, description=aux1.description)
-        e2 = Embed(title=aux2.title, description=aux2.description)
-        e1.set_image(url=WHITE_BAR)
-        e2.set_image(url=WHITE_BAR)
+        e1 = Embed(title=aux1.title, description=aux1.description, color=Color.red())
+        e2 = Embed(title=aux2.title, description=aux2.description, color=Color.brand_green())
 
-        img1 = before.image_url or before.image
-        img2 = now.image_url or now.image
+        if e1.description == e2.description:
+            e1.description = e2.description = None
 
-        if img1 != img2:
-            if isinstance(img1, str):
-                e1.set_image(url=img1)
-            if isinstance(img2, str):
-                e2.set_image(url=img2)
+        if before.image != now.image:
+            e1.set_image(url=before.image)
+            e2.set_image(url=now.image)
+        else:
+            e1.set_image(url=WHITE_BAR)
+            e2.set_image(url=WHITE_BAR)
 
         if aux1.thumbnail != aux2.thumbnail:
-            if aux1.thumbnail:
-                e1.set_thumbnail(url=aux1.thumbnail.url)
-            if aux2.thumbnail:
-                e2.set_thumbnail(url=aux2.thumbnail.url)
+            e1.set_thumbnail(url=aux1.thumbnail)
+            e2.set_thumbnail(url=aux2.thumbnail)
 
         if aux1.footer != aux2.footer:
             e1.set_footer(text=aux1.footer.text, icon_url=aux1.footer.icon_url)
             e2.set_footer(text=aux2.footer.text, icon_url=aux2.footer.icon_url)
 
-        if e1.description == e2.description:
-            e1.description = e2.description = None
-
         for key in set(elem1) | set(elem2):
-            if (v1 := elem1.get(key)) != (v2 := elem2.get(key)):
-                if v1:
-                    v1, i1 = v1
-                    e1.add_field(name=key, value=v1, inline=i1)
-                if v2:
-                    v2, i2 = v2
-                    e2.add_field(name=key, value=v2, inline=i2)
+            value1, inline1 = elem1.get(key, (None, False))
+            value2, inline2 = elem2.get(key, (None, False))
+            if value1 != value2:
+                if value1:
+                    e1.add_field(name=key, value=value1, inline=inline1)
+                if value2:
+                    e2.add_field(name=key, value=value2, inline=inline2)
 
-        if e1 != e2:
+        key1 = e1.title, e1.description, e1.image, e1.thumbnail, e1.footer, e1.fields
+        key2 = e2.title, e2.description, e2.image, e2.thumbnail, e2.footer, e2.fields
+
+        if key1 != key2:
             if e1.title == e2.title:
                 e2.title = None
-            e1.color, e2.color = Color.red(), Color.brand_green()
-            aux1_new.append(e1)
-            aux2_new.append(e2)
-
-    return aux1_new, aux2_new
+            yield e1, e2
 
 
 class Submission(commands.Cog):
@@ -398,7 +381,7 @@ class Submission(commands.Cog):
                             )
 
                         if word == "modified":
-                            for embed1, embed2 in zip(*comparison_handler(before=former, now=oc)):
+                            for embed1, embed2 in comparison_handler(before=former, now=oc):
                                 embeds = [embed1, embed2]
                                 files1, embed1 = await self.bot.embed_raw(embed1, "footer", "thumbnail")
                                 files2, embed2 = await self.bot.embed_raw(embed2, "footer", "thumbnail")
@@ -646,7 +629,7 @@ class Submission(commands.Cog):
         done, pending = await asyncio.wait(
             [
                 asyncio.create_task(
-                    self.bot.wait_for("message", check=checker),
+                    self.bot.wait_for("message", check=checker, timeout=2),
                     name="Message",
                 ),
                 asyncio.create_task(
@@ -656,10 +639,6 @@ class Submission(commands.Cog):
                 asyncio.create_task(
                     self.bot.wait_for("message_delete", check=lambda x: x == message),
                     name="Delete",
-                ),
-                asyncio.create_task(
-                    asyncio.sleep(2),
-                    name="Timeout",
                 ),
             ],
             return_when=asyncio.FIRST_COMPLETED,
@@ -675,7 +654,7 @@ class Submission(commands.Cog):
             return
 
         if not messages:
-            if any(future.get_name() == "Timeout" for future in done):
+            if any(future.get_name() == "Message" for future in done):
                 await self.on_message_tupper(message, message.author)
             return
 
@@ -696,21 +675,16 @@ class Submission(commands.Cog):
         attachments = message.attachments
         for msg in sorted(messages, key=lambda x: x.id):
             if data := TUPPER_REPLY_PATTERN.search(msg.content):
-                text = str(data.group("content")).strip()
+                text = str(data.group("content") or msg.content)
             else:
                 text = msg.content
 
-            if not (
-                fuzz.WRatio(text, message.content, score_cutoff=95)
-                or (
-                    attachments
-                    and len(attachments) == len(msg.attachments)
-                    and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
-                )
+            if fuzz.WRatio(text, message.content, score_cutoff=95) or (
+                attachments
+                and len(attachments) == len(msg.attachments)
+                and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
             ):
-                continue
-
-            await self.on_message_tupper(msg, message.author, kwargs)
+                await self.on_message_tupper(msg, message.author, kwargs)
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
@@ -757,8 +731,9 @@ class Submission(commands.Cog):
         embed = Embed(
             title="Reminder",
             description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available. </ocs:1017242400705490985> </find:1022520398488817686>",
+            color=thread.owner.color,
+            timestamp=thread.created_at,
         )
-        embed.color, embed.timestamp = thread.owner.color, thread.created_at
         embed.set_image(url=image)
         embed.set_thumbnail(url=self.bot.user.display_avatar)
         embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
