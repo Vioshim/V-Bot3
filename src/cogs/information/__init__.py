@@ -61,13 +61,8 @@ from src.cogs.information.perks import CustomPerks
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import (
-    DEFAULT_TIMEZONE,
-    LINK_EMOJI,
-    STICKER_EMOJI,
-    WHITE_BAR,
-)
-from src.utils.functions import message_line, safe_username, name_emoji_from_channel
+from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, STICKER_EMOJI, WHITE_BAR
+from src.utils.functions import message_line, name_emoji_from_channel, safe_username
 
 __all__ = ("Information", "setup")
 

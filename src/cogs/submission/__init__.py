@@ -59,14 +59,8 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import (
-    LINK_EMOJI,
-    MAP_ELEMENTS2,
-    REPLY_EMOJI,
-    SETTING_EMOJI,
-    WHITE_BAR,
-)
-from src.utils.functions import safe_username, name_emoji_from_channel
+from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
+from src.utils.functions import name_emoji_from_channel, safe_username
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
