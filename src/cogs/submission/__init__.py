@@ -513,6 +513,7 @@ class Submission(commands.Cog):
         try:
             name = message.channel.name.replace("»", "")
             emoji, name = name.split("〛")
+            emoji = emoji[0]
         except ValueError:
             emoji, name = SETTING_EMOJI, message.channel.name
         finally:
