@@ -19,6 +19,7 @@ from discord import Embed, Interaction, Message, TextChannel
 from discord.ext.commands import Context
 from discord.utils import remove_markdown
 
+from src.utils.etc import SETTING_EMOJI
 from src.utils.matches import (
     CLYDE,
     DISCORD,
@@ -50,7 +51,19 @@ __all__ = (
     "embed_handler",
     "yaml_handler",
     "safe_username",
+    "name_emoji_from_channel",
 )
+
+
+def name_emoji_from_channel(channel: TextChannel):
+    name = channel.name.replace("»", "")
+    try:
+        emoji, name = name.split("〛", maxsplit=1)
+        emoji = emoji[0]
+    except ValueError:
+        emoji, name = SETTING_EMOJI, name
+    name = name.replace("-", " ").title()
+    return name, emoji
 
 
 def safe_username(text: str):

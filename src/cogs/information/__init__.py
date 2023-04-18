@@ -63,13 +63,11 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import (
     DEFAULT_TIMEZONE,
-    KOFI_EMOJI,
     LINK_EMOJI,
-    SETTING_EMOJI,
     STICKER_EMOJI,
     WHITE_BAR,
 )
-from src.utils.functions import message_line, safe_username
+from src.utils.functions import message_line, safe_username, name_emoji_from_channel
 
 __all__ = ("Information", "setup")
 
@@ -708,17 +706,10 @@ class Information(commands.Cog):
             if text:
                 embed.add_field(name=name, value=text[:1024])
 
-        try:
-            name = channel.name.replace("»", "")
-            emoji, name = name.split("〛")
-        except ValueError:
-            emoji, name = SETTING_EMOJI, channel.name
-        finally:
-            name = name.replace("-", " ").title()
-
         view = View()
         cat_name = getattr(channel.category, "name", "No Category")
         embed.set_footer(text=f"Category: {cat_name}")
+        name, emoji = name_emoji_from_channel(channel)
         view.add_item(Button(emoji=emoji, label=name, url=channel.jump_url))
 
         log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
@@ -765,15 +756,8 @@ class Information(commands.Cog):
             embed.title = f"{embed.title} - Deleted Threads"
             embed.description = threads[:4096]
 
-        try:
-            name = channel.name.replace("»", "")
-            emoji, name = name.split("〛")
-        except ValueError:
-            emoji, name = SETTING_EMOJI, channel.name
-        finally:
-            name = name.replace("-", " ").title()
-
         view = View()
+        name, emoji = name_emoji_from_channel(channel)
         if category := channel.category:
             embed.set_footer(text=f"Category: {category.name}")
             view.add_item(Button(emoji=emoji, label=name, url=category.jump_url))
@@ -864,15 +848,8 @@ class Information(commands.Cog):
         if not condition:
             return
 
-        try:
-            name = after.name.replace("»", "")
-            emoji, name = name.split("〛")
-        except ValueError:
-            emoji, name = SETTING_EMOJI, after.name
-        finally:
-            name = name.replace("-", " ").title()
-
         view = View()
+        name, emoji = name_emoji_from_channel(after)
         view.add_item(Button(emoji=emoji, label=name, url=after.jump_url))
 
         if embed2.title or embed2.description:
@@ -1021,15 +998,8 @@ class Information(commands.Cog):
         if not condition:
             return
 
-        try:
-            name = after.channel.name.replace("»", "")
-            emoji, name = name.split("〛")
-        except ValueError:
-            emoji, name = SETTING_EMOJI, after.channel.name
-        finally:
-            name = name.replace("-", " ").title()
-
         view = View()
+        name, emoji = name_emoji_from_channel(after.channel)
         view.add_item(Button(emoji=emoji, label=name, url=after.jump_url))
 
         log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
@@ -1124,16 +1094,8 @@ class Information(commands.Cog):
             embed.set_image(url=WHITE_BAR)
             embed.set_footer(text=msg.guild.name, icon_url=msg.guild.icon)
 
-            emoji, name = SETTING_EMOJI, msg.channel.name
-            try:
-                name = msg.channel.name.replace("»", "")
-                emoji, name = name.split("〛")
-            except ValueError:
-                emoji, name = SETTING_EMOJI, msg.channel.name
-            finally:
-                name = name.replace("-", " ").title()
-
             view = View()
+            name, emoji = name_emoji_from_channel(msg.channel)
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
             view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
             await w.send(embed=embed, view=view, thread=Object(id=1020153317889953833))
@@ -1333,15 +1295,8 @@ class Information(commands.Cog):
             except HTTPException:
                 continue
 
-        try:
-            name = message.channel.name.replace("»", "")
-            emoji, name = name.split("〛")
-        except ValueError:
-            emoji, name = SETTING_EMOJI, message.channel.name
-        finally:
-            name = name.replace("-", " ").title()
-
         view = View()
+        name, emoji = name_emoji_from_channel(message.channel)
         view.add_item(Button(emoji=emoji, label=name, url=message.jump_url))
 
         username: str = message.author.display_name

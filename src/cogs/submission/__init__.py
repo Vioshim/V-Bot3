@@ -66,7 +66,7 @@ from src.utils.etc import (
     SETTING_EMOJI,
     WHITE_BAR,
 )
-from src.utils.functions import safe_username
+from src.utils.functions import safe_username, name_emoji_from_channel
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
 from src.views.move_view import MoveView
@@ -297,13 +297,7 @@ class Submission(commands.Cog):
                 if not (ch := guild.get_channel_or_thread(oc.location)):
                     ch = await guild.fetch_channel(oc.location)
                 msg = ch.get_partial_message(oc.last_used)
-                try:
-                    name = ch.name.replace("»", "")
-                    emoji, name = name.split("〛")
-                except ValueError:
-                    emoji, name = SETTING_EMOJI, ch.name
-                finally:
-                    name = name.replace("-", " ")
+                name, emoji = name_emoji_from_channel(ch)
                 view.add_item(Button(label=name, emoji=emoji, url=msg.jump_url))
             kwargs["view"] = view
 
@@ -510,16 +504,8 @@ class Submission(commands.Cog):
 
         log_w = await self.bot.webhook(info_channel)
 
-        try:
-            name = message.channel.name.replace("»", "")
-            emoji, name = name.split("〛")
-            emoji = emoji[0]
-        except ValueError:
-            emoji, name = SETTING_EMOJI, message.channel.name
-        finally:
-            name = name.replace("-", " ")
-
         view = View()
+        name, emoji = name_emoji_from_channel(message.channel)
         view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
         if oc_jump_url := oc.jump_url:
             view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.emoji))
