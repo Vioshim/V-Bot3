@@ -1375,6 +1375,7 @@ class CreationOCView(Basic):
             embeds[0].set_image(url="attachment://image.png")
 
         if isinstance(self.oc.image, File):
+            self.oc.image.fp.seek(0)
             files = [self.oc.image]
 
         try:
