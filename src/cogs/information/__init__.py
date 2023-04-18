@@ -162,10 +162,13 @@ class AnnouncementModal(Modal):
 
     async def on_submit(self, interaction: Interaction):
         resp: InteractionResponse = interaction.response
+        embeds: list[Embed] = self.kwargs.get("embeds", [])
         await resp.defer(ephemeral=True, thinking=True)
         webhook: Webhook = await interaction.client.webhook(interaction.channel)
-        if embeds := self.kwargs.get("embeds"):
+
+        if embeds:
             embeds[0].title = self.thread_name.value
+            embeds[0].set_author(name=interaction.user.display_name, icon_url=interaction.user.avatar)
 
         msg = await webhook.send(**self.kwargs, allowed_mentions=AllowedMentions(everyone=True, roles=True), wait=True)
 
