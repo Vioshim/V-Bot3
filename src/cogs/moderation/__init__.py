@@ -16,24 +16,20 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass
 from datetime import timedelta
 from re import MULTILINE, compile
 from typing import Optional
 
 from aiohttp import ClientResponseError
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
 from discord import (
     AllowedMentions,
     DiscordException,
     Embed,
-    ForumChannel,
     Interaction,
     InteractionResponse,
     Member,
     Message,
-    NotFound,
     Role,
     TextChannel,
     User,
@@ -46,6 +42,7 @@ from discord.ui import Button, View, button
 from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
 
+from src.cogs.moderation.appeals import BanAppeal, ModAppeal
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import WHITE_BAR
@@ -177,26 +174,6 @@ class Meeting(View):
         await self.message.edit(embed=self.embed, view=None)
 
 
-@dataclass(slots=True)
-class BanAppeal:
-    id: int
-    ban_reason: str = ""
-    unban_reason: str = ""
-
-    def __post_init__(self):
-        self.id = int(self.id)
-
-    def __hash__(self):
-        return self.id >> 22
-
-    def __eq__(self, other):
-        return isinstance(other, BanAppeal) and self.id == other.id
-
-    @classmethod
-    def from_values(cls, data: list[list[str]]):
-        return {cls(*i[1:]) for i in data if i}
-
-
 class Moderation(commands.Cog):
     """This is a standard moderation Cog"""
 
@@ -216,15 +193,18 @@ class Moderation(commands.Cog):
             callback=self.vote_user,
             guild_ids=guild_ids,
         )
-        self.check_query = None
-        self.responses: set[BanAppeal] = set()
+        self.check_ban_query = None
+        self.ban_responses: set[BanAppeal] = set()
+        self.mod_responses: set[ModAppeal] = set()
 
     async def cog_load(self) -> None:
-        self.check_appeal.start()
+        self.check_ban_appeal.start()
+        self.check_mod_appeal.start()
         self.bot.tree.add_command(self.itx_menu)
 
     async def cog_unload(self) -> None:
-        self.check_appeal.stop()
+        self.check_ban_appeal.stop()
+        self.check_mod_appeal.stop()
         self.bot.tree.remove_command(self.itx_menu.name, type=self.itx_menu.type)
 
     async def scam_all(self):
@@ -266,65 +246,13 @@ class Moderation(commands.Cog):
         else:
             await self.scam_changes()
 
-    @loop(seconds=5)
-    async def check_appeal(self):
-        if not self.check_query:
-            storage = await self.bot.aiogoogle.discover("sheets", "v4")
-            self.check_query = storage.spreadsheets.values.get(
-                spreadsheetId="1OYI3sLKs9fFIoZ6v7RyM7KE7oFcbSOjffoMXFMVsC8s",
-                range="Form Responses 1",
-            )
+    @loop(seconds=2)
+    async def check_ban_appeal(self):
+        await BanAppeal.appeal_check(self.bot, self.ban_responses)
 
-        if not (channel := self.bot.get_channel(1094921401942687944)):
-            channel: ForumChannel = await self.bot.fetch_channel(1094921401942687944)
-
-        data = await self.bot.aiogoogle.as_service_account(self.check_query)
-        responses = BanAppeal.from_values(data["values"][1:])
-        db = self.bot.mongo_db("Appeal")
-
-        if new_reports := responses - self.responses:
-            self.bot.logger.info(f"New Ban Appeals: {len(new_reports)}")
-            self.responses |= new_reports
-
-        for entry in new_reports:
-            if await db.find_one({"id": entry.id}):
-                continue
-
-            try:
-                ban_data = await channel.guild.fetch_ban(entry)
-            except NotFound:
-                continue
-
-            base_embed = (
-                Embed(title="Ban Appeal", color=0x2F3136)
-                .set_author(
-                    name=ban_data.user.display_name,
-                    icon_url=ban_data.user.display_avatar.url,
-                )
-                .set_footer(text=str(entry.id))
-            )
-
-            ban_e, unban_e = base_embed.copy(), base_embed.copy()
-
-            ban_e.title = "Please briefly describe the reason for your ban from the Discord server."
-            ban_e.description = entry.ban_reason
-
-            unban_e.title = "Why do you believe your ban should be lifted?"
-            unban_e.description = entry.unban_reason
-
-            file = await ban_data.user.display_avatar.with_size(4096).to_file()
-            tdata = await channel.create_thread(
-                name=str(ban_data.user),
-                content=f"Audit Logs' ban reason: {ban_data.reason or 'No Reason Provided.'}",
-                embeds=[ban_e, unban_e],
-                file=file,
-            )
-            await tdata.message.pin()
-            await db.replace_one(
-                {"id": entry.id},
-                {"id": entry.id, "thread": tdata.thread.id},
-                upsert=True,
-            )
+    @loop(seconds=2)
+    async def check_mod_appeal(self):
+        await ModAppeal.appeal_check(self.bot, self.mod_responses)
 
     @commands.Cog.listener()
     async def on_ready(self):
