@@ -41,10 +41,6 @@ class Appeal:
     def from_values(cls, data: list[list[str]]):
         return {cls(*i[1:]) for i in data if i}
 
-    @property
-    def embeds(self):
-        return [Embed(title=type(self).__name__, color=0x2F3136).set_footer(text=str(self.id))]
-
 
 @dataclass(slots=True)
 class BanAppeal(Appeal):
