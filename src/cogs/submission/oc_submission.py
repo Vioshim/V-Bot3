@@ -1380,6 +1380,7 @@ class CreationOCView(Basic):
                 files = [self.oc.image]
             except ValueError:
                 self.oc.image = None
+                embeds[0].set_image(url="attachment://image.png")
                 self.progress.discard(ImageField.name)
 
         try:
@@ -1388,9 +1389,6 @@ class CreationOCView(Basic):
                 # message = message.channel.get_partial_message(message.id)
                 try:
                     m = await message.edit(embeds=embeds, view=self, attachments=files)
-                except ValueError:
-                    embeds[0].set_image(url="attachment://image.png")
-                    m = await message.edit(embeds=embeds, view=self)
                 except DiscordException:
                     m = await itx.edit_original_response(embeds=embeds, view=self, attachments=files)
             else:
