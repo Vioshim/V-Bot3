@@ -1375,8 +1375,12 @@ class CreationOCView(Basic):
             embeds[0].set_image(url="attachment://image.png")
 
         if isinstance(self.oc.image, File):
-            self.oc.image.fp.seek(0)
-            files = [self.oc.image]
+            try:
+                self.oc.image.fp.seek(0)
+                files = [self.oc.image]
+            except ValueError:
+                self.oc.image = None
+                self.progress.discard(ImageField.name)
 
         try:
             if resp.is_done() and (message := self.message or itx.message):
