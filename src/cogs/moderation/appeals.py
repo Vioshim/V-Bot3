@@ -149,7 +149,11 @@ class ModAppeal(Appeal):
                 try:
                     member = await channel.guild.fetch_member(entry.id)
                 except NotFound:
-                    continue
+                    return await db.replace_one(
+                        {"id": entry.id},
+                        {"id": entry.id, "thread": None},
+                        upsert=True,
+                    )
 
             if member.guild_permissions.manage_guild:
                 continue
