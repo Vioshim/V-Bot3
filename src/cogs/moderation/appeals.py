@@ -24,7 +24,7 @@ from discord.utils import get
 from src.structures.bot import CustomBot
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, unsafe_hash=True)
 class Appeal:
     id: int = 0
 
@@ -42,7 +42,7 @@ class Appeal:
         return {cls(*i[1:]) for i in data if i}
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, unsafe_hash=True)
 class BanAppeal(Appeal):
     ban_reason: str = ""
     unban_reason: str = ""
@@ -115,7 +115,7 @@ class BanAppeal(Appeal):
                 )
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, unsafe_hash=True)
 class ModAppeal(Appeal):
     previous_experience: str = ""
     handling_disrespect: str = ""
