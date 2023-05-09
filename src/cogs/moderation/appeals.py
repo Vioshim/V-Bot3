@@ -148,10 +148,10 @@ class ModAppeal(Appeal):
             )
 
             data = await bot.aiogoogle.as_service_account(query)
-            responses = ModAppeal.from_values(data["values"][1:])
+            new_responses = ModAppeal.from_values(data["values"][1:])
             db = bot.mongo_db("Mod Appeal")
 
-            if new_reports := responses - responses:
+            if new_reports := new_responses - responses:
                 bot.logger.info(f"New Mod Applications: {len(new_reports)}")
                 responses |= new_reports
 
