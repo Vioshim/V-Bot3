@@ -60,10 +60,10 @@ class BanAppeal(Appeal):
             )
 
             data = await bot.aiogoogle.as_service_account(query)
-            responses = BanAppeal.from_values(data["values"][1:])
+            new_responses = BanAppeal.from_values(data["values"][1:])
             db = bot.mongo_db("Ban Appeal")
 
-            if new_reports := responses - responses:
+            if new_reports := new_responses - responses:
                 bot.logger.info(f"New Ban Appeals: {len(new_reports)}")
                 responses |= new_reports
 
@@ -154,9 +154,6 @@ class ModAppeal(Appeal):
                         {"id": entry.id, "thread": None},
                         upsert=True,
                     )
-
-            if member.guild_permissions.manage_guild:
-                continue
 
             base_embed = (
                 Embed(

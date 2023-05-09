@@ -246,11 +246,11 @@ class Moderation(commands.Cog):
         else:
             await self.scam_changes()
 
-    @loop(seconds=2)
+    @loop(minutes=1)
     async def check_ban_appeal(self):
         await BanAppeal.appeal_check(self.bot, self.ban_responses)
 
-    @loop(seconds=2)
+    @loop(minutes=1)
     async def check_mod_appeal(self):
         await ModAppeal.appeal_check(self.bot, self.mod_responses)
 
