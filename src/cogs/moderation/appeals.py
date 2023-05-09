@@ -141,7 +141,7 @@ class ModAppeal(Appeal):
 
         storage = await bot.aiogoogle.discover("sheets", "v4")
         query = storage.spreadsheets.values.get(
-            spreadsheetId="1RuJJwh-GH9AwWc0PJzpheAF13oatP9MgAFUAB-LrNuM",
+            spreadsheetId="19KUAlatwWoFcNB7fxS4lYa-sySrsBpJ50OfRxCy1R4E",
             range="Form Responses 1",
         )
 
