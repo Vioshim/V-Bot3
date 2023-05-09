@@ -31,12 +31,6 @@ class Appeal:
     def __post_init__(self):
         self.id = int(self.id)
 
-    def __hash__(self):
-        return self.id >> 22
-
-    def __eq__(self, other: Appeal):
-        return isinstance(other, Appeal) and self.id == other.id
-
     @classmethod
     def from_values(cls, data: list[list[str]]):
         return {cls(*i[1:]) for i in data if i}
@@ -46,9 +40,6 @@ class Appeal:
 class BanAppeal(Appeal):
     ban_reason: str = ""
     unban_reason: str = ""
-
-    def __eq__(self, other: BanAppeal):
-        return self.id == other.id if isinstance(other, BanAppeal) else NotImplemented
 
     @classmethod
     async def appeal_check(cls, bot: CustomBot, responses: set[BanAppeal] = None):
@@ -125,9 +116,6 @@ class ModAppeal(Appeal):
     handling_biases: str = ""
     handling_lore: str = ""
     skills: str = ""
-
-    def __eq__(self, other: ModAppeal):
-        return self.id == other.id if isinstance(other, ModAppeal) else NotImplemented
 
     @classmethod
     async def appeal_check(cls, bot: CustomBot, responses: set[ModAppeal] = None):
