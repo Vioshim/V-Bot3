@@ -132,70 +132,68 @@ class ModAppeal(Appeal):
     @classmethod
     async def appeal_check(cls, bot: CustomBot, responses: set[ModAppeal] = None):
         responses = set() if responses is None else responses
+        if not (channel := bot.get_channel(1094921401942687944)):
+            channel: ForumChannel = await bot.fetch_channel(1094921401942687944)
 
-        with suppress(Exception):
-            if not (channel := bot.get_channel(1094921401942687944)):
-                channel: ForumChannel = await bot.fetch_channel(1094921401942687944)
+        applied_tags = []
+        if tag := get(channel.available_tags, name="Mod Application"):
+            applied_tags.append(tag)
 
-            applied_tags = []
-            if tag := get(channel.available_tags, name="Mod Application"):
-                applied_tags.append(tag)
+        storage = await bot.aiogoogle.discover("sheets", "v4")
+        query = storage.spreadsheets.values.get(
+            spreadsheetId="1RuJJwh-GH9AwWc0PJzpheAF13oatP9MgAFUAB-LrNuM",
+            range="Form Responses 1",
+        )
 
-            storage = await bot.aiogoogle.discover("sheets", "v4")
-            query = storage.spreadsheets.values.get(
-                spreadsheetId="1RuJJwh-GH9AwWc0PJzpheAF13oatP9MgAFUAB-LrNuM",
-                range="Form Responses 1",
+        data = await bot.aiogoogle.as_service_account(query)
+        new_responses = ModAppeal.from_values(data["values"][1:])
+        db = bot.mongo_db("Mod Appeal")
+
+        if new_reports := new_responses - responses:
+            bot.logger.info(f"New Mod Applications: {len(new_reports)}")
+            responses |= new_reports
+
+        for entry in new_reports:
+            if await db.find_one({"id": entry.id}):
+                continue
+
+            if not (member := channel.guild.get_member(entry.id)):
+                try:
+                    member = await channel.guild.fetch_member(entry.id)
+                except NotFound:
+                    continue
+
+            if member.guild_permissions.manage_guild:
+                continue
+
+            base_embed = (
+                Embed(
+                    title="Mod Application",
+                    color=member.color,
+                    description="\n".join(x.mention for x in member.roles),
+                    timestamp=member.joined_at,
+                )
+                .set_author(name=member.display_name, icon_url=member.display_avatar)
+                .set_footer(text=str(entry.id))
             )
 
-            data = await bot.aiogoogle.as_service_account(query)
-            new_responses = ModAppeal.from_values(data["values"][1:])
-            db = bot.mongo_db("Mod Appeal")
+            file = await member.display_avatar.with_size(4096).to_file()
 
-            if new_reports := new_responses - responses:
-                bot.logger.info(f"New Mod Applications: {len(new_reports)}")
-                responses |= new_reports
+            tdata = await channel.create_thread(
+                name=str(member),
+                content=f"Mod application from {member.mention}",
+                embed=base_embed,
+                file=file,
+                applied_tags=applied_tags,
+            )
+            await tdata.message.pin()
 
-            for entry in new_reports:
-                if await db.find_one({"id": entry.id}):
-                    continue
+            for title, answer in zip(data["values"][0][1:], astuple(entry)[1:]):
+                base_embed.title, base_embed.description = title, str(answer or "No Answer Provided.")[:4000]
+                await tdata.thread.send(embed=base_embed)
 
-                if not (member := channel.guild.get_member(entry.id)):
-                    try:
-                        member = await channel.guild.fetch_member(entry.id)
-                    except NotFound:
-                        continue
-
-                if member.guild_permissions.manage_guild:
-                    continue
-
-                base_embed = (
-                    Embed(
-                        title="Mod Application",
-                        color=member.color,
-                        description="\n".join(x.mention for x in member.roles),
-                        timestamp=member.joined_at,
-                    )
-                    .set_author(name=member.display_name, icon_url=member.display_avatar)
-                    .set_footer(text=str(entry.id))
-                )
-
-                file = await member.display_avatar.with_size(4096).to_file()
-
-                tdata = await channel.create_thread(
-                    name=str(member),
-                    content=f"Mod application from {member.mention}",
-                    embed=base_embed,
-                    file=file,
-                    applied_tags=applied_tags,
-                )
-                await tdata.message.pin()
-
-                for title, answer in zip(data["values"][0][1:], astuple(entry)[1:]):
-                    base_embed.title, base_embed.description = title, str(answer or "No Answer Provided.")[:4000]
-                    await tdata.thread.send(embed=base_embed)
-
-                await db.replace_one(
-                    {"id": entry.id},
-                    {"id": entry.id, "thread": tdata.thread.id},
-                    upsert=True,
-                )
+            await db.replace_one(
+                {"id": entry.id},
+                {"id": entry.id, "thread": tdata.thread.id},
+                upsert=True,
+            )
