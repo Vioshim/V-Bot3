@@ -381,7 +381,7 @@ class Species:
         item = value.copy()
         for k, v in {
             "mega": CustomMega,
-            "ub": UltraBeast,
+            "ub": CustomUltraBeast,
             "paradox": CustomParadox,
             "base": Variant,
         }.items():
