@@ -98,43 +98,47 @@ class Roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
-        member = payload.member
         if not all(
             (
                 payload.guild_id,
                 str(payload.emoji) == "\N{PUBLIC ADDRESS LOUDSPEAKER}",
-                not member.bot,
+                not payload.member.bot,
             )
         ):
             return
 
         db = self.bot.mongo_db("Roleplayers")
         if item := await db.find_one({"id": payload.message_id, "server": payload.guild_id}):
-            guild = member.guild
+            guild = payload.member.guild
             if thread := guild.get_thread(payload.channel_id):
                 msg = thread.get_partial_message(payload.message_id)
                 await msg.remove_reaction(emoji=payload.emoji, member=payload.member)
-            webhook = await self.bot.webhook(1061008601335992422, reason="Ping")
-            view = View()
-            url = f"https://discord.com/channels/{payload.guild_id}/{payload.message_id}"
-            view.add_item(Button(label="Your OCs", url=url))
-            if item2 := await db.find_one({"user": member.id, "server": payload.guild_id}):
-                url = f"https://discord.com/channels/{payload.guild_id}/{item2['id']}"
-                view.add_item(Button(label="User's OCs", url=url))
 
-            if (author := guild.get_member(item["user"])) and author != member:
+            if (author := guild.get_member(item["user"])) and author != payload.member:
+                registered = get(guild.roles, name="Registered")
+                if registered and get(payload.member.roles, name="Moderation") and registered not in author.roles:
+                    return await author.add_roles(registered, reason=str(payload.member))
+
+                webhook = await self.bot.webhook(1061008601335992422, reason="Ping")
+                view = View()
+                url = f"https://discord.com/channels/{payload.guild_id}/{payload.message_id}"
+                view.add_item(Button(label="Your OCs", url=url))
+                if item2 := await db.find_one({"user": payload.member.id, "server": payload.guild_id}):
+                    url = f"https://discord.com/channels/{payload.guild_id}/{item2['id']}"
+                    view.add_item(Button(label="User's OCs", url=url))
+
                 embed = Embed(
                     title=f"Hello {author.display_name}",
-                    description=f"{member.display_name} is interested on Rping with your characters.",
-                    color=member.color,
+                    description=f"{payload.member.display_name} is interested on Rping with your characters.",
+                    color=payload.member.color,
                 )
                 embed.set_image(url=WHITE_BAR)
                 embed.set_footer(text=guild.name, icon_url=guild.icon)
                 await webhook.send(
-                    content=f"{author.mention} pinged by {member.mention}",
-                    allowed_mentions=AllowedMentions(users=[author, member]),
-                    avatar_url=member.display_avatar.url,
-                    username=safe_username(member.display_name),
+                    content=f"{author.mention} pinged by {payload.member.mention}",
+                    allowed_mentions=AllowedMentions(users=[author, payload.member]),
+                    avatar_url=payload.member.display_avatar.url,
+                    username=safe_username(payload.member.display_name),
                     embed=embed,
                     view=view,
                     thread=Object(id=1061010425136828628),
