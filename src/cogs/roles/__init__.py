@@ -103,15 +103,15 @@ class Roles(commands.Cog):
     async def on_member_update(self, before: Member, after: Member):
         roles = set(before.roles) ^ set(after.roles)
         if roles and (no_ping_role := get(roles, id=1092498088347844649)):
-            members_text = " ".join(str(x.id) for x in no_ping_role.members)
+            members_text = " ".join(str(x.id) for x in sorted(no_ping_role.members, key=lambda x: x.id))
             rule = await after.guild.fetch_automod_rule(1110410673164390532)
             regex_patterns = [f"<@({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text)]
-            mod_role = get(after.guild.roles, name="Moderation")
-            await rule.edit(
-                trigger=AutoModTrigger(regex_patterns=regex_patterns),
-                exempt_roles=[mod_role] if mod_role else [],
-                enabled=True,
-            )
+            if rule.trigger.regex_patterns != regex_patterns:
+                await rule.edit(
+                    trigger=AutoModTrigger(
+                        regex_patterns=regex_patterns,
+                    ),
+                )
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
