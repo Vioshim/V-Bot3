@@ -105,7 +105,7 @@ class Roles(commands.Cog):
         if roles and (no_ping_role := get(roles, id=1092498088347844649)):
             members_text = " ".join(str(x.id) for x in sorted(no_ping_role.members, key=lambda x: x.id))
             rule = await after.guild.fetch_automod_rule(1110410673164390532)
-            regex_patterns = [f"<@({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text)]
+            regex_patterns = [f"<@({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text) if line]
             if rule.trigger.regex_patterns != regex_patterns:
                 await rule.edit(
                     trigger=AutoModTrigger(
