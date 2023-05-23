@@ -14,11 +14,13 @@
 
 
 from datetime import datetime, time, timedelta, timezone
+from textwrap import TextWrapper
 from typing import Optional
 from urllib.parse import quote_plus
 
 from discord import (
     AllowedMentions,
+    AutoModTrigger,
     Embed,
     Interaction,
     Member,
@@ -51,6 +53,7 @@ class Roles(commands.Cog):
             callback=self.check_afk,
             guild_ids=[719343092963999804],
         )
+        self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
 
     async def cog_load(self):
         self.bot.tree.add_command(self.itx_menu1)
@@ -95,6 +98,20 @@ class Roles(commands.Cog):
         msg = channel.get_partial_message(1086478795520872478)
         await msg.edit(view=BasicRoleSelect(timeout=None))
         self.bot.logger.info("Finished loading Self Roles")
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: Member, after: Member):
+        roles = set(before.roles) ^ set(after.roles)
+        if roles and (no_ping_role := get(roles, id=1092498088347844649)):
+            members_text = " ".join(str(x.id) for x in no_ping_role.members)
+            rule = await after.guild.fetch_automod_rule(1110410673164390532)
+            regex_patterns = [f"<@({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text)]
+            mod_role = get(after.guild.roles, name="Moderation")
+            await rule.edit(
+                trigger=AutoModTrigger(regex_patterns=regex_patterns),
+                exempt_roles=[mod_role] if mod_role else [],
+                enabled=True,
+            )
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
