@@ -698,7 +698,7 @@ class Character:
         def move_parser(x: Move):
             item = self.hidden_power if x.move_id in {237, 851} and self.hidden_power else x.type
             item = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item
-            return f"> [{x.name}] - {item.name} ({x.category.name})".title()
+            return f"* [{x.name}] - {item.name} ({x.category.name})".title()
 
         if moves_text := "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name))):
             c_embed.add_field(name=moveset_title, value=moves_text, inline=False)
