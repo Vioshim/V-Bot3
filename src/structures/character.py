@@ -977,7 +977,7 @@ class Character:
                 a1 = Ability.get(name="Beast Boost")
                 if a1 in self.abilities:
                     name = "Fakemon UB"
-                elif self.species.species_evolves_from:
+                elif self.species and self.species.species_evolves_from:
                     name = "Fakemon Evo"
             case Kind.Variant | Kind.CustomParadox:
                 a1 = Ability.get(name="Protosynthesis")
