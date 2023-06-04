@@ -89,7 +89,7 @@ class BanAppeal(Appeal):
                 tdata = await channel.create_thread(
                     name=str(ban_data.user),
                     content=f"Audit Logs' ban reason: {ban_data.reason or 'No Reason Provided.'}",
-                    embeds=base_embed,
+                    embed=base_embed,
                     file=file,
                     applied_tags=applied_tags,
                 )
