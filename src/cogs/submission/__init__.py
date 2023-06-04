@@ -708,6 +708,7 @@ class Submission(commands.Cog):
         else:
             image = "https://cdn.discordapp.com/attachments/748384705098940426/1096165342608380054/image.png"
 
+        ping_role = thread.guild.get_role(1110599604090716242)
         await msg.pin(reason=f"Thread created by {thread.owner}")
         embed = Embed(
             title="Reminder",
@@ -742,6 +743,8 @@ class Submission(commands.Cog):
 
         await w.send(
             embed=embed,
+            content=ping_role.mention,
+            allowed_mentions=AllowedMentions(roles=[ping_role]),
             username=safe_username(thread.owner.display_name),
             avatar_url=thread.owner.display_avatar.url,
             thread=Object(id=1061010425136828628),

@@ -66,7 +66,7 @@ async def main() -> None:
                 aiogoogle=aiogoogle,
             ) as bot,
         ):
-            await bot.login(getenv("DISCORD_TOKEN"))
+            await bot.login(getenv("DISCORD_TOKEN", ""))
             await bot.connect(reconnect=True)
     except Exception as e:
         logger.critical("An exception occurred while trying to connect.", exc_info=e)
