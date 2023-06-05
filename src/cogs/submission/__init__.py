@@ -566,6 +566,7 @@ class Submission(commands.Cog):
                 allowed_mentions=AllowedMentions.none(),
                 view=view if len(text) == index + 1 else MISSING,
                 wait=True,
+                silent=True,
             )
 
             await db.insert_one(
