@@ -220,18 +220,9 @@ class Submission(commands.Cog):
                             member = await self.bot.fetch_user(member.id)
 
                 if isinstance(member, (User, Member)):
-                    roles: list[Role] = getattr(member, "roles", [])
-                    tags = [
-                        o
-                        for x in map(
-                            lambda x: x.name.removesuffix(" RP Search"),
-                            filter(lambda x: " RP Search" in x.name, roles),
-                        )
-                        if (o := get(channel.available_tags, name=x))
-                    ]
-                    tags.sort(key=lambda x: x.name)
-                    thread = await thread.edit(name=member.display_name, applied_tags=tags[:5], archived=False)
-                    msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
+                    thread = await thread.edit(name=member.display_name, archived=False)
+                    file = await member.display_avatar.with_size(4096).to_file()
+                    msg = await msg.edit(content=member.mention, attachments=[file])
             except DiscordException:
                 thread = None
 
@@ -243,21 +234,12 @@ class Submission(commands.Cog):
                     member = await self.bot.fetch_user(member.id)
 
             if isinstance(member, (User, Member)):
-                roles: list[Role] = getattr(member, "roles", [])
-                tags = [
-                    o
-                    for x in map(
-                        lambda x: x.name.removesuffix(" RP Search"),
-                        filter(lambda x: " RP Search" in x.name, roles),
-                    )
-                    if (o := get(channel.available_tags, name=x))
-                ]
-                tags.sort(key=lambda x: x.name)
+                file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
-                    content=f"{member.mention}\n{member.display_avatar.url}",
-                    applied_tags=tags[:5],
-                    allowed_mentions=AllowedMentions(users=True),
+                    content=member.mention,
+                    file=file,
+                    allowed_mentions=AllowedMentions(users=[member]),
                 )
                 thread = x.thread
                 await db.replace_one(
