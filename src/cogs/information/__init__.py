@@ -906,35 +906,100 @@ class Information(commands.Cog):
             return
         channel = message.channel
 
-        if not (word := channels.get(channel.id)):
-            return
-
-        if message.author.bot:
-            return
-
-        webhook = await self.bot.webhook(channel)
-
-        if message.webhook_id and webhook.id != message.webhook_id:
-            await message.delete(delay=0)
-            return
-
         context = await self.bot.get_context(message)
 
         if context.command:
             return
 
-        self.bot.msg_cache_add(message)
-        kwargs = await self.embed_info(message)
-        if embeds := kwargs.get("embeds", []):
-            embeds[0].title = word
-        del kwargs["view"]
-        view = AnnouncementView(member=message.author, **kwargs)
-        conf_embed = discord.Embed(title=word, color=discord.Colour.blurple(), timestamp=utcnow())
-        conf_embed.set_image(url=WHITE_BAR)
-        conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
-        await message.reply(embed=conf_embed, view=view)
-        await view.wait()
-        await message.delete(delay=0)
+        if word := channels.get(channel.id):
+            if message.author.bot:
+                return
+
+            webhook = await self.bot.webhook(channel)
+
+            if message.webhook_id and webhook.id != message.webhook_id:
+                await message.delete(delay=0)
+                return
+
+            self.bot.msg_cache_add(message)
+            kwargs = await self.embed_info(message)
+            if embeds := kwargs.get("embeds", []):
+                embeds[0].title = word
+            del kwargs["view"]
+            view = AnnouncementView(member=message.author, **kwargs)
+            conf_embed = discord.Embed(title=word, color=discord.Colour.blurple(), timestamp=utcnow())
+            conf_embed.set_image(url=WHITE_BAR)
+            conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
+            await message.reply(embed=conf_embed, view=view)
+            await view.wait()
+            await message.delete(delay=0)
+        else:
+            messages: list[discord.Message] = []
+
+            def checker(m: discord.Message):
+                if m.webhook_id and message.channel == m.channel:
+                    messages.append(m)
+                return False
+
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(
+                        self.bot.wait_for("message", check=checker, timeout=2),
+                        name="Message",
+                    ),
+                    asyncio.create_task(
+                        self.bot.wait_for("message_edit", check=lambda x, _: x == message),
+                        name="Edit",
+                    ),
+                    asyncio.create_task(
+                        self.bot.wait_for("message_delete", check=lambda x: x == message),
+                        name="Delete",
+                    ),
+                ],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+
+            for future in pending:
+                future.cancel()
+
+            for future in done:
+                future.exception()
+
+            if any(future.get_name() == "Edit" for future in done):
+                return
+
+            attachments = message.attachments
+            w = await self.bot.webhook(1020151767532580934, reason="Message delete logging")
+            for msg in sorted(messages, key=lambda x: x.id):
+                if data := TUPPER_REPLY_PATTERN.search(msg.content):
+                    text = str(data.group("content") or msg.content)
+                else:
+                    text = msg.content
+
+                if (
+                    fuzz.WRatio(text, message.content, score_cutoff=95)
+                    or text in message.content
+                    or (
+                        attachments
+                        and len(attachments) == len(msg.attachments)
+                        and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+                    )
+                ):
+                    self.bot.msg_cache_add(message)
+                    if kwargs := await self.embed_info(msg):
+                        if not msg.webhook_id:
+                            kwargs["content"] = msg.author.mention
+
+                        if kwargs["view"].children:
+                            kwargs["view"].children[0].url = msg.jump_url
+
+                        await w.send(
+                            **kwargs,
+                            thread=discord.Object(id=1116351113566892123),
+                            allowed_mentions=discord.AllowedMentions.none(),
+                        )
+
+                        break
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -1036,40 +1101,15 @@ class Information(commands.Cog):
         ):
             return
 
-        def check(m: discord.Message):
-            if data := TUPPER_REPLY_PATTERN.search(m.content):
-                text = str(data.group("content") or m.content)
-            else:
-                text = m.content
-
-            return (
-                m.channel.id == msg.channel.id
-                and m.webhook_id
-                and (
-                    (m.content and (fuzz.WRatio(text, m.content, score_cutoff=95) or text in m.content))
-                    or (
-                        msg.attachments
-                        and len(m.attachments) == len(msg.attachments)
-                        and all(x.filename == y.filename for x, y in zip(msg.attachments, m.attachments))
-                    )
-                )
-            )
-
         if kwargs := await self.embed_info(msg):
-            thread = discord.Object(id=1020153332481937518)
-            try:
-                m = await self.bot.wait_for("message", check=check, timeout=2)
-                if kwargs["view"].children:
-                    kwargs["view"].children[0].url = m.jump_url
-            except asyncio.TimeoutError:
-                thread = discord.Object(id=1116351113566892123)
-
-            if msg.webhook_id:
-                thread = discord.Object(id=1020153332481937518)
-            else:
+            if not msg.webhook_id:
                 kwargs["content"] = msg.author.mention
 
-            await w.send(**kwargs, thread=thread, allowed_mentions=discord.AllowedMentions.none())
+            await w.send(
+                **kwargs,
+                thread=discord.Object(id=1116351113566892123),
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
