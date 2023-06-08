@@ -1009,21 +1009,21 @@ class Information(commands.Cog):
         message: Message
             Cached Message
         """
-        if msg.id in self.bot.msg_cache:
-            return
-
         if not msg.guild or msg.guild.id != 719343092963999804:
             return
-
-        w = await self.bot.webhook(1020151767532580934, reason="Message delete logging")
         if (
             not msg.guild
-            or msg.webhook_id == w.id
+            or (msg.application_id == self.bot.user.id and msg.webhook_id)
             or self.bot.user == msg.author
             or msg.author.id == self.bot.owner_id
             or msg.author.id in self.bot.owner_ids
             or msg.channel.name.endswith("-logs")
         ):
+            return
+
+        w = await self.bot.webhook(1020151767532580934, reason="Message delete logging")
+        await asyncio.sleep(1)
+        if msg.id in self.bot.msg_cache:
             return
 
         kwargs = await self.embed_info(msg)
