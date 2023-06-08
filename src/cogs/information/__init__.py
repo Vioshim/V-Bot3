@@ -1056,15 +1056,17 @@ class Information(commands.Cog):
             )
 
         if kwargs := await self.embed_info(msg):
+            thread = discord.Object(id=1020153332481937518)
             try:
                 m = await self.bot.wait_for("message", check=check, timeout=2)
-                thread = discord.Object(id=1020153332481937518)
                 if kwargs["view"].children:
                     kwargs["view"].children[0].url = m.jump_url
             except asyncio.TimeoutError:
                 thread = discord.Object(id=1116351113566892123)
 
-            if not msg.webhook_id:
+            if msg.webhook_id:
+                thread = discord.Object(id=1020153332481937518)
+            else:
                 kwargs["content"] = msg.author.mention
 
             await w.send(**kwargs, thread=thread, allowed_mentions=discord.AllowedMentions.none())
