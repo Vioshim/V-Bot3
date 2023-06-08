@@ -934,7 +934,10 @@ class Submission(commands.Cog):
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
     async def get_ocs(
-        self, itx: Interaction[CustomBot], member: Optional[Member | User], character: Optional[CharacterArg]
+        self,
+        itx: Interaction[CustomBot],
+        member: Optional[Member | User],
+        character: Optional[CharacterArg],
     ):
         """Allows to show characters
 

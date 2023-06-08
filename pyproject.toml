@@ -31,6 +31,8 @@ chronological = "^0.1.1"
 aiogoogle = "^4.5.0"
 dateparser = "^1.1.5"
 pluralkit = "^1.1.1"
+webcolors = "^1.13"
+titlecase = "^2.4"
 
 
 [tool.poetry.dev-dependencies]

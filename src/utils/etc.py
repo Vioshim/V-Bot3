@@ -16,6 +16,7 @@
 from dataclasses import dataclass
 from datetime import timedelta, timezone
 from enum import Enum
+from typing import NamedTuple
 
 from discord import PartialEmoji
 
@@ -39,6 +40,16 @@ __all__ = (
     "KOFI_EMOJI",
     "RTFMPages",
 )
+
+
+class ArrowEmotes(NamedTuple):
+    START = PartialEmoji(name="DoubleArrowLeft", id=1080654556272283739)
+    BACK = PartialEmoji(name="ArrowLeft", id=1080654546461786122)
+    CLOSE = PartialEmoji(name="Stop", id=1080654549062275142)
+    FORWARD = PartialEmoji(name="ArrowRight", id=1080654553927663758)
+    END = PartialEmoji(name="DoubleArrowRight", id=1080654551373324338)
+
+
 REPLY_EMOJI = PartialEmoji(name="IconReply", id=816772114639487057)
 EMOTE_CREATE_EMOJI = PartialEmoji(name="emotecreate", id=460538984263581696)
 EMOTE_REMOVE_EMOJI = PartialEmoji(name="emoteremove", id=460538983965786123)

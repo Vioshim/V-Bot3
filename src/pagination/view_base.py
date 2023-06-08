@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import datetime
-from typing import NamedTuple, Optional, Union
+from typing import Optional
 
 from discord import (
     AllowedMentions,
@@ -33,7 +33,6 @@ from discord import (
     Message,
     MessageReference,
     NotFound,
-    PartialEmoji,
     PartialMessage,
     StickerItem,
     User,
@@ -43,18 +42,10 @@ from discord.abc import Messageable, Snowflake
 from discord.ext.commands import Context
 from discord.ui import Button, View, button
 
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import WHITE_BAR, ArrowEmotes
 from src.utils.functions import embed_modifier, safe_username
 
 __all__ = ("Basic",)
-
-
-class ArrowEmotes(NamedTuple):
-    START = PartialEmoji(name="DoubleArrowLeft", id=972196330808160296)
-    BACK = PartialEmoji(name="ArrowLeft", id=972196330837528606)
-    FORWARD = PartialEmoji(name="ArrowRight", id=972196330892058684)
-    END = PartialEmoji(name="DoubleArrowRight", id=972196330942390372)
-    CLOSE = PartialEmoji(name="Stop", id=972196330795585567)
 
 
 class Basic(View):
@@ -64,7 +55,7 @@ class Basic(View):
         self,
         *,
         target: Optional[Messageable] = None,
-        member: Union[Member, User] = None,
+        member: Optional[Member | User] = None,
         timeout: Optional[float] = 180.0,
         embed: Optional[Embed] = None,
     ):
@@ -160,11 +151,11 @@ class Basic(View):
         embeds: list[Embed] = None,
         file: File = None,
         files: list[File] = None,
-        stickers: list[Union[GuildSticker, StickerItem]] = None,
+        stickers: list[GuildSticker | StickerItem] = None,
         delete_after: float = None,
         nonce: int = None,
         allowed_mentions: AllowedMentions = None,
-        reference: Union[Message, MessageReference, PartialMessage] = None,
+        reference: Optional[Message | MessageReference | PartialMessage] = None,
         mention_author: bool = False,
         username: str = None,
         avatar_url: str = None,

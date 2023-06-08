@@ -5,7 +5,6 @@
 
 > A dynamic tree search tool for wiki purposes
 
-| File              | Description                                     |
-| ----------------- | ----------------------------------------------- |
-| `wiki.py`         | Binary Tree Wiki classes and transform methods. |
-| `wiki_complex.py` | Paginatior Complex for Wiki Trees               |
+| File      | Description                                     |     |
+| --------- | ----------------------------------------------- | --- |
+| `wiki.py` | Binary Tree Wiki classes and transform methods. |     |
