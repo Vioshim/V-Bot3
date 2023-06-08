@@ -24,18 +24,16 @@ from aiohttp import ClientResponseError
 from discord import app_commands
 from discord.abc import GuildChannel
 from discord.ext import commands
-from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import format_dt, get, time_snowflake, utcnow
+from discord.ui import Button, Modal, Select, TextInput, View, select
+from discord.utils import format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import fuzz
 from yaml import dump
 
-from src.cogs.information.area_selection import RegionViewComplex
 from src.cogs.information.perks import CustomPerks
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
-from src.structures.character import Character
-from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, STICKER_EMOJI, WHITE_BAR
+from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
 from src.utils.functions import message_line, name_emoji_from_channel, safe_username
 from src.utils.matches import TUPPER_REPLY_PATTERN
 
@@ -231,79 +229,6 @@ class AnnouncementView(View):
 
         await itx.message.delete(delay=0)
         self.stop()
-
-
-class TicketModal(Modal, title="Ticket"):
-    content = TextInput(
-        label="Content",
-        placeholder="What would you like to comment / report to Staff?",
-        style=discord.TextStyle.paragraph,
-        required=True,
-    )
-
-    async def on_submit(self, itx: discord.Interaction[CustomBot]):
-        """This is a function that creates a thread whenever an user uses it
-
-        Parameters
-        ----------
-        interaction : Interaction
-            Interaction object
-        """
-        await itx.response.defer(ephemeral=True, thinking=True)
-        member: discord.Member = itx.user
-        data = itx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
-        name = data.strftime("%B %d, %Y")
-        webhook = await itx.client.webhook(719343092963999807)
-        thread = await webhook.channel.create_thread(
-            name=name, type=discord.ChannelType.private_thread, invitable=False
-        )
-        embed = discord.Embed(
-            title=f"Ticket {name}"[:256], description=self.content.value, timestamp=data, color=member.color
-        )
-        embed.set_thumbnail(url=member.display_avatar.url)
-
-        msg = await webhook.send(thread=thread, wait=True, embed=embed)
-
-        view = View()
-        view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
-        await itx.followup.send("Ticket created successfully", ephemeral=True, view=view)
-        await thread.add_user(member)
-
-        channel = itx.client.get_partial_messageable(
-            id=1077697010490167308,
-            guild_id=itx.guild.id,
-        )
-
-        await channel.send(embed=embed, view=view)
-        self.stop()
-
-
-class InformationView(View):
-    async def on_error(self, interaction: discord.Interaction[CustomBot], error: Exception, item, /):
-        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
-
-    @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=discord.ButtonStyle.blurple)
-    async def see_map(self, itx: discord.Interaction[CustomBot], _: Button):
-        db = itx.client.mongo_db("Characters")
-        date_value = time_snowflake(itx.created_at - timedelta(days=14))
-        key = {
-            "server": itx.guild_id,
-            "$or": [
-                {"id": {"$gte": date_value}},
-                {"location": {"$gte": date_value}},
-                {"last_used": {"$gte": date_value}},
-            ],
-            "location": {"$type": 18},
-        }
-        if role := get(itx.guild.roles, name="Registered"):
-            key["author"] = {"$in": [x.id for x in role.members]}
-        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-        view = RegionViewComplex(member=itx.user, target=itx, ocs=ocs)
-        await view.simple_send(ephemeral=True)
-
-    @button(label="Make a Ticket", emoji=STICKER_EMOJI, row=1, style=discord.ButtonStyle.blurple)
-    async def create_ticket(self, itx: discord.Interaction[CustomBot], _: Button):
-        await itx.response.send_modal(TicketModal(timeout=None))
 
 
 class Information(commands.Cog):
@@ -1497,10 +1422,6 @@ class Information(commands.Cog):
         async for item in db.find({}):
             view = PollView.from_mongo(item)
             self.bot.add_view(view, message_id=item["id"])
-
-        channel = self.bot.get_partial_messageable(860590339327918100, guild_id=719343092963999804)
-        message = channel.get_partial_message(1056291757517705367)
-        await message.edit(view=InformationView(timeout=None))
 
         self.ready = True
 
