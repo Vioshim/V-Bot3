@@ -24,7 +24,6 @@ from discord import (
     AllowedMentions,
     ButtonStyle,
     Color,
-    DiscordException,
     Embed,
     ForumChannel,
     Guild,
@@ -516,37 +515,11 @@ class RPSearchManage(View):
         custom_id="archive_thread",
         style=ButtonStyle.red,
     )
-    async def conclude(self, itx: Interaction[CustomBot], btn: Button):
-        db = itx.client.mongo_db("RP Search")
-        resp: InteractionResponse = itx.response
+    async def conclude(self, itx: Interaction[CustomBot], _: Button):
         if itx.user.id != self.member_id and not itx.user.guild_permissions.moderate_members:
-            return await resp.send_message(
-                f"Only <@{self.member_id}> can archive it",
-                ephemeral=True,
-            )
-        if "Confirm" not in btn.label:
-            btn.label = f"{btn.label} (Confirm)"
-            return await resp.edit_message(view=self)
-        await resp.pong()
-        if (message := itx.message) and (
-            item := await db.find_one_and_delete(
-                {
-                    "server": itx.guild_id,
-                    "id": message.id,
-                }
-            )
-        ):
-            channel = itx.guild.get_channel(958122815171756042)
-            message = channel.get_partial_message(item["id"])
-            await message.delete(delay=0)
-            if thread := itx.guild.get_thread(item["id"]):
-                message = thread.get_partial_message(item["message"])
-                try:
-                    await message.edit(view=None)
-                except DiscordException:
-                    await message.delete(delay=0)
-
-                await thread.edit(archived=True, locked=True)
+            return await itx.response.send_message(f"Only <@{self.member_id}> can archive it", ephemeral=True)
+        await itx.response.send_message("Archiving thread...", ephemeral=True)
+        await itx.channel.edit(archived=True, locked=True)
 
 
 def time_message(msg: str, s: int):
