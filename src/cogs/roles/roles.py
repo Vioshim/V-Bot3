@@ -684,7 +684,7 @@ class RPModal(Modal):
         )
 
         if isinstance(item := self.to_user, Role):
-            name, reference_name = item.name, item.name
+            name, reference_name = item.name, f"{self.user.display_name}▷{item.name}"
         elif isinstance(item, Member):
             name, reference_name = item.display_name, f"▷{self.to_user.display_name}"
         else:
@@ -718,7 +718,7 @@ class RPModal(Modal):
         for idx, x in enumerate(items[:6]):
             view.add_item(Button(label=x.name[:80], emoji=x.emoji, url=x.jump_url, row=idx // 3))
 
-        cog1.cool_down[item.id] = itx.created_at
+        cog1.cool_down[self.user.id] = itx.created_at
         cog1.role_cool_down[item.id] = itx.created_at
 
         aux_embed = RP_SEARCH_EMBED.copy()

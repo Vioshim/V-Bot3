@@ -32,7 +32,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.utils import get
+from discord.utils import get, snowflake_time
 
 from src.cogs.roles.roles import (
     AFKModal,
@@ -226,6 +226,11 @@ class Roles(commands.Cog):
     async def on_ready(self):
         db = self.bot.mongo_db("RP Search")
         async for item in db.find({}):
+            date = snowflake_time(item["id"])
+            self.cool_down.setdefault(item["member"], date)
+            self.role_cool_down.setdefault(item["role"], date)
+            self.cool_down[item["member"]] = max(self.cool_down[item["member"]], date)
+            self.role_cool_down[item["role"]] = max(self.role_cool_down[item["role"]], date)
             view = RPSearchManage(msg_id=item["id"], member_id=item["member"], ocs=item["ocs"])
             self.bot.add_view(view, message_id=item["id"])
 
