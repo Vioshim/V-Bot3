@@ -986,20 +986,20 @@ class Information(commands.Cog):
                     )
                 ):
                     self.bot.msg_cache_add(message)
-                    if kwargs := await self.embed_info(msg):
-                        if not msg.webhook_id:
-                            kwargs["content"] = msg.author.mention
+                    kwargs = await self.embed_info(msg)
 
-                        if kwargs["view"].children:
-                            kwargs["view"].children[0].url = msg.jump_url
+                    if not msg.webhook_id:
+                        kwargs["content"] = msg.author.mention
 
-                        await w.send(
-                            **kwargs,
-                            thread=discord.Object(id=1116351113566892123),
-                            allowed_mentions=discord.AllowedMentions.none(),
-                        )
+                    if kwargs["view"].children:
+                        kwargs["view"].children[0].url = msg.jump_url
 
-                        break
+                    await w.send(
+                        **kwargs,
+                        thread=discord.Object(id=1020153332481937518),
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
+                    break
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
@@ -1101,15 +1101,16 @@ class Information(commands.Cog):
         ):
             return
 
-        if kwargs := await self.embed_info(msg):
-            if not msg.webhook_id:
-                kwargs["content"] = msg.author.mention
+        kwargs = await self.embed_info(msg)
 
-            await w.send(
-                **kwargs,
-                thread=discord.Object(id=1116351113566892123),
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
+        if not msg.webhook_id:
+            kwargs["content"] = msg.author.mention
+
+        await w.send(
+            **kwargs,
+            thread=discord.Object(id=1116351113566892123),
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
