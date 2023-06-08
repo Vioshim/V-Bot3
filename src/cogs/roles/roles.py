@@ -688,7 +688,7 @@ class RPModal(Modal):
         elif isinstance(item, Member):
             name, reference_name = item.display_name, f"▷{self.to_user.display_name}"
         else:
-            item = itx.guild.get_role(719642423327719434) or self.user
+            item = itx.guild.get_role(1110599604090716242) or self.user
             name, reference_name = "Looking for RP", f"{self.user.display_name}▷"
 
         embed = Embed(

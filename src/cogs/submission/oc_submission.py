@@ -1768,7 +1768,7 @@ class SubmissionView(Basic):
                     }
                 )
             ],
-            to_user=role,
+            to_user=itx.guild.get_role(1110599604090716242),
         )
 
         if role and role not in itx.user.roles:
