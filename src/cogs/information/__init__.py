@@ -1019,7 +1019,7 @@ class Information(commands.Cog):
 
         await w.send(
             **kwargs,
-            thread=discord.Object(id=1116351113566892123),
+            thread=discord.Object(id=1116406003353800744),
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
@@ -1053,12 +1053,13 @@ class Information(commands.Cog):
             return
 
         w = await self.bot.webhook(1020151767532580934, reason="Bulk delete logging")
+        messages = [message_line(x) for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]
 
-        if (messages := [x for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]) and (
+        if messages and (
             paste := await self.bot.m_bin.create_paste(
                 filename=f"{utcnow().strftime('%x')} - {msg.channel}.yaml",
                 content=dump(
-                    data=[*map(message_line, messages)],
+                    data=messages,
                     allow_unicode=True,
                     sort_keys=False,
                 ),
