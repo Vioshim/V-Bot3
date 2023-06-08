@@ -272,6 +272,7 @@ class Basic(View):
         elif isinstance(target, Webhook):
             self.message = await target.send(**data, wait=True)
         else:
+            data.pop("ephemeral", None)
             self.message = await target.send(**data)
 
         return self.message
