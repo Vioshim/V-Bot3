@@ -643,10 +643,14 @@ class Submission(commands.Cog):
             else:
                 text = msg.content
 
-            if fuzz.WRatio(text, message.content, score_cutoff=95) or (
-                attachments
-                and len(attachments) == len(msg.attachments)
-                and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+            if (
+                fuzz.WRatio(text, message.content, score_cutoff=95)
+                or text in message.content
+                or (
+                    attachments
+                    and len(attachments) == len(msg.attachments)
+                    and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+                )
             ):
                 await self.on_message_tupper(msg, message.author, kwargs)
 

@@ -22,6 +22,7 @@ from discord import (
     AllowedMentions,
     AutoModTrigger,
     Embed,
+    ForumChannel,
     Interaction,
     Member,
     Message,
@@ -136,7 +137,9 @@ class Roles(commands.Cog):
                 if registered and get(payload.member.roles, name="Moderation") and registered not in author.roles:
                     return await author.add_roles(registered, reason=str(payload.member))
 
-                webhook = await self.bot.webhook(1061008601335992422, reason="Ping")
+                if not (channel := guild.get_channel(1061008601335992422)):
+                    channel: ForumChannel = await guild.fetch_channel(1061008601335992422)
+
                 view = View()
                 url = f"https://discord.com/channels/{payload.guild_id}/{payload.message_id}"
                 view.add_item(Button(label="Your OCs", url=url))
@@ -151,15 +154,15 @@ class Roles(commands.Cog):
                 )
                 embed.set_image(url=WHITE_BAR)
                 embed.set_footer(text=guild.name, icon_url=guild.icon)
-                await webhook.send(
-                    content=f"{author.mention} pinged by {payload.member.mention}",
-                    allowed_mentions=AllowedMentions(users=[author, payload.member]),
-                    avatar_url=payload.member.display_avatar.url,
-                    username=safe_username(payload.member.display_name),
+                base = await channel.create_thread(
+                    name=f"▷{payload.member.display_name}",
+                    content=f"{author.mention} {payload.member.mention}",
+                    reason=str(payload.member),
                     embed=embed,
                     view=view,
-                    thread=Object(id=1061010425136828628),
+                    allowed_mentions=AllowedMentions(users=[author, payload.member]),
                 )
+                await base.message.pin()
 
     @commands.Cog.listener()
     async def on_message(self, msg: Message):

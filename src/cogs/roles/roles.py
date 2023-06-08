@@ -15,9 +15,9 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, timezone
-from itertools import groupby
+from itertools import chain, groupby
 from time import mktime
-from typing import Iterable
+from typing import Iterable, Optional
 
 from dateparser import parse
 from discord import (
@@ -26,20 +26,17 @@ from discord import (
     Color,
     DiscordException,
     Embed,
+    ForumChannel,
     Guild,
     Interaction,
     InteractionResponse,
     Member,
-    Object,
     Role,
     SelectOption,
     TextStyle,
-    Webhook,
-    WebhookMessage,
 )
 from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from discord.utils import utcnow
-from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
 
 from src.structures.bot import CustomBot
@@ -204,7 +201,7 @@ class AFKModal(Modal, title="Current Time"):
 
         await itx.followup.send(embed=embed)
 
-        db: AsyncIOMotorCollection = itx.client.mongo_db("AFK")
+        db = itx.client.mongo_db("AFK")
         await db.replace_one(
             {"user": member.id},
             {
@@ -242,11 +239,11 @@ class RoleSelect(View):
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
 
         if add := set(roles) - set(member.roles):
-            text = "\n".join(f"> • {role.mention}" for role in add)
+            text = "\n".join(f"* {role.mention}" for role in add)
             embed.add_field(name="**__Roles Added__**", value=text, inline=False)
             await member.add_roles(*add)
         if remove := (total - roles) & set(member.roles):
-            text = "\n".join(f"> • {role.mention}" for role in remove)
+            text = "\n".join(f"* {role.mention}" for role in remove)
             embed.add_field(name="**__Roles Removed__**", value=text, inline=False)
             await member.remove_roles(*remove)
 
@@ -438,7 +435,7 @@ class BasicRoleSelect(RoleSelect):
     )
     async def afk_schedule(self, itx: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = itx.response
-        db: AsyncIOMotorCollection = itx.client.mongo_db("AFK")
+        db = itx.client.mongo_db("AFK")
         member: Member = itx.client.supporting.get(itx.user, itx.user)
         if item := await db.find_one({"user": member.id}):
             modal = AFKModal(hours=sct.values, offset=item["offset"])
@@ -454,7 +451,7 @@ class BasicRoleSelect(RoleSelect):
     )
     async def tz_schedule(self, itx: Interaction[CustomBot], _: Button):
         resp: InteractionResponse = itx.response
-        db: AsyncIOMotorCollection = itx.client.mongo_db("AFK")
+        db = itx.client.mongo_db("AFK")
         member: Member = itx.client.supporting.get(itx.user, itx.user)
         if item := await db.find_one({"user": member.id}):
             modal = AFKModal(hours=item["hours"], offset=item["offset"])
@@ -482,7 +479,7 @@ class RPSearchManage(View):
     async def check_ocs(self, itx: Interaction[CustomBot], btn: Button):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
-        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        db = itx.client.mongo_db("Characters")
         if not (
             ocs := [
                 Character.from_mongo_dict(x)
@@ -519,8 +516,8 @@ class RPSearchManage(View):
         custom_id="archive_thread",
         style=ButtonStyle.red,
     )
-    async def conclude(self, itx: Interaction, btn: Button):
-        db: AsyncIOMotorCollection = itx.client.mongo_db("RP Search")
+    async def conclude(self, itx: Interaction[CustomBot], btn: Button):
+        db = itx.client.mongo_db("RP Search")
         resp: InteractionResponse = itx.response
         if itx.user.id != self.member_id and not itx.user.guild_permissions.moderate_members:
             return await resp.send_message(
@@ -561,12 +558,12 @@ class RPModal(Modal):
         self,
         user: Member,
         ocs: set[Character],
-        to_user: Member,
+        to_user: Optional[Member | Role] = None,
         mobile: bool = True,
     ) -> None:
         super(RPModal, self).__init__(title="Pinging")
         self.user = user
-        self.ocs = ocs
+        self.ocs = sorted(ocs, key=lambda x: x.last_used or x.id, reverse=True)
         self.to_user = to_user
 
         self.names = TextInput(
@@ -582,23 +579,35 @@ class RPModal(Modal):
             default=f"{user.display_name} is looking to RP with their registered characters.",
             required=False,
         )
-        self.message.default = self.message.default.replace("their", f"{to_user.display_name}'s ")
+        if isinstance(to_user, Member):
+            # fmt: off
+            self.message.default = (
+                self.message.default
+                .replace("their", f"{to_user.display_name}'s")
+                .replace("s's", "s'")
+            )
+            # fmt: on
         self.add_item(self.message)
 
         self.select_ocs1 = Select(placeholder="Select Characters", min_values=0)
         self.select_ocs2 = Select(placeholder="Select Characters", min_values=0)
         self.select_ocs3 = Select(placeholder="Select Characters", min_values=0)
         self.select_ocs4 = Select(placeholder="Select Characters", min_values=0)
-        self.select_ocs_group = self.select_ocs1, self.select_ocs2, self.select_ocs3, self.select_ocs4
+        self.select_ocs_group = (
+            self.select_ocs1,
+            self.select_ocs2,
+            self.select_ocs3,
+            self.select_ocs4,
+        )
 
         if mobile:
-            text = "\n".join(f"- {x.species.name} | {x.name}" for x in ocs)
+            text = "\n".join(f"- {x.species.name} | {x.name}" for x in self.ocs)
             if len(text) > 4000:
-                text = "\n".join(f"- {x.name}" for x in ocs)
+                text = "\n".join(f"- {x.name}" for x in self.ocs)[:4000]
             self.names.default = text
             self.add_item(self.names)
-        elif ocs:
-            oc_chunks = iter(chunks_split(ocs, 25))
+        elif self.ocs:
+            oc_chunks = iter(chunks_split(self.ocs, 25))
             for item in self.select_ocs_group:
                 if characters := next(oc_chunks, []):
                     item.options = [
@@ -623,8 +632,9 @@ class RPModal(Modal):
             msg = f"{self.user.mention} is in cool down, user pinged one recently."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
-        if (val := cog.role_cool_down.get(self.to_user.id)) and hours(val) < 1:
-            msg = f"Pinging {self.to_user.mention} is in cool down, check the pings at <#1061010425136828628>."
+        user = self.to_user or self.user
+        if (val := cog.role_cool_down.get(user.id)) and hours(val) < 1:
+            msg = f"Pinging {user.mention} is in cool down, check the pings at <#1061008601335992422>."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
         return True
@@ -650,59 +660,83 @@ class RPModal(Modal):
         ]
 
         cog1 = itx.client.get_cog("Roles")
-        db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        db = itx.client.mongo_db("Characters")
         items.extend(
             [
                 Character.from_mongo_dict(x)
                 async for x in db.find(
-                    {"id": {"$in": [int(value) for item in self.select_ocs_group for value in item.values]}}
+                    {
+                        "id": {
+                            "$in": [
+                                int(item)
+                                for item in chain(
+                                    self.select_ocs1.values,
+                                    self.select_ocs2.values,
+                                    self.select_ocs3.values,
+                                    self.select_ocs4.values,
+                                )
+                                if item.isdigit()
+                            ]
+                        }
+                    }
                 )
             ]
         )
 
-        embed = Embed(title=self.to_user.display_name, color=self.user.color, description=self.message.value)
+        if isinstance(item := self.to_user, Role):
+            name, reference_name = item.name, item.name
+        elif isinstance(item, Member):
+            name, reference_name = item.display_name, f"▷{self.to_user.display_name}"
+        else:
+            item = itx.guild.get_role(719642423327719434) or self.user
+            name, reference_name = "Looking for RP", f"{self.user.display_name}▷"
+
+        embed = Embed(
+            title=name,
+            color=self.user.color,
+            description=self.message.value,
+            timestamp=itx.created_at,
+        )
         guild: Guild = self.user.guild
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=guild.name, icon_url=guild.icon.url)
-        if not items:
-            items = self.ocs
-        items = sorted(set(items), key=lambda x: x.name)
 
-        webhook: Webhook = await itx.client.webhook(1061008601335992422, reason="RP Search")
-        msg1: WebhookMessage = await webhook.send(
-            content=self.to_user.mention,
-            allowed_mentions=AllowedMentions(roles=True),
-            thread=Object(id=1061010425136828628),
+        items = sorted(set(items or self.ocs), key=lambda x: x.last_used or x.id, reverse=True)
+
+        if not (channel := guild.get_channel(1061008601335992422)):
+            channel: ForumChannel = await guild.fetch_channel(1061008601335992422)
+
+        base = await channel.create_thread(
+            name=safe_username(reference_name),
+            content=f"{self.user.mention} is looking to RP with {item.mention}!",
+            allowed_mentions=AllowedMentions(users=True, roles=True),
             embed=embed,
-            username=safe_username(self.user.display_name),
-            avatar_url=self.user.display_avatar.url,
-            wait=True,
         )
 
-        embed.set_image(url=WHITE_BAR)
-        view = RPSearchManage(msg1.id, self.user, items)
+        view = RPSearchManage(base.thread.id, self.user, items)
         for idx, x in enumerate(items[:6]):
             view.add_item(Button(label=x.name[:80], emoji=x.emoji, url=x.jump_url, row=idx // 3))
 
-        cog1.cool_down[self.to_user.id] = itx.created_at
-        cog1.role_cool_down[self.to_user.id] = itx.created_at
+        cog1.cool_down[item.id] = itx.created_at
+        cog1.role_cool_down[item.id] = itx.created_at
 
         aux_embed = RP_SEARCH_EMBED.copy()
         aux_embed.clear_fields()
         aux_embed.title = "Ping has been done successfully!"
 
         aux_view = View()
-        aux_view.add_item(Button(label="Go to Ping", emoji=LINK_EMOJI, url=msg1.jump_url))
+        aux_view.add_item(Button(label="Go to Ping", emoji=LINK_EMOJI, url=base.message.jump_url))
         await itx.followup.send(embed=aux_embed, ephemeral=True, view=aux_view)
 
-        db: AsyncIOMotorCollection = itx.client.mongo_db("OC Background")
+        db = itx.client.mongo_db("OC Background")
         if img := await db.find_one({"author": self.user.id}):
             img = img["image"]
 
         if file := await itx.client.get_file(Character.collage(items, background=img)):
             embed.set_image(url=f"attachment://{file.filename}")
-            await msg1.edit(embed=embed, attachments=[file], view=view)
+            await base.message.edit(embed=embed, attachments=[file], view=view)
         elif text := ", ".join(str(x.id) for x in items):
-            await msg1.edit(view=view)
+            await base.message.edit(view=view)
             itx.client.logger.info("Error Image Parsing OCs: %s", text)
+
         self.stop()

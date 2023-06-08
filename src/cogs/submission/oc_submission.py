@@ -47,6 +47,7 @@ from discord.utils import MISSING, get, time_snowflake
 from frozendict import frozendict
 from motor.motor_asyncio import AsyncIOMotorCollection
 
+from src.cogs.roles.roles import RPModal
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
@@ -1676,7 +1677,7 @@ class SubmissionView(Basic):
         itx.client.logger.info("%s is reading/modifying characters", str(itx.user))
         await view.simple_send()
 
-    @button(label="Creation", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
+    @button(label="Create", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
     async def oc_add(self, itx: Interaction[CustomBot], _: Button):
         cog = itx.client.get_cog("Submission")
         user: Member = itx.client.supporting.get(itx.user, itx.user)
@@ -1700,7 +1701,7 @@ class SubmissionView(Basic):
         finally:
             cog.ignore -= users
 
-    @button(label="Modification", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
+    @button(label="Modify", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
     async def oc_update(self, itx: Interaction[CustomBot], _: Button):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         resp: InteractionResponse = itx.response
@@ -1714,7 +1715,7 @@ class SubmissionView(Basic):
         await view.simple_send(title="Select Character to modify")
         itx.client.logger.info("%s is modifying characters", str(itx.user))
 
-    @button(style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=2, custom_id="delete-oc")
+    @button(label="Delete", style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=2, custom_id="delete-oc")
     async def oc_delete(self, itx: Interaction[CustomBot], _: Button):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         resp: InteractionResponse = itx.response
@@ -1742,3 +1743,38 @@ class SubmissionView(Basic):
                     msg = channel.get_partial_message(oc.id)
                     await msg.delete(delay=0)
                 itx.client.logger.info("%s is deleting %s characters", str(itx.user), len(choices))
+
+    @button(
+        label="Looking for RP",
+        row=3,
+        custom_id="rp-search",
+        style=ButtonStyle.blurple,
+        emoji="🔍",
+    )
+    async def rp_search(self, itx: Interaction[CustomBot], _: Button):
+        db = itx.client.mongo_db("Characters")
+        guild = itx.guild
+        user = itx.client.supporting.get(itx.user, itx.user)
+        role = itx.guild.get_role(719642423327719434)
+
+        modal = RPModal(
+            user=user,
+            ocs=[
+                Character.from_mongo_dict(x)
+                async for x in db.find(
+                    {
+                        "author": user.id,
+                        "server": guild.id,
+                    }
+                )
+            ],
+            to_user=role,
+        )
+
+        if role and role not in itx.user.roles:
+            await itx.response.send_message(
+                f"You must have the {role.mention} role to use this feature.",
+                ephemeral=True,
+            )
+        elif await modal.check(itx):
+            await itx.response.send_modal(modal)
