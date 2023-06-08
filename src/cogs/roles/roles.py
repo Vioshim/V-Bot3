@@ -712,6 +712,7 @@ class RPModal(Modal):
             allowed_mentions=AllowedMentions(users=True, roles=True),
             embed=embed,
         )
+        await base.message.pin()
 
         view = RPSearchManage(base.thread.id, self.user, items)
         for idx, x in enumerate(items[:6]):
