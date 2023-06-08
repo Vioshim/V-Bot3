@@ -1032,6 +1032,7 @@ class Information(commands.Cog):
             or self.bot.user == msg.author
             or msg.author.id == self.bot.owner_id
             or msg.author.id in self.bot.owner_ids
+            or msg.channel.name.endswith("-logs")
         ):
             return
 
