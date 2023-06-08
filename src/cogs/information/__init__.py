@@ -894,7 +894,6 @@ class Information(commands.Cog):
                 return
 
             attachments = message.attachments
-            w = await self.bot.webhook(1020151767532580934, reason="Message delete logging")
             for msg in sorted(messages, key=lambda x: x.id):
                 if data := TUPPER_REPLY_PATTERN.search(msg.content):
                     text = str(data.group("content") or msg.content)
@@ -911,19 +910,6 @@ class Information(commands.Cog):
                     )
                 ):
                     self.bot.msg_cache_add(message)
-                    kwargs = await self.embed_info(msg)
-
-                    if not msg.webhook_id:
-                        kwargs["content"] = msg.author.mention
-
-                    if kwargs["view"].children:
-                        kwargs["view"].children[0].url = msg.jump_url
-
-                    await w.send(
-                        **kwargs,
-                        thread=discord.Object(id=1020153332481937518),
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
                     break
 
     @commands.Cog.listener()
