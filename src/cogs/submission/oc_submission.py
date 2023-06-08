@@ -1832,7 +1832,6 @@ class SubmissionView(Basic):
         label="RP Search",
         row=3,
         custom_id="rp-search",
-        style=ButtonStyle.blurple,
         emoji="🔍",
     )
     async def rp_search(self, itx: Interaction[CustomBot], _: Button):
