@@ -519,7 +519,7 @@ class RPSearchManage(View):
         if itx.user.id != self.member_id and not itx.user.guild_permissions.moderate_members:
             return await itx.response.send_message(f"Only <@{self.member_id}> can archive it", ephemeral=True)
         await itx.response.send_message("Archiving thread...", ephemeral=True)
-        await itx.channel.edit(archived=True, locked=True)
+        await itx.channel.edit(archived=True)
 
 
 def time_message(msg: str, s: int):
