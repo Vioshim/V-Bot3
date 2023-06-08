@@ -747,7 +747,7 @@ class RPModal(Modal):
                 "member": self.user.id,
                 "role": item.id,
                 "server": itx.guild.id,
-                "ocs": [x.id for x in items],
+                "ocs": [x.id for x in items] if len(items) != len(self.ocs) else [],
             }
         )
 
