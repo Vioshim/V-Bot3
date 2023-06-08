@@ -27,7 +27,7 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot as Client
-from src.structures.converters import EmbedFlags
+from src.structures.converters import Context, EmbedFlags
 from src.utils.etc import REPLY_EMOJI, ArrowEmotes
 
 __all__ = (
@@ -387,11 +387,15 @@ class WikiComplex(Complex[WikiEntry]):
         self,
         *,
         tree: WikiEntry,
-        context: commands.Context[Client],
-        edit_mode: bool = False,
+        context: commands.Context[Client] | Interaction[Client],
     ):
-        member, target = context.author, context.interaction or context.channel
-        self.context = context
+        if isinstance(context, Interaction):
+            member, target = context.user, context
+            context = Context(context.client, context.user, context.guild)
+        else:
+            member, target = context.author, context.interaction or context.channel
+
+        edit_mode = context.author.guild_permissions.administrator
         super(WikiComplex, self).__init__(
             member=member,
             values=tree.ordered_children,
@@ -400,6 +404,7 @@ class WikiComplex(Complex[WikiEntry]):
             parser=wiki_parser,
             silent_mode=True,
         )
+        self.context = context
         self.edit_mode = edit_mode
         self.real_max = self.max_values
         self.tree = tree

@@ -43,8 +43,7 @@ class Wiki(commands.Cog):
             data.parent = page
             page.add_node(data)
 
-        edit_mode = await self.bot.is_owner(ctx.author)
-        view = WikiComplex(tree=data, context=ctx, edit_mode=edit_mode)
+        view = WikiComplex(tree=data, context=ctx)
         if search:
             data.embeds = [view.embed]
             data.embeds[0].title = f"Search: {search.title()}"

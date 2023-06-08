@@ -51,6 +51,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from src.cogs.roles.roles import RPModal
 from src.cogs.submission.area_selection import RegionViewComplex
 from src.cogs.submission.oc_parsers import ParserMethods
+from src.cogs.wiki.wiki import WikiComplex, WikiEntry
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
@@ -1725,7 +1726,13 @@ class SubmissionView(Basic):
         itx.client.logger.info("%s is reading/modifying characters", str(itx.user))
         await view.simple_send()
 
-    @button(label="Create", emoji="\N{PENCIL}", row=2, custom_id="add-oc")
+    @button(
+        label="Create",
+        emoji="\N{PENCIL}",
+        row=2,
+        custom_id="add-oc",
+        style=ButtonStyle.blurple,
+    )
     async def oc_add(self, itx: Interaction[CustomBot], _: Button):
         cog = itx.client.get_cog("Submission")
         user: Member = itx.client.supporting.get(itx.user, itx.user)
@@ -1749,7 +1756,13 @@ class SubmissionView(Basic):
         finally:
             cog.ignore -= users
 
-    @button(label="Modify", emoji="\N{PENCIL}", row=2, custom_id="modify-oc")
+    @button(
+        label="Modify",
+        emoji="\N{PENCIL}",
+        row=2,
+        custom_id="modify-oc",
+        style=ButtonStyle.blurple,
+    )
     async def oc_update(self, itx: Interaction[CustomBot], _: Button):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         resp: InteractionResponse = itx.response
@@ -1792,7 +1805,7 @@ class SubmissionView(Basic):
                     await msg.delete(delay=0)
                 itx.client.logger.info("%s is deleting %s characters", str(itx.user), len(choices))
 
-    @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, style=ButtonStyle.blurple, custom_id="see-map")
+    @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
         date_value = time_snowflake(itx.created_at - timedelta(days=14))
@@ -1811,7 +1824,7 @@ class SubmissionView(Basic):
         view = RegionViewComplex(member=itx.user, target=itx, ocs=ocs)
         await view.simple_send(ephemeral=True)
 
-    @button(label="Ticket", emoji=STICKER_EMOJI, row=3, style=ButtonStyle.blurple, custom_id="ticket")
+    @button(label="Ticket", emoji=STICKER_EMOJI, row=3, custom_id="ticket")
     async def create_ticket(self, itx: Interaction[CustomBot], _: Button):
         await itx.response.send_modal(TicketModal(timeout=None))
 
@@ -1849,3 +1862,9 @@ class SubmissionView(Basic):
             )
         elif await modal.check(itx):
             await itx.response.send_modal(modal)
+
+    @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
+    async def info(self, itx: Interaction[CustomBot], _: Button):
+        tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({})])
+        view = WikiComplex(tree=tree, context=itx)
+        await view.simple_send(ephemeral=True, embeds=tree.embeds)
