@@ -532,7 +532,7 @@ class RPSearchManage(View):
             item := await db.find_one_and_delete(
                 {
                     "server": itx.guild_id,
-                    "$or": [{"id": message.id}, {"message": message.id}],
+                    "id": message.id,
                 }
             )
         ):
@@ -735,8 +735,19 @@ class RPModal(Modal):
         if file := await itx.client.get_file(Character.collage(items, background=img)):
             embed.set_image(url=f"attachment://{file.filename}")
             await base.message.edit(embed=embed, attachments=[file], view=view)
-        elif text := ", ".join(str(x.id) for x in items):
+        else:
             await base.message.edit(view=view)
-            itx.client.logger.info("Error Image Parsing OCs: %s", text)
+            itx.client.logger.info("Error Image Parsing OCs: %s", ", ".join(str(x.id) for x in items))
+
+        db = itx.client.mongo_db("RP Search")
+        await db.insert_one(
+            {
+                "id": base.thread.id,
+                "member": self.user.id,
+                "role": item.id,
+                "server": itx.guild.id,
+                "ocs": [x.id for x in items],
+            }
+        )
 
         self.stop()

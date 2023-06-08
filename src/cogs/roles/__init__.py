@@ -26,7 +26,6 @@ from discord import (
     Interaction,
     Member,
     Message,
-    Object,
     RawReactionActionEvent,
     User,
     app_commands,
@@ -35,11 +34,16 @@ from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import get
 
-from src.cogs.roles.roles import AFKModal, AFKSchedule, BasicRoleSelect, RPModal
+from src.cogs.roles.roles import (
+    AFKModal,
+    AFKSchedule,
+    BasicRoleSelect,
+    RPModal,
+    RPSearchManage,
+)
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
-from src.utils.functions import safe_username
 
 __all__ = ("Roles", "setup")
 
@@ -217,6 +221,13 @@ class Roles(commands.Cog):
                 delete_after=10,
                 allowed_mentions=AllowedMentions(users=True),
             )
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        db = self.bot.mongo_db("RP Search")
+        async for item in db.find({}):
+            view = RPSearchManage(msg_id=item["id"], member_id=item["member"], ocs=item["ocs"])
+            self.bot.add_view(view, message_id=item["id"])
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
