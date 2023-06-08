@@ -519,10 +519,10 @@ class Move:
 
     @property
     def max_move_name(self):
-        return "Max Guard" if self.category == Category.STATUS else self.type.max_move
+        return "Max Guard" if self.category == Category.Status else self.type.max_move
 
     def max_move_type_for(self, item: TypingEnum):
-        return TypingEnum.Normal if self.category == Category.STATUS else item
+        return TypingEnum.Normal if self.category == Category.Status else item
 
     @property
     def max_move_type(self):
@@ -549,7 +549,7 @@ class Move:
         embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
 
-        if cat != Category.STATUS:
+        if cat != Category.Status:
             embed.add_field(name="Effect", value=item.max_effect, inline=False)
 
         return embed
