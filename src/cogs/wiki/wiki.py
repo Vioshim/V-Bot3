@@ -249,11 +249,6 @@ class WikiEntry:
         route = [x for x in node.path.split("/") if x]
         ref_route = dict(enumerate(route))
 
-        if not route:
-            self.content, self.embeds = node.content, node.embeds
-            self.title, self.desc = node.title, node.desc
-            self.emoji, self.order = node.emoji, node.order
-
         for idx, item in enumerate(route):
             if item in aux.children:
                 ref_route.pop(idx, None)
@@ -269,6 +264,11 @@ class WikiEntry:
                 aux.children[elements[index]] = aux = ref
         else:
             aux.embeds = node.embeds
+            aux.content = node.content
+            aux.title = node.title
+            aux.desc = node.desc
+            aux.emoji = node.emoji
+            aux.order = node.order
 
     def remove_node_params(self, path: str):
         aux = self
