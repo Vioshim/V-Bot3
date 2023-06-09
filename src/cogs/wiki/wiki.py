@@ -397,6 +397,10 @@ class WikiContentModal(Modal, title="Wiki Content"):
         default="",
     )
 
+    async def on_submit(self, interaction: Interaction):
+        await interaction.response.send_message("Content updated", ephemeral=True)
+        self.stop()
+
 
 def wiki_parser(item: WikiEntry):
     key = item.desc or (f"Entry has {len(item.children)} pages." if item.children else "")
