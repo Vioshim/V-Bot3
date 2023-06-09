@@ -412,6 +412,7 @@ class WikiContentModal(Modal, title="Wiki Content"):
             max_length=2000,
             default=tree.content,
         )
+        self.add_item(self.text)
 
     async def on_submit(self, interaction: Interaction[CustomBot]):
         db = interaction.client.mongo_db("Wiki")
