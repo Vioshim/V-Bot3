@@ -317,7 +317,10 @@ class WikiPathModal(Modal, title="Wiki Path"):
         embed = (
             message.embeds[0]
             if message.embeds
-            else Embed(color=context.author.color, timestamp=context.message.created_at)
+            else Embed(
+                color=context.author.color,
+                timestamp=context.message.created_at,
+            )
         )
         embed_text = EmbedFlags.to_flags(message, embed)
         self.title_data = TextInput(label="Title", required=False, default=node.title)
@@ -344,10 +347,14 @@ class WikiPathModal(Modal, title="Wiki Path"):
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             db = interaction.client.mongo_db("Wiki")
-            payload = await EmbedFlags().convert(self.context, self.embed_data.value)
-            embed = payload.embed
             order = int(self.order_data.value)
-            msg = await interaction.followup.send(embed=embed, wait=True)
+            if embed_value := self.embed_data.value:
+                payload = await EmbedFlags().convert(self.context, embed_value)
+                embed = payload.embed
+                msg = await interaction.followup.send(embed=embed, wait=True)
+            else:
+                embed = None
+                msg = await interaction.followup.send(content="No Embed", wait=True)
             await msg.delete(delay=3)
         except Exception as e:
             interaction.client.logger.exception(
