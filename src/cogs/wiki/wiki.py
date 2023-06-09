@@ -320,14 +320,7 @@ class WikiEntry:
 class WikiPathModal(Modal, title="Wiki Path"):
     def __init__(self, node: WikiEntry, message: Message, context: commands.Context[Client]) -> None:
         super(WikiPathModal, self).__init__(timeout=None)
-        embed = (
-            message.embeds[0]
-            if message.embeds
-            else Embed(
-                color=context.author.color,
-                timestamp=context.message.created_at,
-            )
-        )
+        embed = message.embeds[0] if message.embeds else Embed()
         embed_text = EmbedFlags.to_flags(message, embed)
         self.title_data = TextInput(label="Title", required=False, default=node.title)
         self.desc_data = TextInput(label="Description", required=False, default=node.desc)
