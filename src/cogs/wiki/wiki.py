@@ -21,7 +21,15 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import Any, Optional
 
-from discord import ButtonStyle, Embed, Interaction, Message, PartialEmoji, TextStyle
+from discord import (
+    ButtonStyle,
+    Embed,
+    Interaction,
+    Message,
+    PartialEmoji,
+    SelectOption,
+    TextStyle,
+)
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
@@ -47,15 +55,15 @@ class WikiEntry:
         title: str = "",
         desc: str = "",
         path: list[str] | str = "",
+        content: str = "",
         embeds: list[Embed] = None,
         order: int = 0,
         emoji: Optional[PartialEmoji | str] = None,
         parent: Optional[WikiEntry] = None,
         children: dict[str, WikiEntry] = None,
     ) -> None:
-        if not embeds:
-            embeds = []
-
+        embeds = embeds or []
+        self.content = content or ""
         self.title = title or ""
         self.desc = desc or ""
         self.path = "/".join(path) if isinstance(path, list) else path
@@ -82,6 +90,7 @@ class WikiEntry:
             (
                 self.title and text in self.title.lower(),
                 self.desc and text in self.desc.lower(),
+                self.content and text in self.content.lower(),
                 any(x.title and text in x.title.lower() for x in self.embeds),
                 any(x.description and text in x.description.lower() for x in self.embeds),
                 any(x.footer.text and text in x.footer.text.lower() for x in self.embeds),
@@ -98,6 +107,7 @@ class WikiEntry:
             title=self.title,
             desc=self.desc,
             path=self.path,
+            content=self.content,
             embeds=[embed.copy() for embed in self.embeds],
             order=self.order,
             emoji=self.emoji,
@@ -157,6 +167,7 @@ class WikiEntry:
             "path": route.split("/") if route else [],
             "title": self.title,
             "desc": self.desc,
+            "content": self.content,
             "embeds": [x.to_dict() for x in self.embeds if x],
             "order": self.order,
             "emoji": str(self._emoji) if self._emoji else None,
@@ -198,6 +209,7 @@ class WikiEntry:
         self,
         path: str = "",
         title: str = "",
+        content: str = "",
         desc: str = "",
         embeds: list[Embed] = None,
         order: int = 0,
@@ -208,6 +220,7 @@ class WikiEntry:
                 path=path,
                 title=title,
                 desc=desc,
+                content=content,
                 embeds=embeds,
                 order=order,
                 emoji=emoji,
@@ -375,6 +388,16 @@ class WikiPathModal(Modal, title="Wiki Path"):
             self.stop()
 
 
+class WikiContentModal(Modal, title="Wiki Content"):
+    text = TextInput(
+        label="Content",
+        style=TextStyle.paragraph,
+        required=False,
+        max_length=2000,
+        default="",
+    )
+
+
 def wiki_parser(item: WikiEntry):
     key = item.desc or (f"Entry has {len(item.children)} pages." if item.children else "")
     if not key and item.embeds:
@@ -410,10 +433,7 @@ class WikiComplex(Complex[WikiEntry]):
         self.tree = tree
         self.remove_item(self.finish)
         if not self.edit_mode:
-            self.remove_item(self.edit_page)
-            self.remove_item(self.delete_page)
-            self.remove_item(self.new_page)
-            self.remove_item(self.refresh_page)
+            self.remove_item(self.edit_options)
 
     @property
     def children_entries(self):
@@ -444,8 +464,8 @@ class WikiComplex(Complex[WikiEntry]):
         self.last_child.disabled = index >= len(items) - 1
 
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
-        embeds = self.tree.embeds
-        if not embeds:
+        text, embeds = self.tree.content, self.tree.embeds
+        if not (embeds or text):
             embed = Embed(
                 title="This page has no information yet",
                 description="Feel free to make suggestions to fill this page!",
@@ -453,7 +473,7 @@ class WikiComplex(Complex[WikiEntry]):
             )
             embeds.append(embed)
 
-        data = dict(embeds=embeds)
+        data = dict(embeds=embeds, content=text)
 
         if isinstance(page, int):
             self.pos = page
@@ -505,54 +525,80 @@ class WikiComplex(Complex[WikiEntry]):
     async def select_choice(self, interaction: Interaction[Client], _: Select) -> None:
         await self.selection(interaction, self.current_choice)
 
-    @button(emoji="📝", label="Edit", custom_id="edit", row=3)
-    async def edit_page(self, interaction: Interaction[Client], _: Button) -> None:
+    @select(
+        placeholder="Edit options",
+        custom_id="edit-options",
+        row=3,
+        options=[
+            SelectOption(
+                label="Edit content",
+                emoji="📝",
+                description="Edit the content of the page",
+            ),
+            SelectOption(
+                label="Edit page",
+                emoji="📝",
+                description="Edit the page's embed'",
+            ),
+            SelectOption(
+                label="Delete page",
+                emoji="🗑️",
+                description="Delete the page",
+            ),
+            SelectOption(
+                label="New page",
+                emoji="📄",
+                description="Create a new page",
+            ),
+            SelectOption(
+                label="Refresh page",
+                emoji="🔄",
+                description="Refresh the pages",
+            ),
+        ],
+    )
+    async def edit_options(self, interaction: Interaction[Client], sct: Select) -> None:
         if not (self.edit_mode or interaction.permissions.administrator):
-            return
+            return await interaction.response.send_message(
+                "You don't have the permission to do that",
+                ephemeral=True,
+            )
 
-        modal = WikiPathModal(self.tree, interaction.message, self.context)
-        await interaction.response.send_modal(modal)
-        await modal.wait()
-        await self.selection(interaction, modal.node)
-
-    @button(emoji="🗑️", label="Delete", custom_id="delete", row=3)
-    async def delete_page(self, interaction: Interaction[Client], btn: Button) -> None:
-        if not (self.edit_mode or interaction.permissions.administrator):
-            return
-
-        if "Confirm" not in btn.label:
-            btn.label = "Delete (Confirm)"
-            return await interaction.response.edit_message(view=self)
-
-        btn.label, tree = "Delete", self.tree
-        if current := self.tree.delete():
-            db = interaction.client.mongo_db("Wiki")
-            route = current.route
-            await db.delete_many({f"path.{index}": path for index, path in enumerate(route.split("/"))})
-            if parent := current.parent:
-                tree = parent
-            else:
-                entries = await db.find({}).to_list(length=None)
-                tree = WikiEntry.from_list(entries)
-        await self.selection(interaction, tree)
-
-    @button(emoji="📄", label="New page", custom_id="new", row=3)
-    async def new_page(self, interaction: Interaction[Client], btn: Button) -> None:
-        if not (self.edit_mode or interaction.permissions.administrator):
-            return
-
-        items = self.tree.children.values() if self.tree.children else [self.tree]
-        if self.tree.path.startswith("Changelog"):
-            order = min(items, key=lambda x: x.order).order - 1
-        else:
-            order = max(items, key=lambda x: x.order).order + 1
-        node = WikiEntry(order=order, parent=self.tree, path=btn.label)
-        modal = WikiPathModal(node, interaction.message, self.context)
-        await interaction.response.send_modal(modal)
-        await modal.wait()
-        await self.selection(interaction, modal.node)
-
-    @button(emoji="🔁", label="Refresh", custom_id="refresh", row=3)
-    async def refresh_page(self, interaction: Interaction[Client], _: Button) -> None:
-        entries = await interaction.client.mongo_db("Wiki").find({}).to_list(length=None)
-        await self.selection(interaction, WikiEntry.from_list(entries))
+        match sct.values[0]:
+            case "Edit content":
+                modal = WikiContentModal()
+                modal.text.default = self.tree.content
+                await interaction.response.send_modal(modal)
+                await modal.wait()
+                self.tree.content = modal.text
+                await self.selection(interaction, self.tree)
+            case "Edit page":
+                modal = WikiPathModal(self.tree, interaction.message, self.context)
+                await interaction.response.send_modal(modal)
+                await modal.wait()
+                await self.selection(interaction, modal.node)
+            case "Delete page":
+                if current := self.tree.delete():
+                    db = interaction.client.mongo_db("Wiki")
+                    route = current.route
+                    await db.delete_many({f"path.{index}": path for index, path in enumerate(route.split("/"))})
+                    if parent := current.parent:
+                        tree = parent
+                    else:
+                        entries = await db.find({}).to_list(length=None)
+                        tree = WikiEntry.from_list(entries)
+                await self.selection(interaction, tree)
+            case "New page":
+                items = self.tree.children.values() if self.tree.children else [self.tree]
+                if self.tree.path.startswith("Changelog"):
+                    order = min(items, key=lambda x: x.order).order - 1
+                else:
+                    order = max(items, key=lambda x: x.order).order + 1
+                node = WikiEntry(order=order, parent=self.tree, path="New page")
+                modal = WikiPathModal(node, interaction.message, self.context)
+                await interaction.response.send_modal(modal)
+                await modal.wait()
+                await self.selection(interaction, modal.node)
+            case "Refresh page":
+                entries = await interaction.client.mongo_db("Wiki").find({}).to_list(length=None)
+                await self.selection(interaction, WikiEntry.from_list(entries))
