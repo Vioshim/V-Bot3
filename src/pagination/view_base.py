@@ -208,7 +208,7 @@ class Basic(View):
         """
         target = self.target
 
-        if not embeds:
+        if not (embeds or content):
             embed = embed or self.embed
             self.embed = embed_modifier(embed, **kwargs)
             embeds = [self.embed]
@@ -235,7 +235,7 @@ class Basic(View):
             ephemeral=ephemeral,
         )
 
-        if not embeds and not embed:
+        if not embeds and not embed and not content:
             data["embed"] = self.embed
 
         data = {k: v for k, v in data.items() if v}
