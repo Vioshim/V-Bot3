@@ -675,8 +675,7 @@ class EmbedFlags(commands.FlagConverter, prefix="--", delimiter=" "):
                 color = webcolors.rgb_to_name(embed.color.to_rgb())
             except ValueError:
                 color = str(embed.color)
-                if color == "#94939f":
-                    color = "D-Proxy"
+
             text.append(f"--color {color}")
         if embed.image:
             text.append(f"--image {image_replacer(embed.image.url)}")
