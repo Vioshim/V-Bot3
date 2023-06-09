@@ -336,7 +336,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
             label="Embed",
             style=TextStyle.paragraph,
             default=embed_text[:4000],
-            required=not node.content,
+            required=False,
         )
         self.path_data = TextInput(label="Path")
         self.node = node
@@ -575,6 +575,11 @@ class WikiComplex(Complex[WikiEntry]):
                 description="Delete the page",
             ),
             SelectOption(
+                label="New sub-page",
+                emoji="➕",
+                description="Create a new sub page",
+            ),
+            SelectOption(
                 label="New page",
                 emoji="📄",
                 description="Create a new page",
@@ -614,13 +619,25 @@ class WikiComplex(Complex[WikiEntry]):
                         entries = await db.find({}).to_list(length=None)
                         tree = WikiEntry.from_list(entries)
                 await self.selection(interaction, tree)
-            case "New page":
+            case "New sub-page":
                 items = self.tree.children.values() if self.tree.children else [self.tree]
                 if self.tree.path.startswith("Changelog"):
                     order = min(items, key=lambda x: x.order).order - 1
                 else:
                     order = max(items, key=lambda x: x.order).order + 1
                 node = WikiEntry(order=order, parent=self.tree, path="New page")
+                modal = WikiPathModal(node, interaction.message, self.context)
+                await interaction.response.send_modal(modal)
+                await modal.wait()
+                await self.selection(interaction, modal.node)
+            case "New page":
+                order = self.tree.order + 1
+                parent = self.tree.parent or self.tree
+                if parent.path.startswith("Changelog"):
+                    order = self.tree.order - 1
+                else:
+                    order = self.tree.order + 1
+                node = WikiEntry(order=order, parent=self.tree.parent, path="New page")
                 modal = WikiPathModal(node, interaction.message, self.context)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
