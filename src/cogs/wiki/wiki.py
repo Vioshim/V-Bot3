@@ -34,6 +34,7 @@ from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
 from src.structures.bot import CustomBot as Client
 from src.structures.converters import Context, EmbedFlags
 from src.utils.etc import REPLY_EMOJI, ArrowEmotes
@@ -401,16 +402,22 @@ class WikiPathModal(Modal, title="Wiki Path"):
 
 
 class WikiContentModal(Modal, title="Wiki Content"):
-    text = TextInput(
-        label="Content",
-        style=TextStyle.paragraph,
-        required=False,
-        max_length=2000,
-        default="",
-    )
+    def __init__(self, *, tree: WikiEntry) -> None:
+        super().__init__(timeout=None)
+        self.tree = tree
+        self.text = TextInput(
+            label="Content",
+            style=TextStyle.paragraph,
+            required=False,
+            max_length=2000,
+            default=tree.content,
+        )
 
-    async def on_submit(self, interaction: Interaction):
-        await interaction.response.send_message("Content updated", ephemeral=True)
+    async def on_submit(self, interaction: Interaction[CustomBot]):
+        db = interaction.client.mongo_db("Wiki")
+        self.tree.content, route = self.text.value, self.tree.route.strip()
+        result = await db.replace_one({"path": route.split("/") if route else []}, self.tree.simplified, upsert=True)
+        await interaction.response.send_message(str(result.raw_result), ephemeral=True)
         self.stop()
 
 
@@ -582,13 +589,10 @@ class WikiComplex(Complex[WikiEntry]):
         db = interaction.client.mongo_db("Wiki")
         match sct.values[0]:
             case "Edit content":
-                modal = WikiContentModal()
-                modal.text.default = self.tree.content
+                modal = WikiContentModal(tree=self.tree)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
-                self.tree.content, route = modal.text.value, self.tree.route.strip()
-                await db.replace_one({"path": route.split("/") if route else []}, self.tree.simplified, upsert=True)
-                await self.selection(interaction, self.tree)
+                await self.selection(interaction, modal.tree)
             case "Edit page":
                 modal = WikiPathModal(self.tree, interaction.message, self.context)
                 await interaction.response.send_modal(modal)
