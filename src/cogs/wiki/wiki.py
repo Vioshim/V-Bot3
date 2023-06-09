@@ -567,13 +567,21 @@ class WikiComplex(Complex[WikiEntry]):
                 "You don't have the permission to do that",
                 ephemeral=True,
             )
-
+        db = interaction.client.mongo_db("Wiki")
         match sct.values[0]:
             case "Edit content":
                 modal = WikiContentModal()
                 modal.text.default = self.tree.content
                 await interaction.response.send_modal(modal)
                 await modal.wait()
+
+                await db.update_one(
+                    self.tree.key,
+                    {
+                        "$set": {"content": modal.text.value},
+                    },
+                )
+
                 self.tree.content = modal.text.value
                 await self.selection(interaction, self.tree)
             case "Edit page":
@@ -583,7 +591,6 @@ class WikiComplex(Complex[WikiEntry]):
                 await self.selection(interaction, modal.node)
             case "Delete page":
                 if current := self.tree.delete():
-                    db = interaction.client.mongo_db("Wiki")
                     route = current.route
                     await db.delete_many({f"path.{index}": path for index, path in enumerate(route.split("/"))})
                     if parent := current.parent:
@@ -604,5 +611,5 @@ class WikiComplex(Complex[WikiEntry]):
                 await modal.wait()
                 await self.selection(interaction, modal.node)
             case "Refresh page":
-                entries = await interaction.client.mongo_db("Wiki").find({}).to_list(length=None)
+                entries = await db.find({}).to_list(length=None)
                 await self.selection(interaction, WikiEntry.from_list(entries))
