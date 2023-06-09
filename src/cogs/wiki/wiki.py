@@ -323,7 +323,12 @@ class WikiPathModal(Modal, title="Wiki Path"):
         self.title_data = TextInput(label="Title", required=False, default=node.title)
         self.desc_data = TextInput(label="Description", required=False, default=node.desc)
         self.order_data = TextInput(label="Order", required=False, default=str(node.order))
-        self.embed_data = TextInput(label="Embed", style=TextStyle.paragraph, default=embed_text[:4000])
+        self.embed_data = TextInput(
+            label="Embed",
+            style=TextStyle.paragraph,
+            default=embed_text[:4000],
+            required=not node.content,
+        )
         self.path_data = TextInput(label="Path")
         self.node = node
         self.context = context
@@ -574,15 +579,8 @@ class WikiComplex(Complex[WikiEntry]):
                 modal.text.default = self.tree.content
                 await interaction.response.send_modal(modal)
                 await modal.wait()
-
-                await db.update_one(
-                    self.tree.key,
-                    {
-                        "$set": {"content": modal.text.value},
-                    },
-                )
-
-                self.tree.content = modal.text.value
+                self.tree.content, route = modal.text.value, self.tree.route.strip()
+                await db.replace_one({"path": route.split("/") if route else []}, self.tree.simplified, upsert=True)
                 await self.selection(interaction, self.tree)
             case "Edit page":
                 modal = WikiPathModal(self.tree, interaction.message, self.context)
