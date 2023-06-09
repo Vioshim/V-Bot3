@@ -570,7 +570,7 @@ class WikiComplex(Complex[WikiEntry]):
                 modal.text.default = self.tree.content
                 await interaction.response.send_modal(modal)
                 await modal.wait()
-                self.tree.content = modal.text
+                self.tree.content = modal.text.value
                 await self.selection(interaction, self.tree)
             case "Edit page":
                 modal = WikiPathModal(self.tree, interaction.message, self.context)
