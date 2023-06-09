@@ -1866,4 +1866,8 @@ class SubmissionView(Basic):
     async def info(self, itx: Interaction[CustomBot], _: Button):
         tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({})])
         view = WikiComplex(tree=tree, context=itx)
-        await view.simple_send(ephemeral=True, embeds=tree.embeds)
+        await view.simple_send(
+            ephemeral=True,
+            embeds=tree.embeds,
+            content=tree.content,
+        )

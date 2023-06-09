@@ -48,7 +48,11 @@ class Wiki(commands.Cog):
             data.embeds = [view.embed]
             data.embeds[0].title = f"Search: {search.title()}"
 
-        await view.simple_send(ephemeral=True, embeds=data.embeds)
+        await view.simple_send(
+            ephemeral=True,
+            embeds=data.embeds,
+            content=data.content,
+        )
 
 
 async def setup(bot: CustomBot):
