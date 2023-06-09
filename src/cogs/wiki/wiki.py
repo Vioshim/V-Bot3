@@ -249,6 +249,11 @@ class WikiEntry:
         route = [x for x in node.path.split("/") if x]
         ref_route = dict(enumerate(route))
 
+        if not route:
+            self.content, self.embeds = node.content, node.embeds
+            self.title, self.desc = node.title, node.desc
+            self.emoji, self.order = node.emoji, node.order
+
         for idx, item in enumerate(route):
             if item in aux.children:
                 ref_route.pop(idx, None)
