@@ -34,7 +34,6 @@ from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.complex import Complex
-from src.structures.bot import CustomBot
 from src.structures.bot import CustomBot as Client
 from src.structures.converters import Context, EmbedFlags
 from src.utils.etc import REPLY_EMOJI, ArrowEmotes
@@ -317,7 +316,7 @@ class WikiEntry:
             yield from cls.to_list(child)
 
 
-class WikiPathModal(Modal, title="Wiki Path"):
+class WikiPathEmbedModal(Modal, title="Wiki Embed"):
     def __init__(self, node: WikiEntry, message: Message, context: commands.Context[Client]) -> None:
         super(WikiPathModal, self).__init__(timeout=None)
         embed = message.embeds[0] if message.embeds else Embed()
@@ -346,7 +345,7 @@ class WikiPathModal(Modal, title="Wiki Path"):
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             db = interaction.client.mongo_db("Wiki")
-            order = int(self.order_data.value)
+            order = int(self.order_data.value) if self.order_data.value.isdigit() else self.node.order
             if embed_value := self.embed_data.value:
                 payload = await EmbedFlags().convert(self.context, embed_value)
                 embed = payload.embed
@@ -399,24 +398,57 @@ class WikiPathModal(Modal, title="Wiki Path"):
             self.stop()
 
 
-class WikiContentModal(Modal, title="Wiki Content"):
-    def __init__(self, *, tree: WikiEntry) -> None:
-        super().__init__(timeout=None)
-        self.tree = tree
-        self.text = TextInput(
+class WikiPathModal(Modal, title="Wiki Content"):
+    def __init__(self, tree: WikiEntry) -> None:
+        super(WikiPathModal, self).__init__(timeout=None)
+        self.title_data = TextInput(label="Title", required=False, default=tree.title)
+        self.desc_data = TextInput(label="Description", required=False, default=tree.desc)
+        self.order_data = TextInput(label="Order", required=False, default=str(tree.order))
+        self.content_data = TextInput(
             label="Content",
             style=TextStyle.paragraph,
-            required=False,
-            max_length=2000,
             default=tree.content,
+            required=False,
         )
-        self.add_item(self.text)
+        self.path_data = TextInput(label="Path")
+        self.tree = tree
+        self.add_item(self.title_data)
+        self.add_item(self.desc_data)
+        self.add_item(self.order_data)
+        self.add_item(self.content_data)
+        if path := tree.path:
+            self.path_data.default = path
+            self.add_item(self.path_data)
 
-    async def on_submit(self, interaction: Interaction[CustomBot]):
+    async def on_submit(self, interaction: Interaction[Client]) -> None:
         db = interaction.client.mongo_db("Wiki")
-        self.tree.content, route = self.text.value, self.tree.route.strip()
-        result = await db.replace_one({"path": route.split("/") if route else []}, self.tree.simplified, upsert=True)
-        await interaction.response.send_message(str(result.raw_result), ephemeral=True)
+        order = int(self.order_data.value) if self.order_data.value.isdigit() else self.node.order
+        await interaction.response.send_message("Saving...", delete_after=3)
+        self.tree.title = self.title_data.value
+        self.tree.desc = self.desc_data.value
+        self.tree.order = order
+
+        if self.tree.parent:
+            self.tree.parent.children[self.tree.path] = self.tree
+
+        if (
+            self.path_data.value
+            and self.path_data.value != self.tree.path
+            and (node := self.tree.delete())
+            and (query := {f"path.{index}": value for index, value in enumerate(node.route.split("/"))})
+        ):
+            self.tree.path = self.path_data.value
+            route = self.tree.route.strip()
+            new_info = {f"path.{index}": value for index, value in enumerate(route.split("/"))}
+            await db.update_many(query, {"$set": new_info})
+        else:
+            route = self.tree.route.strip()
+
+        if parent := self.tree.parent:
+            parent.children[self.tree.path] = self.tree
+
+        await db.replace_one({"path": route.split("/") if route else []}, self.tree.simplified, upsert=True)
+        interaction.client.logger.info("Wiki(%s) modified by %s", route or "/", interaction.user.display_name)
         self.stop()
 
 
@@ -558,7 +590,7 @@ class WikiComplex(Complex[WikiEntry]):
                 description="Edit the content of the page",
             ),
             SelectOption(
-                label="Edit page",
+                label="Edit embed",
                 emoji="📝",
                 description="Edit the page's embed'",
             ),
@@ -593,12 +625,12 @@ class WikiComplex(Complex[WikiEntry]):
         db = interaction.client.mongo_db("Wiki")
         match sct.values[0]:
             case "Edit content":
-                modal = WikiContentModal(tree=self.tree)
+                modal = WikiPathModal(tree=self.tree)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
                 await self.selection(interaction, modal.tree)
-            case "Edit page":
-                modal = WikiPathModal(self.tree, interaction.message, self.context)
+            case "Edit embed":
+                modal = WikiPathEmbedModal(self.tree, interaction.message, self.context)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
                 await self.selection(interaction, modal.node)
@@ -613,16 +645,11 @@ class WikiComplex(Complex[WikiEntry]):
                         tree = WikiEntry.from_list(entries)
                 await self.selection(interaction, tree)
             case "New sub-page":
-                items = self.tree.children.values() if self.tree.children else [self.tree]
-                if self.tree.path.startswith("Changelog"):
-                    order = min(items, key=lambda x: x.order).order - 1
-                else:
-                    order = max(items, key=lambda x: x.order).order + 1
-                node = WikiEntry(order=order, parent=self.tree, path="New page")
-                modal = WikiPathModal(node, interaction.message, self.context)
+                node = WikiEntry(parent=self.tree, path="New page")
+                modal = WikiPathModal(node)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
-                await self.selection(interaction, modal.node)
+                await self.selection(interaction, modal.tree)
             case "New page":
                 order = self.tree.order + 1
                 parent = self.tree.parent or self.tree
@@ -631,10 +658,10 @@ class WikiComplex(Complex[WikiEntry]):
                 else:
                     order = self.tree.order + 1
                 node = WikiEntry(order=order, parent=self.tree.parent, path="New page")
-                modal = WikiPathModal(node, interaction.message, self.context)
+                modal = WikiPathModal(node)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
-                await self.selection(interaction, modal.node)
+                await self.selection(interaction, modal.tree)
             case "Refresh page":
                 entries = await db.find({}).to_list(length=None)
                 await self.selection(interaction, WikiEntry.from_list(entries))
