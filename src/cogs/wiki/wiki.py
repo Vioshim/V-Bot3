@@ -422,11 +422,12 @@ class WikiPathModal(Modal, title="Wiki Content"):
 
     async def on_submit(self, interaction: Interaction[Client]) -> None:
         db = interaction.client.mongo_db("Wiki")
-        order = int(self.order_data.value) if self.order_data.value.isdigit() else self.node.order
-        await interaction.response.send_message("Saving...", delete_after=3)
+        order = int(self.order_data.value) if self.order_data.value.isdigit() else self.tree.order
+        await interaction.response.send_message("Saving...", delete_after=3, ephemeral=True)
         self.tree.title = self.title_data.value
         self.tree.desc = self.desc_data.value
         self.tree.order = order
+        self.tree.content = self.content_data.value
 
         if self.tree.parent:
             self.tree.parent.children[self.tree.path] = self.tree
