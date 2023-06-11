@@ -32,6 +32,7 @@ from discord import (
 )
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, button, select
+from discord.utils import MISSING
 
 from src.pagination.complex import Complex
 from src.structures.bot import CustomBot as Client
@@ -317,12 +318,16 @@ class WikiEntry:
 
 
 class WikiPathEmbedModal(Modal, title="Wiki Embed"):
-    def __init__(self, node: WikiEntry, message: Message, context: commands.Context[Client]) -> None:
+    def __init__(self, node: WikiEntry, message: Message, context: commands.Context[Client], index: int = 0) -> None:
         super(WikiPathEmbedModal, self).__init__(timeout=None)
-        embed = message.embeds[0] if message.embeds else Embed()
+
+        try:
+            embed = message.embeds[index]
+        except IndexError:
+            embed = Embed()
+
         embed_text = EmbedFlags.to_flags(message, embed)
-        self.title_data = TextInput(label="Title", required=False, default=node.title)
-        self.desc_data = TextInput(label="Description", required=False, default=node.desc)
+        self.index_data = TextInput(label="Index", required=False, default=str(index), min_length=1, max_length=1)
         self.order_data = TextInput(label="Order", required=False, default=str(node.order))
         self.embed_data = TextInput(
             label="Embed",
@@ -333,8 +338,7 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
         self.path_data = TextInput(label="Path")
         self.node = node
         self.context = context
-        self.add_item(self.title_data)
-        self.add_item(self.desc_data)
+        self.add_item(self.index_data)
         self.add_item(self.order_data)
         self.add_item(self.embed_data)
         if path := node.path:
@@ -343,16 +347,17 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
 
     async def on_submit(self, interaction: Interaction[Client]) -> None:
         await interaction.response.defer(ephemeral=True, thinking=True)
+        order = int(self.order_data.value) if self.order_data.value.isdigit() else self.node.order
+        index = int(self.index_data.value) if self.index_data.value.isdigit() else 0
+
         try:
             db = interaction.client.mongo_db("Wiki")
-            order = int(self.order_data.value) if self.order_data.value.isdigit() else self.node.order
             if embed_value := self.embed_data.value:
                 payload = await EmbedFlags().convert(self.context, embed_value)
                 embed = payload.embed
-                msg = await interaction.followup.send(embed=embed, wait=True)
             else:
-                embed = None
-                msg = await interaction.followup.send(content="No Embed", wait=True)
+                embed = MISSING
+            msg = await interaction.followup.send(content=f"Index {index}", embed=embed, wait=True)
             await msg.delete(delay=3)
         except Exception as e:
             interaction.client.logger.exception(
@@ -367,35 +372,41 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
                 color=0x94939F,
             )
             await interaction.followup.send(embed=embed)
-        else:
-            self.node.embeds = [embed] if embed else []
-            self.node.title = self.title_data.value
-            self.node.desc = self.desc_data.value
-            self.node.order = order
+            return self.stop()
 
-            if self.node.parent:
-                self.node.parent.children[self.node.path] = self.node
-
-            if (
-                self.path_data.value
-                and self.path_data.value != self.node.path
-                and (node := self.node.delete())
-                and (query := {f"path.{index}": value for index, value in enumerate(node.route.split("/"))})
-            ):
-                self.node.path = self.path_data.value
-                route = self.node.route.strip()
-                new_info = {f"path.{index}": value for index, value in enumerate(route.split("/"))}
-                await db.update_many(query, {"$set": new_info})
+        try:
+            if embed:
+                self.node.embeds[index] = embed
             else:
-                route = self.node.route.strip()
+                self.node.embeds.pop(index)
+        except IndexError:
+            if embed and len(self.node.embeds) < 10:
+                self.node.embeds.append(embed)
 
-            if parent := self.node.parent:
-                parent.children[self.node.path] = self.node
+        if self.node.parent:
+            self.node.parent.children[self.node.path] = self.node
 
-            await db.replace_one({"path": route.split("/") if route else []}, self.node.simplified, upsert=True)
-            interaction.client.logger.info("Wiki(%s) modified by %s", route or "/", interaction.user.display_name)
-        finally:
-            self.stop()
+        self.node.order = order
+
+        if (
+            self.path_data.value
+            and self.path_data.value != self.node.path
+            and (node := self.node.delete())
+            and (query := {f"path.{index}": value for index, value in enumerate(node.route.split("/"))})
+        ):
+            self.node.path = self.path_data.value
+            route = self.node.route.strip()
+            new_info = {f"path.{index}": value for index, value in enumerate(route.split("/"))}
+            await db.update_many(query, {"$set": new_info})
+        else:
+            route = self.node.route.strip()
+
+        if parent := self.node.parent:
+            parent.children[self.node.path] = self.node
+
+        await db.replace_one({"path": route.split("/") if route else []}, self.node.simplified, upsert=True)
+        interaction.client.logger.info("Wiki(%s) modified by %s", route or "/", interaction.user.display_name)
+        self.stop()
 
 
 class WikiPathModal(Modal, title="Wiki Content"):
@@ -408,6 +419,7 @@ class WikiPathModal(Modal, title="Wiki Content"):
             label="Content",
             style=TextStyle.paragraph,
             default=tree.content,
+            max_length=2000,
             required=False,
         )
         self.path_data = TextInput(label="Path")
@@ -423,7 +435,8 @@ class WikiPathModal(Modal, title="Wiki Content"):
     async def on_submit(self, interaction: Interaction[Client]) -> None:
         db = interaction.client.mongo_db("Wiki")
         order = int(self.order_data.value) if self.order_data.value.isdigit() else self.tree.order
-        await interaction.response.send_message("Saving...", delete_after=3, ephemeral=True)
+        await interaction.response.edit_message(content="Saving...")
+
         self.tree.title = self.title_data.value
         self.tree.desc = self.desc_data.value
         self.tree.order = order
