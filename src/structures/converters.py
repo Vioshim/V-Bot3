@@ -75,6 +75,7 @@ class Context:
     author: discord.Member
     guild: discord.Guild
     command: commands.Command | None = None
+    current_parameter = None
 
 
 class ImageURLConverter(commands.Converter[str]):
