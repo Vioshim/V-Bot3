@@ -74,6 +74,7 @@ class Context:
     bot: CustomBot
     author: discord.Member
     guild: discord.Guild
+    command: commands.Command | None = None
 
 
 class ImageURLConverter(commands.Converter[str]):

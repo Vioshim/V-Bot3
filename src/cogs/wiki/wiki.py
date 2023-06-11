@@ -436,7 +436,7 @@ class WikiComplex(Complex[WikiEntry]):
     ):
         if isinstance(context, Interaction):
             member, target = context.user, context
-            context = Context(context.client, context.user, context.guild)
+            context = Context(context.client, context.user, context.guild, context.command)
         else:
             member, target = context.author, context.interaction or context.channel
 
