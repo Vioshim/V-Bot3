@@ -643,7 +643,7 @@ class WikiComplex(Complex[WikiEntry]):
             case "New sub-page":
                 node = WikiEntry(
                     parent=self.tree,
-                    path="New page",
+                    path=self.tree.path or "New page",
                     content=self.tree.content,
                     title=self.tree.title,
                     desc=self.tree.desc,
@@ -663,7 +663,7 @@ class WikiComplex(Complex[WikiEntry]):
                 node = WikiEntry(
                     order=order,
                     parent=self.tree.parent,
-                    path="New page",
+                    path=self.tree.path or "New page",
                     content=self.tree.content,
                     title=self.tree.title,
                     desc=self.tree.desc,
