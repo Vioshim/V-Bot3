@@ -328,7 +328,6 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
 
         embed_text = EmbedFlags.to_flags(message, embed)
         self.index_data = TextInput(label="Index", required=False, default=str(index), min_length=1, max_length=1)
-        self.order_data = TextInput(label="Order", required=False, default=str(node.order))
         self.embed_data = TextInput(
             label="Embed",
             style=TextStyle.paragraph,
@@ -339,7 +338,6 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
         self.node = node
         self.context = context
         self.add_item(self.index_data)
-        self.add_item(self.order_data)
         self.add_item(self.embed_data)
         if path := node.path:
             self.path_data.default = path
@@ -347,7 +345,6 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
 
     async def on_submit(self, interaction: Interaction[Client]) -> None:
         await interaction.response.defer(ephemeral=True, thinking=True)
-        order = int(self.order_data.value) if self.order_data.value.isdigit() else self.node.order
         index = int(self.index_data.value) if self.index_data.value.isdigit() else 0
 
         try:
@@ -385,8 +382,6 @@ class WikiPathEmbedModal(Modal, title="Wiki Embed"):
 
         if self.node.parent:
             self.node.parent.children[self.node.path] = self.node
-
-        self.node.order = order
 
         if (
             self.path_data.value
