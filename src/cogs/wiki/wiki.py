@@ -318,7 +318,7 @@ class WikiEntry:
 
 class WikiPathEmbedModal(Modal, title="Wiki Embed"):
     def __init__(self, node: WikiEntry, message: Message, context: commands.Context[Client]) -> None:
-        super(WikiPathModal, self).__init__(timeout=None)
+        super(WikiPathEmbedModal, self).__init__(timeout=None)
         embed = message.embeds[0] if message.embeds else Embed()
         embed_text = EmbedFlags.to_flags(message, embed)
         self.title_data = TextInput(label="Title", required=False, default=node.title)
@@ -521,12 +521,7 @@ class WikiComplex(Complex[WikiEntry]):
     def default_params(self, page: Optional[int] = None) -> dict[str, Any]:
         text, embeds = self.tree.content, self.tree.embeds
         if not (embeds or text):
-            embed = Embed(
-                title="This page has no information yet",
-                description="Feel free to make suggestions to fill this page!",
-                color=0x94939F,
-            )
-            embeds.append(embed)
+            text = "This page has no information yet\nFeel free to make suggestions to fill this page!"
 
         data = dict(embeds=embeds, content=text)
 
