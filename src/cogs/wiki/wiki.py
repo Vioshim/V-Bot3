@@ -649,6 +649,13 @@ class WikiComplex(Complex[WikiEntry]):
                         tree = WikiEntry.from_list(entries)
                 await self.selection(interaction, tree)
             case "New sub-page":
+                if not self.tree.children:
+                    order = 0
+                elif self.tree.path.startswith("Changelog"):
+                    order = min(self.tree.children.values(), key=lambda x: x.order).order - 1
+                else:
+                    order = max(self.tree.children.values(), key=lambda x: x.order).order + 1
+
                 node = WikiEntry(
                     parent=self.tree,
                     path="New page",
@@ -656,7 +663,9 @@ class WikiComplex(Complex[WikiEntry]):
                     title=self.tree.title,
                     desc=self.tree.desc,
                     embeds=self.tree.embeds,
+                    order=order,
                 )
+
                 modal = WikiPathModal(node)
                 await interaction.response.send_modal(modal)
                 await modal.wait()
