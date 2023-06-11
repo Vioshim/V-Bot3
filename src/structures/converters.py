@@ -88,8 +88,8 @@ class ImageURLConverter(commands.Converter[str]):
 
         name, *args = argument.strip().split()
         attachments: list[discord.Attachment] = []
-        if ctx.message:
-            attachments.extend(x for x in ctx.message.attachments if str(x.content_type).startswith("image/"))
+        if message := getattr(ctx, "message", None):
+            attachments.extend(x for x in message.attachments if str(x.content_type).startswith("image/"))
 
         match [name.lower(), *args]:
             case ["default"]:
