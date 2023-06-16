@@ -84,7 +84,11 @@ class ImageURLConverter(commands.Converter[str]):
         if not argument or argument.startswith("attachment://"):
             return argument or ""
 
-        aux = Context(bot=ctx.client, author=ctx.user, guild=ctx.guild) if isinstance(ctx, discord.Interaction) else ctx
+        aux = (
+            Context(bot=ctx.client, author=ctx.user, guild=ctx.guild, command=ctx.command)
+            if isinstance(ctx, discord.Interaction)
+            else ctx
+        )
 
         name, *args = argument.strip().split()
         attachments: list[discord.Attachment] = []

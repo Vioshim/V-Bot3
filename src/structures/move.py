@@ -56,12 +56,12 @@ class Category(IntEnum):
     @classmethod
     def from_id(cls, value: int):
         match value:
+            case 0:
+                return cls.Status
             case 1:
                 return cls.Physical
             case 2:
                 return cls.Special
-            case _:
-                return cls.Status
 
 
 CHECK_FLAGS: dict[str, Callable[[Any], Optional[str]]] = {
