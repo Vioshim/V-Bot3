@@ -40,7 +40,6 @@ from rapidfuzz import process
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split, safe_username
 from src.views.characters_view import CharactersView
@@ -252,24 +251,6 @@ class RoleSelect(View):
 
 
 class BasicRoleSelect(RoleSelect):
-    @select(
-        placeholder="Select Pronoun Roles",
-        custom_id="pronouns",
-        min_values=0,
-        max_values=len(Pronoun),
-        options=[
-            SelectOption(
-                label=pronoun.name,
-                value=str(pronoun.role_id),
-                description=f"Adds {pronoun.name} as pronoun in roles.",
-                emoji=pronoun.emoji,
-            )
-            for pronoun in Pronoun
-        ],
-    )
-    async def pronouns_choice(self, itx: Interaction[CustomBot], sct: Select):
-        await self.choice(itx, sct)
-
     @select(
         placeholder="Select Color Roles",
         custom_id="colors",

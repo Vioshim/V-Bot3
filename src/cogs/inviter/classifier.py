@@ -231,19 +231,19 @@ class InviterView(View):
     async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
         interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
-    @select(
-        placeholder="Select RP Hub",
-        custom_id="hubs",
-        options=[
-            SelectOption(
-                label=k[:100],
-                description=v.description.replace("\n", " ")[:100],
-                emoji=INVITE_EMOJI,
-            )
-            for k, v in DATA.items()
-            if k != "Parallel"
-        ],
-    )
+    # @select(
+    #   placeholder="Select RP Hub",
+    #   custom_id="hubs",
+    #   options=[
+    #       SelectOption(
+    #           label=k[:100],
+    #           description=v.description.replace("\n", " ")[:100],
+    #           emoji=INVITE_EMOJI,
+    #       )
+    #       for k, v in DATA.items()
+    #       if k != "Parallel"
+    #   ],
+    # )
     async def hubs(self, ctx: Interaction, sct: Select):
         resp: InteractionResponse = ctx.response
         key = sct.values[0]
