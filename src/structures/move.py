@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import IntEnum
 from functools import lru_cache
 from json import load
 from re import split
@@ -40,28 +40,28 @@ ALL_MOVES = frozendict()
 ALL_MOVES_BY_NAME = frozendict()
 
 
-class Category(Enum):
-    STATUS = PartialEmoji(name="Status", id=1001887872221200506)
-    PHYSICAL = PartialEmoji(name="Physical", id=1001887867796205598)
-    SPECIAL = PartialEmoji(name="Special", id=1001887870266658916)
+class Category(IntEnum):
+    Status = 1001887872221200506
+    Physical = 1001887867796205598
+    Special = 1001887870266658916
 
     @property
-    def title(self) -> str:
-        return self.name.title()
+    def url(self):
+        return f"https://cdn.discordapp.com/emojis/{self.value}.png"
 
     @property
-    def emoji(self) -> PartialEmoji:
-        return self.value
+    def emoji(self):
+        return PartialEmoji(name=self.name, id=self.value)
 
     @classmethod
     def from_id(cls, value: int):
         match value:
             case 1:
-                return cls.PHYSICAL
+                return cls.Physical
             case 2:
-                return cls.SPECIAL
+                return cls.Special
             case _:
-                return cls.STATUS
+                return cls.Status
 
 
 CHECK_FLAGS: dict[str, Callable[[Any], Optional[str]]] = {
@@ -472,7 +472,7 @@ class Move:
             embed.set_author(name=f"Originally {self.type.name} Type ", icon_url=self.type.emoji.url)
 
         cat = self.category
-        embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
+        embed.set_footer(text=cat.name, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
         embed.add_field(name="Max Power", value=self.max_move_base)
@@ -504,7 +504,7 @@ class Move:
             icon_url=self.type.emoji.url if self.type != item else None,
         )
         cat = self.category
-        embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
+        embed.set_footer(text=cat.name, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
         if effect := self.z_effect:
@@ -519,10 +519,10 @@ class Move:
 
     @property
     def max_move_name(self):
-        return "Max Guard" if self.category == Category.STATUS else self.type.max_move
+        return "Max Guard" if self.category == Category.Status else self.type.max_move
 
     def max_move_type_for(self, item: TypingEnum):
-        return TypingEnum.Normal if self.category == Category.STATUS else item
+        return TypingEnum.Normal if self.category == Category.Status else item
 
     @property
     def max_move_type(self):
@@ -545,11 +545,11 @@ class Move:
             name=f"Original Move: {self.name}",
             icon_url=item.emoji.url if item != self.type else None,
         )
-        embed.set_footer(text=cat.title, icon_url=cat.emoji.url)
+        embed.set_footer(text=cat.name, icon_url=cat.emoji.url)
         embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
 
-        if cat != Category.STATUS:
+        if cat != Category.Status:
             embed.add_field(name="Effect", value=item.max_effect, inline=False)
 
         return embed

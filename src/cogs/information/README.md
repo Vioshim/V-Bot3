@@ -5,8 +5,7 @@
 
 > A cog that includes all the log-related utilities aside of a welcome message and a menu that handles the rules and common daily activities.
 
-| File                | Description                   |
-| ------------------- | ----------------------------- |
-| `area_selection.py` | AreaView Class Implementation |
-| `perks.py`          | Features for boosters         |
-| `polls.py`          | Poll System                   |
+| File       | Description           |
+| ---------- | --------------------- |
+| `perks.py` | Features for boosters |
+| `polls.py` | Poll System           |

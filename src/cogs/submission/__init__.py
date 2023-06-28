@@ -38,7 +38,6 @@ from discord import (
     RawMessageUpdateEvent,
     RawThreadDeleteEvent,
     RawThreadUpdateEvent,
-    Role,
     TextChannel,
     Thread,
     User,
@@ -59,7 +58,7 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import LINK_EMOJI, MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
 from src.utils.functions import name_emoji_from_channel, safe_username
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
@@ -69,6 +68,7 @@ __all__ = ("Submission", "setup")
 
 
 ENTRIES = set(MAP_ELEMENTS2) | {740552350703550545, 740567496721039401}
+DEFAULT_IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/1096165342608380054/image.png"
 
 
 def comparison_handler(before: Character, now: Character):
@@ -220,18 +220,9 @@ class Submission(commands.Cog):
                             member = await self.bot.fetch_user(member.id)
 
                 if isinstance(member, (User, Member)):
-                    roles: list[Role] = getattr(member, "roles", [])
-                    tags = [
-                        o
-                        for x in map(
-                            lambda x: x.name.removesuffix(" RP Search"),
-                            filter(lambda x: " RP Search" in x.name, roles),
-                        )
-                        if (o := get(channel.available_tags, name=x))
-                    ]
-                    tags.sort(key=lambda x: x.name)
-                    thread = await thread.edit(name=member.display_name, applied_tags=tags[:5], archived=False)
-                    msg = await msg.edit(content=f"{member.mention}\n{member.display_avatar.url}", attachments=[])
+                    thread = await thread.edit(name=member.display_name, archived=False)
+                    file = await member.display_avatar.with_size(4096).to_file()
+                    msg = await msg.edit(content=member.mention, attachments=[file])
             except DiscordException:
                 thread = None
 
@@ -243,21 +234,12 @@ class Submission(commands.Cog):
                     member = await self.bot.fetch_user(member.id)
 
             if isinstance(member, (User, Member)):
-                roles: list[Role] = getattr(member, "roles", [])
-                tags = [
-                    o
-                    for x in map(
-                        lambda x: x.name.removesuffix(" RP Search"),
-                        filter(lambda x: " RP Search" in x.name, roles),
-                    )
-                    if (o := get(channel.available_tags, name=x))
-                ]
-                tags.sort(key=lambda x: x.name)
+                file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
                     name=member.display_name,
-                    content=f"{member.mention}\n{member.display_avatar.url}",
-                    applied_tags=tags[:5],
-                    allowed_mentions=AllowedMentions(users=True),
+                    content=member.mention,
+                    file=file,
+                    allowed_mentions=AllowedMentions(users=[member]),
                 )
                 thread = x.thread
                 await db.replace_one(
@@ -566,6 +548,7 @@ class Submission(commands.Cog):
                 allowed_mentions=AllowedMentions.none(),
                 view=view if len(text) == index + 1 else MISSING,
                 wait=True,
+                silent=True,
             )
 
             await db.insert_one(
@@ -660,10 +643,14 @@ class Submission(commands.Cog):
             else:
                 text = msg.content
 
-            if fuzz.WRatio(text, message.content, score_cutoff=95) or (
-                attachments
-                and len(attachments) == len(msg.attachments)
-                and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+            if (
+                fuzz.WRatio(text, message.content, score_cutoff=95)
+                or text in message.content
+                or (
+                    attachments
+                    and len(attachments) == len(msg.attachments)
+                    and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+                )
             ):
                 await self.on_message_tupper(msg, message.author, kwargs)
 
@@ -671,7 +658,7 @@ class Submission(commands.Cog):
         self.bot.logger.info("Loading Submission menu")
         view = SubmissionView(timeout=None)
         channel = self.bot.get_partial_messageable(id=852180971985043466, guild_id=719343092963999804)
-        message = channel.get_partial_message(1005387453055639612)
+        message = channel.get_partial_message(1116388296025722911)
         view.message = await message.edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
@@ -706,49 +693,24 @@ class Submission(commands.Cog):
         if item := await db.find_one({"author": thread.owner.id}):
             image = item["image"]
         else:
-            image = "https://cdn.discordapp.com/attachments/748384705098940426/1096165342608380054/image.png"
+            image = DEFAULT_IMAGE
 
         ping_role = thread.guild.get_role(1110599604090716242)
         await msg.pin(reason=f"Thread created by {thread.owner}")
         embed = Embed(
             title="Reminder",
-            description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available. </ocs:1017242400705490985> </find:1022520398488817686>",
+            description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1017242400705490985>\n* </find:1022520398488817686>",
             color=thread.owner.color,
             timestamp=thread.created_at,
         )
         embed.set_image(url=image)
         embed.set_thumbnail(url=self.bot.user.display_avatar)
         embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
-        await thread.send(embed=embed)
-        w = await self.bot.webhook(thread)
-
-        embed = Embed(
-            title=thread.name,
-            description=msg.content,
-            color=thread.owner.color,
-            timestamp=thread.created_at,
-        )
-
-        if images := [x for x in msg.attachments if str(x.content_type).startswith("image/")]:
-            embed.set_thumbnail(url=images[0].url)
-
-        embed.set_image(url=image)
-        applied_tags = sorted(thread.applied_tags, key=lambda x: x.name)
-
-        tags = ", ".join(x.name for x in applied_tags) or None
-        embed.set_footer(text=f"Tags: {tags}")
-
-        view = View()
-        view.add_item(Button(label="Check Thread", url=msg.jump_url, emoji=LINK_EMOJI))
-
-        await w.send(
-            embed=embed,
+        await msg.reply(
             content=ping_role.mention,
+            embed=embed,
             allowed_mentions=AllowedMentions(roles=[ping_role]),
-            username=safe_username(thread.owner.display_name),
-            avatar_url=thread.owner.display_avatar.url,
-            thread=Object(id=1061010425136828628),
-            view=view,
+            mention_author=True,
         )
 
     @commands.Cog.listener()
@@ -972,7 +934,10 @@ class Submission(commands.Cog):
     @app_commands.command(name="ocs")
     @app_commands.guilds(719343092963999804)
     async def get_ocs(
-        self, itx: Interaction[CustomBot], member: Optional[Member | User], character: Optional[CharacterArg]
+        self,
+        itx: Interaction[CustomBot],
+        member: Optional[Member | User],
+        character: Optional[CharacterArg],
     ):
         """Allows to show characters
 

@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import lru_cache
 from re import split
 from typing import Any, Callable, Optional
 
@@ -109,17 +108,21 @@ class Typing:
     def __init__(self, data: dict[str, Any]) -> None:
         self.name = data.get("name", "")
         self.icon = data.get("icon", "")
-        if type_id := data.get("id", None):
+        if type_id := data.get("id"):
             self.ids = frozenset({type_id})
         else:
             self.ids = frozenset(data.get("ids", []))
         self.color = data.get("color", 0)
-        self.emoji = PartialEmoji.from_str(data.get("emoji", "<:pokeball:952522808435544074>"))
+        self.emoji = PartialEmoji.from_str(data.get("emoji", "<:Pokeball:1080677576713977856>"))
         self.z_move = data.get("z_move", "")
         self.max_move = data.get("max_move", "")
         self.max_effect = data.get("max_effect", "")
         self.chart = frozendict(data.get("chart", {}))
         self.game_id = data.get("game_id", 0)
+
+    @property
+    def url(self):
+        return self.emoji.url
 
     @property
     def id(self):
@@ -162,11 +165,7 @@ class Typing:
         """
         return any(x in self.chart for x in other.ids)
 
-    def __setitem__(
-        self,
-        type_id: Typing,
-        value: int | float,
-    ) -> None:
+    def __setitem__(self, type_id: Typing, value: int | float) -> None:
         """Setitem method for assigning chart values
 
         Parameters
@@ -524,8 +523,7 @@ class TypingEnum(Typing, Enum):
         return get(TypingEnum, **kwargs)
 
     @classmethod
-    @lru_cache(maxsize=None)
-    def deduce(cls, item: str | TypingEnum) -> Optional[TypingEnum]:
+    def deduce(cls, item: str | TypingEnum, lang: str = "en-US") -> Optional[TypingEnum]:
         """This is a method that determines the Typing out of
         the existing entries, it has a 85% of precision.
 
@@ -541,6 +539,8 @@ class TypingEnum(Typing, Enum):
         """
         if isinstance(item, Typing):
             return TypingEnum(item)
+        if isinstance(item, cls):
+            return item
 
         name = fix(item).title()
         if data := TypingEnum.get(name=name):
@@ -554,7 +554,7 @@ class TypingEnum(Typing, Enum):
             return data[0]
 
     @classmethod
-    def deduce_many(cls, *elems: str | TypingEnum):
+    def deduce_many(cls, *elems: str | TypingEnum, lang: str = "en-US"):
         """This is a method that determines the moves out of
         the existing entries, it has a 85% of precision.
 

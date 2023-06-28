@@ -437,7 +437,7 @@ class Movepool:
             level=frozendict(level),
             tm=foo(self.tm),
             event=foo(self.event),
-            tutor=foo(self.event),
+            tutor=foo(self.tutor),
             egg=foo(self.egg),
             other=foo(self.other),
         )

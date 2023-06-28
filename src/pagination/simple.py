@@ -37,7 +37,8 @@ from discord import (
 from discord.abc import Messageable, Snowflake
 from discord.ui import Button, button
 
-from src.pagination.view_base import ArrowEmotes, Basic
+from src.pagination.view_base import Basic
+from src.utils.etc import ArrowEmotes
 
 _T = TypeVar("_T", bound=Sized)
 

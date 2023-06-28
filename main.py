@@ -28,7 +28,6 @@ from dotenv import load_dotenv
 from orjson import loads
 
 from src.structures.bot import CustomBot
-from src.structures.help import CustomHelp
 from src.structures.logger import ColoredLogger
 
 setLoggerClass(ColoredLogger)
@@ -62,7 +61,7 @@ async def main() -> None:
                 description="This is Vioshim's bot",
                 command_attrs=dict(hidden=True),
                 case_insensitive=True,
-                help_command=CustomHelp(),
+                help_command=None,
                 aiogoogle=aiogoogle,
             ) as bot,
         ):

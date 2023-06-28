@@ -13,56 +13,29 @@
 # limitations under the License.
 
 
+import asyncio
 from contextlib import suppress
 from datetime import timedelta
 from os import getenv
 from typing import Optional
 
+import discord
 from aiohttp import ClientResponseError
-from discord import (
-    AllowedMentions,
-    Asset,
-    Attachment,
-    ButtonStyle,
-    ChannelType,
-    Colour,
-    DiscordException,
-    Embed,
-    Emoji,
-    Guild,
-    HTTPException,
-    Interaction,
-    InteractionResponse,
-    Member,
-    Message,
-    NotFound,
-    Object,
-    PartialEmoji,
-    PermissionOverwrite,
-    RawBulkMessageDeleteEvent,
-    RawMessageDeleteEvent,
-    RawReactionActionEvent,
-    Role,
-    TextChannel,
-    TextStyle,
-    User,
-    Webhook,
-    app_commands,
-)
+from discord import app_commands
 from discord.abc import GuildChannel
 from discord.ext import commands
-from discord.ui import Button, Modal, Select, TextInput, View, button, select
-from discord.utils import format_dt, get, time_snowflake, utcnow
+from discord.ui import Button, Modal, Select, TextInput, View, select
+from discord.utils import format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
+from rapidfuzz import fuzz
 from yaml import dump
 
-from src.cogs.information.area_selection import RegionViewComplex
 from src.cogs.information.perks import CustomPerks
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
-from src.structures.character import Character
-from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, STICKER_EMOJI, WHITE_BAR
+from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
 from src.utils.functions import message_line, name_emoji_from_channel, safe_username
+from src.utils.matches import TUPPER_REPLY_PATTERN
 
 __all__ = ("Information", "setup")
 
@@ -142,7 +115,7 @@ class AnnouncementModal(Modal):
 
         self.poll_data = TextInput(
             label="Poll Data",
-            style=TextStyle.paragraph,
+            style=discord.TextStyle.paragraph,
             placeholder="Value, Value, Value",
             required=True,
         )
@@ -160,17 +133,18 @@ class AnnouncementModal(Modal):
             self.add_item(self.poll_data)
             self.add_item(self.poll_range)
 
-    async def on_submit(self, interaction: Interaction):
-        resp: InteractionResponse = interaction.response
-        embeds: list[Embed] = self.kwargs.get("embeds", [])
-        await resp.defer(ephemeral=True, thinking=True)
-        webhook: Webhook = await interaction.client.webhook(interaction.channel)
+    async def on_submit(self, interaction: discord.Interaction[CustomBot]):
+        embeds: list[discord.Embed] = self.kwargs.get("embeds", [])
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        webhook = await interaction.client.webhook(interaction.channel)
 
         if embeds:
             embeds[0].title = self.thread_name.value
             embeds[0].set_author(name=interaction.user.display_name, icon_url=interaction.user.avatar)
 
-        msg = await webhook.send(**self.kwargs, allowed_mentions=AllowedMentions(everyone=True, roles=True), wait=True)
+        msg = await webhook.send(
+            **self.kwargs, allowed_mentions=discord.AllowedMentions(everyone=True, roles=True), wait=True
+        )
 
         if self.poll_mode:
             db: AsyncIOMotorCollection = interaction.client.mongo_db("Poll")
@@ -193,13 +167,13 @@ class AnnouncementModal(Modal):
 
 
 class AnnouncementView(View):
-    def __init__(self, *, member: Member, **kwargs):
+    def __init__(self, *, member: discord.Member, **kwargs):
         super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
         self.format()
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
+    async def interaction_check(self, interaction: discord.Interaction[CustomBot]) -> bool:
         if interaction.user != self.member:
             await interaction.response.send_message(f"Message requested by {self.member.mention}", ephemeral=True)
             return False
@@ -210,12 +184,12 @@ class AnnouncementView(View):
         self.features.add_option(
             label="Add a thread",
             value="thread",
-            emoji=PartialEmoji(name="messageupdate", id=432986578927747073),
+            emoji=discord.PartialEmoji(name="messageupdate", id=432986578927747073),
         )
         self.features.add_option(
             label="Add a poll",
             value="poll",
-            emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+            emoji=discord.PartialEmoji(name="channelcreate", id=432986578781077514),
         )
         self.features.add_option(
             label="Cancel Process",
@@ -232,11 +206,10 @@ class AnnouncementView(View):
                 )
 
     @select(placeholder="Select Features", max_values=3)
-    async def features(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        if str(ctx.guild_id) in sct.values:
+    async def features(self, itx: discord.Interaction[CustomBot], sct: Select):
+        if str(itx.guild_id) in sct.values:
             self.kwargs["content"] = "@everyone"
-        elif roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := ctx.guild.get_role(int(x)))):
+        elif roles := " ".join(o.mention for x in sct.values if x.isdigit() and (o := itx.guild.get_role(int(x)))):
             self.kwargs["content"] = roles
         else:
             self.kwargs["content"] = None
@@ -245,101 +218,35 @@ class AnnouncementView(View):
         self.kwargs["thread"] = "thread" in sct.values
 
         if "cancel" in sct.values:
-            await resp.pong()
+            await itx.response.pong()
         else:
-            word = channels.get(ctx.channel_id)
-            data = ctx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
-            name = f"{word} {ctx.user.display_name} {data.strftime('%B %d')}"
+            word = channels.get(itx.channel_id)
+            data = itx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
+            name = f"{word} {itx.user.display_name} {data.strftime('%B %d')}"
             modal = AnnouncementModal(word=word, name=name, **self.kwargs)
-            await resp.send_modal(modal)
+            await itx.response.send_modal(modal)
             await modal.wait()
 
-        await ctx.message.delete(delay=0)
+        await itx.message.delete(delay=0)
         self.stop()
-
-
-class TicketModal(Modal, title="Ticket"):
-    content = TextInput(
-        label="Content",
-        placeholder="What would you like to comment / report to Staff?",
-        style=TextStyle.paragraph,
-        required=True,
-    )
-
-    async def on_submit(self, interaction: Interaction):
-        """This is a function that creates a thread whenever an user uses it
-
-        Parameters
-        ----------
-        interaction : Interaction
-            Interaction object
-        """
-        resp: InteractionResponse = interaction.response
-        await resp.defer(ephemeral=True, thinking=True)
-        member: Member = interaction.user
-        data = interaction.created_at.astimezone(tz=DEFAULT_TIMEZONE)
-        name = data.strftime("%B %d, %Y")
-        webhook: Webhook = await interaction.client.webhook(719343092963999807)
-        thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
-        embed = Embed(title=f"Ticket {name}"[:256], description=self.content.value, timestamp=data, color=member.color)
-        embed.set_thumbnail(url=member.display_avatar.url)
-
-        msg = await webhook.send(thread=thread, wait=True, embed=embed)
-
-        view = View()
-        view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
-        await interaction.followup.send("Ticket created successfully", ephemeral=True, view=view)
-        await thread.add_user(member)
-
-        channel = interaction.client.get_partial_messageable(
-            id=1077697010490167308,
-            guild_id=interaction.guild.id,
-        )
-
-        await channel.send(embed=embed, view=view)
-        self.stop()
-
-
-class InformationView(View):
-    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, item, /):
-        interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
-
-    @button(label="See Map", emoji="\N{WORLD MAP}", row=1, style=ButtonStyle.blurple)
-    async def see_map(self, ctx: Interaction[CustomBot], _: Button):
-        db: AsyncIOMotorCollection = ctx.client.mongo_db("Characters")
-        date_value = time_snowflake(ctx.created_at - timedelta(days=14))
-        key = {
-            "server": ctx.guild_id,
-            "$or": [
-                {"id": {"$gte": date_value}},
-                {"location": {"$gte": date_value}},
-                {"last_used": {"$gte": date_value}},
-            ],
-            "location": {"$type": 18},
-        }
-        if role := get(ctx.guild.roles, name="Registered"):
-            key["author"] = {"$in": [x.id for x in role.members]}
-        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-        view = RegionViewComplex(member=ctx.user, target=ctx, ocs=ocs)
-        await view.simple_send(ephemeral=True)
-
-    @button(label="Make a Ticket", emoji=STICKER_EMOJI, row=1, style=ButtonStyle.blurple)
-    async def create_ticket(self, ctx: Interaction[CustomBot], _: Button):
-        resp: InteractionResponse = ctx.response
-        await resp.send_modal(TicketModal(timeout=None))
 
 
 class Information(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.ready = False
-        self.message: Optional[Message] = None
+        self.message: Optional[discord.Message] = None
         self.bot.tree.on_error = self.on_error
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Booster")
-    async def perks(self, ctx: Interaction[CustomBot], perk: CustomPerks, icon: Optional[Attachment] = None):
+    async def perks(
+        self,
+        itx: discord.Interaction[CustomBot],
+        perk: CustomPerks,
+        icon: Optional[discord.Attachment] = None,
+    ):
         """Custom Functions for Supporters!
 
         Parameters
@@ -351,26 +258,25 @@ class Information(commands.Cog):
         icon : Attachment
             Image File
         """
-        resp: InteractionResponse = ctx.response
         if not icon or icon.content_type.startswith("image"):
             try:
-                await perk.method(ctx, icon)
+                await perk.method(itx, icon)
             except Exception as e:
                 self.bot.logger.exception("Exception in perks", exc_info=e)
-                await resp.send_message(str(e), ephemeral=True)
+                await itx.response.send_message(str(e), ephemeral=True)
         else:
-            await resp.send_message("Valid File Format: image/png", ephemeral=True)
+            await itx.response.send_message("Valid File Format: image/png", ephemeral=True)
 
     @commands.Cog.listener()
-    async def on_member_remove(self, member: Member):
+    async def on_member_remove(self, member: discord.Member):
         if member.guild.id != 719343092963999804:
             return
 
-        guild: Guild = member.guild
-        embed = Embed(
+        guild = member.guild
+        embed = discord.Embed(
             title="Member Left - Roles",
             description="The user did not have any roles.",
-            color=Colour.red(),
+            color=discord.Colour.red(),
             timestamp=utcnow(),
         )
         if roles := member.roles[:0:-1]:
@@ -390,7 +296,7 @@ class Information(commands.Cog):
         db = self.bot.mongo_db("Custom Role")
         if data := await db.find_one({"author": member.id}):
             if role := get(member.guild.roles, id=data["id"]):
-                with suppress(DiscordException):
+                with suppress(discord.DiscordException):
                     await role.delete(reason="User left")
 
             await db.delete_one(data)
@@ -405,24 +311,24 @@ class Information(commands.Cog):
             embed=embed,
             view=view,
             username=safe_username(member.display_name),
-            thread=Object(id=1020153313242665022),
+            thread=discord.Object(id=1020153313242665022),
             avatar_url=member.display_avatar.url,
         )
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: Member):
+    async def on_member_join(self, member: discord.Member):
         if member.guild.id != 719343092963999804:
             return
 
         date = utcnow()
-        embed = Embed(description=f"{member.mention} - {member}", timestamp=date)
+        embed = discord.Embed(description=f"{member.mention} - {member}", timestamp=date)
         if member.created_at >= date - timedelta(days=30):
             embed.title = "Member Joined - Account Created Recently"
-            embed.color = Colour.orange()
+            embed.color = discord.Colour.orange()
             await member.timeout(timedelta(days=7), reason="Account created less than 30 days ago.")
         else:
             embed.title = "Member Joined"
-            embed.color = Colour.green()
+            embed.color = discord.Colour.green()
 
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {member.id}")
@@ -442,19 +348,23 @@ class Information(commands.Cog):
             embed=embed,
             file=file,
             view=view,
-            thread=Object(id=1020153315255922738),
+            thread=discord.Object(id=1020153315255922738),
             username=safe_username(member.display_name),
             avatar_url=member.display_avatar.url,
         )
 
     @commands.Cog.listener()
-    async def on_member_update(self, past: Member, now: Member):
+    async def on_member_update(self, past: discord.Member, now: discord.Member):
         if now.guild.id != 719343092963999804 or past.premium_since == now.premium_since:
             return
 
         files = []
         if past.premium_since and not now.premium_since:
-            embed = Embed(title="Has un-boosted the Server!", colour=Colour.red(), timestamp=utcnow())
+            embed = discord.Embed(
+                title="Has un-boosted the Server!",
+                colour=discord.Colour.red(),
+                timestamp=utcnow(),
+            )
             db = self.bot.mongo_db("Custom Role")
             if (
                 data := await db.find_one_and_delete(
@@ -468,10 +378,14 @@ class Information(commands.Cog):
                 embed.add_field(name="Name", value=role.name)
                 embed.add_field(name="Color", value=role.color)
 
-                with suppress(DiscordException):
+                with suppress(discord.DiscordException):
                     await role.delete(reason="User unboosted")
         else:
-            embed = Embed(title="Has boosted the Server!", colour=Colour.brand_green(), timestamp=utcnow())
+            embed = discord.Embed(
+                title="Has boosted the Server!",
+                colour=discord.Colour.brand_green(),
+                timestamp=utcnow(),
+            )
 
         embed.set_image(url=WHITE_BAR)
         embed.set_author(name=now.display_name, icon_url=now.display_avatar.url)
@@ -482,19 +396,19 @@ class Information(commands.Cog):
             content=now.mention,
             embed=embed,
             files=files,
-            thread=Object(id=1020153311200022528),
+            thread=discord.Object(id=1020153311200022528),
             username=safe_username(now.display_name),
             avatar_url=now.display_avatar.url,
         )
 
     @commands.Cog.listener()
-    async def on_member_ban(self, guild: Guild, user: Member | User):
+    async def on_member_ban(self, guild: discord.Guild, user: discord.Member | discord.User):
         if guild.id != 719343092963999804:
             return
 
-        embed = Embed(
+        embed = discord.Embed(
             title="Member Banned",
-            colour=Colour.red(),
+            colour=discord.Colour.red(),
             description=f"{user.mention} - {user}",
             timestamp=utcnow(),
         )
@@ -516,13 +430,13 @@ class Information(commands.Cog):
             embed=embed,
             file=file,
             view=view,
-            thread=Object(id=1020153286285865000),
+            thread=discord.Object(id=1020153286285865000),
             username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
         )
 
     @commands.Cog.listener()
-    async def on_role_create(self, role: Role):
+    async def on_role_create(self, role: discord.Role):
         """Role Create Event
 
         Parameters
@@ -530,21 +444,21 @@ class Information(commands.Cog):
         role : Role
             Added role
         """
-        embed = Embed(
+        embed = discord.Embed(
             title="Role Created",
             description=role.name,
             color=role.color,
             timestamp=role.created_at,
         )
-        if isinstance(icon := role.display_icon, Asset):
+        if isinstance(icon := role.display_icon, discord.Asset):
             embed.set_thumbnail(url=icon)
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=role.guild.name, icon_url=role.guild.icon)
         log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        await log.send(embed=embed, thread=Object(id=1020153288617906256))
+        await log.send(embed=embed, thread=discord.Object(id=1020153288617906256))
 
     @commands.Cog.listener()
-    async def on_role_delete(self, role: Role):
+    async def on_role_delete(self, role: discord.Role):
         """Role Delete Event
 
         Parameters
@@ -552,23 +466,23 @@ class Information(commands.Cog):
         role : Role
             Added role
         """
-        embed = Embed(
+        embed = discord.Embed(
             title="Role Deleted",
             description=role.name,
             color=role.color,
             timestamp=role.created_at,
         )
         files = []
-        if isinstance(icon := role.display_icon, Asset):
+        if isinstance(icon := role.display_icon, discord.Asset):
             files.append(file := await icon.to_file())
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=role.guild.name, icon_url=role.guild.icon)
         log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        await log.send(embed=embed, files=files, thread=Object(id=1020153288617906256))
+        await log.send(embed=embed, files=files, thread=discord.Object(id=1020153288617906256))
 
     @commands.Cog.listener()
-    async def on_role_update(self, before: Role, after: Role):
+    async def on_role_update(self, before: discord.Role, after: discord.Role):
         """Role Update Event
 
         Parameters
@@ -581,10 +495,10 @@ class Information(commands.Cog):
         if not before.guild or before.guild.id != 719343092963999804:
             return
 
-        embed1 = Embed(title=f"Role Update: {after.name}", colour=before.color, timestamp=before.created_at)
+        embed1 = discord.Embed(title=f"Role Update: {after.name}", colour=before.color, timestamp=before.created_at)
         embed1.set_image(url=WHITE_BAR)
 
-        embed2 = Embed(colour=after.color, timestamp=utcnow())
+        embed2 = discord.Embed(colour=after.color, timestamp=utcnow())
         embed2.set_image(url=WHITE_BAR)
 
         embeds, files = [embed1, embed2], []
@@ -598,7 +512,7 @@ class Information(commands.Cog):
         if before.display_icon != after.display_icon:
             condition = True
             for aux1, aux2 in zip([embed1, embed2], [before.display_icon, after.display_icon]):
-                if isinstance(aux2, Asset):
+                if isinstance(aux2, discord.Asset):
                     aux1.url = WHITE_BAR
                     files.append(file := await aux2.to_file())
                     aux1.set_image(url=f"attachment://{file.filename}")
@@ -608,14 +522,14 @@ class Information(commands.Cog):
         if before.permissions != after.permissions:
             condition = True
             embeds.append(
-                Embed(
+                discord.Embed(
                     title="Updated Permissions",
                     description="\n".join(
                         f"• {ICON_VALUES[v1]} -> {ICON_VALUES[v2]}: {k1.replace('_', ' ').title()}"
                         for ((k1, v1), (k2, v2)) in zip(before.permissions, after.permissions)
                         if k1 == k2 and v1 != v2
                     ),
-                    color=Colour.blurple(),
+                    color=discord.Colour.blurple(),
                     timestamp=utcnow(),
                 ).set_image(url=WHITE_BAR)
             )
@@ -627,15 +541,15 @@ class Information(commands.Cog):
         await log.send(
             embeds=embeds,
             files=files,
-            thread=Object(id=1020153288617906256),
+            thread=discord.Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(
         self,
-        guild: Guild,
-        before: list[Emoji],
-        after: list[Emoji],
+        guild: discord.Guild,
+        before: list[discord.Emoji],
+        after: list[discord.Emoji],
     ):
         """Guild Emoji Update
 
@@ -651,22 +565,27 @@ class Information(commands.Cog):
         if guild.id != 719343092963999804:
             return
 
-        aux_before, aux_after = set[Emoji](before), set[Emoji](after)
+        aux_before, aux_after = set[discord.Emoji](before), set[discord.Emoji](after)
         description = "\n".join(f"+ {x} - {x!r}" for x in (aux_after - aux_before))
-        embed = Embed(title="Emoji Changes", description=description, color=Colour.blurple(), timestamp=utcnow())
+        embed = discord.Embed(
+            title="Emoji Changes",
+            description=description,
+            color=discord.Colour.blurple(),
+            timestamp=utcnow(),
+        )
         embed.set_image(url=WHITE_BAR)
 
         embeds, files = [embed], []
 
         for item in aux_before - aux_after:
             files.append(file := await item.to_file())
-            e = Embed(title=item.name)
+            e = discord.Embed(title=item.name)
             e.set_thumbnail(url=f"attachment://{file.filename}")
             e.set_image(url=WHITE_BAR)
             e.set_footer(text=f"ID: {item.id}")
 
         log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
-        await log.send(embeds=embeds, thread=Object(id=1020153288617906256))
+        await log.send(embeds=embeds, thread=discord.Object(id=1020153288617906256))
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel):
@@ -682,13 +601,13 @@ class Information(commands.Cog):
         if not channel.guild or channel.guild.id != 719343092963999804:
             return
 
-        if not isinstance(channel, TextChannel):
+        if not isinstance(channel, discord.TextChannel):
             return
 
-        embed = Embed(
+        embed = discord.Embed(
             title=f"Channel Create: {channel.name}",
             description=channel.topic,
-            colour=Colour.green(),
+            colour=discord.Colour.green(),
             timestamp=channel.created_at,
         )
 
@@ -714,7 +633,7 @@ class Information(commands.Cog):
         await log.send(
             embed=embed,
             view=view,
-            thread=Object(id=1020153288617906256),
+            thread=discord.Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
@@ -731,10 +650,10 @@ class Information(commands.Cog):
         if not channel.guild or channel.guild.id != 719343092963999804:
             return
 
-        embed = Embed(
+        embed = discord.Embed(
             title=f"Channel Delete: {channel.name}",
             description=getattr(channel, "topic", None),
-            colour=Colour.red(),
+            colour=discord.Colour.red(),
             timestamp=channel.created_at,
         )
 
@@ -767,7 +686,7 @@ class Information(commands.Cog):
         await log.send(
             embed=embed,
             view=view,
-            thread=Object(id=1020153288617906256),
+            thread=discord.Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
@@ -788,9 +707,16 @@ class Information(commands.Cog):
         if not before.guild or before.guild.id != 719343092963999804:
             return
 
-        embed1 = Embed(title=f"Channel Update: {after.name}", colour=Colour.red(), timestamp=before.created_at)
+        embed1 = discord.Embed(
+            title=f"Channel Update: {after.name}",
+            colour=discord.Colour.red(),
+            timestamp=before.created_at,
+        )
         embed1.set_image(url=WHITE_BAR)
-        embed2 = Embed(colour=Colour.green(), timestamp=utcnow())
+        embed2 = discord.Embed(
+            colour=discord.Colour.green(),
+            timestamp=utcnow(),
+        )
         embed2.set_image(url=WHITE_BAR)
 
         embeds = [embed1]
@@ -811,10 +737,10 @@ class Information(commands.Cog):
         ):
             condition = True
 
-            differences = Embed(
+            differences = discord.Embed(
                 title="Permissions Overwritten",
                 description="",
-                colour=Colour.blurple(),
+                colour=discord.Colour.blurple(),
                 timestamp=utcnow(),
             )
             items = []
@@ -827,8 +753,8 @@ class Information(commands.Cog):
                     items.append(f"+ {item}")
                 elif item not in after.overwrites:
                     items.append(f"- {item}")
-                value1 = dict(before.overwrites.get(item, PermissionOverwrite()))
-                value2 = dict(after.overwrites.get(item, PermissionOverwrite()))
+                value1 = dict(before.overwrites.get(item, discord.PermissionOverwrite()))
+                value2 = dict(after.overwrites.get(item, discord.PermissionOverwrite()))
 
                 if text := "\n".join(
                     f"{icon1} -> {icon2}: {key.replace('_', ' ').title()}"
@@ -863,17 +789,17 @@ class Information(commands.Cog):
         await log.send(
             embeds=embeds,
             view=view,
-            thread=Object(id=1020153288617906256),
+            thread=discord.Object(id=1020153288617906256),
         )
 
     @commands.Cog.listener()
-    async def on_member_unban(self, guild: Guild, user: User):
+    async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         if guild.id != 719343092963999804:
             return
 
-        embed = Embed(
+        embed = discord.Embed(
             title="Member Unbanned",
-            colour=Colour.green(),
+            colour=discord.Colour.green(),
             description=f"{user.mention} - {user}",
             timestamp=utcnow(),
         )
@@ -894,50 +820,100 @@ class Information(commands.Cog):
             embed=embed,
             file=file,
             view=view,
-            thread=Object(id=1020153286285865000),
+            thread=discord.Object(id=1020153286285865000),
             username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
         )
 
     @commands.Cog.listener()
-    async def on_message(self, message: Message):
+    async def on_message(self, message: discord.Message):
         if message.mention_everyone or message.role_mentions:
             return
         channel = message.channel
-
-        if not (word := channels.get(channel.id)):
-            return
-
-        if message.author.bot:
-            return
-
-        webhook = await self.bot.webhook(channel)
-
-        if message.webhook_id and webhook.id != message.webhook_id:
-            await message.delete(delay=0)
-            return
 
         context = await self.bot.get_context(message)
 
         if context.command:
             return
 
-        member: Member = message.author
-        self.bot.msg_cache_add(message)
-        kwargs = await self.embed_info(message)
-        if embeds := kwargs.get("embeds", []):
-            embeds[0].title = word
-        del kwargs["view"]
-        view = AnnouncementView(member=member, **kwargs)
-        conf_embed = Embed(title=word, color=Colour.blurple(), timestamp=utcnow())
-        conf_embed.set_image(url=WHITE_BAR)
-        conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
-        await message.reply(embed=conf_embed, view=view)
-        await view.wait()
-        await message.delete(delay=0)
+        if word := channels.get(channel.id):
+            if message.author.bot:
+                return
+
+            webhook = await self.bot.webhook(channel)
+
+            if message.webhook_id and webhook.id != message.webhook_id:
+                await message.delete(delay=0)
+                return
+
+            self.bot.msg_cache_add(message)
+            kwargs = await self.embed_info(message)
+            if embeds := kwargs.get("embeds", []):
+                embeds[0].title = word
+            del kwargs["view"]
+            view = AnnouncementView(member=message.author, **kwargs)
+            conf_embed = discord.Embed(title=word, color=discord.Colour.blurple(), timestamp=utcnow())
+            conf_embed.set_image(url=WHITE_BAR)
+            conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
+            await message.reply(embed=conf_embed, view=view)
+            await view.wait()
+            await message.delete(delay=0)
+        else:
+            messages: list[discord.Message] = []
+
+            def checker(m: discord.Message):
+                if m.webhook_id and message.channel == m.channel:
+                    messages.append(m)
+                return False
+
+            done, pending = await asyncio.wait(
+                [
+                    asyncio.create_task(
+                        self.bot.wait_for("message", check=checker, timeout=2),
+                        name="Message",
+                    ),
+                    asyncio.create_task(
+                        self.bot.wait_for("message_edit", check=lambda x, _: x == message),
+                        name="Edit",
+                    ),
+                    asyncio.create_task(
+                        self.bot.wait_for("message_delete", check=lambda x: x == message),
+                        name="Delete",
+                    ),
+                ],
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+
+            for future in pending:
+                future.cancel()
+
+            for future in done:
+                future.exception()
+
+            if any(future.get_name() == "Edit" for future in done):
+                return
+
+            attachments = message.attachments
+            for msg in sorted(messages, key=lambda x: x.id):
+                if data := TUPPER_REPLY_PATTERN.search(msg.content):
+                    text = str(data.group("content") or msg.content)
+                else:
+                    text = msg.content
+
+                if (
+                    fuzz.WRatio(text, message.content, score_cutoff=95)
+                    or text in message.content
+                    or (
+                        attachments
+                        and len(attachments) == len(msg.attachments)
+                        and all(x.filename == y.filename for x, y in zip(attachments, msg.attachments))
+                    )
+                ):
+                    self.bot.msg_cache_add(message)
+                    break
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before: Message, after: Message):
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Bump handler for message editing bots
 
         Parameters
@@ -947,7 +923,7 @@ class Information(commands.Cog):
         after : Message
             Message after editing
         """
-        if not isinstance(member := after.author, Member):
+        if not isinstance(member := after.author, discord.Member):
             return
 
         if member.guild.id != 719343092963999804:
@@ -956,16 +932,16 @@ class Information(commands.Cog):
         if member.bot or await self.bot.is_owner(member):
             return
 
-        embed1 = Embed(
+        embed1 = discord.Embed(
             title="Previous Message",
-            colour=Colour.red(),
+            colour=discord.Colour.red(),
             description="",
             timestamp=before.edited_at or before.created_at,
         )
         embed1.set_image(url=WHITE_BAR)
-        embed2 = Embed(
+        embed2 = discord.Embed(
             title="Message Afterwards",
-            colour=Colour.green(),
+            colour=discord.Colour.green(),
             description="",
             timestamp=after.edited_at or utcnow(),
         )
@@ -1007,11 +983,11 @@ class Information(commands.Cog):
             files=files,
             embeds=embeds,
             view=view,
-            thread=Object(id=1020153290471772200),
+            thread=discord.Object(id=1020153290471772200),
         )
 
     @commands.Cog.listener()
-    async def on_message_delete(self, ctx: Message):
+    async def on_message_delete(self, msg: discord.Message):
         """Cached Message deleted detection
 
         Parameters
@@ -1019,31 +995,36 @@ class Information(commands.Cog):
         message: Message
             Cached Message
         """
-        if ctx.id in self.bot.msg_cache:
+        if not msg.guild or msg.guild.id != 719343092963999804:
             return
-
-        if not ctx.guild or ctx.guild.id != 719343092963999804:
-            return
-
-        user: Member = ctx.author
-        w = await self.bot.webhook(1020151767532580934, reason="Raw Message delete logging")
         if (
-            not ctx.guild
-            or ctx.webhook_id == w.id
-            or self.bot.user == user
-            or user.id == self.bot.owner_id
-            or user.id in self.bot.owner_ids
+            not msg.guild
+            or (msg.application_id == self.bot.user.id and msg.webhook_id)
+            or self.bot.user == msg.author
+            or msg.author.id == self.bot.owner_id
+            or msg.author.id in self.bot.owner_ids
+            or msg.channel.name.endswith("-logs")
         ):
             return
 
-        if kwargs := await self.embed_info(ctx):
-            if not ctx.webhook_id:
-                kwargs["content"] = ctx.author.mention
-                kwargs["allowed_mentions"] = AllowedMentions.none()
-            await w.send(**kwargs, thread=Object(id=1020153332481937518))
+        w = await self.bot.webhook(1020151767532580934, reason="Message delete logging")
+        await asyncio.sleep(1)
+        if msg.id in self.bot.msg_cache:
+            return
+
+        kwargs = await self.embed_info(msg)
+
+        if not msg.webhook_id:
+            kwargs["content"] = msg.author.mention
+
+        await w.send(
+            **kwargs,
+            thread=discord.Object(id=1116406003353800744),
+            allowed_mentions=discord.AllowedMentions.none(),
+        )
 
     @commands.Cog.listener()
-    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
+    async def on_raw_message_delete(self, payload: discord.RawMessageDeleteEvent):
         """Message deleted detection
 
         Parameters
@@ -1055,7 +1036,7 @@ class Information(commands.Cog):
             self.bot.msg_cache.remove(payload.message_id)
 
     @commands.Cog.listener()
-    async def on_bulk_message_delete(self, messages: list[Message]):
+    async def on_bulk_message_delete(self, messages: list[discord.Message]):
         """This coroutine triggers upon cached bulk message deletions. YAML Format to Myst.bin
 
         Parameters
@@ -1072,18 +1053,19 @@ class Information(commands.Cog):
             return
 
         w = await self.bot.webhook(1020151767532580934, reason="Bulk delete logging")
+        messages = [message_line(x) for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]
 
-        if (messages := [x for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]) and (
+        if messages and (
             paste := await self.bot.m_bin.create_paste(
                 filename=f"{utcnow().strftime('%x')} - {msg.channel}.yaml",
                 content=dump(
-                    data=[*map(message_line, messages)],
+                    data=messages,
                     allow_unicode=True,
                     sort_keys=False,
                 ),
             )
         ):
-            embed = Embed(
+            embed = discord.Embed(
                 title="Bulk Message Delete",
                 url=paste,
                 description=f"Deleted {len(messages)} messages",
@@ -1096,10 +1078,10 @@ class Information(commands.Cog):
             name, emoji = name_emoji_from_channel(msg.channel)
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
             view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
-            await w.send(embed=embed, view=view, thread=Object(id=1020153317889953833))
+            await w.send(embed=embed, view=view, thread=discord.Object(id=1020153317889953833))
 
     @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
+    async def on_raw_bulk_message_delete(self, payload: discord.RawBulkMessageDeleteEvent):
         """This coroutine triggers upon raw bulk message deletions.
 
         Parameters
@@ -1110,12 +1092,12 @@ class Information(commands.Cog):
         self.bot.msg_cache -= payload.message_ids
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         if str(payload.emoji) != "\N{WHITE MEDIUM STAR}":
             return
 
         try:
-            guild: Guild = self.bot.get_guild(payload.guild_id)
+            guild: discord.Guild = self.bot.get_guild(payload.guild_id)
             if not (channel := guild.get_channel_or_thread(payload.channel_id)):
                 channel = await guild.fetch_channel(payload.channel_id)
 
@@ -1139,16 +1121,16 @@ class Information(commands.Cog):
                     await message.pin()
             else:
                 await reaction.remove(payload.member)
-        except DiscordException as e:
+        except discord.DiscordException as e:
             self.bot.logger.exception("Error on Star System", exc_info=e)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
         if str(payload.emoji) != "\N{WHITE MEDIUM STAR}":
             return
 
         try:
-            guild: Guild = self.bot.get_guild(payload.guild_id)
+            guild: discord.Guild = self.bot.get_guild(payload.guild_id)
             if not (channel := guild.get_channel_or_thread(payload.channel_id)):
                 channel = await guild.fetch_channel(payload.channel_id)
 
@@ -1169,7 +1151,7 @@ class Information(commands.Cog):
                 and message.pinned
             ):
                 await message.unpin()
-        except DiscordException as e:
+        except discord.DiscordException as e:
             self.bot.logger.exception("Error on Star System", exc_info=e)
 
     async def tenor_fetch(self, image_id: str):
@@ -1209,22 +1191,22 @@ class Information(commands.Cog):
         if url.startswith("https://giphy.com/"):
             return await self.giphy_fetch(image_id)
 
-    async def embed_info(self, message: Message):
+    async def embed_info(self, message: discord.Message):
         files = []
-        embeds: list[Embed] = []
+        embeds: list[discord.Embed] = []
         if content := message.content:
-            embed = Embed(
+            embed = discord.Embed(
                 title="Message",
                 description=content,
-                color=Colour.blurple(),
+                color=discord.Colour.blurple(),
             )
             embed.set_image(url=WHITE_BAR)
         else:
-            embed = Embed()
+            embed = discord.Embed()
         embeds.append(embed)
         for sticker in message.stickers:
             if embed.title == "Sticker":
-                aux = Embed(color=Colour.blurple())
+                aux = discord.Embed(color=discord.Colour.blurple())
                 embeds.append(aux)
             else:
                 aux = embed
@@ -1240,7 +1222,7 @@ class Information(commands.Cog):
                     if data := await self.gif_fetch(e.url):
                         gif_title, gif_url, gif_image = data
                         if embed.title == "GIF":
-                            aux = Embed(color=Colour.blurple())
+                            aux = discord.Embed(color=discord.Colour.blurple())
                             embeds.append(aux)
                         else:
                             aux = embed
@@ -1254,7 +1236,7 @@ class Information(commands.Cog):
                     if embed.description == e.url:
                         aux = embed
                     else:
-                        aux = Embed(color=Colour.blurple())
+                        aux = discord.Embed(color=discord.Colour.blurple())
                         embeds.append(aux)
                     aux.set_image(url=e.url)
                 case "article" | "link":
@@ -1280,17 +1262,17 @@ class Information(commands.Cog):
                 extension = attachment.filename.split(".")[-1]
                 if attachment.content_type.startswith("image/"):
                     file = await attachment.to_file(use_cached=True, filename=f"img{index}.{extension}")
-                    if embed == Embed() or embed.image.url == WHITE_BAR:
+                    if embed == discord.Embed() or embed.image.url == WHITE_BAR:
                         aux = embed
                     else:
-                        aux = Embed()
+                        aux = discord.Embed()
                         embeds.append(aux)
-                    aux.color = Colour.blurple()
+                    aux.color = discord.Colour.blurple()
                     aux.set_image(url=f"attachment://{file.filename}")
                 else:
                     file = await attachment.to_file(use_cached=True)
                 files.append(file)
-            except HTTPException:
+            except discord.HTTPException:
                 continue
 
         view = View()
@@ -1301,7 +1283,7 @@ class Information(commands.Cog):
         if message.author.bot and "〕" not in username:
             username = f"Bot〕{username}"
 
-        if embeds := embeds[1:11] if embeds[0] == Embed() else embeds[:10]:
+        if embeds := embeds[1:11] if embeds[0] == discord.Embed() else embeds[:10]:
             last_embed = embeds[-1]
             last_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
             last_embed.timestamp = utcnow()
@@ -1326,25 +1308,27 @@ class Information(commands.Cog):
         name: str = ctx.guild.name if ctx.guild else "Private Message"
         self.bot.logger.info("%s > %s > %s", name, ctx.author, ctx.command.qualified_name)
 
-    async def on_error(self, interaction: Interaction, error: app_commands.AppCommandError):
+    async def on_error(self, itx: discord.Interaction[CustomBot], error: app_commands.AppCommandError):
         error: Exception | app_commands.AppCommandError = getattr(error, "original", error)
-        command = interaction.command
-        resp: InteractionResponse = interaction.response
+        command = itx.command
         if command and command._has_any_error_handlers():  # skipcq: PYL-W0212
             return
 
         self.bot.logger.error(
             "Interaction Error(%s, %s)",
             getattr(command, "name", "Unknown"),
-            ", ".join(f"{k}={v}" for k, v in interaction.data.items()),
+            ", ".join(f"{k}={v}" for k, v in itx.data.items()),
             exc_info=error,
         )
 
-        with suppress(NotFound):
-            if not resp.is_done():
-                await resp.defer(thinking=True, ephemeral=True)
+        with suppress(discord.NotFound):
+            if not itx.response.is_done():
+                await itx.response.defer(thinking=True, ephemeral=True)
 
-        embed = Embed(color=Colour.red(), timestamp=interaction.created_at)
+        embed = discord.Embed(
+            color=discord.Colour.red(),
+            timestamp=itx.created_at,
+        )
         embed.set_image(url=WHITE_BAR)
 
         if not isinstance(error, app_commands.AppCommandError):
@@ -1354,8 +1338,8 @@ class Information(commands.Cog):
             embed.title = f"Error - {type(error).__name__}"
             embed.description = str(error)
 
-        with suppress(NotFound):
-            await interaction.followup.send(embed=embed, ephemeral=True)
+        with suppress(discord.NotFound):
+            await itx.followup.send(embed=embed, ephemeral=True)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context[CustomBot], error: commands.CommandError):
@@ -1384,8 +1368,8 @@ class Information(commands.Cog):
             ),
         ):
             await ctx.send(
-                embed=Embed(
-                    color=Colour.red(),
+                embed=discord.Embed(
+                    color=discord.Colour.red(),
                     title=f"Error - {ctx.command.qualified_name}",
                     description=str(error),
                 )
@@ -1401,8 +1385,8 @@ class Information(commands.Cog):
 
         error_cause = error.__cause__ or error
         await ctx.send(
-            embed=Embed(
-                color=Colour.red(),
+            embed=discord.Embed(
+                color=discord.Colour.red(),
                 title=f"Unexpected error - {ctx.command.qualified_name}",
                 description=f"```py\n{type(error_cause).__name__}: {error_cause}\n```",
             )
@@ -1425,10 +1409,6 @@ class Information(commands.Cog):
         async for item in db.find({}):
             view = PollView.from_mongo(item)
             self.bot.add_view(view, message_id=item["id"])
-
-        channel = self.bot.get_partial_messageable(860590339327918100, guild_id=719343092963999804)
-        message = channel.get_partial_message(1056291757517705367)
-        await message.edit(view=InformationView(timeout=None))
 
         self.ready = True
 

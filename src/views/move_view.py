@@ -102,7 +102,6 @@ class MoveComplex(Complex[Move]):
 
     @select(placeholder="Filter by Typings / Category", custom_id="filter", max_values=2, min_values=0, row=3)
     async def select_types(self, interaction: Interaction, sct: Select) -> None:
-        resp: InteractionResponse = interaction.response
         if len(sct.values) == 0:
             self.values = self.total
             await self.edit(interaction=interaction, page=0)
@@ -117,7 +116,7 @@ class MoveComplex(Complex[Move]):
                 timestamp=interaction.created_at,
             )
             embed.set_image(url=WHITE_BAR)
-            await resp.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class MoveView(MoveComplex):
