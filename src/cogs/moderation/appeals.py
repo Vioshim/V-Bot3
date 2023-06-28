@@ -18,6 +18,7 @@ from __future__ import annotations
 from contextlib import suppress
 from dataclasses import astuple, dataclass
 
+from aiogoogle.excs import HTTPError
 from discord import Embed, ForumChannel, NotFound
 from discord.utils import get
 
@@ -59,14 +60,18 @@ class BanAppeal(Appeal):
                 range="Form Responses 1",
             )
 
-            data = await bot.aiogoogle.as_service_account(query)
-            new_responses = BanAppeal.from_values(data["values"][1:])
-            db = bot.mongo_db("Ban Appeal")
+            try:
+                data = await bot.aiogoogle.as_service_account(query)
+                new_responses = BanAppeal.from_values(data["values"][1:])
+            except HTTPError as e:
+                new_responses = set()
+                bot.logger.error(f"Error fetching ban appeals: {e}")
 
             if new_reports := new_responses - responses:
                 bot.logger.info(f"New Ban Appeals: {len(new_reports)}")
                 responses |= new_reports
 
+            db = bot.mongo_db("Ban Appeal")
             for entry in new_reports:
                 if await db.find_one({"id": entry.id}):
                     continue
@@ -133,14 +138,18 @@ class ModAppeal(Appeal):
             range="Form Responses 1",
         )
 
-        data = await bot.aiogoogle.as_service_account(query)
-        new_responses = ModAppeal.from_values(data["values"][1:])
-        db = bot.mongo_db("Mod Appeal")
+        try:
+            data = await bot.aiogoogle.as_service_account(query)
+            new_responses = ModAppeal.from_values(data["values"][1:])
+        except HTTPError as e:
+            new_responses = set()
+            bot.logger.error(f"Error fetching Mod Applications: {e}")
 
         if new_reports := new_responses - responses:
             bot.logger.info(f"New Mod Applications: {len(new_reports)}")
             responses |= new_reports
 
+        db = bot.mongo_db("Mod Appeal")
         for entry in new_reports:
             if await db.find_one({"id": entry.id}):
                 continue
