@@ -1260,7 +1260,7 @@ class Information(commands.Cog):
         for index, attachment in enumerate(message.attachments, start=1):
             try:
                 extension = attachment.filename.split(".")[-1]
-                if attachment.content_type.startswith("image/"):
+                if attachment.content_type and attachment.content_type.startswith("image/"):
                     file = await attachment.to_file(use_cached=True, filename=f"img{index}.{extension}")
                     if embed == discord.Embed() or embed.image.url == WHITE_BAR:
                         aux = embed
