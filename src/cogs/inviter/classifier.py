@@ -26,7 +26,6 @@ from discord import (
     InteractionResponse,
     Invite,
     Member,
-    SelectOption,
     TextChannel,
 )
 from discord.abc import Messageable
