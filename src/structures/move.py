@@ -131,7 +131,7 @@ class Move:
 
     @property
     def move_id(self) -> int:
-        return self.data["MoveID"]
+        return self.data.get("MoveID", 0)
 
     def __hash__(self) -> int:
         return self.move_id
@@ -172,17 +172,23 @@ class Move:
 
     @property
     def banned(self) -> bool:
-        move_id: int = self.move_id
-        aux = move_id in {165, 449}  # Struggle, Judgement
-        aux |= self.is_z_move()
-        aux |= self.is_max_move()
-        aux |= move_id == 0  # No ID
-        return aux
+        # fmt: off
+        return (
+            self.move_id in {0, 449}  # No ID, Judgement
+            or self.is_z_move()
+            or self.is_max_move()
+        )
+        # fmt: on
 
     def is_z_move(self):
-        aux = 622 <= self.move_id <= 658  # Z-Moves
-        aux |= 695 <= self.move_id <= 703 or self.move_id == 719 or 723 <= self.move_id <= 728  # Unique Z-Moves
-        return aux
+        # fmt: off
+        return (
+            622 <= self.move_id <= 658  # Z-Moves
+            or 695 <= self.move_id <= 703
+            or self.move_id == 719
+            or 723 <= self.move_id <= 728  # Unique Z-Moves
+        )
+        # fmt: on
 
     def is_max_move(self):
         return 757 <= self.move_id <= 774  # Max-Moves

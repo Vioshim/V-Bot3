@@ -1192,7 +1192,6 @@ class Information(commands.Cog):
             return await self.giphy_fetch(image_id)
 
     async def embed_info(self, message: discord.Message):
-        files = []
         embeds: list[discord.Embed] = []
         if content := message.content:
             embed = discord.Embed(
@@ -1257,24 +1256,7 @@ class Information(commands.Cog):
                 case _:
                     embeds.append(e)
 
-        for index, attachment in enumerate(message.attachments, start=1):
-            try:
-                extension = attachment.filename.split(".")[-1]
-                if attachment.content_type and attachment.content_type.startswith("image/"):
-                    file = await attachment.to_file(use_cached=True, filename=f"img{index}.{extension}")
-                    if embed == discord.Embed() or embed.image.url == WHITE_BAR:
-                        aux = embed
-                    else:
-                        aux = discord.Embed()
-                        embeds.append(aux)
-                    aux.color = discord.Colour.blurple()
-                    aux.set_image(url=f"attachment://{file.filename}")
-                else:
-                    file = await attachment.to_file(use_cached=True)
-                files.append(file)
-            except discord.HTTPException:
-                continue
-
+        files = [await x.to_file(use_cached=True) for x in message.attachments]
         view = View()
         name, emoji = name_emoji_from_channel(message.channel)
         view.add_item(Button(emoji=emoji, label=name, url=message.jump_url))
