@@ -1188,9 +1188,6 @@ class ImageField(TemplateField, required=True):
         ):
 
             class BackgroundImage(Basic):
-                async def on_error(self, interaction: Interaction[CustomBot], error: Exception, item, /) -> None:
-                    interaction.client.logger.error(f"Error on {self.__class__.__name__}: {error} {item}")
-
                 @select(
                     options=[
                         SelectOption(
@@ -1380,7 +1377,7 @@ class CreationOCView(Basic):
     async def kind(self, itx: Interaction[CustomBot], sct: Select):
         try:
             self.oc.species = None
-            items: list[TemplateField] = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
+            items = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.M
@@ -1413,24 +1410,23 @@ class CreationOCView(Basic):
         self.setup(condition)
         embeds, files = self.embeds, MISSING
         embed = embeds[0]
-        if not condition:
-            embed.set_image(url="attachment://image.png")
-        else:
-            embed.set_image(url=self.oc.image_url)
 
         if isinstance(self.oc.image, File):
             try:
                 self.oc.image.fp.seek(0)
                 files = [self.oc.image]
             except ValueError:
-                self.oc.image = None
-                embed.set_image(url="attachment://image.png")
+                files, self.oc.image = [], None
+                condition = False
                 self.progress.discard(ImageField.name)
+
+        if not condition:
+            embed.set_image(url="attachment://image.png")
+        else:
+            embed.set_image(url=self.oc.image_url)
 
         try:
             if resp.is_done() and (message := self.message or itx.message):
-                # if not message.flags.ephemeral:
-                # message = message.channel.get_partial_message(message.id)
                 try:
                     m = await message.edit(embeds=embeds, view=self, attachments=files)
                 except DiscordException:
@@ -1438,13 +1434,13 @@ class CreationOCView(Basic):
             else:
                 await resp.edit_message(embeds=embeds, view=self, attachments=files)
                 m = await itx.original_response()
-            if self.oc.image:
-                if files and embed.image.proxy_url:
-                    self.oc.image = embed.image.proxy_url
-                    self.setup(embed_update=False)
-                    m = await m.edit(view=self)
 
-                self.message = m
+            if embed.image and embed.image.proxy_url:
+                self.oc.image = embed.image.proxy_url
+                self.setup(embed_update=False)
+                m = await m.edit(view=self)
+
+            self.message = m
         except DiscordException:
             await self.help_method(itx)
 
@@ -1459,7 +1455,7 @@ class CreationOCView(Basic):
     async def fields1(self, itx: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = itx.response
         if item := TemplateField.get(name=sct.values[0]):
-            self.ephemeral = itx.message.flags.ephemeral or self.ephemeral
+            self.ephemeral = (itx.message and itx.message.flags.ephemeral) or self.ephemeral
             await resp.defer(ephemeral=self.ephemeral, thinking=True)
             await item.on_submit(itx, self.ref_template, self.progress, self.oc, self.ephemeral)
         await self.update(itx)
@@ -1468,14 +1464,14 @@ class CreationOCView(Basic):
     async def fields2(self, itx: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = itx.response
         if item := TemplateField.get(name=sct.values[0]):
-            self.ephemeral = itx.message.flags.ephemeral or self.ephemeral
+            self.ephemeral = (itx.message and itx.message.flags.ephemeral) or self.ephemeral
             await resp.defer(ephemeral=self.ephemeral, thinking=True)
             await item.on_submit(itx, self.ref_template, self.progress, self.oc, self.ephemeral)
         await self.update(itx)
 
     async def delete(self, itx: Optional[Interaction] = None) -> None:
         db = self.bot.mongo_db("OC Creation")
-        if m := self.message or itx.message:
+        if m := self.message or (itx and itx.message):
             guild_id = itx.guild_id if itx else self.oc.server
             await db.delete_one({"id": m.id, "server": guild_id})
         return await super(CreationOCView, self).delete(itx)

@@ -330,7 +330,7 @@ class Character:
     moveset: frozenset[Move] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
     url: Optional[str] = None
-    image: Optional[int] = None
+    image: Optional[int | str | File] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
     size: Size | float = Size.M
