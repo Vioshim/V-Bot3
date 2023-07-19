@@ -1435,8 +1435,8 @@ class CreationOCView(Basic):
                 await resp.edit_message(embeds=embeds, view=self, attachments=files)
                 m = await itx.original_response()
 
-            if embed.image and embed.image.proxy_url:
-                self.oc.image = embed.image.proxy_url
+            if files and m.embeds:
+                self.oc.image = m.embeds[0].image.proxy_url
                 self.setup(embed_update=False)
                 m = await m.edit(view=self)
 
