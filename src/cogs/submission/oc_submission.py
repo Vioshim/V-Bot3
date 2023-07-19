@@ -14,7 +14,7 @@
 
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 from typing import Optional
@@ -136,9 +136,9 @@ class TicketModal(Modal, title="Ticket"):
 
 @dataclass(unsafe_hash=True, slots=True)
 class TemplateItem:
-    description: str = ""
-    fields: frozendict[str, str] = field(default_factory=frozendict)
-    docs: frozendict[str, str] = field(default_factory=frozendict)
+    description: str
+    fields: frozendict[str, str]
+    docs: frozendict[str, str]
 
     def __init__(self, data: dict[str, str]) -> None:
         self.description = data.get("description", "")
@@ -332,19 +332,11 @@ class Template(TemplateItem, Enum):
 
     @property
     def min_values(self):
-        match self:
-            case self.Fusion:
-                return 2
-            case _:
-                return 1
+        return 2 if self == self.Fusion else 1
 
     @property
     def max_values(self):
-        match self:
-            case self.Fusion:
-                return 2
-            case _:
-                return 1
+        return 2 if self == self.Fusion else 1
 
     @property
     def total_species(self) -> frozenset[Species]:
@@ -1420,9 +1412,11 @@ class CreationOCView(Basic):
         condition = ImageField.name not in self.progress
         self.setup(condition)
         embeds, files = self.embeds, MISSING
-
+        embed = embeds[0]
         if not condition:
-            embeds[0].set_image(url="attachment://image.png")
+            embed.set_image(url="attachment://image.png")
+        else:
+            embed.set_image(url=self.oc.image_url)
 
         if isinstance(self.oc.image, File):
             try:
@@ -1430,7 +1424,7 @@ class CreationOCView(Basic):
                 files = [self.oc.image]
             except ValueError:
                 self.oc.image = None
-                embeds[0].set_image(url="attachment://image.png")
+                embed.set_image(url="attachment://image.png")
                 self.progress.discard(ImageField.name)
 
         try:
@@ -1445,8 +1439,8 @@ class CreationOCView(Basic):
                 await resp.edit_message(embeds=embeds, view=self, attachments=files)
                 m = await itx.original_response()
             if self.oc.image:
-                if files and m.embeds[0].image.proxy_url:
-                    self.oc.image = m.embeds[0].image.proxy_url
+                if files and embed.image.proxy_url:
+                    self.oc.image = embed.image.proxy_url
                     self.setup(embed_update=False)
                     m = await m.edit(view=self)
 
@@ -1454,7 +1448,7 @@ class CreationOCView(Basic):
         except DiscordException:
             await self.help_method(itx)
 
-    async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] = None):
+    async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] | None = None):
         self.ephemeral = ephemeral
         self.embeds = embeds or self.embeds
         if not ephemeral:
@@ -1502,8 +1496,8 @@ class CreationOCView(Basic):
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple, row=3)
     async def printer(self, itx: Interaction[CustomBot], _: Button):
         await itx.response.defer(ephemeral=True, thinking=True)
-        file = await self.oc.to_docx(itx.client)
-        await itx.followup.send(file=file, ephemeral=True)
+        oc_file = await self.oc.to_docx(itx.client)
+        await itx.followup.send(file=oc_file, ephemeral=True)
         itx.client.logger.info("User %s printed %s", str(itx.user), repr(self.oc))
 
     @button(label="Close this Menu", row=3)
@@ -1526,10 +1520,10 @@ class CreationOCView(Basic):
         )
         await view.handler_send(ephemeral=False)
 
-        if isinstance(self.oc.image, str) and isinstance(file := await itx.client.get_file(self.oc.image), File):
+        if isinstance(self.oc.image, str) and isinstance(oc_file := await itx.client.get_file(self.oc.image), File):
             embeds = view.embeds
-            attachments = [file]
-            embeds[0].set_image(url=f"attachment://{file.filename}")
+            attachments = [oc_file]
+            embeds[0].set_image(url=f"attachment://{oc_file.filename}")
             message = await view.message.edit(attachments=attachments, embeds=embeds)
             if image := message.embeds[0].image:
                 self.oc.image = image.url
@@ -1840,19 +1834,18 @@ class SubmissionView(Basic):
         user = itx.client.supporting.get(itx.user, itx.user)
         role = itx.guild.get_role(719642423327719434)
 
-        modal = RPModal(
-            user=user,
-            ocs=[
-                Character.from_mongo_dict(x)
-                async for x in db.find(
-                    {
-                        "author": user.id,
-                        "server": guild.id,
-                    }
-                )
-            ],
-            to_user=itx.guild.get_role(1110599604090716242),
-        )
+        ocs = [
+            Character.from_mongo_dict(x)
+            async for x in db.find(
+                {
+                    "author": user.id,
+                    "server": guild and guild.id,
+                }
+            )
+        ]
+        ocs.sort(key=lambda x: x.name)
+        to_user = itx.guild and itx.guild.get_role(1110599604090716242)
+        modal = RPModal(user=user, ocs=ocs, to_user=to_user)
 
         if role and role not in itx.user.roles:
             await itx.response.send_message(

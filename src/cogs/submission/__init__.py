@@ -910,8 +910,8 @@ class Submission(commands.Cog):
             view = View()
             for oc in ocs:
                 view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.emoji))
-            if file := await self.bot.get_file(url):
-                await itx.reply(file=file, view=view)
+            if oc_file := await self.bot.get_file(url):
+                await itx.reply(file=oc_file, view=view)
             else:
                 await itx.reply(content=url, view=view)
 
@@ -926,8 +926,8 @@ class Submission(commands.Cog):
             view = View()
             for index, oc in enumerate(ocs):
                 view.add_item(Button(label=oc.name[:80], url=oc.jump_url, row=index // 2, emoji=oc.emoji))
-            if file := await self.bot.get_file(url):
-                await itx.reply(file=file, view=view)
+            if oc_file := await self.bot.get_file(url):
+                await itx.reply(file=oc_file, view=view)
             else:
                 await itx.reply(content=url, view=view)
 

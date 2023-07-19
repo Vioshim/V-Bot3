@@ -901,8 +901,8 @@ class Information(commands.Cog):
                     text = msg.content
 
                 if (
-                    fuzz.WRatio(text, message.content, score_cutoff=95)
-                    or text in message.content
+                    text in message.content
+                    or fuzz.WRatio(text, message.content, score_cutoff=95)
                     or (
                         attachments
                         and len(attachments) == len(msg.attachments)

@@ -93,7 +93,7 @@ class Ability:
         return get(cls.all(), **kwargs)
 
     @classmethod
-    def deduce_many(cls, *elems: str, limit_range: Optional[int] = None) -> frozenset[Ability]:
+    def deduce_many(cls, *elems: str | Ability, limit_range: Optional[int] = None) -> frozenset[Ability]:
         """This is a method that determines the abilities out of
         the existing entries, it has a 85% of precision.
         Parameters

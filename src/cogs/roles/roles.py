@@ -126,7 +126,7 @@ class AFKSchedule:
     hours: frozenset[datetime] = field(default_factory=frozenset)
 
     def astimezone(self, tz: timezone):
-        return AFKSchedule([x.astimezone(tz) for x in self.hours])
+        return AFKSchedule(frozenset(x.astimezone(tz) for x in self.hours))
 
     @property
     def pairs(self):
@@ -149,7 +149,7 @@ class AFKSchedule:
 
 
 class AFKModal(Modal, title="Current Time"):
-    def __init__(self, hours: list[int] = None, offset: int = 0) -> None:
+    def __init__(self, hours: Optional[list[int]] = None, offset: int = 0) -> None:
         super(AFKModal, self).__init__(timeout=None)
         date = utcnow().astimezone(timezone(offset=timedelta(hours=offset)))
         text = date.strftime("%I:%M %p")
@@ -176,7 +176,7 @@ class AFKModal(Modal, title="Current Time"):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         current_date = itx.created_at
-        member: Member = itx.client.supporting.get(itx.user, itx.user)
+        member = itx.client.supporting.get(itx.user, itx.user)
         date1 = current_date.astimezone(DEFAULT_TIMEZONE)
         date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
         ref = abs(date1 - date2).seconds
@@ -185,7 +185,7 @@ class AFKModal(Modal, title="Current Time"):
             self.offset = -self.offset
 
         tz = timezone(timedelta(hours=self.offset))
-        data = AFKSchedule([datetime.combine(current_date, time(hour=x), tz) for x in self.hours])
+        data = AFKSchedule(frozenset(datetime.combine(current_date, time(hour=x), tz) for x in self.hours))
 
         embed = Embed(
             title="AFK Schedule",
@@ -221,7 +221,7 @@ class RoleSelect(View):
     async def choice(itx: Interaction[CustomBot], sct: Select, remove_all: bool = False):
         resp: InteractionResponse = itx.response
         member: Member = itx.client.supporting.get(itx.user, itx.user)
-        guild = itx.guild
+        guild: Guild = itx.guild
 
         roles: set[Role] = set() if remove_all else set(get_role(sct.values, guild))
         total: set[Role] = set(get_role(sct.options, guild))
@@ -229,12 +229,12 @@ class RoleSelect(View):
         await resp.defer(ephemeral=True, thinking=True)
 
         embed = Embed(
-            title=sct.placeholder.removeprefix("Select "),
+            title=sct.placeholder and sct.placeholder.removeprefix("Select "),
             color=Color.blurple(),
             timestamp=itx.created_at,
         )
         embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text=guild.name, icon_url=guild.icon.url)
+        embed.set_footer(text=guild.name, icon_url=guild.icon)
 
         if add := set(roles) - set(member.roles):
             text = "\n".join(f"* {role.mention}" for role in add)
@@ -460,10 +460,16 @@ class RPSearchManage(View):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         db = itx.client.mongo_db("Characters")
+        items = [x.id if isinstance(x, Character) else x for x in self.ocs]
         if not (
             ocs := [
                 Character.from_mongo_dict(x)
-                async for x in db.find({"id": {"$in": [x.id if isinstance(x, Character) else x for x in self.ocs]}})
+                async for x in db.find(
+                    {
+                        "id": {"$in": items},
+                        "author": self.member_id,
+                    }
+                )
             ]
         ):
             ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": self.member_id})]
@@ -511,7 +517,7 @@ class RPModal(Modal):
     def __init__(
         self,
         user: Member,
-        ocs: set[Character],
+        ocs: Iterable[Character],
         to_user: Optional[Member | Role] = None,
         mobile: bool = True,
     ) -> None:
@@ -533,7 +539,7 @@ class RPModal(Modal):
             default=f"{user.display_name} is looking to RP with their registered characters.",
             required=False,
         )
-        if isinstance(to_user, Member):
+        if isinstance(to_user, Member) and self.message.default:
             # fmt: off
             self.message.default = (
                 self.message.default
@@ -543,10 +549,11 @@ class RPModal(Modal):
             # fmt: on
         self.add_item(self.message)
 
-        self.select_ocs1 = Select(placeholder="Select Characters", min_values=0)
-        self.select_ocs2 = Select(placeholder="Select Characters", min_values=0)
-        self.select_ocs3 = Select(placeholder="Select Characters", min_values=0)
-        self.select_ocs4 = Select(placeholder="Select Characters", min_values=0)
+        placeholder = "Select Characters"
+        self.select_ocs1 = Select(placeholder=placeholder, min_values=0)
+        self.select_ocs2 = Select(placeholder=placeholder, min_values=0)
+        self.select_ocs3 = Select(placeholder=placeholder, min_values=0)
+        self.select_ocs4 = Select(placeholder=placeholder, min_values=0)
         self.select_ocs_group = (
             self.select_ocs1,
             self.select_ocs2,
@@ -555,7 +562,7 @@ class RPModal(Modal):
         )
 
         if mobile:
-            text = "\n".join(f"- {x.species.name} | {x.name}" for x in self.ocs)
+            text = "\n".join(f"- {x.species.name} | {x.name}" for x in self.ocs if x.species)
             if len(text) > 4000:
                 text = "\n".join(f"- {x.name}" for x in self.ocs)[:4000]
             self.names.default = text
@@ -582,12 +589,12 @@ class RPModal(Modal):
     async def check(self, itx: Interaction[CustomBot]) -> bool:
         resp: InteractionResponse = itx.response
         cog = itx.client.get_cog("Roles")
-        if (val := cog.cool_down.get(self.user.id)) and hours(val) < 1:
+        if (val := cog.cool_down.get(self.user.id)) and hours(val) < 1:  # type: ignore
             msg = f"{self.user.mention} is in cool down, user pinged one recently."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
         user = self.to_user or self.user
-        if (val := cog.role_cool_down.get(user.id)) and hours(val) < 1:
+        if (val := cog.role_cool_down.get(user.id)) and hours(val) < 1:  # type: ignore
             msg = f"Pinging {user.mention} is in cool down, check the pings at <#1061008601335992422>."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
@@ -687,9 +694,9 @@ class RPModal(Modal):
         if img := await db.find_one({"author": self.user.id}):
             img = img["image"]
 
-        if file := await itx.client.get_file(Character.collage(items, background=img)):
-            embed.set_image(url=f"attachment://{file.filename}")
-            await base.message.edit(embed=embed, attachments=[file], view=view)
+        if oc_file := await itx.client.get_file(Character.collage(items, background=img)):
+            embed.set_image(url=f"attachment://{oc_file.filename}")
+            await base.message.edit(embed=embed, attachments=[oc_file], view=view)
         else:
             await base.message.edit(view=view)
             itx.client.logger.info("Error Image Parsing OCs: %s", ", ".join(str(x.id) for x in items))
@@ -700,7 +707,7 @@ class RPModal(Modal):
                 "id": base.thread.id,
                 "member": self.user.id,
                 "role": item.id,
-                "server": itx.guild.id,
+                "server": itx.guild and itx.guild.id,
                 "ocs": [x.id for x in items] if len(items) != len(self.ocs) else [],
             }
         )

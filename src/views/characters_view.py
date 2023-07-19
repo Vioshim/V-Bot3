@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Optional
+from typing import Optional, Iterable
 
 from discord import (
     AllowedMentions,
@@ -59,7 +59,7 @@ class PingModal(Modal):
 
     async def on_submit(self, interaction: Interaction) -> None:
         resp: InteractionResponse = interaction.response
-        origin = channel = interaction.channel
+        origin = interaction.channel
         user = interaction.user
         receiver = interaction.guild.get_member(self.oc.author)
         if isinstance(origin, Thread):
@@ -88,15 +88,15 @@ class PingModal(Modal):
             font=Fonts.Whitney_Black,
             font_size=36,
         )
-        file: File = await interaction.client.get_file(kit.url)
-        embed.set_thumbnail(url=f"attachment://{file.filename}")
+        oc_file: File = await interaction.client.get_file(kit.url)
+        embed.set_thumbnail(url=f"attachment://{oc_file.filename}")
         embed.set_image(url=WHITE_BAR)
         webhook: Webhook = await interaction.client.webhook(channel)
         view = View()
         view.add_item(Button(label=self.oc.name[:80], emoji=self.oc.emoji, url=self.oc.jump_url))
         msg = await webhook.send(
             receiver.mention,
-            file=file,
+            file=oc_file,
             allowed_mentions=AllowedMentions(users=True),
             embed=embed,
             username=safe_username(user.display_name),
@@ -142,8 +142,8 @@ class PingView(View):
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple)
     async def printer(self, ctx: Interaction, _: Button):
         await ctx.response.defer(ephemeral=True, thinking=True)
-        file = await self.oc.to_docx(ctx.client)
-        await ctx.followup.send(file=file, ephemeral=True)
+        oc_file = await self.oc.to_docx(ctx.client)
+        await ctx.followup.send(file=oc_file, ephemeral=True)
         ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
 
     @button(label="Ping OC", style=ButtonStyle.blurple)
@@ -203,7 +203,7 @@ class BaseCharactersView(Complex[Character]):
         self,
         member: Member,
         target: Interaction | Webhook | TextChannel,
-        ocs: set[Character],
+        ocs: Iterable[Character],
         keep_working: bool = False,
         max_values: int = 1,
         auto_conclude: bool = True,

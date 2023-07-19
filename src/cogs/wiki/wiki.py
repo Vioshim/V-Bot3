@@ -57,11 +57,11 @@ class WikiEntry:
         desc: str = "",
         path: list[str] | str = "",
         content: str = "",
-        embeds: list[Embed] = None,
+        embeds: list[Embed] | None = None,
         order: int = 0,
         emoji: Optional[PartialEmoji | str] = None,
         parent: Optional[WikiEntry] = None,
-        children: dict[str, WikiEntry] = None,
+        children: dict[str, WikiEntry] | None = None,
     ) -> None:
         embeds = embeds or []
         self.content = content or ""
@@ -96,7 +96,7 @@ class WikiEntry:
                 any(x.description and text in x.description.lower() for x in self.embeds),
                 any(x.footer.text and text in x.footer.text.lower() for x in self.embeds),
                 any(x.author.name and text in x.author.name.lower() for x in self.embeds),
-                any(text in f.name or text in f.value for x in self.embeds for f in x.fields),
+                any(text in f.name or text in f.value for x in self.embeds for f in x.fields if f.name and f.value),
             )
         )
 
@@ -174,24 +174,24 @@ class WikiEntry:
             "emoji": str(self._emoji) if self._emoji else None,
         }
 
-    def printTree(
+    def print_tree(
         self,
         root: Optional[WikiEntry] = None,
-        markerStr="+-",
-        levelMarkers: list[bool] = None,
+        marker_str="+-",
+        level_markers: list[bool] | None = None,
     ):
         if not root:
             root = self
-        levelMarkers = levelMarkers or []
-        placeholder = " " * len(levelMarkers)
+        level_markers = level_markers or []
+        placeholder = " " * len(level_markers)
         connection = f"|{placeholder[:-1]}"
-        level = len(levelMarkers)
-        markers = "".join(map(lambda x: connection if x else placeholder, levelMarkers[:-1]))
-        markers += markerStr if level > 0 else ""
+        level = len(level_markers)
+        markers = "".join(map(lambda x: connection if x else placeholder, level_markers[:-1]))
+        markers += marker_str if level > 0 else ""
         print(f"{markers}{root.path}")
-        for i, child in enumerate(root.children):
-            isLast = i == len(root.children) - 1
-            self.printTree(child, markerStr, [*levelMarkers, not isLast])
+        for i, child in enumerate(root.children.values()):
+            is_last = i == len(root.children) - 1
+            self.print_tree(child, marker_str, [*level_markers, not is_last])
 
     def lookup(self, foo: str, strict: bool = False) -> Optional[WikiEntry]:
         current = self
