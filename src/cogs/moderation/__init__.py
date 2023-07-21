@@ -46,6 +46,7 @@ from src.cogs.moderation.appeals import BanAppeal, ModAppeal
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import WHITE_BAR
+from src.utils.matches import REGEX_URL
 
 __all__ = ("Moderation", "setup")
 
@@ -168,10 +169,11 @@ class Meeting(View):
             else:
                 text = "Ban Prevented. No moderator intervened"
 
-        view = View()
-        view.add_item(Button(label="Jump URL", url=self.message.jump_url))
-        await channel.send(content=text, embeds=[embed, embed2], view=view)
-        await self.message.edit(embed=self.embed, view=None)
+        if self.message:
+            view = View()
+            view.add_item(Button(label="Jump URL", url=self.message.jump_url))
+            await channel.send(content=text, embeds=[embed, embed2], view=view)
+            await self.message.edit(embed=self.embed, view=None)
 
 
 class Moderation(commands.Cog):
@@ -219,7 +221,7 @@ class Moderation(commands.Cog):
         except ClientResponseError:
             self.bot.logger.error("Scam API is down.")
 
-    async def scam_changes(self, seconds: str = 300):
+    async def scam_changes(self, seconds: str | int = 300):
         """Function to load API Changes
 
         Parameters
@@ -255,13 +257,57 @@ class Moderation(commands.Cog):
         await ModAppeal.appeal_check(self.bot, self.mod_responses)
 
     @commands.Cog.listener()
+    async def on_message(self, message: Message):
+        """Detects scam urls and deletes the message
+
+        Parameters
+        ----------
+        message : Message
+            Message
+        """
+        if (
+            isinstance(message.author, Member)
+            and message.content
+            and message.author != self.bot.user
+            and (not await self.bot.is_owner(message.author))
+            and self.bot.scam_urls.intersection(REGEX_URL.findall(message.content))
+        ):
+            with suppress(DiscordException):
+                await message.delete(delay=0)
+                await message.author.ban(
+                    delete_message_days=1,
+                    reason="Nitro Scam victim",
+                )
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: Message, after: Message):
+        """Detect link edits
+
+        Parameters
+        ----------
+        before : Message
+            Message before
+        after : Message
+            Message after
+        """
+        if (
+            isinstance(after.author, Member)
+            and after.author != self.bot.user
+            and (not await self.bot.is_owner(after.author))
+            and (set(REGEX_URL.findall(before.content)) ^ set(REGEX_URL.findall(after.content)))
+            and not get(after.author.roles, name="Registered")
+        ):
+            await after.author.timeout(timedelta(days=1), reason="Suspicious link edit")
+            await after.delete(delay=0)
+
+    @commands.Cog.listener()
     async def on_ready(self):
         """Initialize the scam urls and schedule each 5 minutes"""
         await self.scam_all()
         await self.bot.scheduler.add_schedule(
             self.scam_load,
             id="Nitro Scam List",
-            trigger=CronTrigger(minute="0,5,10,15,20,25,30,35,40,45,50,55", second=0),
+            trigger=CronTrigger(minute=",".join(map(str, range(0, 60, 5))), second=0),
         )
 
     async def vote_process(self, interaction: Interaction, member: Member, reason: Optional[str] = None):

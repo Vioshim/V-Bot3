@@ -49,8 +49,6 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from mystbin import Client as MystBinClient
 from orjson import dumps
 
-from src.utils.matches import REGEX_URL
-
 __all__ = ("CustomBot",)
 
 
@@ -166,28 +164,6 @@ class CustomBot(Bot):
                 self.webhook_cache[channel.id] = await webhook.fetch()
         except (HTTPException, NotFound, ValueError):
             del self.webhook_cache[channel.id]
-
-    async def on_message(self, message: Message) -> None:
-        """Bot's on_message with nitro scam handler
-
-        Parameters
-        ----------
-        message : Message
-            message to process
-        """
-        if message.content and (not await self.is_owner(self.user)) and message.author != self.user:
-            elements = REGEX_URL.findall(message.content)
-            if self.scam_urls.intersection(elements):
-                try:
-                    if not message.guild:
-                        await message.reply("That's a Nitro Scam")
-                    else:
-                        await message.delete()
-                        await message.author.ban(delete_message_days=1, reason="Nitro Scam victim")
-                    return
-                except DiscordException:
-                    return
-        await self.process_commands(message)
 
     def msg_cache_add(self, message: Message | PartialMessage | int, /):
         """Method to add a message to the message cache
