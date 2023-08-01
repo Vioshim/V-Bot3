@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import asdict, dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
@@ -126,7 +126,7 @@ class Kind(Enum):
         return name.replace("Common", "Pokemon")
 
     @property
-    def to_db(self) -> str:
+    def to_db(self):
         match self:
             case self.Common:
                 return "COMMON"
@@ -251,66 +251,57 @@ class Size(Enum):
         return f"{value:.2f} kg / {self.kg_to_lbs(value):.2f} lbs"
 
 
-class Stats(Enum):
-    HP = ("HP", 0)
-    ATK = ("Attack", 1)
-    DEF = ("Defense", 2)
-    SPA = ("Sp. Attack", 3)
-    SPD = ("Sp. Defense", 4)
-    SPE = ("Speed", 5)
-
-
-@dataclass
-class NatureItem:
-    high: Stats
-    low: Stats
+class Stats(StrEnum):
+    HP = "HP"
+    ATK = "Attack"
+    DEF = "Defense"
+    SPA = "Sp. Attack"
+    SPD = "Sp. Defense"
+    SPE = "Speed"
 
 
 class Nature(Enum):
-    # fmt: off
-    Composed   = NatureItem(Stats.HP,  Stats.HP )  # noqa: E202,E221
-    Cuddly     = NatureItem(Stats.HP,  Stats.ATK)  # noqa: E221
-    Distracted = NatureItem(Stats.HP,  Stats.DEF)  # noqa: E221
-    Proud      = NatureItem(Stats.HP,  Stats.SPA)  # noqa: E221
-    Decisive   = NatureItem(Stats.HP,  Stats.SPD)  # noqa: E221
-    Patient    = NatureItem(Stats.HP,  Stats.SPE)  # noqa: E221
-    Desperate  = NatureItem(Stats.ATK, Stats.HP )  # noqa: E202,E221
-    Hardy      = NatureItem(Stats.ATK, Stats.ATK)  # noqa: E221
-    Lonely     = NatureItem(Stats.ATK, Stats.DEF)  # noqa: E221
-    Adamant    = NatureItem(Stats.ATK, Stats.SPA)  # noqa: E221
-    Naughty    = NatureItem(Stats.ATK, Stats.SPD)  # noqa: E221
-    Brave      = NatureItem(Stats.ATK, Stats.SPE)  # noqa: E221
-    Stark      = NatureItem(Stats.DEF, Stats.HP )  # noqa: E202,E221
-    Bold       = NatureItem(Stats.DEF, Stats.ATK)  # noqa: E221
-    Docile     = NatureItem(Stats.DEF, Stats.DEF)  # noqa: E221
-    Impish     = NatureItem(Stats.DEF, Stats.SPA)  # noqa: E221
-    Lax        = NatureItem(Stats.DEF, Stats.SPD)  # noqa: E221
-    Relaxed    = NatureItem(Stats.DEF, Stats.SPE)  # noqa: E221
-    Curious    = NatureItem(Stats.SPA, Stats.HP )  # noqa: E202,E221
-    Modest     = NatureItem(Stats.SPA, Stats.ATK)  # noqa: E221
-    Mild       = NatureItem(Stats.SPA, Stats.DEF)  # noqa: E221
-    Bashful    = NatureItem(Stats.SPA, Stats.SPA)  # noqa: E221
-    Rash       = NatureItem(Stats.SPA, Stats.SPD)  # noqa: E221
-    Quiet      = NatureItem(Stats.SPA, Stats.SPE)  # noqa: E221
-    Dreamy     = NatureItem(Stats.SPD, Stats.HP )  # noqa: E202,E221
-    Calm       = NatureItem(Stats.SPD, Stats.ATK)  # noqa: E221
-    Gentle     = NatureItem(Stats.SPD, Stats.DEF)  # noqa: E221
-    Careful    = NatureItem(Stats.SPD, Stats.SPA)  # noqa: E221
-    Quirky     = NatureItem(Stats.SPD, Stats.SPD)  # noqa: E221
-    Sassy      = NatureItem(Stats.SPD, Stats.SPE)  # noqa: E221
-    Skittish   = NatureItem(Stats.SPE, Stats.HP )  # noqa: E202,E221
-    Timid      = NatureItem(Stats.SPE, Stats.ATK)  # noqa: E221
-    Hasty      = NatureItem(Stats.SPE, Stats.DEF)  # noqa: E221
-    Jolly      = NatureItem(Stats.SPE, Stats.SPA)  # noqa: E221
-    Naive      = NatureItem(Stats.SPE, Stats.SPD)  # noqa: E221
-    Serious    = NatureItem(Stats.SPE, Stats.SPE)  # noqa: E221
-    # fmt: on
+    def __init__(self, high: Stats, low: Stats):
+        self.description = f"⬆ {high.value} | ⬇ {low.value}"
 
-    @property
-    def description(self) -> str:
-        item: NatureItem = self.value
-        (high, _), (low, _) = item.high.value, item.low.value
-        return f"\N{UPWARDS BLACK ARROW} {high} | \N{DOWNWARDS BLACK ARROW} {low}"
+    # fmt: off
+    Composed   = (Stats.HP,  Stats.HP )  # noqa: E202,E221
+    Cuddly     = (Stats.HP,  Stats.ATK)  # noqa: E221
+    Distracted = (Stats.HP,  Stats.DEF)  # noqa: E221
+    Proud      = (Stats.HP,  Stats.SPA)  # noqa: E221
+    Decisive   = (Stats.HP,  Stats.SPD)  # noqa: E221
+    Patient    = (Stats.HP,  Stats.SPE)  # noqa: E221
+    Desperate  = (Stats.ATK, Stats.HP )  # noqa: E202,E221
+    Hardy      = (Stats.ATK, Stats.ATK)  # noqa: E221
+    Lonely     = (Stats.ATK, Stats.DEF)  # noqa: E221
+    Adamant    = (Stats.ATK, Stats.SPA)  # noqa: E221
+    Naughty    = (Stats.ATK, Stats.SPD)  # noqa: E221
+    Brave      = (Stats.ATK, Stats.SPE)  # noqa: E221
+    Stark      = (Stats.DEF, Stats.HP )  # noqa: E202,E221
+    Bold       = (Stats.DEF, Stats.ATK)  # noqa: E221
+    Docile     = (Stats.DEF, Stats.DEF)  # noqa: E221
+    Impish     = (Stats.DEF, Stats.SPA)  # noqa: E221
+    Lax        = (Stats.DEF, Stats.SPD)  # noqa: E221
+    Relaxed    = (Stats.DEF, Stats.SPE)  # noqa: E221
+    Curious    = (Stats.SPA, Stats.HP )  # noqa: E202,E221
+    Modest     = (Stats.SPA, Stats.ATK)  # noqa: E221
+    Mild       = (Stats.SPA, Stats.DEF)  # noqa: E221
+    Bashful    = (Stats.SPA, Stats.SPA)  # noqa: E221
+    Rash       = (Stats.SPA, Stats.SPD)  # noqa: E221
+    Quiet      = (Stats.SPA, Stats.SPE)  # noqa: E221
+    Dreamy     = (Stats.SPD, Stats.HP )  # noqa: E202,E221
+    Calm       = (Stats.SPD, Stats.ATK)  # noqa: E221
+    Gentle     = (Stats.SPD, Stats.DEF)  # noqa: E221
+    Careful    = (Stats.SPD, Stats.SPA)  # noqa: E221
+    Quirky     = (Stats.SPD, Stats.SPD)  # noqa: E221
+    Sassy      = (Stats.SPD, Stats.SPE)  # noqa: E221
+    Skittish   = (Stats.SPE, Stats.HP )  # noqa: E202,E221
+    Timid      = (Stats.SPE, Stats.ATK)  # noqa: E221
+    Hasty      = (Stats.SPE, Stats.DEF)  # noqa: E221
+    Jolly      = (Stats.SPE, Stats.SPA)  # noqa: E221
+    Naive      = (Stats.SPE, Stats.SPD)  # noqa: E221
+    Serious    = (Stats.SPE, Stats.SPE)  # noqa: E221
+    # fmt: on
 
 
 @dataclass(slots=True)

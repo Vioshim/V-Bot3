@@ -99,22 +99,15 @@ class EmbedBuilder(commands.Cog):
                     channel = await self.bot.fetch_channel(channel_id)
 
                 reference = await channel.fetch_message(message_id)
-
-                author: User = reference.author
-                name = author.display_name.removeprefix("URL〕")
-
-                view = View()
-                view.add_item(
-                    Button(
-                        label=f"URL Requested by {message.author.display_name}",
-                        url=reference.jump_url,
-                        emoji=SETTING_EMOJI,
-                    )
-                )
-
+                name = reference.author.display_name.removeprefix("URL〕")
                 cog: Information = self.bot.get_cog("Information")
                 kwargs = await cog.embed_info(reference)
-                kwargs["view"] = view
+                if embeds := kwargs.get("embeds", []):
+                    embeds[-1].set_footer(
+                        text=f"URL Requested by {message.author.display_name}",
+                        icon_url=message.author.display_avatar,
+                    )
+
                 kwargs["username"] = f"URL〕{safe_username(name)}"
                 await self.webhook_send(message, **kwargs)
         elif message.content.startswith("https://replay.pokemonshowdown.com/"):

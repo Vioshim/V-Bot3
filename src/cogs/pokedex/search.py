@@ -61,13 +61,13 @@ OPERATORS = {
 
 
 def item_name(mon: Character | Species) -> str:
-    if isinstance(mon, Character):
+    if isinstance(mon, Character) and mon.species:
         mon = mon.species
     return getattr(mon, "name", mon)
 
 
 def item_value(mon: Character | Species):
-    if isinstance(mon, Character) and mon.kind in STANDARD:
+    if isinstance(mon, Character) and mon.kind in STANDARD and mon.species:
         mon = mon.species
     return str(mon.id)
 

@@ -14,6 +14,7 @@
 
 
 from contextlib import suppress
+from typing import Optional
 
 from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
@@ -31,7 +32,7 @@ __all__ = (
 
 
 class HeightModal1(Modal, title="Height"):
-    def __init__(self, oc: Character, info: str) -> None:
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
         super(HeightModal1, self).__init__(title="Height", timeout=None)
         self.text = TextInput(label="Meters", placeholder=info, default=info)
         self.add_item(self.text)
@@ -39,8 +40,8 @@ class HeightModal1(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        condition = m not in self.oc.total_movepool
-        height = self.oc.species.height
+        condition = m and m not in self.oc.total_movepool
+        height: float = getattr(self.oc.species, "height", 0)
 
         if not condition:
             height_a, height_b = 0.1, 20
@@ -80,9 +81,9 @@ class HeightModal1(Modal, title="Height"):
 
 
 class HeightModal2(Modal, title="Height"):
-    def __init__(self, oc: Character, info: str) -> None:
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
         super(HeightModal2, self).__init__(title="Height", timeout=None)
-        info = info.removesuffix('" ft')
+        info = info.removesuffix('" ft') if info else ""
         ft_info, in_info = info.split("' ")
 
         self.text1 = TextInput(label="Feet", placeholder=ft_info, default=ft_info, required=False)
@@ -94,8 +95,8 @@ class HeightModal2(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        condition = m not in self.oc.total_movepool
-        height = self.oc.species.height
+        condition = m and m not in self.oc.total_movepool
+        height: float = getattr(self.oc.species, "height", 0)
 
         if not condition:
             height_a, height_b = 0.1, 20
@@ -132,7 +133,7 @@ class HeightModal2(Modal, title="Height"):
 
 
 class WeightModal1(Modal, title="Weight"):
-    def __init__(self, oc: Character, info: str) -> None:
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
         super(WeightModal1, self).__init__(title="Weight", timeout=None)
         self.text = TextInput(label="kg", placeholder=info, default=info)
         self.add_item(self.text)
@@ -140,8 +141,8 @@ class WeightModal1(Modal, title="Weight"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        condition = m not in self.oc.total_movepool
-        weight = self.oc.species.weight
+        condition = m and m not in self.oc.total_movepool
+        weight: float = getattr(self.oc.species, "weight", 0)
 
         if not condition:
             weight_a, weight_b = 0.1, 999.9
@@ -177,7 +178,7 @@ class WeightModal1(Modal, title="Weight"):
 
 
 class WeightModal2(Modal, title="Weight"):
-    def __init__(self, oc: Character, info: str) -> None:
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
         super(WeightModal2, self).__init__(title="Weight", timeout=None)
         self.text = TextInput(label="lbs", placeholder=info, default=info)
         self.add_item(self.text)
@@ -185,8 +186,8 @@ class WeightModal2(Modal, title="Weight"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        condition = m not in self.oc.total_movepool
-        weight = self.oc.species.weight
+        condition = m and m not in self.oc.total_movepool
+        weight: float = getattr(self.oc.species, "weight", 0)
 
         if not condition:
             weight_a, weight_b = 0.1, 999.9
@@ -228,7 +229,10 @@ class HeightView(Basic):
         self.oc = oc
 
         m = Move.get(name="Transform")
-        height = 0 if m in oc.total_movepool else oc.species.height
+        if m and m not in oc.total_movepool and oc.species:
+            height = oc.species.height
+        else:
+            height = 0
 
         if isinstance(oc.size, Size):
             info = oc.size.height_info(height)
@@ -268,7 +272,7 @@ class HeightView(Basic):
 
     @button(label="Close", style=ButtonStyle.gray)
     async def finish(self, itx: Interaction, btn: Button):
-        if "Confirm" not in btn.label:
+        if btn.label and "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await itx.response.edit_message(view=self)
         await self.delete(itx)
@@ -281,7 +285,10 @@ class WeightView(Basic):
         self.oc = oc
 
         m = Move.get(name="Transform")
-        weight = 0 if m in oc.total_movepool else oc.species.weight
+        if m and m not in oc.total_movepool and oc.species:
+            weight = oc.species.weight
+        else:
+            weight = 0
 
         if isinstance(oc.weight, Size):
             info = oc.weight.weight_info(weight)
@@ -293,10 +300,18 @@ class WeightView(Basic):
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
         for item in items:
+            name, (multiplier, *_) = item.name, item.value
+            if item == Size.M:
+                name = "Default"
+            elif item.name.endswith("_"):
+                name = f"* {item.name[:-1]}"
+
+            description = f"{name} ({multiplier:.2f}x)"
+
             self.choice.add_option(
                 label=item.weight_info(weight),
                 value=item.name,
-                description={Size.M: "Default"}.get(item),
+                description=description,
                 default=item == oc.weight,
             )
 
@@ -321,7 +336,7 @@ class WeightView(Basic):
 
     @button(label="Close", style=ButtonStyle.gray)
     async def finish(self, itx: Interaction, btn: Button):
-        if "Confirm" not in btn.label:
+        if btn.label and "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await itx.response.edit_message(view=self)
         await self.delete(itx)
