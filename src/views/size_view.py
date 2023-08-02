@@ -228,12 +228,7 @@ class HeightView(Basic):
         self.choice.options.clear()
         self.oc = oc
 
-        m = Move.get(name="Transform")
-        if m and m not in oc.total_movepool and oc.species:
-            height = oc.species.height
-        else:
-            height = 0
-
+        height = oc.species.height if oc.species else 0
         if isinstance(oc.size, Size):
             info = oc.size.height_info(height)
         else:
@@ -284,12 +279,7 @@ class WeightView(Basic):
         self.choice.options.clear()
         self.oc = oc
 
-        m = Move.get(name="Transform")
-        if m and m not in oc.total_movepool and oc.species:
-            weight = oc.species.weight
-        else:
-            weight = 0
-
+        weight = oc.species.weight if oc.species else 0
         if isinstance(oc.weight, Size):
             info = oc.weight.weight_info(weight)
         else:
