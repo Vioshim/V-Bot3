@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 
 from discord import (
     AllowedMentions,
@@ -35,6 +35,7 @@ from discord.ui import Button, Modal, Select, TextInput, View, button, select
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
+from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import safe_username
@@ -57,7 +58,7 @@ class PingModal(Modal):
         self.add_item(self.message)
         self.oc = oc
 
-    async def on_submit(self, interaction: Interaction) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot]) -> None:
         resp: InteractionResponse = interaction.response
         origin = interaction.channel
         user = interaction.user
@@ -127,9 +128,9 @@ class PingView(View):
         if reference.user.id != oc.author:
             self.remove_item(self.delete)
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
+    async def interaction_check(self, interaction: Interaction[CustomBot]) -> bool:
         guild: Guild = interaction.guild
-        resp: InteractionResponse = interaction.response
+        resp = interaction.response
         registered = guild.get_role(719642423327719434)
         if registered not in interaction.user.roles:
             await resp.send_message("You don't have registered role", ephemeral=True)
@@ -140,14 +141,17 @@ class PingView(View):
         return True
 
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple)
-    async def printer(self, ctx: Interaction, _: Button):
+    async def printer(self, ctx: Interaction[CustomBot], _: Button):
         await ctx.response.defer(ephemeral=True, thinking=True)
-        oc_file = await self.oc.to_docx(ctx.client)
+        if await ctx.client.is_owner(ctx.user):
+            oc_file = await self.oc.to_pdf(ctx.client)
+        else:
+            oc_file = await self.oc.to_docx(ctx.client)
         await ctx.followup.send(file=oc_file, ephemeral=True)
         ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
 
     @button(label="Ping OC", style=ButtonStyle.blurple)
-    async def ping(self, ctx: Interaction, btn: Button) -> None:
+    async def ping(self, ctx: Interaction[CustomBot], btn: Button):
         resp: InteractionResponse = ctx.response
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
@@ -178,7 +182,7 @@ class PingView(View):
         style=ButtonStyle.red,
         emoji=PartialEmoji(name="emoteremove", id=460538983965786123),
     )
-    async def delete(self, ctx: Interaction, btn: Button) -> None:
+    async def delete(self, ctx: Interaction[CustomBot], btn: Button):
         resp: InteractionResponse = ctx.response
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
@@ -202,7 +206,7 @@ class BaseCharactersView(Complex[Character]):
     def __init__(
         self,
         member: Member,
-        target: Interaction | Webhook | TextChannel,
+        target: Interaction[CustomBot] | Webhook | TextChannel,
         ocs: Iterable[Character],
         keep_working: bool = False,
         max_values: int = 1,
@@ -229,7 +233,7 @@ class CharactersView(BaseCharactersView):
     def __init__(
         self,
         member: Member,
-        target: Interaction | Webhook | TextChannel,
+        target: Interaction[CustomBot] | Webhook | TextChannel,
         ocs: set[Character],
         keep_working: bool = False,
         msg_id: Optional[None] = None,
@@ -246,7 +250,7 @@ class CharactersView(BaseCharactersView):
         self.msg_id = int(msg_id) if msg_id else None
 
     @select(row=1, placeholder="Select the Characters", custom_id="selector")
-    async def select_choice(self, interaction: Interaction, sct: Select) -> None:
+    async def select_choice(self, interaction: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = interaction.response
         if item := self.current_choice:
             await resp.defer(ephemeral=True, thinking=True)

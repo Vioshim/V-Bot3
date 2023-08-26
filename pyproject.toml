@@ -33,6 +33,7 @@ dateparser = "^1.1.5"
 pluralkit = "^1.1.1"
 webcolors = "^1.13"
 titlecase = "^2.4"
+reportlab = "^4.0.4"
 
 
 [tool.poetry.dev-dependencies]

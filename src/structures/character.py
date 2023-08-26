@@ -32,6 +32,18 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import process
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import (
+    Image,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
@@ -711,10 +723,9 @@ class Character:
 
         return embeds
 
-    async def to_docx(self, bot: CustomBot):
-        doc: Document = document()
-
-        params_header = {
+    @property
+    def params_header(self):
+        data = {
             "Age": self.age.name,
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
             "Pokeball": self.pokeball.label if self.pokeball else None,
@@ -722,10 +733,17 @@ class Character:
             "Measure": "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")]),
         }
 
-        doc.add_heading(f"{self.emoji}〛{self.name}", 0)
-
         if species_data := self.species_data:
-            params_header[species_data[0]] = species_data[1]
+            data[species_data[0]] = species_data[1]
+
+        return data
+
+    async def to_docx(self, bot: CustomBot):
+        doc: Document = document()
+
+        params_header = self.params_header
+
+        doc.add_heading(f"{self.emoji}〛{self.name}", 0)
 
         table = doc.add_table(rows=1, cols=len(params_header))
         hdr_cells = table.rows[0].cells
@@ -798,9 +816,15 @@ class Character:
                 doc.add_heading("How does it make the character's life harder?", 2)
                 doc.add_paragraph(cons).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-        if isinstance(self.species, (Variant, CustomParadox, CustomUltraBeast, Fakemon)) and (
-            movepool := self.species.movepool
-        ):
+        if isinstance(
+            self.species,
+            (
+                Variant,
+                CustomParadox,
+                CustomUltraBeast,
+                Fakemon,
+            ),
+        ) and (movepool := self.species.movepool):
             doc.add_page_break()
             doc.add_heading("Movepool", level=1)
             if movepool.level:
@@ -830,6 +854,194 @@ class Character:
         doc.save(fp := BytesIO())
         fp.seek(0)
         return File(fp=fp, filename=f"{self.id or 'Character'}.docx")
+
+    async def to_pdf(self, bot: CustomBot) -> File:
+        """To PDF"""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+
+        content = [
+            Table(
+                [[k, v] for k, v in self.params_header.items()],
+                colWidths=[100, 300],
+                style=TableStyle(
+                    [
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                        ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                        ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
+                    ]
+                ),
+            )
+        ]
+
+        # Add heading
+        content.append(Paragraph(f"<strong>{self.emoji}〛{self.name}</strong>", styles["Heading1"]))
+
+        # Add an image
+        if img_file := await bot.get_file(self.image_url):
+            img_stream = BytesIO(img_file.fp.read())
+            content.append(Image(img_stream))
+
+        # Add abilities and moveset sections
+        if self.abilities:
+            content.append(Paragraph("Abilities", styles["Heading2"]))
+            for item in self.abilities:
+                content.append(Paragraph(f"<strong>{item.name}</strong> - {item.description}", styles["Normal"]))
+
+        if self.moveset:
+            content.append(Paragraph("Favorite Moves", styles["Heading2"]))
+            for item in self.moveset:
+                content.append(Paragraph(f"• {item.name} - {item.category.name} - {item.type.name}", styles["Normal"]))
+
+        if self.backstory or self.extra or self.personality:
+            content.append(PageBreak())
+
+        if self.backstory:
+            content.extend(
+                (
+                    Spacer(1, 12),
+                    Paragraph("Bio", styles["Heading2"]),
+                    Paragraph(self.backstory, styles["Normal"]),
+                )
+            )
+
+        if self.personality:
+            content.extend(
+                (
+                    Spacer(1, 12),
+                    Paragraph("Personality", styles["Heading2"]),
+                    Paragraph(self.personality, styles["Normal"]),
+                )
+            )
+
+        if self.extra:
+            content.extend(
+                (
+                    Spacer(1, 12),
+                    Paragraph("Extra Information", styles["Heading2"]),
+                    Paragraph(self.extra, styles["Normal"]),
+                )
+            )
+
+        if sp_ability := self.sp_ability:
+            content.append(PageBreak())
+            content.append(Paragraph(f"Unique Trait: {sp_ability.name}", styles["Heading1"]))
+            content.append(Paragraph(sp_ability.kind.phrase, styles["Heading2"]))
+
+            if sp_ability.description:
+                content.append(Paragraph(sp_ability.description, styles["Normal"]))
+
+            if sp_ability.pros:
+                content.append(Paragraph("How does it make the character's life easier?", styles["Heading3"]))
+                content.append(Paragraph(sp_ability.pros, styles["Normal"]))
+
+            if sp_ability.cons:
+                content.append(Paragraph("How does it make the character's life harder?", styles["Heading3"]))
+                content.append(Paragraph(sp_ability.cons, styles["Normal"]))
+
+            if sp_ability.origin:
+                content.append(Paragraph("How was it obtained?", styles["Heading3"]))
+                content.append(Paragraph(sp_ability.origin, styles["Normal"]))
+
+        if isinstance(
+            self.species,
+            (
+                Variant,
+                CustomParadox,
+                CustomUltraBeast,
+                Fakemon,
+            ),
+        ) and (movepool := self.species.movepool):
+            content.extend(
+                (
+                    PageBreak(),
+                    Paragraph("Movepool", styles["Heading1"]),
+                )
+            )
+
+            if movepool.level:
+                content.append(Paragraph("Level Moves", styles["Heading2"]))
+                content.append(
+                    Table(
+                        [
+                            [f"{k:03d}", ", ".join(x.name for x in sorted(v, key=lambda x: x.name))]
+                            for k, v in movepool.level.items()
+                            if v
+                        ],
+                        colWidths=[50, 350],
+                        style=TableStyle(
+                            [
+                                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                                ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.black),
+                                ("BOX", (0, 0), (-1, -1), 0.25, colors.black),
+                            ]
+                        ),
+                    )
+                )
+
+            if movepool.tm:
+                content.extend(
+                    (
+                        Paragraph("TM Moves", styles["Heading2"]),
+                        Paragraph(
+                            ", ".join(x.name for x in sorted(movepool.tm, key=lambda x: x.name)),
+                            styles["Normal"],
+                        ),
+                    )
+                )
+
+            if movepool.tutor:
+                content.extend(
+                    (
+                        Paragraph("Tutor Moves", styles["Heading2"]),
+                        Paragraph(
+                            ", ".join(x.name for x in sorted(movepool.tutor, key=lambda x: x.name)),
+                            styles["Normal"],
+                        ),
+                    )
+                )
+
+            if movepool.egg:
+                content.extend(
+                    (
+                        Paragraph("Egg Moves", styles["Heading2"]),
+                        Paragraph(
+                            ", ".join(x.name for x in sorted(movepool.egg, key=lambda x: x.name)),
+                            styles["Normal"],
+                        ),
+                    )
+                )
+
+            if movepool.event:
+                content.extend(
+                    (
+                        Paragraph("Event Moves", styles["Heading2"]),
+                        Paragraph(
+                            ", ".join(x.name for x in sorted(movepool.event, key=lambda x: x.name)),
+                            styles["Normal"],
+                        ),
+                    )
+                )
+
+            if movepool.other:
+                content.extend(
+                    (
+                        Paragraph("Other Moves", styles["Heading2"]),
+                        Paragraph(
+                            ", ".join(x.name for x in sorted(movepool.other, key=lambda x: x.name)),
+                            styles["Normal"],
+                        ),
+                    )
+                )
+
+        # Build the PDF document
+        doc.build(content)
+        buffer.seek(0)
+
+        return File(fp=buffer, filename=f"{self.id or 'Character'}.pdf")
 
     def generated_image(self, background: Optional[str] = None) -> Optional[str]:
         """Generated Image
