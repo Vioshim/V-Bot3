@@ -23,7 +23,7 @@ from typing import Literal, Optional
 
 from aiogoogle import Aiogoogle
 from aiohttp import ClientSession
-from apscheduler.schedulers.async_ import AsyncScheduler
+from apscheduler import AsyncScheduler
 from discord import (
     AllowedMentions,
     DiscordException,

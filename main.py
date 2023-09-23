@@ -21,7 +21,7 @@ from os import getenv
 
 from aiogoogle import Aiogoogle
 from aiogoogle.auth.creds import ServiceAccountCreds
-from apscheduler.schedulers.async_ import AsyncScheduler
+from apscheduler import AsyncScheduler
 from discord import Streaming
 from discord.ext.commands import when_mentioned_or
 from dotenv import load_dotenv
