@@ -444,6 +444,9 @@ class Information(commands.Cog):
         role : Role
             Added role
         """
+        if role.guild.id != 719343092963999804:
+            return
+
         embed = discord.Embed(
             title="Role Created",
             description=role.name,
@@ -466,6 +469,9 @@ class Information(commands.Cog):
         role : Role
             Added role
         """
+        if role.guild.id != 719343092963999804:
+            return
+
         embed = discord.Embed(
             title="Role Deleted",
             description=role.name,
@@ -858,7 +864,8 @@ class Information(commands.Cog):
             await message.reply(embed=conf_embed, view=view)
             await view.wait()
             await message.delete(delay=0)
-        else:
+
+        elif message.guild.id == 719343092963999804:
             messages: list[discord.Message] = []
 
             def checker(m: discord.Message):
