@@ -2370,16 +2370,25 @@
     {
         "id": "SUPERSWEETSYRUP",
         "name": "Supersweet Syrup",
-        "description": "Lowers the evasion of opposing Pokémon by 1 stage when first sent into battle"
+        "description": "Lowers the evasion of opposing Pokémon by 1 stage when first sent into battle",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
     },
     {
         "id": "HOSPITABILITY",
         "name": "Hospitability",
-        "description": "Heals up to 25% of its partner Pokémon's Maximum Hit Points when it enters battle"
+        "description": "Heals up to 25% of its partner Pokémon's Maximum Hit Points when it enters battle",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
     },
     {
         "id": "TOXICCHAIN",
         "name": "Toxic Chain",
-        "description": "The power of the Pokémon's toxic chain may badly poison any target the Pokémon hits with a move."
+        "description": "The power of the Pokémon's toxic chain may badly poison any target the Pokémon hits with a move.",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
     }
 ]
