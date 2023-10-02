@@ -865,7 +865,7 @@ class Information(commands.Cog):
             await view.wait()
             await message.delete(delay=0)
 
-        elif message.guild.id == 719343092963999804:
+        elif message.guild and message.guild.id == 719343092963999804:
             messages: list[discord.Message] = []
 
             def checker(m: discord.Message):
