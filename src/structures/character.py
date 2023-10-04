@@ -1089,6 +1089,7 @@ class Character:
                         background_transparency=70,
                         font=Fonts.Whitney_Black,
                         font_size=36,
+                        padding=15,
                     )
         return kit.url
 
@@ -1114,6 +1115,7 @@ class Character:
                         background_transparency=70,
                         font=Fonts.Whitney_Black,
                         font_size=36,
+                        padding=15,
                     )
         return kit.url
 
@@ -1141,6 +1143,7 @@ class Character:
                         background_transparency=70,
                         font=Fonts.Whitney_Black,
                         font_size=36,
+                        padding=15,
                     )
         return kit.url
 
