@@ -88,6 +88,7 @@ class PingModal(Modal):
             background_transparency=90,
             font=Fonts.Whitney_Black,
             font_size=36,
+            padding=15,
         )
         oc_file: File = await interaction.client.get_file(kit.url)
         embed.set_thumbnail(url=f"attachment://{oc_file.filename}")
