@@ -81,24 +81,13 @@ class ImageKitTransformation(ABC):
         """
 
     @staticmethod
-    def token_parse(elements: dict[str, Any]):
-        return ",".join(item_parse(k, v) for k, v in elements.items() if isinstance(v, (int, str, Enum)))
-
-
-class ImageMethod(ABC):
-    @abstractproperty
-    def tokenize(self) -> str:
-        """Tokenize property
-
-        Returns
-        -------
-        str
-            tokenized data
-        """
+    def token_parse(elements: dict[str, Any], phrase: str = None):
+        text = ",".join(item_parse(k, v) for k, v in elements.items() if isinstance(v, (int, str, Enum)))
+        return f"l-{phrase},{text},l-end" if phrase else text
 
     @staticmethod
-    def token_parse(elements: dict[str, Any]):
-        return ",".join(item_parse(k, v) for k, v in elements.items() if isinstance(v, (int, str, Enum)))
+    def color_handler(color: int | str = None) -> str:
+        return color if isinstance(color, str) else hex(color or 0)[2:].upper()
 
 
 class Focus(IntEnum):  # fo-foo
@@ -174,7 +163,7 @@ class Typography(Enum):  # ott-foo
 
 
 @dataclass(unsafe_hash=True)
-class ImagePadResizeCropStrategy(ImageMethod):
+class ImagePadResizeCropStrategy(ImageKitTransformation):
     height: Optional[int] = None
     width: Optional[int] = None
     background: Optional[int] = None
@@ -182,9 +171,14 @@ class ImagePadResizeCropStrategy(ImageMethod):
 
     @property
     def tokenize(self) -> str:
-        elements = dict(h=self.height, w=self.width, cm="pad_resize", mode=self.mode)
+        elements = dict(
+            h=self.height,
+            w=self.width,
+            cm="pad_resize",
+            mode=self.mode,
+        )
         if self.background:
-            elements["bg"] = hex(self.background)[2:].upper()
+            elements["bg"] = self.color_handler(self.background)
         return self.token_parse(elements)
 
 
@@ -200,6 +194,12 @@ class ImageTransformation(ImageKitTransformation):
     focus: Optional[Focus] = None
     strat: Optional[CropStrategy] = None
     trimming: bool = True
+    zoom: Optional[float] = None
+    border_width: Optional[int] = None
+    border_color: Optional[int] = None
+    radius: Optional[int] = None
+    rotation: Optional[int] = None
+    blur: Optional[int] = None
 
     def __post_init__(self):
         self.image = image_formatter(self.image)
@@ -207,21 +207,27 @@ class ImageTransformation(ImageKitTransformation):
     @property
     def tokenize(self) -> str:
         elements = dict(
-            oi=self.image,
-            oh=self.height,
-            ow=self.width,
+            i=self.image,
+            h=self.height,
+            w=self.width,
             xc=self.centered_x,
             yc=self.centered_y,
-            oifo=self.focus,
+            fo=self.focus,
             cm=self.strat,
+            z=self.zoom,
+            r=self.radius,
+            rt=self.rotation,
+            bl=self.blur,
         )
         if isinstance(self.x, int):
-            elements["ox"] = f"N{abs(self.x)}" if self.x < 0 else f"{self.x}"
+            elements["lx"] = f"N{abs(self.x)}" if self.x < 0 else f"{self.x}"
         if isinstance(self.y, int):
-            elements["oy"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
+            elements["ly"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
         if not self.trimming:
-            elements["oit"] = "false"
-        return self.token_parse(elements)
+            elements["t"] = "false"
+        if self.border_color or self.border_width:
+            elements["b"] = f"{self.border_width or 1}-{self.color_handler(self.border_color)}"
+        return self.token_parse(elements, "image")
 
 
 @dataclass(unsafe_hash=True)
@@ -248,37 +254,37 @@ class TextTransformation(ImageKitTransformation):
         encoded = b64encode(str(self.text).encode("utf-8"))
         decoded = encoded.decode("utf-8")
         elements = {
-            "otf": self.font,
-            "otw": self.width,
-            "ote": decoded,
-            "or": self.radius,
-            "ots": self.font_size,
-            "oa": self.transparency,
-            "otia": self.alignment,
-            "ott": self.typography,
+            "ff": self.font,
+            "w": self.width,
+            "ie": decoded,
+            "r": self.radius,
+            "fs": self.font_size,
+            "al": self.transparency,
+            "ia": self.alignment,
+            "tg": self.typography,
         }
-        if isinstance(self.color, int):
-            elements["otc"] = hex(self.color)[2:].upper()
+        if self.color:
+            elements["co"] = self.color_handler(self.color)
         if isinstance(self.x, int):
-            elements["ox"] = f"N{abs(self.x)}" if self.x < 0 else f"{self.x}"
+            elements["lx"] = f"N{abs(self.x)}" if self.x < 0 else f"{self.x}"
         if isinstance(self.y, int):
-            elements["oy"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
-        if isinstance(self.background, int):
-            background = hex(self.background)[2:].upper()
+            elements["ly"] = f"N{abs(self.y)}" if self.y < 0 else f"{self.y}"
+        if self.background:
+            background = self.color_handler(self.background)
             if isinstance(self.background_transparency, int):
                 background += f"{self.background_transparency:02d}"
-            elements["otbg"] = background
-        if isinstance(self.padding, Iterable):
-            elements["otp"] = "_".join(self.padding)
-        elif isinstance(self.padding, int):
-            elements["otp"] = self.padding
-        if isinstance(self.overlay, int):
-            overlay = hex(self.overlay)[2:].upper()
+            elements["bg"] = background
+
+        if self.padding:
+            elements["pa"] = self.padding if isinstance(self.padding, int) else "_".join(self.padding)
+
+        if self.overlay:
+            overlay = self.color_handler(self.overlay)
             if isinstance(self.overlay_transparency, int):
                 overlay += f"{self.overlay_transparency:02d}"
-            elements["otc"] = overlay
+            elements["co"] = overlay
 
-        return self.token_parse(elements)
+        return self.token_parse(elements, "text")
 
 
 class ImageKit:
@@ -340,9 +346,8 @@ class ImageKit:
             extra.append(f"h-{height}")
         if format := self.format:
             extra.append(f"f-{format}")
-        if extra_text := ",".join(extra):
-            return f"{base}?tr={extra_text}"
-        return base
+        extra_text = ",".join(extra)
+        return f"{base}?tr={extra_text}" if extra_text else base
 
     def add_image(
         self,
@@ -356,6 +361,12 @@ class ImageKit:
         focus: Optional[Focus] = None,
         strat: Optional[CropStrategy] = None,
         trimming: bool = True,
+        zoom: Optional[float] = None,
+        border_width: Optional[int] = None,
+        border_color: Optional[int] = None,
+        radius: Optional[int] = None,
+        rotation: Optional[int] = None,
+        blur: Optional[int] = None,
     ):
         self.elements.append(
             ImageTransformation(
@@ -369,6 +380,12 @@ class ImageKit:
                 focus=focus,
                 strat=strat,
                 trimming=trimming,
+                zoom=zoom,
+                border_width=border_width,
+                border_color=border_color,
+                radius=radius,
+                rotation=rotation,
+                blur=blur,
             )
         )
 
