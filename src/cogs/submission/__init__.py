@@ -482,7 +482,7 @@ class Submission(commands.Cog):
 
         view = View()
         name, emoji = name_emoji_from_channel(message.channel)
-        view.add_item(Button(label=name[:80], url=message.jump_url, emoji=emoji))
+        view.add_item(Button(label=name, url=message.jump_url, emoji=emoji))
         if oc_jump_url := oc.jump_url:
             view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.emoji))
         else:

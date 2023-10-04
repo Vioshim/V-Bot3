@@ -55,14 +55,16 @@ __all__ = (
 )
 
 
-def name_emoji_from_channel(channel: TextChannel):
+def name_emoji_from_channel(channel: TextChannel, max_chars: Optional[int] = 80):
     name = channel.name.replace("»", "")
     try:
         emoji, name = name.split("〛", maxsplit=1)
         emoji = emoji[0]
     except ValueError:
         emoji, name = SETTING_EMOJI, name
-    name = name.replace("-", " ").title()
+    name = name.replace("-", " ").title() or "Unknown"
+    if max_chars:
+        name = name[:max_chars]
     return name, emoji
 
 
