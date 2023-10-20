@@ -442,7 +442,7 @@ def message_line(message: Message):
     if files := [
         dict(
             url=item.url,
-            proxy_url=item.proxy_url,
+            proxy_url=item.proxy_url.split("?")[0],
             filename=item.filename,
             type=item.content_type,
             spoiler=item.is_spoiler(),

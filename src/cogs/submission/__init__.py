@@ -889,7 +889,7 @@ class Submission(commands.Cog):
     async def oc_image(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with itx.typing():
             data = [x for x in itx.message.attachments if x.content_type.startswith("image/")]
-            image = data[0].proxy_url if data else None
+            image = data[0].proxy_url.split("?")[0] if data else None
             db = self.bot.mongo_db("Characters")
             ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
             ocs.sort(key=lambda x: x.id)

@@ -773,7 +773,7 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx, editing_attachments=attachments) as embed:
             if author := embed.author:
                 if attachments:
-                    embed.set_author(name=author.name, url=author.url, icon_url=attachments[-1].proxy_url)
+                    embed.set_author(name=author.name, url=author.url, icon_url=attachments[-1].proxy_url.split("?")[0])
                 elif isinstance(icon, (Emoji, PartialEmoji)):
                     embed.set_author(name=author.name, url=author.url, icon_url=icon.url)
                 elif icon:
@@ -843,7 +843,7 @@ class EmbedBuilder(commands.Cog):
         async with self.edit(ctx, editing_attachments=attachments) as embed:
             if footer := embed.footer:
                 if attachments:
-                    embed.set_footer(text=footer.text, icon_url=attachments[-1].proxy_url)
+                    embed.set_footer(text=footer.text, icon_url=attachments[-1].proxy_url.split("?")[0])
                 elif isinstance(icon, (Emoji, PartialEmoji)):
                     embed.set_footer(text=footer.text, icon_url=icon.url)
                 elif icon:
@@ -865,7 +865,7 @@ class EmbedBuilder(commands.Cog):
         attachments = ctx.message.attachments
         async with self.edit(ctx, editing_attachments=attachments) as embed:
             if attachments:
-                embed.set_thumbnail(url=attachments[-1].proxy_url)
+                embed.set_thumbnail(url=attachments[-1].proxy_url.split("?")[0])
             elif isinstance(thumbnail, (Emoji, PartialEmoji)):
                 embed.set_thumbnail(url=thumbnail.url)
             elif thumbnail:
@@ -917,7 +917,7 @@ class EmbedBuilder(commands.Cog):
         attachments = ctx.message.attachments
         async with self.edit(ctx, editing_attachments=attachments) as embed:
             if attachments:
-                embed.set_image(url=attachments[-1].proxy_url)
+                embed.set_image(url=attachments[-1].proxy_url.split("?")[0])
             elif isinstance(image, (Emoji, PartialEmoji)):
                 embed.set_image(url=image.url)
             elif image:
