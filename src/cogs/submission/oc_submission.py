@@ -1223,7 +1223,10 @@ class ImageField(TemplateField, required=True):
                             url = oc.generated_image(bg)
 
                         if not (img := await itx.client.get_file(url)) and sct.values[0] != "keep":
-                            img = await itx.client.get_file(oc.generated_image())
+                            img = await itx.client.get_file(url := oc.generated_image())
+
+                        if url:
+                            itx.client.logger.info("Image: %s", url)
 
                         if img:
                             oc.image = img
