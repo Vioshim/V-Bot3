@@ -887,7 +887,7 @@ class MovepoolField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        return ", ".join(x for x in oc.movepool() if x.banned)
+        return ", ".join(x.name for x in oc.movepool() if x.banned)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
