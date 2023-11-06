@@ -658,7 +658,7 @@ class Submission(commands.Cog):
         self.bot.logger.info("Loading Submission menu")
         view = SubmissionView(timeout=None)
         channel = self.bot.get_partial_messageable(id=852180971985043466, guild_id=719343092963999804)
-        message = channel.get_partial_message(1116388296025722911)
+        message = channel.get_partial_message(1171220451180154991)
         view.message = await message.edit(view=view)
         self.bot.logger.info("Finished loading Submission menu")
 
