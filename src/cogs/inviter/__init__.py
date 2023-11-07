@@ -100,8 +100,11 @@ class Inviter(commands.Cog):
         reference : Optional[Message], optional
             Message reference, by default None
         """
+        reference = reference or (ctx.message.reference and ctx.message.reference.resolved)
+
         if not reference:
-            reference = ctx.message.reference.resolved
+            return await ctx.reply("No message reference", delete_after=2)
+
         if not invite and (invite_url := INVITE.search(reference.content) or INVITE.search(ctx.message.content)):
             with suppress(DiscordException):
                 invite = await self.bot.fetch_invite(url=invite_url.group(1))
