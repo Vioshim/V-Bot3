@@ -869,12 +869,6 @@ class Submission(commands.Cog):
                 if thread := get(guild.threads, id=oc.thread):
                     await thread.delete()
 
-                role = get(guild.roles, name="Registered")
-                member = get(guild.members, id=oc.author)
-
-                if role and member and role in member.roles:
-                    await member.remove_roles(role, reason="0 Characters")
-
         log_db = self.bot.mongo_db("RP Logs")
         proxy_db = self.bot.mongo_db("Tupper-logs")
         if item := await log_db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
@@ -910,6 +904,7 @@ class Submission(commands.Cog):
             view = View()
             for oc in ocs:
                 view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.emoji))
+
             if oc_file := await self.bot.get_file(url):
                 await itx.reply(file=oc_file, view=view)
             else:

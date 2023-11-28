@@ -238,8 +238,8 @@ class Roles(commands.Cog):
             view = RPSearchManage(msg_id=item["id"], member_id=item["member"], ocs=item["ocs"])
             self.bot.add_view(view, message_id=item["id"])
 
-    @app_commands.command()
-    @app_commands.guilds(719343092963999804)
+    # @app_commands.command()
+    # @app_commands.guilds(719343092963999804)
     async def ping(self, itx: Interaction[CustomBot], member: Member | User):
         """Command used to ping roles, and even users.
 

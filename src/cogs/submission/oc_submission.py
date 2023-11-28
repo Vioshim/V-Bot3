@@ -1733,8 +1733,7 @@ class SubmissionView(Basic):
         cog = itx.client.get_cog("Submission")
         user: Member = itx.client.supporting.get(itx.user, itx.user)
         resp: InteractionResponse = itx.response
-        ephemeral = bool((role := itx.guild.get_role(719642423327719434)) and role in itx.user.roles)
-        await resp.defer(ephemeral=ephemeral, thinking=True)
+        await resp.defer(ephemeral=True, thinking=True)
         users = {itx.user.id, user.id}
         try:
             cog.ignore |= users
@@ -1744,10 +1743,10 @@ class SubmissionView(Basic):
                 user=user,
                 template=Template.Pokemon,
             )
-            await view.handler_send(ephemeral=ephemeral)
+            await view.handler_send(ephemeral=True)
             await view.wait()
         except Exception as e:
-            await itx.followup.send(str(e), ephemeral=ephemeral)
+            await itx.followup.send(str(e), ephemeral=True)
             itx.client.logger.exception("Character Creation Exception", exc_info=e)
         finally:
             cog.ignore -= users
@@ -1801,7 +1800,7 @@ class SubmissionView(Basic):
                     await msg.delete(delay=0)
                 itx.client.logger.info("%s is deleting %s characters", str(itx.user), len(choices))
 
-    @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
+    # @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
         date_value = time_snowflake(itx.created_at - timedelta(days=14))
@@ -1824,12 +1823,7 @@ class SubmissionView(Basic):
     async def create_ticket(self, itx: Interaction[CustomBot], _: Button):
         await itx.response.send_modal(TicketModal(timeout=None))
 
-    @button(
-        label="RP Search",
-        row=3,
-        custom_id="rp-search",
-        emoji="🔍",
-    )
+    # @button(label="RP Search", row=3, custom_id="rp-search", emoji="🔍")
     async def rp_search(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
         guild = itx.guild
@@ -1857,7 +1851,7 @@ class SubmissionView(Basic):
         elif await modal.check(itx):
             await itx.response.send_modal(modal)
 
-    @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
+    # @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
     async def info(self, itx: Interaction[CustomBot], _: Button):
         tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({})])
         view = WikiComplex(tree=tree, context=itx)

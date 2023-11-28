@@ -361,7 +361,7 @@ class BasicRoleSelect(RoleSelect):
         placeholder="Select Basic Roles",
         custom_id="basic",
         min_values=0,
-        max_values=5,
+        max_values=3,
         options=[
             SelectOption(
                 label="Announcements",
@@ -376,22 +376,10 @@ class BasicRoleSelect(RoleSelect):
                 description="Reminds you to bump the server",
             ),
             SelectOption(
-                label="RP Events",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="805878418225889280",
-                description="Get informed of RP Events, Missions and Storylines.",
-            ),
-            SelectOption(
                 label="Don't Ping Me!",
                 emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
                 value="1092498088347844649",
                 description="Warns people not to ping you.",
-            ),
-            SelectOption(
-                label="Looking for RP",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="1110599604090716242",
-                description="Lets people know you're looking for RP.",
             ),
         ],
     )
