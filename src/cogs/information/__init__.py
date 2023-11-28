@@ -240,7 +240,7 @@ class Information(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(719343092963999804)
-    @app_commands.checks.has_role("Booster")
+    @app_commands.checks.has_any_role("Booster", "Supporter")
     async def perks(
         self,
         itx: discord.Interaction[CustomBot],
