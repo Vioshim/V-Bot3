@@ -43,6 +43,14 @@ class BanAppeal(Appeal):
     ban_reason: str = ""
     unban_reason: str = ""
 
+    @property
+    def info(self):
+        return {
+            "Where did you get banned?": self.banned_in,
+            "Please briefly describe the reason for your ban": self.ban_reason,
+            "Why do you believe your ban should be lifted?": self.unban_reason,
+        }
+
     @classmethod
     async def appeal_check(cls, bot: CustomBot, responses: set[BanAppeal] = None):
         responses = set() if responses is None else responses
@@ -101,10 +109,8 @@ class BanAppeal(Appeal):
                 )
                 await tdata.message.pin()
 
-                for title, answer in zip(data["values"][0][1:], astuple(entry)[1:]):
-                    title, *rest_of_title = title.split("\n", 1)
-                    title = f"# {title}\n" + "\n".join(rest_of_title)
-                    base_embed.title = title[:256]
+                for title, answer in entry.info.items():
+                    base_embed.title = title
                     base_embed.description = answer[:4000] or "No Answer Provided."
                     await tdata.thread.send(embed=base_embed)
 
