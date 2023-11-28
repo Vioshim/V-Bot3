@@ -206,8 +206,8 @@ class OCBackgroundPerk(Perk):
 
 class CustomPerks(Enum):
     Custom_Role = CustomRolePerk
-    # RP_Search_Banner = RPSearchBannerPerk
-    # OC_Background = OCBackgroundPerk
+    RP_Search_Banner = RPSearchBannerPerk
+    OC_Background = OCBackgroundPerk
 
     async def method(self, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
         await self.value.method(ctx, img)
