@@ -101,8 +101,11 @@ class BanAppeal(Appeal):
                 )
                 await tdata.message.pin()
 
-                for title, answer in zip(data["values"][0][2:], astuple(entry)[1:]):
-                    base_embed.title, base_embed.description = title, str(answer or "No Answer Provided.")[:4000]
+                for title, answer in zip(data["values"][0][1:], astuple(entry)[1:]):
+                    title, *rest_of_title = title.split("\n", 1)
+                    title = f"# {title}\n" + "\n".join(rest_of_title)
+                    base_embed.title = title[:256]
+                    base_embed.description = answer[:4000] or "No Answer Provided."
                     await tdata.thread.send(embed=base_embed)
 
                 await db.replace_one(
