@@ -39,8 +39,8 @@ class Appeal:
 
 @dataclass(slots=True, unsafe_hash=True)
 class BanAppeal(Appeal):
-    ban_reason: str = ""
     banned_in: str = ""
+    ban_reason: str = ""
     unban_reason: str = ""
 
     @classmethod
@@ -101,7 +101,7 @@ class BanAppeal(Appeal):
                 )
                 await tdata.message.pin()
 
-                for title, answer in zip(data["values"][0][1:], astuple(entry)[1:]):
+                for title, answer in zip(data["values"][0][2:], astuple(entry)[1:]):
                     base_embed.title, base_embed.description = title, str(answer or "No Answer Provided.")[:4000]
                     await tdata.thread.send(embed=base_embed)
 
