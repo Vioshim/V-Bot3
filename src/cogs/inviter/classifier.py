@@ -254,8 +254,8 @@ class InviterView(View):
         await resp.send_message(content=info.url, embed=info, ephemeral=True, view=view)
 
     @button(
-        label="Parallel World's Ad",
-        custom_id="Parallel",
+        label="D-Proxy's Server Ad",
+        custom_id="D-Proxy",
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
     )
