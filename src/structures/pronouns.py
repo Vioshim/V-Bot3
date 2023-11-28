@@ -51,9 +51,9 @@ class Pronoun(PronounItem, Enum):
         deduces the Pronoun based on the given string.
     """
 
-    He = ("male_n8DIlBU0M.png", "\N{MALE SIGN}", 738230651840626708)
-    She = ("female_bdjGCkuKH.png", "\N{FEMALE SIGN}", 738230653916807199)
-    Them = (None, "\N{BLACK SQUARE BUTTON}", 874721683381030973)
+    He = ("male_n8DIlBU0M.png", "\N{MALE SIGN}", 1178871573701214268)
+    She = ("female_bdjGCkuKH.png", "\N{FEMALE SIGN}", 1178871770590216313)
+    Them = (None, "\N{BLACK SQUARE BUTTON}", 1178871778584571934)
 
     @classmethod
     def deduce(cls, item: str) -> Pronoun:
