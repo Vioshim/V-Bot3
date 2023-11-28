@@ -40,6 +40,7 @@ class Appeal:
 @dataclass(slots=True, unsafe_hash=True)
 class BanAppeal(Appeal):
     ban_reason: str = ""
+    banned_in: str = ""
     unban_reason: str = ""
 
     @classmethod
@@ -56,7 +57,7 @@ class BanAppeal(Appeal):
 
             storage = await bot.aiogoogle.discover("sheets", "v4")
             query = storage.spreadsheets.values.get(
-                spreadsheetId="1OYI3sLKs9fFIoZ6v7RyM7KE7oFcbSOjffoMXFMVsC8s",
+                spreadsheetId="1sXZcIvICowHL-XBUiO6U60UmYxjW05lXc0EpZFNtLDM",
                 range="Form Responses 1",
             )
 
