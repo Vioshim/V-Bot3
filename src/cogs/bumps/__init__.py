@@ -27,6 +27,8 @@ __all__ = ("Bump", "setup")
 class Bump(Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
+        self.bump_pings: dict[int, Message] = {}
+        self.bump_notifs: dict[int, Message] = {}
 
     @Cog.listener()
     async def on_message(self, ctx: Message):
@@ -44,18 +46,26 @@ class Bump(Cog):
         if ctx.author == self.bot.user:
             return
 
-        if not (ctx.author.bot and ctx.embeds):
+        if not ctx.author.bot or not ctx.embeds or not (item := BumpBot.get(id=ctx.author.id)):
             return
 
-        if item := BumpBot.get(id=ctx.author.id):
-            self.bot.msg_cache_add(ctx)
-            w = await self.bot.webhook(ctx.channel)
-            bump = PingBump(after=ctx, data=item, webhook=w)
-            if bump.valid:
-                await ctx.delete(delay=0)
-            elif timedelta := bump.timedelta:
-                await sleep(timedelta.total_seconds())
-            await bump.send()
+        self.bot.msg_cache_add(ctx)
+        w = await self.bot.webhook(ctx.channel)
+        bump = PingBump(after=ctx, data=item, webhook=w, bumps=self.bump_pings)
+
+        if bump.valid:
+            if msg := self.bump_pings.pop(ctx.author.id, None):
+                await msg.delete(delay=0)
+
+            if msg := self.bump_notifs.pop(ctx.author.id, None):
+                await msg.delete(delay=0)
+
+            await ctx.delete(delay=0)
+
+        elif timedelta := bump.timedelta:
+            await sleep(timedelta.total_seconds())
+
+        self.bump_notifs[ctx.author.id] = await bump.send(timeout=False)
 
     @Cog.listener()
     async def on_message_edit(self, before: Message, after: Message):
@@ -68,18 +78,27 @@ class Bump(Cog):
         after : Message
             Message after editing
         """
-        if after.author == self.bot.user or not after.author.bot or not after.embeds:
+        if (after.author == self.bot.user or not after.author.bot or not after.embeds) or not (
+            item := BumpBot.get(id=after.author.id)
+        ):
             return
 
-        if item := BumpBot.get(id=after.author.id):
-            self.bot.msg_cache_add(after)
-            w = await self.bot.webhook(after.channel)
-            bump = PingBump(before=before, after=after, data=item, webhook=w)
-            if bump.valid:
-                await after.delete(delay=0)
-            elif timedelta := bump.timedelta:
-                await sleep(timedelta.total_seconds())
-            await bump.send()
+        self.bot.msg_cache_add(after)
+        w = await self.bot.webhook(after.channel)
+        bump = PingBump(before=before, after=after, data=item, webhook=w, bumps=self.bump_pings)
+        if bump.valid:
+            if msg := self.bump_pings.pop(after.author.id, None):
+                await msg.delete(delay=0)
+
+            if msg := self.bump_notifs.pop(after.author.id, None):
+                await msg.delete(delay=0)
+
+            await after.delete(delay=0)
+
+        elif timedelta := bump.timedelta:
+            await sleep(timedelta.total_seconds())
+
+        self.bump_notifs[after.author.id] = await bump.send(timeout=False)
 
 
 async def setup(bot: CustomBot) -> None:

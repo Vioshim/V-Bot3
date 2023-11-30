@@ -14,8 +14,6 @@
 
 
 from datetime import datetime
-from re import IGNORECASE, MULTILINE, Pattern, compile
-from typing import Optional
 
 from dateparser import parse
 from discord import (
@@ -27,10 +25,10 @@ from discord import (
     Message,
     Thread,
     Webhook,
-    WebhookMessage,
 )
 from discord.ui import Button, View, button
 from discord.utils import MISSING, get, utcnow
+from regex import IGNORECASE, MULTILINE, Pattern, compile
 
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import safe_username
@@ -170,9 +168,11 @@ class PingBump(View):
         after: Message = None,
         data: BumpBot = None,
         webhook: Webhook = None,
+        bumps: dict[int, Message] = None,
     ):
         super(PingBump, self).__init__(timeout=data.hours * 3600.0)
         self.embed = data.adapt_embed(after)
+        self.bumps = bumps or {}
         self.webhook = webhook
         if url := self.embed.url:
             btn = Button(label="Click Here to Review us!", url=url)
@@ -180,7 +180,6 @@ class PingBump(View):
         self.before = before
         self.after = after
         self.data = data
-        self.message: Optional[WebhookMessage] = None
 
     @property
     def valid(self) -> bool:
@@ -217,21 +216,18 @@ class PingBump(View):
         mention = f"</bump:{self.data.cmd_id}>"
         if timeout:
             mention = f"**<@&1008443584594325554> (Slash Command is {mention}):**"
-            embed, view, wait = MISSING, MISSING, False
+            embed, view = MISSING, MISSING
         else:
-            embed, view, wait = self.embed, self, True
+            embed, view = self.embed, self
 
-        if not (avatar_url := self.data.avatar):
-            avatar_url = self.after.author.display_avatar.url
-
-        self.message = await self.webhook.send(
+        return await self.webhook.send(
             content=mention,
             embed=embed,
             view=view,
-            wait=wait,
+            wait=True,
             thread=thread,
             username=safe_username(self.after.author.display_name),
-            avatar_url=avatar_url,
+            avatar_url=self.data.avatar or self.after.author.display_avatar.url,
             allowed_mentions=AllowedMentions(users=True, roles=True),
         )
 
@@ -248,8 +244,5 @@ class PingBump(View):
         await resp.send_message(msg, ephemeral=True)
 
     async def on_timeout(self) -> None:
-        self.reminder.disabled = True
-        if message := self.message:
-            await message.edit(view=self)
-        await self.send(timeout=True)
+        self.bumps[self.data.id] = await self.send(timeout=True)
         self.stop()
