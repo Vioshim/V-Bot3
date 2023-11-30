@@ -133,21 +133,25 @@ class AnnouncementModal(Modal):
             self.add_item(self.poll_data)
             self.add_item(self.poll_range)
 
-    async def on_submit(self, interaction: discord.Interaction[CustomBot]):
+    async def on_submit(self, itx: discord.Interaction[CustomBot]):
         embeds: list[discord.Embed] = self.kwargs.get("embeds", [])
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        webhook = await interaction.client.webhook(interaction.channel)
+        await itx.response.defer(ephemeral=True, thinking=True)
+        webhook = await itx.client.webhook(itx.channel)
 
         if embeds:
             embeds[0].title = self.thread_name.value
-            embeds[0].set_author(name=interaction.user.display_name, icon_url=interaction.user.avatar)
+            embeds[0].set_author(
+                name=itx.user.display_name,
+                icon_url=itx.user.avatar,
+                url="https://ko-fi.com/Vioshim" if itx.permissions.moderate_members else None,
+            )
 
         msg = await webhook.send(
             **self.kwargs, allowed_mentions=discord.AllowedMentions(everyone=True, roles=True), wait=True
         )
 
         if self.poll_mode:
-            db: AsyncIOMotorCollection = interaction.client.mongo_db("Poll")
+            db: AsyncIOMotorCollection = itx.client.mongo_db("Poll")
             if not (answers := [int(o) for x in self.poll_range.value.split("-") if (o := x.strip()) and o.isdigit()]):
                 answers = [1]
             view = PollView.parse(text=self.poll_data.value, min_values=answers[0], max_values=answers[-1])
@@ -156,13 +160,13 @@ class AnnouncementModal(Modal):
 
         if self.thread_mode:
             thread = await msg.create_thread(name=self.thread_name.value)
-            await thread.add_user(interaction.user)
+            await thread.add_user(itx.user)
             match self.word:
                 case "OC Question" | "Story" | "Storyline" | "Mission":
-                    if tupper := interaction.guild.get_member(431544605209788416):
+                    if tupper := itx.guild.get_member(431544605209788416):
                         await thread.add_user(tupper)
 
-        await interaction.followup.send("Thread created successfully", ephemeral=True)
+        await itx.followup.send("Thread created successfully", ephemeral=True)
         self.stop()
 
 
