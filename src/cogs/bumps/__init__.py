@@ -31,41 +31,43 @@ class Bump(Cog):
         self.bump_notifs: dict[int, Message] = {}
 
     @Cog.listener()
-    async def on_message(self, ctx: Message):
+    async def on_message(self, message: Message):
         """Upon message detects if it's a successful bump for reminding purposes.
 
         Parameters
         ----------
-        ctx: Message
+        message: Message
             Message with possible bump information
 
         Returns
         -------
 
         """
-        if ctx.author == self.bot.user:
+        if message.author == self.bot.user:
             return
 
-        if not ctx.author.bot or not ctx.embeds or not (item := BumpBot.get(id=ctx.author.id)):
+        if not message.author.bot or not message.embeds or not (item := BumpBot.get(id=message.author.id)):
             return
 
-        self.bot.msg_cache_add(ctx)
-        w = await self.bot.webhook(ctx.channel)
-        bump = PingBump(after=ctx, data=item, webhook=w, bumps=self.bump_pings)
+        self.bot.msg_cache_add(message)
+        w = await self.bot.webhook(message.channel)
+        bump = PingBump(after=message, data=item, webhook=w, bumps=self.bump_pings)
 
         if bump.valid:
-            if msg := self.bump_pings.pop(ctx.author.id, None):
+            if msg := self.bump_pings.pop(message.author.id, None):
                 await msg.delete(delay=0)
 
-            if msg := self.bump_notifs.pop(ctx.author.id, None):
+            if msg := self.bump_notifs.pop(message.author.id, None):
                 await msg.delete(delay=0)
 
-            await ctx.delete(delay=0)
+            await message.delete(delay=0)
 
         elif timedelta := bump.timedelta:
             await sleep(timedelta.total_seconds())
 
-        self.bump_notifs[ctx.author.id] = await bump.send(timeout=False)
+        self.bump_notifs[message.author.id] = await bump.send(timeout=False)
+        await bump.wait()
+        self.bump_pings[message.author.id] = await bump.send(timeout=True)
 
     @Cog.listener()
     async def on_message_edit(self, before: Message, after: Message):
@@ -99,6 +101,8 @@ class Bump(Cog):
             await sleep(timedelta.total_seconds())
 
         self.bump_notifs[after.author.id] = await bump.send(timeout=False)
+        await bump.wait()
+        self.bump_pings[after.author.id] = await bump.send(timeout=True)
 
 
 async def setup(bot: CustomBot) -> None:

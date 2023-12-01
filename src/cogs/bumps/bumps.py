@@ -242,7 +242,3 @@ class PingBump(View):
             await inter.user.add_roles(role)
             msg = "Alright, you will get notified"
         await resp.send_message(msg, ephemeral=True)
-
-    async def on_timeout(self) -> None:
-        self.bumps[self.data.id] = await self.send(timeout=True)
-        self.stop()
