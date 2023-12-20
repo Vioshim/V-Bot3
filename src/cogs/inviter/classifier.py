@@ -34,7 +34,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
 from src.utils.etc import LINK_EMOJI, SETTING_EMOJI
-from structures.bot import CustomBot
+from src.structures.bot import CustomBot
 
 __all__ = ("InviteComplex", "InviteAdminComplex", "InviterView", "Partner", "PartnerComplex")
 
