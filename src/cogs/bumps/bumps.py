@@ -14,7 +14,7 @@
 
 
 from datetime import datetime
-from src.structures.bot import CustomBot
+
 from dateparser import parse
 from discord import (
     AllowedMentions,
@@ -29,6 +29,7 @@ from discord.ui import Button, View, button
 from discord.utils import MISSING, get, utcnow
 from regex import IGNORECASE, MULTILINE, Pattern, compile
 
+from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 from src.utils.functions import safe_username
 
