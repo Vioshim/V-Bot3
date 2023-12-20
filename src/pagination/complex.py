@@ -44,7 +44,7 @@ from discord.abc import Messageable, Snowflake
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from rapidfuzz import process
 
-from pagination.simple import Simple
+from src.pagination.simple import Simple
 from src.pagination.view_base import ArrowEmotes
 from src.structures.bot import CustomBot
 from src.utils.etc import CREATE_EMOJI, DELETE_EMOJI, LIST_EMOJI, PRESENCE_EMOJI
