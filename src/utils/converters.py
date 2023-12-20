@@ -36,7 +36,7 @@ from rapidfuzz import process
 from src.structures.bot import CustomBot as Client
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Category
-from utils.imagekit import ImageKit
+from src.utils.imagekit import ImageKit
 
 __all__ = ("DateConverter", "GuildArg")
 
