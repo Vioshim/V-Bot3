@@ -25,7 +25,7 @@ from discord import ButtonStyle, Embed, Interaction, Message, PartialEmoji, Text
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
-from pagination.complex import Complex
+from src.pagination.complex import Complex
 from src.structures.bot import CustomBot as Client
 from src.utils.converters import EmbedFlags
 from src.utils.etc import REPLY_EMOJI, ArrowEmotes
