@@ -33,8 +33,8 @@ from discord.utils import get, remove_markdown
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
-from src.utils.etc import LINK_EMOJI, SETTING_EMOJI
 from src.structures.bot import CustomBot
+from src.utils.etc import LINK_EMOJI, SETTING_EMOJI
 
 __all__ = ("InviteComplex", "InviteAdminComplex", "InviterView", "Partner", "PartnerComplex")
 

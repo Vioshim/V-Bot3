@@ -51,10 +51,10 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from src.cogs.roles.roles import RPModal
 from src.cogs.submission.area_selection import RegionViewComplex
 from src.cogs.submission.oc_parsers import ParserMethods
-from src.cogs.wiki.wiki import WikiComplex, WikiEntry
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
+from src.pagination.wiki import WikiComplex, WikiEntry
 from src.structures.ability import ABILITIES_DEFINING, ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Nature, Size
