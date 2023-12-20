@@ -316,16 +316,14 @@ class Moderation(commands.Cog):
                     continue
 
                 # New Applicant
-                base_embed = (
-                    Embed(title=app.form, color=member.color)
-                    .set_author(name=member.display_name, icon_url=member.display_avatar)
-                    .set_footer(text=str(member.id))
-                )
-                if isinstance(member, Member):
-                    base_embed.description = "\n".join(x.mention for x in member.roles)
-                    base_embed.timestamp = member.joined_at
+                base_embed = Embed(
+                    title=app.form,
+                    color=member.color,
+                    description="\n".join(x.mention for x in getattr(member, "roles", [])[1:]),
+                ).set_author(name=member.display_name, icon_url=member.display_avatar)
 
                 file = await member.display_avatar.with_size(4096).to_file()
+                base_embed.set_image(url=f"attachment://{file.filename}")
                 tdata = await channel.create_thread(
                     name=str(member),
                     content=f"{app.form} ► {member.mention}",
@@ -335,6 +333,7 @@ class Moderation(commands.Cog):
                 )
                 await tdata.message.pin()
 
+                base_embed.set_image(url=None)
                 for title, answer in info.items():
                     base_embed.title, base_embed.description = title, str(answer or "No Answer Provided.")[:4000]
                     await tdata.thread.send(embed=base_embed)

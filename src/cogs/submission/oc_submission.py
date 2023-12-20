@@ -1509,7 +1509,7 @@ class CreationOCView(Basic):
             return await itx.response.edit_message(view=self)
         await self.delete(itx)
 
-    async def help_method(self, itx: Interaction):
+    async def help_method(self, itx: Interaction[CustomBot]):
         channel = itx.guild.get_channel(852180971985043466)
 
         view = CreationOCView(
@@ -1522,7 +1522,7 @@ class CreationOCView(Basic):
         )
         await view.handler_send(ephemeral=False)
 
-        if isinstance(self.oc.image, str) and isinstance(oc_file := await itx.client.get_file(self.oc.image), File):
+        if isinstance(self.oc.image, str) and (oc_file := await itx.client.get_file(self.oc.image)):
             embeds = view.embeds
             attachments = [oc_file]
             embeds[0].set_image(url=f"attachment://{oc_file.filename}")
@@ -1853,10 +1853,6 @@ class SubmissionView(Basic):
 
     # @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
     async def info(self, itx: Interaction[CustomBot], _: Button):
-        tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({})])
+        tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({"server": itx.guild_id})])
         view = WikiComplex(tree=tree, context=itx)
-        await view.simple_send(
-            ephemeral=True,
-            embeds=tree.embeds,
-            content=tree.content,
-        )
+        await view.simple_send(ephemeral=True, embeds=tree.embeds)
