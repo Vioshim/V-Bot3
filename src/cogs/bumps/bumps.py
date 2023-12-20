@@ -14,14 +14,13 @@
 
 
 from datetime import datetime
-
+from src.structures.bot import CustomBot
 from dateparser import parse
 from discord import (
     AllowedMentions,
     ButtonStyle,
     Embed,
     Interaction,
-    InteractionResponse,
     Message,
     Thread,
     Webhook,
@@ -63,6 +62,7 @@ class BumpBot:
         bool
             If applicable
         """
+        return message.author.id == cls.id
 
     @classmethod
     def on_message_edit(cls, before: Message, after: Message) -> bool:
@@ -79,10 +79,11 @@ class BumpBot:
         -------
             If applicable
         """
+        return after.author.id == cls.id
 
     @classmethod
     def adapt_embed(cls, ctx: Message) -> Embed:
-        embed = ctx.embeds[0]
+        embed = ctx.embeds[0].copy()
         embed.timestamp = utcnow()
         if not embed.image:
             embed.set_image(url=WHITE_BAR)
@@ -114,7 +115,7 @@ class Disboard(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        return message.embeds and "Bump done!" in message.embeds[0].description
+        return super().on_message(message) and message.embeds and "Bump done!" in message.embeds[0].description
 
 
 class DiscordServer(BumpBot):
@@ -127,7 +128,7 @@ class DiscordServer(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        return message.embeds and ":thumbsup:" in message.embeds[0].description
+        return super().on_message(message) and message.embeds and ":thumbsup:" in message.embeds[0].description
 
 
 class ListIO(BumpBot):
@@ -141,9 +142,13 @@ class ListIO(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        return message.embeds and (
-            "Your server has been bumped successfully!" in message.embeds[0].title
-            or "Server bumped!" in message.embeds[0].description
+        return (
+            super().on_message(message)
+            and message.embeds
+            and (
+                "Your server has been bumped successfully!" in message.embeds[0].title
+                or "Server bumped!" in message.embeds[0].description
+            )
         )
 
 
@@ -157,7 +162,9 @@ class Disboost(BumpBot):
 
     @classmethod
     def on_message(cls, message: Message) -> bool:
-        return bool(message.embeds and "You have succesfully bumped" in message.embeds[0].description)
+        return super().on_message(message) and bool(
+            message.embeds and "You have succesfully bumped" in message.embeds[0].description
+        )
 
 
 class PingBump(View):
@@ -168,11 +175,9 @@ class PingBump(View):
         after: Message = None,
         data: BumpBot = None,
         webhook: Webhook = None,
-        bumps: dict[int, Message] = None,
     ):
-        super(PingBump, self).__init__(timeout=data.hours * 3600.0)
+        super(PingBump, self).__init__(timeout=None)
         self.embed = data.adapt_embed(after)
-        self.bumps = bumps or {}
         self.webhook = webhook
         if url := self.embed.url:
             btn = Button(label="Click Here to Review us!", url=url)
@@ -180,6 +185,14 @@ class PingBump(View):
         self.before = before
         self.after = after
         self.data = data
+        role = get(after.guild.roles, name="Bump Ping")
+        if not role:
+            self.remove_item(self.reminder)
+        self.role = role
+
+    @property
+    def mention(self):
+        return f"**{self.role and self.role.mention} (Slash Command is </bump:{self.data.cmd_id}>)**"
 
     @property
     def valid(self) -> bool:
@@ -213,32 +226,29 @@ class PingBump(View):
         else:
             thread = MISSING
 
-        mention = f"</bump:{self.data.cmd_id}>"
         if timeout:
-            mention = f"**<@&1008443584594325554> (Slash Command is {mention}):**"
             embed, view = MISSING, MISSING
         else:
             embed, view = self.embed, self
 
         return await self.webhook.send(
-            content=mention,
+            content=self.mention,
             embed=embed,
             view=view,
             wait=True,
             thread=thread,
             username=safe_username(self.after.author.display_name),
             avatar_url=self.data.avatar or self.after.author.display_avatar.url,
-            allowed_mentions=AllowedMentions(users=True, roles=True),
+            allowed_mentions=AllowedMentions(users=True, roles=timeout),
         )
 
     @button(emoji="a:SZD_desk_bell:769116713639215124", style=ButtonStyle.blurple)
-    async def reminder(self, inter: Interaction, _: Button) -> None:
-        resp: InteractionResponse = inter.response
-        role = inter.guild.get_role(1008443584594325554)
-        if role in inter.user.roles:
-            await inter.user.remove_roles(role)
+    async def reminder(self, itx: Interaction[CustomBot], _: Button) -> None:
+        if self.role in itx.user.roles:
+            await itx.user.remove_roles(self.role)
             msg = "Alright, you won't get notified"
         else:
-            await inter.user.add_roles(role)
+            await itx.user.add_roles(self.role)
             msg = "Alright, you will get notified"
-        await resp.send_message(msg, ephemeral=True)
+
+        await itx.response.send_message(msg, ephemeral=True)
