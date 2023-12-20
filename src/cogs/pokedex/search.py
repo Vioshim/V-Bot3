@@ -21,6 +21,7 @@ from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 from discord import ForumChannel, Guild, Interaction, Member, Thread
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
+from discord.ext import commands
 from discord.ui import Select, select
 from rapidfuzz import process
 
@@ -137,8 +138,8 @@ def age_parser(text: str, oc: Character):
     return False
 
 
-class MoveTransformer(Transformer):
-    async def transform(self, _: Interaction[CustomBot], value: Optional[str], /):
+class MoveTransformer(commands.Converter[str], Transformer):
+    async def transform(self, _: Interaction[CustomBot], value: str, /):
         if move := Move.deduce(value):
             return move
 
@@ -152,36 +153,34 @@ class MoveTransformer(Transformer):
             options = items[:25]
         return [Choice(name=x.name, value=x.id) for x in set(options)]
 
+    async def convert(self, _: commands.Context[CustomBot], argument: str, /):
+        if move := Move.deduce(argument):
+            return move
+
+        raise ValueError(f"Move {argument!r} Not found.")
+
 
 MoveArg = Transform[Move, MoveTransformer]
 
 
-class ABCTransformer(Transformer):
-    async def on_submit(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
-        return []
-
-    async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
-        items = await self.on_submit(ctx, value)
-        if options := process.extract(
-            value or "",
-            choices=items,
-            limit=25,
-            processor=lambda x: x.name,
-            score_cutoff=60,
-        ):
-            return [x[0] for x in options]
-        return items[:25]
-
-
-class SpeciesTransformer(Transformer):
-    async def transform(self, ctx: Interaction[CustomBot], value: Optional[str], /):
-        db = ctx.client.mongo_db("Characters")
+class SpeciesTransformer(commands.Converter[str], Transformer):
+    async def transform(self, itx: Interaction[CustomBot], value: Optional[str], /):
+        db = itx.client.mongo_db("Characters")
         value = value or ""
         if value.isdigit() and (item := await db.find_one({"id": int(value)})):
             return Character.from_mongo_dict(item)
         if oc := Species.single_deduce(value):
             return oc
         raise ValueError(f"Species {value!r} not found")
+
+    async def convert(self, ctx: commands.Context[CustomBot], argument: str, /):
+        db = ctx.bot.mongo_db("Characters")
+        argument = argument or ""
+        if argument.isdigit() and (item := await db.find_one({"id": int(argument)})):
+            return Character.from_mongo_dict(item)
+        if oc := Species.single_deduce(argument):
+            return oc
+        raise ValueError(f"Species {argument!r} not found")
 
     async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         db = ctx.client.mongo_db("Characters")
@@ -238,13 +237,20 @@ class SpeciesTransformer(Transformer):
         return [Choice(name=k, value=v) for k, v in entries.items()]
 
 
-class DefaultSpeciesTransformer(Transformer):
+class DefaultSpeciesTransformer(commands.Converter[str], Transformer):
     cache: dict = {}
 
+    async def convert(self, _: commands.Context[CustomBot], argument: str, /):
+        if item := Species.single_deduce(argument):
+            return item
+
+        raise ValueError(f"Species {argument!r} not found")
+
     async def transform(self, _: Interaction[CustomBot], value: Optional[str], /):
-        if not (item := Species.single_deduce(value)):
-            raise ValueError(f"Species {value!r} not found")
-        return item
+        if item := Species.single_deduce(value):
+            return item
+
+        raise ValueError(f"Species {value!r} not found")
 
     async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         if ctx.command and ctx.command.name == "find" and (fused := Species.from_ID(ctx.namespace.species)):
@@ -278,7 +284,13 @@ SpeciesArg = Transform[Species, SpeciesTransformer]
 DefaultSpeciesArg = Transform[Species, DefaultSpeciesTransformer]
 
 
-class AbilityTransformer(Transformer):
+class AbilityTransformer(commands.Converter[str], Transformer):
+    async def convert(self, _: commands.Context[CustomBot], argument: str, /):
+        if item := Ability.from_ID(argument):
+            return item
+
+        raise ValueError(f"Ability {argument!r} not found")
+
     async def transform(self, _: Interaction[CustomBot], value: Optional[str], /):
         if item := Ability.from_ID(value):
             return item
@@ -297,17 +309,23 @@ class AbilityTransformer(Transformer):
 AbilityArg = Transform[Ability, AbilityTransformer]
 
 
-class FakemonTransformer(Transformer):
-    async def transform(self, ctx: Interaction[CustomBot], value: Optional[str], /):
-        db = ctx.client.mongo_db("Characters")
+class FakemonTransformer(commands.Converter[str], Transformer):
+    async def process(self, bot: CustomBot, value: str, guild_id: int):
+        db = bot.mongo_db("Characters")
         oc: Optional[Character] = None
-        if value.isdigit() and (item := await db.find_one({"id": int(value)})):
+        if value.isdigit() and (item := await db.find_one({"id": int(value), "server": guild_id})):
             oc = Character.from_mongo_dict(item)
         elif ocs := process.extractOne(
             value or "",
             choices=[
                 Character.from_mongo_dict(x)
-                async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
+                async for x in db.find(
+                    {
+                        "species.evolves_from": {"$exists": 1},
+                        "species.base": {"$exists": 0},
+                        "server": guild_id,
+                    }
+                )
             ],
             processor=item_name,
             score_cutoff=60,
@@ -317,12 +335,24 @@ class FakemonTransformer(Transformer):
             raise ValueError(f"Fakemon {value!r} not found.")
         return oc
 
+    async def transform(self, itx: Interaction[CustomBot], value: Optional[str], /):
+        await self.process(itx.client, value, itx.guild_id)
+
+    async def convert(self, ctx: commands.Context[CustomBot], argument: str, /):
+        await self.process(ctx.bot, argument, ctx.guild and ctx.guild.id)
+
     async def autocomplete(self, ctx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:
         guild: Guild = ctx.guild
         db = ctx.client.mongo_db("Characters")
         mons = [
             Character.from_mongo_dict(x)
-            async for x in db.find({"species.evolves_from": {"$exists": 1}, "species.base": {"$exists": 0}})
+            async for x in db.find(
+                {
+                    "species.evolves_from": {"$exists": 1},
+                    "species.base": {"$exists": 0},
+                    "server": ctx.guild_id,
+                }
+            )
             if guild.get_member(x["author"])
         ]
         if options := process.extract(value or "", choices=mons, limit=25, processor=item_name, score_cutoff=60):

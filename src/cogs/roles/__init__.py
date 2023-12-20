@@ -53,11 +53,7 @@ class Roles(commands.Cog):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
-        self.itx_menu1 = app_commands.ContextMenu(
-            name="AFK Schedule",
-            callback=self.check_afk,
-            guild_ids=[719343092963999804],
-        )
+        self.itx_menu1 = app_commands.ContextMenu(name="AFK Schedule", callback=self.check_afk)
         self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
 
     async def cog_load(self):

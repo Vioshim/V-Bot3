@@ -15,7 +15,7 @@
 
 from discord.ext import commands
 
-from src.cogs.wiki.wiki import WikiComplex, WikiEntry
+from src.pagination.wiki import WikiComplex, WikiEntry
 from src.structures.bot import CustomBot
 
 
@@ -29,12 +29,13 @@ class Wiki(commands.Cog):
 
         Parameters
         ----------
-        ctx : commands.Context[Client]
+        ctx : commands.Context[CustomBot]
             Context
         search : str
             Lookup term
         """
-        entries = await ctx.bot.mongo_db("Wiki").find({}).to_list(length=None)
+        guild_id = ctx.guild.id if ctx.guild else None
+        entries = await self.bot.mongo_db("Wiki").find({"server": guild_id}).to_list(length=None)
         data = page = WikiEntry.from_list(entries)
 
         if search:
@@ -43,16 +44,17 @@ class Wiki(commands.Cog):
             data.parent = page
             page.add_node(data)
 
-        view = WikiComplex(tree=data, context=ctx)
+        edit_mode = await self.bot.is_owner(ctx.author)
+
+        if ctx.guild and not edit_mode:
+            edit_mode = ctx.permissions.administrator
+
+        view = WikiComplex(tree=data, context=ctx, edit_mode=edit_mode)
         if search:
             data.embeds = [view.embed]
             data.embeds[0].title = f"Search: {search.title()}"
 
-        await view.simple_send(
-            ephemeral=True,
-            embeds=data.embeds,
-            content=data.content,
-        )
+        await view.simple_send(ephemeral=True, embeds=data.embeds)
 
 
 async def setup(bot: CustomBot):

@@ -1,30 +1,31 @@
-# Copyright 2022 Vioshim
+# -*- coding: utf-8 -*-
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Copyright (C) 2023 Vioshim
 #
-#      https://www.apache.org/licenses/LICENSE-2.0
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from __future__ import annotations
 
 from contextlib import asynccontextmanager, suppress
 from inspect import isfunction
-from logging import getLogger, setLoggerClass
 from types import TracebackType
-from typing import Any, Callable, Iterable, Optional, Sized, TypeVar
+from typing import Any, Callable, Collection, Iterable, Optional, TypeVar
 
 from discord import (
     AllowedMentions,
     ButtonStyle,
-    Color,
     Embed,
     Emoji,
     File,
@@ -43,17 +44,12 @@ from discord.abc import Messageable, Snowflake
 from discord.ui import Button, Modal, Select, TextInput, button, select
 from rapidfuzz import process
 
-from src.pagination.simple import Simple
+from pagination.simple import Simple
 from src.pagination.view_base import ArrowEmotes
 from src.structures.bot import CustomBot
-from src.structures.logger import ColoredLogger
-from src.utils.etc import LIST_EMOJI, WHITE_BAR
+from src.utils.etc import CREATE_EMOJI, DELETE_EMOJI, LIST_EMOJI, PRESENCE_EMOJI
 
-setLoggerClass(ColoredLogger)
-
-logger = getLogger(__name__)
-
-_T = TypeVar("_T", bound=Sized)
+_T = TypeVar("_T", bound=Collection)
 
 __all__ = ("Complex",)
 
@@ -69,9 +65,9 @@ class DefaultModal(Modal):
 
     async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
         await interaction.response.send_message("An error has occurred.", ephemeral=True)
-        logger.error("Ignoring exception in modal %r:", self, exc_info=error)
+        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
-    async def on_submit(self, interaction: Interaction[CustomBot]) -> None:
+    async def on_submit(self, interaction: Interaction[CustomBot], /) -> None:
         await interaction.response.pong()
         current = set()
         elements = [o for x in str(self.item.value or "").split(",") if (o := x.strip())]
@@ -170,13 +166,6 @@ class Complex(Simple[_T]):
         return self.choices
 
     async def __aexit__(self, exc_type: type, exc_val: Exception, exc_tb: TracebackType) -> None:
-        if exc_type:
-            logger.exception(
-                "Exception occurred, target: %s, user: %s",
-                str(self.target),
-                str(self.member),
-                exc_info=exc_val,
-            )
         await self.delete()
 
     def chunk(self, index: int):
@@ -192,7 +181,7 @@ class Complex(Simple[_T]):
             return self._emoji_parser
         if isfunction(self._emoji_parser):
             return self._emoji_parser(item)
-        return getattr(item, "emoji", PartialEmoji(name="StatusRichPresence", id=842328614883295232))
+        return getattr(item, "emoji", PRESENCE_EMOJI)
 
     @property
     def choice(self) -> Optional[_T]:
@@ -205,11 +194,12 @@ class Complex(Simple[_T]):
         foo = self.select_choice
         pages = self.navigate
         choices = self.choices
-        foo.placeholder = text = (
+        text = (
             f"Picked: {len(choices)}, Max: {amount}, Options: {len(self.values)}"
             if (amount := self.real_max or self.max_values) > 1
             else f"Single Choice, Options: {len(self.values)}"
         )
+        foo.placeholder = text
         if self.auto_text_component:
             self.text_component = TextInput(
                 label=self.embed.title[:45] if self.embed and self.embed.title else "Input",
@@ -222,7 +212,7 @@ class Complex(Simple[_T]):
             for k, v in map(self.parser, sorted(self.choices, key=key, reverse=reverse)):
                 self.embed.add_field(name=k[:256], value=v[:1024], inline=False)
 
-        if not self.text_component:
+        if not (self.text_component and self.values):
             self.remove_item(self.message_handler)
         elif self.message_handler not in self.children:
             self.add_item(self.message_handler)
@@ -304,7 +294,7 @@ class Complex(Simple[_T]):
         foo.max_values = min(foo.max_values, len(foo.options) or 1)
 
         # This is the outcome for provided values.
-        if not pages.options:
+        if len(pages.options) <= 1:
             self.remove_item(pages)
         elif pages not in self.children:
             self.add_item(pages)
@@ -547,24 +537,20 @@ class Complex(Simple[_T]):
         ----------
         sct: Select
             Button which interacts with the User
-        interaction: Interaction[CustomBot]
+        itx: Interaction[CustomBot]
             Current interaction of the user
         """
         items = self.current_choices
         if not interaction.response.is_done() and not self.silent_mode and all(x.isdigit() for x in sct.values):
             member: Member | User = interaction.user
             await interaction.response.defer(ephemeral=True, thinking=True)
-            embed = Embed(
-                description="\n".join(f"> **•** {x}" for x, _ in map(self.parser, items)),
-                color=Color.blurple(),
-            )
+            embed = Embed(description="\n".join(f"> **•** {x}" for x, _ in map(self.parser, items)), color=0x94939F)
             if embed.description:
                 embed.title = "Great! you have selected"
             else:
                 embed.title = "Nothing has been selected."
 
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
-            embed.set_image(url=WHITE_BAR)
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
             if guild := interaction.guild:
                 embed.set_footer(text=guild.name, icon_url=guild.icon)
             await interaction.followup.send(embed=embed, ephemeral=True)
@@ -601,7 +587,7 @@ class Complex(Simple[_T]):
 
     @button(
         label="Write down the choice instead.",
-        emoji=PartialEmoji(name="channelcreate", id=432986578781077514),
+        emoji=CREATE_EMOJI,
         custom_id="writer",
         style=ButtonStyle.blurple,
         disabled=False,
@@ -623,7 +609,7 @@ class Complex(Simple[_T]):
 
     @button(
         label="Deselect",
-        emoji=PartialEmoji(name="channeldelete", id=432986579674333215),
+        emoji=DELETE_EMOJI,
         custom_id="remover",
         style=ButtonStyle.blurple,
         disabled=False,

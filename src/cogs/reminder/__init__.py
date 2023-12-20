@@ -135,7 +135,6 @@ class Reminder(commands.Cog):
                 await tupper_log.insert_one({"channel": msg.channel.id, "id": msg.id, "author": author_id})
 
     @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     async def remind(self, ctx: Interaction[CustomBot], message: Optional[str], due: Optional[str]):
         """Fennekin Reminder System
 

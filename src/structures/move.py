@@ -283,7 +283,7 @@ class Move:
                 | "Instruct"
             ):
                 return "Special Attack ↑", "Raises Special Attack by 1 stage"
-            case ("Psycho Shift" | "Heal Block"):
+            case "Psycho Shift" | "Heal Block":
                 return "Special Attack ↑↑", "Raises Special Attack by 2 stages"
             case (
                 "Whirlwind"
@@ -310,7 +310,7 @@ class Move:
                 | "Spotlight"
             ):
                 return "Special Defense ↑", "Raises Special Defense by 1 stage"
-            case ("Magic Coat" | "Imprison" | "Captivate" | "Aromatic Mist" | "Powder"):
+            case "Magic Coat" | "Imprison" | "Captivate" | "Aromatic Mist" | "Powder":
                 return "Special Defense ↑↑", "Raises Special Defense by 2 stages"
             case (
                 "Sing"
@@ -346,11 +346,11 @@ class Move:
                 | "Aurora Veil"
             ):
                 return "Speed ↑", "Raises Speed by 1 stage"
-            case ("Trick" | "Recycle" | "Snatch" | "Switcheroo" | "Ally Switch" | "Bestow"):
+            case "Trick" | "Recycle" | "Snatch" | "Switcheroo" | "Ally Switch" | "Bestow":
                 return "Speed ↑↑", "Raises Speed by 2 stages"
             case "Me First":
                 return "Speed ↑↑", "Raises Speed by 2 stages, calls a Z-move"
-            case ("Mimic" | "Defense Curl" | "Focus Energy" | "Sweet Scent" | "Defog" | "Trick Room"):
+            case "Mimic" | "Defense Curl" | "Focus Energy" | "Sweet Scent" | "Defog" | "Trick Room":
                 return "Accuracy ↑", "Raises accuracy by 1 stage"
             case "Copycat":
                 return "Accuracy ↑", "Raises accuracy by 1 stage, calls a Z-move"
@@ -377,7 +377,7 @@ class Move:
                 | "Purify"
             ):
                 return "Stats ↑", "Raises Attack, Defense, Sp. Atk, Sp. Def, and Speed by 1 stage"
-            case ("Foresight" | "Tailwind" | "Acupressure" | "Heart Swap" | "Sleep Talk"):
+            case "Foresight" | "Tailwind" | "Acupressure" | "Heart Swap" | "Sleep Talk":
                 return "Boosts critical-hit ratio", "Boosts critical-hit ratio by 2 stages"
             case "Sleep Talk":
                 return "Boosts critical-hit ratio", "Boosts critical-hit ratio by 2 stages, calls a Z-move"
@@ -448,9 +448,9 @@ class Move:
                 | "Aromatherapy"
             ):
                 return "Restores HP", "Fully restores user's HP"
-            case ("Memento" | "Parting Shot"):
+            case "Memento" | "Parting Shot":
                 return "Restores replacement's HP", "Fully restores switched-in ally's HP"
-            case ("Destiny Bond" | "Grudge"):
+            case "Destiny Bond" | "Grudge":
                 return "Center of attention", "User becomes center of attention"
             case "Curse":
                 return (

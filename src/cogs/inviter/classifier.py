@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from json import load
 from typing import Optional
 
 from discord import (
@@ -30,11 +29,12 @@ from discord import (
 )
 from discord.abc import Messageable
 from discord.ui import Button, Select, View, button, select
-from discord.utils import remove_markdown
+from discord.utils import get, remove_markdown
 from motor.motor_asyncio import AsyncIOMotorCollection
 
 from src.pagination.complex import Complex
-from src.utils.etc import INVITE_EMOJI, LINK_EMOJI, SETTING_EMOJI
+from src.utils.etc import LINK_EMOJI, SETTING_EMOJI
+from structures.bot import CustomBot
 
 __all__ = ("InviteComplex", "InviteAdminComplex", "InviterView", "Partner", "PartnerComplex")
 
@@ -74,17 +74,9 @@ class InviteAdminComplex(InviteComplex):
             target=target,
         )
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
-        pm_manager_role = interaction.guild.get_role(788215077336514570)
-        return interaction.user.guild_permissions.administrator or pm_manager_role in interaction.user.roles
-
-
-DATA: dict[str, Embed] = {}
-
-with open("resources/hub_partners.json", mode="r", encoding="utf8") as f:
-    data = load(f)
-    if isinstance(data, dict):
-        DATA = {k: Embed.from_dict(v) for k, v in data.items()}
+    async def interaction_check(self, itx: Interaction[CustomBot]) -> bool:
+        pm_manager_role = get(itx.guild.roles, name="Recruiter")
+        return itx.user.guild_permissions.administrator or pm_manager_role in itx.user.roles
 
 
 @dataclass(slots=True)
@@ -97,28 +89,11 @@ class Partner:
     icon_url: str
     image_url: Optional[str]
     tags: list[str]
+    server: int
 
     @property
     def invite_url(self):
         return f"https://discord.gg/{self.url}"
-
-    @property
-    def data(self):
-        return {
-            "id": self.id,
-            "msg_id": self.msg_id,
-            "url": self.url,
-            "title": self.title,
-            "content": self.content,
-            "icon_url": self.icon_url,
-            "image_url": self.image_url,
-            "tags": sorted(self.tags),
-        }
-
-    @classmethod
-    def from_mongo_dict(cls, kwargs: dict[str, str]):
-        del kwargs["_id"]
-        return Partner(**kwargs)
 
     def __eq__(self, o: Partner) -> bool:
         return isinstance(o, Partner) and o.id == self.id
@@ -201,9 +176,11 @@ class TagComplex(Complex[str]):
     )
     async def finish(self, ctx: Interaction, btn: Button):
         resp: InteractionResponse = ctx.response
+
         if "Confirm" not in btn.label:
             btn.label = f"{btn.label} (Confirm)"
             return await resp.edit_message(view=self)
+
         if choices := sorted(self.choices):
             await ctx.response.defer(ephemeral=True, thinking=True)
             items = [self.data.get(x, set()) for x in choices]
@@ -227,41 +204,30 @@ class InviterView(View):
                 entries[tag].add(item)
         return dict(sorted(entries.items(), key=lambda x: (-len(x[1]), x[0])))
 
-    async def on_error(self, interaction: Interaction, error: Exception, item, /) -> None:
+    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, item, /) -> None:
         interaction.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
-    # @select(
-    #   placeholder="Select RP Hub",
-    #   custom_id="hubs",
-    #   options=[
-    #       SelectOption(
-    #           label=k[:100],
-    #           description=v.description.replace("\n", " ")[:100],
-    #           emoji=INVITE_EMOJI,
-    #       )
-    #       for k, v in DATA.items()
-    #       if k != "Parallel"
-    #   ],
-    # )
-    async def hubs(self, ctx: Interaction, sct: Select):
-        resp: InteractionResponse = ctx.response
-        key = sct.values[0]
-        info = DATA[key].copy()
-        info.timestamp = ctx.created_at
-        info.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        view = View()
-        view.add_item(Button(label="Join Hub!", url=info.url, emoji=INVITE_EMOJI))
-        await resp.send_message(content=info.url, embed=info, ephemeral=True, view=view)
-
     @button(
-        label="D-Proxy's Server Ad",
-        custom_id="D-Proxy",
+        label="Server's Ad",
+        custom_id="partnerships.advertisement",
         style=ButtonStyle.blurple,
         emoji=SETTING_EMOJI,
     )
-    async def server_ad(self, ctx: Interaction, btn: Button):
+    async def server_ad(self, ctx: Interaction[CustomBot], btn: Button):
         resp: InteractionResponse = ctx.response
-        embed = DATA[btn.custom_id].copy()
+        db = ctx.client.mongo_db("InfoData")
+
+        if data := await db.find_one(
+            {"server": ctx.guild_id, btn.custom_id: {"$exists": True, "$ne": None}},
+            {"_id": 0, btn.custom_id: 1},
+        ):
+            embed = Embed.from_dict(data["partnerships"]["advertisement"])
+        else:
+            embed = Embed(
+                title="Server's Ad",
+                description="This server doesn't have an advertisement!",
+            )
+
         embed.timestamp = ctx.created_at
         embed.color = ctx.user.color
         embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
@@ -273,10 +239,10 @@ class InviterView(View):
         style=ButtonStyle.blurple,
         emoji=LINK_EMOJI,
     )
-    async def select_msg(self, ctx: Interaction, btn: Button):
+    async def select_msg(self, ctx: Interaction[CustomBot], btn: Button):
         db: AsyncIOMotorCollection = ctx.client.mongo_db("Partnerships")
         await ctx.response.defer(ephemeral=True, thinking=True)
-        items = {Partner.from_mongo_dict(x) async for x in db.find()}
+        items = {Partner(**item) async for item in db.find({"server": ctx.guild_id}, {"_id": 0})}
         data = self.group_method(items)
         view = TagComplex(member=ctx.user, target=ctx, data=data)
         await view.simple_send(

@@ -68,6 +68,9 @@ THUMBS_DOWN_EMOJI = PartialEmoji(name="thumbs_down", id=995303546503311380)
 INVITE_EMOJI = PartialEmoji(name="IconInvite", id=778931752835088426)
 LIST_EMOJI = PartialEmoji(name="list", id=432986579007569922)
 KOFI_EMOJI = PartialEmoji(name="kofi", id=952523061171716097)
+CREATE_EMOJI = PartialEmoji(name="channelcreate", id=432986578781077514)
+DELETE_EMOJI = PartialEmoji(name="channeldelete", id=432986579674333215)
+PRESENCE_EMOJI = PartialEmoji(name="StatusRichPresence", id=842328614883295232)
 DICE_NUMBERS = [
     PartialEmoji(name="one", id=952524707129868308),
     PartialEmoji(name="two", id=952524707176001546),

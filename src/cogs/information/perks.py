@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional
 
-from discord import Attachment, Colour, Embed, Interaction, Object, Role, Webhook
+from discord import Attachment, Colour, Embed, Interaction, Object, Role
 from discord.ui import Modal, TextInput
 from discord.utils import MISSING, find
 
@@ -31,7 +31,7 @@ __all__ = ("CustomPerks",)
 class Perk(ABC):
     @classmethod
     @abstractmethod
-    async def method(cls, ctx: Interaction[CustomBot], msg: Optional[Attachment] = None):
+    async def method(cls, itx: Interaction[CustomBot], msg: Optional[Attachment] = None):
         "Method that uses the interaction"
 
 
@@ -68,21 +68,21 @@ class CustomRoleModal(Modal, title="Custom Role"):
             return False
         return True
 
-    async def on_submit(self, ctx: Interaction[CustomBot]) -> None:
-        await ctx.response.defer(ephemeral=True, thinking=True)
+    async def on_submit(self, itx: Interaction[CustomBot]) -> None:
+        await itx.response.defer(ephemeral=True, thinking=True)
 
-        embed = Embed(title="Custom Role", timestamp=ctx.created_at)
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
+        embed = Embed(title="Custom Role", timestamp=itx.created_at)
+        embed.set_footer(text=itx.guild.name, icon_url=itx.guild.icon)
         embed.set_image(url=WHITE_BAR)
 
-        db = ctx.client.mongo_db("Custom Role")
+        db = itx.client.mongo_db("Custom Role")
         if not self.name.value and self.role:
             await self.role.delete()
             embed.title = "Custom Role - Removed"
             embed.color = self.role.color
             embed.description = self.role.name
             embed.set_thumbnail(url=self.role.icon)
-            await db.delete_one({"id": self.role.id})
+            await db.delete_one({"id": self.role.id, "server": itx.guild_id})
         elif name := self.name.value:
             color = Colour.from_str(self.color.value) if self.color else Colour.default()
 
@@ -91,8 +91,8 @@ class CustomRoleModal(Modal, title="Custom Role"):
 
             if not role:
                 icon_data = icon_data or MISSING
-                booster = find(lambda x: x.is_premium_subscriber(), ctx.guild.roles)
-                role = await ctx.guild.create_role(name=name, colour=color, display_icon=icon_data)
+                booster = find(lambda x: x.is_premium_subscriber(), itx.guild.roles)
+                role = await itx.guild.create_role(name=name, colour=color, display_icon=icon_data)
                 await role.edit(position=booster.position + 1)
             else:
                 await role.edit(name=name, color=color, display_icon=icon_data)
@@ -101,53 +101,60 @@ class CustomRoleModal(Modal, title="Custom Role"):
             embed.description = role.name
             embed.set_thumbnail(url=role.icon)
 
-            if role not in ctx.user.roles:
-                await ctx.user.add_roles(role)
+            if role not in itx.user.roles:
+                await itx.user.add_roles(role)
 
             await db.replace_one(
-                {"author": ctx.user.id},
-                {"author": ctx.user.id, "id": role.id},
+                {"author": itx.user.id, "server": itx.guild_id},
+                {"author": itx.user.id, "id": role.id, "server": itx.guild_id},
                 upsert=True,
             )
             self.role = role
 
-        w: Webhook = await ctx.client.webhook(1020151767532580934)
+        cog = itx.client.get_cog("Information")
+        data = cog.info_data.get(itx.guild_id, {})
+        if info := data.get("member_boost"):
+            channel_id = info.get("channel")
+            if thread_id := info.get("thread"):
+                thread = Object(id=thread_id)
+            else:
+                thread = MISSING
 
-        await w.send(
-            embed=embed,
-            thread=Object(id=1020153311200022528),
-            username=safe_username(ctx.user.display_name),
-            avatar_url=ctx.user.display_avatar.url,
-        )
+            w = await itx.client.webhook(channel_id)
+            await w.send(
+                embed=embed,
+                thread=thread,
+                username=safe_username(itx.user.display_name),
+                avatar_url=itx.user.display_avatar.url,
+            )
 
-        await ctx.followup.send(embed=embed, ephemeral=True)
+        await itx.followup.send(embed=embed, ephemeral=True)
         self.stop()
 
 
 class CustomRolePerk(Perk):
     @classmethod
-    async def method(cls, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
-        db = ctx.client.mongo_db("Custom Role")
+    async def method(cls, itx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        db = itx.client.mongo_db("Custom Role")
         role: Optional[Role] = None
-        if role_data := await db.find_one({"author": ctx.user.id}):
-            role = ctx.guild.get_role(role_data["id"])
+        if role_data := await db.find_one({"author": itx.user.id, "server": itx.guild_id}):
+            role = itx.guild.get_role(role_data["id"])
             if not role:
                 await db.delete_one(role_data)
-            elif role not in ctx.user.roles:
-                await ctx.user.add_roles(role)
+            elif role not in itx.user.roles:
+                await itx.user.add_roles(role)
         modal = CustomRoleModal(role=role, icon=img)
-        await ctx.response.send_modal(modal)
+        await itx.response.send_modal(modal)
 
 
 class RPSearchBannerPerk(Perk):
     @classmethod
-    async def method(cls, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
-        await ctx.response.defer(thinking=True, ephemeral=True)
-        db = ctx.client.mongo_db("RP Search Banner")
-        key = {"author": ctx.user.id}
-        embed = Embed(title="RP Search Banner", color=ctx.user.color, timestamp=ctx.created_at)
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        w: Webhook = await ctx.client.webhook(1020151767532580934)
+    async def method(cls, itx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        await itx.response.defer(thinking=True, ephemeral=True)
+        db = itx.client.mongo_db("RP Search Banner")
+        key = {"author": itx.user.id, "server": itx.guild_id}
+        embed = Embed(title="RP Search Banner", color=itx.user.color, timestamp=itx.created_at)
+        embed.set_footer(text=itx.guild.name, icon_url=itx.guild.icon)
 
         if img:
             url = f"attachment://{img.filename}"
@@ -157,29 +164,40 @@ class RPSearchBannerPerk(Perk):
             file = MISSING
 
         embed.set_image(url=url)
-        m = await w.send(
-            embed=embed,
-            file=file,
-            thread=Object(id=1020153311200022528),
-            wait=True,
-            username=safe_username(ctx.user.display_name),
-            avatar_url=ctx.user.display_avatar.url,
-        )
-        image = m.embeds[0].image.url
-        embed.set_image(url=image)
-        await db.replace_one(key, key | {"image": image}, upsert=True)
-        await ctx.followup.send(embed=embed, ephemeral=True)
+
+        cog = itx.client.get_cog("Information")
+        data = cog.info_data.get(itx.guild_id, {})
+        if info := data.get("member_boost"):
+            channel_id = info.get("channel")
+            if thread_id := info.get("thread"):
+                thread = Object(id=thread_id)
+            else:
+                thread = MISSING
+
+            w = await itx.client.webhook(channel_id)
+            m = await w.send(
+                embed=embed,
+                file=file,
+                thread=thread,
+                wait=True,
+                username=safe_username(itx.user.display_name),
+                avatar_url=itx.user.display_avatar.url,
+            )
+            image = m.embeds[0].image.url
+            embed.set_image(url=image)
+            await db.replace_one(key, key | {"image": image}, upsert=True)
+
+        await itx.followup.send(embed=embed, ephemeral=True)
 
 
 class OCBackgroundPerk(Perk):
     @classmethod
-    async def method(cls, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
-        await ctx.response.defer(thinking=True, ephemeral=True)
-        db = ctx.client.mongo_db("OC Background")
-        key = {"author": ctx.user.id}
-        embed = Embed(title="OC Background", color=ctx.user.color, timestamp=ctx.created_at)
-        embed.set_footer(text=ctx.guild.name, icon_url=ctx.guild.icon)
-        w: Webhook = await ctx.client.webhook(1020151767532580934)
+    async def method(cls, itx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        await itx.response.defer(thinking=True, ephemeral=True)
+        db = itx.client.mongo_db("OC Background")
+        key = {"author": itx.user.id, "server": itx.guild_id}
+        embed = Embed(title="OC Background", color=itx.user.color, timestamp=itx.created_at)
+        embed.set_footer(text=itx.guild.name, icon_url=itx.guild.icon)
 
         if img:
             embed.set_image(url=f"attachment://{img.filename}")
@@ -190,18 +208,28 @@ class OCBackgroundPerk(Perk):
             )
             file = MISSING
 
-        m = await w.send(
-            embed=embed,
-            file=file,
-            thread=Object(id=1020153311200022528),
-            wait=True,
-            username=safe_username(ctx.user.display_name),
-            avatar_url=ctx.user.display_avatar.url,
-        )
-        image = m.embeds[0].image.url
-        embed.set_image(url=image)
-        await db.replace_one(key, key | {"image": image}, upsert=True)
-        await ctx.followup.send(embed=embed, ephemeral=True)
+        cog = itx.client.get_cog("Information")
+        data = cog.info_data.get(itx.guild_id, {})
+        if info := data.get("member_boost"):
+            channel_id = info.get("channel")
+            if thread_id := info.get("thread"):
+                thread = Object(id=thread_id)
+            else:
+                thread = MISSING
+
+            w = await itx.client.webhook(channel_id)
+            m = await w.send(
+                embed=embed,
+                file=file,
+                thread=thread,
+                wait=True,
+                username=safe_username(itx.user.display_name),
+                avatar_url=itx.user.display_avatar.url,
+            )
+            image = m.embeds[0].image.url
+            embed.set_image(url=image)
+            await db.replace_one(key, key | {"image": image}, upsert=True)
+            await itx.followup.send(embed=embed, ephemeral=True)
 
 
 class CustomPerks(Enum):
@@ -209,5 +237,5 @@ class CustomPerks(Enum):
     RP_Search_Banner = RPSearchBannerPerk
     OC_Background = OCBackgroundPerk
 
-    async def method(self, ctx: Interaction[CustomBot], img: Optional[Attachment] = None):
-        await self.value.method(ctx, img)
+    async def method(self, itx: Interaction[CustomBot], img: Optional[Attachment] = None):
+        await self.value.method(itx, img)

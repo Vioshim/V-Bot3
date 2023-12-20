@@ -25,7 +25,7 @@ from discord import app_commands
 from discord.abc import GuildChannel
 from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, select
-from discord.utils import format_dt, get, utcnow
+from discord.utils import MISSING, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import fuzz
 from yaml import dump
@@ -40,62 +40,18 @@ from src.utils.matches import TUPPER_REPLY_PATTERN
 __all__ = ("Information", "setup")
 
 
-channels = {
-    766018765690241034: "OC Question",
-    918703451830100028: "Poll",
-    728800301888307301: "Suggestion",
-    769304918694690866: "Story",
-    903627523911458816: "Storyline",
-    1031639683928686693: "Random Fact",
-    723228500835958987: "Announcement",
-    740606964727546026: "Question",
-    908498210211909642: "Mission",
-    836726822166593598: "To-Do",
-}
-
-roles = {
-    "Storyline": 805878418225889280,
-    "Mission": 805878418225889280,
-    "Random Fact": 805878418225889280,
-    "Poll": 967980442919784488,
-    "Question": 967980442919784488,
-    "Suggestion": 967980442919784488,
-}
-
-MSG_INFO = {
-    719343092963999804: 913555643699458088,
-    952517983786377287: 952617304095592478,
-}
-
 TENOR_URL = "https://g.tenor.com/v1/gifs"
 GIPHY_URL = "https://api.giphy.com/v1/gifs"
 
 TENOR_API = getenv("TENOR_API")
 GIPHY_API = getenv("GIPHY_API")
 WEATHER_API = getenv("WEATHER_API")
-STARS_AMOUNT = 3
 
 ICON_VALUES = {
     True: "\N{WHITE HEAVY CHECK MARK}",
     False: "\N{CROSS MARK}",
     None: "\N{BLACK SQUARE BUTTON}",
 }
-
-
-PING_ROLES = {
-    "Announcements": 908809235012419595,
-    "Everyone": 719343092963999804,
-    "Radio": 805878418225889280,
-    "Partners": 725582056620294204,
-    "Moderation": 720296534742138880,
-    "Registered": 719642423327719434,
-    "Supporters": 967980442919784488,
-}
-
-DISABLED_CATEGORIES = [
-    740550068922220625,  # Server & News
-    740552350703550545,  # RP information
-]
 
 
 class AnnouncementModal(Modal):
@@ -143,11 +99,13 @@ class AnnouncementModal(Modal):
             embeds[0].set_author(
                 name=itx.user.display_name,
                 icon_url=itx.user.avatar,
-                url="https://ko-fi.com/Vioshim" if itx.permissions.moderate_members else None,
+                url="https://ko-fi.com/Vioshim" if await itx.client.is_owner(itx.user) else None,
             )
 
         msg = await webhook.send(
-            **self.kwargs, allowed_mentions=discord.AllowedMentions(everyone=True, roles=True), wait=True
+            **self.kwargs,
+            allowed_mentions=discord.AllowedMentions(everyone=True, roles=True),
+            wait=True,
         )
 
         if self.poll_mode:
@@ -163,6 +121,8 @@ class AnnouncementModal(Modal):
             await thread.add_user(itx.user)
             match self.word:
                 case "OC Question" | "Story" | "Storyline" | "Mission":
+                    if dproxy := itx.guild.get_member(1061328084307034212):
+                        await thread.add_user(dproxy)
                     if tupper := itx.guild.get_member(431544605209788416):
                         await thread.add_user(tupper)
 
@@ -171,10 +131,19 @@ class AnnouncementModal(Modal):
 
 
 class AnnouncementView(View):
-    def __init__(self, *, member: discord.Member, **kwargs):
+    def __init__(
+        self,
+        *,
+        member: discord.Member,
+        ping_roles: dict[str, int],
+        word_channels: dict[int, str],
+        **kwargs,
+    ):
         super(AnnouncementView, self).__init__()
         self.member = member
         self.kwargs = kwargs
+        self.ping_roles = ping_roles
+        self.word_channels = word_channels
         self.format()
 
     async def interaction_check(self, interaction: discord.Interaction[CustomBot]) -> bool:
@@ -201,7 +170,7 @@ class AnnouncementView(View):
             emoji="\N{CROSS MARK}",
         )
         if self.member.guild_permissions.administrator:
-            for k, v in PING_ROLES.items():
+            for k, v in self.ping_roles.items():
                 self.features.add_option(
                     label=f"{k} Role",
                     value=f"{v}",
@@ -224,7 +193,7 @@ class AnnouncementView(View):
         if "cancel" in sct.values:
             await itx.response.pong()
         else:
-            word = channels.get(itx.channel_id)
+            word = self.word_channels.get(itx.channel_id)
             data = itx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
             name = f"{word} {itx.user.display_name} {data.strftime('%B %d')}"
             modal = AnnouncementModal(word=word, name=name, **self.kwargs)
@@ -241,9 +210,31 @@ class Information(commands.Cog):
         self.ready = False
         self.message: Optional[discord.Message] = None
         self.bot.tree.on_error = self.on_error
+        self.info_data: dict[int, dict[str, dict[str, int] | int | list[int]]] = {}
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Loads the program in the scheduler"""
+        if self.ready:
+            return
+
+        db = self.bot.mongo_db("Poll")
+        async for item in db.find({}, {"_id": 0}):
+            item_id = item.pop("id", None)
+            self.bot.add_view(PollView(**item), message_id=item_id)
+
+        db = self.bot.mongo_db("InfoData")
+        async for item in db.find({}, {"_id": 0}):
+            server_id = item.pop("server", None)
+
+            if word_channels := item.pop("word_channels", {}):
+                item["word_channels"] = {v: k for k, v in word_channels.items()}
+
+            self.info_data[server_id] = item
+
+        self.ready = True
 
     @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_any_role("Booster", "Supporter")
     async def perks(
         self,
@@ -273,7 +264,8 @@ class Information(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        if member.guild.id != 719343092963999804:
+        data = self.info_data.get(member.guild.id, {})
+        if not (info := data.get("member_remove", {})):
             return
 
         guild = member.guild
@@ -289,16 +281,17 @@ class Information(commands.Cog):
             embed.set_footer(text=f"ID: {member.id}", icon_url=icon.url)
         else:
             embed.set_footer(text=f"ID: {member.id}")
+
         embed.set_image(url=WHITE_BAR)
         view = View()
 
         db1 = self.bot.mongo_db("Roleplayers")
-        if item := await db1.find_one({"user": member.id}):
+        if item := await db1.find_one({"user": member.id, "server": member.guild.id}):
             url = f"https://discord.com/channels/{guild.id}/{item['id']}"
             view.add_item(Button(label="Characters", url=url))
 
         db = self.bot.mongo_db("Custom Role")
-        if data := await db.find_one({"author": member.id}):
+        if data := await db.find_one({"author": member.id, "server": member.guild.id}):
             if role := get(member.guild.roles, id=data["id"]):
                 with suppress(discord.DiscordException):
                     await role.delete(reason="User left")
@@ -308,20 +301,28 @@ class Information(commands.Cog):
         asset = member.display_avatar.replace(format="png", size=4096)
         file = await asset.to_file()
         embed.set_thumbnail(url=f"attachment://{file.filename}")
-        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Join Logging")
         await log.send(
             content=member.mention,
             file=file,
             embed=embed,
             view=view,
             username=safe_username(member.display_name),
-            thread=discord.Object(id=1020153313242665022),
+            thread=thread,
             avatar_url=member.display_avatar.url,
         )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        if member.guild.id != 719343092963999804:
+        data = self.info_data.get(member.guild.id, {})
+        if not (info := data.get("member_join", {})):
             return
 
         date = utcnow()
@@ -337,29 +338,37 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {member.id}")
         asset = member.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+
         file = await asset.to_file()
         embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.add_field(name="Account Age", value=format_dt(member.created_at, style="R"))
         view = View()
         db1 = self.bot.mongo_db("Roleplayers")
-        if item := await db1.find_one({"user": member.id}):
+        if item := await db1.find_one({"user": member.id, "server": member.guild.id}):
             url = f"https://discord.com/channels/{member.guild.id}/{item['id']}"
             view.add_item(Button(label="Characters", url=url))
 
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Join Logging")
         await log.send(
             content=member.mention,
             embed=embed,
             file=file,
             view=view,
-            thread=discord.Object(id=1020153315255922738),
+            thread=thread,
             username=safe_username(member.display_name),
             avatar_url=member.display_avatar.url,
         )
 
     @commands.Cog.listener()
     async def on_member_update(self, past: discord.Member, now: discord.Member):
-        if now.guild.id != 719343092963999804 or past.premium_since == now.premium_since:
+        data = self.info_data.get(now.guild.id, {})
+        if not (info := data.get("member_boost", {})) or past.premium_since == now.premium_since:
             return
 
         files = []
@@ -372,7 +381,10 @@ class Information(commands.Cog):
             db = self.bot.mongo_db("Custom Role")
             if (
                 data := await db.find_one_and_delete(
-                    {"author": now.id, "server": now.guild.id},
+                    {
+                        "author": now.id,
+                        "server": now.guild.id,
+                    },
                 )
             ) and (role := get(now.guild.roles, id=data["id"])):
                 if role.icon:
@@ -395,19 +407,26 @@ class Information(commands.Cog):
         embed.set_author(name=now.display_name, icon_url=now.display_avatar.url)
         embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
 
-        log = await self.bot.webhook(1020151767532580934, reason="Logging")
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Logging")
         await log.send(
             content=now.mention,
             embed=embed,
             files=files,
-            thread=discord.Object(id=1020153311200022528),
+            thread=thread,
             username=safe_username(now.display_name),
             avatar_url=now.display_avatar.url,
         )
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.Member | discord.User):
-        if guild.id != 719343092963999804:
+        data = self.info_data.get(guild.id, {})
+        if not (info := data.get("member_ban", {})):
             return
 
         embed = discord.Embed(
@@ -419,22 +438,29 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {user.id}")
         asset = user.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+
         file = await asset.to_file()
         embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
         view = View()
         db1 = self.bot.mongo_db("Roleplayers")
-        if item := await db1.find_one({"user": user.id}):
+        if item := await db1.find_one({"user": user.id, "server": guild.id}):
             url = f"https://discord.com/channels/{guild.id}/{item['id']}"
             view.add_item(Button(label="Characters", url=url))
 
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Join Logging")
         await log.send(
             content=user.mention,
             embed=embed,
             file=file,
             view=view,
-            thread=discord.Object(id=1020153286285865000),
+            thread=thread,
             username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
         )
@@ -448,7 +474,8 @@ class Information(commands.Cog):
         role : Role
             Added role
         """
-        if role.guild.id != 719343092963999804:
+        data = self.info_data.get(role.guild.id, {})
+        if not (info := data.get("server_changes", {})) or "role_create" not in data.get("features", []):
             return
 
         embed = discord.Embed(
@@ -461,8 +488,15 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=icon)
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=role.guild.name, icon_url=role.guild.icon)
-        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        await log.send(embed=embed, thread=discord.Object(id=1020153288617906256))
+
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Join Logging")
+        await log.send(embed=embed, thread=thread)
 
     @commands.Cog.listener()
     async def on_role_delete(self, role: discord.Role):
@@ -473,7 +507,8 @@ class Information(commands.Cog):
         role : Role
             Added role
         """
-        if role.guild.id != 719343092963999804:
+        data = self.info_data.get(role.guild.id, {})
+        if not (info := data.get("server_changes", {})) or "role_delete" not in data.get("features", []):
             return
 
         embed = discord.Embed(
@@ -488,8 +523,15 @@ class Information(commands.Cog):
             embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=role.guild.name, icon_url=role.guild.icon)
-        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
-        await log.send(embed=embed, files=files, thread=discord.Object(id=1020153288617906256))
+
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Role delete")
+        await log.send(embed=embed, files=files, thread=thread)
 
     @commands.Cog.listener()
     async def on_role_update(self, before: discord.Role, after: discord.Role):
@@ -502,7 +544,9 @@ class Information(commands.Cog):
         after : Role
             Role after editing
         """
-        if not before.guild or before.guild.id != 719343092963999804:
+
+        data = self.info_data.get(after.guild.id, {})
+        if not (info := data.get("server_changes", {})) or "role_update" not in data.get("features", []):
             return
 
         embed1 = discord.Embed(title=f"Role Update: {after.name}", colour=before.color, timestamp=before.created_at)
@@ -547,12 +591,14 @@ class Information(commands.Cog):
         if not condition:
             return
 
-        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
-        await log.send(
-            embeds=embeds,
-            files=files,
-            thread=discord.Object(id=1020153288617906256),
-        )
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Edit Logging")
+        await log.send(embeds=embeds, files=files, thread=thread)
 
     @commands.Cog.listener()
     async def on_guild_emojis_update(
@@ -572,7 +618,8 @@ class Information(commands.Cog):
         after : list[Emoji]
             New Emojis
         """
-        if guild.id != 719343092963999804:
+        data = self.info_data.get(guild.id, {})
+        if not (info := data.get("server_changes", {})) or "guild_emojis_update" not in data.get("features", []):
             return
 
         aux_before, aux_after = set[discord.Emoji](before), set[discord.Emoji](after)
@@ -594,8 +641,14 @@ class Information(commands.Cog):
             e.set_image(url=WHITE_BAR)
             e.set_footer(text=f"ID: {item.id}")
 
-        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
-        await log.send(embeds=embeds, thread=discord.Object(id=1020153288617906256))
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Edit Logging")
+        await log.send(embeds=embeds, thread=thread)
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: GuildChannel):
@@ -608,7 +661,8 @@ class Information(commands.Cog):
         after : GuildChannel
             Channel after editing
         """
-        if not channel.guild or channel.guild.id != 719343092963999804:
+        data = self.info_data.get(channel.guild.id, {})
+        if not (info := data.get("server_changes", {})) or "guild_channel_create" not in data.get("features", []):
             return
 
         if not isinstance(channel, discord.TextChannel):
@@ -639,12 +693,14 @@ class Information(commands.Cog):
         name, emoji = name_emoji_from_channel(channel)
         view.add_item(Button(emoji=emoji, label=name, url=channel.jump_url))
 
-        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
-        await log.send(
-            embed=embed,
-            view=view,
-            thread=discord.Object(id=1020153288617906256),
-        )
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Edit Logging")
+        await log.send(embed=embed, view=view, thread=thread)
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: GuildChannel):
@@ -657,7 +713,9 @@ class Information(commands.Cog):
         after : GuildChannel
             Channel after editing
         """
-        if not channel.guild or channel.guild.id != 719343092963999804:
+
+        data = self.info_data.get(channel.guild.id, {})
+        if not (info := data.get("server_changes", {})) or "guild_channel_delete" not in data.get("features", []):
             return
 
         embed = discord.Embed(
@@ -692,12 +750,14 @@ class Information(commands.Cog):
             embed.set_footer(text="No Category")
             view.add_item(Button(emoji=emoji, label=name, url=channel.jump_url))
 
-        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
-        await log.send(
-            embed=embed,
-            view=view,
-            thread=discord.Object(id=1020153288617906256),
-        )
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Edit Logging")
+        await log.send(embed=embed, view=view, thread=thread)
 
     @commands.Cog.listener()
     async def on_guild_channel_update(
@@ -714,7 +774,8 @@ class Information(commands.Cog):
         after : GuildChannel
             Channel after editing
         """
-        if not before.guild or before.guild.id != 719343092963999804:
+        data = self.info_data.get(after.guild.id, {})
+        if not (info := data.get("server_changes", {})) or "guild_channel_update" not in data.get("features", []):
             return
 
         embed1 = discord.Embed(
@@ -795,16 +856,19 @@ class Information(commands.Cog):
             cat_name2 = getattr(after.category, "name", "No Category")
             embeds[-1].set_footer(text=f"Category: {cat_name1} -> {cat_name2}")
 
-        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
-        await log.send(
-            embeds=embeds,
-            view=view,
-            thread=discord.Object(id=1020153288617906256),
-        )
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Edit Logging")
+        await log.send(embeds=embeds, view=view, thread=thread)
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
-        if guild.id != 719343092963999804:
+        data = self.info_data.get(guild.id, {})
+        if not (info := data.get("member_unban", {})):
             return
 
         embed = discord.Embed(
@@ -816,37 +880,49 @@ class Information(commands.Cog):
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text=f"ID: {user.id}")
         asset = user.display_avatar.replace(format="png", size=512)
-        log = await self.bot.webhook(1020151767532580934, reason="Join Logging")
+
         file = await asset.to_file()
         embed.set_thumbnail(url=f"attachment://{file.filename}")
         embed.add_field(name="Account Age", value=format_dt(user.created_at, style="R"))
         db1 = self.bot.mongo_db("Roleplayers")
         view = View()
-        if item := await db1.find_one({"user": user.id}):
+        if item := await db1.find_one({"user": user.id, "server": guild.id}):
             url = f"https://discord.com/channels/{guild.id}/{item['id']}"
             view.add_item(Button(label="Characters", url=url))
+
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Join Logging")
         await log.send(
             content=user.mention,
             embed=embed,
             file=file,
             view=view,
-            thread=discord.Object(id=1020153286285865000),
+            thread=thread,
             username=safe_username(user.display_name),
             avatar_url=user.display_avatar.url,
         )
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.mention_everyone or message.role_mentions:
+        if not message.guild:
             return
-        channel = message.channel
 
+        data = self.info_data.get(message.guild.id, {})
+        if not (info := data.get("word_channels", {})) or message.mention_everyone or message.role_mentions:
+            return
+
+        channel = message.channel
         context = await self.bot.get_context(message)
 
         if context.command:
             return
 
-        if word := channels.get(channel.id):
+        if word := info.get(channel.id):
             if message.author.bot:
                 return
 
@@ -861,7 +937,13 @@ class Information(commands.Cog):
             if embeds := kwargs.get("embeds", []):
                 embeds[0].title = word
             del kwargs["view"]
-            view = AnnouncementView(member=message.author, **kwargs)
+
+            view = AnnouncementView(
+                member=message.author,
+                ping_roles=data.get("ping_roles", {}),
+                word_channels=data.get("word_channels", {}),
+                **kwargs,
+            )
             conf_embed = discord.Embed(title=word, color=discord.Colour.blurple(), timestamp=utcnow())
             conf_embed.set_image(url=WHITE_BAR)
             conf_embed.set_footer(text=message.guild.name, icon_url=message.guild.icon)
@@ -869,7 +951,7 @@ class Information(commands.Cog):
             await view.wait()
             await message.delete(delay=0)
 
-        elif message.guild and message.guild.id == 719343092963999804:
+        elif "tupper_logging" not in data.get("features", []):
             messages: list[discord.Message] = []
 
             def checker(m: discord.Message):
@@ -937,10 +1019,8 @@ class Information(commands.Cog):
         if not isinstance(member := after.author, discord.Member):
             return
 
-        if member.guild.id != 719343092963999804:
-            return
-
-        if member.bot or await self.bot.is_owner(member):
+        data = self.info_data.get(member.guild.id, {})
+        if not (info := data.get("message_edit", {})) or member.bot or await self.bot.is_owner(member):
             return
 
         embed1 = discord.Embed(
@@ -987,14 +1067,20 @@ class Information(commands.Cog):
         name, emoji = name_emoji_from_channel(after.channel)
         view.add_item(Button(emoji=emoji, label=name, url=after.jump_url))
 
-        log = await self.bot.webhook(1020151767532580934, reason="Edit Logging")
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Edit Logging")
         await log.send(
             username=safe_username(member.display_name),
             avatar_url=member.display_avatar,
             files=files,
             embeds=embeds,
             view=view,
-            thread=discord.Object(id=1020153290471772200),
+            thread=thread,
         )
 
     @commands.Cog.listener()
@@ -1006,19 +1092,20 @@ class Information(commands.Cog):
         message: Message
             Cached Message
         """
-        if not msg.guild or msg.guild.id != 719343092963999804:
+        if not msg.guild:
             return
+
+        data = self.info_data.get(msg.guild.id, {})
+        if not (info := data.get("message_delete", {})):
+            return
+
         if (
-            not msg.guild
-            or (msg.application_id == self.bot.user.id and msg.webhook_id)
+            (msg.application_id == self.bot.user.id and msg.webhook_id)
             or self.bot.user == msg.author
-            or msg.author.id == self.bot.owner_id
-            or msg.author.id in self.bot.owner_ids
             or msg.channel.name.endswith("-logs")
         ):
             return
 
-        w = await self.bot.webhook(1020151767532580934, reason="Message delete logging")
         await asyncio.sleep(1)
         if msg.id in self.bot.msg_cache:
             return
@@ -1028,9 +1115,16 @@ class Information(commands.Cog):
         if not msg.webhook_id:
             kwargs["content"] = msg.author.mention
 
-        await w.send(
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
+
+        log = await self.bot.webhook(channel_id, reason="Message delete logging")
+        await log.send(
             **kwargs,
-            thread=discord.Object(id=1116406003353800744),
+            thread=thread,
             allowed_mentions=discord.AllowedMentions.none(),
         )
 
@@ -1055,18 +1149,24 @@ class Information(commands.Cog):
         messages: list[Message]
             Messages that were deleted.
         """
-        if not messages:
+        if not (messages and messages[0].guild):
             return
 
         msg = messages[0]
-
-        if not msg.guild or msg.guild.id != 719343092963999804:
+        data = self.info_data.get(msg.guild.id, {})
+        if not (info := data.get("bulk_message_delete", {})):
             return
 
-        w = await self.bot.webhook(1020151767532580934, reason="Bulk delete logging")
-        messages = [message_line(x) for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]
+        channel_id = info["id"]
+        if thread_id := info.get("thread"):
+            thread = discord.Object(id=thread_id)
+        else:
+            thread = MISSING
 
-        if messages and (
+        w = await self.bot.webhook(channel_id, reason="Bulk delete logging")
+        if (
+            messages := [message_line(x) for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]
+        ) and (
             paste := await self.bot.m_bin.create_paste(
                 filename=f"{utcnow().strftime('%x')} - {msg.channel}.yaml",
                 content=dump(
@@ -1089,7 +1189,8 @@ class Information(commands.Cog):
             name, emoji = name_emoji_from_channel(msg.channel)
             view.add_item(Button(emoji=emoji, label=name, url=msg.jump_url))
             view.add_item(Button(emoji=LINK_EMOJI, label="See Logs", url=str(paste)))
-            await w.send(embed=embed, view=view, thread=discord.Object(id=1020153317889953833))
+
+            await w.send(embed=embed, view=view, thread=thread)
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload: discord.RawBulkMessageDeleteEvent):
@@ -1114,6 +1215,9 @@ class Information(commands.Cog):
 
             message = await channel.fetch_message(payload.message_id)
             everyone = guild.get_role(guild.id)
+            data = self.info_data.get(guild.id, {}).get("star_reactions", {})
+            disabled_categories = data.get("disabled_categories", [])
+            max_amount = data.get("max_amount", 3)
 
             reactions = [x for x in message.reactions if str(x.emoji) == str(payload.emoji)]
             reaction = reactions[0]
@@ -1124,11 +1228,11 @@ class Information(commands.Cog):
                 and message.author != self.bot.user
                 and message.author != payload.member
                 and bool(channel.permissions_for(everyone).add_reactions)
-                and channel.category_id not in DISABLED_CATEGORIES
+                and channel.category_id not in disabled_categories
                 and all(x.type != "rich" for x in message.embeds)
                 and (not message.author.bot or message.webhook_id)
             ):
-                if reaction.count >= STARS_AMOUNT and not message.pinned:
+                if reaction.count >= max_amount and not message.pinned:
                     await message.pin()
             else:
                 await reaction.remove(payload.member)
@@ -1148,6 +1252,10 @@ class Information(commands.Cog):
             if not (message := get(self.bot.cached_messages, id=payload.message_id)):
                 message = await channel.fetch_message(payload.message_id)
 
+            data = self.info_data.get(guild.id, {}).get("star_reactions", {})
+            disabled_categories = data.get("disabled_categories", [])
+            max_amount = data.get("max_amount", 3)
+
             if (
                 (reactions := {x for x in message.reactions if str(x.emoji) == str(payload.emoji)})
                 and not message.is_system()
@@ -1155,10 +1263,10 @@ class Information(commands.Cog):
                 and message.author != self.bot.user
                 and message.author != payload.member
                 and bool(channel.permissions_for(guild.default_role).add_reactions)
-                and channel.category_id not in DISABLED_CATEGORIES
+                and channel.category_id not in disabled_categories
                 and all(x.type != "rich" for x in message.embeds)
                 and (not message.author.bot or message.webhook_id)
-                and reactions.pop().count < STARS_AMOUNT
+                and reactions.pop().count < max_amount
                 and message.pinned
             ):
                 await message.unpin()
@@ -1391,19 +1499,6 @@ class Information(commands.Cog):
             ", ".join(f"{k}={v!r}" for k, v in ctx.kwargs.items()),
             exc_info=error,
         )
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """Loads the program in the scheduler"""
-        if self.ready:
-            return
-
-        db = self.bot.mongo_db("Poll")
-        async for item in db.find({}):
-            view = PollView.from_mongo(item)
-            self.bot.add_view(view, message_id=item["id"])
-
-        self.ready = True
 
 
 async def setup(bot: CustomBot):

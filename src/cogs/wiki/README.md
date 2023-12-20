@@ -5,6 +5,5 @@
 
 > A dynamic tree search tool for wiki purposes
 
-| File      | Description                                     |     |
-| --------- | ----------------------------------------------- | --- |
-| `wiki.py` | Binary Tree Wiki classes and transform methods. |     |
+| File | Description |
+| ---- | ----------- |

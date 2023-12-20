@@ -16,20 +16,24 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import timedelta
 from re import MULTILINE, compile
 from typing import Optional
 
+from aiogoogle.excs import HTTPError
 from aiohttp import ClientResponseError
 from apscheduler.triggers.cron import CronTrigger
 from discord import (
     AllowedMentions,
     DiscordException,
     Embed,
+    ForumChannel,
     Interaction,
     InteractionResponse,
     Member,
     Message,
+    NotFound,
     Role,
     TextChannel,
     User,
@@ -42,7 +46,6 @@ from discord.ui import Button, View, button
 from discord.utils import format_dt, get, utcnow
 from jishaku.codeblocks import Codeblock, codeblock_converter
 
-from src.cogs.moderation.appeals import BanAppeal, ModAppeal
 from src.structures.bot import CustomBot
 from src.structures.converters import AfterDateCall
 from src.utils.etc import WHITE_BAR
@@ -53,6 +56,15 @@ __all__ = ("Moderation", "setup")
 
 API = "https://phish.sinking.yachts/v2"
 API_PARAM = {"X-Identity": "V-Bot"}
+
+
+@dataclass(slots=True, unsafe_hash=True)
+class Application:
+    google_id: str
+    server: int
+    forum_id: int
+    form: str = "Form Responses 1"
+    check_presence: bool = True
 
 
 class Meeting(View):
@@ -86,21 +98,26 @@ class Meeting(View):
         self.embed = embed
 
     async def interaction_check(self, interaction: Interaction) -> bool:
-        resp: InteractionResponse = interaction.response
-        member: Member = interaction.user
+        resp = interaction.response
+        member = interaction.user
         if member == self.reporter:
             await resp.send_message("You are the one reporting.", ephemeral=True)
             return False
+
         if member == self.imposter:
             await resp.send_message("You are the one reported.", ephemeral=True)
             return False
+
         if not get(member.roles, name="Registered"):
             await resp.send_message("Only registered members can vote.", ephemeral=True)
             return False
+
         if member in self.attack:
             self.attack.discard(member)
+
         if member in self.defend:
             self.defend.discard(member)
+
         return True
 
     @button(label="Agreed")
@@ -137,8 +154,10 @@ class Meeting(View):
     async def process(self, method: Optional[bool] = None):
         sus: Member = self.imposter
         hero: Member = self.reporter
+
         if not (channel := self.guild.get_channel_or_thread(1077697010490167308)):
             channel = await self.guild.fetch_channel(1077697010490167308)
+
         embed = Embed(
             title=f"Users that Agreed with {sus}'s Votation",
             description="\n".join(i.mention for i in self.attack),
@@ -189,33 +208,23 @@ class Moderation(commands.Cog):
         """
         self.bot = bot
         self.loaded: bool = False
-        guild_ids = [719343092963999804]
         self.itx_menu = app_commands.ContextMenu(
             name="Vote to Ban",
             callback=self.vote_user,
-            guild_ids=guild_ids,
         )
-        self.check_ban_query = None
-        self.ban_responses: set[BanAppeal] = set()
-        self.mod_responses: set[ModAppeal] = set()
 
     async def cog_load(self) -> None:
-        self.check_ban_appeal.start()
-        self.check_mod_appeal.start()
+        self.check_applications.start()
         self.bot.tree.add_command(self.itx_menu)
 
     async def cog_unload(self) -> None:
-        self.check_ban_appeal.stop()
-        self.check_mod_appeal.stop()
+        self.check_applications.stop()
         self.bot.tree.remove_command(self.itx_menu.name, type=self.itx_menu.type)
 
     async def scam_all(self):
         """Function to load all API data"""
         try:
-            async with self.bot.session.get(
-                f"{API}/all",
-                params=API_PARAM,
-            ) as data:
+            async with self.bot.session.get(f"{API}/all", params=API_PARAM) as data:
                 entries = await data.json()
                 self.bot.scam_urls = set(entries)
         except ClientResponseError:
@@ -249,12 +258,92 @@ class Moderation(commands.Cog):
             await self.scam_changes()
 
     @loop(minutes=1)
-    async def check_ban_appeal(self):
-        await BanAppeal.appeal_check(self.bot, self.ban_responses)
+    async def check_applications(self):
+        db1 = self.bot.mongo_db("Applications")
+        db2 = self.bot.mongo_db("Applicants")
 
-    @loop(minutes=1)
-    async def check_mod_appeal(self):
-        await ModAppeal.appeal_check(self.bot, self.mod_responses)
+        async for item in db1.find({}, {"_id": 0}):
+            app = Application(**item)
+
+            if not (channel := self.bot.get_channel(app.forum_id)):
+                channel: ForumChannel = await self.bot.fetch_channel(app.forum_id)
+
+            applied_tags = []
+            if tag := get(channel.available_tags, name=app.form):
+                applied_tags.append(tag)
+
+            storage = await self.bot.aiogoogle.discover("sheets", "v4")
+            query = storage.spreadsheets.values.get(
+                spreadsheetId=app.google_id,
+                range=app.form,
+            )
+
+            try:
+                data = await self.bot.aiogoogle.as_service_account(query)
+            except HTTPError as e:
+                self.bot.logger.error(f"Error fetching App {app.form!r}: {e}")
+                data = {}
+
+            values: list[str] = data.get("values", [])
+            if not values:
+                continue
+
+            headers, *values = values
+
+            id_question = next((x for x in headers if "ID" in x), None)
+            if not id_question:
+                continue
+
+            for row in values:
+                info = dict(zip(headers, row))
+
+                try:
+                    user_id = int(info.pop(id_question, ""))
+                except ValueError:
+                    continue
+
+                if not (member := channel.guild.get_member(user_id)):
+                    try:
+                        if app.check_presence:
+                            member = await channel.guild.fetch_member(user_id)
+                        else:
+                            member = await self.bot.fetch_user(user_id)
+                    except NotFound:
+                        continue
+
+                key = {"id": user_id, "google_id": app.google_id}
+                if await db2.find_one(key):
+                    continue
+
+                # New Applicant
+                base_embed = (
+                    Embed(title=app.form, color=member.color)
+                    .set_author(name=member.display_name, icon_url=member.display_avatar)
+                    .set_footer(text=str(member.id))
+                )
+                if isinstance(member, Member):
+                    base_embed.description = "\n".join(x.mention for x in member.roles)
+                    base_embed.timestamp = member.joined_at
+
+                file = await member.display_avatar.with_size(4096).to_file()
+                tdata = await channel.create_thread(
+                    name=str(member),
+                    content=f"{app.form} ► {member.mention}",
+                    embed=base_embed,
+                    file=file,
+                    applied_tags=applied_tags,
+                )
+                await tdata.message.pin()
+
+                for title, answer in info.items():
+                    base_embed.title, base_embed.description = title, str(answer or "No Answer Provided.")[:4000]
+                    await tdata.thread.send(embed=base_embed)
+
+                await db2.replace_one(
+                    key,
+                    key | {"thread": tdata.thread.id},
+                    upsert=True,
+                )
 
     @commands.Cog.listener()
     async def on_message(self, message: Message):
@@ -278,27 +367,6 @@ class Moderation(commands.Cog):
                     delete_message_days=1,
                     reason="Nitro Scam victim",
                 )
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, before: Message, after: Message):
-        """Detect link edits
-
-        Parameters
-        ----------
-        before : Message
-            Message before
-        after : Message
-            Message after
-        """
-        if (
-            isinstance(after.author, Member)
-            and after.author != self.bot.user
-            and (not await self.bot.is_owner(after.author))
-            and (set(REGEX_URL.findall(before.content)) ^ set(REGEX_URL.findall(after.content)))
-            and not get(after.author.roles, name="Registered")
-        ):
-            await after.author.timeout(timedelta(days=1), reason="Suspicious link edit")
-            await after.delete(delay=0)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -330,6 +398,7 @@ class Moderation(commands.Cog):
 
         if not member:
             return await interaction.followup.send(content="Command failed as member was not found", ephemeral=True)
+
         if member == interaction.user:
             return await interaction.followup.send(
                 content="You can't report yourself. Tool isn't a joke", ephemeral=True
@@ -366,7 +435,6 @@ class Moderation(commands.Cog):
         await self.vote_process(interaction, member)
 
     @app_commands.command(description="Starts a meeting to report a raider")
-    @app_commands.guilds(719343092963999804)
     async def vote(self, interaction: Interaction, member: Member, *, reason: Optional[str] = None):
         """Starts a votation to report a member
 

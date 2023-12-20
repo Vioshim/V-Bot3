@@ -7,41 +7,41 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.11.*"
+python = "^3.11.7"
 "discord.py" = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
     "speed",
     "voice",
 ] }
-jishaku = "^2.5.1"
+jishaku = "^2.5.2"
 uvloop = { version = "^0.17.0", platform = "linux" }
-frozendict = "^2.3.4"
-rapidfuzz = "^2.6.0"
-motor = { extras = ["srv"], version = "^3.0.0" }
+frozendict = "^2.3.10"
+rapidfuzz = "^3.5.2"
+motor = { extras = ["srv"], version = "^3.3.2" }
 colour = "^0.1.5"
-pyaml = "^21.10.1"
+pyaml = "^23.9.7"
 apscheduler = { git = "https://github.com/agronholm/apscheduler.git", rev = "master" }
-beautifulsoup4 = "^4.11.1"
-python-docx = "^0.8.11"
+beautifulsoup4 = "^4.12.2"
+python-docx = "^1.1.0"
 d20 = "^1.1.2"
-mystbin-py = "^5.0.2"
-humanize = "^4.3.0"
-python-dotenv = "^0.20.0"
-pymongo = { extras = ["srv"], version = "^4.2.0" }
+mystbin-py = "^6.0.2"
+humanize = "^4.9.0"
+python-dotenv = "^1.0.0"
+pymongo = { extras = ["srv"], version = "^4.6.1" }
 chronological = "^0.1.1"
-aiogoogle = "^4.5.0"
-dateparser = "^1.1.5"
-pluralkit = "^1.1.1"
+aiogoogle = "^5.6.0"
+dateparser = "^1.2.0"
+pluralkit = "^1.1.5"
 webcolors = "^1.13"
-titlecase = "^2.4"
-reportlab = "^4.0.4"
+titlecase = "^2.4.1"
+reportlab = "^4.0.8"
 
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-flake8 = "^6.0.0"
+pytest = "^7.4.3"
+flake8 = "^6.1.0"
 motor-stubs = "^1.7.1"
-black = { version = "^23.1.0", allow-prereleases = true }
-isort = { version = "^5.10.1", extras = [
+black = { version = "^24.1a1", allow-prereleases = true }
+isort = { version = "^5.13.1", extras = [
     "requirements_deprecated_finder",
     "pipfile_deprecated_finder",
 ] }
