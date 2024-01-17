@@ -53,12 +53,13 @@ from src.cogs.submission.oc_submission import (
     CreationOCView,
     ModCharactersView,
     SubmissionView,
+    Template,
 )
 from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
+from src.utils.etc import REPLY_EMOJI, WHITE_BAR
 from src.utils.functions import name_emoji_from_channel, safe_username
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
@@ -1072,6 +1073,65 @@ class Submission(commands.Cog):
         embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
+
+    @commands.hybrid_command(name="register", aliases=["create"])
+    async def register(
+        self,
+        ctx: commands.Context[CustomBot],
+        template: Template = Template.Pokemon,
+    ):
+        """Allows to create OCs
+
+        Parameters
+        ----------
+        ctx : commands.Context[CustomBot]
+            Context
+        template : Template, optional
+            Template to use, by default Pokemon
+        """
+        user: Member = self.bot.supporting.get(ctx.author, ctx.author)
+        await ctx.defer(ephemeral=True)
+        users = {ctx.author.id, user.id}
+        try:
+            self.ignore |= users
+            view = CreationOCView(bot=self.bot, itx=ctx, user=user, template=template)
+            await view.handler_send(ephemeral=True)
+            await view.wait()
+        except Exception as e:
+            await ctx.send(str(e), ephemeral=True)
+            self.bot.logger.exception("Character Creation Exception", exc_info=e)
+        finally:
+            self.ignore -= users
+
+    @commands.command()
+    async def addchar(self, ctx: commands.Context[CustomBot], *, text: str = ""):
+        """Allows to create OCs from text
+
+        Parameters
+        ----------
+        ctx : commands.Context[CustomBot]
+            Context
+        text : str
+            Text to parse
+        """
+        if (
+            not ctx.guild
+            or ctx.message.mentions
+            or ctx.author.bot
+            or ctx.author.id in self.ignore
+            or ctx.message.stickers
+        ):
+            return await ctx.reply("Can't use this command with mentions, bots or stickers", delete_after=15)
+
+        self.ignore.add(ctx.author.id)
+        try:
+            async for item in ParserMethods.parse(text=text, bot=self.bot):
+                return await self.submission_handler(ctx, **item)
+        except Exception as e:
+            self.bot.logger.exception("Exception processing character", exc_info=e)
+            await ctx.reply(str(e), delete_after=15)
+        finally:
+            self.ignore -= {ctx.author.id}
 
     @app_commands.command()
     @app_commands.checks.has_role("Moderation")
