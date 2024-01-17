@@ -712,8 +712,19 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Server")
         item = await db.find_one(
-            {"id": thread.guild.id, "looking_for_rp": {"$exists": True}},
-            {"_id": 0, "no_thread_categories": 1, "rp_planning": 1, "looking_for_rp": 1},
+            {
+                "id": thread.guild.id,
+                "rp_planning": {"$exists": True},
+                "looking_for_rp": {"$exists": True},
+                "rp_session_log": {"$exists": True},
+            },
+            {
+                "_id": 0,
+                "no_thread_categories": 1,
+                "rp_planning": 1,
+                "looking_for_rp": 1,
+                "rp_session_log": 1,
+            },
         )
         item = item or {}
 
@@ -734,7 +745,7 @@ class Submission(commands.Cog):
             await msg.pin(reason=f"Thread created by {thread.owner}")
             embed = Embed(
                 title="Reminder",
-                description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1017242400705490985>\n* </find:1022520398488817686>",
+                description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1197132689292152844>\n* </find:1186936002330243096>",
                 color=thread.owner.color,
                 timestamp=thread.created_at,
             )

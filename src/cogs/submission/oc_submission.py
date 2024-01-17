@@ -1867,9 +1867,11 @@ class SubmissionView(Basic):
     async def create_ticket(self, itx: Interaction[CustomBot], _: Button):
         await itx.response.send_modal(TicketModal(timeout=None))
 
-    # @button(label="RP Search", row=3, custom_id="rp-search", emoji="🔍")
+    @button(label="RP Search", row=3, custom_id="rp-search", emoji="🔍")
     async def rp_search(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
+        db1 = itx.client.mongo_db("Characters")
+
         guild = itx.guild
         user = itx.client.supporting.get(itx.user, itx.user)
 
@@ -1883,7 +1885,19 @@ class SubmissionView(Basic):
             )
         ]
         ocs.sort(key=lambda x: x.name)
-        to_user = itx.guild and itx.guild.get_role(1196879060219986063)  # TODO: Change later
+
+        if info := db1.find_one(
+            {"id": itx.guild_id, "looking_for_rp": {"$exists": True}},
+            {
+                "_id": 0,
+                "looking_for_rp": 1,
+            },
+        ):
+            role_id = info["looking_for_rp"]
+        else:
+            role_id = None
+
+        to_user = itx.guild and itx.guild.get_role(role_id)
         modal = RPModal(user=user, ocs=ocs, to_user=to_user)
 
         if await modal.check(itx):
