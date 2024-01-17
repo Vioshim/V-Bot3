@@ -1892,6 +1892,6 @@ class SubmissionView(Basic):
     @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
     async def info(self, itx: Interaction[CustomBot], _: Button):
         tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({"server": itx.guild_id})])
-        edit_mode = await itx.client.is_owner(itx.user)
+        edit_mode = (await itx.client.is_owner(itx.user)) or itx.permissions.administrator
         view = WikiComplex(tree=tree, context=itx, edit_mode=edit_mode)
         await view.simple_send(ephemeral=True, embeds=tree.embeds)
