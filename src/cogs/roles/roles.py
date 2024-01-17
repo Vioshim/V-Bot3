@@ -246,14 +246,15 @@ class RoleSelect(Select):
         return roles
 
 
-class AuxRoleView(View):
+class BasicRoleSelect(View):
     def __init__(self, items: list[dict[str, str]]) -> None:
-        super(AuxRoleView, self).__init__(timeout=None)
-        for item in items:
+        super(BasicRoleSelect, self).__init__(timeout=None)
+        for index, item in enumerate(items):
             self.add_item(
                 RoleSelect(
                     placeholder=item.get("placeholder"),
                     custom_id=item.get("custom_id"),
+                    row=index,
                     options=[
                         SelectOption(
                             label=option.get("label"),
@@ -271,13 +272,12 @@ class AuxRoleView(View):
     async def on_error(self, itx: Interaction[CustomBot], error: Exception, item, /) -> None:
         itx.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
-
-class BasicRoleSelect(AuxRoleView):
     @select(
         placeholder="AFK Schedule",
         custom_id="afk",
         min_values=0,
         max_values=24,
+        row=3,
         options=[
             SelectOption(
                 label=lapse.strftime("%I:00 %p"),
@@ -303,6 +303,7 @@ class BasicRoleSelect(AuxRoleView):
         custom_id="timezone",
         style=ButtonStyle.blurple,
         emoji="\N{TIMER CLOCK}",
+        row=4,
     )
     async def tz_schedule(self, itx: Interaction[CustomBot], _: Button):
         resp: InteractionResponse = itx.response
