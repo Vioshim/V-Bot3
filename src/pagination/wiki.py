@@ -395,7 +395,7 @@ class WikiComplex(Complex[WikiEntry]):
         context: commands.Context[Client],
         edit_mode: bool = False,
     ):
-        if is instance(context, Interaction):
+        if isinstance(context, Interaction):
             member, target = context.user, context or context.channel
         else:
             member, target = context.author, context.interaction or context.channel
