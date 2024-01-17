@@ -117,6 +117,7 @@ def comparison_handler(before: Character, now: Character):
 class Submission(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
+        self.data_db: dict[int, dict] = {}
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
         self.itx_menu1 = app_commands.ContextMenu(
@@ -196,7 +197,6 @@ class Submission(commands.Cog):
             member = Object(id=member)
 
         db = self.bot.mongo_db("Roleplayers")
-        db1 = self.bot.mongo_db("Server")
 
         thread = None
 
@@ -205,10 +205,12 @@ class Submission(commands.Cog):
 
         data = data or {}
 
-        info = await db1.find_one(
-            {"id": server_id, "oc_list": {"$exists": True}},
-            {"_id": 0, "oc_list": 1},
-        )
+        if not (info := self.data_db.get(thread.guild.id)):
+            db1 = self.bot.mongo_db("Server")
+            info = await db1.find_one(
+                {"id": server_id, "oc_list": {"$exists": True}},
+                {"_id": 0, "oc_list": 1},
+            )
 
         if not (channel := self.bot.get_channel(info["oc_list"])):
             channel: ForumChannel = await self.bot.fetch_channel(info["oc_list"])
@@ -324,7 +326,6 @@ class Submission(commands.Cog):
             oc.image_url = msg_oc.embeds[0].image.url
 
             db = self.bot.mongo_db("Characters")
-            db1 = self.bot.mongo_db("Server")
 
             if former is None and (former := await db.find_one({"id": oc.id})):
                 former = Character.from_mongo_dict(former)
@@ -338,14 +339,16 @@ class Submission(commands.Cog):
                 upsert=True,
             )
 
-            info = await db1.find_one(
-                {
-                    "id": oc.server,
-                    "oc_modifications": {"$exists": True},
-                    "staff": {"$exists": True},
-                },
-                {"_id": 0, "oc_modifications": 1, "staff": 1},
-            )
+            if not (info := self.data_db.get(thread.guild.id)):
+                db1 = self.bot.mongo_db("Server")
+                info = await db1.find_one(
+                    {
+                        "id": oc.server,
+                        "oc_modifications": {"$exists": True},
+                        "staff": {"$exists": True},
+                    },
+                    {"_id": 0, "oc_modifications": 1, "staff": 1},
+                )
 
             if logging and info:
                 self.bot.logger.info(
@@ -427,14 +430,15 @@ class Submission(commands.Cog):
         else:
             refer_author = message.author
 
-        info = await self.bot.mongo_db("Server").find_one(
-            {
-                "id": message.guild.id,
-                "oc_images": {"$exists": True},
-                "staff": {"$exists": True},
-            },
-            {"_id": 0, "oc_images": 1, "staff": 1},
-        )
+        if not (info := self.data_db.get(message.guild.id)):
+            info = await self.bot.mongo_db("Server").find_one(
+                {
+                    "id": message.guild.id,
+                    "oc_images": {"$exists": True},
+                    "staff": {"$exists": True},
+                },
+                {"_id": 0, "oc_images": 1, "staff": 1},
+            )
 
         if msg_data and info:
             author: Member = self.bot.supporting.get(refer_author, refer_author)
@@ -696,8 +700,8 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Server")
         async for item in db.find(
             {"oc_submission": {"$exists": True}, "oc_submission_msg": {"$exists": True}},
-            {"_id": 0, "id": 1, "oc_submission": 1, "oc_submission_msg": 1},
         ):
+            self.data_db[item["id"]] = item
             view = SubmissionView(timeout=None)
             channel = self.bot.get_partial_messageable(id=item["oc_submission"], guild_id=item["id"])
             message = channel.get_partial_message(item["oc_submission_msg"])
@@ -710,23 +714,24 @@ class Submission(commands.Cog):
         if not isinstance(parent := thread.parent, ForumChannel) or self.bot.user == thread.owner:
             return
 
-        db = self.bot.mongo_db("Server")
-        item = await db.find_one(
-            {
-                "id": thread.guild.id,
-                "rp_planning": {"$exists": True},
-                "looking_for_rp": {"$exists": True},
-                "rp_session_log": {"$exists": True},
-            },
-            {
-                "_id": 0,
-                "no_thread_categories": 1,
-                "rp_planning": 1,
-                "looking_for_rp": 1,
-                "rp_session_log": 1,
-            },
-        )
-        item = item or {}
+        if not (item := self.data_db.get(thread.guild.id)):
+            db = self.bot.mongo_db("Server")
+            item = await db.find_one(
+                {
+                    "id": thread.guild.id,
+                    "rp_planning": {"$exists": True},
+                    "looking_for_rp": {"$exists": True},
+                    "rp_session_log": {"$exists": True},
+                },
+                {
+                    "_id": 0,
+                    "no_thread_categories": 1,
+                    "rp_planning": 1,
+                    "looking_for_rp": 1,
+                    "rp_session_log": 1,
+                },
+            )
+            item = item or {}
 
         if thread.category_id in item.get("no_thread_categories", []):
             return
@@ -816,9 +821,10 @@ class Submission(commands.Cog):
         if not message.guild:
             return
 
-        db = self.bot.mongo_db("Server")
-        item = await db.find_one({"id": message.guild.id})
-        item = item or {}
+        if not (item := self.data_db.get(message.guild.id)):
+            db = self.bot.mongo_db("Server")
+            item = await db.find_one({"id": message.guild.id})
+            item = item or {}
 
         if message.channel.id == item.get("oc_submission"):
             await self.on_message_submission(message)
@@ -863,13 +869,14 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("RP Logs")
-        db1 = self.bot.mongo_db("Server")
 
-        info = await db1.find_one(
-            {"id": message.guild.id, "oc_submission": {"$exists": True}},
-            {"_id": 0, "oc_submission": 1},
-        )
-        info = info or {}
+        if not (item := self.data_db.get(message.guild.id)):
+            db1 = self.bot.mongo_db("Server")
+            info = await db1.find_one(
+                {"id": message.guild.id, "oc_submission": {"$exists": True}},
+                {"_id": 0, "oc_submission": 1},
+            )
+            info = info or {}
 
         if message.channel.id == info.get("oc_submission"):
             await self.on_message_submission(message)
