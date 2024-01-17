@@ -1651,6 +1651,7 @@ class SubmissionModal(Modal):
             author: Member = itx.client.supporting.get(refer_author, refer_author)
             async for item in ParserMethods.parse(text=self.text.value, bot=itx.client):
                 oc = Character.process(**item)
+                oc.server = itx.guild_id
 
                 if isinstance(oc.image, File):
                     w = await itx.client.webhook(info["staff"])
