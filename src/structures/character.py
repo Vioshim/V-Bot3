@@ -647,7 +647,7 @@ class Character:
         if pronoun := self.pronoun_text:
             c_embed.add_field(name="Pronoun", value=pronoun)
 
-        c_embed.add_field(name="Age", value=self.age.name)
+        c_embed.add_field(name="Age", value=self.age.title)
 
         if species_data := self.species_data:
             name1, name2 = species_data
@@ -739,12 +739,14 @@ class Character:
     @property
     def params_header(self):
         data = {
-            "Age": self.age.name,
+            "Age": self.age.title,
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
-            "Pokeball": self.pokeball.label if self.pokeball else None,
             "Nature": self.nature.name if self.nature else None,
-            "Measure": "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")]),
         }
+        if self.pokeball:
+            data["Pokeball"] = self.pokeball.label
+
+        data["Measure"] = "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")])
 
         if species_data := self.species_data:
             data[species_data[0]] = species_data[1]
@@ -1206,7 +1208,7 @@ class Character:
                 elif a2 in self.abilities:
                     name = "Future"
         species = self.species.name if self.species else None
-        return f"{name}: {species}, Age: {self.age.name}, Types: {types}"
+        return f"{name}: {species}, Age: {self.age.title}, Types: {types}"
 
     @classmethod
     def process(cls, **kwargs) -> Character:
