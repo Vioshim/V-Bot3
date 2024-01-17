@@ -68,7 +68,13 @@ class Application:
 
 
 class Meeting(View):
-    def __init__(self, reporter: Member, imposter: Member, reason: Optional[str] = None):
+    def __init__(
+        self,
+        reporter: Member,
+        imposter: Member,
+        reason: Optional[str] = None,
+        channel_id: int = 0,
+    ):
         super(Meeting, self).__init__(timeout=60)
         self.reporter = reporter
         self.imposter = imposter
@@ -76,6 +82,7 @@ class Meeting(View):
         self.defend: set[Member] = set()
         self.moderator: Optional[Member] = None
         self.guild = reporter.guild
+        self.channel_id = channel_id
         self.message: Optional[Message] = None
         embed = Embed(
             title=f"Meeting for {imposter}",
@@ -155,8 +162,8 @@ class Meeting(View):
         sus: Member = self.imposter
         hero: Member = self.reporter
 
-        if not (channel := self.guild.get_channel_or_thread(1077697010490167308)):
-            channel = await self.guild.fetch_channel(1077697010490167308)
+        if not (channel := self.guild.get_channel_or_thread(self.channel_id)):
+            channel = await self.guild.fetch_channel(self.channel_id)
 
         embed = Embed(
             title=f"Users that Agreed with {sus}'s Votation",
@@ -377,7 +384,7 @@ class Moderation(commands.Cog):
             trigger=CronTrigger(minute=",".join(map(str, range(0, 60, 5))), second=0),
         )
 
-    async def vote_process(self, interaction: Interaction, member: Member, reason: Optional[str] = None):
+    async def vote_process(self, interaction: Interaction[CustomBot], member: Member, reason: Optional[str] = None):
         """Function to process a votation
 
         Parameters
@@ -415,7 +422,19 @@ class Moderation(commands.Cog):
                 ephemeral=True,
             )
 
-        view = Meeting(reporter=interaction.user, imposter=member, reason=reason)
+        db = interaction.client.mongo_db("Server")
+        if info := await db.find_one(
+            {
+                "id": interaction.guild_id,
+                "staff_chat": {"$exists": True},
+            },
+            {"_id": 0, "staff_chat": 1},
+        ):
+            channel_id = info["staff_chat"]
+        else:
+            channel_id = interaction.channel_id
+
+        view = Meeting(reporter=interaction.user, imposter=member, reason=reason, channel_id=channel_id)
         time = format_dt(utcnow() + timedelta(seconds=60), style="R")
         msg = await interaction.followup.send(
             content=f"{moderation.mention}  -  {time}",

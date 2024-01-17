@@ -223,7 +223,7 @@ class Information(commands.Cog):
             item_id = item.pop("id", None)
             self.bot.add_view(PollView(**item), message_id=item_id)
 
-        db = self.bot.mongo_db("InfoData")
+        db = self.bot.mongo_db("c")
         async for item in db.find({}, {"_id": 0}):
             server_id = item.pop("server", None)
 

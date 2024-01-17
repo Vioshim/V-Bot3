@@ -167,7 +167,7 @@ class SpeciesTransformer(commands.Converter[str], Transformer):
     async def transform(self, itx: Interaction[CustomBot], value: Optional[str], /):
         db = itx.client.mongo_db("Characters")
         value = value or ""
-        if value.isdigit() and (item := await db.find_one({"id": int(value)})):
+        if value.isdigit() and (item := await db.find_one({"id": int(value), "server": itx.guild_id})):
             return Character.from_mongo_dict(item)
         if oc := Species.single_deduce(value):
             return oc
@@ -176,7 +176,7 @@ class SpeciesTransformer(commands.Converter[str], Transformer):
     async def convert(self, ctx: commands.Context[CustomBot], argument: str, /):
         db = ctx.bot.mongo_db("Characters")
         argument = argument or ""
-        if argument.isdigit() and (item := await db.find_one({"id": int(argument)})):
+        if argument.isdigit() and (item := await db.find_one({"id": int(argument), "server": ctx.guild.id})):
             return Character.from_mongo_dict(item)
         if oc := Species.single_deduce(argument):
             return oc
@@ -262,7 +262,8 @@ class DefaultSpeciesTransformer(commands.Converter[str], Transformer):
                         "$or": [
                             {"species.chimera": {"$in": fused.id.split("/")}},
                             {"species.fusion.species": {"$in": fused.id.split("/")}},
-                        ]
+                        ],
+                        "server": ctx.guild_id,
                     }
                 )
                 if (oc := Character.from_mongo_dict(x))

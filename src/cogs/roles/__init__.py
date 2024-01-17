@@ -143,7 +143,17 @@ class Roles(commands.Cog):
             return
 
         db = self.bot.mongo_db("Roleplayers")
-        if item := await db.find_one({"id": payload.message_id, "server": payload.guild_id}):
+        db1 = self.bot.mongo_db("Server")
+        item = await db.find_one({"id": payload.message_id, "server": payload.guild_id})
+        data = await db1.find_one(
+            {
+                "id": payload.guild_id,
+                "rp_planning": {"$exists": True},
+            },
+            {"_id": 0, "rp_planning": 1},
+        )
+
+        if item and data:
             guild = payload.member.guild
             if thread := guild.get_thread(payload.channel_id):
                 msg = thread.get_partial_message(payload.message_id)
@@ -154,8 +164,8 @@ class Roles(commands.Cog):
                 if registered and get(payload.member.roles, name="Moderation") and registered not in author.roles:
                     return await author.add_roles(registered, reason=str(payload.member))
 
-                if not (channel := guild.get_channel(1061008601335992422)):
-                    channel: ForumChannel = await guild.fetch_channel(1061008601335992422)
+                if not (channel := guild.get_channel(data["rp_planning"])):
+                    channel: ForumChannel = await guild.fetch_channel(data["rp_planning"])
 
                 view = View()
                 url = f"https://discord.com/channels/{payload.guild_id}/{payload.message_id}"
