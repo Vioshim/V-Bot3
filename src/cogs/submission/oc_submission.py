@@ -1320,7 +1320,7 @@ class CreationOCView(Basic):
         self.bot = bot
         oc = oc.copy() if oc else Character()
         oc.author = oc.author or user.id
-        oc.server = itx.guild_id
+        oc.server = itx.guild.id
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
