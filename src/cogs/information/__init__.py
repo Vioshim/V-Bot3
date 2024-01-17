@@ -1020,7 +1020,7 @@ class Information(commands.Cog):
             return
 
         data = self.info_data.get(member.guild.id, {})
-        if not (info := data.get("message_edit", {})) or member.bot or await self.bot.is_owner(member):
+        if not (info := data.get("message_edit", {})) or member.bot:
             return
 
         embed1 = discord.Embed(
