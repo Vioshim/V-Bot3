@@ -711,16 +711,43 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("Server")
-        item = await db.find_one({"id": thread.guild.id})
+        item = await db.find_one(
+            {"id": thread.guild.id, "looking_for_rp": {"$exists": True}},
+            {"_id": 0, "no_thread_categories": 1, "rp_planning": 1, "looking_for_rp": 1},
+        )
         item = item or {}
 
-        if thread.category_id not in item.get("no_thread_categories", []):
+        if thread.category_id in item.get("no_thread_categories", []):
             return
 
         await asyncio.sleep(1)
         msg = await thread.get_partial_message(thread.id).fetch()
 
-        if thread.parent_id != item.get("rp_planning"):
+        if thread.parent_id == item.get("rp_planning"):
+            db = self.bot.mongo_db("RP Search Banner")
+            if item := await db.find_one({"author": thread.owner.id}):
+                image = item["image"]
+            else:
+                image = DEFAULT_IMAGE
+
+            ping_role = thread.guild.get_role(item["looking_for_rp"])
+            await msg.pin(reason=f"Thread created by {thread.owner}")
+            embed = Embed(
+                title="Reminder",
+                description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1017242400705490985>\n* </find:1022520398488817686>",
+                color=thread.owner.color,
+                timestamp=thread.created_at,
+            )
+            embed.set_image(url=image)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
+            embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
+            await msg.reply(
+                content=ping_role.mention,
+                embed=embed,
+                allowed_mentions=AllowedMentions(roles=[ping_role]),
+                mention_author=True,
+            )
+        else:
             data = await parent.create_thread(
                 name=thread.name,
                 content=msg.content[:2000],
@@ -733,31 +760,7 @@ class Submission(commands.Cog):
             )
             await data.message.pin()
             await data.thread.add_user(thread.owner)
-            return await thread.delete()
-
-        db = self.bot.mongo_db("RP Search Banner")
-        if item := await db.find_one({"author": thread.owner.id}):
-            image = item["image"]
-        else:
-            image = DEFAULT_IMAGE
-
-        ping_role = thread.guild.get_role(1196879060219986063)  # TODO: Fix
-        await msg.pin(reason=f"Thread created by {thread.owner}")
-        embed = Embed(
-            title="Reminder",
-            description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1017242400705490985>\n* </find:1022520398488817686>",
-            color=thread.owner.color,
-            timestamp=thread.created_at,
-        )
-        embed.set_image(url=image)
-        embed.set_thumbnail(url=self.bot.user.display_avatar)
-        embed.set_footer(text=thread.guild.name, icon_url=thread.guild.icon)
-        await msg.reply(
-            content=ping_role.mention,
-            embed=embed,
-            allowed_mentions=AllowedMentions(roles=[ping_role]),
-            mention_author=True,
-        )
+            await thread.delete()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member):
