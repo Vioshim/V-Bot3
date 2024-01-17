@@ -82,7 +82,7 @@ class AgeGroup(Enum):
     Adolescent = 25, "14 - 24 (Rough equivalent in human years)"
     Teenager = 35, "25 - 34 (Rough equivalent in human years)"
     Young_Adult = 50, "35 - 49 (Rough equivalent in human years)"
-    Adult: 65 = "50 - 64 (Rough equivalent in human years)"
+    Adult = 65, "50 - 64 (Rough equivalent in human years)"
     Middle_Aged = 80, "65 - 79 (Rough equivalent in human years)"
     Senior = 100, "80 - 99 (Rough equivalent in human years)"
     Elderly = 125, "100 - 124 (Rough equivalent in human years)"
