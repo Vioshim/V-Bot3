@@ -98,7 +98,7 @@ class Roles(commands.Cog):
 
         db = self.bot.mongo_db("Server")
         async for item in db.find({"self_roles": {"$exists": True}}):
-            info = item.get("self_roles_info", {})
+            info = item.get("self_roles", {})
             channel = self.bot.get_partial_messageable(info["channel"], guild_id=item["id"])
             msg = channel.get_partial_message(info["message"])
             await msg.edit(view=BasicRoleSelect(items=info.get("items", [])))
