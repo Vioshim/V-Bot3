@@ -89,8 +89,10 @@ class Inviter(commands.Cog):
     async def on_ready(self):
         db = self.bot.mongo_db("InfoData")
         async for item in db.find(
-            {"partnerships": {"$exists": True, "$ne": None}},
-            {"partnerships.channel": {"$exists": True, "$ne": None}},
+            {
+                "partnerships": {"$exists": True, "$ne": None},
+                "partnerships.channel": {"$exists": True, "$ne": None},
+            },
             {"_id": 0, "partnerships": 1},
         ):
             await self.load_partners(**item["partnerships"])
