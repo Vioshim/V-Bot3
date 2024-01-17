@@ -223,12 +223,12 @@ class Information(commands.Cog):
             item_id = item.pop("id", None)
             self.bot.add_view(PollView(**item), message_id=item_id)
 
-        db = self.bot.mongo_db("c")
+        db = self.bot.mongo_db("InfoData")
         async for item in db.find({}, {"_id": 0}):
             server_id = item.pop("server", None)
 
-            if word_channels := item.pop("word_channels", {}):
-                item["word_channels"] = {v: k for k, v in word_channels.items()}
+            word_channels = item.pop("word_channels", {})
+            item["word_channels"] = {v: k for k, v in word_channels.items()}
 
             self.info_data[server_id] = item
 
