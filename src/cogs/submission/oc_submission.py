@@ -1283,7 +1283,7 @@ class ImageField(TemplateField, required=True):
             await msg.delete(delay=0)
 
 
-class PokeballField(TemplateField):
+class PokeballField:
     "Specify if OC has a pokeball or not"
 
     @classmethod
