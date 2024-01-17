@@ -332,7 +332,7 @@ class Character:
     abilities: frozenset[Ability] = field(default_factory=frozenset)
     moveset: frozenset[Move] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
-    url: Optional[str] = None
+    url: str = ""
     image: Optional[int | str | File] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
@@ -376,6 +376,7 @@ class Character:
 
     def __post_init__(self):
         self.image_url = self.image
+        self.url = self.url or ""
         if isinstance(self.species, str):
             self.species = Species.from_ID(self.species)
         if not self.server:
@@ -479,8 +480,7 @@ class Character:
 
     @property
     def document_url(self):
-        if self.url:
-            return f"https://docs.google.com/document/d/{self.url}/edit?usp=sharing"
+        return f"https://docs.google.com/document/d/{self.url}/edit?usp=sharing" if self.url else ""
 
     @document_url.setter
     def document_url(self, url: str):
@@ -490,7 +490,7 @@ class Character:
 
     @document_url.deleter
     def document_url(self):
-        self.url = None
+        self.url = ""
 
     @property
     def evolves_from(self):

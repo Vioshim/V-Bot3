@@ -67,7 +67,6 @@ from src.views.move_view import MoveView
 __all__ = ("Submission", "setup")
 
 
-ENTRIES = set(MAP_ELEMENTS2) | {740552350703550545, 740567496721039401}
 DEFAULT_IMAGE = "https://cdn.discordapp.com/attachments/748384705098940426/1096165342608380054/image.png"
 
 
@@ -120,16 +119,13 @@ class Submission(commands.Cog):
         self.bot = bot
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
-        guild_ids = [719343092963999804]
         self.itx_menu1 = app_commands.ContextMenu(
             name="Moves & Abilities",
             callback=self.info_checker,
-            guild_ids=guild_ids,
         )
         self.itx_menu2 = app_commands.ContextMenu(
             name="Check User's OCs",
             callback=self.check_ocs,
-            guild_ids=guild_ids,
         )
 
     async def cog_load(self) -> None:
@@ -146,7 +142,7 @@ class Submission(commands.Cog):
         await resp.defer(ephemeral=True, thinking=True)
         moves: list[SpAbility | Ability | Move] = []
         db = self.bot.mongo_db("Characters")
-        if data := await db.find_one({"id": message.id}):
+        if data := await db.find_one({"id": message.id, "server": itx.guild_id}):
             oc = Character.from_mongo_dict(data)
             moves = list(oc.moveset) + list(oc.abilities)
             if sp_ability := oc.sp_ability:
@@ -175,7 +171,7 @@ class Submission(commands.Cog):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
         db = self.bot.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id})]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": itx.guild_id})]
         view = ModCharactersView(member=itx.user, ocs=ocs, target=itx, keep_working=True)
         embed = view.embed
         embed.color = member.color
@@ -183,7 +179,12 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
-    async def list_update(self, member: Object | User | Member, data: Optional[dict] = None):
+    async def list_update(
+        self,
+        member: Object | User | Member,
+        server_id: int,
+        data: Optional[dict] = None,
+    ):
         """This function updates an user's character list message
 
         Parameters
@@ -194,15 +195,23 @@ class Submission(commands.Cog):
         if isinstance(member, int):
             member = Object(id=member)
 
-        if not (channel := self.bot.get_channel(1019686568644059136)):
-            channel: ForumChannel = await self.bot.fetch_channel(1019686568644059136)
-
         db = self.bot.mongo_db("Roleplayers")
+        db1 = self.bot.mongo_db("Characters")
 
         thread = None
 
         if not data:
-            data = await db.find_one({"user": member.id, "server": channel.guild.id})
+            data = await db.find_one({"user": member.id, "server": server_id})
+
+        data = data or {}
+
+        info = await db1.find_one(
+            {"id": server_id, "oc_list": {"$exists": True}},
+            {"_id": 0, "oc_list": 1},
+        )
+
+        if not (channel := self.bot.get_channel(info["oc_list"])):
+            channel: ForumChannel = await self.bot.fetch_channel(info["oc_list"])
 
         if data:
             if not (thread := channel.get_thread(data["id"])):
@@ -257,7 +266,7 @@ class Submission(commands.Cog):
     async def register_oc(self, oc: Character, image_as_is: bool = False, logging: bool = True):
         try:
             member = Object(id=oc.author)
-            thread = await self.list_update(member)
+            thread = await self.list_update(member, oc.server)
             oc.thread = thread.id
             guild: Guild = self.bot.get_guild(oc.server)
             user = guild.get_member(member.id) or member
@@ -315,13 +324,30 @@ class Submission(commands.Cog):
             oc.image_url = msg_oc.embeds[0].image.url
 
             db = self.bot.mongo_db("Characters")
+            db1 = self.bot.mongo_db("Server")
 
             if former is None and (former := await db.find_one({"id": oc.id})):
                 former = Character.from_mongo_dict(former)
 
-            await db.replace_one({"id": reference_id}, oc.to_mongo_dict(), upsert=True)
+            await db.replace_one(
+                {
+                    "id": reference_id,
+                    "server": oc.server,
+                },
+                oc.to_mongo_dict(),
+                upsert=True,
+            )
 
-            if logging:
+            info = await db1.find_one(
+                {
+                    "id": oc.server,
+                    "oc_modifications": {"$exists": True},
+                    "staff": {"$exists": True},
+                },
+                {"_id": 0, "oc_modifications": 1, "staff": 1},
+            )
+
+            if logging and info:
                 self.bot.logger.info(
                     "Character has been %s! > %s > %s > %s",
                     word,
@@ -334,7 +360,7 @@ class Submission(commands.Cog):
                     if former:
                         pack_embeds: list[list[Embed]] = []
                         pack_files: list[list[File]] = []
-                        log = await self.bot.webhook(1020151767532580934, reason="Logging")
+                        log = await self.bot.webhook(info["staff"], reason="Logging")
                         if isinstance(user, (User, Member)):
                             username, avatar_url = user.display_name, user.display_avatar.url
                         else:
@@ -373,7 +399,7 @@ class Submission(commands.Cog):
                             await log.send(
                                 embeds=embeds,
                                 files=files,
-                                thread=Object(id=1020153309425836122),
+                                thread=Object(id=info["oc_modifications"]),
                                 username=safe_username(username),
                                 avatar_url=avatar_url,
                                 view=view,
@@ -386,7 +412,7 @@ class Submission(commands.Cog):
     async def oc_update(self, oc: Character):
         embeds = oc.embeds
         embeds[0].set_image(url="attachment://image.png")
-        thread = await self.list_update(oc.author)
+        thread = await self.list_update(oc.author, oc.server)
         msg = thread.get_partial_message(oc.id)
         try:
             if thread.archived:
@@ -400,17 +426,27 @@ class Submission(commands.Cog):
             refer_author = message.user
         else:
             refer_author = message.author
-        if msg_data:
-            author = self.bot.supporting.get(refer_author, refer_author)
+
+        info = await self.bot.mongo_db("Server").find_one(
+            {
+                "id": message.guild.id,
+                "oc_images": {"$exists": True},
+                "staff": {"$exists": True},
+            },
+            {"_id": 0, "oc_images": 1, "staff": 1},
+        )
+
+        if msg_data and info:
+            author: Member = self.bot.supporting.get(refer_author, refer_author)
             if oc := Character.process(**msg_data):
                 if isinstance(oc.image, File):
-                    w = await self.bot.webhook(1020151767532580934)
+                    w = await self.bot.webhook(info["staff"])
                     msg = await w.send(
-                        content=oc.document_url,
+                        content=oc.document_url or "",
                         file=oc.image,
                         username=safe_username(author.display_name),
                         avatar_url=author.display_avatar.url,
-                        thread=Object(id=1045687852069040148),
+                        thread=Object(id=info["oc_images"]),
                         wait=True,
                     )
                     if msg.attachments:
@@ -656,25 +692,35 @@ class Submission(commands.Cog):
 
     async def load_submssions(self):
         self.bot.logger.info("Loading Submission menu")
-        view = SubmissionView(timeout=None)
-        channel = self.bot.get_partial_messageable(id=852180971985043466, guild_id=719343092963999804)
-        message = channel.get_partial_message(1171220451180154991)
-        view.message = await message.edit(view=view)
+
+        db = self.bot.mongo_db("Server")
+        async for item in db.find(
+            {"oc_submission": {"$exists": True}, "oc_submission_msg": {"$exists": True}},
+            {"_id": 0, "id": 1, "oc_submission": 1, "oc_submission_msg": 1},
+        ):
+            view = SubmissionView(timeout=None)
+            channel = self.bot.get_partial_messageable(id=item["oc_submission"], guild_id=item["id"])
+            message = channel.get_partial_message(item["oc_submission_msg"])
+            view.message = await message.edit(view=view)
+
         self.bot.logger.info("Finished loading Submission menu")
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: Thread):
-        if (
-            not isinstance(parent := thread.parent, ForumChannel)
-            or thread.category_id not in ENTRIES
-            or self.bot.user == thread.owner
-        ):
+        if not isinstance(parent := thread.parent, ForumChannel) or self.bot.user == thread.owner:
+            return
+
+        db = self.bot.mongo_db("Server")
+        item = await db.find_one({"id": thread.guild.id})
+        item = item or {}
+
+        if thread.category_id not in item.get("no_thread_categories", []):
             return
 
         await asyncio.sleep(1)
         msg = await thread.get_partial_message(thread.id).fetch()
 
-        if thread.parent_id != 1061008601335992422:
+        if thread.parent_id != item.get("rp_planning"):
             data = await parent.create_thread(
                 name=thread.name,
                 content=msg.content[:2000],
@@ -695,7 +741,7 @@ class Submission(commands.Cog):
         else:
             image = DEFAULT_IMAGE
 
-        ping_role = thread.guild.get_role(1110599604090716242)
+        ping_role = thread.guild.get_role(1196879060219986063)  # TODO: Fix
         await msg.pin(reason=f"Thread created by {thread.owner}")
         embed = Embed(
             title="Reminder",
@@ -719,7 +765,7 @@ class Submission(commands.Cog):
 
         thread = None
         if data := await db.find_one({"user": member.id, "server": member.guild.id}):
-            thread = await self.list_update(member, data)
+            thread = await self.list_update(member, member.guild.id, data)
             await thread.edit(
                 name=member.display_name if thread.name != member.display_name else MISSING,
                 reason=f"{thread.name} -> {member.display_name}",
@@ -730,7 +776,7 @@ class Submission(commands.Cog):
     async def on_member_remove(self, member: Member):
         db = self.bot.mongo_db("Roleplayers")
         if data := await db.find_one({"user": member.id, "server": member.guild.id}):
-            thread = await self.list_update(member, data)
+            thread = await self.list_update(member, member.guild.id, data)
             await thread.edit(name=member.display_name, reason=f"Member left: {member.display_name}", archived=True)
 
     @commands.Cog.listener()
@@ -739,7 +785,7 @@ class Submission(commands.Cog):
             return
         db = self.bot.mongo_db("Roleplayers")
         if data := await db.find_one({"user": now.id, "server": now.guild.id}):
-            thread = await self.list_update(now, data)
+            thread = await self.list_update(now, now.guild.id, data)
             if thread.name != now.display_name:
                 reason = f"{thread.name} -> {now.display_name}."
                 await thread.edit(name=now.display_name, reason=reason)
@@ -756,14 +802,22 @@ class Submission(commands.Cog):
         if not message.guild:
             return
 
-        if message.channel.id == 852180971985043466:
+        db = self.bot.mongo_db("Server")
+        item = await db.find_one({"id": message.guild.id})
+        item = item or {}
+
+        if message.channel.id == item.get("oc_submission"):
             await self.on_message_submission(message)
         elif (
-            (message.channel.category_id in MAP_ELEMENTS2 if hasattr(message.channel, "category_id") else True)
+            (
+                message.channel.category_id in item.get("no_thread_categories", [])
+                if hasattr(message.channel, "category_id")
+                else True
+            )
             and not message.channel.name.endswith("OOC")
             and not message.webhook_id
         ):
-            if message.author.id == 431544605209788416:  # Tupper
+            if message.application_id and message.application_id != self.bot.user.id:
                 self.bot.msg_cache_add(message)
                 await message.delete(delay=3)
             else:
@@ -795,11 +849,19 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("RP Logs")
-        if message.channel.id == 852180971985043466:
+        db1 = self.bot.mongo_db("Server")
+
+        info = await db1.find_one(
+            {"id": message.guild.id, "oc_submission": {"$exists": True}},
+            {"_id": 0, "oc_submission": 1},
+        )
+        info = info or {}
+
+        if message.channel.id == info.get("oc_submission"):
             await self.on_message_submission(message)
         elif (
             isinstance(message.channel, Thread)
-            and message.channel.category_id in MAP_ELEMENTS2
+            and message.channel.category_id in info.get("no_thread_categories", [])
             and not message.channel.name.endswith("OOC")
         ):
             if item := await db.find_one({"id": message.id, "channel": message.channel.id}):
@@ -843,9 +905,6 @@ class Submission(commands.Cog):
         payload : RawThreadDeleteEvent
             Information
         """
-        if payload.parent_id != 919277769735680050:
-            return
-
         db = self.bot.mongo_db("Roleplayers")
         db2 = self.bot.mongo_db("Characters")
         await db.delete_one({"server": payload.guild_id, "id": payload.thread_id})
@@ -885,7 +944,15 @@ class Submission(commands.Cog):
             data = [x for x in itx.message.attachments if x.content_type.startswith("image/")]
             image = data[0].proxy_url.split("?")[0] if data else None
             db = self.bot.mongo_db("Characters")
-            ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
+            ocs = [
+                Character.from_mongo_dict(item)
+                async for item in db.find(
+                    {
+                        "id": {"$in": oc_ids},
+                        "server": itx.guild.id,
+                    }
+                )
+            ]
             ocs.sort(key=lambda x: x.id)
             url = Character.collage(ocs, background=image, font=font)
             if file := await self.bot.get_file(url):
@@ -898,7 +965,15 @@ class Submission(commands.Cog):
     async def oc_rack(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with itx.typing():
             db = self.bot.mongo_db("Characters")
-            ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
+            ocs = [
+                Character.from_mongo_dict(item)
+                async for item in db.find(
+                    {
+                        "id": {"$in": oc_ids},
+                        "server": itx.guild.id,
+                    }
+                )
+            ]
             ocs.sort(key=lambda x: x.id)
             url = Character.rack(ocs, font=font)
             view = View()
@@ -915,7 +990,15 @@ class Submission(commands.Cog):
     async def oc_rack2(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
         async with itx.typing():
             db = self.bot.mongo_db("Characters")
-            ocs = [Character.from_mongo_dict(item) async for item in db.find({"id": {"$in": oc_ids}})]
+            ocs = [
+                Character.from_mongo_dict(item)
+                async for item in db.find(
+                    {
+                        "id": {"$in": oc_ids},
+                        "server": itx.guild.id,
+                    }
+                )
+            ]
             ocs.sort(key=lambda x: x.id)
             url = Character.rack2(ocs, font=font)
             view = View()
@@ -927,7 +1010,6 @@ class Submission(commands.Cog):
                 await itx.reply(content=url, view=view)
 
     @app_commands.command(name="ocs")
-    @app_commands.guilds(719343092963999804)
     async def get_ocs(
         self,
         itx: Interaction[CustomBot],
@@ -961,17 +1043,16 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(item) async for item in db.find({"author": member.id})]
+        ocs = [Character.from_mongo_dict(item) async for item in db.find({"author": member.id, "server": itx.guild_id})]
         ocs.sort(key=lambda x: x.name)
         view = ModCharactersView(member=itx.user, ocs=ocs, target=itx, keep_working=True)
         embed = view.embed
         embed.color = member.color
-        embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+        embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
     @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     @app_commands.checks.has_role("Moderation")
     async def submit_as(self, itx: Interaction[CustomBot], member: Optional[User]):
         """Allows to create OCs as an user

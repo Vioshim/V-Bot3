@@ -111,8 +111,10 @@ class CustomRoleModal(Modal, title="Custom Role"):
             )
             self.role = role
 
-        cog = itx.client.get_cog("Information")
-        data = cog.info_data.get(itx.guild_id, {})
+        db = itx.client.mongo_db("Server")
+        data = await db.find_one({"id": itx.guild_id})
+        data = data or {}
+
         if info := data.get("member_boost"):
             channel_id = info.get("channel")
             if thread_id := info.get("thread"):
@@ -165,8 +167,10 @@ class RPSearchBannerPerk(Perk):
 
         embed.set_image(url=url)
 
-        cog = itx.client.get_cog("Information")
-        data = cog.info_data.get(itx.guild_id, {})
+        db = itx.client.mongo_db("Server")
+        data = await db.find_one({"id": itx.guild_id})
+        data = data or {}
+
         if info := data.get("member_boost"):
             channel_id = info.get("channel")
             if thread_id := info.get("thread"):
@@ -208,8 +212,10 @@ class OCBackgroundPerk(Perk):
             )
             file = MISSING
 
-        cog = itx.client.get_cog("Information")
-        data = cog.info_data.get(itx.guild_id, {})
+        db = itx.client.mongo_db("Server")
+        data = await db.find_one({"id": itx.guild_id})
+        data = data or {}
+
         if info := data.get("member_boost"):
             channel_id = info.get("channel")
             if thread_id := info.get("thread"):

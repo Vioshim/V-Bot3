@@ -113,24 +113,42 @@ class TicketModal(Modal, title="Ticket"):
         member: Member = itx.user
         data = itx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
         name = data.strftime("%B %d, %Y")
-        webhook = await itx.client.webhook(719343092963999807)
-        thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
-        embed = Embed(title=f"Ticket {name}"[:256], description=self.content.value, timestamp=data, color=member.color)
-        embed.set_thumbnail(url=member.display_avatar.url)
 
-        msg = await webhook.send(thread=thread, wait=True, embed=embed)
+        db = itx.client.mongo_db("Server")
+        if info := await db.find_one(
+            {
+                "id": itx.guild_id,
+                "tickets": {"$exists": True},
+                "staff_chat": {"$exists": True},
+            },
+            {"_id": 0, "tickets": 1, "staff_chat": 1},
+        ):
+            webhook = await itx.client.webhook(info["tickets"])
+            thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
+            embed = Embed(
+                title=f"Ticket {name}"[:256],
+                description=self.content.value,
+                timestamp=data,
+                color=member.color,
+            )
+            embed.set_thumbnail(url=member.display_avatar.url)
 
-        view = View()
-        view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
-        await itx.followup.send("Ticket created successfully", ephemeral=True, view=view)
-        await thread.add_user(member)
+            msg = await webhook.send(thread=thread, wait=True, embed=embed)
 
-        channel = itx.client.get_partial_messageable(
-            id=1077697010490167308,
-            guild_id=itx.guild.id,
-        )
+            view = View()
+            view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
+            await thread.add_user(member)
 
-        await channel.send(embed=embed, view=view)
+            channel = itx.client.get_partial_messageable(
+                id=info["staff_chat"],
+                guild_id=itx.guild.id,
+            )
+
+            await channel.send(embed=embed, view=view)
+            await itx.followup.send("Ticket created successfully", ephemeral=True, view=view)
+        else:
+            await itx.followup.send("Ticket system not setup yet.", ephemeral=True)
+
         self.stop()
 
 
@@ -1510,17 +1528,28 @@ class CreationOCView(Basic):
         await self.delete(itx)
 
     async def help_method(self, itx: Interaction[CustomBot]):
-        channel = itx.guild.get_channel(852180971985043466)
+        db = self.bot.mongo_db("Server")
+        if info := await db.find_one(
+            {
+                "id": itx.guild_id,
+                "oc_submission": {"$exists": True},
+            },
+            {
+                "_id": 0,
+                "oc_submission": 1,
+            },
+        ):
+            channel = itx.guild.get_channel(info["oc_submission"])
 
-        view = CreationOCView(
-            bot=self.bot,
-            itx=channel,
-            user=self.member,
-            oc=self.oc,
-            template=self.ref_template,
-            progress=self.progress,
-        )
-        await view.handler_send(ephemeral=False)
+            view = CreationOCView(
+                bot=self.bot,
+                itx=channel,
+                user=self.member,
+                oc=self.oc,
+                template=self.ref_template,
+                progress=self.progress,
+            )
+            await view.handler_send(ephemeral=False)
 
         if isinstance(self.oc.image, str) and (oc_file := await itx.client.get_file(self.oc.image)):
             embeds = view.embeds
@@ -1605,18 +1634,32 @@ class SubmissionModal(Modal):
         resp: InteractionResponse = itx.response
         refer_author = itx.user
         try:
-            author = itx.client.supporting.get(refer_author, refer_author)
+            db = itx.client.mongo_db("Server")
+            info = await db.find_one(
+                {
+                    "id": itx.guild_id,
+                    "staff": {"$exists": True},
+                    "oc_images": {"$exists": True},
+                },
+                {
+                    "_id": 0,
+                    "staff": 1,
+                    "oc_images": 1,
+                },
+            )
+
+            author: Member = itx.client.supporting.get(refer_author, refer_author)
             async for item in ParserMethods.parse(text=self.text.value, bot=itx.client):
                 oc = Character.process(**item)
 
                 if isinstance(oc.image, File):
-                    w = await itx.client.webhook(1020151767532580934)
+                    w = await itx.client.webhook(info["staff"])
                     msg = await w.send(
                         file=oc.image,
                         wait=True,
                         username=safe_username(author.display_name),
                         avatar_url=author.display_avatar.url,
-                        thread=Object(id=1045687852069040148),
+                        thread=Object(id=info["oc_images"]),
                     )
                     if msg.attachments:
                         oc.image = msg.attachments[0].url
@@ -1828,7 +1871,6 @@ class SubmissionView(Basic):
         db = itx.client.mongo_db("Characters")
         guild = itx.guild
         user = itx.client.supporting.get(itx.user, itx.user)
-        role = itx.guild.get_role(719642423327719434)
 
         ocs = [
             Character.from_mongo_dict(x)
@@ -1840,18 +1882,13 @@ class SubmissionView(Basic):
             )
         ]
         ocs.sort(key=lambda x: x.name)
-        to_user = itx.guild and itx.guild.get_role(1110599604090716242)
+        to_user = itx.guild and itx.guild.get_role(1196879060219986063)  # TODO: Change later
         modal = RPModal(user=user, ocs=ocs, to_user=to_user)
 
-        if role and role not in itx.user.roles:
-            await itx.response.send_message(
-                f"You must have the {role.mention} role to use this feature.",
-                ephemeral=True,
-            )
-        elif await modal.check(itx):
+        if await modal.check(itx):
             await itx.response.send_modal(modal)
 
-    # @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
+    @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
     async def info(self, itx: Interaction[CustomBot], _: Button):
         tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({"server": itx.guild_id})])
         view = WikiComplex(tree=tree, context=itx)

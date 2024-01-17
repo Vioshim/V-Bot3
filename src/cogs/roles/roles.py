@@ -40,7 +40,6 @@ from rapidfuzz import process
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.structures.pronouns import Pronoun
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split, safe_username
 from src.views.characters_view import CharactersView
@@ -214,23 +213,19 @@ class AFKModal(Modal, title="Current Time"):
         self.stop()
 
 
-class RoleSelect(View):
-    async def on_error(self, itx: Interaction[CustomBot], error: Exception, item, /) -> None:
-        itx.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
-
-    @staticmethod
-    async def choice(itx: Interaction[CustomBot], sct: Select, remove_all: bool = False):
+class RoleSelect(Select):
+    async def role_choice(self, itx: Interaction[CustomBot]):
         resp: InteractionResponse = itx.response
         member: Member = itx.client.supporting.get(itx.user, itx.user)
         guild: Guild = itx.guild
 
-        roles: set[Role] = set() if remove_all else set(get_role(sct.values, guild))
-        total: set[Role] = set(get_role(sct.options, guild))
+        roles: set[Role] = set(get_role(self.values, guild))
+        total: set[Role] = set(get_role(self.options, guild))
 
         await resp.defer(ephemeral=True, thinking=True)
 
         embed = Embed(
-            title=sct.placeholder and sct.placeholder.removeprefix("Select "),
+            title=self.placeholder and self.placeholder.removeprefix("Select "),
             color=Color.blurple(),
             timestamp=itx.created_at,
         )
@@ -251,159 +246,33 @@ class RoleSelect(View):
         return roles
 
 
-class BasicRoleSelect(RoleSelect):
-    @select(
-        placeholder="Pick your pronouns",
-        custom_id="pronouns",
-        min_values=0,
-        max_values=3,
-        options=[
-            SelectOption(
-                label=f"Pronoun {pronoun.name}",
-                emoji=pronoun.emoji,
-                value=str(pronoun.role_id),
+class AuxRoleView(View):
+    def __init__(self, items: list[dict[str, str]]) -> None:
+        super(AuxRoleView, self).__init__(timeout=None)
+        for item in items:
+            self.add_item(
+                RoleSelect(
+                    placeholder=item.get("placeholder"),
+                    custom_id=item.get("custom_id"),
+                    options=[
+                        SelectOption(
+                            label=option.get("label"),
+                            value=option.get("value"),
+                            description=option.get("description", ""),
+                            emoji=option.get("emoji"),
+                        )
+                        for option in item.get("options", [])
+                    ],
+                    min_values=item.get("min_values", 1),
+                    max_values=item.get("max_values", 1),
+                )
             )
-            for pronoun in Pronoun
-        ],
-    )
-    async def pronouns_choice(self, itx: Interaction[CustomBot], sct: Select):
-        await self.choice(itx, sct)
 
-    @select(
-        placeholder="Pick your favorite color",
-        custom_id="colors",
-        options=[
-            SelectOption(
-                label="Red",
-                emoji=":red:952523311395528728",
-                value="794274172813312000",
-                description="#FF3C28",
-            ),
-            SelectOption(
-                label="Crimson",
-                emoji=":crimson:952523311680745492",
-                value="794274956296847370",
-                description="#E10F00",
-            ),
-            SelectOption(
-                label="Orange",
-                emoji=":orange:952523311756218428",
-                value="794275894209282109",
-                description="#FAA005",
-            ),
-            SelectOption(
-                label="Golden",
-                emoji=":golden:952523311429074966",
-                value="794275428696064061",
-                description="#1EDC00",
-            ),
-            SelectOption(
-                label="Yellow",
-                emoji=":yellow:952523311697494086",
-                value="794274424777080884",
-                description="#E6FF00",
-            ),
-            SelectOption(
-                label="Green",
-                emoji=":green:952523311890452520",
-                value="794274561570504765",
-                description="#1EDC00",
-            ),
-            SelectOption(
-                label="Lime",
-                emoji=":lime:952523311865270302",
-                value="794276035326902342",
-                description="#82FF96",
-            ),
-            SelectOption(
-                label="Cyan",
-                emoji=":cyan:952523311735255100",
-                value="794276172762185799",
-                description="#96F5F5",
-            ),
-            SelectOption(
-                label="Light Blue",
-                emoji=":light_blue:952523313794670622",
-                value="794274301707812885",
-                description="#0AB9E6",
-            ),
-            SelectOption(
-                label="Deep Blue",
-                emoji=":deep_blue:952523311680725013",
-                value="794275553477394475",
-                description="#4655F5",
-            ),
-            SelectOption(
-                label="Violet",
-                emoji=":violet:952523311743660052",
-                value="794275765533278208",
-                description="#B400E6",
-            ),
-            SelectOption(
-                label="Pink",
-                emoji=":pink:952523311743635486",
-                value="794274741061025842",
-                description="#FF3278",
-            ),
-            SelectOption(
-                label="Light Brown",
-                emoji=":light_brown:952523311764627536",
-                value="794275107958292500",
-                description="#D7AA73",
-            ),
-            SelectOption(
-                label="Dark Brown",
-                emoji=":dark_brown:952523311642972200",
-                value="794275288271028275",
-                description="#C88D32",
-            ),
-            SelectOption(
-                label="Silver",
-                emoji=":silver:952523311680745532",
-                value="850018780762472468",
-                description="#C0C0C0",
-            ),
-            SelectOption(
-                label="Gray",
-                emoji=":gray:952523311714295898",
-                value="794273806176223303",
-                description="#828282",
-            ),
-        ],
-        min_values=0,
-    )
-    async def colors_choice(self, itx: Interaction[CustomBot], sct: Select):
-        await self.choice(itx, sct)
+    async def on_error(self, itx: Interaction[CustomBot], error: Exception, item, /) -> None:
+        itx.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
 
-    @select(
-        placeholder="Utility Roles",
-        custom_id="basic",
-        min_values=0,
-        max_values=3,
-        options=[
-            SelectOption(
-                label="Announcements",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="908809235012419595",
-                description="Get pinged during announcements.",
-            ),
-            SelectOption(
-                label="Bump Reminder",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="1008443862559240312",
-                description="Reminds you to bump the server",
-            ),
-            SelectOption(
-                label="Don't Ping Me!",
-                emoji="\N{DIAMOND SHAPE WITH A DOT INSIDE}",
-                value="1092498088347844649",
-                description="Warns people not to ping you.",
-            ),
-        ],
-    )
-    async def basic_choice(self, itx: Interaction[CustomBot], sct: Select):
-        await self.choice(itx, sct)
 
+class BasicRoleSelect(AuxRoleView):
     @select(
         placeholder="AFK Schedule",
         custom_id="afk",
@@ -447,10 +316,17 @@ class BasicRoleSelect(RoleSelect):
 
 
 class RPSearchManage(View):
-    def __init__(self, msg_id: int, member_id: int | Member, ocs: set[int | Character] = None):
+    def __init__(
+        self,
+        msg_id: int,
+        member_id: int | Member,
+        ocs: set[int | Character] = None,
+        server_id: int = None,
+    ):
         super(RPSearchManage, self).__init__(timeout=None)
         if not isinstance(member_id, int):
             member_id = member_id.id
+        self.server_id = server_id
         self.member_id = member_id
         self.check_ocs.custom_id = str(msg_id)
         self.ocs = ocs
@@ -467,18 +343,14 @@ class RPSearchManage(View):
         await resp.defer(ephemeral=True, thinking=True)
         db = itx.client.mongo_db("Characters")
         items = [x.id if isinstance(x, Character) else x for x in self.ocs]
-        if not (
-            ocs := [
-                Character.from_mongo_dict(x)
-                async for x in db.find(
-                    {
-                        "id": {"$in": items},
-                        "author": self.member_id,
-                    }
-                )
-            ]
-        ):
-            ocs = [Character.from_mongo_dict(x) async for x in db.find({"author": self.member_id})]
+
+        key = {
+            "author": self.member_id,
+            "server": self.server_id or itx.guild_id,
+        }
+
+        if not (ocs := [Character.from_mongo_dict(x) async for x in db.find({"id": {"$in": items}} | key)]):
+            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
 
         view = CharactersView(
             member=itx.user,
@@ -489,7 +361,7 @@ class RPSearchManage(View):
         )
         embed = view.embed
         if member := itx.guild.get_member(self.member_id) or itx.client.get_user(self.member_id):
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar.url)
+            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
         else:
             member = f"User(ID={self.member_id})"
         async with view.send(ephemeral=True, single=True) as data:
@@ -601,7 +473,7 @@ class RPModal(Modal):
             return False
         user = self.to_user or self.user
         if (val := cog.role_cool_down.get(user.id)) and hours(val) < 1:  # type: ignore
-            msg = f"Pinging {user.mention} is in cool down, check the pings at <#1061008601335992422>."
+            msg = f"Pinging {user.mention} is in cool down, check the pings at RP-Planning."
             await resp.send_message(time_message(msg, 3600 - seconds(val)), ephemeral=True)
             return False
         return True
@@ -644,18 +516,24 @@ class RPModal(Modal):
                                 )
                                 if item.isdigit()
                             ]
-                        }
+                        },
+                        "author": self.user.id,
+                        "server": itx.guild_id,
                     }
                 )
             ]
         )
+
+        db1 = itx.client.mongo_db("Server")
+        server_info = await db1.find_one({"id": itx.guild_id})
+        server_info = server_info or {}
 
         if isinstance(item := self.to_user, Role):
             name, reference_name = item.name, f"{self.user.display_name}▷{item.name}"
         elif isinstance(item, Member):
             name, reference_name = item.display_name, f"▷{self.to_user.display_name}"
         else:
-            item = itx.guild.get_role(1110599604090716242) or self.user
+            item = itx.guild.get_role(server_info.get("looking_for_rp")) or self.user
             name, reference_name = "Looking for RP", f"{self.user.display_name}▷"
 
         embed = Embed(
@@ -670,8 +548,9 @@ class RPModal(Modal):
 
         items = sorted(set(items or self.ocs), key=lambda x: x.last_used or x.id, reverse=True)
 
-        if not (channel := guild.get_channel(1061008601335992422)):
-            channel: ForumChannel = await guild.fetch_channel(1061008601335992422)
+        rp_planning_id = server_info.get("rp_planning")
+        if not (channel := guild.get_channel(rp_planning_id)):
+            channel: ForumChannel = await guild.fetch_channel(rp_planning_id)
 
         base = await channel.create_thread(
             name=safe_username(reference_name),
@@ -697,7 +576,7 @@ class RPModal(Modal):
         await itx.followup.send(embed=aux_embed, ephemeral=True, view=aux_view)
 
         db = itx.client.mongo_db("OC Background")
-        if img := await db.find_one({"author": self.user.id}):
+        if img := await db.find_one({"author": self.user.id, "server": guild.id}):
             img = img["image"]
 
         if oc_file := await itx.client.get_file(Character.collage(items, background=img)):

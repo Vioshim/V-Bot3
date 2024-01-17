@@ -95,24 +95,41 @@ class Roles(commands.Cog):
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
-        channel = self.bot.get_partial_messageable(719709333369258015, guild_id=719343092963999804)
-        msg = channel.get_partial_message(1086478795520872478)
-        await msg.edit(view=BasicRoleSelect(timeout=None))
+
+        db = self.bot.mongo_db("Server")
+        async for item in db.find({"self_roles": {"$exists": True}}):
+            info = item.get("self_roles_info", {})
+            channel = self.bot.get_partial_messageable(item["channel"], guild_id=item["id"])
+            msg = channel.get_partial_message(item["message"])
+            await msg.edit(view=BasicRoleSelect(items=info.get("items", [])))
+
         self.bot.logger.info("Finished loading Self Roles")
 
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member):
         roles = set(before.roles) ^ set(after.roles)
-        if roles and (no_ping_role := get(roles, id=1092498088347844649)):
+        if roles and (no_ping_role := get(roles, name="Don't Ping Me")):
+            db = self.bot.mongo_db("Server")
+            if not (
+                item := await db.find_one(
+                    {
+                        "id": after.guild.id,
+                        "self_roles.no_ping_automod": {"$exists": True},
+                    },
+                    {
+                        "_id": 0,
+                        "self_roles.no_ping_automod": 1,
+                    },
+                )
+            ):
+                return
+
             members_text = " ".join(str(x.id) for x in sorted(no_ping_role.members, key=lambda x: x.id))
-            rule = await after.guild.fetch_automod_rule(1110410673164390532)
+            rule = await after.guild.fetch_automod_rule(item["self_roles"]["no_ping_automod"])
             regex_patterns = [f"<@({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text) if line]
             if rule.trigger.regex_patterns != regex_patterns:
-                await rule.edit(
-                    trigger=AutoModTrigger(
-                        regex_patterns=regex_patterns,
-                    ),
-                )
+                trigger = AutoModTrigger(regex_patterns=regex_patterns)
+                await rule.edit(trigger=trigger, name="No Ping Automod")
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
@@ -173,7 +190,7 @@ class Roles(commands.Cog):
         if not (users := {x for x in msg.mentions if x != msg.author and isinstance(x, Member)}):
             return
 
-        no_ping_role = get(msg.guild.roles, id=1092498088347844649)
+        no_ping_role = get(msg.guild.roles, name="Don't Ping Me")
         if (
             not (msg.author.guild_permissions.manage_messages or msg.author.guild_permissions.administrator)
             and no_ping_role
@@ -231,11 +248,12 @@ class Roles(commands.Cog):
             self.role_cool_down.setdefault(item["role"], date)
             self.cool_down[item["member"]] = max(self.cool_down[item["member"]], date)
             self.role_cool_down[item["role"]] = max(self.role_cool_down[item["role"]], date)
-            view = RPSearchManage(msg_id=item["id"], member_id=item["member"], ocs=item["ocs"])
+            view = RPSearchManage(
+                msg_id=item["id"], member_id=item["member"], ocs=item["ocs"], server_id=item["server"]
+            )
             self.bot.add_view(view, message_id=item["id"])
 
-    # @app_commands.command()
-    # @app_commands.guilds(719343092963999804)
+    @app_commands.command()
     async def ping(self, itx: Interaction[CustomBot], member: Member | User):
         """Command used to ping roles, and even users.
 
@@ -255,7 +273,6 @@ class Roles(commands.Cog):
             await itx.response.send_modal(modal)
 
     @app_commands.command()
-    @app_commands.guilds(719343092963999804)
     async def afk(self, itx: Interaction[CustomBot], member: Member | User):
         """Check users' AFK Schedule
 
