@@ -395,7 +395,10 @@ class WikiComplex(Complex[WikiEntry]):
         context: commands.Context[Client],
         edit_mode: bool = False,
     ):
-        member, target = context.author, context.interaction or context.channel
+        if is instance(context, Interaction):
+            member, target = context.user, context or context.channel
+        else:
+            member, target = context.author, context.interaction or context.channel
         self.context = context
         super(WikiComplex, self).__init__(
             member=member,
