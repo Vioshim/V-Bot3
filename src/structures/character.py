@@ -73,9 +73,6 @@ from src.utils.imagekit import Fonts, ImageKit
 __all__ = ("Character", "CharacterArg", "Kind", "Size")
 
 
-from enum import Enum
-
-
 class AgeGroup(Enum):
     Unknown = 0, "The age is Unknown."
     Egg = 1, "Newly hatched Pokémon."
