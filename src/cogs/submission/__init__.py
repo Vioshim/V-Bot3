@@ -725,8 +725,8 @@ class Submission(commands.Cog):
 
         if thread.parent_id == item.get("rp_planning"):
             db = self.bot.mongo_db("RP Search Banner")
-            if item := await db.find_one({"author": thread.owner.id}):
-                image = item["image"]
+            if aux := await db.find_one({"author": thread.owner.id, "server": thread.guild.id}):
+                image = aux["image"]
             else:
                 image = DEFAULT_IMAGE
 
