@@ -1901,7 +1901,7 @@ class SubmissionView(Basic):
         ]
         ocs.sort(key=lambda x: x.name)
 
-        if info := db1.find_one(
+        if info := await db1.find_one(
             {"id": itx.guild_id, "looking_for_rp": {"$exists": True}},
             {
                 "_id": 0,
