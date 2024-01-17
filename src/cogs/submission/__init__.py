@@ -196,7 +196,7 @@ class Submission(commands.Cog):
             member = Object(id=member)
 
         db = self.bot.mongo_db("Roleplayers")
-        db1 = self.bot.mongo_db("Characters")
+        db1 = self.bot.mongo_db("Server")
 
         thread = None
 
