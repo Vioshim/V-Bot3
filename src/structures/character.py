@@ -75,11 +75,18 @@ __all__ = ("Character", "CharacterArg", "Kind", "Size")
 
 class AgeGroup(Enum):
     Unknown = 0, "The age is Unknown."
-    Child = 14, "Considered a child."
+    Egg = 1, "Newly hatched Pokémon."
+    Baby = 5, "Recently evolved from an egg, still in early stages"
+    Toddler = 10, "Learning and developing, but not yet fully mature."
+    Child = 14, "Considered a child in terms of maturity."
     Adolescent = 25, "14 - 24 (Rough equivalent in human years)"
-    Adult = 50, "25 - 49 (Rough equivalent in human years)"
-    Elderly = 100, "50 - 99 (Rough equivalent in human years)"
-    Ancient = 100, "Magic, pokeball from past or lived long enough."
+    Teenager = 35, "25 - 34 (Rough equivalent in human years)"
+    Young_Adult = 50, "35 - 49 (Rough equivalent in human years)"
+    Adult: 65 = "50 - 64 (Rough equivalent in human years)"
+    Middle_Aged = 80, "65 - 79 (Rough equivalent in human years)"
+    Senior = 100, "80 - 99 (Rough equivalent in human years)"
+    Elderly = 125, "100 - 124 (Rough equivalent in human years)"
+    Ancient = 150, "Magic, pokeball from past or lived long enough."
 
     @classmethod
     def parse(cls, item: AgeGroup | Optional[int] | str):
@@ -104,6 +111,10 @@ class AgeGroup(Enum):
     def from_number(cls, item: Optional[int]):
         base = item or 0
         return next((x for x in cls if x.value[0] >= base), cls.Ancient)
+
+    @property
+    def title(self):
+        return self.name.replace("_", " ")
 
     @property
     def key(self):
