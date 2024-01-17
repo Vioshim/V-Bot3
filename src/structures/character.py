@@ -73,20 +73,23 @@ from src.utils.imagekit import Fonts, ImageKit
 __all__ = ("Character", "CharacterArg", "Kind", "Size")
 
 
+from enum import Enum
+
+
 class AgeGroup(Enum):
     Unknown = 0, "The age is Unknown."
     Egg = 1, "Newly hatched Pokémon."
     Baby = 5, "Recently evolved from an egg, still in early stages"
     Toddler = 10, "Learning and developing, but not yet fully mature."
-    Child = 14, "Considered a child in terms of maturity."
-    Adolescent = 25, "14 - 24 (Rough equivalent in human years)"
-    Teenager = 35, "25 - 34 (Rough equivalent in human years)"
-    Young_Adult = 50, "35 - 49 (Rough equivalent in human years)"
-    Adult = 65, "50 - 64 (Rough equivalent in human years)"
-    Middle_Aged = 80, "65 - 79 (Rough equivalent in human years)"
-    Senior = 100, "80 - 99 (Rough equivalent in human years)"
-    Elderly = 125, "100 - 124 (Rough equivalent in human years)"
-    Ancient = 150, "Magic, pokeball from past or lived long enough."
+    Child = 15, "Considered a child in terms of maturity."
+    Adolescent = 18, "15 - 17 (Rough equivalent in human years)"
+    Young_Adult = 26, "18 - 25 (Rough equivalent in human years)"
+    Adult = 40, "26 - 39 (Rough equivalent in human years)"
+    Middle_Aged = 55, "40 - 54 (Rough equivalent in human years)"
+    Senior = 70, "55 - 69 (Rough equivalent in human years)"
+    Elderly = 85, "70 - 84 (Rough equivalent in human years)"
+    Ancient = 100, "85 - 99 (Rough equivalent in human years)"
+    Timeless = 125, "Magic, pokeball from past, or lived long enough."
 
     @classmethod
     def parse(cls, item: AgeGroup | Optional[int] | str):
