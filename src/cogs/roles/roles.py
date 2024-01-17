@@ -214,7 +214,7 @@ class AFKModal(Modal, title="Current Time"):
 
 
 class RoleSelect(Select):
-    async def role_choice(self, itx: Interaction[CustomBot]):
+    async def callback(self, itx: Interaction[CustomBot]):
         resp: InteractionResponse = itx.response
         member: Member = itx.client.supporting.get(itx.user, itx.user)
         guild: Guild = itx.guild
