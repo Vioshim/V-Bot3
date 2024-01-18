@@ -213,27 +213,36 @@ class Kind(Enum):
 
 class Size(Enum):
     # fmt: off
-    XXXL =  1.25,    1.25,    6.50, 235.000  # noqa: E222
-    XXXL_ = 1.21875, 1.21875, 5.25, 214.125  # noqa: E222
-    XXL =   1.1875,  1.1875,  4.00, 193.250  # noqa: E222
-    XXL_ =  1.15625, 1.15625, 3.00, 172.375  # noqa: E222
-    XL =    1.125,   1.125,   2.00, 151.500  # noqa: E222
-    XL_ =   1.09375, 1.09375, 1.75, 130.625  # noqa: E222
-    L =     1.0625,  1.0625,  1.50, 109.750  # noqa: E222
-    L_ =    1.03125, 1.03125, 1.35, 88.8750  # noqa: E222
-    M =     1,       1,       1.20, 68.0000  # noqa: E222
-    S_ =    0.96875, 0.96875, 1.10, 59.5000  # noqa: E222
-    S =     0.9375,  0.9375,  1.00, 51.0000  # noqa: E222
-    XS_ =   0.90625, 0.90625, 0.90, 42.5000  # noqa: E222
-    XS =    0.875,   0.875,   0.80, 34.0000  # noqa: E222
-    XXS_ =  0.84375, 0.84375, 0.65, 25.6500  # noqa: E222
-    XXS =   0.8125,  0.8125,  0.50, 17.3000  # noqa: E222
-    XXXS_ = 0.78125, 0.78125, 0.35, 8.95000  # noqa: E222
-    XXXS =  0.75,    0.75,    0.30, 4.60000  # noqa: E222
+    XXXL =  1.25,    6.50, 235.000  # noqa: E222
+    XXXL_ = 1.21875, 5.25, 214.125  # noqa: E222
+    XXL =   1.1875,  4.00, 193.250  # noqa: E222
+    XXL_ =  1.15625, 3.00, 172.375  # noqa: E222
+    XL =    1.125,   2.00, 151.500  # noqa: E222
+    XL_ =   1.09375, 1.75, 130.625  # noqa: E222
+    L =     1.0625,  1.50, 109.750  # noqa: E222
+    L_ =    1.03125, 1.35, 88.8750  # noqa: E222
+    M =     1.,      1.20, 68.0000  # noqa: E222
+    S_ =    0.96875, 1.10, 59.5000  # noqa: E222
+    S =     0.9375,  1.00, 51.0000  # noqa: E222
+    XS_ =   0.90625, 0.90, 42.5000  # noqa: E222
+    XS =    0.875,   0.80, 34.0000  # noqa: E222
+    XXS_ =  0.84375, 0.65, 25.6500  # noqa: E222
+    XXS =   0.8125,  0.50, 17.3000  # noqa: E222
+    XXXS_ = 0.78125, 0.35, 8.95000  # noqa: E222
+    XXXS =  0.75,    0.30, 4.60000  # noqa: E222
     # fmt: on
 
     def height_value(self, value: float = 0):
-        proportion, _, size, _ = self.value
+        proportion, size, _ = self.value
+        if value:
+            value *= proportion
+        else:
+            value = size
+
+        return value
+
+    def weight_value(self, value: float = 0):
+        proportion, _, size = self.value
         if value:
             value *= proportion
         else:
@@ -261,15 +270,6 @@ class Size(Enum):
         value = self.height_value(value)
         feet, inches = self.meters_to_ft_inches(value)
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
-
-    def weight_value(self, value: float = 0):
-        _, proportion, _, size = self.value
-        if value:
-            value *= proportion
-        else:
-            value = size
-
-        return value
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
