@@ -206,7 +206,7 @@ class Submission(commands.Cog):
 
         data = data or {}
 
-        if not (info := self.data_db.get(thread.guild.id)):
+        if not (info := self.data_db.get(server_id)):
             db1 = self.bot.mongo_db("Server")
             info = await db1.find_one(
                 {"id": server_id, "oc_list": {"$exists": True}},
