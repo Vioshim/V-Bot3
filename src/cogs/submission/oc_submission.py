@@ -1528,10 +1528,7 @@ class CreationOCView(Basic):
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple, row=3)
     async def printer(self, itx: Interaction[CustomBot], _: Button):
         await itx.response.defer(ephemeral=True, thinking=True)
-        if await itx.client.is_owner(itx.user):
-            oc_file = await self.oc.to_pdf(itx.client)
-        else:
-            oc_file = await self.oc.to_docx(itx.client)
+        oc_file = await self.oc.to_docx(itx.client)
         await itx.followup.send(file=oc_file, ephemeral=True)
         itx.client.logger.info("User %s printed %s", str(itx.user), repr(self.oc))
 
