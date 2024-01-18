@@ -144,10 +144,7 @@ class PingView(View):
     @button(emoji="\N{PRINTER}", style=ButtonStyle.blurple)
     async def printer(self, ctx: Interaction[CustomBot], _: Button):
         await ctx.response.defer(ephemeral=True, thinking=True)
-        if await ctx.client.is_owner(ctx.user):
-            oc_file = await self.oc.to_pdf(ctx.client)
-        else:
-            oc_file = await self.oc.to_docx(ctx.client)
+        oc_file = await self.oc.to_docx(ctx.client)
         await ctx.followup.send(file=oc_file, ephemeral=True)
         ctx.client.logger.info("User %s printed %s", str(ctx.user), repr(self.oc))
 

@@ -43,6 +43,7 @@ from discord import (
     User,
     app_commands,
 )
+from discord.app_commands import ContextMenu
 from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import MISSING, find, get
@@ -121,14 +122,8 @@ class Submission(commands.Cog):
         self.data_db: dict[int, dict] = {}
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
-        self.itx_menu1 = app_commands.ContextMenu(
-            name="Moves & Abilities",
-            callback=self.info_checker,
-        )
-        self.itx_menu2 = app_commands.ContextMenu(
-            name="Check User's OCs",
-            callback=self.check_ocs,
-        )
+        self.itx_menu1 = ContextMenu(name="Moves & Abilities", callback=self.info_checker)
+        self.itx_menu2 = ContextMenu(name="Check User's OCs", callback=self.check_ocs)
 
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.itx_menu1)
