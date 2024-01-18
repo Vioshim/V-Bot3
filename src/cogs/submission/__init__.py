@@ -871,7 +871,7 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("RP Logs")
 
-        if not (item := self.data_db.get(message.guild.id)):
+        if not (info := self.data_db.get(message.guild.id)):
             db1 = self.bot.mongo_db("Server")
             info = await db1.find_one(
                 {"id": message.guild.id, "oc_submission": {"$exists": True}},
