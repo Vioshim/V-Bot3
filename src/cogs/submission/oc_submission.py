@@ -1831,7 +1831,6 @@ class TemplateSelectionView(Basic):
             for x in Template
             if not x.restricted or self.member.guild_permissions.administrator
         ]
-        self.add_item(self.show_template)
 
     @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
     async def show_template(self, itx: Interaction[CustomBot], sct: Select) -> None:
