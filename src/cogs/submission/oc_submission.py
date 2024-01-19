@@ -33,7 +33,9 @@ from discord import (
     Object,
     SelectOption,
     TextStyle,
+    User,
 )
+from discord.abc import Messageable
 from discord.ui import (
     Button,
     Modal,
@@ -1816,12 +1818,10 @@ class TemplateView(View):
         self.stop()
 
 
-class SubmissionView(Basic):
-    @select(
-        placeholder="Click here to read our Templates",
-        row=0,
-        custom_id="read",
-        options=[
+class TemplateSelectionView(Basic):
+    def __init__(self, itx: Interaction[CustomBot], member: Member):
+        super(TemplateSelectionView, self).__init__(target=itx, member=member, timeout=None)
+        self.show_template.options = [
             SelectOption(
                 label=x.title,
                 value=x.name,
@@ -1829,8 +1829,11 @@ class SubmissionView(Basic):
                 emoji=RICH_PRESENCE_EMOJI,
             )
             for x in Template
-        ],
-    )
+            if not x.restricted or self.member.guild_permissions.administrator
+        ]
+        self.add_item(self.show_template)
+
+    @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
     async def show_template(self, itx: Interaction[CustomBot], sct: Select) -> None:
         await itx.response.defer(ephemeral=True, thinking=True)
 
@@ -1847,7 +1850,9 @@ class SubmissionView(Basic):
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await itx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
 
-    @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0, row=1)
+
+class SubmissionView(Basic):
+    @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0, row=0)
     async def user_ocs(self, itx: Interaction[CustomBot], sct: UserSelect):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         member: Member = sct.values[0] if sct.values else itx.user
@@ -1862,7 +1867,7 @@ class SubmissionView(Basic):
     @button(
         label="Create",
         emoji="\N{PENCIL}",
-        row=2,
+        row=1,
         custom_id="add-oc",
         style=ButtonStyle.blurple,
     )
@@ -1891,7 +1896,7 @@ class SubmissionView(Basic):
     @button(
         label="Modify",
         emoji="\N{PENCIL}",
-        row=2,
+        row=1,
         custom_id="modify-oc",
         style=ButtonStyle.blurple,
     )
@@ -1908,7 +1913,7 @@ class SubmissionView(Basic):
         await view.simple_send(title="Select Character to modify")
         itx.client.logger.info("%s is modifying characters", str(itx.user))
 
-    @button(label="Delete", style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=2, custom_id="delete-oc")
+    @button(label="Delete", style=ButtonStyle.red, emoji="\N{WASTEBASKET}", row=1, custom_id="delete-oc")
     async def oc_delete(self, itx: Interaction[CustomBot], _: Button):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         resp: InteractionResponse = itx.response
@@ -1956,11 +1961,11 @@ class SubmissionView(Basic):
         view = RegionViewComplex(member=itx.user, target=itx, ocs=ocs)
         await view.simple_send(ephemeral=True)
 
-    @button(label="Ticket", emoji=STICKER_EMOJI, row=3, custom_id="ticket")
+    @button(label="Ticket", emoji=STICKER_EMOJI, row=2, custom_id="ticket")
     async def create_ticket(self, itx: Interaction[CustomBot], _: Button):
         await itx.response.send_modal(TicketModal(timeout=None))
 
-    @button(label="RP Search", row=3, custom_id="rp-search", emoji="🔍")
+    @button(label="RP Search", row=2, custom_id="rp-search", emoji="🔍")
     async def rp_search(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
         db1 = itx.client.mongo_db("Characters")
@@ -1996,9 +2001,12 @@ class SubmissionView(Basic):
         if await modal.check(itx):
             await itx.response.send_modal(modal)
 
-    @button(emoji="\N{INFORMATION SOURCE}", label="Info", row=3, custom_id="info")
-    async def info(self, itx: Interaction[CustomBot], _: Button):
-        tree = WikiEntry.from_list([x async for x in itx.client.mongo_db("Wiki").find({"server": itx.guild_id})])
-        edit_mode = (await itx.client.is_owner(itx.user)) or itx.permissions.administrator
-        view = WikiComplex(tree=tree, context=itx, edit_mode=edit_mode)
-        await view.simple_send(ephemeral=True, embeds=tree.embeds)
+    @button(emoji="\N{INFORMATION SOURCE}", label="Templates (Alternative)", row=2, custom_id="info")
+    async def info(self, itx: Interaction[CustomBot], btn: Button):
+        view = TemplateSelectionView(itx=itx, member=itx.user)
+        embed = Embed(
+            title=btn.label,
+            description="Select the template you want to use.",
+            color=Color.blurple(),
+        )
+        await itx.response.send_message(embed=embed, view=view, ephemeral=True)
