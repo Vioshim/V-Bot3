@@ -133,7 +133,7 @@ class PingView(View):
         guild: Guild = interaction.guild
         resp = interaction.response
         registered = guild.get_role(719642423327719434)
-        if registered not in interaction.user.roles:
+        if registered and registered not in interaction.user.roles:
             await resp.send_message("You don't have registered role", ephemeral=True)
             return False
         if not guild.get_member(self.oc.author):

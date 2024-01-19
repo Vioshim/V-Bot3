@@ -159,9 +159,11 @@ class TemplateItem:
     description: str
     fields: frozendict[str, str]
     docs: frozendict[str, str]
+    restricted: bool = False
 
     def __init__(self, data: dict[str, str]) -> None:
         self.description = data.get("description", "")
+        self.restricted = data.get("restricted", False)
         modifier = data.get("modifier", {})
         default = dict(
             Name="Name",
@@ -173,71 +175,116 @@ class TemplateItem:
             Moveset="Move, Move, Move, Move, Move, Move",
         )
 
-        exclude = data.get("exclude", [])
+        exclude = data.get("exclude", ["Types"])
         fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
         self.fields = frozendict(fields)
-        self.docs = frozendict(data.get("docs", {}))
+        self.docs = frozendict(
+            data.get(
+                "docs",
+                {
+                    "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
+                    "Unique Trait": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
+                },
+            )
+        )
 
 
 class Template(TemplateItem, Enum):
-    Pokemon = dict(
-        description="Normal residents that resemble Pokemon.",
-        exclude=["Types"],
-        docs={
-            "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
-            "Unique Trait": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
-        },
+    Pokemon = dict(description="Normal residents that resemble Pokemon.")
+    Legendary = dict(
+        description="Normal residents that resemble Legendary Pokemon.",
+        restricted=True,
     )
-    Fusion = dict(
+    Mythical = dict(
+        description="Normal residents that resemble Mythical Pokemon.",
+        restricted=True,
+    )
+    UltraBeast = dict(
+        description="Normal residents that resemble Ultra Beasts.",
+        restricted=True,
+    )
+    Paradox = dict(
+        description="Normal residents that resemble Paradox Pokemon.",
+        restricted=True,
+    )
+    Mega = dict(
+        description="Permanent Mega Evolutions.",
+        docs={
+            "Standard": "1QRlm692RM5lXBv3bx8YKdnkkeYqz8bYY9MLzR8ElX4s",
+            "Unique Trait": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
+        },
+        restricted=True,
+    )
+    Crossbreed = dict(
         description="Individuals that share traits of two species.",
-        modifier={"Species": ("Species", "Species 1, Species 2")},
+        modifier={
+            "Species": ("Species", "Species 1, Species 2"),
+        },
+        exclude=[],
         docs={
             "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
             "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
     )
-    # Variant = dict(
-    #     description="Fan-made. Species variations (movesets, types)",
-    #     modifier={"Species": ("Variant", "Variant Species")},
-    #     docs={
-    #         "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
-    #         "Unique Trait": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
-    #     },
-    # )
-    # CustomPokemon = dict(
-    #     description="Fan-made. They are normal residents.",
-    #     modifier={"Species": ("Fakemon", "Fakemon Species")},
-    #     docs={
-    #         "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-    #         "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
-    #         "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
-    #         "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
-    #     },
-    # )
-    # CustomMega = dict(
-    #     description="Fan-made. Mega evolved and kept stuck like this.",
-    #     modifier={"Species": ("Fakemon", "Mega Species")},
-    #     docs={
-    #         "Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0",
-    #         "Unique Trait": "1tQPKNdxQTA33eUwNgWVGZMYJ3iQzloZIbSNirRXqhj4",
-    #     },
-    # )
-    # CustomParadox = dict(
-    #     description="Fan-made. From distant past/future, somehow ended up here.",
-    #     modifier={"Species": ("Fakemon", "Paradox Species")},
-    #     docs={
-    #         "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-    #         "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
-    #     },
-    # )
-    # CustomUltraBeast = dict(
-    #     description="Fan-made. From other dimensions, somehow ended up here.",
-    #     modifier={"Species": ("Fakemon", "Ultra Beast Species")},
-    #     docs={
-    #         "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-    #         "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
-    #     },
-    # )
+    Fusion = dict(
+        description="Individuals that share traits of two species.",
+        modifier={
+            "Species": ("Species", "Species 1, Species 2"),
+        },
+        exclude=[],
+        docs={
+            "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
+            "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
+        },
+        restricted=True,
+    )
+    Variant = dict(
+        description="Fan-made. Species variations (movesets, types)",
+        modifier={"Species": ("Variant", "Variant Species")},
+        docs={
+            "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
+            "Unique Trait": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
+        },
+        restricted=True,
+    )
+    CustomPokemon = dict(
+        description="Fan-made. They are normal residents.",
+        modifier={"Species": ("Fakemon", "Fakemon Species")},
+        docs={
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+            "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
+            "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
+        },
+        restricted=True,
+    )
+    CustomMega = dict(
+        description="Fan-made. Mega evolved and kept stuck like this.",
+        modifier={"Species": ("Fakemon", "Mega Species")},
+        docs={
+            "Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0",
+            "Unique Trait": "1tQPKNdxQTA33eUwNgWVGZMYJ3iQzloZIbSNirRXqhj4",
+        },
+        restricted=True,
+    )
+    CustomParadox = dict(
+        description="Fan-made. From distant past/future, somehow ended up here.",
+        modifier={"Species": ("Fakemon", "Paradox Species")},
+        docs={
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+        restricted=True,
+    )
+    CustomUltraBeast = dict(
+        description="Fan-made. From other dimensions, somehow ended up here.",
+        modifier={"Species": ("Fakemon", "Ultra Beast Species")},
+        docs={
+            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
+            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
+        },
+        restricted=True,
+    )
 
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
         choices: list[Species] = []
@@ -266,14 +313,7 @@ class Template(TemplateItem, Enum):
         default_measure: bool = False
 
         match self.name:
-            case "Pokemon":
-                oc.species, abilities = choices[0], choices[0].abilities.copy()
-                if len(abilities) <= 2:
-                    oc.abilities = abilities
-                else:
-                    oc.abilities &= abilities
-                default_measure = True
-            case "Fusion":
+            case "Fusion" | "Crossbreed":
                 oc.species = Fusion(*choices, ratio=0.5)
                 default_measure = True
             case "Variant":
@@ -338,6 +378,13 @@ class Template(TemplateItem, Enum):
                                 base_image=oc.image_url,
                                 movepool=Movepool(other=oc.moveset.copy()),
                             )
+            case _:
+                oc.species, abilities = choices[0], choices[0].abilities.copy()
+                if len(abilities) <= 2:
+                    oc.abilities = abilities
+                else:
+                    oc.abilities &= abilities
+                default_measure = True
 
         if species := oc.species:
             moves = species.total_movepool()
@@ -361,12 +408,24 @@ class Template(TemplateItem, Enum):
     @property
     def total_species(self) -> frozenset[Species]:
         match self.name:
-            case "CustomUltraBeast":
-                mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast))
-            case "Pokemon" | "Fusion":
+            case "Pokemon" | "Crossbreed":
                 mon_total = Pokemon.all()
+            case "Fusion":
+                mon_total = Species.all()
+            case "Legendary":
+                mon_total = Legendary.all()
+            case "Mythical":
+                mon_total = Mythical.all()
+            case "UltraBeast":
+                mon_total = UltraBeast.all()
+            case "Paradox":
+                mon_total = Paradox.all()
+            case "Mega":
+                mon_total = Mega.all()
             case "CustomMega" | "Variant" | "CustomParadox":
                 mon_total = Species.all(exclude=(Mega, Paradox))
+            case "CustomUltraBeast":
+                mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast))
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
@@ -549,7 +608,10 @@ class SpeciesField(TemplateField, required=True):
         if not (species := oc.species):
             return "Missing Species"
 
-        if species.banned or isinstance(
+        if species.banned:
+            return f"{species.name} as species are banned."
+
+        if isinstance(
             species,
             (
                 Mythical,
@@ -563,7 +625,7 @@ class SpeciesField(TemplateField, required=True):
                 Variant,
             ),
         ):
-            return f"{species.name} as species are banned."
+            return "Kind of species not allowed."
 
         if isinstance(
             species,
@@ -1373,6 +1435,7 @@ class CreationOCView(Basic):
                 description=x.description[:100],
             )
             for x in Template
+            if not x.restricted or self.member.guild_permissions.administrator
         ]
         self.fields1.options.clear()
         self.fields2.options.clear()
@@ -1402,7 +1465,13 @@ class CreationOCView(Basic):
         self.cancel.label = "Close this Menu"
         self.finish_oc.label = "Delete OC"
         self.help.label = "Request Help"
-        self.submit.disabled = bool(errors)
+
+        if bool(errors):
+            self.submit.style = ButtonStyle.red
+        else:
+            self.submit.style = ButtonStyle.green
+
+        self.submit.disabled = False if self.member.guild_permissions.administrator else bool(errors)
 
         if embed_update:
             embeds = self.oc.embeds
@@ -1415,7 +1484,13 @@ class CreationOCView(Basic):
             self.oc.species = None
             items = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
             self.progress -= {x.name for x in items}
-            self.ref_template = Template[sct.values[0]]
+            ref_template = Template[sct.values[0]]
+
+            if ref_template.restricted and not self.member.guild_permissions.administrator:
+                self.ref_template = Template.Pokemon
+            else:
+                self.ref_template = ref_template
+
             self.oc.size = self.oc.weight = Size.M
             await self.update(itx)
         except Exception as e:
@@ -1757,10 +1832,17 @@ class SubmissionView(Basic):
         ],
     )
     async def show_template(self, itx: Interaction[CustomBot], sct: Select) -> None:
-        resp: InteractionResponse = itx.response
-        await resp.defer(ephemeral=True, thinking=True)
-        embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
+        await itx.response.defer(ephemeral=True, thinking=True)
+
         template = Template[sct.values[0]]
+
+        if template.restricted and not itx.user.guild_permissions.administrator:
+            return await itx.followup.send(
+                "This template is restricted to Administrators only.",
+                ephemeral=True,
+            )
+
+        embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
         embed.set_image(url="https://hmp.me/dx38")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
         await itx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
@@ -1768,9 +1850,8 @@ class SubmissionView(Basic):
     @select(cls=UserSelect, placeholder="Read User's OCs", custom_id="user-ocs", min_values=0, row=1)
     async def user_ocs(self, itx: Interaction[CustomBot], sct: UserSelect):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
-        resp: InteractionResponse = itx.response
         member: Member = sct.values[0] if sct.values else itx.user
-        await resp.defer(ephemeral=True, thinking=True)
+        await itx.response.defer(ephemeral=True, thinking=True)
         values = [Character.from_mongo_dict(x) async for x in db.find({"author": member.id, "server": itx.guild_id})]
         values.sort(key=lambda x: x.name)
         view = ModCharactersView(member=itx.user, target=itx, ocs=values)
