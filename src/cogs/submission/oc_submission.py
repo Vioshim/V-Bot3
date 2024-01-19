@@ -1834,8 +1834,6 @@ class TemplateSelectionView(Basic):
 
     @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
     async def show_template(self, itx: Interaction[CustomBot], sct: Select) -> None:
-        await itx.response.defer(ephemeral=True, thinking=True)
-
         template = Template[sct.values[0]]
 
         if template.restricted and not itx.user.guild_permissions.administrator:
@@ -1847,7 +1845,7 @@ class TemplateSelectionView(Basic):
         embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
         embed.set_image(url="https://hmp.me/dx38")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
-        await itx.followup.send(embed=embed, view=TemplateView(template), ephemeral=True)
+        await itx.response.edit_message(embed=embed, view=TemplateView(template))
 
 
 class SubmissionView(Basic):
