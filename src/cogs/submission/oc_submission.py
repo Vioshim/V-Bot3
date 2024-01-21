@@ -33,9 +33,7 @@ from discord import (
     Object,
     SelectOption,
     TextStyle,
-    User,
 )
-from discord.abc import Messageable
 from discord.ui import (
     Button,
     Modal,
@@ -56,7 +54,6 @@ from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.pagination.wiki import WikiComplex, WikiEntry
 from src.structures.ability import ABILITIES_DEFINING, ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Nature, Size
