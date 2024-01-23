@@ -335,7 +335,7 @@ class Character:
     id: int = 0
     author: Optional[int] = None
     thread: Optional[int] = None
-    server: int = 719343092963999804
+    server: int = 1196879060173852702
     name: str = ""
     age: AgeGroup = AgeGroup.Unknown
     pronoun: frozenset[Pronoun] = field(default_factory=frozenset)
@@ -393,7 +393,7 @@ class Character:
         if isinstance(self.species, str):
             self.species = Species.from_ID(self.species)
         if not self.server:
-            self.server = 719343092963999804
+            self.server = 1196879060173852702
         if isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
         if isinstance(self.abilities, str):
@@ -468,7 +468,7 @@ class Character:
         if isinstance(self.image, int) and self.thread:
             return f"https://media.discordapp.net/attachments/{self.thread}/{self.image}/image.png"
         if isinstance(self.image, str) and self.image.startswith(
-            "https://media.discordapp.net/attachments/1045687852069040148/"
+            "https://media.discordapp.net/attachments/1196967811034132581/"
         ):
             return self.image
 

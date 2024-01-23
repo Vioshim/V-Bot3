@@ -41,9 +41,9 @@ ALL_MOVES_BY_NAME = frozendict()
 
 
 class Category(IntEnum):
-    Status = 1001887872221200506
-    Physical = 1001887867796205598
-    Special = 1001887870266658916
+    Status = 1080656476357525615
+    Physical = 1080656480446971914
+    Special = 1080656483190059038
 
     @property
     def url(self):

@@ -33,13 +33,10 @@ class PronounItem:
         image stored at Imagekit, defaults to None
     emoji: Optional[str]
         emoji that represents the pronoun, defaults to None
-    role_id: Optional[int]
-        discord role that represents the pronoun, defaults to None
     """
 
     image: Optional[str]
     emoji: str
-    role_id: int
 
 
 class Pronoun(PronounItem, Enum):
@@ -51,9 +48,9 @@ class Pronoun(PronounItem, Enum):
         deduces the Pronoun based on the given string.
     """
 
-    He = ("male_n8DIlBU0M.png", "\N{MALE SIGN}", 1178871573701214268)
-    She = ("female_bdjGCkuKH.png", "\N{FEMALE SIGN}", 1178871770590216313)
-    Them = (None, "\N{BLACK SQUARE BUTTON}", 1178871778584571934)
+    He = ("male_n8DIlBU0M.png", "\N{MALE SIGN}")
+    She = ("female_bdjGCkuKH.png", "\N{FEMALE SIGN}")
+    Them = (None, "\N{BLACK SQUARE BUTTON}")
 
     @classmethod
     def deduce(cls, item: str) -> Pronoun:
