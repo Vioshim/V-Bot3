@@ -59,6 +59,9 @@ class CustomRoleModal(Modal, title="Custom Role"):
         self.add_item(self.name)
         self.add_item(self.color)
 
+    async def on_error(self, itx: Interaction[CustomBot], error: Exception, /) -> None:
+        itx.client.logger.error("Ignoring exception in Modal %r", self, exc_info=error)
+
     async def interaction_check(self, interaction: Interaction[CustomBot]) -> bool:
         try:
             if self.color.value:
