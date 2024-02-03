@@ -88,6 +88,7 @@ class ReminderModal(Modal, title="Reminder"):
 class Reminder(commands.Cog):
     def __init__(self, bot: CustomBot) -> None:
         self.bot = bot
+        self.processed_reminders = set()
 
     async def cog_load(self) -> None:
         self.remind_action.start()
@@ -95,16 +96,23 @@ class Reminder(commands.Cog):
     async def cog_unload(self) -> None:
         self.remind_action.stop()
 
-    @loop(seconds=1)
+    @loop(seconds=5)
     async def remind_action(self):
         remind = self.bot.mongo_db("Reminder")
         tupper_log = self.bot.mongo_db("Tupper-logs")
-        condition = {"due": {"$lte": utcnow()}}
         embed = Embed(title="Reminder!", color=Color.blurple())
         embed.set_image(url=WHITE_BAR)
         embed.set_footer(text="You can react with ❌ to delete this message.")
 
-        async for item in remind.find(condition):
+        async for item in remind.find(
+            {
+                "due": {"$lte": utcnow()},
+                "_id": {"$nin": list(self.processed_reminders)},
+            }
+        ):
+
+            self.processed_reminders.add(item["_id"])
+
             author_id, channel_id, thread_id, message = (
                 item["author"],
                 item["channel"],
@@ -121,18 +129,25 @@ class Reminder(commands.Cog):
                 continue
             webhook = await self.bot.webhook(channel)
             embed.description = message
-            with suppress(DiscordException):
-                msg = await webhook.send(
-                    content=member.mention,
-                    username="Fennekin Reminder",
-                    avatar_url="https://hmp.me/dx4e",
-                    embed=embed,
-                    thread=thread,
-                    allowed_mentions=AllowedMentions(users=True),
-                    wait=True,
-                )
-                await msg.add_reaction("\N{CROSS MARK}")
-                await tupper_log.insert_one({"channel": msg.channel.id, "id": msg.id, "author": author_id})
+            msg = await webhook.send(
+                content=member.mention,
+                username="Fennekin Reminder",
+                avatar_url="https://hmp.me/dx4e",
+                embed=embed,
+                thread=thread,
+                allowed_mentions=AllowedMentions(users=True),
+                wait=True,
+            )
+            await msg.add_reaction("\N{CROSS MARK}")
+            await tupper_log.insert_one(
+                {
+                    "channel": msg.channel.id,
+                    "id": msg.id,
+                    "author": author_id,
+                }
+            )
+
+        self.processed_reminders.clear()
 
     @app_commands.command()
     async def remind(self, ctx: Interaction[CustomBot], message: Optional[str], due: Optional[str]):
