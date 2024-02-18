@@ -213,23 +213,15 @@ class Kind(Enum):
 
 class Size(Enum):
     # fmt: off
-    XXXL =  1.25,    6.50, 235.000  # noqa: E222
-    XXXL_ = 1.21875, 5.25, 214.125  # noqa: E222
-    XXL =   1.1875,  4.00, 193.250  # noqa: E222
-    XXL_ =  1.15625, 3.00, 172.375  # noqa: E222
-    XL =    1.125,   2.00, 151.500  # noqa: E222
-    XL_ =   1.09375, 1.75, 130.625  # noqa: E222
-    L =     1.0625,  1.50, 109.750  # noqa: E222
-    L_ =    1.03125, 1.35, 88.8750  # noqa: E222
-    M =     1.,      1.20, 68.0000  # noqa: E222
-    S_ =    0.96875, 1.10, 59.5000  # noqa: E222
-    S =     0.9375,  1.00, 51.0000  # noqa: E222
-    XS_ =   0.90625, 0.90, 42.5000  # noqa: E222
-    XS =    0.875,   0.80, 34.0000  # noqa: E222
-    XXS_ =  0.84375, 0.65, 25.6500  # noqa: E222
-    XXS =   0.8125,  0.50, 17.3000  # noqa: E222
-    XXXS_ = 0.78125, 0.35, 8.95000  # noqa: E222
-    XXXS =  0.75,    0.30, 4.60000  # noqa: E222
+    XXXL =  1.20, 6.50, 235.000  # noqa: E222
+    XXL =   1.15, 4.00, 193.250  # noqa: E222
+    XL =    1.10, 2.00, 151.500  # noqa: E222
+    L =     1.05, 1.50, 109.750  # noqa: E222
+    M =     1.00, 1.20, 68.0000  # noqa: E222
+    S =     0.95, 1.00, 51.0000  # noqa: E222
+    XS =    0.90, 0.80, 34.0000  # noqa: E222
+    XXS =   0.85, 0.50, 17.3000  # noqa: E222
+    XXXS =  0.80, 0.30, 4.60000  # noqa: E222
     # fmt: on
 
     def height_value(self, value: float = 0):
@@ -404,7 +396,7 @@ class Character:
         self.moveset = Move.deduce_many(*self.moveset)
         if isinstance(self.size, str):
             try:
-                self.size = Size[self.size]
+                self.size = Size[self.size.removesuffix("_")]
             except KeyError:
                 self.size = Size.M
         if isinstance(self.weight, str):
