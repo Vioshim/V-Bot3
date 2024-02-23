@@ -13,7 +13,7 @@ python = "^3.11.7"
     "voice",
 ] }
 jishaku = "^2.5.2"
-uvloop = { version = "^0.17.0", platform = "linux" }
+uvloop = { version = "^0.19.0", platform = "linux" }
 frozendict = "^2.3.10"
 rapidfuzz = "^3.5.2"
 motor = { extras = ["srv"], version = "^3.3.2" }
