@@ -134,10 +134,10 @@ class Move:
         return self.data.get("MoveID", 0)
 
     def __hash__(self) -> int:
-        return self.move_id
+        return hash(self.name)
 
     def __eq__(self, o: Move) -> bool:
-        return isinstance(o, Move) and self.move_id == o.move_id
+        return isinstance(o, Move) and self.id == o.id
 
     def __int__(self):
         return self.move_id
@@ -174,7 +174,7 @@ class Move:
     def banned(self) -> bool:
         # fmt: off
         return (
-            self.move_id in {0, 449}  # No ID, Judgement
+            self.move_id in {0, 449, 1000}  # No ID, Judgement, GMax Moves
             or self.is_z_move()
             or self.is_max_move()
         )
