@@ -17,7 +17,7 @@ from datetime import datetime, time, timedelta, timezone
 from textwrap import TextWrapper
 from typing import Optional
 from urllib.parse import quote_plus
-
+from contextlib import suppress
 from discord import (
     AllowedMentions,
     AutoModTrigger,
@@ -29,6 +29,8 @@ from discord import (
     RawReactionActionEvent,
     User,
     app_commands,
+    AutoModRule,
+    Guild,
 )
 from discord.ext import commands
 from discord.ui import Button, View
@@ -53,8 +55,37 @@ class Roles(commands.Cog):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
+        self.auto_mods: dict[int, AutoModRule] = {}
         self.itx_menu1 = app_commands.ContextMenu(name="AFK Schedule", callback=self.check_afk)
         self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
+
+    async def fetch_automod(self, guild: Guild) -> Optional[AutoModRule]:
+        db = self.bot.mongo_db("Server")
+
+        if guild.id not in self.auto_mods:
+            self.auto_mods[guild.id] = None
+
+            if item := await db.find_one(
+                {
+                    "id": guild.id,
+                    "self_roles.no_ping_automod": {"$exists": True},
+                },
+                {
+                    "_id": 0,
+                    "self_roles.no_ping_automod": 1,
+                },
+            ):
+                rule_id = item["self_roles"]["no_ping_automod"]
+                try:
+                    self.auto_mods[guild.id] = await guild.fetch_automod_rule(rule_id)
+                except Exception:
+                    await db.update_one(
+                        {"id": guild.id},
+                        {"$unset": {"self_roles.no_ping_automod": ""}},
+                    )
+                    return
+
+        return self.auto_mods[guild.id]
 
     async def cog_load(self):
         self.bot.tree.add_command(self.itx_menu1)
@@ -107,29 +138,17 @@ class Roles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member):
-        roles = set(before.roles) ^ set(after.roles)
-        if roles and (no_ping_role := get(roles, name="Don't Ping Me")):
-            db = self.bot.mongo_db("Server")
-            if not (
-                item := await db.find_one(
-                    {
-                        "id": after.guild.id,
-                        "self_roles.no_ping_automod": {"$exists": True},
-                    },
-                    {
-                        "_id": 0,
-                        "self_roles.no_ping_automod": 1,
-                    },
-                )
-            ):
-                return
-
+        if (
+            (roles := set(before.roles) ^ set(after.roles))
+            and (no_ping_role := get(roles, name="Don't Ping Me"))
+            and (rule := await self.fetch_automod(after.guild))
+        ):
             members_text = " ".join(str(x.id) for x in sorted(no_ping_role.members, key=lambda x: x.id))
-            rule = await after.guild.fetch_automod_rule(item["self_roles"]["no_ping_automod"])
-            regex_patterns = [f"<@({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text) if line]
+            regex_patterns = [f"<@!?({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text) if line]
             if rule.trigger.regex_patterns != regex_patterns:
                 trigger = AutoModTrigger(regex_patterns=regex_patterns)
-                await rule.edit(trigger=trigger, name="No Ping Automod")
+                rule = await rule.edit(trigger=trigger, name="No Ping Automod")
+                self.auto_mods[after.guild.id] = rule
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
