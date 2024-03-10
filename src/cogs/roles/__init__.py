@@ -55,7 +55,7 @@ class Roles(commands.Cog):
         self.bot = bot
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
-        self.auto_mods: dict[int, AutoModRule] = {}
+        self.auto_mods: dict[int, Optional[AutoModRule]] = {}
         self.itx_menu1 = app_commands.ContextMenu(name="AFK Schedule", callback=self.check_afk)
         self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
 
@@ -147,7 +147,12 @@ class Roles(commands.Cog):
             regex_patterns = [f"<@!?({line.replace(' ', '|')})>" for line in self.wrapper.wrap(members_text) if line]
             if rule.trigger.regex_patterns != regex_patterns:
                 trigger = AutoModTrigger(regex_patterns=regex_patterns)
-                rule = await rule.edit(trigger=trigger, name="No Ping Automod")
+                rule = await rule.edit(
+                    trigger=trigger,
+                    name="No Ping Automod",
+                    reason=f"Updated by {after}",
+                    enabled=True,
+                )
                 self.auto_mods[after.guild.id] = rule
 
     @commands.Cog.listener()
