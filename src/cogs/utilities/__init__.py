@@ -120,18 +120,17 @@ class Utilities(commands.Cog):
         text = str(text)
         pat = ".*?".join(map(re.escape, text))
         regex = re.compile(pat, flags=re.IGNORECASE)
+
         for item in collection:
             to_search = key(item) if key else item
-            r = regex.search(to_search)
-            if r:
+            if r := regex.search(to_search):
                 suggestions.append((len(r.group()), r.start(), item))
 
         def sort_key(tup):
             return (tup[0], tup[1], key(tup[2])) if key else tup
 
-        if lazy:
-            return (z for _, _, z in sorted(suggestions, key=sort_key))
-        return [z for _, _, z in sorted(suggestions, key=sort_key)]
+        gen = (z for _, _, z in sorted(suggestions, key=sort_key))
+        return gen if lazy else list(gen)
 
     @staticmethod
     def parse_object_inv(stream: SphinxObjectFileReader, url: str):
@@ -208,32 +207,33 @@ class Utilities(commands.Cog):
         guilds: commands.Greedy[Object],
         spec: Optional[Literal["~", "*", "^"]] = None,
     ) -> None:
-        if not guilds:
-            if spec == "~":
+        if guilds:
+            ret = 0
+            for guild in guilds:
+                try:
+                    await self.bot.tree.sync(guild=guild)
+                except HTTPException:
+                    pass
+                else:
+                    ret += 1
+
+            return await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+
+        match spec:
+            case "~":
                 synced = await self.bot.tree.sync(guild=ctx.guild)
-            elif spec == "*":
+            case "*":
                 self.bot.tree.copy_global_to(guild=ctx.guild)
                 synced = await self.bot.tree.sync(guild=ctx.guild)
-            elif spec == "^":
+            case "^":
                 self.bot.tree.clear_commands(guild=ctx.guild)
                 await self.bot.tree.sync(guild=ctx.guild)
                 synced = []
-            else:
+            case _:
                 synced = await self.bot.tree.sync()
 
-            await ctx.send(f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}")
-            return
-
-        ret = 0
-        for guild in guilds:
-            try:
-                await self.bot.tree.sync(guild=guild)
-            except HTTPException:
-                pass
-            else:
-                ret += 1
-
-        await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+        word = "globally" if spec is None else "to the current guild."
+        await ctx.send(f"Synced {len(synced)} commands {word}")
 
     @commands.command()
     async def charinfo(self, ctx: commands.Context, *, characters: str):
@@ -335,8 +335,8 @@ class Utilities(commands.Cog):
             message = ctx.message
         await message.reply(content=str(url))
 
-    @commands.command()
-    async def roll(self, ctx: commands.Context, *, expression: Optional[str] = None):
+    @commands.hybrid_command()
+    async def roll(self, ctx: commands.Context[CustomBot], *, expression: str = "d20"):
         """Allows to roll dice based on 20
 
         Parameters
@@ -346,8 +346,8 @@ class Utilities(commands.Cog):
         expression : str
             Expression (Example: d20)
         """
-        if not expression:
-            expression = "d20"
+        await ctx.defer(ephemeral=True)
+
         embed = Embed(
             title=f"Rolling: {expression}",
             color=Color.blurple(),
@@ -373,46 +373,6 @@ class Utilities(commands.Cog):
             self.bot.logger.exception("Error while rolling dice.", exc_info=e)
         finally:
             await ctx.reply(embed=embed)
-
-    @app_commands.command(name="roll")
-    async def slash_roll(self, ctx: Interaction[CustomBot], expression: Optional[str] = None, hidden: bool = True):
-        """Allows to roll dice based on 20
-
-        Parameters
-        ----------
-        ctx : Interaction
-            Interaction
-        expression : str
-            Expression (Example: d20)
-        hidden : bool, optional
-            If it's shown, by default invisible
-        """
-        resp: InteractionResponse = ctx.response
-        await resp.defer(ephemeral=hidden, thinking=True)
-
-        if not expression:
-            expression = "d20"
-
-        embed = Embed(title=f"Rolling: {expression}", color=Color.blurple(), timestamp=ctx.created_at)
-
-        if len(embed.title) > 256:
-            embed.title = "Rolling Expression"
-
-        embed.set_image(url=WHITE_BAR)
-
-        if guild := ctx.guild:
-            embed.set_footer(text=guild.name, icon_url=guild.icon)
-
-        try:
-            value = d20.roll(expr=expression, allow_comments=True)
-            if len(value.result) > 4096:
-                d20.utils.simplify_expr(value.expr)
-            embed.description = value.result
-            embed.set_thumbnail(url=f"https://dummyimage.com/512x512/FFFFFF/000000&text={value.total}")
-        except Exception:
-            embed.description = "Invalid expression."
-        finally:
-            await ctx.followup.send(embed=embed, ephemeral=hidden)
 
 
 async def setup(bot: CustomBot) -> None:

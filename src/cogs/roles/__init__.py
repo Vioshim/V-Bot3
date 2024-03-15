@@ -17,20 +17,20 @@ from datetime import datetime, time, timedelta, timezone
 from textwrap import TextWrapper
 from typing import Optional
 from urllib.parse import quote_plus
-from contextlib import suppress
+
 from discord import (
     AllowedMentions,
+    AutoModRule,
     AutoModTrigger,
     Embed,
     ForumChannel,
+    Guild,
     Interaction,
     Member,
     Message,
     RawReactionActionEvent,
     User,
     app_commands,
-    AutoModRule,
-    Guild,
 )
 from discord.ext import commands
 from discord.ui import Button, View

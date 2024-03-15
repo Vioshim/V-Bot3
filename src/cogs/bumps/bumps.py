@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from dateparser import parse
 from discord import (
@@ -203,23 +203,17 @@ class PingBump(View):
 
     @property
     def timedelta(self):
-        if date := self.date:
-            return date.replace(tzinfo=None) - utcnow().replace(tzinfo=None)
+        return self.date.replace(tzinfo=None) - utcnow().replace(tzinfo=None)
 
     @property
     def date(self) -> datetime:
-        if (embeds := self.after.embeds) and (
-            data := self.data.format_date.search(
-                embeds[0].description,
-            )
-        ):
+        if (embeds := self.after.embeds) and (data := self.data.format_date.search(embeds[0].description)):
             return parse(
                 data.group(1),
-                settings=dict(
-                    PREFER_DATES_FROM="future",
-                    TIMEZONE="utc",
-                ),
+                settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"),
             )
+
+        return self.after.created_at + timedelta(hours=self.data.hours)
 
     async def send(self, timeout: bool = False):
         if isinstance(self.after.channel, Thread):
