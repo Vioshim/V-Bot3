@@ -80,4 +80,4 @@ if __name__ == "__main__":
         loop_factory = None
         logger.error("Not using uvloop")
 
-    asyncio.run(main(), debug=True, loop=loop_factory)
+    asyncio.run(main(), debug=True, loop_factory=loop_factory)
