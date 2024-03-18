@@ -13,13 +13,11 @@
 # limitations under the License.
 
 
-from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta, timezone
-from itertools import chain, groupby
+from datetime import datetime, timedelta
+from itertools import chain
 from time import mktime
 from typing import Iterable, Optional
 
-from dateparser import parse
 from discord import (
     AllowedMentions,
     ButtonStyle,
@@ -34,13 +32,13 @@ from discord import (
     SelectOption,
     TextStyle,
 )
-from discord.ui import Button, Modal, Select, TextInput, View, button, select
+from discord.ui import Button, Modal, Select, TextInput, View, button
 from discord.utils import utcnow
 from rapidfuzz import process
 
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
+from src.utils.etc import LINK_EMOJI, SETTING_EMOJI, WHITE_BAR
 from src.utils.functions import chunks_split, safe_username
 from src.views.characters_view import CharactersView
 
@@ -107,112 +105,6 @@ def get_role(items: Iterable[SelectOption | str], guild: Guild):
             yield role
 
 
-@dataclass(unsafe_hash=True, slots=True)
-class AdjacentTimeState:
-    key: int = 0
-    previous: float = float("nan")
-
-    def __call__(self, value: datetime):
-        adjacent = value.hour - self.previous == 1
-        wraps_around = value.hour == 0 and self.previous == 23
-        if not adjacent and not wraps_around:
-            self.key += 1
-        self.previous = value.hour
-        return self.key
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class AFKSchedule:
-    hours: frozenset[datetime] = field(default_factory=frozenset)
-
-    def astimezone(self, tz: timezone):
-        return AFKSchedule(frozenset(x.astimezone(tz) for x in self.hours))
-
-    @property
-    def pairs(self):
-        # find all consecutive runs
-        hours = sorted(self.hours, key=lambda x: x.hour)
-        runs = [list(group) for _, group in groupby(hours, key=AdjacentTimeState())]
-
-        # check wrap-around
-        if len(runs) >= 2:
-            (first_time, *_), *_, (*_, last_time) = runs
-            if first_time.hour - last_time.hour == 1 or first_time.hour == 0 and last_time.hour == 23:
-                runs[0] = runs[-1] + runs[0]
-                del runs[-1]
-
-        return sorted((run[0].time(), run[-1].time()) for run in runs)
-
-    @property
-    def text(self):
-        return "\n".join(f"• {x.strftime('%I:00 %p')} - {y.strftime('%I:59 %p')}" for x, y in self.pairs)
-
-
-class AFKModal(Modal, title="Current Time"):
-    def __init__(self, hours: Optional[list[int]] = None, offset: int = 0) -> None:
-        super(AFKModal, self).__init__(timeout=None)
-        date = utcnow().astimezone(timezone(offset=timedelta(hours=offset)))
-        text = date.strftime("%I:%M %p")
-
-        data = TextInput(
-            label="What time it is for you?",
-            max_length=8,
-            placeholder=text,
-            default=text,
-        )
-        items = []
-        if hours:
-            items.extend(map(int, hours))
-        self.hours: list[int] = items
-        self.hours.sort()
-        self.offset = offset
-        self.data = data
-        self.add_item(data)
-
-    async def on_error(self, itx: Interaction[CustomBot], error: Exception, /) -> None:
-        itx.client.logger.error("Ignoring exception in modal %r", self, exc_info=error)
-
-    async def on_submit(self, itx: Interaction[CustomBot]) -> None:
-        resp: InteractionResponse = itx.response
-        await resp.defer(ephemeral=True, thinking=True)
-        current_date = itx.created_at
-        member = itx.client.supporting.get(itx.user, itx.user)
-        date1 = current_date.astimezone(DEFAULT_TIMEZONE)
-        date2 = (parse(self.data.value, settings=dict(TIMEZONE="utc")) or date1).astimezone(DEFAULT_TIMEZONE)
-        ref = abs(date1 - date2).seconds
-        self.offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
-        if date1 > date2:
-            self.offset = -self.offset
-
-        tz = timezone(timedelta(hours=self.offset))
-        data = AFKSchedule(frozenset(datetime.combine(current_date, time(hour=x), tz) for x in self.hours))
-
-        embed = Embed(
-            title="AFK Schedule",
-            description=data.text or "All schedules were removed.",
-            color=Color.blurple(),
-        )
-        embed.set_image(url=WHITE_BAR)
-        embed.set_footer(
-            text="Command /afk will show your afk schedule.\npings when you're offline will notify of it during them.",
-        )
-
-        await itx.followup.send(embed=embed)
-
-        db = itx.client.mongo_db("AFK")
-        await db.replace_one(
-            {"user": member.id},
-            {
-                "user": member.id,
-                "hours": sorted(self.hours),
-                "offset": float(self.offset),
-            },
-            upsert=True,
-        )
-
-        self.stop()
-
-
 class RoleSelect(Select):
     async def callback(self, itx: Interaction[CustomBot]):
         resp: InteractionResponse = itx.response
@@ -271,49 +163,6 @@ class BasicRoleSelect(View):
 
     async def on_error(self, itx: Interaction[CustomBot], error: Exception, item, /) -> None:
         itx.client.logger.error("Ignoring exception in view %r for item %r", self, item, exc_info=error)
-
-    @select(
-        placeholder="AFK Schedule",
-        custom_id="afk",
-        min_values=0,
-        max_values=24,
-        row=3,
-        options=[
-            SelectOption(
-                label=lapse.strftime("%I:00 %p"),
-                value=str(lapse.hour),
-                description=lapse.strftime("From %I:00 %p to %I:59 %p"),
-                emoji="\N{SLEEPING SYMBOL}",
-            )
-            for lapse in map(time, range(24))
-        ],
-    )
-    async def afk_schedule(self, itx: Interaction[CustomBot], sct: Select):
-        resp: InteractionResponse = itx.response
-        db = itx.client.mongo_db("AFK")
-        member: Member = itx.client.supporting.get(itx.user, itx.user)
-        if item := await db.find_one({"user": member.id}):
-            modal = AFKModal(hours=sct.values, offset=item["offset"])
-        else:
-            modal = AFKModal(hours=sct.values)
-        await resp.send_modal(modal)
-
-    @button(
-        label="Set Timezone. What time it is?",
-        custom_id="timezone",
-        style=ButtonStyle.blurple,
-        emoji="\N{TIMER CLOCK}",
-        row=4,
-    )
-    async def tz_schedule(self, itx: Interaction[CustomBot], _: Button):
-        resp: InteractionResponse = itx.response
-        db = itx.client.mongo_db("AFK")
-        member: Member = itx.client.supporting.get(itx.user, itx.user)
-        if item := await db.find_one({"user": member.id}):
-            modal = AFKModal(hours=item["hours"], offset=item["offset"])
-        else:
-            modal = AFKModal()
-        await resp.send_modal(modal)
 
 
 class RPSearchManage(View):

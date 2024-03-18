@@ -37,8 +37,6 @@ from discord.ui import Button, View
 from discord.utils import get, snowflake_time
 
 from src.cogs.roles.roles import (
-    AFKModal,
-    AFKSchedule,
     BasicRoleSelect,
     RPModal,
     RPSearchManage,
@@ -56,7 +54,6 @@ class Roles(commands.Cog):
         self.cool_down: dict[int, datetime] = {}
         self.role_cool_down: dict[int, datetime] = {}
         self.auto_mods: dict[int, Optional[AutoModRule]] = {}
-        self.itx_menu1 = app_commands.ContextMenu(name="AFK Schedule", callback=self.check_afk)
         self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
 
     async def fetch_automod(self, guild: Guild) -> Optional[AutoModRule]:
@@ -88,41 +85,7 @@ class Roles(commands.Cog):
         return self.auto_mods[guild.id]
 
     async def cog_load(self):
-        self.bot.tree.add_command(self.itx_menu1)
         await self.load_self_roles()
-
-    async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.itx_menu1.name, type=self.itx_menu1.type)
-
-    async def check_afk(self, itx: Interaction[CustomBot], member: Member):
-        db = self.bot.mongo_db("AFK")
-        if item := await db.find_one({"user": itx.user.id}):
-            current_date = itx.created_at
-            embed = Embed(title="AFK Schedule", color=member.color)
-            embed.set_author(name=member.display_name, icon_url=member.display_avatar)
-            if item2 := await db.find_one({"user": member.id}):
-                tz1 = timezone(timedelta(hours=item["offset"]))
-                tz2 = timezone(timedelta(hours=item2["offset"]))
-                user_data = [datetime.combine(current_date, time(hour=x), tz2) for x in item2["hours"]]
-
-                data1 = AFKSchedule(user_data)
-                data2 = data1.astimezone(tz1)
-                desc1, desc2 = data1.text, data2.text
-                if desc1 != desc2 and desc1 and desc2:
-                    embed.add_field(name="In user's timezone", value=desc1, inline=False)
-                    embed.add_field(name="In your timezone", value=desc2, inline=False)
-                else:
-                    embed.description = desc1 or desc2
-
-                date = current_date.astimezone(tz2)
-                text = f"User's time is {date.strftime('%I:%M %p')}"
-            else:
-                text = "No timezone associated to the account."
-            embed.set_image(url=f"https://dummyimage.com/468x60/FFFFFF/000000&text={quote_plus(text)}")
-            await itx.response.send_message(embed=embed, ephemeral=True)
-        else:
-            modal = AFKModal()
-            await itx.response.send_modal(modal)
 
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
@@ -220,7 +183,6 @@ class Roles(commands.Cog):
         if msg.flags.ephemeral or not msg.guild or msg.webhook_id or msg.author.bot:
             return
 
-        db = self.bot.mongo_db("AFK")
         if not (users := {x for x in msg.mentions if x != msg.author and isinstance(x, Member)}):
             return
 
@@ -233,6 +195,8 @@ class Roles(commands.Cog):
             await msg.reply("https://media.tenor.com/kJhT6VC2tzEAAAAC/pings-off-reply-pings-off.gif")
             await msg.author.timeout(timedelta(seconds=5), reason=f"Pinged {no_ping_users}")
 
+        """
+        db = self.bot.mongo_db("AFK")
         offline_users = [x.id for x in users if str(x.status) == "offline"]
         if not offline_users:
             return
@@ -272,6 +236,7 @@ class Roles(commands.Cog):
                 delete_after=10,
                 allowed_mentions=AllowedMentions(users=True),
             )
+        """
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -305,19 +270,6 @@ class Roles(commands.Cog):
         modal = RPModal(user=user, ocs=ocs, to_user=member)
         if await modal.check(itx):
             await itx.response.send_modal(modal)
-
-    @app_commands.command()
-    async def afk(self, itx: Interaction[CustomBot], member: Member | User):
-        """Check users' AFK Schedule
-
-        Parameters
-        ----------
-        itx : Interaction[CustomBot],
-            Interaction[CustomBot],
-        member : Member
-            User to Check
-        """
-        await self.check_afk(itx, member)
 
 
 async def setup(bot: CustomBot) -> None:
