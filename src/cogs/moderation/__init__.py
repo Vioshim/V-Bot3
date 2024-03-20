@@ -218,6 +218,10 @@ class Moderation(commands.Cog):
         self.itx_menu = app_commands.ContextMenu(
             name="Vote to Ban",
             callback=self.vote_user,
+            guild_ids=[
+                952518750748438549,
+                1196879060173852702,
+            ],
         )
 
     async def cog_load(self) -> None:
