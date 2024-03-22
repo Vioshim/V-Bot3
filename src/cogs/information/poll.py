@@ -66,7 +66,7 @@ class PollView(View):
     async def poll(self, ctx: Interaction[CustomBot], sct: Select):
         db = ctx.client.mongo_db("Poll")
 
-        previous = [k for k, v in self.options.items() for user in v if user == ctx.user.id]
+        previous = {k for k, v in self.options.items() if ctx.user.id in v}
         self.options = {k: [x for x in v if x != ctx.user.id] for k, v in self.options.items()}
         for item in sct.values:
             self.options.setdefault(item, [])
