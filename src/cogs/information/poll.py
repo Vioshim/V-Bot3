@@ -27,28 +27,14 @@ class PollView(View):
         options: dict[str, list[int]],
         min_values: int = 1,
         max_values: int = 1,
+        required: bool = False,
     ) -> None:
         super(PollView, self).__init__(timeout=None)
         self.options = options
+        self.required = required
         self.poll.min_values = min(min_values, len(options))
         self.poll.max_values = min(max_values, len(options))
         self.format()
-
-    @classmethod
-    def from_mongo(cls, data: dict):
-        return cls(
-            options=data["options"],
-            min_values=data["min_values"],
-            max_values=data["max_values"],
-        )
-
-    @classmethod
-    def parse(cls, text: str, min_values: str | int = 1, max_values: str | int = 1):
-        return cls(
-            options={o: [] for x in text.split(",") if (o := x.strip())},
-            min_values=int(min_values),
-            max_values=int(max_values),
-        )
 
     def format(self):
         if amount := sum(map(len, self.options.values())):
@@ -73,14 +59,19 @@ class PollView(View):
             min_values=self.poll.min_values,
             max_values=self.poll.max_values,
             options=self.options,
+            required=self.required,
         )
 
     @select(placeholder="Poll", custom_id="poll")
     async def poll(self, ctx: Interaction[CustomBot], sct: Select):
         db = ctx.client.mongo_db("Poll")
+
+        previous = [k for k, v in self.options.items() for user in v if user == ctx.user.id]
         self.options = {k: [x for x in v if x != ctx.user.id] for k, v in self.options.items()}
         for item in sct.values:
             self.options.setdefault(item, [])
-            self.options[item].append(ctx.user.id)
+            if item not in previous or self.required:
+                self.options[item].append(ctx.user.id)
+
         await ctx.response.edit_message(view=self.format())
         await db.replace_one(key := {"id": ctx.message.id}, key | self.data, upsert=True)

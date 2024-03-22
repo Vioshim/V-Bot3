@@ -81,6 +81,12 @@ class AnnouncementModal(Modal):
             default="1",
             required=True,
         )
+        self.required = TextInput(
+            label="Required Roles",
+            placeholder="True/False",
+            default="True",
+            required=False,
+        )
 
         self.thread_mode = kwargs.pop("thread", False)
         self.poll_mode = kwargs.pop("poll", word == "Poll")
@@ -112,7 +118,12 @@ class AnnouncementModal(Modal):
             db: AsyncIOMotorCollection = itx.client.mongo_db("Poll")
             if not (answers := [int(o) for x in self.poll_range.value.split("-") if (o := x.strip()) and o.isdigit()]):
                 answers = [1]
-            view = PollView.parse(text=self.poll_data.value, min_values=answers[0], max_values=answers[-1])
+            view = PollView(
+                options={o: [] for x in self.poll_data.value.split(",") if (o := x.strip())},
+                min_values=int(answers[0]),
+                max_values=int(answers[-1]),
+                required=self.required.value.lower() == "true",
+            )
             await msg.edit(view=view)
             await db.insert_one({"id": msg.id} | view.data)
 
