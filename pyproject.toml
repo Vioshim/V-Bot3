@@ -28,7 +28,7 @@ humanize = "^4.9.0"
 python-dotenv = "^1.0.0"
 pymongo = { extras = ["srv"], version = "^4.6.1" }
 chronological = "^0.1.1"
-aiogoogle = "^5.6.0"
+aiogoogle = { git = "https://github.com/omarryhan/aiogoogle.git", rev = "master" }
 dateparser = "^1.2.0"
 pluralkit = "^1.1.5"
 webcolors = "^1.13"
