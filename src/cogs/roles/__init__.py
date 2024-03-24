@@ -271,6 +271,7 @@ class Roles(commands.Cog):
             self.bot.add_view(view, message_id=item["id"])
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def ping(self, itx: Interaction[CustomBot], member: Member | User):
         """Command used to ping roles, and even users.
 

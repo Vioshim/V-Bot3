@@ -1140,6 +1140,7 @@ class Submission(commands.Cog):
 
     @app_commands.command()
     @app_commands.checks.has_role("Moderation")
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def submit_as(self, itx: Interaction[CustomBot], member: Optional[User]):
         """Allows to create OCs as an user
 
