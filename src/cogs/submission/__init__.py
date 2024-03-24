@@ -773,7 +773,7 @@ class Submission(commands.Cog):
                 allowed_mentions=AllowedMentions(roles=[ping_role]),
                 mention_author=True,
             )
-        else:
+        elif not item.get("no_threading"):
             data = await parent.create_thread(
                 name=thread.name,
                 content=msg.content[:2000],
