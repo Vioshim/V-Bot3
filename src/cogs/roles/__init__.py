@@ -36,11 +36,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import get, snowflake_time
 
-from src.cogs.roles.roles import (
-    BasicRoleSelect,
-    RPModal,
-    RPSearchManage,
-)
+from src.cogs.roles.roles import BasicRoleSelect, RPModal, RPSearchManage
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
@@ -55,6 +51,27 @@ class Roles(commands.Cog):
         self.role_cool_down: dict[int, datetime] = {}
         self.auto_mods: dict[int, Optional[AutoModRule]] = {}
         self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
+        self.no_ping_roles: dict[int, int | None] = {}
+
+    async def fetch_no_ping_role(self, guild: Guild) -> Optional[int]:
+        db = self.bot.mongo_db("Server")
+
+        if guild.id not in self.no_ping_roles:
+            self.no_ping_roles[guild.id] = None
+
+            if item := await db.find_one(
+                {
+                    "id": guild.id,
+                    "self_roles.no_ping": {"$exists": True},
+                },
+                {
+                    "_id": 0,
+                    "self_roles.no_ping": 1,
+                },
+            ):
+                self.no_ping_roles[guild.id] = item["self_roles"]["no_ping"]
+
+        return self.no_ping_roles[guild.id]
 
     async def fetch_automod(self, guild: Guild) -> Optional[AutoModRule]:
         db = self.bot.mongo_db("Server")
@@ -102,8 +119,9 @@ class Roles(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member):
         if (
-            (roles := set(before.roles) ^ set(after.roles))
-            and (no_ping_role := get(roles, name="Don't Ping Me"))
+            (role_id := await self.fetch_no_ping_role(after.guild))
+            and (roles := set(before.roles) ^ set(after.roles))
+            and (no_ping_role := get(roles, id=role_id))
             and (rule := await self.fetch_automod(after.guild))
         ):
             members_text = " ".join(str(x.id) for x in sorted(no_ping_role.members, key=lambda x: x.id))

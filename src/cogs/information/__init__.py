@@ -246,6 +246,7 @@ class Information(commands.Cog):
         self.ready = True
 
     @app_commands.command()
+    @app_commands.guilds(1065784144417787994, 952518750748438549, 1196879060173852702)
     @app_commands.checks.has_any_role("Booster", "Supporter")
     async def perks(
         self,
@@ -379,60 +380,73 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, past: discord.Member, now: discord.Member):
         data = self.info_data.get(now.guild.id, {})
-        if not (info := data.get("member_boost", {})) or past.premium_since == now.premium_since:
-            return
+        info = None
+        embeds: list[discord.Embed] = []
+        files: list[discord.File] = []
 
-        files = []
-        if past.premium_since and not now.premium_since:
-            embed = discord.Embed(
-                title="Has un-boosted the Server!",
-                colour=discord.Colour.red(),
-                timestamp=utcnow(),
+        if past.premium_since != now.premium_since:
+
+            if not (info := data.get("member_boost", {})):
+                return
+
+            if past.premium_since and not now.premium_since:
+                embed = discord.Embed(title="Has un-boosted the Server!", colour=discord.Colour.red())
+                db = self.bot.mongo_db("Custom Role")
+                if (data := await db.find_one_and_delete({"author": now.id, "server": now.guild.id})) and (
+                    role := get(now.guild.roles, id=data["id"])
+                ):
+                    if role.icon:
+                        file = await role.icon.to_file()
+                        embed.set_thumbnail(url=f"attachment://{file.filename}")
+                        files.append(file)
+                    embed.add_field(name="Name", value=role.name)
+                    embed.add_field(name="Color", value=role.color)
+
+                    with suppress(discord.DiscordException):
+                        await role.delete(reason="User unboosted")
+            else:
+                embed = discord.Embed(title="Has boosted the Server!", colour=discord.Colour.brand_green())
+            embeds.append(embed)
+
+        elif (past.display_name, past.display_avatar) != (now.display_name, now.display_avatar):
+
+            if not (info := data.get("member_update", {})):
+                return
+
+            embed1 = discord.Embed(title=past.display_name, colour=discord.Colour.red())
+            embed2 = discord.Embed(title=now.display_name, colour=discord.Colour.brand_green())
+
+            if past.display_avatar != now.display_avatar:
+                file1 = await past.display_avatar.with_size(4096).to_file()
+                embed1.set_thumbnail(url=f"attachment://{file1.filename}")
+                file2 = await past.display_avatar.with_size(4096).to_file()
+                embed2.set_thumbnail(url=f"attachment://{file2.filename}")
+                files.extend([file1, file2])
+
+            embeds.extend([embed1, embed2])
+
+        if embeds:
+            embeds[0].set_author(name=now.display_name, icon_url=now.display_avatar)
+            embeds[-1].set_footer(text=now.guild.name, icon_url=now.guild.icon)
+            for embed in embeds:
+                embed.set_image(url=WHITE_BAR)
+
+        if info and now.guild.me.guild_permissions.manage_webhooks:
+            channel_id = info["id"]
+            if thread_id := info.get("thread"):
+                thread = discord.Object(id=thread_id)
+            else:
+                thread = MISSING
+
+            log = await self.bot.webhook(channel_id, reason="Logging")
+            await log.send(
+                content=now.mention,
+                embed=embed,
+                files=files,
+                thread=thread,
+                username=safe_username(now.display_name),
+                avatar_url=now.display_avatar.url,
             )
-            db = self.bot.mongo_db("Custom Role")
-            if (
-                data := await db.find_one_and_delete(
-                    {
-                        "author": now.id,
-                        "server": now.guild.id,
-                    },
-                )
-            ) and (role := get(now.guild.roles, id=data["id"])):
-                if role.icon:
-                    file = await role.icon.to_file()
-                    embed.set_thumbnail(url=f"attachment://{file.filename}")
-                    files.append(file)
-                embed.add_field(name="Name", value=role.name)
-                embed.add_field(name="Color", value=role.color)
-
-                with suppress(discord.DiscordException):
-                    await role.delete(reason="User unboosted")
-        else:
-            embed = discord.Embed(
-                title="Has boosted the Server!",
-                colour=discord.Colour.brand_green(),
-                timestamp=utcnow(),
-            )
-
-        embed.set_image(url=WHITE_BAR)
-        embed.set_author(name=now.display_name, icon_url=now.display_avatar.url)
-        embed.set_footer(text=now.guild.name, icon_url=now.guild.icon)
-
-        channel_id = info["id"]
-        if thread_id := info.get("thread"):
-            thread = discord.Object(id=thread_id)
-        else:
-            thread = MISSING
-
-        log = await self.bot.webhook(channel_id, reason="Logging")
-        await log.send(
-            content=now.mention,
-            embed=embed,
-            files=files,
-            thread=thread,
-            username=safe_username(now.display_name),
-            avatar_url=now.display_avatar.url,
-        )
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.Member | discord.User):
