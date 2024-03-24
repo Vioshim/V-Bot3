@@ -380,7 +380,7 @@ class Information(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, past: discord.Member, now: discord.Member):
         data = self.info_data.get(now.guild.id, {})
-        info = None
+        info = {}
         embeds: list[discord.Embed] = []
         files: list[discord.File] = []
 
