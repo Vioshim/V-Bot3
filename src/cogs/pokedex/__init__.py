@@ -73,6 +73,7 @@ class Pokedex(commands.Cog):
         self.bot = bot
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def random_oc(self, ctx: Interaction[CustomBot]):
         """Generate a Random OC
 
@@ -102,6 +103,7 @@ class Pokedex(commands.Cog):
         await ctx.followup.send(embed=embed)
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def movepool(
         self,
         ctx: Interaction[CustomBot],
@@ -274,6 +276,7 @@ class Pokedex(commands.Cog):
 
     @app_commands.command()
     @app_commands.rename(_type="type", sp_ability="unique_trait")
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def find(
         self,
         ctx: Interaction[CustomBot],
@@ -464,6 +467,7 @@ class Pokedex(commands.Cog):
             self.bot.logger.info("%s is reading /find %s", str(ctx.user), namespace)
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def chart(
         self,
         ctx: Interaction[CustomBot],

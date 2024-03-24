@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from discord import app_commands
 from discord.ext import commands
 
 from src.pagination.wiki import WikiComplex, WikiEntry
@@ -24,6 +25,7 @@ class Wiki(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(name="help", aliases=["wiki"])
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def help(self, ctx: commands.Context[CustomBot], search: str = ""):
         """Built-in Bot Wiki
 

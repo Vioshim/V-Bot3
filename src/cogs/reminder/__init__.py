@@ -150,6 +150,7 @@ class Reminder(commands.Cog):
         self.processed_reminders.clear()
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def remind(self, ctx: Interaction[CustomBot], message: Optional[str], due: Optional[str]):
         """Fennekin Reminder System
 

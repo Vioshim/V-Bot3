@@ -254,6 +254,7 @@ class Utilities(commands.Cog):
 
     @app_commands.command()
     @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def rtfm(self, ctx: Interaction[CustomBot], key: Optional[RTFMPages], query: Optional[str]):
         """Executes a manual query
 
@@ -272,6 +273,7 @@ class Utilities(commands.Cog):
 
     @app_commands.command()
     @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.guilds(1065784144417787994, 952518750748438549, 1196879060173852702)
     async def forum(
         self,
         ctx: Interaction[CustomBot],
@@ -301,6 +303,7 @@ class Utilities(commands.Cog):
             await ctx.response.send_modal(modal)
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def metronome(self, ctx: Interaction[CustomBot], valid: bool = True, hidden: bool = False):
         """Allows to use Metronome
 
@@ -336,6 +339,7 @@ class Utilities(commands.Cog):
         await message.reply(content=str(url))
 
     @commands.hybrid_command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def roll(self, ctx: commands.Context[CustomBot], *, expression: str = "d20"):
         """Allows to roll dice based on 20
 

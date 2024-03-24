@@ -125,18 +125,12 @@ class Submission(commands.Cog):
         self.itx_menu1 = ContextMenu(
             name="Moves & Abilities",
             callback=self.info_checker,
-            guild_ids=[
-                952518750748438549,
-                1196879060173852702,
-            ],
+            guild_ids=[952518750748438549, 1196879060173852702],
         )
         self.itx_menu2 = ContextMenu(
             name="Check User's OCs",
             callback=self.check_ocs,
-            guild_ids=[
-                952518750748438549,
-                1196879060173852702,
-            ],
+            guild_ids=[952518750748438549, 1196879060173852702],
         )
 
     async def cog_load(self) -> None:
@@ -1041,6 +1035,7 @@ class Submission(commands.Cog):
                 await itx.reply(content=url, view=view)
 
     @app_commands.command(name="ocs")
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def get_ocs(
         self,
         itx: Interaction[CustomBot],
@@ -1084,6 +1079,7 @@ class Submission(commands.Cog):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
     @commands.hybrid_command(name="register", aliases=["create"])
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def register(
         self,
         ctx: commands.Context[CustomBot],
