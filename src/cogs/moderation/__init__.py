@@ -355,6 +355,11 @@ class Moderation(commands.Cog):
                     upsert=True,
                 )
 
+    @loop(minutes=1)
+    async def check_emails(self):
+        # TODO Implement email checking
+        pass
+
     @commands.Cog.listener()
     async def on_message(self, message: Message):
         """Detects scam urls and deletes the message

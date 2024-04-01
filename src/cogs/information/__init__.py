@@ -417,11 +417,10 @@ class Information(commands.Cog):
             embed2 = discord.Embed(title=now.display_name, colour=discord.Colour.brand_green())
 
             if past.display_avatar != now.display_avatar:
-                file1 = await past.display_avatar.with_size(4096).to_file()
-                embed1.set_thumbnail(url=f"attachment://{file1.filename}")
-                file2 = await past.display_avatar.with_size(4096).to_file()
-                embed2.set_thumbnail(url=f"attachment://{file2.filename}")
-                files.extend([file1, file2])
+                file = await now.display_avatar.with_size(4096).to_file()
+                embed1.set_thumbnail(url=past.display_avatar)
+                embed2.set_thumbnail(url=f"attachment://{file.filename}")
+                files.append(file)
 
             embeds.extend([embed1, embed2])
 
