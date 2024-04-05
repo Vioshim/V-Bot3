@@ -281,7 +281,7 @@ class Pokedex(commands.Cog):
         ctx: Interaction[CustomBot],
         species1: DefaultSpeciesArg,
         species2: DefaultSpeciesArg,
-        ratio: commands.Range[float, 0.1, 0.9] = 0.5,
+        ratio: Literal[10, 20, 30, 40, 50, 60, 70, 80, 90] = 50,
     ):
         """Command to check Fusion Information
 
@@ -293,13 +293,13 @@ class Pokedex(commands.Cog):
             First Species
         species2 : DefaultSpeciesArg
             Second Species
-        ratio : commands.Range[float, 0.1, 0.9]
-            Ratio of Fusion, defaults to 0.5
+        ratio : int
+            Ratio of Fusion, defaults to 50%
         """
         await ctx.response.defer(ephemeral=True, thinking=True)
-        mon = Fusion(species1, species2, ratio=ratio / 10)
+        mon = Fusion(species1, species2, ratio=ratio / 100)
 
-        ratio_a, ratio_b = ratio / 10, 1 - ratio / 10
+        ratio_a, ratio_b = ratio / 100, 1 - ratio / 100
 
         embed = Embed(
             title=f"{ratio_a:.1%} {species1.name} + {ratio_b:.1%} {species2.name}",
