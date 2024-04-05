@@ -96,6 +96,7 @@ class Species:
     evolves_to: frozenset[str] = field(default_factory=frozenset)
     movepool: Movepool = field(default_factory=Movepool)
     abilities: frozenset[Ability] = field(default_factory=frozenset)
+    egg_groups: frozenset[str] = field(default_factory=frozenset)
 
     def __post_init__(self):
         self.evolves_to = frozenset(self.evolves_to)
@@ -110,6 +111,14 @@ class Species:
         if isinstance(self.types, str):
             self.types = [self.types]
         self.types = TypingEnum.deduce_many(*self.types)
+
+        if isinstance(self.evolves_to, str):
+            self.evolves_to = [self.evolves_to]
+        self.evolves_to = frozenset(self.evolves_to)
+
+        if isinstance(self.egg_groups, str):
+            self.egg_groups = [self.egg_groups]
+        self.egg_groups = frozenset(self.egg_groups)
 
     def __eq__(self, other: Species):
         return isinstance(other, Species) and str(self.id) == str(other.id)
@@ -815,6 +824,7 @@ class Fusion(Species):
             banned=mon1.banned or mon2.banned,
             movepool=mon1.movepool + mon2.movepool,
             abilities=abilities,
+            egg_groups=mon1.egg_groups & mon2.egg_groups,
         )
         if len(items := list(self.possible_types)) == 1:
             self.types = frozenset(items[0])

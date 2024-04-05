@@ -275,6 +275,60 @@ class Pokedex(commands.Cog):
             await view.simple_send(embed=embed, ephemeral=True)
 
     @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    async def fusion(
+        self,
+        ctx: Interaction[CustomBot],
+        species1: DefaultSpeciesArg,
+        species2: DefaultSpeciesArg,
+        ratio: commands.Range[float, 0.1, 0.9] = 0.5,
+    ):
+        """Command to check Fusion Information
+
+        Parameters
+        ----------
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
+        species1 : DefaultSpeciesArg
+            First Species
+        species2 : DefaultSpeciesArg
+            Second Species
+        ratio : commands.Range[float, 0.1, 0.9]
+            Ratio of Fusion, defaults to 0.5
+        """
+        await ctx.response.defer(ephemeral=True, thinking=True)
+        mon = Fusion(species1, species2, ratio=ratio / 10)
+
+        ratio_a, ratio_b = ratio / 10, 1 - ratio / 10
+
+        embed = Embed(
+            title=f"{ratio_a:.1%} {species1.name} + {ratio_b:.1%} {species2.name}",
+            color=ctx.user.color,
+        )
+
+        if mon.banned or not mon.egg_groups:
+            embed.title += " - Banned Fusion"
+
+        if mon_types := ", ".join(i.name for i in mon.types):
+            embed.set_footer(text=f"Types: {mon_types}")
+
+        elif possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in mon.possible_types):
+            embed.set_footer(text=f"Possible Types:\n{possible_types}")
+
+        if ab_text := "\n".join(f"• {ab.name}" for ab in mon.abilities):
+            amount = min(len(mon.abilities), 2)
+            embed.add_field(name=f"Abilities (Max {amount})", value=ab_text)
+
+        if mon.abilities:
+            embed.add_field(
+                name="Abilities",
+                value="\n".join(f"• {ab.name}" for ab in mon.abilities),
+                inline=False,
+            )
+
+        await ctx.followup.send(embed=embed)
+
+    @app_commands.command()
     @app_commands.rename(_type="type", sp_ability="unique_trait")
     @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def find(

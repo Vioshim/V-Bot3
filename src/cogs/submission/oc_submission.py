@@ -302,7 +302,13 @@ class Template(TemplateItem, Enum):
             if role := get(itx.guild.roles, name="Registered"):
                 key["author"] = {"$in": [x.id for x in role.members]}
             ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-            view = SpeciesComplex(member=itx.user, target=itx, mon_total=mons, max_values=self.max_values, ocs=ocs)
+            view = SpeciesComplex(
+                member=itx.user,
+                target=itx,
+                mon_total=mons,
+                max_values=self.max_values,
+                ocs=ocs,
+            )
             async with view.send(ephemeral=ephemeral) as data:
                 if self.min_values <= len(data) <= self.max_values:
                     choices.extend(data)
@@ -643,8 +649,12 @@ class SpeciesField(TemplateField, required=True):
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
 
-        if isinstance(species, Fusion) and len(species.bases) != 2:
-            return "Must include 2 species."
+        if isinstance(species, Fusion):
+            if len(species.bases) != 2:
+                return "Must include 2 species."
+
+            if not species.egg_groups:
+                return "Invalid Egg Group Combination"
 
     @classmethod
     async def on_submit(
