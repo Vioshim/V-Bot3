@@ -334,10 +334,13 @@ class CustomBot(Bot):
         channel = getattr(channel, "parent", channel)
 
         if isinstance(channel, (TextChannel, ForumChannel, VoiceChannel)):
+            items = await channel.webhooks()
+            items.sort(key=lambda x: bool(x.user and x.user.bot))
             for item in await channel.webhooks():
-                if item.user == self.user:
+                if item.user and not item.user.bot or item.user == self.user:
                     self.webhook_cache[channel.id] = item
                     return item
+
             image = await self.user.display_avatar.read()
             item = await channel.create_webhook(
                 name=self.user.display_name,
