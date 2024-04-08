@@ -1607,7 +1607,7 @@ class CreationOCView(Basic):
             cog = itx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
             self.oc.location, self.oc.last_used = None, itx.id
-            await cog.register_oc(self.oc, image_as_is=True)
+            await cog.register_oc(self.oc)
             msg = await itx.followup.send(f"Character {self.oc.name} {word} without Issues!", ephemeral=True, wait=True)
             await msg.delete(delay=2)
         except Exception as e:
