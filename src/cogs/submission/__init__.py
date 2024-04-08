@@ -25,6 +25,7 @@ from discord import (
     DiscordException,
     Embed,
     File,
+    Forbidden,
     ForumChannel,
     Guild,
     Interaction,
@@ -698,13 +699,20 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Server")
         async for item in db.find(
-            {"oc_submission": {"$exists": True}, "oc_submission_msg": {"$exists": True}},
+            {
+                "oc_submission": {"$exists": True},
+                "oc_submission_msg": {"$exists": True},
+            },
         ):
             self.data_db[item["id"]] = item
             view = SubmissionView(timeout=None)
             channel = self.bot.get_partial_messageable(id=item["oc_submission"], guild_id=item["id"])
             message = channel.get_partial_message(item["oc_submission_msg"])
-            view.message = await message.edit(view=view)
+            try:
+                view.message = await message.edit(view=view)
+            except Forbidden:
+                w = await self.bot.webhook(channel)
+                await w.edit_message(message_id=message.id, view=view)
 
         self.bot.logger.info("Finished loading Submission menu")
 
