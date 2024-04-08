@@ -427,14 +427,9 @@ class RPModal(Modal):
 
         db = itx.client.mongo_db("OC Background")
         if img := await db.find_one({"author": self.user.id, "server": guild.id}):
-            img = img["image"]
+            embed.set_image(url=img["image"])
 
-        if oc_file := await itx.client.get_file(Character.collage(items, background=img)):
-            embed.set_image(url=f"attachment://{oc_file.filename}")
-            await base.message.edit(embed=embed, attachments=[oc_file], view=view)
-        else:
-            await base.message.edit(view=view)
-            itx.client.logger.info("Error Image Parsing OCs: %s", ", ".join(str(x.id) for x in items))
+        await base.message.edit(view=view, embed=embed)
 
         db = itx.client.mongo_db("RP Search")
         await db.insert_one(

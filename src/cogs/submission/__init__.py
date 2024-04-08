@@ -269,7 +269,7 @@ class Submission(commands.Cog):
 
         return thread
 
-    async def register_oc(self, oc: Character, image_as_is: bool = False, logging: bool = True):
+    async def register_oc(self, oc: Character, logging: bool = True):
         try:
             member = Object(id=oc.author)
             thread = await self.list_update(member, oc.server)
@@ -293,12 +293,7 @@ class Submission(commands.Cog):
             kwargs["view"] = view
 
             if not oc.image_url:
-                if image_as_is:
-                    image = oc.image
-                elif img := await self.bot.mongo_db("OC Background").find_one({"author": oc.author}):
-                    image = oc.generated_image(img["image"])
-                else:
-                    image = oc.generated_image()
+                image = oc.image
                 if file := await self.bot.get_file(url=image, filename="image"):
                     word = "attachments" if oc.id else "files"
                     kwargs[word] = [file]
@@ -961,78 +956,6 @@ class Submission(commands.Cog):
             await proxy_db.delete_one({"channel": log_channel.id, "id": item["log"]})
             with suppress(DiscordException):
                 await w.delete_message(item["log"])
-
-    @commands.command()
-    @commands.guild_only()
-    async def oc_image(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
-        async with itx.typing():
-            data = [x for x in itx.message.attachments if x.content_type.startswith("image/")]
-            image = data[0].proxy_url.split("?")[0] if data else None
-            db = self.bot.mongo_db("Characters")
-            ocs = [
-                Character.from_mongo_dict(item)
-                async for item in db.find(
-                    {
-                        "id": {"$in": oc_ids},
-                        "server": itx.guild.id,
-                    }
-                )
-            ]
-            ocs.sort(key=lambda x: x.id)
-            url = Character.collage(ocs, background=image, font=font)
-            if file := await self.bot.get_file(url):
-                await itx.reply(file=file)
-            else:
-                await itx.reply(content=url)
-
-    @commands.command()
-    @commands.guild_only()
-    async def oc_rack(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
-        async with itx.typing():
-            db = self.bot.mongo_db("Characters")
-            ocs = [
-                Character.from_mongo_dict(item)
-                async for item in db.find(
-                    {
-                        "id": {"$in": oc_ids},
-                        "server": itx.guild.id,
-                    }
-                )
-            ]
-            ocs.sort(key=lambda x: x.id)
-            url = Character.rack(ocs, font=font)
-            view = View()
-            for oc in ocs:
-                view.add_item(Button(label=oc.name[:80], url=oc.jump_url, emoji=oc.emoji))
-
-            if oc_file := await self.bot.get_file(url):
-                await itx.reply(file=oc_file, view=view)
-            else:
-                await itx.reply(content=url, view=view)
-
-    @commands.command()
-    @commands.guild_only()
-    async def oc_rack2(self, itx: commands.Context, oc_ids: commands.Greedy[int], font: bool = True):
-        async with itx.typing():
-            db = self.bot.mongo_db("Characters")
-            ocs = [
-                Character.from_mongo_dict(item)
-                async for item in db.find(
-                    {
-                        "id": {"$in": oc_ids},
-                        "server": itx.guild.id,
-                    }
-                )
-            ]
-            ocs.sort(key=lambda x: x.id)
-            url = Character.rack2(ocs, font=font)
-            view = View()
-            for index, oc in enumerate(ocs):
-                view.add_item(Button(label=oc.name[:80], url=oc.jump_url, row=index // 2, emoji=oc.emoji))
-            if oc_file := await self.bot.get_file(url):
-                await itx.reply(file=oc_file, view=view)
-            else:
-                await itx.reply(content=url, view=view)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(952518750748438549, 1196879060173852702)
