@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import asdict, dataclass, field
-from enum import Enum, IntEnum, StrEnum
+from enum import Enum, StrEnum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
@@ -211,7 +211,7 @@ class Kind(Enum):
         )
 
 
-class Size(IntEnum):
+class Size(float, Enum):
     Alpha_XXXL = 20
     Alpha_XXL = 19
     Alpha_XL = 18
@@ -231,6 +231,17 @@ class Size(IntEnum):
     Mini_XS = 3
     Mini_XXS = 2
     Mini_XXXS = 1
+
+    @property
+    def emoji(self):
+        name = self.name.split("_")[0]
+        match name:
+            case "Alpha":
+                return "🟧"
+            case "Mini":
+                return "🟦"
+            case "M":
+                return "🟩"
 
     @property
     def reference_name(self):

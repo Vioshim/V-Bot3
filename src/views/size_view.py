@@ -226,10 +226,7 @@ class HeightView(Basic):
                 value=item.name,
                 description={Size.M: "Default"}.get(item),
                 default=item == oc.size,
-                emoji={
-                    "Alpha": "\N{LARGE RED CIRCLE}",
-                    "Mini": "\N{LARGE BLUE CIRCLE}",
-                }.get(item.name.split("_")[0]),
+                emoji=item.emoji,
             )
 
     @select(placeholder="Single Choice.")
@@ -281,10 +278,7 @@ class WeightView(Basic):
                 value=item.name,
                 description={Size.M: "Default"}.get(item),
                 default=item == oc.weight,
-                emoji={
-                    "Alpha": "\N{LARGE RED CIRCLE}",
-                    "Mini": "\N{LARGE BLUE CIRCLE}",
-                }.get(item.name.split("_")[0]),
+                emoji=item.emoji,
             )
 
     @select(placeholder="Single Choice.")
