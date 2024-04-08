@@ -115,8 +115,8 @@ class Roles(commands.Cog):
             try:
                 await msg.edit(view=view)
             except Forbidden:
-                w = await self.bot.webhook(channel)
-                await w.edit_message(message_id=msg.id, view=view)
+                if w := await self.bot.webhook(channel):
+                    await w.edit_message(message_id=msg.id, view=view)
 
         self.bot.logger.info("Finished loading Self Roles")
 

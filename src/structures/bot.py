@@ -333,11 +333,11 @@ class CustomBot(Bot):
             channel = await self.fetch_channel(channel) if aux is None else aux
         channel = getattr(channel, "parent", channel)
 
-        if hasattr(channel, "webhooks"):
+        if isinstance(channel, (TextChannel, ForumChannel, VoiceChannel)):
             items: list[Webhook] = await channel.webhooks()
             items.sort(key=lambda x: bool(x.user and x.user.bot))
             for item in items:
-                if item.user and not item.user.bot or item.user == self.user:
+                if (item.user and not item.user.bot) or item.user == self.user:
                     self.webhook_cache[channel.id] = item
                     return item
 
