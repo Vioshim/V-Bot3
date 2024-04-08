@@ -23,6 +23,7 @@ from discord import (
     AutoModRule,
     AutoModTrigger,
     Embed,
+    Forbidden,
     ForumChannel,
     Guild,
     Interaction,
@@ -112,7 +113,12 @@ class Roles(commands.Cog):
             info = item.get("self_roles", {})
             channel = self.bot.get_partial_messageable(info["channel"], guild_id=item["id"])
             msg = channel.get_partial_message(info["message"])
-            await msg.edit(view=BasicRoleSelect(items=info.get("items", [])))
+            view = BasicRoleSelect(items=info.get("items", []))
+            try:
+                await msg.edit(view=view)
+            except Forbidden:
+                w = await self.bot.webhook(channel)
+                await w.edit_message(message_id=msg.id, view=view)
 
         self.bot.logger.info("Finished loading Self Roles")
 

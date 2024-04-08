@@ -712,7 +712,7 @@ class Submission(commands.Cog):
                 view.message = await message.edit(view=view)
             except Forbidden:
                 w = await self.bot.webhook(channel)
-                await w.edit_message(message_id=message.id, view=view)
+                view.message = await w.edit_message(message_id=message.id, view=view)
 
         self.bot.logger.info("Finished loading Submission menu")
 
