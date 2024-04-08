@@ -123,6 +123,7 @@ class Submission(commands.Cog):
         self.data_db: dict[int, dict] = {}
         self.ignore: set[int] = set()
         self.data_msg: dict[int, Message] = {}
+        self.ready = False
         self.itx_menu1 = ContextMenu(
             name="Moves & Abilities",
             callback=self.info_checker,
@@ -137,7 +138,6 @@ class Submission(commands.Cog):
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.itx_menu1)
         self.bot.tree.add_command(self.itx_menu2)
-        await self.load_submssions()
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.itx_menu1.name, type=self.itx_menu1.type)
@@ -711,10 +711,18 @@ class Submission(commands.Cog):
             try:
                 view.message = await message.edit(view=view)
             except Forbidden:
-                w = await self.bot.webhook(channel)
-                view.message = await w.edit_message(message_id=message.id, view=view)
+                if w := await self.bot.webhook(channel):
+                    view.message = await w.edit_message(message_id=message.id, view=view)
 
         self.bot.logger.info("Finished loading Submission menu")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if self.ready:
+            return
+
+        await self.load_submssions()
+        self.ready = True
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: Thread):

@@ -53,6 +53,7 @@ class Roles(commands.Cog):
         self.auto_mods: dict[int, Optional[AutoModRule]] = {}
         self.wrapper = TextWrapper(width=250, placeholder="", max_lines=10)
         self.no_ping_roles: dict[int, int | None] = {}
+        self.ready = False
 
     async def fetch_no_ping_role(self, guild: Guild) -> Optional[int]:
         db = self.bot.mongo_db("Server")
@@ -102,9 +103,6 @@ class Roles(commands.Cog):
 
         return self.auto_mods[guild.id]
 
-    async def cog_load(self):
-        await self.load_self_roles()
-
     async def load_self_roles(self):
         self.bot.logger.info("Loading Self Roles")
 
@@ -121,6 +119,14 @@ class Roles(commands.Cog):
                 await w.edit_message(message_id=msg.id, view=view)
 
         self.bot.logger.info("Finished loading Self Roles")
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        if self.ready:
+            return
+
+        await self.load_self_roles()
+        self.ready = True
 
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member):
