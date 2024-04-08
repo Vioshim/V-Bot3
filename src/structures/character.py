@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import asdict, dataclass, field
-from enum import Enum, StrEnum
+from enum import Enum, IntEnum, StrEnum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
@@ -211,35 +211,43 @@ class Kind(Enum):
         )
 
 
-class Size(Enum):
-    # fmt: off
-    XXXL =  2.000, 6.50, 235.000  # noqa: E222
-    XXL =   1.750, 4.00, 193.250  # noqa: E222
-    XL =    1.500, 2.00, 151.500  # noqa: E222
-    L =     1.250, 1.50, 109.750  # noqa: E222
-    M =     1.000, 1.20, 68.0000  # noqa: E222
-    S =     0.875, 1.00, 51.0000  # noqa: E222
-    XS =    0.750, 0.80, 34.0000  # noqa: E222
-    XXS =   0.625, 0.50, 17.3000  # noqa: E222
-    XXXS =  0.500, 0.30, 4.60000  # noqa: E222
-    # fmt: on
+class Size(IntEnum):
+    Alpha_XXXL = 20
+    Alpha_XXL = 19
+    Alpha_XL = 18
+    Alpha_L = 17
+    Alpha = 16
+    XXXL = 14
+    XXL = 13
+    XL = 12
+    L = 11
+    M = 10
+    S = 9
+    XS = 8
+    XXS = 7
+    XXXS = 6
+    Mini = 5
+    Mini_S = 4
+    Mini_XS = 3
+    Mini_XXS = 2
+    Mini_XXXS = 1
+
+    @property
+    def reference_name(self):
+        return self.name.replace("_", " ")
 
     def height_value(self, value: float = 0):
-        proportion, size, _ = self.value
         if value:
-            value *= proportion
+            value *= self.value / 10
         else:
-            value = size
-
+            value = self.value / 5
         return value
 
     def weight_value(self, value: float = 0):
-        proportion, _, size = self.value
         if value:
-            value *= proportion
+            value *= self.value / 10
         else:
-            value = size
-
+            value = self.value * 5
         return value
 
     @staticmethod

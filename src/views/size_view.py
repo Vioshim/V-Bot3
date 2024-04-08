@@ -226,6 +226,10 @@ class HeightView(Basic):
                 value=item.name,
                 description={Size.M: "Default"}.get(item),
                 default=item == oc.size,
+                emoji={
+                    "Alpha": "\N{LARGE RED CIRCLE}",
+                    "Mini": "\N{LARGE BLUE CIRCLE}",
+                }.get(item.name.split("_")[0]),
             )
 
     @select(placeholder="Single Choice.")
@@ -272,19 +276,15 @@ class WeightView(Basic):
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
         for item in items:
-            name, (multiplier, *_) = item.name, item.value
-            if item == Size.M:
-                name = "Default"
-            elif item.name.endswith("_"):
-                name = f"* {item.name[:-1]}"
-
-            description = f"{name} ({multiplier:.2f}x)"
-
             self.choice.add_option(
                 label=item.weight_info(weight),
                 value=item.name,
-                description=description,
+                description={Size.M: "Default"}.get(item),
                 default=item == oc.weight,
+                emoji={
+                    "Alpha": "\N{LARGE RED CIRCLE}",
+                    "Mini": "\N{LARGE BLUE CIRCLE}",
+                }.get(item.name.split("_")[0]),
             )
 
     @select(placeholder="Single Choice.")
