@@ -708,11 +708,11 @@ class Submission(commands.Cog):
             view = SubmissionView(timeout=None)
             channel = self.bot.get_partial_messageable(id=item["oc_submission"], guild_id=item["id"])
             message = channel.get_partial_message(item["oc_submission_msg"])
-            try:
+            if webhook_id := item.get("webhook_id"):
+                w = await self.bot.fetch_webhook(webhook_id)
+                view.message = await w.edit_message(message_id=message.id, view=view)
+            else:
                 view.message = await message.edit(view=view)
-            except Forbidden:
-                if w := await self.bot.webhook(channel):
-                    view.message = await w.edit_message(message_id=message.id, view=view)
 
         self.bot.logger.info("Finished loading Submission menu")
 

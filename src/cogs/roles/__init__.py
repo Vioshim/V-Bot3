@@ -112,11 +112,11 @@ class Roles(commands.Cog):
             channel = self.bot.get_partial_messageable(info["channel"], guild_id=item["id"])
             msg = channel.get_partial_message(info["message"])
             view = BasicRoleSelect(items=info.get("items", []))
-            try:
+            if webhook_id := item.get("webhook_id"):
+                w = await self.bot.fetch_webhook(webhook_id)
+                await w.edit_message(message_id=msg.id, view=view)
+            else:
                 await msg.edit(view=view)
-            except Forbidden:
-                if w := await self.bot.webhook(channel):
-                    await w.edit_message(message_id=msg.id, view=view)
 
         self.bot.logger.info("Finished loading Self Roles")
 
