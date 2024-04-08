@@ -1399,7 +1399,7 @@ class Information(commands.Cog):
                 case _:
                     embeds.append(e)
 
-        files = [await x.to_file(use_cached=True) for x in message.attachments]
+        files = [await x.to_file() for x in message.attachments]
         view = View()
         name, emoji = name_emoji_from_channel(message.channel)
         view.add_item(Button(emoji=emoji, label=name, url=message.jump_url))
