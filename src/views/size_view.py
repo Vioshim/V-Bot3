@@ -224,7 +224,7 @@ class HeightView(Basic):
             self.choice.add_option(
                 label=item.height_info(height),
                 value=item.name,
-                description={Size.M: "Default"}.get(item),
+                description=item.reference_name,
                 default=item == oc.size,
                 emoji=item.emoji,
             )
@@ -276,7 +276,7 @@ class WeightView(Basic):
             self.choice.add_option(
                 label=item.weight_info(weight),
                 value=item.name,
-                description={Size.M: "Default"}.get(item),
+                description=item.reference_name,
                 default=item == oc.weight,
                 emoji=item.emoji,
             )

@@ -245,7 +245,7 @@ class Size(float, Enum):
 
     @property
     def reference_name(self):
-        return self.name.replace("_", " ")
+        return "Default" if self == Size.M else self.name.replace("_", " ")
 
     def height_value(self, value: float = 0):
         if value:
