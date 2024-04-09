@@ -765,7 +765,7 @@ class Submission(commands.Cog):
             await msg.pin(reason=f"Thread created by {thread.owner}")
             embed = Embed(
                 title="Reminder",
-                description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1197132689292152844>\n* </find:1186936002330243096>",
+                description="> In order to see the User's OCs just hold their username for a while or press right click, you'll see what OCs they have available.\n* </ocs:1225930574024409194>\n* </find:1225930574217216016>",
                 color=thread.owner.color,
                 timestamp=thread.created_at,
             )
@@ -790,7 +790,8 @@ class Submission(commands.Cog):
                 allowed_mentions=AllowedMentions.none(),
             )
             await data.message.pin()
-            await data.thread.add_user(thread.owner)
+            if thread.owner:
+                await data.thread.add_user(thread.owner)
             await thread.delete()
 
     @commands.Cog.listener()
