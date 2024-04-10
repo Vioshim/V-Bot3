@@ -21,7 +21,6 @@ from typing import Optional, TypeVar
 
 from discord import (
     Asset,
-    Attachment,
     File,
     HTTPException,
     Interaction,
@@ -139,15 +138,17 @@ class ImageView(Basic):
                     continue
 
                 if attachments := received.attachments:
-                    self.text = await attachments[0].to_file(use_cached=True)
+                    self.text = attachments[0].proxy_url
                     self.received = received
                     await received.delete(delay=0)
-                elif file := await ctx.client.get_file(url=received.content):
+                elif file := await ctx.client.get_file(url=received.content, filename="image"):
                     await received.delete(delay=0)
-                    self.text = file
-                    self.received = received
+                    self.received = foo = await ctx.channel.send(file=file)
+                    if attachments := self.received.attachments:
+                        self.text = attachments[0].proxy_url
+                    await foo.delete(delay=0)
                 elif self.message.embeds and (image := self.message.embeds[0].image):
-                    self.text = await ctx.client.get_file(image.proxy_url or image.url)
+                    self.text = image.proxy_url
                 else:
                     self.text = None
 
