@@ -740,6 +740,7 @@ class Submission(commands.Cog):
                 },
                 {
                     "_id": 0,
+                    "threading": 1,
                     "no_thread_categories": 1,
                     "rp_planning": 1,
                     "looking_for_rp": 1,
@@ -778,7 +779,7 @@ class Submission(commands.Cog):
                 allowed_mentions=AllowedMentions(roles=[ping_role]),
                 mention_author=True,
             )
-        elif not item.get("no_threading"):
+        elif item.get("threading"):
             data = await parent.create_thread(
                 name=thread.name,
                 content=msg.content[:2000],
