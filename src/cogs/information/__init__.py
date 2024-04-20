@@ -265,7 +265,7 @@ class Information(commands.Cog):
         icon : Attachment
             Image File
         """
-        if not icon or icon.content_type.startswith("image"):
+        if not icon or str(icon.content_type).startswith("image"):
             try:
                 await perk.method(itx, icon)
             except Exception as e:
@@ -471,6 +471,8 @@ class Information(commands.Cog):
         if item := await db1.find_one({"user": user.id, "server": guild.id}):
             url = f"https://discord.com/channels/{guild.id}/{item['id']}"
             view.add_item(Button(label="Characters", url=url))
+        else:
+            view.add_item(Button(label="Account Link", url=f"https://discord.com/users/{user.id}"))
 
         channel_id = info["id"]
         if thread_id := info.get("thread"):
@@ -931,7 +933,6 @@ class Information(commands.Cog):
             avatar_url=user.display_avatar.url,
         )
 
-    @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if not message.guild:
             return
