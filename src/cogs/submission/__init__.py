@@ -294,7 +294,7 @@ class Submission(commands.Cog):
             kwargs["view"] = view
 
             image = oc.image or oc.image_url
-            if file := await self.bot.get_file(url=image, filename="image"):
+            if file := await self.bot.get_file(url=image, filename="image.png"):
                 word = "attachments" if oc.id else "files"
                 kwargs[word] = [file]
 
