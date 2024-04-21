@@ -70617,7 +70617,7 @@
 		"SPE": 115,
 		"evolves_from": "RAYQUAZA",
 		"abilities": ["DELTASTREAM"],
-		"kind": "Pokemon",
+		"kind": "Mega",
 		"egg_groups": ["no-eggs"]
 	},
 	{
