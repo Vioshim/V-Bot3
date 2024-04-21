@@ -1404,7 +1404,6 @@ class CreationOCView(Basic):
         self.submit.label = "Save Changes" if self.oc.id else "Submit OC"
         self.cancel.label = "Close this Menu"
         self.finish_oc.label = "Delete OC"
-        self.help.label = "Request Help"
 
         if bool(errors):
             self.submit.style = ButtonStyle.red
@@ -1466,13 +1465,12 @@ class CreationOCView(Basic):
             try:
                 self.oc.image.fp.seek(0)
                 files = [self.oc.image]
+                embed.set_image(url="attachment://image.png")
             except ValueError:
                 files, self.oc.image = [], None
                 condition = False
                 self.progress.discard(ImageField.name)
-
-        if not condition:
-            embed.set_image(url="attachment://image.png")
+                embed.set_image(url=self.oc.image_url)
         else:
             embed.set_image(url=self.oc.image_url)
 
@@ -1487,7 +1485,7 @@ class CreationOCView(Basic):
                 m = await itx.original_response()
 
             if files and m.embeds:
-                self.oc.image = m.embeds[0].image.proxy_url
+                self.oc.image = m.embeds[0].image.proxy_url or m.embeds[0].image.url
                 self.setup(embed_update=False)
                 m = await m.edit(view=self)
 
@@ -1498,8 +1496,6 @@ class CreationOCView(Basic):
     async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] | None = None):
         self.ephemeral = ephemeral
         self.embeds = embeds or self.embeds
-        if not ephemeral:
-            self.remove_item(self.help)
         return await self.send(embeds=self.embeds, ephemeral=ephemeral, content=str(self.oc.id or ""))
 
     @select(placeholder="Essentials. Click here!", row=1)
@@ -1587,14 +1583,6 @@ class CreationOCView(Basic):
                 self.oc.image = image.url
 
         await self.delete(itx)
-
-    @button(label="Request Help", row=3)
-    async def help(self, itx: Interaction[CustomBot], btn: Button):
-        if "Confirm" not in btn.label:
-            btn.label = f"{btn.label} (Confirm)"
-            resp: InteractionResponse = itx.response
-            return await resp.edit_message(view=self)
-        await self.help_method(itx)
 
     @button(disabled=True, label="Submit", style=ButtonStyle.green, row=3)
     async def submit(self, itx: Interaction[CustomBot], btn: Button):

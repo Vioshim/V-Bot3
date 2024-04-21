@@ -85,8 +85,8 @@ def comparison_handler(before: Character, now: Character):
             e1.description = e2.description = None
 
         if before.image != now.image:
-            e1.set_image(url=before.image)
-            e2.set_image(url=now.image)
+            e1.set_image(url=before.image_url or before.image)
+            e2.set_image(url=now.image_url or now.image)
         else:
             e1.set_image(url=WHITE_BAR)
             e2.set_image(url=WHITE_BAR)
@@ -293,11 +293,10 @@ class Submission(commands.Cog):
                 view.add_item(Button(label=name, emoji=emoji, url=msg.jump_url))
             kwargs["view"] = view
 
-            if not oc.image_url:
-                image = oc.image
-                if file := await self.bot.get_file(url=image, filename="image"):
-                    word = "attachments" if oc.id else "files"
-                    kwargs[word] = [file]
+            image = oc.image or oc.image_url
+            if file := await self.bot.get_file(url=image, filename="image"):
+                word = "attachments" if oc.id else "files"
+                kwargs[word] = [file]
 
             former: Optional[Character] = None
 

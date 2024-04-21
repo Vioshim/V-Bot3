@@ -138,17 +138,17 @@ class ImageView(Basic):
                     continue
 
                 if attachments := received.attachments:
-                    self.text = attachments[0].proxy_url
+                    self.text = attachments[0].proxy_url or attachments[0].url
                     self.received = received
                     await received.delete(delay=0)
                 elif file := await ctx.client.get_file(url=received.content, filename="image"):
                     await received.delete(delay=0)
                     self.received = foo = await ctx.channel.send(file=file)
                     if attachments := self.received.attachments:
-                        self.text = attachments[0].proxy_url
+                        self.text = attachments[0].proxy_url or attachments[0].url
                     await foo.delete(delay=0)
                 elif self.message.embeds and (image := self.message.embeds[0].image):
-                    self.text = image.proxy_url
+                    self.text = image.proxy_url or image.url
                 else:
                     self.text = None
 
