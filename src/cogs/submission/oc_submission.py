@@ -1460,6 +1460,7 @@ class CreationOCView(Basic):
         self.setup(condition)
         embeds, files = self.embeds, MISSING
         embed = embeds[0]
+        image = self.oc.image or self.oc.image_url
 
         if isinstance(self.oc.image, File):
             try:
@@ -1470,9 +1471,9 @@ class CreationOCView(Basic):
                 files, self.oc.image = [], None
                 condition = False
                 self.progress.discard(ImageField.name)
-                embed.set_image(url=self.oc.image_url)
+                embed.set_image(url=image)
         else:
-            embed.set_image(url=self.oc.image_url)
+            embed.set_image(url=image)
 
         try:
             if resp.is_done() and (message := self.message or itx.message):
