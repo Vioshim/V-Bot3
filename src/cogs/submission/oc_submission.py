@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, TypedDict
 
 from discord import (
     ButtonStyle,
@@ -153,17 +153,23 @@ class TicketModal(Modal, title="Ticket"):
         self.stop()
 
 
+class TemplateDict(TypedDict):
+    description: str
+    fields: Optional[dict[str, str | dict[str, str]]]
+    docs: Optional[dict[str, str]]
+    modifier: Optional[dict[str, tuple[str, str]]]
+    exclude: Optional[list[str]]
+
+
 @dataclass(unsafe_hash=True, slots=True)
 class TemplateItem:
     description: str
     fields: frozendict[str, str]
     docs: frozendict[str, str]
-    restricted: bool = False
 
-    def __init__(self, data: dict[str, str]) -> None:
+    def __init__(self, data: TemplateDict | dict) -> None:
         self.description = data.get("description", "")
-        self.restricted = data.get("restricted", False)
-        modifier = data.get("modifier", {})
+        modifier = data.get("modifier") or {}
         default = dict(
             Name="Name",
             Species="Species",
@@ -174,116 +180,91 @@ class TemplateItem:
             Moveset="Move, Move, Move, Move, Move, Move",
         )
 
-        exclude = data.get("exclude", ["Types"])
+        exclude = data.get("exclude", ["Types"]) or []
         fields = {x[0]: x[1] for k, v in default.items() if (x := modifier.get(k, (k, v))) and x[0] not in exclude}
         self.fields = frozendict(fields)
         self.docs = frozendict(
-            data.get(
-                "docs",
-                {
-                    "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
-                    "Unique Trait": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
-                },
-            )
+            data.get("docs")
+            or {
+                "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
+                "Unique Trait": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
+            }
         )
 
 
 class Template(TemplateItem, Enum):
-    Pokemon = dict(description="Normal residents that resemble Pokemon.")
-    Legendary = dict(
-        description="Normal residents that resemble Legendary Pokemon.",
-        restricted=True,
-    )
-    Mythical = dict(
-        description="Normal residents that resemble Mythical Pokemon.",
-        restricted=True,
-    )
-    UltraBeast = dict(
-        description="Normal residents that resemble Ultra Beasts.",
-        restricted=True,
-    )
-    Paradox = dict(
-        description="Normal residents that resemble Paradox Pokemon.",
-        restricted=True,
-    )
-    Mega = dict(
-        description="Permanent Mega Evolutions.",
-        docs={
+    Pokemon = {"description": "Normal residents that resemble Pokemon."}
+    Legendary = {"description": "Normal residents that resemble Legendary Pokemon."}
+    Mythical = {"description": "Normal residents that resemble Mythical Pokemon."}
+    UltraBeast = {"description": "Normal residents that resemble Ultra Beasts."}
+    Paradox = {"description": "Normal residents that resemble Paradox Pokemon."}
+    Mega = {
+        "description": "Permanent Mega Evolutions.",
+        "docs": {
             "Standard": "1QRlm692RM5lXBv3bx8YKdnkkeYqz8bYY9MLzR8ElX4s",
             "Unique Trait": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
         },
-        restricted=True,
-    )
-    Crossbreed = dict(
-        description="Individuals that share traits of two species.",
-        modifier={
-            "Species": ("Species", "Species 1, Species 2"),
-        },
-        exclude=[],
-        docs={
+    }
+    Crossbreed = {
+        "description": "Individuals that share traits of two species naturally.",
+        "modifier": {"Species": ("Species", "Species 1, Species 2")},
+        "exclude": [],
+        "docs": {
             "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
             "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
-    )
-    Fusion = dict(
-        description="Individuals that share traits of two species.",
-        modifier={
-            "Species": ("Species", "Species 1, Species 2"),
-        },
-        exclude=[],
-        docs={
+    }
+    Fusion = {
+        "description": "Individuals that share traits of two species artificially.",
+        "modifier": {"Species": ("Species", "Species 1, Species 2")},
+        "exclude": [],
+        "docs": {
             "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
             "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
-        restricted=True,
-    )
-    Variant = dict(
-        description="Fan-made. Species variations (movesets, types)",
-        modifier={"Species": ("Variant", "Variant Species")},
-        docs={
+    }
+    Variant = {
+        "description": "Fan-made. Species variations (movesets, types)",
+        "modifier": {"Species": ("Variant", "Variant Species")},
+        "docs": {
             "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
             "Unique Trait": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
         },
-        restricted=True,
-    )
-    CustomPokemon = dict(
-        description="Fan-made. They are normal residents.",
-        modifier={"Species": ("Fakemon", "Fakemon Species")},
-        docs={
+    }
+    CustomPokemon = {
+        "description": "Fan-made. They are normal residents.",
+        "modifier": {"Species": ("Fakemon", "Fakemon Species")},
+        "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
             "Evolution": "1v48lBR4P5ucWtAFHBy0DpIzUCUPCQHVFlz4q-it-pj8",
             "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
-        restricted=True,
-    )
-    CustomMega = dict(
-        description="Fan-made. Mega evolved and kept stuck like this.",
-        modifier={"Species": ("Fakemon", "Mega Species")},
-        docs={
+    }
+    CustomMega = {
+        "description": "Fan-made. Mega evolved and kept stuck like this.",
+        "modifier": {"Species": ("Fakemon", "Mega Species")},
+        "docs": {
             "Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0",
             "Unique Trait": "1tQPKNdxQTA33eUwNgWVGZMYJ3iQzloZIbSNirRXqhj4",
         },
-        restricted=True,
-    )
-    CustomParadox = dict(
-        description="Fan-made. From distant past/future, somehow ended up here.",
-        modifier={"Species": ("Fakemon", "Paradox Species")},
-        docs={
+    }
+    CustomParadox = {
+        "description": "Fan-made. From distant past/future, somehow ended up here.",
+        "modifier": {"Species": ("Fakemon", "Paradox Species")},
+        "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
         },
-        restricted=True,
-    )
-    CustomUltraBeast = dict(
-        description="Fan-made. From other dimensions, somehow ended up here.",
-        modifier={"Species": ("Fakemon", "Ultra Beast Species")},
-        docs={
+    }
+    CustomUltraBeast = {
+        "description": "Fan-made. From other dimensions, somehow ended up here.",
+        "modifier": {"Species": ("Fakemon", "Ultra Beast Species")},
+        "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
         },
-        restricted=True,
-    )
+    }
 
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
         choices: list[Species] = []
@@ -1375,7 +1356,6 @@ class CreationOCView(Basic):
                 description=x.description[:100],
             )
             for x in Template
-            if not x.restricted or self.member.guild_permissions.administrator
         ]
         self.fields1.options.clear()
         self.fields2.options.clear()
@@ -1423,13 +1403,7 @@ class CreationOCView(Basic):
             self.oc.species = None
             items = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
             self.progress -= {x.name for x in items}
-            ref_template = Template[sct.values[0]]
-
-            if ref_template.restricted and not self.member.guild_permissions.administrator:
-                self.ref_template = Template.Pokemon
-            else:
-                self.ref_template = ref_template
-
+            self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.M
             await self.update(itx)
         except Exception as e:
@@ -1756,19 +1730,11 @@ class TemplateSelectionView(Basic):
                 emoji=RICH_PRESENCE_EMOJI,
             )
             for x in Template
-            if not x.restricted or self.member.guild_permissions.administrator
         ]
 
     @select(placeholder="Click here to read our Templates", row=0, custom_id="read")
     async def show_template(self, itx: Interaction[CustomBot], sct: Select) -> None:
         template = Template[sct.values[0]]
-
-        if template.restricted and not itx.user.guild_permissions.administrator:
-            return await itx.followup.send(
-                "This template is restricted to Administrators only.",
-                ephemeral=True,
-            )
-
         embed = Embed(title="How do you want to register your character?", color=0xFFFFFE)
         embed.set_image(url="https://hmp.me/dx38")
         embed.set_footer(text="After sending, bot will ask for backstory, extra info and image.")
