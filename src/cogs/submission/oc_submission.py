@@ -600,22 +600,6 @@ class SpeciesField(TemplateField, required=True):
         if isinstance(
             species,
             (
-                Mythical,
-                Legendary,
-                Paradox,
-                UltraBeast,
-                Fakemon,
-                Mega,
-                Fakemon,
-                CustomMega,
-                Variant,
-            ),
-        ):
-            return "Kind of species not allowed."
-
-        if isinstance(
-            species,
-            (
                 Variant,
                 CustomMega,
                 CustomParadox,
@@ -630,12 +614,8 @@ class SpeciesField(TemplateField, required=True):
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
 
-        if isinstance(species, Fusion):
-            if len(species.bases) != 2:
-                return "Must include 2 species."
-
-            if not species.egg_groups:
-                return "Invalid Egg Group Combination"
+        if isinstance(species, Fusion) and len(species.bases) != 2:
+            return "Must include 2 species."
 
     @classmethod
     async def on_submit(
