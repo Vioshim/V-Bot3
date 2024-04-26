@@ -109,6 +109,11 @@ class ForumModal(Modal):
             await itx.response.send_message("Added Forum thread", ephemeral=True, view=view)
 
 
+class RollFlags(commands.FlagConverter, prefix="--", delimiter=" "):
+    expression: str = commands.flag(default="d20", positional=True)
+    ephemeral: bool = True
+
+
 class Utilities(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
@@ -340,7 +345,7 @@ class Utilities(commands.Cog):
 
     @commands.hybrid_command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def roll(self, ctx: commands.Context[CustomBot], *, expression: str = "d20"):
+    async def roll(self, ctx: commands.Context[CustomBot], *, flags: RollFlags):
         """Allows to roll dice based on 20
 
         Parameters
@@ -349,16 +354,18 @@ class Utilities(commands.Cog):
             Context
         expression : str
             Expression (Example: d20)
+        ephemeral : bool
+            Shows to only you, by default True
         """
-        await ctx.defer(ephemeral=True)
+        await ctx.defer(ephemeral=flags.ephemeral)
 
         embed = Embed(
-            title=f"Rolling: {expression}",
+            title=f"Rolling: {flags.expression}",
             color=Color.blurple(),
             timestamp=ctx.message.created_at,
         )
 
-        if len(embed.title) > 256:
+        if embed.title and len(embed.title) > 256:
             embed.title = "Rolling Expression"
 
         embed.set_image(url=WHITE_BAR)
@@ -367,7 +374,7 @@ class Utilities(commands.Cog):
             embed.set_footer(text=guild.name, icon_url=guild.icon)
 
         try:
-            value = d20.roll(expr=expression, allow_comments=True)
+            value = d20.roll(expr=flags.expression, allow_comments=True)
             if len(value.result) > 4096:
                 d20.utils.simplify_expr(value.expr)
             embed.description = value.result
