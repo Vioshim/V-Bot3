@@ -61,7 +61,6 @@ async def main() -> None:
                 description="This is Vioshim's bot",
                 command_attrs=dict(hidden=True),
                 case_insensitive=True,
-                help_command=None,
                 aiogoogle=aiogoogle,
             ) as bot,
         ):
