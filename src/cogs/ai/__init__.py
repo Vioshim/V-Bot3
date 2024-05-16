@@ -76,6 +76,8 @@ class AiCog(commands.Cog):
         await self.client.close()
 
     @app_commands.guilds(1196879060173852702)
+    @commands.max_concurrency(1, wait=False)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.hybrid_group(invoke_without_command=True)
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         await ctx.invoke(self.generate, flags=flags)
