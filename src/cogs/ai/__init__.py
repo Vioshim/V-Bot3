@@ -76,13 +76,11 @@ class AiCog(commands.Cog):
         await self.client.close()
 
     @app_commands.guilds(1196879060173852702)
-    @commands.is_nsfw()
     @commands.hybrid_group(invoke_without_command=True)
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         await ctx.invoke(self.generate, flags=flags)
 
     @ai.command()
-    @commands.is_nsfw()
     async def generate(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate an image from a prompt"""
         await ctx.defer(ephemeral=True)
@@ -117,7 +115,6 @@ class AiCog(commands.Cog):
             await ctx.send(embed=embed, files=files, ephemeral=True)
 
     @ai.command()
-    @commands.is_nsfw()
     async def img2img(
         self,
         ctx: commands.Context,
@@ -189,7 +186,6 @@ class AiCog(commands.Cog):
             await ctx.send(embed=embed, files=files, ephemeral=True)
 
     @ai.command()
-    @commands.is_nsfw()
     async def inpaint(
         self,
         ctx: commands.Context,
