@@ -15,7 +15,7 @@
 
 import base64
 import os
-import random
+from io import BytesIO
 from typing import Optional
 
 from discord import Attachment, Embed, File, app_commands
@@ -41,7 +41,7 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
         description="Model to use for generating the image",
     )
     seed: commands.Range[int, 0, 4294967295 - 7] = commands.flag(
-        default=lambda _: random.randint(0, 4294967295 - 7),
+        default=0,
         description="Seed for the AI to generate the image from",
     )
     size: Resolution = commands.flag(
@@ -79,16 +79,15 @@ class AiCog(commands.GroupCog, name="ai"):
     @commands.hybrid_command()
     async def generate(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate an image from a prompt"""
+        await ctx.defer(ephemeral=True)
 
-        height, width = flags.size.value
         payload = Metadata(
             prompt=flags.prompt,
             negative_prompt=flags.negative_prompt,
+            res_preset=flags.size,
             model=flags.model,
             seed=flags.seed,
             action=Action.GENERATE,
-            height=height,
-            width=width,
             sampler=flags.sampler,
             steps=flags.steps,
         )
@@ -101,7 +100,13 @@ class AiCog(commands.GroupCog, name="ai"):
                 description="Generating image...",
                 color=0x2F3136,
             )
-            files = [File(img.data, filename=img.filename) for img in await self.client.generate_image(payload)]
+            files = [
+                File(
+                    fp=BytesIO(img.data),
+                    filename=img.filename,
+                )
+                for img in await self.client.generate_image(payload, is_opus=True)
+            ]
             await ctx.send(embed=embed, files=files, ephemeral=True)
 
     @commands.hybrid_command()
@@ -115,13 +120,21 @@ class AiCog(commands.GroupCog, name="ai"):
         *,
         flags: GenerateFlags,
     ):
-        """Generate an image from a prompt
+        """Generate an image from an image
 
         Parameters
         ----------
-        vibe : Optional[Attachment], optional
-            Attachment to use for the image's vibe, by default None
+        image : Attachment
+            Attachment to use for the image
+        mask : Optional[Attachment], optional
+            Attachment to use for the mask, by default None
+        strength : commands.Range[float, 0.01, 0.99], optional
+            Strength of the image, by default 0.6
+        noise : commands.Range[float, 0, 1], optional
+            Noise of the image, by default 0.1
         """
+        await ctx.defer(ephemeral=True)
+
         if not (image is not None and str(image.content_type).startswith("image/")):
             raise commands.BadArgument("Invalid image attachment")
 
@@ -157,7 +170,13 @@ class AiCog(commands.GroupCog, name="ai"):
                 description="Generating image...",
                 color=0x2F3136,
             )
-            files = [File(img.data, filename=img.filename) for img in await self.client.generate_image(payload)]
+            files = [
+                File(
+                    fp=BytesIO(img.data),
+                    filename=img.filename,
+                )
+                for img in await self.client.generate_image(payload, is_opus=True)
+            ]
             await ctx.send(embed=embed, files=files, ephemeral=True)
 
     @commands.hybrid_command()
@@ -166,6 +185,7 @@ class AiCog(commands.GroupCog, name="ai"):
         ctx: commands.Context,
         image: Attachment,
         mask: Attachment,
+        add_original_image: bool = False,
         strength: commands.Range[float, 0.01, 0.99] = 0.6,
         noise: commands.Range[float, 0, 1] = 0.1,
         *,
@@ -175,9 +195,17 @@ class AiCog(commands.GroupCog, name="ai"):
 
         Parameters
         ----------
-        vibe : Optional[Attachment], optional
-            Attachment to use for the image's vibe, by default None
+        image : Attachment
+            Attachment to use for the image
+        mask : Optional[Attachment], optional
+            Attachment to use for the mask, by default None
+        strength : commands.Range[float, 0.01, 0.99], optional
+            Strength of the image, by default 0.6
+        noise : commands.Range[float, 0, 1], optional
+            Noise of the image, by default 0.1
         """
+        await ctx.defer(ephemeral=True)
+
         if not (image is not None and str(image.content_type).startswith("image/")):
             raise commands.BadArgument("Invalid image attachment")
 
@@ -198,6 +226,7 @@ class AiCog(commands.GroupCog, name="ai"):
             width=width,
             sampler=flags.sampler,
             noise=noise,
+            add_original_image=add_original_image,
             steps=flags.steps,
             mask=mask_data,
             image=data,
@@ -212,7 +241,13 @@ class AiCog(commands.GroupCog, name="ai"):
                 description="Generating image...",
                 color=0x2F3136,
             )
-            files = [File(img.data, filename=img.filename) for img in await self.client.generate_image(payload)]
+            files = [
+                File(
+                    fp=BytesIO(img.data),
+                    filename=img.filename,
+                )
+                for img in await self.client.generate_image(payload, is_opus=True)
+            ]
             await ctx.send(embed=embed, files=files, ephemeral=True)
 
 
