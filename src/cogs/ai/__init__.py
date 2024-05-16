@@ -15,6 +15,7 @@
 
 import base64
 import os
+import random
 from typing import Optional
 
 from discord import Attachment, Embed, File, app_commands
@@ -40,7 +41,7 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
         description="Model to use for generating the image",
     )
     seed: commands.Range[int, 0, 4294967295 - 7] = commands.flag(
-        default=0,
+        default=lambda _: random.randint(0, 4294967295 - 7),
         description="Seed for the AI to generate the image from",
     )
     size: Resolution = commands.flag(
