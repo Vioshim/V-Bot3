@@ -7,8 +7,8 @@ license = "apache"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11.7"
-"discord.py" = { git = "https://github.com/Vioshim/discord.py.git", rev = "flags/consume_rest", extras = [
+python = "^3.12.3"
+"discord.py" = { git = "https://github.com/Rapptz/discord.py.git", rev = "master", extras = [
     "speed",
     "voice",
 ] }
@@ -35,6 +35,7 @@ webcolors = "^1.13"
 titlecase = "^2.4.1"
 reportlab = "^4.0.8"
 discord-ext-i18n = {git = "https://github.com/Vioshim/discord-ext-i18n"}
+novelai = {git = "https://github.com/Vioshim/NovelAI-API.git"}
 
 
 [tool.poetry.dev-dependencies]

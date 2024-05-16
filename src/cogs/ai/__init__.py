@@ -13,178 +13,206 @@
 # limitations under the License.
 
 
-from discord import (
-    Embed,
-    Interaction,
-    Message,
-    Object,
-    RawBulkMessageDeleteEvent,
-    RawMessageDeleteEvent,
-    RawThreadDeleteEvent,
-    TextChannel,
-    TextStyle,
-    Thread,
-    Webhook,
-)
+import base64
+import os
+from typing import Optional
+
+from discord import Attachment, Embed, File, app_commands
 from discord.ext import commands
-from discord.ui import Button, Modal, TextInput, View
-from openai import Completion
-from rapidfuzz import process
+from novelai import Action, Metadata, Model, NAIClient, Resolution, Sampler
 
 from src.structures.bot import CustomBot
-from src.structures.character import Character
-from src.utils.functions import safe_username
 
 
-def ai_completition(prompt: str):
-    return "\n".join(
-        choice.text
-        for choice in Completion.create(
-            prompt=prompt,
-            engine="text-davinci-002",
-            max_tokens=4000 - len(prompt),
-            temperature=0.7,
-            top_p=1,
-            stop=None,
-            presence_penalty=0,
-            frequency_penalty=0,
-            echo=False,
-            n=1,
-            stream=False,
-            logprobs=None,
-            best_of=1,
-            logit_bias={},
-        ).choices
+class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
+    prompt: str = commands.flag(
+        default="",
+        positional=True,
+        description="Prompt for the AI to generate an image from",
+    )
+    negative_prompt: str = commands.flag(
+        default="",
+        aliases=["neg_prompt", "negative", "neg"],
+        description="Negative prompt for the AI to generate an image from",
+    )
+    model: Model = commands.flag(
+        default=Model.FURRYV3,
+        description="Model to use for generating the image",
+    )
+    seed: commands.Range[int, 0, 4294967295 - 7] = commands.flag(
+        default=0,
+        description="Seed for the AI to generate the image from",
+    )
+    size: Resolution = commands.flag(
+        default=Resolution.NORMAL_SQUARE,
+        description="Size of the image to generate",
+    )
+    sampler: Sampler = commands.flag(
+        default=Sampler.EULER_ANC,
+        description="Sampler to use for generating the image",
+    )
+    steps: commands.Range[int, 1, 28] = commands.flag(
+        default=28,
+        aliases=["step"],
+        description="Number of steps to generate the image",
     )
 
 
-def message_parse(message: Message):
-    if isinstance(channel := message.channel, Thread):
-        thread_id, channel_id = channel.id, channel.parent_id
-    else:
-        thread_id, channel_id = None, channel.id
+@app_commands.guilds(1196879060173852702)
+class AiCog(commands.GroupCog, name="ai"):
 
-    return {
-        "id": message.id,
-        "text": message.content,
-        "category": message.channel.category_id,
-        "thread": thread_id,
-        "channel": channel_id,
-        "server": message.guild.id,
-        "created_at": message.created_at,
-    }
-
-
-class AIModal(Modal):
-    def __init__(self, ephemeral: bool = True) -> None:
-        super(AIModal, self).__init__(title="Open AI", timeout=None)
-        self.ephemeral = ephemeral
-        self.description = TextInput(label="Description", style=TextStyle.paragraph)
-        self.add_item(self.description)
-
-    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
-        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
-
-    @classmethod
-    async def send(cls, interaction: Interaction[CustomBot], text: str, ephemeral: bool = False):
-        answer = await interaction.client.loop.run_in_executor(None, ai_completition, text)
-        if len(text) <= 256:
-            embeds = [Embed(title=text, description=answer, color=interaction.user.color)]
-        else:
-            embed1 = Embed(description=text, color=interaction.user.color)
-            embed2, embed2.description = embed1.copy(), answer
-            embeds = [embed1, embed2]
-
-        message = await interaction.followup.send(embeds=embeds, ephemeral=ephemeral, wait=True)
-        w: Webhook = await interaction.client.webhook(1020151767532580934)
-        view = View()
-        view.add_item(Button(label="Jump URL", url=message.jump_url))
-        await w.send(
-            embeds=embeds,
-            username=safe_username(interaction.user.display_name),
-            avatar_url=interaction.user.display_avatar.url,
-            view=view,
-            thread=Object(id=1020153295622373437),
+    def __init__(self, bot: CustomBot):
+        self.bot = bot
+        self.client = NAIClient(
+            os.environ["NOVELAI_USERNAME"],
+            os.environ["NOVELAI_PASSWORD"],
+            proxy=None,
         )
 
-    async def on_submit(self, interaction: Interaction[CustomBot], /) -> None:
-        await interaction.response.defer(ephemeral=self.ephemeral, thinking=True)
-        await self.send(interaction, text=self.description.value, ephemeral=self.ephemeral)
-        self.stop()
+    async def cog_load(self) -> None:
+        await self.client.init(timeout=30, auto_close=True)
 
+    async def cog_unload(self) -> None:
+        await self.client.close()
 
-class AiCog(commands.Cog):
-    def __init__(self, bot: CustomBot) -> None:
-        self.bot = bot
-        self.cache: dict[int, dict] = {}
-        self.msg_cache: dict[int, Message] = {}
+    @commands.hybrid_command()
+    async def generate(self, ctx: commands.Context, *, flags: GenerateFlags):
+        """Generate an image from a prompt"""
 
-    async def process(self, message: Message):
-        db = self.bot.mongo_db("RP Samples")
-        db2 = self.bot.mongo_db("Characters")
-        ocs = [Character.from_mongo_dict(x) async for x in db2.find({})]
-        if items := process.extract(
-            message.author.display_name,
-            ocs,
-            processor=lambda x: getattr(x, "name", x),
-            score_cutoff=85,
-        ):
-            data = message_parse(message)
-            if len(ocs := [x[0] for x in items]) == 1:
-                data["oc"] = ocs[0].id
-            else:
-                data["ocs"] = [x.id for x in ocs]
+        height, width = flags.size.value
+        payload = Metadata(
+            prompt=flags.prompt,
+            negative_prompt=flags.negative_prompt,
+            model=flags.model,
+            seed=flags.seed,
+            action=Action.GENERATE,
+            height=height,
+            width=width,
+            sampler=flags.sampler,
+            steps=flags.steps,
+        )
 
-            self.cache[message.id] = data
-            self.msg_cache[message.id] = message
+        if result := payload.calculate_cost(is_opus=True):
+            await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
+        else:
+            embed = Embed(
+                title="Result",
+                description="Generating image...",
+                color=0x2F3136,
+            )
+            files = [File(img.data, filename=img.filename) for img in await self.client.generate_image(payload)]
+            await ctx.send(embed=embed, files=files, ephemeral=True)
 
-            await db.replace_one({"id": message.id}, data, upsert=True)
-
-    @commands.Cog.listener()
-    async def on_raw_thread_delete(self, payload: RawThreadDeleteEvent):
-        db = self.bot.mongo_db("RP Samples")
-        await db.delete_many({"thread": payload.thread_id})
-
-    @commands.Cog.listener()
-    async def on_channel_delete(self, channel: TextChannel):
-        if isinstance(channel, TextChannel):
-            db = self.bot.mongo_db("RP Samples")
-            await db.delete_many({"channel": channel.id})
-
-    @commands.Cog.listener()
-    async def on_raw_message_delete(self, payload: RawMessageDeleteEvent):
-        db = self.bot.mongo_db("RP Samples")
-        self.cache.pop(payload.message_id, None)
-        self.msg_cache.pop(payload.message_id, None)
-        await db.delete_one({"id": payload.message_id})
-
-    @commands.Cog.listener()
-    async def on_raw_bulk_message_delete(self, payload: RawBulkMessageDeleteEvent):
-        db = self.bot.mongo_db("RP Samples")
-        await db.delete_many({"id": {"$in": list(payload.message_ids)}})
-        for item in payload.message_ids:
-            self.cache.pop(item, None)
-            self.msg_cache.pop(item, None)
-
-    @staticmethod
-    async def ai(interaction: Interaction[CustomBot], text: str, ephemeral: bool = True):
-        """Open AI Generator
+    @commands.hybrid_command()
+    async def img2img(
+        self,
+        ctx: commands.Context,
+        image: Attachment,
+        mask: Optional[Attachment] = None,
+        strength: commands.Range[float, 0.01, 0.99] = 0.6,
+        noise: commands.Range[float, 0, 1] = 0.1,
+        *,
+        flags: GenerateFlags,
+    ):
+        """Generate an image from a prompt
 
         Parameters
         ----------
-        interaction : Interaction
-            Interaction
-        text : str
-            Text
-        ephemeral : bool, optional
-            If invisible, by default True
+        vibe : Optional[Attachment], optional
+            Attachment to use for the image's vibe, by default None
         """
-        if text:
-            await interaction.response.defer(ephemeral=ephemeral, thinking=True)
-            await AIModal.send(interaction=interaction, text=text, ephemeral=ephemeral)
+        if not (image is not None and str(image.content_type).startswith("image/")):
+            raise commands.BadArgument("Invalid image attachment")
+
+        data = base64.b64encode(await image.read()).decode("utf-8")
+
+        if mask is not None and str(mask.content_type).startswith("image/"):
+            mask_data = base64.b64encode(await mask.read()).decode("utf-8")
         else:
-            modal = AIModal(ephemeral=ephemeral)
-            await interaction.response.send_modal(modal=modal)
+            mask_data = None
+
+        height, width = flags.size.value
+        payload = Metadata(
+            prompt=flags.prompt,
+            negative_prompt=flags.negative_prompt,
+            model=flags.model,
+            seed=flags.seed,
+            action=Action.IMG2IMG,
+            height=height,
+            width=width,
+            sampler=flags.sampler,
+            noise=noise,
+            steps=flags.steps,
+            mask=mask_data,
+            image=data,
+            strength=strength,
+        )
+
+        if result := payload.calculate_cost(is_opus=True):
+            await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
+        else:
+            embed = Embed(
+                title="Result",
+                description="Generating image...",
+                color=0x2F3136,
+            )
+            files = [File(img.data, filename=img.filename) for img in await self.client.generate_image(payload)]
+            await ctx.send(embed=embed, files=files, ephemeral=True)
+
+    @commands.hybrid_command()
+    async def inpaint(
+        self,
+        ctx: commands.Context,
+        image: Attachment,
+        mask: Attachment,
+        strength: commands.Range[float, 0.01, 0.99] = 0.6,
+        noise: commands.Range[float, 0, 1] = 0.1,
+        *,
+        flags: GenerateFlags,
+    ):
+        """Generate an image from a prompt
+
+        Parameters
+        ----------
+        vibe : Optional[Attachment], optional
+            Attachment to use for the image's vibe, by default None
+        """
+        if not (image is not None and str(image.content_type).startswith("image/")):
+            raise commands.BadArgument("Invalid image attachment")
+
+        if not (mask is not None and str(mask.content_type).startswith("image/")):
+            raise commands.BadArgument("Invalid mask attachment")
+
+        data = base64.b64encode(await image.read()).decode("utf-8")
+        mask_data = base64.b64encode(await mask.read()).decode("utf-8")
+
+        height, width = flags.size.value
+        payload = Metadata(
+            prompt=flags.prompt,
+            negative_prompt=flags.negative_prompt,
+            model=flags.model,
+            seed=flags.seed,
+            action=Action.INPAINT,
+            height=height,
+            width=width,
+            sampler=flags.sampler,
+            noise=noise,
+            steps=flags.steps,
+            mask=mask_data,
+            image=data,
+            strength=strength,
+        )
+
+        if result := payload.calculate_cost(is_opus=True):
+            await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
+        else:
+            embed = Embed(
+                title="Result",
+                description="Generating image...",
+                color=0x2F3136,
+            )
+            files = [File(img.data, filename=img.filename) for img in await self.client.generate_image(payload)]
+            await ctx.send(embed=embed, files=files, ephemeral=True)
 
 
 async def setup(bot: CustomBot) -> None:
