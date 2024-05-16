@@ -59,7 +59,6 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
     )
 
 
-@commands.is_nsfw()
 class AiCog(commands.Cog):
 
     def __init__(self, bot: CustomBot):
