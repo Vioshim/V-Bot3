@@ -101,7 +101,6 @@ class AiCog(commands.Cog):
     @app_commands.guilds(1196879060173852702)
     @app_commands.default_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
-    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.hybrid_command()
     async def ai(
         self,
