@@ -34,11 +34,6 @@ from src.structures.bot import CustomBot
 
 
 class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
-    prompt: str = commands.flag(
-        default="",
-        positional=True,
-        description="Prompt for the AI to generate an image from",
-    )
     negative_prompt: str = commands.flag(
         default="",
         aliases=["neg_prompt", "negative", "neg"],
@@ -106,6 +101,7 @@ class AiCog(commands.Cog):
     async def ai(
         self,
         ctx: commands.Context,
+        prompt: str,
         image: Optional[Attachment] = None,
         mask: Optional[Attachment] = None,
         *,
@@ -117,15 +113,18 @@ class AiCog(commands.Cog):
         ----------
         ctx: commands.Context
             Context
+        prompt: str
+            Prompt for the AI to generate an image from
         image: Optional[Attachment]
             Image to generate from
         mask: Optional[Attachment]
             Mask for the image
         """
-        await ctx.defer(ephemeral=True)
+        await ctx.typing(ephemeral=False)
+
         if image is None:
             payload = Metadata(
-                prompt=flags.prompt,
+                prompt=prompt,
                 negative_prompt=flags.negative_prompt,
                 res_preset=flags.size,
                 model=flags.model,
@@ -142,7 +141,7 @@ class AiCog(commands.Cog):
 
             height, width = flags.size.value
             payload = Metadata(
-                prompt=flags.prompt,
+                prompt=prompt,
                 negative_prompt=flags.negative_prompt,
                 model=flags.model,
                 seed=flags.seed,
@@ -163,7 +162,7 @@ class AiCog(commands.Cog):
             data = base64.b64encode(await image.read()).decode("utf-8")
             height, width = flags.size.value
             payload = Metadata(
-                prompt=flags.prompt,
+                prompt=prompt,
                 negative_prompt=flags.negative_prompt,
                 model=flags.model,
                 seed=flags.seed,
@@ -189,13 +188,13 @@ class AiCog(commands.Cog):
                     filename=img.filename,
                     description="\n".join(
                         (
-                            f"Prompt: {flags.prompt}",
-                            f"Seed: {flags.seed}",
-                            f"Negative Prompt: {flags.negative_prompt}",
+                            f"Prompt: {img.metadata.prompt}",
+                            f"Seed: {img.metadata.seed}",
+                            f"Negative Prompt: {img.metadata.negative_prompt}",
                         )
                     )[:1024],
                 )
-                for img in await self.client.generate_image(payload, is_opus=True)
+                for img in await self.client.generate_image(payload, is_opus=True, verbose=True)
             ]
         )
 
