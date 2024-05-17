@@ -182,22 +182,22 @@ class AiCog(commands.Cog):
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
 
-        files = [
-            File(
-                fp=BytesIO(img.data),
-                filename=img.filename,
-                description="\n".join(
-                    (
-                        f"Prompt: {flags.prompt}",
-                        f"Seed: {flags.seed}",
-                        f"Negative Prompt: {flags.negative_prompt}",
-                    )
-                )[:1024],
-            )
-            for img in await self.client.generate_image(payload, is_opus=True)
-        ]
-
-        await ctx.send(files=files, ephemeral=True)
+        await ctx.send(
+            files=[
+                File(
+                    fp=BytesIO(img.data),
+                    filename=img.filename,
+                    description="\n".join(
+                        (
+                            f"Prompt: {flags.prompt}",
+                            f"Seed: {flags.seed}",
+                            f"Negative Prompt: {flags.negative_prompt}",
+                        )
+                    )[:1024],
+                )
+                for img in await self.client.generate_image(payload, is_opus=True)
+            ]
+        )
 
 
 async def setup(bot: CustomBot) -> None:
