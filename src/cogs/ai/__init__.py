@@ -18,9 +18,17 @@ import os
 from io import BytesIO
 from typing import Optional
 
-from discord import Attachment, Embed, File, app_commands
+from discord import Attachment, File, app_commands
 from discord.ext import commands
-from novelai import Action, Metadata, Model, NAIClient, Resolution, Sampler
+from novelai import (
+    Action,
+    Metadata,
+    Model,
+    NAIClient,
+    Resolution,
+    Sampler,
+    UndesiredPreset,
+)
 
 from src.structures.bot import CustomBot
 
@@ -97,7 +105,7 @@ class AiCog(commands.Cog):
             action=Action.GENERATE,
             sampler=flags.sampler,
             steps=flags.steps,
-            ucPreset=0,
+            ucPreset=UndesiredPreset.HEAVY,
         )
 
         if result := payload.calculate_cost(is_opus=True):
@@ -172,7 +180,7 @@ class AiCog(commands.Cog):
             mask=mask_data,
             image=data,
             strength=strength,
-            ucPreset=0,
+            ucPreset=UndesiredPreset.HEAVY,
         )
 
         if result := payload.calculate_cost(is_opus=True):
@@ -248,7 +256,7 @@ class AiCog(commands.Cog):
             mask=mask_data,
             image=data,
             strength=strength,
-            ucPreset=0,
+            ucPreset=UndesiredPreset.HEAVY,
         )
 
         if result := payload.calculate_cost(is_opus=True):
