@@ -14,6 +14,7 @@
 
 
 import base64
+import math
 import os
 from io import BytesIO
 from typing import Optional
@@ -29,6 +30,7 @@ from novelai import (
     Sampler,
     UndesiredPreset,
 )
+from PIL import Image
 
 from src.structures.bot import CustomBot
 
@@ -52,7 +54,7 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
         description="Seed for the AI to generate the image from",
     )
     size: Resolution = commands.flag(
-        default=Resolution.NORMAL_SQUARE,
+        default=Resolution.NORMAL_LANDSCAPE,
         description="Size of the image to generate",
     )
     sampler: Sampler = commands.flag(
@@ -112,89 +114,110 @@ class AiCog(commands.Cog):
     @commands.hybrid_command()
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate images using the AI"""
-        await ctx.typing(ephemeral=False)
+        async with ctx.typing(ephemeral=False):
 
-        if not flags.image and not flags.mask and ctx.message.attachments:
-            try:
-                flags.image, flags.mask, *_ = ctx.message.attachments
-            except ValueError:
-                flags.image, flags.mask = ctx.message.attachments[0], None
+            if not flags.image and not flags.mask and ctx.message.attachments:
+                try:
+                    flags.image, flags.mask, *_ = ctx.message.attachments
+                except ValueError:
+                    flags.image, flags.mask = ctx.message.attachments[0], None
 
-        if flags.image is None:
-            payload = Metadata(
-                prompt=flags.prompt,
-                negative_prompt=flags.negative_prompt,
-                res_preset=flags.size,
-                model=flags.model,
-                seed=flags.seed,
-                sm=False,
-                action=Action.GENERATE,
-                sampler=flags.sampler,
-                steps=flags.steps,
-                ucPreset=UndesiredPreset.HEAVY,
-            )
-        elif flags.mask is not None:
-            data = base64.b64encode(await flags.image.read()).decode("utf-8")
-            mask_data = base64.b64encode(await flags.mask.read()).decode("utf-8")
-
-            height, width = flags.size.value
-            payload = Metadata(
-                prompt=flags.prompt,
-                negative_prompt=flags.negative_prompt,
-                model=flags.model,
-                seed=flags.seed,
-                action=Action.INPAINT,
-                height=height,
-                width=width,
-                sampler=flags.sampler,
-                noise=flags.noise,
-                sm=False,
-                add_original_image=flags.add_original_image,
-                steps=flags.steps,
-                mask=mask_data,
-                image=data,
-                strength=flags.strength,
-                ucPreset=UndesiredPreset.HEAVY,
-            )
-        else:
-            data = base64.b64encode(await flags.image.read()).decode("utf-8")
-            height, width = flags.size.value
-            payload = Metadata(
-                prompt=flags.prompt,
-                negative_prompt=flags.negative_prompt,
-                model=flags.model,
-                seed=flags.seed,
-                action=Action.IMG2IMG,
-                height=height,
-                width=width,
-                sampler=flags.sampler,
-                noise=flags.noise,
-                sm=False,
-                steps=flags.steps,
-                image=data,
-                strength=flags.strength,
-                ucPreset=UndesiredPreset.HEAVY,
-            )
-
-        if result := payload.calculate_cost(is_opus=True):
-            return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
-
-        await ctx.send(
-            files=[
-                File(
-                    fp=BytesIO(img.data),
-                    filename=img.filename,
-                    description="\n".join(
-                        (
-                            f"Prompt: {img.metadata.prompt}",
-                            f"Seed: {img.metadata.seed}",
-                            f"Negative Prompt: {img.metadata.negative_prompt}",
-                        )
-                    )[:1024],
+            if flags.image is None:
+                payload = Metadata(
+                    prompt=flags.prompt,
+                    negative_prompt=flags.negative_prompt,
+                    res_preset=flags.size,
+                    model=flags.model,
+                    seed=flags.seed,
+                    sm=False,
+                    action=Action.GENERATE,
+                    sampler=flags.sampler,
+                    steps=flags.steps,
+                    ucPreset=UndesiredPreset.HEAVY,
                 )
-                for img in await self.client.generate_image(payload, is_opus=True, verbose=True)
-            ]
-        )
+            elif flags.mask is not None:
+                content = await flags.image.read()
+                data = base64.b64encode(content).decode("utf-8")
+                mask_data = base64.b64encode(await flags.mask.read()).decode("utf-8")
+
+                with Image.open(BytesIO(content)) as img:
+                    if math.prod(img.size) <= 1024 * 1024:
+                        width, height = img.size
+                    elif img.size[0] > img.size[1]:
+                        width, height = Resolution.NORMAL_LANDSCAPE.value
+                    elif img.size[0] < img.size[1]:
+                        width, height = Resolution.NORMAL_PORTRAIT.value
+                    else:
+                        width, height = Resolution.NORMAL_SQUARE.value
+
+                payload = Metadata(
+                    prompt=flags.prompt,
+                    negative_prompt=flags.negative_prompt,
+                    model=flags.model,
+                    seed=flags.seed,
+                    action=Action.INPAINT,
+                    height=height,
+                    width=width,
+                    sampler=flags.sampler,
+                    noise=flags.noise,
+                    sm=False,
+                    add_original_image=flags.add_original_image,
+                    steps=flags.steps,
+                    mask=mask_data,
+                    image=data,
+                    strength=flags.strength,
+                    ucPreset=UndesiredPreset.HEAVY,
+                )
+            else:
+                content = await flags.image.read()
+                data = base64.b64encode(content).decode("utf-8")
+
+                with Image.open(BytesIO(content)) as img:
+                    if math.prod(img.size) <= 1024 * 1024:
+                        width, height = img.size
+                    elif img.size[0] > img.size[1]:
+                        width, height = Resolution.NORMAL_LANDSCAPE.value
+                    elif img.size[0] < img.size[1]:
+                        width, height = Resolution.NORMAL_PORTRAIT.value
+                    else:
+                        width, height = Resolution.NORMAL_SQUARE.value
+
+                payload = Metadata(
+                    prompt=flags.prompt,
+                    negative_prompt=flags.negative_prompt,
+                    model=flags.model,
+                    seed=flags.seed,
+                    action=Action.IMG2IMG,
+                    height=height,
+                    width=width,
+                    sampler=flags.sampler,
+                    noise=flags.noise,
+                    sm=False,
+                    steps=flags.steps,
+                    image=data,
+                    strength=flags.strength,
+                    ucPreset=UndesiredPreset.HEAVY,
+                )
+
+            if result := payload.calculate_cost(is_opus=True):
+                return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
+
+            await ctx.send(
+                files=[
+                    File(
+                        fp=BytesIO(img.data),
+                        filename=img.filename,
+                        description="\n".join(
+                            (
+                                f"Prompt: {img.metadata.prompt}",
+                                f"Seed: {img.metadata.seed}",
+                                f"Negative Prompt: {img.metadata.negative_prompt}",
+                            )
+                        )[:1024],
+                    )
+                    for img in await self.client.generate_image(payload, is_opus=True, verbose=True)
+                ]
+            )
 
 
 async def setup(bot: CustomBot) -> None:
