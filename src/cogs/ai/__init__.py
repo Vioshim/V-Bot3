@@ -34,6 +34,10 @@ from src.structures.bot import CustomBot
 
 
 class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", delimiter=" "):
+    prompt: str = commands.flag(
+        description="Prompt for the AI to generate an image from",
+        positional=True,
+    )
     negative_prompt: str = commands.flag(
         default="",
         aliases=["neg_prompt", "negative", "neg"],
@@ -75,6 +79,14 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
         description="Add the original image to the generated image",
         aliases=["add_original"],
     )
+    image: Optional[Attachment] = commands.flag(
+        default=None,
+        description="Image to generate from",
+    )
+    mask: Optional[Attachment] = commands.flag(
+        default=None,
+        description="Mask for the image",
+    )
 
 
 class AiCog(commands.Cog):
@@ -98,33 +110,19 @@ class AiCog(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
     @commands.hybrid_command()
-    async def ai(
-        self,
-        ctx: commands.Context,
-        prompt: str,
-        image: Optional[Attachment] = None,
-        mask: Optional[Attachment] = None,
-        *,
-        flags: GenerateFlags,
-    ):
-        """Generate images using the AI
-
-        Parameters
-        ----------
-        ctx: commands.Context
-            Context
-        prompt: str
-            Prompt for the AI to generate an image from
-        image: Optional[Attachment]
-            Image to generate from
-        mask: Optional[Attachment]
-            Mask for the image
-        """
+    async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
+        """Generate images using the AI"""
         await ctx.typing(ephemeral=False)
 
-        if image is None:
+        if not flags.image and not flags.mask and ctx.message.attachments:
+            try:
+                flags.image, flags.mask, *_ = ctx.message.attachments
+            except ValueError:
+                flags.image, flags.mask = ctx.message.attachments[0], None
+
+        if flags.image is None:
             payload = Metadata(
-                prompt=prompt,
+                prompt=flags.prompt,
                 negative_prompt=flags.negative_prompt,
                 res_preset=flags.size,
                 model=flags.model,
@@ -135,13 +133,13 @@ class AiCog(commands.Cog):
                 steps=flags.steps,
                 ucPreset=UndesiredPreset.HEAVY,
             )
-        elif mask is not None:
-            data = base64.b64encode(await image.read()).decode("utf-8")
-            mask_data = base64.b64encode(await mask.read()).decode("utf-8")
+        elif flags.mask is not None:
+            data = base64.b64encode(await flags.image.read()).decode("utf-8")
+            mask_data = base64.b64encode(await flags.mask.read()).decode("utf-8")
 
             height, width = flags.size.value
             payload = Metadata(
-                prompt=prompt,
+                prompt=flags.prompt,
                 negative_prompt=flags.negative_prompt,
                 model=flags.model,
                 seed=flags.seed,
@@ -159,10 +157,10 @@ class AiCog(commands.Cog):
                 ucPreset=UndesiredPreset.HEAVY,
             )
         else:
-            data = base64.b64encode(await image.read()).decode("utf-8")
+            data = base64.b64encode(await flags.image.read()).decode("utf-8")
             height, width = flags.size.value
             payload = Metadata(
-                prompt=prompt,
+                prompt=flags.prompt,
                 negative_prompt=flags.negative_prompt,
                 model=flags.model,
                 seed=flags.seed,
