@@ -141,14 +141,8 @@ class AiCog(commands.Cog):
                 mask_data = base64.b64encode(await flags.mask.read()).decode("utf-8")
 
                 with Image.open(BytesIO(content)) as img:
-                    if math.prod(img.size) <= 1024 * 1024:
-                        width, height = img.size
-                    elif img.size[0] > img.size[1]:
-                        width, height = Resolution.NORMAL_LANDSCAPE.value
-                    elif img.size[0] < img.size[1]:
-                        width, height = Resolution.NORMAL_PORTRAIT.value
-                    else:
-                        width, height = Resolution.NORMAL_SQUARE.value
+                    ratio = img.size[0] / img.size[1]
+                    width, height = min(Resolution, key=lambda res: abs(res.value[0] / res.value[1] - ratio)).value
 
                 payload = Metadata(
                     prompt=flags.prompt,
@@ -173,14 +167,8 @@ class AiCog(commands.Cog):
                 data = base64.b64encode(content).decode("utf-8")
 
                 with Image.open(BytesIO(content)) as img:
-                    if math.prod(img.size) <= 1024 * 1024:
-                        width, height = img.size
-                    elif img.size[0] > img.size[1]:
-                        width, height = Resolution.NORMAL_LANDSCAPE.value
-                    elif img.size[0] < img.size[1]:
-                        width, height = Resolution.NORMAL_PORTRAIT.value
-                    else:
-                        width, height = Resolution.NORMAL_SQUARE.value
+                    ratio = img.size[0] / img.size[1]
+                    width, height = min(Resolution, key=lambda res: abs(res.value[0] / res.value[1] - ratio)).value
 
                 payload = Metadata(
                     prompt=flags.prompt,
