@@ -97,10 +97,9 @@ class AiCog(commands.Cog):
             action=Action.GENERATE,
             sampler=flags.sampler,
             steps=flags.steps,
-            ucPreset=3,
+            ucPreset=0,
         )
 
-        print(payload.model_dump_json(indent=2))
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
 
@@ -173,10 +172,9 @@ class AiCog(commands.Cog):
             mask=mask_data,
             image=data,
             strength=strength,
-            ucPreset=3,
+            ucPreset=0,
         )
 
-        print(payload.model_dump_json(indent=2))
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
 
@@ -250,9 +248,8 @@ class AiCog(commands.Cog):
             mask=mask_data,
             image=data,
             strength=strength,
-            ucPreset=3,
+            ucPreset=0,
         )
-        print(payload.model_dump_json(indent=2))
 
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
