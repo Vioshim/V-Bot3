@@ -78,7 +78,7 @@ class AiCog(commands.Cog):
         )
 
     async def cog_load(self) -> None:
-        await self.client.init(timeout=30, auto_close=True)
+        await self.client.init(timeout=30)
 
     async def cog_unload(self) -> None:
         await self.client.close()
