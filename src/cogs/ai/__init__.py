@@ -99,22 +99,26 @@ class AiCog(commands.Cog):
             ucPreset=3,
         )
 
+        print(payload.model_dump_json(indent=2))
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
 
-        files, embeds = [], []
-        for img in await self.client.generate_image(payload, is_opus=True):
-            embed = Embed(title="Result", color=ctx.author.color)
-            embeds.append(embed.set_image(url=f"attachment://{img.filename}"))
-            files.append(
-                File(
-                    fp=BytesIO(img.data),
-                    filename=img.filename,
-                    description=str(img.metadata.model_dump_json(indent=2))[:1024],
-                )
+        files = [
+            File(
+                fp=BytesIO(img.data),
+                filename=img.filename,
+                description="\n".join(
+                    (
+                        f"Prompt: {flags.prompt}",
+                        f"Seed: {flags.seed}",
+                        f"Negative Prompt: {flags.negative_prompt}",
+                    )
+                )[:1024],
             )
+            for img in await self.client.generate_image(payload, is_opus=True)
+        ]
 
-        await ctx.send(embeds=embeds, files=files, ephemeral=True)
+        await ctx.send(files=files, ephemeral=True)
 
     @ai.command()
     async def img2img(
@@ -170,22 +174,26 @@ class AiCog(commands.Cog):
             ucPreset=3,
         )
 
+        print(payload.model_dump_json(indent=2))
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
 
-        files, embeds = [], []
-        for img in await self.client.generate_image(payload, is_opus=True):
-            embed = Embed(title="Result", color=ctx.author.color)
-            embeds.append(embed.set_image(url=f"attachment://{img.filename}"))
-            files.append(
-                File(
-                    fp=BytesIO(img.data),
-                    filename=img.filename,
-                    description=str(img.metadata.model_dump_json(indent=2))[:1024],
-                )
+        files = [
+            File(
+                fp=BytesIO(img.data),
+                filename=img.filename,
+                description="\n".join(
+                    (
+                        f"Prompt: {flags.prompt}",
+                        f"Seed: {flags.seed}",
+                        f"Negative Prompt: {flags.negative_prompt}",
+                    )
+                )[:1024],
             )
+            for img in await self.client.generate_image(payload, is_opus=True)
+        ]
 
-        await ctx.send(embeds=embeds, files=files, ephemeral=True)
+        await ctx.send(files=files, ephemeral=True)
 
     @ai.command()
     async def inpaint(
@@ -241,23 +249,27 @@ class AiCog(commands.Cog):
             strength=strength,
             ucPreset=3,
         )
+        print(payload.model_dump_json(indent=2))
 
         if result := payload.calculate_cost(is_opus=True):
             return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
 
-        files, embeds = [], []
-        for img in await self.client.generate_image(payload, is_opus=True):
-            embed = Embed(title="Result", color=ctx.author.color)
-            embeds.append(embed.set_image(url=f"attachment://{img.filename}"))
-            files.append(
-                File(
-                    fp=BytesIO(img.data),
-                    filename=img.filename,
-                    description=str(img.metadata.model_dump_json(indent=2))[:1024],
-                )
+        files = [
+            File(
+                fp=BytesIO(img.data),
+                filename=img.filename,
+                description="\n".join(
+                    (
+                        f"Prompt: {flags.prompt}",
+                        f"Seed: {flags.seed}",
+                        f"Negative Prompt: {flags.negative_prompt}",
+                    )
+                )[:1024],
             )
+            for img in await self.client.generate_image(payload, is_opus=True)
+        ]
 
-        await ctx.send(embeds=embeds, files=files, ephemeral=True)
+        await ctx.send(files=files, ephemeral=True)
 
 
 async def setup(bot: CustomBot) -> None:
