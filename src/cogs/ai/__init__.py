@@ -67,7 +67,7 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
         description="Number of steps to generate the image",
     )
     strength: commands.Range[float, 0.01, 0.99] = commands.flag(
-        default=0.6,
+        default=0.62,
         description="Strength of the image",
         aliases=["str"],
     )
@@ -89,6 +89,16 @@ class GenerateFlags(commands.FlagConverter, case_insensitive=True, prefix="--", 
         default=None,
         description="Mask for the image",
     )
+
+
+FREE_RES_OPUS = [
+    Resolution.NORMAL_SQUARE,
+    Resolution.NORMAL_LANDSCAPE,
+    Resolution.NORMAL_PORTRAIT,
+    Resolution.SMALL_SQUARE,
+    Resolution.SMALL_LANDSCAPE,
+    Resolution.SMALL_PORTRAIT,
+]
 
 
 class AiCog(commands.Cog):
@@ -142,7 +152,7 @@ class AiCog(commands.Cog):
 
                 with Image.open(BytesIO(content)) as img:
                     ratio = img.size[0] / img.size[1]
-                    width, height = min(Resolution, key=lambda res: abs(res.value[0] / res.value[1] - ratio)).value
+                    width, height = min(FREE_RES_OPUS, key=lambda res: abs(res.value[0] / res.value[1] - ratio)).value
 
                 payload = Metadata(
                     prompt=flags.prompt,
@@ -168,7 +178,10 @@ class AiCog(commands.Cog):
 
                 with Image.open(BytesIO(content)) as img:
                     ratio = img.size[0] / img.size[1]
-                    width, height = min(Resolution, key=lambda res: abs(res.value[0] / res.value[1] - ratio)).value
+                    width, height = min(
+                        Resolution,
+                        key=lambda res: abs(res.value[0] / res.value[1] - ratio),
+                    ).value
 
                 payload = Metadata(
                     prompt=flags.prompt,
