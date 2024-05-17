@@ -100,6 +100,7 @@ class AiCog(commands.Cog):
 
     @app_commands.guilds(1196879060173852702)
     @app_commands.default_permissions(administrator=True)
+    @commands.has_guild_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
     @commands.hybrid_command()
     async def ai(
