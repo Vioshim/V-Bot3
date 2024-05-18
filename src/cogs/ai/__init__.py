@@ -120,6 +120,7 @@ class AiCog(commands.Cog):
     @app_commands.guilds(1196879060173852702)
     @commands.max_concurrency(1, wait=False)
     @commands.is_nsfw()
+    @commands.guild_only()
     @commands.hybrid_command()
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate images using the AI"""
