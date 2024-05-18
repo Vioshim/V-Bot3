@@ -118,9 +118,8 @@ class AiCog(commands.Cog):
         await self.client.close()
 
     @app_commands.guilds(1196879060173852702)
-    @app_commands.default_permissions(administrator=True)
-    @commands.has_guild_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
+    @commands.is_nsfw()
     @commands.hybrid_command()
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate images using the AI"""
@@ -201,7 +200,7 @@ class AiCog(commands.Cog):
                 )
 
             if result := payload.calculate_cost(is_opus=True):
-                return await ctx.send(f"Estimated cost: {result} credits", ephemeral=True)
+                raise commands.UserInputError(f"Estimated cost: {result} credits")
 
             await ctx.send(
                 files=[
