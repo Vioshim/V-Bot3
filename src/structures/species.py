@@ -15,8 +15,11 @@
 
 from __future__ import annotations
 
+import operator
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+from functools import reduce
+from itertools import combinations
 from json import JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional, Type
 
@@ -323,9 +326,11 @@ class Species:
         """
         if "," not in item and "_" not in item:
             return cls.single_deduce(item)
-        if len(items := set(cls.deduce(item))) == 2:
-            mon1, mon2 = items
-            return Fusion(mon1=mon1, mon2=mon2, ratio=0.5)
+
+        # between 2 and 3
+        if 2 <= len(items := set(cls.deduce(item))) <= 3:
+            return Fusion(*items)
+
         if items:
             return items.pop()
 
@@ -344,8 +349,9 @@ class Species:
         if isinstance(item, str):
             values = {i.id: i for i in cls.all()} or ALL_SPECIES
             items = {x for i in item.split("_") if (x := values.get(i))}
-            if len(items) == 2:
-                items = {Fusion(*items, ratio=0.5)}
+            if 2 <= len(items) <= 3:
+                items = {Fusion(*items)}
+
             if items and isinstance(data := items.pop(), cls):
                 return data
 
@@ -399,10 +405,9 @@ class Species:
 
         if data := item.get("fusion", []):
             if isinstance(data, dict):
-                (mon1, mon2), ratio = data.get("species"), data.get("ratio", 0.5)
-                fusion = Fusion(mon1, mon2, ratio=ratio)
-            else:
-                fusion = Fusion(*data, ratio=0.5)
+                data = data.get("species", [])
+
+            fusion = Fusion(*data)
 
             if not fusion.types:
                 fusion.types = TypingEnum.deduce_many(*item.get("types", []))
@@ -795,46 +800,33 @@ class Variant(Species):
 class Fusion(Species):
     "This class Represents a fusion"
 
-    mon1: Optional[Species] = None
-    mon2: Optional[Species] = None
-    ratio: float = 0.5
+    bases: frozenset[Species] = field(default_factory=frozenset)
 
-    def __init__(self, mon1: Species, mon2: Species, ratio: float = 0.5):
-        if isinstance(mon1, str):
-            mon1 = Species.single_deduce(mon1)
-        if isinstance(mon2, str):
-            mon2 = Species.single_deduce(mon2)
-
-        mons = sorted((mon1, mon2), key=lambda x: x.id)
-        abilities = mon1.abilities | mon2.abilities
-        self.mon1, self.mon2 = mon1, mon2 = mons
-        self.ratio = ratio
-        ratio1, ratio2 = ratio, 1.0 - ratio
+    def __init__(self, bases: frozenset[Species | str]):
+        self.bases = frozenset({o for x in bases if (o := Species.single_deduce(x) if isinstance(x, str) else x)})
+        mons = sorted(self.bases, key=lambda x: x.id)
+        abilities = reduce(operator.or_, (x.abilities for x in mons))
+        amount = len(mons) or 1
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
             name="/".join(x.name for x in mons),
-            height=round(ratio1 * mon1.height + ratio2 * mon2.height, 1),
-            weight=round(ratio1 * mon1.weight + ratio2 * mon2.weight, 1),
-            HP=round(ratio1 * mon1.HP + ratio2 * mon2.HP),
-            ATK=round(ratio1 * mon1.ATK + ratio2 * mon2.ATK),
-            DEF=round(ratio1 * mon1.DEF + ratio2 * mon2.DEF),
-            SPA=round(ratio1 * mon1.SPA + ratio2 * mon2.SPA),
-            SPD=round(ratio1 * mon1.SPD + ratio2 * mon2.SPD),
-            SPE=round(ratio1 * mon1.SPE + ratio2 * mon2.SPE),
-            banned=mon1.banned or mon2.banned,
-            movepool=mon1.movepool + mon2.movepool,
+            height=reduce(operator.add, (x.height for x in mons)) // amount,
+            weight=reduce(operator.add, (x.weight for x in mons)) // amount,
+            HP=reduce(operator.add, (x.HP for x in mons)) // amount,
+            ATK=reduce(operator.add, (x.ATK for x in mons)) // amount,
+            DEF=reduce(operator.add, (x.DEF for x in mons)) // amount,
+            SPA=reduce(operator.add, (x.SPA for x in mons)) // amount,
+            SPD=reduce(operator.add, (x.SPD for x in mons)) // amount,
+            SPE=reduce(operator.add, (x.SPE for x in mons)) // amount,
+            banned=any(x.banned for x in mons),
+            movepool=reduce(operator.add, (x.movepool for x in mons)),
             abilities=abilities,
-            egg_groups=mon1.egg_groups & mon2.egg_groups,
+            egg_groups=reduce(operator.and_, (x.egg_groups for x in mons)),
         )
         if len(items := list(self.possible_types)) == 1:
             self.types = frozenset(items[0])
-        item1 = self.mon1.evolves_to
-        item2 = self.mon2.evolves_to
-        self.evolves_to = frozenset(zip(item1, item2))
-        if mon1.shape == mon2.shape:
-            self.shape = mon1.shape
-        if (item1 := mon1.evolves_from) and (item2 := mon2.evolves_from):
-            self.evolves_from = item1, item2
+
+        self.evolves_to = frozenset(reduce(operator.or_, (x.evolves_to for x in mons)))
 
     def __eq__(self, other: Fusion):
         if isinstance(other, Fusion):
@@ -843,60 +835,24 @@ class Fusion(Species):
 
     @property
     def label_name(self):
-        return f"{self.ratio:.0%}〛{self.mon1.name}, {1 - self.ratio:.0%}〛{self.mon2.name}"
-
-    @property
-    def ratios(self):
-        return [Fusion(self.mon1, self.mon2, ratio=x / 10) for x in range(1, 10)]
-
-    @property
-    def bases(self) -> frozenset[Species]:
-        return frozenset((self.mon1, self.mon2))
+        return ", ".join(x.name for x in sorted(self.bases, key=lambda x: x.id))
 
     @property
     def species_evolves_to(self) -> list[Fusion]:
-        items = [Fusion(mon1=a, mon2=b) for a, b in zip(self.mon1.species_evolves_to, self.mon2.species_evolves_to)]
-
-        for mon in self.mon1.species_evolves_to:
-            if mon != self.mon2:
-                mon = Fusion(mon1=mon, mon2=self.mon2)
-            items.append(mon)
-
-        for mon in self.mon2.species_evolves_to:
-            if mon != self.mon1:
-                mon = Fusion(mon1=self.mon1, mon2=mon)
-            items.append(mon)
-
-        return items
+        items = frozenset.union(*[x.evolves_to for x in self.bases])
+        return [Fusion(*x) for i in range(2, len(items) + 1) for x in combinations(items, i)]
 
     @property
     def species_evolves_from(self):
-        mon1 = self.mon1.species_evolves_from
-        mon2 = self.mon2.species_evolves_from
-        if mon1 and mon2 and mon1 != mon2:
-            return Fusion(mon1=mon1, mon2=mon2)
-        return mon1 or mon2
+        return [
+            Fusion(*x)
+            for i in range(1, len(self.bases) + 1)
+            for x in combinations({x.evolves_from for x in self.bases if x.evolves_from}, i)
+        ]
 
     @property
     def evol_line(self):
-        return self.mon1.evol_line + self.mon2.evol_line
-
-    @property
-    def total_species_evolves_from(self) -> list[Fusion]:
-        items: list[Fusion] = []
-
-        if mon1 := self.mon1.species_evolves_from:
-            items.append(Fusion(mon1=mon1, mon2=self.mon2) if mon1 != self.mon2 else mon1)
-
-        if mon2 := self.mon2.species_evolves_from:
-            items.append(Fusion(mon1=self.mon1, mon2=mon2) if self.mon1 != mon2 else mon2)
-
-        if mon1 and mon2:
-            if mon1 != mon2:
-                mon1 = Fusion(mon1=mon1, mon2=mon2)
-            items.append(mon1)
-
-        return items
+        return reduce(operator.add, (x.evol_line for x in self.bases))
 
     @property
     def possible_types(self) -> frozenset[frozenset[TypingEnum]]:
@@ -907,9 +863,8 @@ class Fusion(Species):
         frozenset[frozenset[Typing]]
             List of sets (valid types)
         """
-        elements = {self.mon1.types, self.mon2.types}
-        elements.update(frozenset({x, y}) for x in self.mon1.types for y in self.mon2.types)
-        return frozenset(elements)
+        total = reduce(operator.or_, (x.types for x in self.bases))
+        return frozenset(map(frozenset, combinations(total, 2)))
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Fusion]:
@@ -931,10 +886,7 @@ class Fusion(Species):
 
     def as_data(self):
         return {
-            "fusion": {
-                "species": [x.id for x in self.bases],
-                "ratio": self.ratio,
-            },
+            "fusion": {"species": [x.id for x in self.bases]},
             "types": [x.name for x in self.types],
         }
 

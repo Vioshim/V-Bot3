@@ -204,17 +204,8 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
         },
     }
-    Crossbreed = {
-        "description": "Individuals that share traits of two species naturally.",
-        "modifier": {"Species": ("Species", "Species 1, Species 2")},
-        "exclude": [],
-        "docs": {
-            "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
-            "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
-        },
-    }
     Fusion = {
-        "description": "Individuals that share traits of two species artificially.",
+        "description": "Individuals that share traits of more than two species.",
         "modifier": {"Species": ("Species", "Species 1, Species 2")},
         "exclude": [],
         "docs": {
@@ -384,11 +375,11 @@ class Template(TemplateItem, Enum):
 
     @property
     def min_values(self):
-        return 2 if self in (self.Fusion, self.Crossbreed) else 1
+        return 2 if self == self.Fusion else 1
 
     @property
     def max_values(self):
-        return 2 if self in (self.Fusion, self.Crossbreed) else 1
+        return 3 if self == self.Fusion else 1
 
     @property
     def total_species(self) -> frozenset[Species]:
@@ -628,45 +619,6 @@ class SpeciesField(TemplateField, required=True):
         await template.process(oc=oc, itx=itx, ephemeral=ephemeral)
         if oc.species:
             progress.add(cls.name)
-
-
-class FusionRatioField(TemplateField, name="Proportion"):
-    "Modify the OC's Fusion Ratio"
-
-    @classmethod
-    def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, Fusion)
-
-    @classmethod
-    async def on_submit(
-        cls,
-        itx: Interaction[CustomBot],
-        template: Template,
-        progress: set[str],
-        oc: Character,
-        ephemeral: bool = False,
-    ):
-        mon: Fusion = oc.species
-        view = Complex[Fusion](
-            member=itx.user,
-            target=itx,
-            timeout=None,
-            values=mon.ratios,
-            emoji_parser=lambda x: "\N{BLACK SQUARE BUTTON}" if x.ratio == mon.ratio else "\N{BLACK LARGE SQUARE}",
-            parser=lambda x: (x.label_name[:100], {0.5: "Default"}.get(x.ratio)),
-            sort_key=lambda x: x.ratio,
-            silent_mode=True,
-        )
-        async with view.send(
-            title=f"{template.title} Character's Proportion.",
-            description=f"> {mon.label_name}",
-            single=True,
-            ephemeral=ephemeral,
-        ) as species:
-            if isinstance(species, Fusion):
-                oc.species = species
-                oc.species.types = mon.types
-                progress.add(cls.name)
 
 
 class SizeField(TemplateField):
