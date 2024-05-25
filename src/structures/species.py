@@ -819,11 +819,7 @@ class Fusion(Species):
             SPD=reduce(operator.add, (x.SPD for x in mons)) // amount,
             SPE=reduce(operator.add, (x.SPE for x in mons)) // amount,
             banned=any(x.banned for x in mons),
-            movepool=reduce(
-                operator.add,
-                (x.movepool for x in mons),
-                initial=Movepool(),
-            ),
+            movepool=reduce(operator.add, (x.movepool for x in mons), Movepool()),
             abilities=abilities,
             egg_groups=reduce(operator.and_, (x.egg_groups for x in mons)),
         )
