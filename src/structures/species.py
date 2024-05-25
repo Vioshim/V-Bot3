@@ -811,18 +811,18 @@ class Fusion(Species):
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
             name="/".join(x.name for x in mons),
-            height=reduce(operator.add, (x.height for x in mons)) // amount,
-            weight=reduce(operator.add, (x.weight for x in mons)) // amount,
-            HP=reduce(operator.add, (x.HP for x in mons)) // amount,
-            ATK=reduce(operator.add, (x.ATK for x in mons)) // amount,
-            DEF=reduce(operator.add, (x.DEF for x in mons)) // amount,
-            SPA=reduce(operator.add, (x.SPA for x in mons)) // amount,
-            SPD=reduce(operator.add, (x.SPD for x in mons)) // amount,
-            SPE=reduce(operator.add, (x.SPE for x in mons)) // amount,
+            height=sum(x.height for x in mons) // amount,
+            weight=sum(x.weight for x in mons) // amount,
+            HP=sum(x.HP for x in mons) // amount,
+            ATK=sum(x.ATK for x in mons) // amount,
+            DEF=sum(x.DEF for x in mons) // amount,
+            SPA=sum(x.SPA for x in mons) // amount,
+            SPD=sum(x.SPD for x in mons) // amount,
+            SPE=sum(x.SPE for x in mons) // amount,
             banned=any(x.banned for x in mons),
             movepool=reduce(operator.add, (x.movepool for x in mons)),
             abilities=abilities,
-            egg_groups=reduce(operator.and_, (x.egg_groups for x in mons)),
+            egg_groups=reduce(operator.or_, (x.egg_groups for x in mons)),
         )
         if len(items := list(self.possible_types)) == 1:
             self.types = frozenset(items[0])
