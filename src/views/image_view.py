@@ -27,6 +27,7 @@ from discord import (
     InteractionResponse,
     Member,
     Message,
+    Object,
     SelectOption,
     User,
 )
@@ -137,7 +138,27 @@ class ImageView(Basic):
                 if not isinstance(received := task.result(), Message):
                     continue
 
-                if attachments := received.attachments:
+                if info := await ctx.client.mongo_db("Server").find_one(
+                    {
+                        "id": ctx.guild_id,
+                        "oc_images": {"$exists": True},
+                        "staff": {"$exists": True},
+                    },
+                    {"_id": 0, "oc_images": 1, "staff": 1},
+                ):
+                    if received.attachments:
+                        ref = await received.attachments[0].to_file()
+                    else:
+                        ref = await ctx.client.get_file(url=received.content, filename="image")
+
+                    if ref:
+                        await received.delete(delay=0)
+                        w = await ctx.client.webhook(info["staff"])
+                        msg = await w.send(file=ref, thread=Object(id=info["oc_images"]), wait=True)
+                        if msg.attachments:
+                            self.text = msg.attachments[0].url
+
+                elif attachments := received.attachments:
                     self.text = attachments[0].proxy_url or attachments[0].url
                     self.received = received
                     await received.delete(delay=0)
