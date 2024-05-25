@@ -47,7 +47,7 @@ class HeightModal(Modal, title="Height"):
         if condition:
             height_a, height_b = 0.1, 20
         elif isinstance(self.oc.species, Fusion):
-            s_a, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
             height_a = height_b = height

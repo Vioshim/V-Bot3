@@ -290,7 +290,7 @@ class Template(TemplateItem, Enum):
 
         match self.name:
             case "Fusion" | "Crossbreed":
-                oc.species = Fusion(*choices, ratio=0.5)
+                oc.species = Fusion(*choices)
                 default_measure = True
             case "Variant":
                 async with ModernInput(member=itx.user, target=itx).handle(
@@ -604,8 +604,8 @@ class SpeciesField(TemplateField, required=True):
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
 
-        if isinstance(species, Fusion) and len(species.bases) != 2:
-            return "Must include 2 species."
+        if isinstance(species, Fusion) and len(species.bases) < 2:
+            return "Must include at least 2 species."
 
     @classmethod
     async def on_submit(

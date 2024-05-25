@@ -455,7 +455,7 @@ class Character:
 
     @property
     def max_amount_species(self):
-        return 2 if isinstance(self.species, Fusion) else 1
+        return 3 if isinstance(self.species, Fusion) else 1
 
     @property
     def last_used_at(self):
@@ -600,10 +600,7 @@ class Character:
     def species_data(self):
         match self.species:
             case mon if isinstance(mon, Fusion):
-                ratio1, ratio2 = mon.ratio, 1 - mon.ratio
-                b1, b2 = (f"{ratio1:.0%}〛", f"{ratio2:.0%}〛") if ratio1 != ratio2 else ("• ", "• ")
-                name = f"{b1}{mon.mon1.name}\n{b2}{mon.mon2.name}"
-                return "Fusion", name[:1024]
+                return "Fusion", "\n".join(f"* {x.name}" for x in mon.bases)[:1024]
             case mon if isinstance(mon, Fakemon):
                 a1 = Ability.get(name="Beast Boost")
                 if a1 in self.abilities:
@@ -628,9 +625,10 @@ class Character:
                 else:
                     phrase = mon.__class__.__name__.removeprefix("Custom")
 
-                if mon.base.name != mon.name:
+                if mon.base and mon.base.name != mon.name:
                     phrase = {"UltraBeast": "UB"}.get(phrase, phrase)
                     phrase = f"{phrase} {mon.base.name}"
+
                 return phrase, mon.name
             case mon if isinstance(mon, Species):
                 phrase = mon.__class__.__name__.removeprefix("Custom")
