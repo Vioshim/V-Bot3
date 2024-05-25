@@ -807,6 +807,11 @@ class Fusion(Species):
         mons = sorted(self.bases, key=lambda x: x.id)
         abilities = reduce(operator.or_, (x.abilities for x in mons))
         amount = len(mons) or 1
+
+        movepool = Movepool()
+        for mon in mons:
+            movepool += mon.movepool
+
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
             name="/".join(x.name for x in mons),
@@ -819,7 +824,7 @@ class Fusion(Species):
             SPD=reduce(operator.add, (x.SPD for x in mons)) // amount,
             SPE=reduce(operator.add, (x.SPE for x in mons)) // amount,
             banned=any(x.banned for x in mons),
-            movepool=reduce(operator.add, (x.movepool for x in mons), Movepool()),
+            movepool=movepool,
             abilities=abilities,
             egg_groups=reduce(operator.and_, (x.egg_groups for x in mons)),
         )
