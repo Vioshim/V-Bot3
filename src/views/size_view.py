@@ -41,31 +41,21 @@ class HeightModal(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        height: float = getattr(self.oc.species, "height", 0)
+        height: float = getattr(self.oc.species, "height", 0.0)
 
         if m and m in self.oc.total_movepool:
-            height_a, height_b = 0.1, 20
+            heights = 0.1, 20
         elif isinstance(self.oc.species, Fusion):
-            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
-            height_a, height_b = s_a.height, s_b.height
+            heights = [x.height for x in sorted(self.oc.species.bases, key=lambda x: x.height)]
         else:
-            height_a = height_b = height
+            heights = (height,)
 
-        a = Size.XXXS.height_value(height_a)
-        b = Size.XXXL.height_value(height_b)
+        items = [x.height_value(height) for height in heights for x in Size]
 
-        answer = self.value
-
-        if answer == a:
-            answer = Size.XXXS
-        elif answer == b:
-            answer = Size.XXXL
-        elif answer < a:
-            answer = height_a
-        elif answer > b:
-            answer = height_b
-        elif item := find(lambda x: round(x.height_value(height), 2) == answer, Size):
-            answer = item
+        if min(items) <= height <= max(items):
+            answer = height
+        else:
+            answer = min(items, key=lambda x: abs(x - answer))
 
         self.oc.size = Size.M if answer <= 0 else answer
 
@@ -136,28 +126,18 @@ class WeightModal(Modal, title="Weight"):
         weight: float = getattr(self.oc.species, "weight", 0)
 
         if m and m in self.oc.total_movepool:
-            weight_a, weight_b = 0.1, 999.9
+            weights = 0.1, 999.9
         elif isinstance(self.oc.species, Fusion):
-            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.weight)
-            weight_a, weight_b = s_a.weight, s_b.weight
+            weights = [x.weight for x in sorted(self.oc.species.bases, key=lambda x: x.weight)]
         else:
-            weight_a = weight_b = weight
+            weights = (weight,)
 
-        a = Size.XXXS.weight_value(weight_a)
-        b = Size.XXXL.weight_value(weight_b)
+        items = [x.weight_value(weight) for weight in weights for x in Size]
 
-        answer = self.value
-
-        if answer == a:
-            answer = Size.XXXS
-        elif answer == b:
-            answer = Size.XXXL
-        elif answer < a:
-            answer = weight_a
-        elif answer > b:
-            answer = weight_b
-        elif item := find(lambda x: round(x.weight_value(weight), 2) == answer, Size):
-            answer = item
+        if min(items) <= weight <= max(items):
+            answer = weight
+        else:
+            answer = min(items, key=lambda x: abs(x - answer))
 
         self.oc.weight = Size.M if answer <= 0 else answer
 
