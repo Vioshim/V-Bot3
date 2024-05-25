@@ -41,10 +41,9 @@ class HeightModal(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        condition = interaction.permissions.administrator or (m and m in self.oc.total_movepool)
         height: float = getattr(self.oc.species, "height", 0)
 
-        if condition:
+        if m and m in self.oc.total_movepool:
             height_a, height_b = 0.1, 20
         elif isinstance(self.oc.species, Fusion):
             s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
@@ -59,12 +58,12 @@ class HeightModal(Modal, title="Height"):
 
         if answer == a:
             answer = Size.XXXS
-        elif answer < a:
-            answer = a if condition else Size.XXXS
         elif answer == b:
             answer = Size.XXXL
+        elif answer < a:
+            answer = height_a
         elif answer > b:
-            answer = b if condition else Size.XXXL
+            answer = height_b
         elif item := find(lambda x: round(x.height_value(height), 2) == answer, Size):
             answer = item
 
@@ -134,13 +133,12 @@ class WeightModal(Modal, title="Weight"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        condition = interaction.permissions.administrator or (m and m in self.oc.total_movepool)
         weight: float = getattr(self.oc.species, "weight", 0)
 
-        if condition:
+        if m and m in self.oc.total_movepool:
             weight_a, weight_b = 0.1, 999.9
         elif isinstance(self.oc.species, Fusion):
-            s_a, s_b = sorted(self.oc.species.bases, key=lambda x: x.weight)
+            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.weight)
             weight_a, weight_b = s_a.weight, s_b.weight
         else:
             weight_a = weight_b = weight
@@ -155,9 +153,9 @@ class WeightModal(Modal, title="Weight"):
         elif answer == b:
             answer = Size.XXXL
         elif answer < a:
-            answer = a if condition else Size.XXXS
+            answer = weight_a
         elif answer > b:
-            answer = a if condition else Size.XXXL
+            answer = weight_b
         elif item := find(lambda x: round(x.weight_value(weight), 2) == answer, Size):
             answer = item
 
