@@ -851,8 +851,8 @@ class MovesetField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if len(oc.moveset) > 6:
-            return "Max 6 Preferred Moves."
+        if len(oc.moveset) > 4:
+            return "Max 4 Preferred Moves."
 
         m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
 
