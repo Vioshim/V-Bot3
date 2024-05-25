@@ -19,7 +19,7 @@ import operator
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import reduce
-from itertools import combinations
+from itertools import combinations_with_replacement
 from json import JSONEncoder, load
 from typing import Any, Callable, Iterable, Optional, Type
 
@@ -841,13 +841,24 @@ class Fusion(Species):
     @property
     def species_evolves_to(self) -> list[Fusion]:
         items = frozenset.union(*[x.evolves_to for x in self.bases])
-        return [Fusion(*x) for i in range(2, len(items) + 1) for x in combinations(items, i)]
+        return [Fusion(*x) for i in range(2, len(items) + 1) for x in combinations_with_replacement(items, i)]
 
     @property
     def species_evolves_from(self):
         items = {x.evolves_from for x in self.bases if x.evolves_from}
         if len(items) == 1:
             return Species.from_ID(items.pop())
+
+    @property
+    def total_movepool(self):
+        if TypingEnum.Shadow in self.types:
+            return Movepool.shadow()
+
+        return reduce(
+            operator.add,
+            (x.species_evolves_from.movepool for x in self.bases if x.species_evolves_from),
+            self.movepool,
+        )
 
     @property
     def evol_line(self):
@@ -863,7 +874,7 @@ class Fusion(Species):
             List of sets (valid types)
         """
         total = reduce(operator.or_, (x.types for x in self.bases))
-        return frozenset(map(frozenset, combinations(total, 2)))
+        return frozenset(map(frozenset, combinations_with_replacement(total, 2)))
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Fusion]:
