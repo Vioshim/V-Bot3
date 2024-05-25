@@ -151,7 +151,7 @@ class MovepoolMoveComplex(MoveComplex):
         movepool: Movepool,
         target: Optional[Messageable] = None,
         keep_working: bool = False,
-        max_values: int = 6,
+        max_values: int = 4,
         choices: set[Move] = None,
     ):
         self.movepool = movepool
