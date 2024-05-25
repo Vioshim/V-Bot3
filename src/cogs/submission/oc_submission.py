@@ -636,7 +636,7 @@ class SizeField(TemplateField):
         if Move.get(name="Transform") in oc.total_movepool:
             height_a, height_b = 0.1, 20.0
         elif isinstance(oc.species, Fusion):
-            s_a, s_b = sorted(oc.species.bases, key=lambda x: x.height)
+            s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
             height_a = height_b = oc.species.height
@@ -680,7 +680,7 @@ class WeightField(TemplateField):
         if Move.get(name="Transform") in oc.total_movepool:
             weight_a, weight_b = 0.1, 999.9
         elif isinstance(oc.species, Fusion):
-            s_a, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
+            s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
             weight_a, weight_b = s_a.weight, s_b.weight
         else:
             weight_a = weight_b = oc.species.weight
