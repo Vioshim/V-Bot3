@@ -191,7 +191,6 @@ class Species:
             if not aux:
                 aux += mon.movepool
             else:
-                print(mon, mon.movepool)
                 moves = mon.movepool.without_moves(aux)
                 aux += Movepool(egg=mon.movepool.egg, other=moves())
         return aux
@@ -846,11 +845,9 @@ class Fusion(Species):
 
     @property
     def species_evolves_from(self):
-        return [
-            Fusion(*x)
-            for i in range(1, len(self.bases) + 1)
-            for x in combinations({x.evolves_from for x in self.bases if x.evolves_from}, i)
-        ]
+        items = {x.evolves_from for x in self.bases if x.evolves_from}
+        if len(items) == 1:
+            return Species.from_ID(items.pop())
 
     @property
     def evol_line(self):
