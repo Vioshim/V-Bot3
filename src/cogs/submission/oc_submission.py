@@ -84,7 +84,6 @@ from src.utils.etc import (
     WHITE_BAR,
 )
 from src.utils.functions import safe_username
-from src.utils.imagekit import ImageKit
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import BaseCharactersView, CharactersView, PingView
 from src.views.image_view import ImageView
@@ -385,11 +384,11 @@ class Template(TemplateItem, Enum):
 
     @property
     def min_values(self):
-        return 2 if self == self.Fusion else 1
+        return 2 if self in (self.Fusion, self.Crossbreed) else 1
 
     @property
     def max_values(self):
-        return 2 if self == self.Fusion else 1
+        return 2 if self in (self.Fusion, self.Crossbreed) else 1
 
     @property
     def total_species(self) -> frozenset[Species]:
