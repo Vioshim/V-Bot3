@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import operator
 from dataclasses import asdict, dataclass, field
+from email.policy import default
 from enum import Enum
 from functools import reduce
 from itertools import combinations_with_replacement
@@ -811,8 +812,8 @@ class Fusion(Species):
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
             name="/".join(x.name for x in mons),
-            height=sum(x.height for x in mons) // amount,
-            weight=sum(x.weight for x in mons) // amount,
+            height=sum(x.height for x in mons) / amount,
+            weight=sum(x.weight for x in mons) / amount,
             HP=sum(x.HP for x in mons) // amount,
             ATK=sum(x.ATK for x in mons) // amount,
             DEF=sum(x.DEF for x in mons) // amount,
