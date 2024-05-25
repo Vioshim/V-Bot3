@@ -184,12 +184,14 @@ class Species:
     def total_movepool(self):
         if TypingEnum.Shadow in self.types:
             return Movepool.shadow()
+
         mon = self
         aux = self.movepool
         while mon := mon.species_evolves_from:
             if not aux:
                 aux += mon.movepool
             else:
+                print(mon, mon.movepool)
                 moves = mon.movepool.without_moves(aux)
                 aux += Movepool(egg=mon.movepool.egg, other=moves())
         return aux
@@ -807,11 +809,6 @@ class Fusion(Species):
         mons = sorted(self.bases, key=lambda x: x.id)
         abilities = reduce(operator.or_, (x.abilities for x in mons))
         amount = len(mons) or 1
-
-        movepool = Movepool()
-        for mon in mons:
-            movepool += mon.movepool
-
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
             name="/".join(x.name for x in mons),
@@ -824,7 +821,7 @@ class Fusion(Species):
             SPD=reduce(operator.add, (x.SPD for x in mons)) // amount,
             SPE=reduce(operator.add, (x.SPE for x in mons)) // amount,
             banned=any(x.banned for x in mons),
-            movepool=movepool,
+            movepool=reduce(operator.add, (x.movepool for x in mons)),
             abilities=abilities,
             egg_groups=reduce(operator.and_, (x.egg_groups for x in mons)),
         )
