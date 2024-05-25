@@ -802,7 +802,7 @@ class Fusion(Species):
 
     bases: frozenset[Species] = field(default_factory=frozenset)
 
-    def __init__(self, bases: frozenset[Species | str]):
+    def __init__(self, *bases: Species | str):
         self.bases = frozenset({o for x in bases if (o := Species.single_deduce(x) if isinstance(x, str) else x)})
         mons = sorted(self.bases, key=lambda x: x.id)
         abilities = reduce(operator.or_, (x.abilities for x in mons))
