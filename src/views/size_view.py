@@ -53,7 +53,7 @@ class HeightModal(Modal, title="Height"):
         items = [x.height_value(height) for height in heights for x in Size]
 
         answer = self.value
-        if not (min(items) <= height <= max(items)):
+        if not (min(items) <= answer <= max(items)):
             answer = min(items, key=lambda x: abs(x - answer))
 
         self.oc.size = Size.M if answer <= 0 else answer
@@ -134,7 +134,7 @@ class WeightModal(Modal, title="Weight"):
         items = [x.weight_value(weight) for weight in weights for x in Size]
 
         answer = self.value
-        if not (min(items) <= weight <= max(items)):
+        if not (min(items) <= answer <= max(items)):
             answer = min(items, key=lambda x: abs(x - answer))
 
         self.oc.weight = Size.M if answer <= 0 else answer
