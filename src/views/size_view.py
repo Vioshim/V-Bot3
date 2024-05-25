@@ -46,7 +46,7 @@ class HeightModal(Modal, title="Height"):
         if m and m in self.oc.total_movepool:
             heights = 0.1, 20
         elif isinstance(self.oc.species, Fusion):
-            heights = [x.height for x in sorted(self.oc.species.bases, key=lambda x: x.height)]
+            heights = [x.height for x in self.oc.species.bases]
         else:
             heights = (height,)
 
