@@ -87,8 +87,8 @@ class Species:
     female_image: Optional[str] = None
     female_image_shiny: Optional[str] = None
     types: frozenset[TypingEnum] = field(default_factory=frozenset)
-    height: int = 0
-    weight: int = 0
+    height: float = 0.0
+    weight: float = 0.0
     HP: int = 0
     ATK: int = 0
     DEF: int = 0
