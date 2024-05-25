@@ -182,6 +182,21 @@ class Movepool:
         """
         return self.operator(other, method=lambda x, y: x | y)
 
+    def __or__(self, other: Movepool) -> Movepool:
+        """Or method
+
+        Parameters
+        ----------
+        other : Movepool
+            Movepool to operate against
+
+        Returns
+        -------
+        Movepool
+            resulting movepool
+        """
+        return self.operator(other, method=lambda x, y: x | y)
+
     def __radd__(self, other: Movepool) -> Movepool:
         """Recursive Add method
 
