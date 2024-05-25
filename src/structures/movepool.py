@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import operator
 from dataclasses import astuple, dataclass, field
 from json import JSONEncoder
 from typing import Any, Callable, Iterable, Optional
@@ -180,7 +181,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        return self.operator(other, method=lambda x, y: x | y)
+        return self.operator(other, method=operator.or_)
 
     def __or__(self, other: Movepool) -> Movepool:
         """Or method
@@ -195,7 +196,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        return self.operator(other, method=lambda x, y: x | y)
+        return self.operator(other, method=operator.or_)
 
     def __radd__(self, other: Movepool) -> Movepool:
         """Recursive Add method
@@ -210,7 +211,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        return self.operator(other, method=lambda x, y: x | y)
+        return self.operator(other, method=operator.or_)
 
     def __sub__(self, other: Movepool) -> Movepool:
         """Sub method
@@ -225,7 +226,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        return self.operator(other, method=lambda x, y: x - y)
+        return self.operator(other, method=operator.sub)
 
     def __xor__(self, other: Movepool) -> Movepool:
         """Xor method
@@ -240,7 +241,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        return self.operator(other, method=lambda x, y: x ^ y)
+        return self.operator(other, method=operator.xor)
 
     def __and__(self, other: Movepool) -> Movepool:
         """And method
@@ -255,7 +256,7 @@ class Movepool:
         Movepool
             resulting movepool
         """
-        return self.operator(other, method=lambda x, y: x & y)
+        return self.operator(other, method=operator.and_)
 
     def __call__(self, *, key: Optional[Callable[[Move]]] = None, reverse: bool = False) -> list[Move]:
         """Returns all moves that belong to this instance sorted.
@@ -289,7 +290,7 @@ class Movepool:
         list[Move]
             List of moves that belong to this instance.
         """
-        key = key or (lambda x: x.name)
+        key = key or operator.attrgetter("name")
         moves: set[Move] = set()
         for item in astuple(self):
             if isinstance(item, frozenset):
