@@ -31,9 +31,10 @@ __all__ = (
 
 
 class HeightModal(Modal, title="Height"):
-    def __init__(self, oc: Character) -> None:
+    def __init__(self, oc: Character, species: Optional[Species] = None) -> None:
         super(HeightModal, self).__init__(title="Height", timeout=None)
         self.oc = oc
+        self.species = oc.species if species is None else species
 
     @property
     def value(self) -> float:
@@ -41,12 +42,12 @@ class HeightModal(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        height: float = getattr(self.oc.species, "height", 0.0)
+        height: float = getattr(self.species, "height", 0.0)
 
         if m and m in self.oc.total_movepool:
             heights = 0.1, 20
-        elif isinstance(self.oc.species, Fusion):
-            heights = [x.height for x in self.oc.species.bases]
+        elif isinstance(self.species, Fusion):
+            heights = [x.height for x in self.species.bases]
         else:
             heights = (height,)
 
@@ -68,8 +69,8 @@ class HeightModal(Modal, title="Height"):
 
 
 class HeightModal1(HeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(HeightModal1, self).__init__(oc=oc)
+    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
+        super(HeightModal1, self).__init__(oc=oc, species=species)
         self.text = TextInput(label="Meters", placeholder=info, default=info)
         self.add_item(self.text)
 
@@ -88,8 +89,8 @@ class HeightModal1(HeightModal):
 
 
 class HeightModal2(HeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(HeightModal2, self).__init__(oc=oc)
+    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
+        super(HeightModal2, self).__init__(oc=oc, species=species)
         info = info.removesuffix('" ft') if info else ""
         ft_info, in_info = info.split("' ")
 
@@ -112,9 +113,10 @@ class HeightModal2(HeightModal):
 
 
 class WeightModal(Modal, title="Weight"):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
+    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
         super(WeightModal, self).__init__(title="Weight", timeout=None)
         self.oc = oc
+        self.species = oc.species if species is None else species
 
     @property
     def value(self) -> float:
@@ -122,12 +124,12 @@ class WeightModal(Modal, title="Weight"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         m = Move.get(name="Transform")
-        weight: float = getattr(self.oc.species, "weight", 0)
+        weight: float = getattr(self.species, "weight", 0)
 
         if m and m in self.oc.total_movepool:
             weights = 0.1, 999.9
-        elif isinstance(self.oc.species, Fusion):
-            weights = [x.weight for x in sorted(self.oc.species.bases, key=lambda x: x.weight)]
+        elif isinstance(self.species, Fusion):
+            weights = [x.weight for x in sorted(self.species.bases, key=lambda x: x.weight)]
         else:
             weights = (weight,)
 
@@ -149,8 +151,8 @@ class WeightModal(Modal, title="Weight"):
 
 
 class WeightModal1(WeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(WeightModal1, self).__init__(oc=oc)
+    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
+        super(WeightModal1, self).__init__(oc=oc, species=species)
         self.text = TextInput(label="kg", placeholder=info, default=info)
         self.add_item(self.text)
 
@@ -165,8 +167,8 @@ class WeightModal1(WeightModal):
 
 
 class WeightModal2(WeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(WeightModal2, self).__init__(oc=oc)
+    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
+        super(WeightModal2, self).__init__(oc=oc, species=species)
         self.text = TextInput(label="lbs", placeholder=info, default=info)
         self.add_item(self.text)
 
@@ -247,14 +249,14 @@ class HeightView(Basic):
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_1(self, itx: Interaction, btn: Button):
-        modal = HeightModal1(oc=self.oc, info=btn.label)
+        modal = HeightModal1(oc=self.oc, info=btn.label, species=self.species)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
 
     @button(label="Feet & Inches", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
-        modal = HeightModal2(oc=self.oc, info=btn.label)
+        modal = HeightModal2(oc=self.oc, info=btn.label, species=self.species)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
@@ -329,14 +331,14 @@ class WeightView(Basic):
 
     @button(label="Kg", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_1(self, itx: Interaction, btn: Button):
-        modal = WeightModal1(oc=self.oc, info=btn.label)
+        modal = WeightModal1(oc=self.oc, info=btn.label, species=self.species)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
 
     @button(label="Lbs", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
-        modal = WeightModal2(oc=self.oc, info=btn.label)
+        modal = WeightModal2(oc=self.oc, info=btn.label, species=self.species)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
