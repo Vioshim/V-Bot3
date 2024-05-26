@@ -205,9 +205,8 @@ class HeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        data = [Fusion(*x) for x in combinations_with_replacement(bases, len(bases))]
-        data.sort(key=lambda x: x.height, reverse=True)
-        for item in data:
+        data = {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}
+        for item in sorted(data, key=lambda x: x.height, reverse=True):
             self.reference.add_option(
                 label=item.name,
                 value=item.id,
@@ -287,9 +286,8 @@ class WeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        data = [Fusion(*x) for x in combinations_with_replacement(bases, len(bases))]
-        data.sort(key=lambda x: x.weight, reverse=True)
-        for item in data:
+        data = {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}
+        for item in sorted(data, key=lambda x: x.weight, reverse=True):
             self.reference.add_option(
                 label=item.name,
                 value=item.id,
