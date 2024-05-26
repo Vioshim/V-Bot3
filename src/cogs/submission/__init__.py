@@ -490,7 +490,7 @@ class Submission(commands.Cog):
         self,
         message: Message,
         user: Member,
-        kwargs: Character | dict[str, Character] = None,
+        kwargs: Optional[Character | dict[str, Character]] = None,
     ):
         channel = message.channel
         author = message.author.name.title()

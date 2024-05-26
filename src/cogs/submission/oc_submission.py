@@ -1763,7 +1763,7 @@ class SubmissionView(Basic):
                     await msg.delete(delay=0)
                 itx.client.logger.info("%s is deleting %s characters", str(itx.user), len(choices))
 
-    # @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
+    @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
         date_value = time_snowflake(itx.created_at - timedelta(days=14))
@@ -1776,7 +1776,7 @@ class SubmissionView(Basic):
             ],
             "location": {"$type": 18},
         }
-        if role := get(itx.guild.roles, name="Registered"):
+        if role := get(itx.guild.roles, name="Roleplayer"):
             key["author"] = {"$in": [x.id for x in role.members]}
         ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
         view = RegionViewComplex(member=itx.user, target=itx, ocs=ocs)
