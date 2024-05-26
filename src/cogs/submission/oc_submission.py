@@ -1766,14 +1766,8 @@ class SubmissionView(Basic):
     @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
-        date_value = time_snowflake(itx.created_at - timedelta(days=14))
         key = {
             "server": itx.guild_id,
-            "$or": [
-                {"id": {"$gte": date_value}},
-                {"location": {"$gte": date_value}},
-                {"last_used": {"$gte": date_value}},
-            ],
             "location": {"$type": 18},
         }
         if role := get(itx.guild.roles, name="Roleplayer"):

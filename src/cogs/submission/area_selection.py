@@ -66,7 +66,7 @@ class LocationSelection(Complex[Thread]):
             silent_mode=True,
             keep_working=True,
             parser=lambda x: (
-                f"{len(self.entries.get(x.id, [])):02d}│{x.name}".replace("-", " ").title(),
+                f"{len(self.entries.get(x.id, [])):02d}〛{x.name}".replace("-", " ").title(),
                 None,
             ),
             sort_key=lambda x: x.name,
@@ -135,7 +135,7 @@ class AreaSelection(Complex[ForumChannel]):
             silent_mode=True,
             keep_working=True,
             parser=lambda x: (
-                f"{len(self.entries.get(x.id, [])):02d}{x.name}".replace("-", " ").title(),
+                f"{len(self.entries.get(x.id, [])):02d}〛{x.name}".replace("-", " ").title(),
                 x.topic or "No description yet.",
             ),
             sort_key=lambda x: x.name,
