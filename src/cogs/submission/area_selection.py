@@ -48,7 +48,9 @@ class LocationSelection(Complex[Thread]):
 
         def foo1(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
-            return isinstance(ch, Thread) and ch.parent == base
+            if isinstance(ch, Thread):
+                ch = ch.parent
+            return ch == base
 
         values = [x for x in ocs if x.location and foo1(x)]
         values.sort(key=lambda x: x.location)
@@ -166,7 +168,7 @@ class RegionViewComplex(Complex[MapPair]):
     def __init__(self, *, member: Member | User, target: Interaction[CustomBot], ocs: list[Character]):
         def foo4(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
-            return ch.category_id if isinstance(ch, Thread) else 0
+            return ch.category_id if ch else 0
 
         ocs = sorted(ocs, key=foo4)
         data = {k: set(v) for k, v in groupby(ocs, key=foo4) if k in MAP_ELEMENTS2}
