@@ -168,7 +168,7 @@ class RegionViewComplex(Complex[MapPair]):
     def __init__(self, *, member: Member | User, target: Interaction[CustomBot], ocs: list[Character]):
         def foo4(oc: Character):
             ch = target.guild.get_channel_or_thread(oc.location)
-            return ch.category_id if ch else 0
+            return (ch and ch.category_id) or 0
 
         ocs = sorted(ocs, key=foo4)
         data = {k: set(v) for k, v in groupby(ocs, key=foo4) if k in MAP_ELEMENTS2}
