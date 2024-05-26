@@ -146,12 +146,12 @@ class AreaSelection(Complex[ForumChannel]):
     async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         try:
             await interaction.response.defer(ephemeral=True, thinking=True)
-            channel: ForumChannel = self.current_choice
+            channel = await interaction.guild.fetch_channel(self.current_choice.id)  # type: ignore
             ocs = self.entries.get(channel.id, set())
             view = LocationSelection(target=interaction, base=channel, ocs=ocs)
             embed = view.embed
             embed.title = channel.name.replace("-", " ").title()
-            embed.description = channel.topic or "No description yet"
+            embed.description = getattr(channel, "topic", "")
             embed.color = interaction.user.color
             embed.timestamp = interaction.created_at
             embed.set_author(name=interaction.user.display_name, icon_url=interaction.user.display_avatar)
