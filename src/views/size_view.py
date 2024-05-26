@@ -208,7 +208,7 @@ class HeightView(Basic):
         for item in data:
             self.reference.add_option(
                 label=item.name,
-                value=item.name,
+                value=item.id,
                 description=Size.M.height_info(item.height),
                 default=item == self.species,
             )
@@ -237,7 +237,7 @@ class HeightView(Basic):
 
     @select(placeholder="Species for reference")
     async def reference(self, itx: Interaction, sct: Select):
-        self.species = Fusion.deduce(sct.values[0])
+        self.species = Fusion.from_ID(sct.values[0])
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Select a Size.")
