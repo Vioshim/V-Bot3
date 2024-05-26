@@ -351,7 +351,7 @@ class Species:
         if isinstance(item, str):
             values = {i.id: i for i in cls.all()} or ALL_SPECIES
             items = {x for i in item.split("_") if (x := values.get(i))}
-            if 2 <= len(items) <= 3:
+            if len(items) > 1:
                 items = {Fusion(*items)}
 
             if items and isinstance(data := items.pop(), cls):
@@ -894,6 +894,23 @@ class Fusion(Species):
         """
         if isinstance(mon := Species.any_deduce(item), cls):
             return mon
+
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[Fusion]:
+        """This method returns the species given exact IDs
+
+        Returns
+        -------
+        Optional[Fusion]
+            result
+        """
+        if isinstance(item, cls):
+            return item
+
+        if isinstance(item, str):
+            values = {i.id: i for i in cls.all()} or ALL_SPECIES
+            items = {x for i in item.split("_") if (x := values.get(i))}
+            return Fusion(*items)
 
     def as_data(self):
         return {

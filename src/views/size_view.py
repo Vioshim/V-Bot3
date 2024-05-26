@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from itertools import combinations_with_replacement
 from typing import Optional
 
 from discord import ButtonStyle, Interaction, Member
@@ -21,7 +22,7 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size
 from src.structures.move import Move
-from src.structures.species import Fusion
+from src.structures.species import Fusion, Species
 
 __all__ = (
     "HeightView",
@@ -180,31 +181,66 @@ class WeightModal2(WeightModal):
 
 
 class HeightView(Basic):
-    def __init__(self, *, target: Interaction, member: Member, oc: Character):
+    def __init__(
+        self,
+        *,
+        target: Interaction,
+        member: Member,
+        oc: Character,
+        species: Optional[Species] = None,
+    ):
         super(HeightView, self).__init__(target=target, member=member, timeout=None)
-        self.choice.options.clear()
         self.oc = oc
+        self.species = oc.species if species is None else species
+        self.format()
 
-        height = oc.species.height if oc.species else 0
-        if isinstance(oc.size, Size):
-            info = oc.size.height_info(height)
+    def format(self):
+        self.reference.options.clear()
+        self.choice.options.clear()
+
+        if isinstance(self.oc.species, Fusion):
+            bases = self.oc.species.bases
         else:
-            info = Size.M.height_info(oc.size)
+            bases = [self.oc.species] if self.oc.species else []
+
+        data = [Fusion(*x) for x in combinations_with_replacement(bases, len(bases))]
+        data.sort(key=lambda x: x.height, reverse=True)
+        for item in data:
+            self.reference.add_option(
+                label=item.name,
+                value=item.name,
+                description=Size.M.height_info(item.height),
+                default=item == self.species,
+            )
+
+        height = self.species.height if self.species else 0
+        if isinstance(self.oc.size, Size):
+            info = self.oc.size.height_info(height)
+        else:
+            info = Size.M.height_info(self.oc.size)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
+
         for item in items:
             self.choice.add_option(
                 label=item.height_info(height),
                 value=item.name,
                 description=item.reference_name,
-                default=item == oc.size,
+                default=item == self.oc.size,
                 emoji=item.emoji,
             )
 
-    @select(placeholder="Single Choice.")
+        return self
+
+    @select(placeholder="Species for reference")
+    async def reference(self, itx: Interaction, sct: Select):
+        self.species = Fusion.deduce(sct.values[0])
+        await itx.response.edit_message(view=self.format())
+
+    @select(placeholder="Select a Size.")
     async def choice(self, itx: Interaction, sct: Select):
         self.oc.size = Size[sct.values[0]]
         await self.delete(itx)
@@ -232,29 +268,59 @@ class HeightView(Basic):
 
 
 class WeightView(Basic):
-    def __init__(self, *, target: Interaction, member: Member, oc: Character):
+    def __init__(self, *, target: Interaction, member: Member, oc: Character, species: Optional[Species] = None):
         super(WeightView, self).__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
+        self.species = oc.species if species is None else species
+        self.format()
 
-        weight = oc.species.weight if oc.species else 0
-        if isinstance(oc.weight, Size):
-            info = oc.weight.weight_info(weight)
+    def format(self):
+        self.reference.options.clear()
+        self.choice.options.clear()
+
+        if isinstance(self.oc.species, Fusion):
+            bases = self.oc.species.bases
         else:
-            info = Size.M.weight_info(oc.weight)
+            bases = [self.oc.species] if self.oc.species else []
+
+        data = [Fusion(*x) for x in combinations_with_replacement(bases, len(bases))]
+        data.sort(key=lambda x: x.weight, reverse=True)
+        for item in data:
+            self.reference.add_option(
+                label=item.name,
+                value=item.id,
+                description=Size.M.weight_info(item.weight),
+                default=item == self.species,
+            )
+
+        weight = self.species.weight if self.species else 0
+
+        if isinstance(self.oc.weight, Size):
+            info = self.oc.weight.height_info(weight)
+        else:
+            info = Size.M.height_info(self.oc.weight)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
+
         for item in items:
             self.choice.add_option(
                 label=item.weight_info(weight),
                 value=item.name,
                 description=item.reference_name,
-                default=item == oc.weight,
+                default=item == self.oc.size,
                 emoji=item.emoji,
             )
+
+        return self
+
+    @select(placeholder="Species for reference")
+    async def reference(self, itx: Interaction, sct: Select):
+        self.species = Fusion.from_ID(sct.values[0])
+        await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Single Choice.")
     async def choice(self, itx: Interaction, sct: Select):
