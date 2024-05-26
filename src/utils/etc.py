@@ -108,13 +108,13 @@ MAP_ELEMENTS = [
     MapPair(
         name="Mysterious Island",
         category=1211907937442865232,
-        emoji="🐲",
+        emoji="\N{DRAGON FACE}",
         desc="A mysterious island with a lot of secrets.",
     ),
     MapPair(
         name="Celesterra Kingdom",
         category=1196879061411176514,
-        emoji="☀",
+        emoji="\N{GEAR}",
         desc="A steampunk kingdom with a lot of technology.",
     ),
     MapPair(

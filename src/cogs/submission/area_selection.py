@@ -22,6 +22,7 @@ from discord import (
     ForumChannel,
     Interaction,
     Member,
+    TextChannel,
     Thread,
     User,
 )
@@ -40,7 +41,7 @@ class LocationSelection(Complex[Thread]):
     def __init__(
         self,
         target: Interaction[CustomBot],
-        base: ForumChannel,
+        base: ForumChannel | TextChannel,
         ocs: set[Character],
     ):
         self.entries: dict[int, set[Character]] = {}
@@ -63,11 +64,10 @@ class LocationSelection(Complex[Thread]):
             silent_mode=True,
             keep_working=True,
             parser=lambda x: (
-                f"{len(self.entries.get(x.id, [])):02d}{x.name[1:]}".replace("-", " ").title(),
+                f"{len(self.entries.get(x.id, [])):02d}│{x.name}".replace("-", " ").title(),
                 None,
             ),
             sort_key=lambda x: x.name,
-            emoji_parser=lambda x: x.name[0],
         )
 
     @select(row=1, placeholder="Select a location to check", custom_id="selector")
@@ -78,7 +78,7 @@ class LocationSelection(Complex[Thread]):
             ocs = self.entries.get(channel.id, set())
             view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
             embed = view.embed
-            embed.title = channel.name[2:].replace("-", " ").title()
+            embed.title = channel.name.replace("-", " ").title()
 
             try:
                 msg = await channel.get_partial_message(channel.id).fetch()
@@ -106,7 +106,7 @@ class AreaSelection(Complex[ForumChannel]):
         ocs: set[Character],
         emoji: str,
     ):
-        channels = [x for x in cat.channels if isinstance(x, ForumChannel)]
+        channels = [x for x in cat.channels if isinstance(x, (ForumChannel, TextChannel))]
 
         self.entries: dict[int, set[Character]] = {}
 
@@ -133,7 +133,7 @@ class AreaSelection(Complex[ForumChannel]):
             silent_mode=True,
             keep_working=True,
             parser=lambda x: (
-                f"{len(self.entries.get(x.id, [])):02d}{x.name.removeprefix(emoji)}".replace("-", " ").title(),
+                f"{len(self.entries.get(x.id, [])):02d}{x.name}".replace("-", " ").title(),
                 x.topic or "No description yet.",
             ),
             sort_key=lambda x: x.name,
@@ -148,7 +148,7 @@ class AreaSelection(Complex[ForumChannel]):
             ocs = self.entries.get(channel.id, set())
             view = LocationSelection(target=interaction, base=channel, ocs=ocs)
             embed = view.embed
-            embed.title = channel.name[2:].replace("-", " ").title()
+            embed.title = channel.name.replace("-", " ").title()
             embed.description = channel.topic or "No description yet"
             embed.color = interaction.user.color
             embed.timestamp = interaction.created_at
