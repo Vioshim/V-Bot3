@@ -284,14 +284,6 @@ class Submission(commands.Cog):
                 embeds=embeds,
                 allowed_mentions=AllowedMentions(users=True),
             )
-            view = View()
-            if oc.location and oc.last_used:
-                if not (ch := guild.get_channel_or_thread(oc.location)):
-                    ch = await guild.fetch_channel(oc.location)
-                msg = ch.get_partial_message(oc.last_used)
-                name, emoji = name_emoji_from_channel(ch)
-                view.add_item(Button(label=name, emoji=emoji, url=msg.jump_url))
-            kwargs["view"] = view
 
             image = oc.image or oc.image_url
             if file := await self.bot.get_file(url=image, filename="image.png"):
@@ -497,21 +489,25 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("RP Logs")
         db2 = self.bot.mongo_db("Tupper-logs")
         key, oc = message.author.name, Character(author=user.id, server=user.guild.id)
-        if kwargs := kwargs or {}:
-            if isinstance(kwargs, Character):
-                key, oc = kwargs.name, kwargs
-            elif item := process.extractOne(
-                author,
-                choices=kwargs.keys(),
-                score_cutoff=85,
-            ):
-                key, oc = item[0], kwargs[item[0]]
-            elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
-                key, oc = ocs[0]
+
+        kwargs = kwargs or {}
+        if isinstance(kwargs, Character):
+            key, oc = kwargs.name, kwargs
+        elif item := process.extractOne(
+            author,
+            choices=kwargs.keys(),
+            score_cutoff=85,
+        ):
+            key, oc = item[0], kwargs[item[0]]
+        elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
+            key, oc = ocs[0]
 
         if oc.id:
-            oc.location, oc.last_used = message.channel.id, message.id
-            await self.register_oc(oc, logging=False)
+            db = self.bot.mongo_db("Characters")
+            await db.update_one(
+                {"id": oc.id, "server": oc.server},
+                {"$set": {"location": oc.location, "last_used": oc.last_used}},
+            )
 
         if not (
             info_channel := find(

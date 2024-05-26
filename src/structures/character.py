@@ -562,6 +562,12 @@ class Character:
             return f"https://discord.com/channels/{self.server}/{self.thread}/{self.id}"
 
     @property
+    def location_url(self):
+        url = f"https://discord.com/channels/{self.server}/"
+        url += f"{self.location}" if self.location else ""
+        return f"{url}/{self.last_used}" if self.last_used else url
+
+    @property
     def height_text(self):
         if isinstance(self.size, Size):
             return self.size.height_info(self.species and self.species.height)
