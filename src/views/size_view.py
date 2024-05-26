@@ -227,11 +227,12 @@ class HeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
         for item in items:
+            label = item.height_info(height)
             self.choice.add_option(
-                label=item.height_info(height),
+                label=label,
                 value=item.name,
                 description=item.reference_name,
-                default=item == self.oc.size,
+                default=label == info,
                 emoji=item.emoji,
             )
 
@@ -309,11 +310,12 @@ class WeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
         for item in items:
+            label = item.weight_info(weight)
             self.choice.add_option(
-                label=item.weight_info(weight),
+                label=label,
                 value=item.name,
                 description=item.reference_name,
-                default=item == self.oc.size,
+                default=label == info,
                 emoji=item.emoji,
             )
 
