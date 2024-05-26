@@ -509,6 +509,10 @@ class Submission(commands.Cog):
             elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
                 key, oc = ocs[0]
 
+        if oc.id:
+            oc.location, oc.last_used = message.channel.id, message.id
+            await self.register_oc(oc, logging=False)
+
         if not (
             info_channel := find(
                 lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"),
@@ -605,9 +609,6 @@ class Submission(commands.Cog):
                     "author": oc.author,
                 }
             )
-            if oc.id:
-                oc.location, oc.last_used = message.channel.id, message.id
-                await self.register_oc(oc, logging=False)
 
     async def on_message_proxy(self, message: Message):
         """This method processes tupper messages
