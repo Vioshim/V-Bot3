@@ -244,7 +244,7 @@ class HeightView(Basic):
 
     @select(placeholder="Select a Size.")
     async def choice(self, itx: Interaction, sct: Select):
-        self.oc.size = Size[sct.values[0]]
+        self.oc.size = Size[sct.values[0]].height_value(self.species.height if self.species else 0)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
@@ -326,7 +326,7 @@ class WeightView(Basic):
 
     @select(placeholder="Single Choice.")
     async def choice(self, itx: Interaction, sct: Select):
-        self.oc.weight = Size[sct.values[0]]
+        self.oc.weight = Size[sct.values[0]].weight_value(self.species.weight if self.species else 0)
         await self.delete(itx)
 
     @button(label="Kg", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
