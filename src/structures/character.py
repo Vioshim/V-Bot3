@@ -252,14 +252,14 @@ class Size(float, Enum):
             value *= self.value / 10
         else:
             value = self.value / 5
-        return value
+        return round(value, 2)
 
     def weight_value(self, value: float = 0):
         if value:
             value *= self.value / 10
         else:
             value = self.value * 5
-        return value
+        return round(value, 2)
 
     @staticmethod
     def meters_to_ft_inches(value: float = 0):
@@ -578,7 +578,7 @@ class Character:
     def height_value(self):
         if isinstance(self.size, Size):
             return self.size.height_value(self.species and self.species.height)
-        return self.size
+        return round(self.size, 2)
 
     @property
     def weight_text(self):
@@ -590,7 +590,7 @@ class Character:
     def weight_value(self):
         if isinstance(self.weight, Size):
             return self.weight.weight_value(self.species and self.species.weight)
-        return self.weight
+        return round(self.weight, 2)
 
     @property
     def default_image(self):
