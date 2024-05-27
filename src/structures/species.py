@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import operator
 from dataclasses import asdict, dataclass, field
-from email.policy import default
 from enum import Enum
 from functools import reduce
 from itertools import combinations_with_replacement
@@ -874,7 +873,7 @@ class Fusion(Species):
         frozenset[frozenset[Typing]]
             List of sets (valid types)
         """
-        total = reduce(operator.or_, (x.types for x in self.bases))
+        total = reduce(operator.or_, (x.types for x in self.bases), frozenset())
         return frozenset(map(frozenset, combinations_with_replacement(total, 2)))
 
     @classmethod
