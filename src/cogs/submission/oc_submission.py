@@ -261,7 +261,7 @@ class Template(TemplateItem, Enum):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
 
         if mons := self.total_species:
-            date_value = time_snowflake(itx.created_at - timedelta(days=14))
+            date_value = time_snowflake(itx.created_at - timedelta(days=30))
             key = {
                 "server": itx.guild_id,
                 "$or": [
@@ -734,7 +734,7 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
     ):
         mon_total = {x for x in Species.all(exclude=(Paradox, Mega)) if not x.banned}
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
-        date_value = time_snowflake(itx.created_at - timedelta(days=14))
+        date_value = time_snowflake(itx.created_at - timedelta(days=30))
         key = {
             "server": itx.guild_id,
             "$or": [

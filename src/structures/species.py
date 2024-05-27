@@ -807,7 +807,7 @@ class Fusion(Species):
     def __init__(self, *bases: Species | str):
         self.bases = frozenset({o for x in bases if (o := Species.single_deduce(x) if isinstance(x, str) else x)})
         mons = sorted(self.bases, key=lambda x: x.id)
-        abilities = reduce(operator.or_, (x.abilities for x in mons))
+        abilities = reduce(operator.or_, (x.abilities for x in mons), frozenset())
         amount = len(mons) or 1
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
@@ -821,14 +821,14 @@ class Fusion(Species):
             SPD=sum(x.SPD for x in mons) // amount,
             SPE=sum(x.SPE for x in mons) // amount,
             banned=any(x.banned for x in mons),
-            movepool=reduce(operator.add, (x.movepool for x in mons)),
+            movepool=reduce(operator.add, (x.movepool for x in mons), Movepool()),
             abilities=abilities,
-            egg_groups=reduce(operator.or_, (x.egg_groups for x in mons)),
+            egg_groups=reduce(operator.or_, (x.egg_groups for x in mons), frozenset()),
         )
         if len(items := list(self.possible_types)) == 1:
             self.types = frozenset(items[0])
 
-        self.evolves_to = frozenset(reduce(operator.or_, (x.evolves_to for x in mons)))
+        self.evolves_to = frozenset(reduce(operator.or_, (x.evolves_to for x in mons), frozenset()))
 
     def __eq__(self, other: Fusion):
         if isinstance(other, Fusion):
@@ -857,13 +857,13 @@ class Fusion(Species):
 
         return reduce(
             operator.add,
-            (x.species_evolves_from.movepool for x in self.bases if x.species_evolves_from),
+            (x.species_evolves_from.total_movepool for x in self.bases if x.species_evolves_from),
             self.movepool,
         )
 
     @property
     def evol_line(self):
-        return reduce(operator.add, (x.evol_line for x in self.bases))
+        return reduce(operator.add, (x.evol_line for x in self.bases), [])
 
     @property
     def possible_types(self) -> frozenset[frozenset[TypingEnum]]:

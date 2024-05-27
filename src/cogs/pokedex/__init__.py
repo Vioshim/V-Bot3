@@ -108,7 +108,8 @@ class Pokedex(commands.Cog):
         self,
         ctx: Interaction[CustomBot],
         species: Optional[DefaultSpeciesArg],
-        fused: Optional[DefaultSpeciesArg],
+        fused1: Optional[DefaultSpeciesArg],
+        fused2: Optional[DefaultSpeciesArg],
         fakemon: Optional[FakemonArg],
         move_id: Optional[MoveArg],
         level: int = 0,
@@ -123,7 +124,9 @@ class Pokedex(commands.Cog):
             Interaction[CustomBot]
         species : Optional[DefaultSpeciesArg]
             Species to look up info about
-        fused : Optional[DefaultSpeciesArg]
+        fused1 : Optional[DefaultSpeciesArg]
+            To check when fused
+        fused2 : Optional[DefaultSpeciesArg]
             To check when fused
         fakemon : Optional[FakemonArg]
             Search fakemon species
@@ -144,9 +147,8 @@ class Pokedex(commands.Cog):
         )
         await ctx.response.defer(ephemeral=True, thinking=True)
 
-        mons: set[Optional[Species]] = {species, fused}
-        if aux := {x for x in mons if x is not None}:
-            mon = Fusion(*aux, ratio=0.5) if len(aux) == 2 else aux.pop()
+        if mons := {species, fused1, fused2} - {None}:
+            mon = Fusion(*mons)
             species = mon
             movepool = mon.total_movepool
         elif fakemon:
@@ -242,7 +244,7 @@ class Pokedex(commands.Cog):
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             db = ctx.client.mongo_db("Characters")
-            date_value = time_snowflake(ctx.created_at - timedelta(days=14))
+            date_value = time_snowflake(ctx.created_at - timedelta(days=30))
             key = {
                 "server": ctx.guild_id,
                 "$or": [
@@ -281,7 +283,7 @@ class Pokedex(commands.Cog):
         ctx: Interaction[CustomBot],
         species1: DefaultSpeciesArg,
         species2: DefaultSpeciesArg,
-        ratio: Literal[10, 20, 30, 40, 50, 60, 70, 80, 90] = 50,
+        species3: Optional[DefaultSpeciesArg],
     ):
         """Command to check Fusion Information
 
@@ -293,18 +295,13 @@ class Pokedex(commands.Cog):
             First Species
         species2 : DefaultSpeciesArg
             Second Species
-        ratio : int
-            Ratio of Fusion, defaults to 50%
+        species3 : Optional[DefaultSpeciesArg]
+            Third Species
         """
         await ctx.response.defer(ephemeral=True, thinking=True)
-        mon = Fusion(species1, species2, ratio=ratio / 100)
-
-        ratio_a, ratio_b = ratio / 100, 1 - ratio / 100
-
-        embed = Embed(
-            title=f"{ratio_a:.1%} {species1.name} + {ratio_b:.1%} {species2.name}",
-            color=ctx.user.color,
-        )
+        items = {species1, species2, species3} - {None}
+        mon = Fusion(*items)
+        embed = Embed(title=mon.name, color=ctx.user.color)
 
         if mon.banned or not mon.egg_groups:
             embed.title += " - Banned Fusion"
@@ -340,7 +337,8 @@ class Pokedex(commands.Cog):
         ability: Optional[AbilityArg],
         move: Optional[MoveArg],
         species: Optional[DefaultSpeciesArg],
-        fused: Optional[DefaultSpeciesArg],
+        fused1: Optional[DefaultSpeciesArg],
+        fused2: Optional[DefaultSpeciesArg],
         member: Optional[Member | User],
         location: Optional[ForumChannel | Thread],
         backstory: Optional[str],
@@ -371,7 +369,9 @@ class Pokedex(commands.Cog):
             Move to filter
         species : Optional[DefaultSpeciesArg]
             Species to look up info about.
-        fused : Optional[DefaultSpeciesArg]
+        fused1 : Optional[DefaultSpeciesArg]
+            Search Fusions that contain the species
+        fused2 : Optional[DefaultSpeciesArg]
             Search Fusions that contain the species
         member : Optional[Member]
             Member to filter
@@ -423,34 +423,26 @@ class Pokedex(commands.Cog):
         else:
             filters.append(lambda x: guild.get_member(x.author))
 
-        if isinstance(mon := species, Species):
-            if fused and mon != fused and not isinstance(fused, Fusion) and not isinstance(mon, Fusion):
-                mon = Fusion(mon, fused, ratio=0.5)
-            filters.append(lambda oc: getattr(oc.species, "base", oc.species) == mon)
-        elif fused and not isinstance(fused, Fusion):
-            filters.append(lambda oc: isinstance(oc.species, Fusion) and fused in oc.species.bases)
-            mon = fused
+        items = {species, fused1, fused2} - {None}
+        mon = Fusion(*items)
 
-        if isinstance(mon, Species):
+        if mon.bases:
+            filters.append(
+                lambda oc: (
+                    mon.bases.issubset(oc.species.bases)
+                    if isinstance(oc.species, Fusion)
+                    else getattr(oc.species, "base", oc.species) == mon
+                )
+            )
             embed.title = mon.name
             if mon.banned:
                 embed.title += " - Banned Species"
-            if mon_types := ", ".join(i.name for i in mon.types):
-                embed.set_footer(text=f"Types: {mon_types}")
-            elif isinstance(species, Fusion):
-                mon_types = "\n".join(f"• {'/'.join(i.name for i in item)}" for item in mon.possible_types)
-                embed.set_footer(text=f"Possible Types:\n{mon_types}")
+            mon_types = "\n".join(f"• {'/'.join(i.name for i in item)}" for item in mon.possible_types)
+            embed.set_footer(text=f"Possible Types:\n{mon_types}")
 
             if ab_text := "\n".join(f"• {ab.name}" for ab in mon.abilities):
-                amount = min(len(mon.abilities), 2)
-                embed.add_field(name=f"Abilities (Max {amount})", value=ab_text)
+                embed.add_field(name=f"Abilities (Max {min(len(mon.abilities), 2)})", value=ab_text)
 
-            if isinstance(mon, Fusion):
-                image1, image2 = mon.mon1.image(gender=pronoun), mon.mon2.image(gender=pronoun)
-            else:
-                image1, image2 = mon.image(gender=pronoun), mon.image(gender=pronoun, shiny=True)
-
-            embeds = [embed.set_image(url=image1), Embed(url=PLACEHOLDER).set_image(url=image2)]
         if pronoun:
             filters.append(lambda oc: pronoun in oc.pronoun)
         if backstory:
@@ -501,7 +493,7 @@ class Pokedex(commands.Cog):
         if kind:
             filters.append(lambda oc: oc.kind == kind)
 
-        date = ctx.created_at - timedelta(days=14)
+        date = ctx.created_at - timedelta(days=30)
         if active:
             filters.append(lambda x: x.last_used_at >= date)
         else:
