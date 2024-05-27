@@ -365,6 +365,7 @@ class Character:
     pokeball: Optional[Pokeball] = None
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
+    hidden_info: Optional[str] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:

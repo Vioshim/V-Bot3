@@ -1110,6 +1110,32 @@ class BioField(TemplateField, required=True):
                 progress.add(cls.name)
 
 
+class HiddenField(TemplateField, name="Hidden Information", required=False):
+    "Define the OC's Hidden Information"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        itx: Interaction[CustomBot],
+        _: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        text_view = ModernInput(member=itx.user, target=itx)
+        async with text_view.handle(
+            label="OC's Hidden Information.",
+            placeholder=oc.hidden_info if ephemeral else "Hidden",
+            default=oc.hidden_info,
+            required=False,
+            ephemeral=ephemeral,
+            style=TextStyle.paragraph,
+        ) as answer:
+            if isinstance(answer, str):
+                oc.hidden_info = answer or None
+                progress.add(cls.name)
+
+
 class PersonalityField(TemplateField, required=False):
     "Modify the OC's Personality"
 
@@ -1766,10 +1792,7 @@ class SubmissionView(Basic):
     @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
-        key = {
-            "server": itx.guild_id,
-            "location": {"$type": 18},
-        }
+        key = {"server": itx.guild_id, "location": {"$type": 18}}
         if role := get(itx.guild.roles, name="Roleplayer"):
             key["author"] = {"$in": [x.id for x in role.members]}
         ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
