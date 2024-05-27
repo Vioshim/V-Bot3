@@ -100,30 +100,40 @@ class LocationSelection(Complex[Thread]):
             await super(LocationSelection, self).select_choice(interaction=interaction, sct=sct)
 
 
-class AreaSelection(Complex[ForumChannel]):
+class AreaSelection(Complex[CategoryChannel | ForumChannel | TextChannel]):
     def __init__(
         self,
         target: Interaction[CustomBot],
-        cat: CategoryChannel,
+        cat: CategoryChannel | ForumChannel | TextChannel,
         ocs: set[Character],
         emoji: str,
     ):
-        channels = [x for x in cat.channels if isinstance(x, (ForumChannel, TextChannel))]
+        if category := cat if isinstance(cat, CategoryChannel) else cat.category:
+            channels = [
+                x
+                for x in category.channels
+                if isinstance(x, (ForumChannel, TextChannel)) and not x.name.endswith("-logs")
+            ]
+        else:
+            channels = []
+
+        if isinstance(cat, TextChannel):
+            channels.append(cat)
 
         self.entries: dict[int, set[Character]] = {}
 
         def foo2(oc: Character):
-            ch = target.guild.get_channel_or_thread(oc.location)
+            ch = cat.guild.get_channel_or_thread(oc.location)
             return bool(ch and cat == ch.category)
 
         def foo3(oc: Character):
-            ch = target.guild.get_channel_or_thread(oc.location)
+            ch = cat.guild.get_channel_or_thread(oc.location)
             if isinstance(ch, Thread):
                 ch = ch.parent
-            return ch
+            return ch.id if ch else 0
 
-        entries = groupby(sorted(filter(foo2, ocs), key=lambda x: foo3(x).id), key=foo3)
-        self.entries = {k.id: set(v) for k, v in entries if k}
+        entries = groupby(sorted(filter(foo2, ocs), key=foo3), key=foo3)
+        self.entries = {k: set(v) for k, v in entries if k}
         self.total = sum(map(len, self.entries.values()))
 
         channels.sort(key=lambda x: len(self.entries.get(x.id, [])), reverse=True)
