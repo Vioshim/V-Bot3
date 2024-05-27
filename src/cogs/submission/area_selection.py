@@ -58,6 +58,8 @@ class LocationSelection(Complex[Thread]):
         self.entries = {k: set(v) for k, v in entries if k}
         self.total = sum(map(len, self.entries.values()))
         channels = [x for x in base.threads if not x.name.endswith(" OOC")]
+        if isinstance(base, TextChannel):
+            channels.append(base)
         channels.sort(key=lambda x: len(self.entries.get(x.id, [])), reverse=True)
         super(LocationSelection, self).__init__(
             target=target,
