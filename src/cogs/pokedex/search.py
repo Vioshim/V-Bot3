@@ -420,11 +420,13 @@ class OCGroupBy(Generic[D], ABC):
         return getattr(group, "name", str(group)), f"Group has {len(elements):02d} OCs."
 
     @staticmethod
-    def sort_by(items: list[tuple[D, list[Character]]]) -> list[tuple[D, list[Character]]]:
-        try:
-            return sorted(items, key=lambda x: (-len(x[1]), x[0]))
-        except TypeError:
-            return sorted(items, key=lambda x: (-len(x[1]), getattr(x[0], "name", str(x[0]))))
+    def sort_key(item: tuple[D, list[Character]]):
+        ref, items = item
+        return -len(items), str(getattr(ref, "name", ref))
+
+    @classmethod
+    def sort_by(cls, items: list[tuple[D, list[Character]]]) -> list[tuple[D, list[Character]]]:
+        return sorted(items, key=cls.sort_key)
 
     @classmethod
     def generate(
@@ -679,18 +681,38 @@ class OCGroupByNature(OCGroupBy[Nature | None]):
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.nature)}
 
 
-class OCGroupByHeight(OCGroupBy[Size]):
+class OCGroupByHeight(OCGroupBy[float]):
     @classmethod
     def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.height_value, reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.height_text) if k}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.height_value) if k}
+
+    @staticmethod
+    def inner_parser(group: float, elements: list[Character]):
+        key = Size.M.height_info(group)
+        return key, f"Group has {len(elements):02d} OCs."
+
+    @staticmethod
+    def sort_key(item: tuple[float, list[Character]]):
+        ref, items = item
+        return ref, -len(items)
 
 
-class OCGroupByWeight(OCGroupBy[Size]):
+class OCGroupByWeight(OCGroupBy[float]):
     @classmethod
     def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
         ocs = sorted(ocs, key=lambda x: x.weight_value, reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight_text) if k}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight_value) if k}
+
+    @staticmethod
+    def inner_parser(group: float, elements: list[Character]):
+        key = Size.M.weight_info(group)
+        return key, f"Group has {len(elements):02d} OCs."
+
+    @staticmethod
+    def sort_key(item: tuple[float, list[Character]]):
+        ref, items = item
+        return ref, -len(items)
 
 
 class GroupByArg(Enum):
