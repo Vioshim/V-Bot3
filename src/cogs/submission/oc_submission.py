@@ -261,18 +261,9 @@ class Template(TemplateItem, Enum):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
 
         if mons := self.total_species:
-            date_value = time_snowflake(itx.created_at - timedelta(days=30))
-            key = {
-                "server": itx.guild_id,
-                "$or": [
-                    {"id": {"$gte": date_value}},
-                    {"location": {"$gte": date_value}},
-                    {"last_used": {"$gte": date_value}},
-                ],
-            }
-            if role := get(itx.guild.roles, name="Registered"):
+            if role := get(itx.guild.roles, name="Roleplayer"):
                 key["author"] = {"$in": [x.id for x in role.members]}
-            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
+            ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": itx.guild_id})]
             view = SpeciesComplex(
                 member=itx.user,
                 target=itx,
@@ -734,18 +725,9 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
     ):
         mon_total = {x for x in Species.all(exclude=(Paradox, Mega)) if not x.banned}
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
-        date_value = time_snowflake(itx.created_at - timedelta(days=30))
-        key = {
-            "server": itx.guild_id,
-            "$or": [
-                {"id": {"$gte": date_value}},
-                {"location": {"$gte": date_value}},
-                {"last_used": {"$gte": date_value}},
-            ],
-        }
-        if role := get(itx.guild.roles, name="Registered"):
+        if role := get(itx.guild.roles, name="Roleplayer"):
             key["author"] = {"$in": [x.id for x in role.members]}
-        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": itx.guild_id})]
         view = SpeciesComplex(member=itx.user, target=itx, mon_total=mon_total, ocs=ocs)
         async with view.send(
             title="Select if it has a canon Pre-Evo (Skip if not needed)",
@@ -1663,7 +1645,7 @@ class TemplateView(View):
         resp: InteractionResponse = itx.response
         match sct.values[0]:
             case "Form":
-                ephemeral = bool(get(itx.user.roles, name="Registered"))
+                ephemeral = bool(get(itx.user.roles, name="Roleplayer"))
                 modal = SubmissionModal(self.template.text, ephemeral=ephemeral)
                 await resp.send_modal(modal)
                 await modal.wait()

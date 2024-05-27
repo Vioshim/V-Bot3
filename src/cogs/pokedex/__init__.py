@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from datetime import timedelta
 from itertools import groupby
 from random import random
 from re import IGNORECASE
@@ -244,16 +243,8 @@ class Pokedex(commands.Cog):
         elif move_id:
             mons = {x for x in Species.all() if move_id in x.movepool}
             db = ctx.client.mongo_db("Characters")
-            date_value = time_snowflake(ctx.created_at - timedelta(days=30))
-            key = {
-                "server": ctx.guild_id,
-                "$or": [
-                    {"id": {"$gte": date_value}},
-                    {"location": {"$gte": date_value}},
-                    {"last_used": {"$gte": date_value}},
-                ],
-            }
-            if role := get(ctx.guild.roles, name="Registered"):
+            key = {"server": ctx.guild_id}
+            if role := get(ctx.guild.roles, name="Roleplayer"):
                 key["author"] = {"$in": [x.id for x in role.members]}
             ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
             view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
@@ -349,7 +340,6 @@ class Pokedex(commands.Cog):
         age: Optional[AgeGroup],
         group_by: Optional[GroupByArg],
         amount: Optional[str],
-        active: bool = True,
     ):
         """Command to obtain Pokemon entries and its ocs
 
@@ -393,8 +383,6 @@ class Pokedex(commands.Cog):
             Group by method
         amount : amount
             Groupby limit search
-        active : bool
-            modified/used since last 2 weeks. True by default
         """
         text: str = ""
         guild: Guild = ctx.guild
@@ -492,12 +480,6 @@ class Pokedex(commands.Cog):
                 embed.description = description
         if kind:
             filters.append(lambda oc: oc.kind == kind)
-
-        date = ctx.created_at - timedelta(days=30)
-        if active:
-            filters.append(lambda x: x.last_used_at >= date)
-        else:
-            filters.append(lambda x: x.last_used_at < date)
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
