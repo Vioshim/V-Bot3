@@ -84,11 +84,14 @@ class LocationSelection(Complex[Thread]):
             embed = view.embed
             embed.title = channel.name.replace("-", " ").title()
 
-            try:
-                msg = await channel.get_partial_message(channel.id).fetch()
-                embed.description = msg.content or "No description yet."
-            except DiscordException:
-                embed.description = "Error in description"
+            if isinstance(channel, Thread):
+                try:
+                    msg = await channel.get_partial_message(channel.id).fetch()
+                    embed.description = msg.content or "No description yet."
+                except DiscordException:
+                    embed.description = "Error in description"
+            else:
+                embed.description = getattr(channel, "topic", "") or "No description yet."
 
             embed.color = interaction.user.color
             embed.timestamp = interaction.created_at
