@@ -261,9 +261,10 @@ class Template(TemplateItem, Enum):
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
 
         if mons := self.total_species:
+            key = {"server": itx.guild_id}
             if role := get(itx.guild.roles, name="Roleplayer"):
                 key["author"] = {"$in": [x.id for x in role.members]}
-            ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": itx.guild_id})]
+            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
             view = SpeciesComplex(
                 member=itx.user,
                 target=itx,
@@ -725,9 +726,10 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
     ):
         mon_total = {x for x in Species.all(exclude=(Paradox, Mega)) if not x.banned}
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        key = {"server": itx.guild_id}
         if role := get(itx.guild.roles, name="Roleplayer"):
             key["author"] = {"$in": [x.id for x in role.members]}
-        ocs = [Character.from_mongo_dict(x) async for x in db.find({"server": itx.guild_id})]
+        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
         view = SpeciesComplex(member=itx.user, target=itx, mon_total=mon_total, ocs=ocs)
         async with view.send(
             title="Select if it has a canon Pre-Evo (Skip if not needed)",
