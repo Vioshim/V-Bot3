@@ -313,7 +313,7 @@ class EmbedBuilder(commands.Cog):
         attachment: Optional[Attachment] = None
             Image to use in the embed.
         """
-        embed = Embed(title=title, description=description)
+        embed = Embed(title=title, description=description, color=ctx.author.color)
         webhook = await self.bot.webhook(ctx.channel, reason="Created by Embed Builder")
         author: Member = ctx.author
 
@@ -515,7 +515,7 @@ class EmbedBuilder(commands.Cog):
         attachment: Optional[Attachment] = None
             Image to use in the embed.
         """
-        embed = Embed(title=title, description=description)
+        embed = Embed(title=title, description=description, color=ctx.author.color)
         author: Member = ctx.author
         attachments = [attachment] if attachment else ctx.message.attachments
         if len(images := [x for x in attachments if x.content_type.startswith("image/")]) == 1:
