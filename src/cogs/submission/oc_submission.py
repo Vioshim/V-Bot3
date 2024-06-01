@@ -768,7 +768,8 @@ class TypesField(TemplateField, required=True):
             if not isinstance(oc.species, (Variant, Fakemon)):
                 return "For Variants or Custom pokemon"
 
-        limit = 3 if isinstance(oc.species, Fusion) and len(oc.species.bases) == 3 else 2
+        limit = max(len(oc.species.bases), 2) if isinstance(oc.species, Fusion) else 2
+
         if len(oc.types) > limit:
             return f"Max {limit} Pokemon Types: ({', '.join(x.name for x in oc.types)})"
 

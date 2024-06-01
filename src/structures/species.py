@@ -874,8 +874,7 @@ class Fusion(Species):
             List of sets (valid types)
         """
         total = reduce(operator.or_, (x.types for x in self.bases), frozenset())
-        limit = 3 if len(self.bases) == 3 else 2
-        return frozenset(map(frozenset, combinations_with_replacement(total, limit)))
+        return frozenset(map(frozenset, combinations_with_replacement(total, max(len(self.bases), 2))))
 
     @classmethod
     def deduce(cls, item: str) -> Optional[Fusion]:
