@@ -751,6 +751,7 @@ class TypesField(TemplateField, required=True):
         if isinstance(species := oc.species, Species):
             if not (mon_types := species.possible_types):
                 return "No possible types for current species"
+
             if oc.types not in mon_types:
                 return ", ".join("/".join(y.name for y in x) for x in mon_types)
 
@@ -767,8 +768,9 @@ class TypesField(TemplateField, required=True):
             if not isinstance(oc.species, (Variant, Fakemon)):
                 return "For Variants or Custom pokemon"
 
-        if len(oc.types) > 2:
-            return f"Max 2 Pokemon Types: ({', '.join(x.name for x in oc.types)})"
+        limit = 3 if isinstance(oc.species, Fusion) and len(oc.species.bases) == 3 else 2
+        if len(oc.types) > limit:
+            return f"Max {limit} Pokemon Types: ({', '.join(x.name for x in oc.types)})"
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -823,10 +825,7 @@ class TypesField(TemplateField, required=True):
             ephemeral=ephemeral,
         ) as types:
             if types:
-                types = frozenset(types)
-                if not isinstance(oc.image, File) and species.types != types:
-                    oc.image = None
-                species.types = types
+                species.types = frozenset(types)
                 progress.add(cls.name)
 
 
