@@ -20,6 +20,7 @@ from enum import Enum
 from typing import Optional, TypedDict
 
 from discord import (
+    AllowedMentions,
     ButtonStyle,
     ChannelType,
     Color,
@@ -32,6 +33,7 @@ from discord import (
     Message,
     Object,
     SelectOption,
+    TextChannel,
     TextStyle,
 )
 from discord.ui import (
@@ -111,6 +113,7 @@ class TicketModal(Modal, title="Ticket"):
         """
         await itx.response.defer(ephemeral=True, thinking=True)
         member: Member = itx.user
+        channel: TextChannel = itx.channel
         data = itx.created_at.astimezone(tz=DEFAULT_TIMEZONE)
         name = data.strftime("%B %d, %Y")
 
@@ -123,26 +126,30 @@ class TicketModal(Modal, title="Ticket"):
             },
             {"_id": 0, "tickets": 1, "staff_chat": 1},
         ):
-            webhook = await itx.client.webhook(info["tickets"])
-            thread = await webhook.channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
+            webhook = await itx.client.webhook(channel)
+            thread = await channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
             embed = Embed(
                 title=f"Ticket {name}"[:256],
                 description=self.content.value,
                 timestamp=data,
                 color=member.color,
             )
-            embed.set_thumbnail(url=member.display_avatar.url)
+            embed.set_thumbnail(url=member.display_avatar)
 
-            msg = await webhook.send(thread=thread, wait=True, embed=embed)
+            msg = await webhook.send(
+                content=member.mention,
+                thread=thread,
+                wait=True,
+                embed=embed,
+                allowed_mentions=AllowedMentions(users=True),
+            )
+
+            await msg.pin()
 
             view = View()
             view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
-            await thread.add_user(member)
 
-            channel = itx.client.get_partial_messageable(
-                id=info["staff_chat"],
-                guild_id=itx.guild.id,
-            )
+            channel = itx.client.get_partial_messageable(id=info["staff_chat"], guild_id=itx.guild_id)
 
             await channel.send(embed=embed, view=view)
             await itx.followup.send("Ticket created successfully", ephemeral=True, view=view)
