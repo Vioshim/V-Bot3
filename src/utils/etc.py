@@ -20,7 +20,7 @@ from typing import NamedTuple
 
 from discord import PartialEmoji
 
-from structures.weather import Weather
+from src.structures.weather import Weather
 
 __all__ = (
     "WHITE_BAR",
