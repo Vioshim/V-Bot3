@@ -65,7 +65,8 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
+from src.structures.weather import Weather
+from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR, Month
 from src.utils.functions import name_emoji_from_channel, safe_username
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
@@ -1125,7 +1126,17 @@ class Submission(commands.Cog):
         if not data:
             return await ctx.reply("This command is not available in this category", ephemeral=True)
 
-        payload = data.weather[ctx.message.created_at.month]
+        date = Month(ctx.message.created_at.month)
+        if info := await self.bot.mongo_db("RPChannels").find_one(
+            {
+                "id": channel.id,
+                f"weather.{date.name}": {"$exists": True},
+            }
+        ):
+            payload = {Weather[x]: int(y) for x, y in info["weather"][date.name].items()}
+        else:
+            payload = data.weather[ctx.message.created_at.month]
+
         items = [(x, y) for x, y in payload.items() if y > 0]
         items.sort(key=lambda x: x[1], reverse=True)
         keys, values = zip(*items)
