@@ -1142,9 +1142,12 @@ class Submission(commands.Cog):
 
         plt.figure(figsize=(12, 6))
         plt.bar([x.ref_name for x in keys], values, color="skyblue", label="Probabilities")
-        x = np.linspace(0, len(keys), 1000)
-        y = norm.pdf(x, mean, std_dev)
-        plt.plot(x, y * 100, color="orange", label="Normal Distribution")
+
+        # Create normal distribution values
+        x_normal = np.linspace(0, len(keys) - 1, 1000)
+        y_normal = norm.pdf(x_normal, mean, std_dev) * max(values) * 10
+
+        plt.plot(x_normal, y_normal, color="orange", label="Normal Distribution")
 
         plt.title(
             f"Weather Probabilities in {channel.name} (Mean: {mean:.2f}% | SD: {std_dev:.2f}%)",
