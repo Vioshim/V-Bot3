@@ -35,13 +35,12 @@ from discord.ext import commands
 from discord.utils import get
 from yarl import URL
 
-from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, MovepoolFlags
+from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, GroupBy, MovepoolFlags
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Kind, Size
+from src.structures.character import Character, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
-from src.structures.pronouns import Pronoun
 from src.structures.species import Fakemon, Fusion, Species
 from src.utils.etc import WHITE_BAR
 from src.views.move_view import MovepoolView
@@ -385,8 +384,9 @@ class Pokedex(commands.Cog):
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
         if flags.group_by:
-            view = flags.group_by.generate(ctx=ctx, ocs=ocs, amount=flags.amount)
-            embed.title = f"{embed.title} - Group by {flags.group_by.name}"
+            group_by = GroupBy(flags.group_by)
+            view = group_by.generate(ctx=ctx, ocs=ocs, amount=flags.amount)
+            embed.title = f"{embed.title} - Group by {group_by.name}"
         else:
             ocs.sort(key=lambda x: x.name)
             view = ModCharactersView(member=ctx.author, ocs=ocs, target=ctx, keep_working=True)

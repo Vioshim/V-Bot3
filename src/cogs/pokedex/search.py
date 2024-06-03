@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum
+from enum import Enum, auto
 from itertools import groupby
 from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 
@@ -413,6 +413,26 @@ class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" "
     evs: int = commands.flag(default=0, description="EVs to calculate stats for")
 
 
+class GroupByArg(StrEnum):
+    Kind = auto()
+    Shape = auto()
+    Age = auto()
+    Species = auto()
+    EvoLine = auto()
+    Type = auto()
+    Pronoun = auto()
+    Move = auto()
+    Ability = auto()
+    Location = auto()
+    Member = auto()
+    HiddenPower = auto()
+    Nature = auto()
+    UniqueTrait = auto()
+    Pokeball = auto()
+    Height = auto()
+    Weight = auto()
+
+
 class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix=":"):
     name: Optional[str] = commands.flag(default=None, description="Name to look for", positional=True)
     kind: Optional[Kind] = commands.flag(default=None, description="Kind to look for")
@@ -440,7 +460,10 @@ class OCGroupBy(Generic[D], ABC):
     @classmethod
     @abstractmethod
     def method(
-        cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags
+        cls,
+        ctx: commands.Context[CustomBot],
+        ocs: Iterable[Character],
+        flags: FindFlags,
     ) -> dict[D, frozenset[Character]]:
         """Abstract method for grouping
 
@@ -761,7 +784,7 @@ class OCGroupByWeight(OCGroupBy[float]):
         return ref, -len(items)
 
 
-class GroupByArg(Enum):
+class GroupBy(Enum):
     Kind = OCGroupByKind
     Shape = OCGroupByShape
     Age = OCGroupByAge
@@ -784,7 +807,7 @@ class GroupByArg(Enum):
         self,
         ctx: commands.Context[CustomBot],
         ocs: Iterable[Character],
-        amount: Optional[str] = None,
+        flags: FindFlags,
     ):
         """Short cut generate
 
@@ -803,4 +826,4 @@ class GroupByArg(Enum):
             Information complex paginator groups.
         """
         value: OCGroupBy = self.value
-        return value.generate(ctx=ctx, ocs=ocs, amount=amount)
+        return value.generate(ctx=ctx, ocs=ocs, flags=flags)
