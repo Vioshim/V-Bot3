@@ -1108,6 +1108,7 @@ class Submission(commands.Cog):
     async def weather(
         self,
         ctx: commands.Context[CustomBot],
+        *,
         channel: ForumChannel | TextChannel | Thread = commands.CurrentChannel,
     ):
         """Shows the weather
