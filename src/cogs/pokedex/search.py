@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from enum import Enum, auto
+from enum import Enum, StrEnum, auto
 from itertools import groupby
 from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 
