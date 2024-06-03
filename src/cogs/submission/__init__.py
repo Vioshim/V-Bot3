@@ -1117,6 +1117,8 @@ class Submission(commands.Cog):
         ----------
         itx : Interaction
             Interaction
+        channel : ForumChannel | TextChannel | Thread
+            Channel to check weather
         """
         data = MAP_ELEMENTS2.get(channel.category_id)
 
