@@ -16,7 +16,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta, timezone
 from enum import Enum, IntEnum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from discord import PartialEmoji
 
