@@ -1140,20 +1140,11 @@ class Submission(commands.Cog):
         mean = np.mean(probabilities)
         std_dev = np.std(probabilities)
 
-        # Generate x values for the normal distribution curve
-        x = np.linspace(min(probabilities) - std_dev, max(probabilities) + std_dev, 1000)
-
-        # Calculate the normal distribution values
-        y = norm.pdf(x, mean, std_dev)
-
-        # Create the plot with improved aesthetics
         plt.figure(figsize=(12, 6))
-
-        # Bar plot for weather probabilities
-        plt.bar(payload.keys(), probabilities, color="skyblue", label="Weather Probabilities")
-
-        # Overlay the normal distribution curve
-        plt.plot(x, y * max(probabilities) / max(y), color="darkblue", label="Normal Distribution", linewidth=2)
+        plt.bar([x.ref_name for x in keys], values, color="skyblue", label="Probabilities")
+        x = np.linspace(0, len(keys), 1000)
+        y = norm.pdf(x, mean, std_dev)
+        plt.plot(x, y * 100, color="orange", label="Normal Distribution")
 
         plt.title(
             f"Weather Probabilities in {channel.name} (Mean: {mean:.2f}% | SD: {std_dev:.2f}%)",
