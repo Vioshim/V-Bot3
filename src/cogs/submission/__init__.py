@@ -1127,7 +1127,7 @@ class Submission(commands.Cog):
             return await ctx.reply("This command is not available in this category", ephemeral=True)
 
         date = Month(ctx.message.created_at.month)
-        if info := await self.bot.mongo_db("RPChannels").find_one(
+        if info := await self.bot.mongo_db("RP Channel").find_one(
             {
                 "id": channel.id,
                 f"weather.{date.name}": {"$exists": True},
