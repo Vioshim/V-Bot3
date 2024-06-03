@@ -1148,7 +1148,7 @@ class Submission(commands.Cog):
             plt.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height() - (max(values) * 0.05),
-                f"{value:.2%}",
+                f"{value} %",
                 ha="center",
                 va="bottom",
                 fontsize=10,
