@@ -1142,17 +1142,29 @@ class Submission(commands.Cog):
         std_dev = np.std(probabilities)
 
         plt.figure(figsize=(12, 6))
-        plt.bar([x.ref_name for x in keys], values, color="skyblue", label="Probabilities")
+        bars = plt.bar([x.ref_name for x in keys], values, color="skyblue", label="Probabilities")
+
+        for bar, value in zip(bars, values):
+            plt.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() - (max(values) * 0.05),
+                f"{value:.2%}",
+                ha="center",
+                va="bottom",
+                fontsize=10,
+                color="black",
+            )
 
         plt.title(
             f"Weather Probabilities in {channel.name} (Mean: {mean:.2f}% | SD: {std_dev:.2f}%)",
-            fontsize=16,
+            fontsize=18,
         )
-        plt.legend(fontsize=12)
+        plt.legend(fontsize=14)
         plt.grid(True, linestyle="--", alpha=0.7)
-        plt.xlabel("Weather Type")
-        plt.ylabel("Probability (%)")
-        plt.xticks(rotation=45, ha="right")
+        plt.xlabel("Weather Type", fontsize=14)
+        plt.ylabel("Probability (%)", fontsize=14)
+        plt.xticks(ticks=np.arange(len(keys)), labels=[x.ref_name for x in keys], rotation=45, ha="right", fontsize=12)
+        plt.yticks(fontsize=12)
         plt.tight_layout()
 
         buf = io.BytesIO()
