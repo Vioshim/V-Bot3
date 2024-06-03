@@ -14,18 +14,21 @@
 
 
 import asyncio
+import io
+import random
 from contextlib import suppress
 from itertools import zip_longest
 from textwrap import wrap
 from typing import Optional
 
+import matplotlib.pyplot as plt
+import numpy as np
 from discord import (
     AllowedMentions,
     Color,
     DiscordException,
     Embed,
     File,
-    Forbidden,
     ForumChannel,
     Guild,
     Interaction,
@@ -49,6 +52,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import MISSING, find, get
 from rapidfuzz import fuzz, process
+from scipy.stats import norm
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import (
@@ -61,7 +65,7 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.utils.etc import REPLY_EMOJI, WHITE_BAR
+from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
 from src.utils.functions import name_emoji_from_channel, safe_username
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
@@ -1098,6 +1102,75 @@ class Submission(commands.Cog):
             ephemeral=True,
             delete_after=3,
         )
+
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    @commands.hybrid_command()
+    async def weather(
+        self,
+        ctx: commands.Context[CustomBot],
+        channel: ForumChannel | TextChannel | Thread = commands.CurrentChannel,
+    ):
+        """Shows the weather
+
+        Parameters
+        ----------
+        itx : Interaction
+            Interaction
+        """
+        data = MAP_ELEMENTS2.get(channel.category_id)
+
+        if not data:
+            return await ctx.reply("This command is not available in this category", ephemeral=True)
+
+        payload = data.weather[ctx.message.created_at.month]
+        keys = list(payload.keys())
+        values = list(payload.values())
+        result = random.choices(keys, values, k=1)[0]
+
+        embed = Embed(
+            title="Weather",
+            description=f"Weather obtained: {result.ref_name}",
+            color=ctx.author.color,
+            timestamp=ctx.message.created_at,
+        )
+        embed.set_image(url="attachment://plot.png")
+
+        # Calculate mean and standard deviation of the probabilities
+        probabilities = list(payload.values())
+        mean = np.mean(probabilities)
+        std_dev = np.std(probabilities)
+
+        # Generate x values for the normal distribution curve
+        x = np.linspace(min(probabilities) - std_dev, max(probabilities) + std_dev, 1000)
+
+        # Calculate the normal distribution values
+        y = norm.pdf(x, mean, std_dev)
+
+        # Create the plot with improved aesthetics
+        plt.figure(figsize=(12, 6))
+
+        # Bar plot for weather probabilities
+        plt.bar(payload.keys(), probabilities, color="skyblue", label="Weather Probabilities")
+
+        # Overlay the normal distribution curve
+        plt.plot(x, y * max(probabilities) / max(y), color="darkblue", label="Normal Distribution", linewidth=2)
+
+        plt.title(
+            f"Weather Probabilities in {channel.name} (Mean: {mean:.2f}% | SD: {std_dev:.2f}%)",
+            fontsize=16,
+        )
+        plt.legend(fontsize=12)
+        plt.grid(True, linestyle="--", alpha=0.7)
+        plt.xlabel("Weather Type")
+        plt.ylabel("Probability (%)")
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
+        buf.seek(0)
+        file = File(buf, filename="plot.png")
+        await ctx.reply(file=file, ephemeral=True, embed=embed)
 
 
 async def setup(bot: CustomBot) -> None:

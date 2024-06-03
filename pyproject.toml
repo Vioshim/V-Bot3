@@ -36,6 +36,8 @@ titlecase = "^2.4.1"
 reportlab = "^4.0.8"
 discord-ext-i18n = {git = "https://github.com/Vioshim/discord-ext-i18n"}
 novelai = {git = "https://github.com/Vioshim/NovelAI-API.git"}
+matplotlib = "^3.8.2"
+scipy = "^1.13.1"
 
 
 [tool.poetry.dev-dependencies]

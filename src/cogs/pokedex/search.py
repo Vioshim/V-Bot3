@@ -13,12 +13,14 @@
 # limitations under the License.
 
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from itertools import groupby
 from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 
-from discord import ForumChannel, Guild, Interaction, Member, Thread
+from discord import ForumChannel, Guild, Interaction, Member, TextChannel, Thread, User
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ext import commands
@@ -396,18 +398,60 @@ class GroupByComplex(Complex[tuple[str, list[Character]]]):
 D = TypeVar("D")
 
 
+class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix=":"):
+    species: Optional[DefaultSpeciesArg] = commands.flag(
+        positional=True,
+        default=None,
+        description="Species to look up info about",
+    )
+    fused1: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="To check when fused")
+    fused2: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="To check when fused")
+    fakemon: Optional[FakemonArg] = commands.flag(default=None, description="Search fakemon species")
+    move_id: Optional[MoveArg] = commands.flag(default=None, description="Move to lookup")
+    level: int = commands.flag(default=0, description="Level to calculate stats for")
+    ivs: int = commands.flag(default=0, description="IVs to calculate stats for")
+    evs: int = commands.flag(default=0, description="EVs to calculate stats for")
+
+
+class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix=":"):
+    name: Optional[str] = commands.flag(default=None, description="Name to look for", positional=True)
+    kind: Optional[Kind] = commands.flag(default=None, description="Kind to look for")
+    type: Optional[TypingEnum] = commands.flag(default=None, description="Type to look for")
+    ability: Optional[AbilityArg] = commands.flag(default=None, description="Ability to look for")
+    move: Optional[MoveArg] = commands.flag(default=None, description="Move to look for")
+    species: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Species to look for")
+    fused1: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Fusion to look for")
+    fused2: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Fusion to look for")
+    member: Optional[Member | User] = commands.flag(default=None, description="Member to look for")
+    location: Optional[TextChannel | ForumChannel | Thread] = commands.flag(
+        default=None, description="Location to look for"
+    )
+    backstory: Optional[str] = commands.flag(default=None, description="Backstory to look for")
+    personality: Optional[str] = commands.flag(default=None, description="Personality to look for")
+    extra: Optional[str] = commands.flag(default=None, description="Extra to look for")
+    unique_trait: Optional[str] = commands.flag(default=None, description="Unique Trait to look for")
+    pronoun: Optional[Pronoun] = commands.flag(default=None, description="Pronoun to look for")
+    age: Optional[AgeGroup] = commands.flag(default=None, description="Age group to look for")
+    group_by: Optional[GroupByArg] = commands.flag(default=None, description="Group by method")
+    amount: Optional[str] = commands.flag(default=None, description="Amount to group by")
+
+
 class OCGroupBy(Generic[D], ABC):
     @classmethod
     @abstractmethod
-    def method(cls, ctx: Interaction[CustomBot], ocs: Iterable[Character]) -> dict[D, frozenset[Character]]:
+    def method(
+        cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags
+    ) -> dict[D, frozenset[Character]]:
         """Abstract method for grouping
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        ctx : commands.Context[CustomBot]
+            Context
         ocs : Iterable[Character]
             Characters to process
+        flags : FindFlags
+            Flags
 
         Returns
         -------
@@ -420,7 +464,7 @@ class OCGroupBy(Generic[D], ABC):
         return getattr(group, "name", str(group)), f"Group has {len(elements):02d} OCs."
 
     @staticmethod
-    def sort_key(item: tuple[D, list[Character]]):
+    def sort_key(item: tuple[D, list[Character]]) -> Any:
         ref, items = item
         return -len(items), str(getattr(ref, "name", ref))
 
@@ -431,18 +475,18 @@ class OCGroupBy(Generic[D], ABC):
     @classmethod
     def generate(
         cls,
-        ctx: Interaction[CustomBot],
+        ctx: commands.Context[CustomBot],
         ocs: Iterable[Character],
-        amount: Optional[str] = None,
+        flags: FindFlags,
     ):
-        if member := ctx.namespace.member:
-            ocs = [x for x in ocs if x.author == member.id]
+        if flags.member:
+            ocs = [x for x in ocs if x.author == flags.member.id]
         else:
             ocs = [x for x in ocs if ctx.guild.get_member(x.author)]
 
-        items = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs).items()]
-        data = {k: v for k, v in cls.sort_by(items) if amount_parser(amount, v)}
-        return GroupByComplex(member=ctx.user, target=ctx, data=data, inner_parser=cls.inner_parser)
+        items = [(x, sorted(y, key=lambda o: o.name)) for x, y in cls.method(ctx, ocs, flags).items()]
+        data = {k: v for k, v in cls.sort_by(items) if amount_parser(flags.amount, v)}
+        return GroupByComplex(member=ctx.author, target=ctx, data=data, inner_parser=cls.inner_parser)
 
 
 class OCGroupByKind(OCGroupBy[Kind]):
@@ -451,14 +495,14 @@ class OCGroupByKind(OCGroupBy[Kind]):
         return group.title, f"Kind has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
 
 
 class OCGroupByShape(OCGroupBy[str]):
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         data: dict[str, set[Character]] = {}
         for oc in ocs:
             if isinstance(species := oc.species, Fusion):
@@ -485,7 +529,7 @@ class OCGroupByShape(OCGroupBy[str]):
 
 class OCGroupByAge(OCGroupBy[AgeGroup]):
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.age.name)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.age)}
 
@@ -498,7 +542,7 @@ class OCGroupBySpecies(OCGroupBy[Kind | Species]):
         return group.name, f"Species has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.kind.name)
         data = {}
         for k, v in groupby(ocs, lambda x: x.kind):
@@ -517,7 +561,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
         return group.name, f"Evo line has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         data: dict[Species, set[Character]] = {}
         for oc in ocs:
             if isinstance(species := oc.species, Fusion):
@@ -526,7 +570,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
                     data.setdefault(mon, set())
                     data[mon].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant, CustomParadox, CustomUltraBeast)):
+                if isinstance(species, (CustomMega, Variant, CustomParadox, CustomUltraBeast)) and species.base:
                     mon = species.base.first_evo
                 elif isinstance(species, Fakemon):
                     mon = species.species_evolves_from
@@ -537,7 +581,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
                     data.setdefault(mon, set())
                     data[mon].add(oc)
 
-        return data
+        return {k: frozenset(v) for k, v in data.items()}
 
 
 class OCGroupByType(OCGroupBy[TypingEnum]):
@@ -546,12 +590,14 @@ class OCGroupByType(OCGroupBy[TypingEnum]):
         return group.name, f"Included in {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         data: dict[TypingEnum, set[Character]] = {}
+
         for oc in ocs:
             for x in oc.types:
                 data.setdefault(x, set())
                 data[x].add(oc)
+
         return {k: frozenset(v) for k, v in data.items()}
 
 
@@ -561,7 +607,7 @@ class OCGroupByPronoun(OCGroupBy[Pronoun]):
         return group.name, f"Used by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         data: dict[Pronoun, set[Character]] = {}
         for oc in ocs:
             for x in oc.pronoun:
@@ -576,7 +622,7 @@ class OCGroupByMove(OCGroupBy[Move]):
         return group.name, f"Learned by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         data: dict[Move, set[Character]] = {}
         for oc in ocs:
             for x in oc.moveset:
@@ -591,7 +637,7 @@ class OCGroupByAbility(OCGroupBy[Ability]):
         return group.name, f"Carried by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         data: dict[Ability, set[Character]] = {}
         for oc in ocs:
             for x in oc.abilities:
@@ -608,7 +654,7 @@ class OCGroupByLocation(OCGroupBy[ForumChannel | None]):
         return group.name, f"Explored by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, ctx: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         guild: Guild = ctx.guild
 
         def foo(oc: Character):
@@ -629,7 +675,7 @@ class OCGroupByMember(OCGroupBy[Member]):
         return group.display_name, f"Has {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, ctx: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.author)
         guild: Guild = ctx.guild
         return {m: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.author) if (m := guild.get_member(k))}
@@ -643,7 +689,7 @@ class OCGroupByHiddenPower(OCGroupBy[TypingEnum | None]):
         return group.name, f"Granted to {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: getattr(x.hidden_power, "name", "Unknown"))
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.hidden_power)}
 
@@ -656,7 +702,7 @@ class OCGroupByUniqueTrait(OCGroupBy[UTraitKind | None]):
         return group.name, f"Used by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.sp_ability.kind.name if x.sp_ability else "Unknown")
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.sp_ability.kind if x.sp_ability else None)}
 
@@ -669,21 +715,21 @@ class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
         return group.label, f"Obtained by {len(elements):02d} OCs."
 
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.pokeball.name if x.pokeball else "None")
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball)}
 
 
 class OCGroupByNature(OCGroupBy[Nature | None]):
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.nature.name if x.nature else "None")
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.nature)}
 
 
 class OCGroupByHeight(OCGroupBy[float]):
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.height_value, reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.height_value) if k}
 
@@ -700,7 +746,7 @@ class OCGroupByHeight(OCGroupBy[float]):
 
 class OCGroupByWeight(OCGroupBy[float]):
     @classmethod
-    def method(cls, _: Interaction[CustomBot], ocs: Iterable[Character]):
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.weight_value, reverse=True)
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight_value) if k}
 
@@ -736,7 +782,7 @@ class GroupByArg(Enum):
 
     def generate(
         self,
-        ctx: Interaction[CustomBot],
+        ctx: commands.Context[CustomBot],
         ocs: Iterable[Character],
         amount: Optional[str] = None,
     ):
@@ -744,8 +790,8 @@ class GroupByArg(Enum):
 
         Parameters
         ----------
-        ctx : Interaction
-            Interaction
+        ctx : commands.Context
+            Context
         ocs : Iterable[Character]
             Characters
         amount : Optional[str], optional

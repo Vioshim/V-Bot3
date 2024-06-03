@@ -26,21 +26,16 @@ from discord import (
     Guild,
     Interaction,
     Member,
+    TextChannel,
     Thread,
     User,
     app_commands,
 )
 from discord.ext import commands
-from discord.utils import get, time_snowflake
+from discord.utils import get
 from yarl import URL
 
-from src.cogs.pokedex.search import (
-    AbilityArg,
-    DefaultSpeciesArg,
-    FakemonArg,
-    GroupByArg,
-    MoveArg,
-)
+from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, MovepoolFlags
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Kind, Size
@@ -101,74 +96,46 @@ class Pokedex(commands.Cog):
                 embed.description = "\n\n".join({x.text for x in items if x.text})
         await ctx.followup.send(embed=embed)
 
-    @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def movepool(
-        self,
-        ctx: Interaction[CustomBot],
-        species: Optional[DefaultSpeciesArg],
-        fused1: Optional[DefaultSpeciesArg],
-        fused2: Optional[DefaultSpeciesArg],
-        fakemon: Optional[FakemonArg],
-        move_id: Optional[MoveArg],
-        level: int = 0,
-        ivs: int = 0,
-        evs: int = 0,
-    ):
+    @commands.hybrid_command()
+    async def movepool(self, ctx: commands.Context[CustomBot], *, flags: MovepoolFlags):
         """Check for Movepool information
 
         Parameters
         ----------
         ctx : Interaction[CustomBot]
             Interaction[CustomBot]
-        species : Optional[DefaultSpeciesArg]
-            Species to look up info about
-        fused1 : Optional[DefaultSpeciesArg]
-            To check when fused
-        fused2 : Optional[DefaultSpeciesArg]
-            To check when fused
-        fakemon : Optional[FakemonArg]
-            Search fakemon species
-        move_id : Optional[MoveArg]
-            Move to lookup
-        level : int
-            Level to calculate stats for
-        ivs : int
-            IVs to calculate stats for
-        evs : int
-            EVs to calculate stats for
         """
         embed = Embed(
             title="See Movepool",
             description="To use this command, provide Species and/or Move.",
-            color=ctx.user.color,
-            timestamp=ctx.created_at,
+            color=ctx.author.color,
+            timestamp=ctx.message.created_at,
         )
-        await ctx.response.defer(ephemeral=True, thinking=True)
 
-        if mons := {species, fused1, fused2} - {None}:
+        if mons := {flags.species, flags.fused1, flags.fused2} - {None}:
             mon = Fusion(*mons)
             species = mon
             movepool = mon.total_movepool
-        elif fakemon:
-            species = fakemon
-            movepool = fakemon.movepool
-            embed.title = f"See {fakemon.species.name}'s movepool"
+        elif species := flags.fakemon:
+            movepool = flags.fakemon.movepool
+            embed.title = f"See {species.name}'s movepool"
         else:
             movepool = None
 
         view = None
         if isinstance(movepool, Movepool):
-            if move_id is None:
-                view = MovepoolView(member=ctx.user, movepool=movepool, target=ctx)
+            if flags.move_id is None:
+                view = MovepoolView(member=ctx.author, movepool=movepool, target=ctx)
+
             if species:
-                if move_id is None:
+                if flags.move_id is None:
                     embed.title = f"{species.name}'s movepool"
-                elif description := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(move_id)):
-                    embed.title = f"{species.name} learns {move_id.name} by"
+                elif description := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(flags.move_id)):
+                    embed.title = f"{species.name} learns {flags.move_id.name} by"
                     embed.description = description
                 else:
-                    embed.title = f"{species.name} can not learn {move_id.name}."
+                    embed.title = f"{species.name} can not learn {flags.move_id.name}."
 
                 if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
                     embed.add_field(name="Possible Types", value=possible_types, inline=False)
@@ -203,75 +170,69 @@ class Pokedex(commands.Cog):
                     embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
                     embed.add_field(name="Weight (Max)", value=Size.XXXL.weight_info(w3))
 
-                if isinstance(species, Species):
-                    if evs or ivs:
-                        level = level or 100
+                evs, ivs, level = flags.evs, flags.ivs, flags.level
+                if isinstance(species, Species) and (evs or ivs or level):
+                    HP, ATK, DEF, SPA, SPD, SPE = (
+                        species.HP,
+                        species.ATK,
+                        species.DEF,
+                        species.SPA,
+                        species.SPD,
+                        species.SPE,
+                    )
+                    cHP = 1
+                    cATK, cDEF, cSPA, cSPD, cSPE = (
+                        int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
+                        int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
+                    )
 
-                    if level:
-                        evs = evs or 252
-                        ivs = ivs or 31
+                    if ab := get(species.abilities, name="Wonder Guard"):
+                        hp_value = ab.name
+                    else:
+                        cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
+                        hp_value = f"{0.9*cHP:.0f} - {1.1*cHP:.0f}"
+                    embed.add_field(name=f"{HP=}, {cHP=}", value=hp_value)
+                    embed.add_field(name=f"{ATK:}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
+                    embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
+                    embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
+                    embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
+                    embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
 
-                        HP, ATK, DEF, SPA, SPD, SPE = (
-                            species.HP,
-                            species.ATK,
-                            species.DEF,
-                            species.SPA,
-                            species.SPD,
-                            species.SPE,
-                        )
-                        cHP = 1
-                        cATK, cDEF, cSPA, cSPD, cSPE = (
-                            int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
-                            int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
-                            int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
-                            int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
-                            int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
-                        )
+            elif flags.move_id:
+                mons = {x for x in Species.all() if flags.move_id in x.movepool}
+                db = ctx.bot.mongo_db("Characters")
+                key = {"server": ctx.guild.id}
+                if role := get(ctx.guild.roles, name="Roleplayer"):
+                    key["author"] = {"$in": [x.id for x in role.members]}
+                ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
+                view = SpeciesComplex(member=ctx.author, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
+                embed = view.embed
+                embed.description = (
+                    f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
+                )
+                embed.title = flags.move_id.name
+                embed.color = flags.move_id.type.color
+                embed.set_thumbnail(url=flags.move_id.emoji.url)
 
-                        if ab := get(species.abilities, name="Wonder Guard"):
-                            hp_value = ab.name
-                        else:
-                            cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
-                            hp_value = f"{0.9*cHP:.0f} - {1.1*cHP:.0f}"
-                        embed.add_field(name=f"{HP=}, {cHP=}", value=hp_value)
-                        embed.add_field(name=f"{ATK:}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
-                        embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
-                        embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
-                        embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
-                        embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
-
-        elif move_id:
-            mons = {x for x in Species.all() if move_id in x.movepool}
-            db = ctx.client.mongo_db("Characters")
-            key = {"server": ctx.guild_id}
-            if role := get(ctx.guild.roles, name="Roleplayer"):
-                key["author"] = {"$in": [x.id for x in role.members]}
-            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-            view = SpeciesComplex(member=ctx.user, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
-            embed = view.embed
-            embed.description = (
-                f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
+            self.bot.logger.info(
+                "%s is reading %s's movepool",
+                str(ctx.author),
+                getattr(species or flags.move_id, "name", "None"),
             )
-            embed.title = move_id.name
-            embed.color = move_id.type.color
-            embed.set_thumbnail(url=move_id.emoji.url)
 
-        self.bot.logger.info(
-            "%s is reading %s's movepool",
-            str(ctx.user),
-            getattr(species or move_id, "name", "None"),
-        )
+            if view is None:
+                await ctx.reply(embed=embed, ephemeral=True)
+            else:
+                await view.simple_send(embed=embed, ephemeral=True)
 
-        if view is None:
-            await ctx.followup.send(embed=embed, ephemeral=True)
-        else:
-            await view.simple_send(embed=embed, ephemeral=True)
-
-    @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
+    @commands.hybrid_command()
     async def fusion(
         self,
-        ctx: Interaction[CustomBot],
+        ctx: commands.Context[CustomBot],
         species1: DefaultSpeciesArg,
         species2: DefaultSpeciesArg,
         species3: Optional[DefaultSpeciesArg],
@@ -280,8 +241,8 @@ class Pokedex(commands.Cog):
 
         Parameters
         ----------
-        ctx : Interaction[CustomBot]
-            Interaction[CustomBot]
+        ctx : Context[CustomBot]
+            Context[CustomBot]
         species1 : DefaultSpeciesArg
             First Species
         species2 : DefaultSpeciesArg
@@ -289,13 +250,12 @@ class Pokedex(commands.Cog):
         species3 : Optional[DefaultSpeciesArg]
             Third Species
         """
-        await ctx.response.defer(ephemeral=True, thinking=True)
         items = {species1, species2, species3} - {None}
         mon = Fusion(*items)
-        embed = Embed(title=mon.name, color=ctx.user.color)
+        embed = Embed(title=mon.name, color=ctx.author.color)
 
-        if mon.banned or not mon.egg_groups:
-            embed.title += " - Banned Fusion"
+        if mon.banned:
+            embed.title = f"{embed.title} - Banned Fusion"
 
         if mon_types := ", ".join(i.name for i in mon.types):
             embed.set_footer(text=f"Types: {mon_types}")
@@ -314,104 +274,45 @@ class Pokedex(commands.Cog):
                 inline=False,
             )
 
-        await ctx.followup.send(embed=embed)
+        await ctx.reply(embed=embed, ephemeral=True)
 
-    @app_commands.command()
-    @app_commands.rename(_type="type", sp_ability="unique_trait")
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def find(
-        self,
-        ctx: Interaction[CustomBot],
-        name: Optional[str],
-        kind: Optional[Kind],
-        _type: Optional[TypingEnum],
-        ability: Optional[AbilityArg],
-        move: Optional[MoveArg],
-        species: Optional[DefaultSpeciesArg],
-        fused1: Optional[DefaultSpeciesArg],
-        fused2: Optional[DefaultSpeciesArg],
-        member: Optional[Member | User],
-        location: Optional[ForumChannel | Thread],
-        backstory: Optional[str],
-        personality: Optional[str],
-        extra: Optional[str],
-        sp_ability: Optional[str],
-        pronoun: Optional[Pronoun],
-        age: Optional[AgeGroup],
-        group_by: Optional[GroupByArg],
-        amount: Optional[str],
-    ):
+    @commands.hybrid_command()
+    async def find(self, ctx: commands.Context[CustomBot], *, flags: FindFlags):
         """Command to obtain Pokemon entries and its ocs
 
         Parameters
         ----------
-        ctx : Interaction[CustomBot]
-            Context
-        name : Optional[str]
-            Any name that matches(regex works).
-        kind : Optional[Kind]
-            Filter by kind
-        _type : Optional[TypingArg]
-            Type to filter
-        ability : Optional[AbilityArg]
-            Ability to filter
-        move : Optional[MoveArg]
-            Move to filter
-        species : Optional[DefaultSpeciesArg]
-            Species to look up info about.
-        fused1 : Optional[DefaultSpeciesArg]
-            Search Fusions that contain the species
-        fused2 : Optional[DefaultSpeciesArg]
-            Search Fusions that contain the species
-        member : Optional[Member]
-            Member to filter
-        location : Optional[ForumChannel | Thread]
-            Location to filter
-        backstory : Optional[str]
-            Any words to look for in backstories
-        personality : Optional[str]
-            Any words to look for in the personality info
-        extra : Optional[str]
-            Any words to look for in the extra info
-        sp_ability : Optional[str]
-            Any words to look for in Sp Abilities
-        pronoun : Optional[Pronoun]
-            Pronoun to Look for
-        age : Optional[AgeGroup]
-            OC's Age group.
-        group_by : Optional[GroupByArg]
-            Group by method
-        amount : amount
-            Groupby limit search
+        ctx : Context[CustomBot]
+            Context[CustomBot]
         """
         text: str = ""
         guild: Guild = ctx.guild
-        await ctx.response.defer(ephemeral=True, thinking=True)
-        embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.user.color, timestamp=ctx.created_at)
+        embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.author.color)
         embed.set_image(url=WHITE_BAR)
         embeds = [embed]
         db = self.bot.mongo_db("Characters")
-        total = [Character.from_mongo_dict(x) async for x in db.find({"server": ctx.guild_id})]
+        total = [Character.from_mongo_dict(x) async for x in db.find({"server": guild.id})]
         filters: list[Callable[[Character], bool]] = []
-        ocs = [species] if isinstance(species, Character) else total
-        if name:
-            name_pattern = re_compile(name, IGNORECASE)
+        ocs = [flags.species] if isinstance(flags.species, Character) else total
+        if flags.name:
+            name_pattern = re_compile(flags.name, IGNORECASE)
             filters.append(lambda oc: name_pattern.search(oc.name))
-        if age:
-            filters.append(lambda oc: oc.age == age)
-        if isinstance(location, ForumChannel):
+        if flags.age:
+            filters.append(lambda oc: oc.age == flags.age)
+        if isinstance(flags.location, ForumChannel):
             filters.append(
                 lambda oc: (ch := guild.get_channel_or_thread(oc.location))
-                and (ch.parent if isinstance(ch, Thread) else ch) == location
+                and (ch.parent if isinstance(ch, Thread) else ch) == flags.location
             )
-        if isinstance(location, Thread):
-            filters.append(lambda oc: oc.location == location.id)
-        if member_id := getattr(member, "id", member):
+        if isinstance(flags.location, Thread):
+            filters.append(lambda oc: oc.location == flags.location.id)
+        if member_id := getattr(flags.member, "id", flags.member):
             filters.append(lambda oc: oc.author == member_id)
         else:
             filters.append(lambda x: guild.get_member(x.author))
 
-        items = {species, fused1, fused2} - {None}
+        items = {flags.species, flags.fused1, flags.fused2} - {None}
         mon = Fusion(*items)
 
         if mon.bases:
@@ -431,74 +332,74 @@ class Pokedex(commands.Cog):
             if ab_text := "\n".join(f"• {ab.name}" for ab in mon.abilities):
                 embed.add_field(name=f"Abilities (Max {min(len(mon.abilities), 2)})", value=ab_text)
 
-        if pronoun:
-            filters.append(lambda oc: pronoun in oc.pronoun)
-        if backstory:
-            backstory_pattern = re_compile(backstory, IGNORECASE)
+        if flags.pronoun:
+            filters.append(lambda oc: flags.pronoun in oc.pronoun)
+        if flags.backstory:
+            backstory_pattern = re_compile(flags.backstory, IGNORECASE)
             filters.append(lambda oc: oc.backstory and backstory_pattern.search(oc.backstory))
-        if personality:
-            personality_pattern = re_compile(personality, IGNORECASE)
+        if flags.personality:
+            personality_pattern = re_compile(flags.personality, IGNORECASE)
             filters.append(lambda oc: oc.personality and personality_pattern.search(oc.personality))
-        if extra:
-            extra_pattern = re_compile(extra, IGNORECASE)
+        if flags.extra:
+            extra_pattern = re_compile(flags.extra, IGNORECASE)
             filters.append(lambda oc: oc.extra and extra_pattern.search(oc.extra))
-        if sp_ability:
-            sp_ability_pattern = re_compile(sp_ability, IGNORECASE)
+        if flags.unique_trait:
+            sp_ability_pattern = re_compile(flags.unique_trait, IGNORECASE)
             filters.append(lambda oc: oc.sp_ability and any(map(sp_ability_pattern.search, oc.sp_ability.params)))
-        if _type:
-            filters.append(lambda oc: _type in oc.types)
-            if embed.color == ctx.user.color:
-                embed.color = _type.color
-            embed.set_thumbnail(url=_type.emoji.url)
-        if ability:
-            filters.append(lambda oc: ability in oc.abilities)
+        if flags.type:
+            filters.append(lambda oc: flags.type in oc.types)
+            if embed.color == ctx.author.color:
+                embed.color = flags.type.color
+            embed.set_thumbnail(url=flags.type.emoji.url)
+        if flags.ability:
+            filters.append(lambda oc: flags.ability in oc.abilities)
             if embed.description:
-                embed.add_field(name=f"Ability - {ability.name}", value=ability.description, inline=False)
+                embed.add_field(name=f"Ability - {flags.ability.name}", value=flags.ability.description, inline=False)
             else:
-                embed.title = ability.name
-                embed.description = ability.description
-            if battle := ability.battle:
+                embed.title = flags.ability.name
+                embed.description = flags.ability.description
+            if battle := flags.ability.battle:
                 embed.add_field(name="Battle effect", value=battle, inline=False)
-            if outside := ability.outside:
+            if outside := flags.ability.outside:
                 embed.add_field(name="Usage", value=outside, inline=False)
-            if random_fact := ability.random_fact:
+            if random_fact := flags.ability.random_fact:
                 embed.add_field(name="Random Fact", value=random_fact, inline=False)
-        if move:
-            filters.append(lambda oc: move in oc.moveset)
-            title = repr(move)
-            if move.banned:
+        if flags.move:
+            filters.append(lambda oc: flags.move in oc.moveset)
+            title = repr(flags.move)
+            if flags.move.banned:
                 title += " - Banned Move"
-            description = move.description
-            if embed.color == ctx.user.color:
-                embed.color = move.color
-            embed.set_thumbnail(url=move.type.emoji.url)
+            description = flags.move.description
+            if embed.color == ctx.author.color:
+                embed.color = flags.move.color
+            embed.set_thumbnail(url=flags.move.type.emoji.url)
 
             if embed.description:
                 embed.add_field(name=title, value=description[:1024], inline=False)
             else:
                 embed.title = title
                 embed.description = description
-        if kind:
-            filters.append(lambda oc: oc.kind == kind)
+        if flags.kind:
+            filters.append(lambda oc: oc.kind == flags.kind)
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
-        if group_by:
-            view = group_by.generate(ctx=ctx, ocs=ocs, amount=amount)
-            embed.title = f"{embed.title} - Group by {group_by.name}"
+        if flags.group_by:
+            view = flags.group_by.generate(ctx=ctx, ocs=ocs, amount=flags.amount)
+            embed.title = f"{embed.title} - Group by {flags.group_by.name}"
         else:
             ocs.sort(key=lambda x: x.name)
-            view = ModCharactersView(member=ctx.user, ocs=ocs, target=ctx, keep_working=True)
+            view = ModCharactersView(member=ctx.author, ocs=ocs, target=ctx, keep_working=True)
 
         async with view.send(ephemeral=True, embeds=embeds, content=text):
-            namespace = " ".join(f"{k}={v}" for k, v in ctx.namespace)
-            self.bot.logger.info("%s is reading /find %s", str(ctx.user), namespace)
+            namespace = " ".join(f"{k}={v}" for k, v in flags if v is not None)
+            self.bot.logger.info("%s is reading /find %s", str(ctx.author), namespace)
 
-    @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
+    @commands.hybrid_command()
     async def chart(
         self,
-        ctx: Interaction[CustomBot],
+        ctx: commands.Context[CustomBot],
         type1: TypingEnum,
         type2: Optional[TypingEnum],
         mode: Literal["Attacking", "Defending"] = "Defending",
@@ -541,7 +442,7 @@ class Pokedex(commands.Cog):
             if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):
                 embed.add_field(name=f"Damage {k}x", value=item)
 
-        await ctx.response.send_message(embed=embed, ephemeral=True)
+        await ctx.reply(embed=embed, ephemeral=True)
 
 
 async def setup(bot: CustomBot):
