@@ -22,7 +22,7 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size
 from src.structures.move import Move
-from src.structures.species import Fusion, Species
+from src.structures.species import Fakemon, Fusion, Species
 
 __all__ = (
     "HeightView",

@@ -451,6 +451,8 @@ class Paradox(Species):
 @dataclass(unsafe_hash=True, slots=True)
 class Fakemon(Species):
     "This class Represents a fakemon"
+    height: float = 1.0
+    weight: float = 50.0
 
     @classmethod
     def deduce(cls, item: str):
