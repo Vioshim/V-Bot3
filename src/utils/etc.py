@@ -13,9 +13,10 @@
 # limitations under the License.
 
 
+from calendar import Month
 from dataclasses import dataclass, field
 from datetime import timedelta, timezone
-from enum import Enum, IntEnum
+from enum import StrEnum
 from typing import NamedTuple
 
 from discord import PartialEmoji
@@ -83,7 +84,7 @@ DICE_NUMBERS = [
 ]
 
 
-class RTFMPages(Enum):
+class RTFMPages(StrEnum):
     Discord = "https://discordpy.readthedocs.io/en/master/"
     Python = "https://docs.python.org/3"
     Apscheduler = "https://apscheduler.readthedocs.io/en/3.x/"
@@ -94,21 +95,6 @@ class RTFMPages(Enum):
     D20 = "https://d20.readthedocs.io/en/latest/"
     Aiohttp = "https://docs.aiohttp.org/en/stable/"
     Python_Docx = "https://python-docx.readthedocs.io/en/latest/"
-
-
-class Month(IntEnum):
-    January = 1
-    February = 2
-    March = 3
-    April = 4
-    May = 5
-    June = 6
-    July = 7
-    August = 8
-    September = 9
-    October = 10
-    November = 11
-    December = 12
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -129,7 +115,7 @@ MAP_ELEMENTS = [
         emoji="\N{DRAGON FACE}",
         desc="A mysterious island with a lot of secrets.",
         weather={
-            Month.January: {
+            Month.JANUARY: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -141,7 +127,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.February: {
+            Month.FEBRUARY: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 45,
                 Weather.Rain: 25,
@@ -153,7 +139,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.March: {
+            Month.MARCH: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 30,
                 Weather.Rain: 30,
@@ -165,7 +151,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.April: {
+            Month.APRIL: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 60,
@@ -177,7 +163,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.May: {
+            Month.MAY: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 30,
@@ -189,7 +175,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.June: {
+            Month.JUNE: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 10,
                 Weather.Rain: 10,
@@ -201,7 +187,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 0,
                 Weather.Harsh_Sunlight: 7,
             },
-            Month.July: {
+            Month.JULY: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 5,
                 Weather.Rain: 25,
@@ -213,7 +199,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 0,
                 Weather.Harsh_Sunlight: 7,
             },
-            Month.August: {
+            Month.AUGUST: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 10,
                 Weather.Rain: 30,
@@ -225,7 +211,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 6,
             },
-            Month.September: {
+            Month.SEPTEMBER: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 50,
                 Weather.Rain: 20,
@@ -237,7 +223,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.October: {
+            Month.OCTOBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 30,
@@ -249,7 +235,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.November: {
+            Month.NOVEMBER: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -261,7 +247,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.December: {
+            Month.DECEMBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 10,
@@ -281,7 +267,7 @@ MAP_ELEMENTS = [
         emoji="\N{GEAR}",
         desc="A steampunk kingdom with a lot of technology.",
         weather={
-            Month.January: {
+            Month.JANUARY: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 40,
                 Weather.Rain: 10,
@@ -293,7 +279,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.February: {
+            Month.FEBRUARY: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 20,
@@ -305,7 +291,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.March: {
+            Month.MARCH: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -317,7 +303,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.April: {
+            Month.APRIL: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 40,
                 Weather.Rain: 40,
@@ -329,7 +315,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.May: {
+            Month.MAY: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 10,
                 Weather.Rain: 20,
@@ -341,7 +327,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.June: {
+            Month.JUNE: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 5,
                 Weather.Rain: 5,
@@ -353,7 +339,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 8,
             },
-            Month.July: {
+            Month.JULY: {
                 Weather.Clear: 64,
                 Weather.Cloudy: 20,
                 Weather.Rain: 10,
@@ -365,7 +351,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 9,
             },
-            Month.August: {
+            Month.AUGUST: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 10,
@@ -377,7 +363,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 5,
                 Weather.Harsh_Sunlight: 7,
             },
-            Month.September: {
+            Month.SEPTEMBER: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -389,7 +375,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 6,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.October: {
+            Month.OCTOBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 40,
                 Weather.Rain: 20,
@@ -401,7 +387,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.November: {
+            Month.NOVEMBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 20,
@@ -413,7 +399,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.December: {
+            Month.DECEMBER: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 40,
                 Weather.Rain: 5,
@@ -433,7 +419,7 @@ MAP_ELEMENTS = [
         emoji="\N{SHOOTING STAR}",
         desc="A star-themed kingdom with a lot of ice.",
         weather={
-            Month.January: {
+            Month.JANUARY: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 1,
@@ -445,7 +431,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.February: {
+            Month.FEBRUARY: {
                 Weather.Clear: 10,
                 Weather.Cloudy: 60,
                 Weather.Rain: 5,
@@ -457,7 +443,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.March: {
+            Month.MARCH: {
                 Weather.Clear: 10,
                 Weather.Cloudy: 40,
                 Weather.Rain: 5,
@@ -469,7 +455,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.April: {
+            Month.APRIL: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 40,
@@ -481,7 +467,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.May: {
+            Month.MAY: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 10,
                 Weather.Rain: 40,
@@ -493,7 +479,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 50,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.June: {
+            Month.JUNE: {
                 Weather.Clear: 70,
                 Weather.Cloudy: 15,
                 Weather.Rain: 50,
@@ -505,7 +491,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.July: {
+            Month.JULY: {
                 Weather.Clear: 80,
                 Weather.Cloudy: 10,
                 Weather.Rain: 60,
@@ -517,7 +503,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.August: {
+            Month.AUGUST: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 10,
                 Weather.Rain: 30,
@@ -529,7 +515,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.September: {
+            Month.SEPTEMBER: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 20,
@@ -541,7 +527,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.October: {
+            Month.OCTOBER: {
                 Weather.Clear: 69,
                 Weather.Cloudy: 40,
                 Weather.Rain: 10,
@@ -553,7 +539,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 50,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.November: {
+            Month.NOVEMBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 60,
                 Weather.Rain: 5,
@@ -565,7 +551,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.December: {
+            Month.DECEMBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 80,
                 Weather.Rain: 5,
@@ -585,7 +571,7 @@ MAP_ELEMENTS = [
         emoji="\N{EVERGREEN TREE}",
         desc="A vast area of land with no civilization.",
         weather={
-            Month.January: {
+            Month.JANUARY: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 50,
                 Weather.Rain: 10,
@@ -597,7 +583,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.February: {
+            Month.FEBRUARY: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 30,
                 Weather.Rain: 30,
@@ -609,7 +595,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.March: {
+            Month.MARCH: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 40,
                 Weather.Rain: 20,
@@ -621,7 +607,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 6,
             },
-            Month.April: {
+            Month.APRIL: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 80,
                 Weather.Rain: 30,
@@ -633,7 +619,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.May: {
+            Month.MAY: {
                 Weather.Clear: 70,
                 Weather.Cloudy: 30,
                 Weather.Rain: 10,
@@ -645,7 +631,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.June: {
+            Month.JUNE: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 20,
                 Weather.Rain: 40,
@@ -657,7 +643,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.July: {
+            Month.JULY: {
                 Weather.Clear: 70,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -669,7 +655,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 5,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.August: {
+            Month.AUGUST: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 10,
@@ -681,7 +667,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 1,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.September: {
+            Month.SEPTEMBER: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 50,
                 Weather.Rain: 25,
@@ -693,7 +679,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.October: {
+            Month.OCTOBER: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 70,
                 Weather.Rain: 30,
@@ -705,7 +691,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 50,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.November: {
+            Month.NOVEMBER: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 20,
@@ -717,7 +703,7 @@ MAP_ELEMENTS = [
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.December: {
+            Month.DECEMBER: {
                 Weather.Clear: 10,
                 Weather.Cloudy: 30,
                 Weather.Rain: 15,

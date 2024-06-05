@@ -16,6 +16,7 @@
 import asyncio
 import io
 import random
+from calendar import Month
 from contextlib import suppress
 from itertools import zip_longest
 from textwrap import wrap
@@ -52,7 +53,6 @@ from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import MISSING, find, get
 from rapidfuzz import fuzz, process
-from scipy.stats import norm
 
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.cogs.submission.oc_submission import (
@@ -66,7 +66,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
 from src.structures.weather import Weather
-from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR, Month
+from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR
 from src.utils.functions import name_emoji_from_channel, safe_username
 from src.utils.matches import EMOJI_MATCHER, EMOJI_REGEX, TUPPER_REPLY_PATTERN
 from src.views.characters_view import PingView
