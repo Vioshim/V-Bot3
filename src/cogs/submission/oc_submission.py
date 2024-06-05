@@ -1783,7 +1783,7 @@ class SubmissionView(Basic):
     @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
-        key = {"server": itx.guild_id, "location": {"$type": 18}}
+        key = {"server": itx.guild_id}
         if role := get(itx.guild.roles, name="Roleplayer"):
             key["author"] = {"$in": [x.id for x in role.members]}
         ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]

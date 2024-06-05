@@ -37,11 +37,11 @@ from src.views.characters_view import CharactersView
 __all__ = ("RegionViewComplex",)
 
 
-class LocationSelection(Complex[Thread]):
+class LocationSelection(Complex[ForumChannel | TextChannel | Thread]):
     def __init__(
         self,
         target: Interaction[CustomBot],
-        base: ForumChannel | TextChannel,
+        base: ForumChannel | TextChannel | Thread,
         ocs: set[Character],
     ):
         self.entries: dict[int, set[Character]] = {}
@@ -78,7 +78,7 @@ class LocationSelection(Complex[Thread]):
     async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         try:
             await interaction.response.defer(ephemeral=True, thinking=True)
-            channel: Thread = self.current_choice
+            channel: ForumChannel | TextChannel | Thread = self.current_choice
             ocs = self.entries.get(channel.id, set())
             view = CharactersView(target=interaction, member=interaction.user, ocs=ocs, keep_working=True)
             embed = view.embed
@@ -114,11 +114,7 @@ class AreaSelection(Complex[CategoryChannel | ForumChannel | TextChannel]):
         emoji: str,
     ):
         if category := cat if isinstance(cat, CategoryChannel) else cat.category:
-            channels = [
-                x
-                for x in category.channels
-                if isinstance(x, (ForumChannel, TextChannel)) and not x.name.endswith("-logs")
-            ]
+            channels = [x for x in category.channels if not x.name.endswith("-logs")]
         else:
             channels = []
 
@@ -209,8 +205,8 @@ class RegionViewComplex(Complex[MapPair]):
     async def select_choice(self, interaction: Interaction[CustomBot], sct: Select) -> None:
         try:
             await interaction.response.defer(ephemeral=True, thinking=True)
-            info = self.current_choice
-            cat = interaction.guild.get_channel(info.category)
+            info: MapPair = self.current_choice
+            cat: CategoryChannel = interaction.guild.get_channel(info.category)
             embed = Embed(
                 title=info.name,
                 description=info.desc,
