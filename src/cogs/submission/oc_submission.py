@@ -1317,7 +1317,12 @@ class CreationOCView(Basic):
                 emoji = "\N{CROSS MARK}"
 
             menu = self.fields1 if item.required else self.fields2
-            menu.add_option(label=item.name, description=description[:100], emoji=emoji)
+            menu.add_option(
+                label=item.name,
+                value=item.name,
+                description=description[:100],
+                emoji=emoji,
+            )
 
         items = {"Essentials": self.fields1, "Extras": self.fields2}
 
