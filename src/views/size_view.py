@@ -205,13 +205,20 @@ class HeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        data = {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}
-        for item in sorted(data, key=lambda x: x.height, reverse=True):
+        if data := {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}:
+            for item in sorted(data, key=lambda x: x.height, reverse=True):
+                self.reference.add_option(
+                    label=item.name,
+                    value=item.id,
+                    description=Size.M.height_info(item.height),
+                    default=item == self.species,
+                )
+        else:
             self.reference.add_option(
-                label=item.name,
-                value=item.id,
-                description=Size.M.height_info(item.height),
-                default=item == self.species,
+                label="No Species",
+                value="0",
+                description="No Species",
+                default=True,
             )
 
         height = self.species.height if self.species else 0
