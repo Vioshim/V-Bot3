@@ -228,7 +228,7 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
         },
     }
-    CustomPokemon = {
+    Fakemon = {
         "description": "Fan-made. They are normal residents.",
         "modifier": {"Species": ("Fakemon", "Fakemon Species")},
         "docs": {
@@ -238,7 +238,7 @@ class Template(TemplateItem, Enum):
             "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     }
-    CustomMega = {
+    FakeMega = {
         "description": "Fan-made. Mega evolved and kept stuck like this.",
         "modifier": {"Species": ("Fakemon", "Mega Species")},
         "docs": {
@@ -246,7 +246,7 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1tQPKNdxQTA33eUwNgWVGZMYJ3iQzloZIbSNirRXqhj4",
         },
     }
-    CustomParadox = {
+    FakeParadox = {
         "description": "Fan-made. From distant past/future, somehow ended up here.",
         "modifier": {"Species": ("Fakemon", "Paradox Species")},
         "docs": {
@@ -254,7 +254,7 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
         },
     }
-    CustomUltraBeast = {
+    FakeUltraBeast = {
         "description": "Fan-made. From other dimensions, somehow ended up here.",
         "modifier": {"Species": ("Fakemon", "Ultra Beast Species")},
         "docs": {
@@ -304,7 +304,7 @@ class Template(TemplateItem, Enum):
                         else:
                             oc.species = Variant(base=choices[0], name=answer)
                             default_measure = True
-            case "CustomParadox":
+            case "FakeParadox":
                 async with ModernInput(member=itx.user, target=itx).handle(
                     label=f"Paradox {choices[0].name}"[:45],
                     ephemeral=ephemeral,
@@ -317,7 +317,7 @@ class Template(TemplateItem, Enum):
                         else:
                             oc.species = CustomParadox(base=choices[0], name=answer)
                             default_measure = True
-            case "CustomUltraBeast":
+            case "FakeUltraBeast":
                 async with ModernInput(member=itx.user, target=itx).handle(
                     label=f"UB {choices[0].name}"[:45],
                     ephemeral=ephemeral,
@@ -330,11 +330,11 @@ class Template(TemplateItem, Enum):
                         else:
                             oc.species = CustomUltraBeast(base=choices[0], name=answer)
                             default_measure = True
-            case "CustomMega":
+            case "FakeMega":
                 default_measure = not (isinstance(oc.species, CustomMega) and oc.species.base == choices[0])
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
-            case "CustomPokemon":
+            case "Fakemon":
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
                     label="OC's Species.",
@@ -397,9 +397,9 @@ class Template(TemplateItem, Enum):
                 mon_total = Paradox.all()
             case "Mega":
                 mon_total = Mega.all()
-            case "CustomMega" | "Variant" | "CustomParadox":
+            case "FakeMega" | "Variant" | "FakeParadox":
                 mon_total = Species.all(exclude=(Mega, Paradox))
-            case "CustomUltraBeast":
+            case "FakeUltraBeast":
                 mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast))
             case _:
                 mon_total = []
@@ -412,8 +412,10 @@ class Template(TemplateItem, Enum):
     @property
     def title(self):
         name = self.name
-        if name.startswith("Custom"):
-            name = name.removeprefix("Custom") + " (Custom)"
+        if name.startswith("Fakemon"):
+            name = "Pokemon (Fakemon)"
+        elif name.startswith("Fake"):
+            name = name.removeprefix("Fake") + " (Fakemon)"
         return name.strip()
 
     @property
@@ -810,7 +812,7 @@ class TypesField(TemplateField, required=True):
                 return (x.name, f"Adds the typing {x.name}")
 
             ignore = [TypingEnum.Shadow, TypingEnum.Typeless]
-            if template.name in ["Variant", "CustomPokemon"]:
+            if template.name in ["Variant", "Fakemon"]:
                 ignore.remove(TypingEnum.Typeless)
 
             values, max_values = TypingEnum.all(*ignore), 2
@@ -1276,12 +1278,11 @@ class CreationOCView(Basic):
         self.ephemeral = isinstance(message, Message) and message.flags.ephemeral
         if not isinstance(template, Template):
             name = template if isinstance(template, str) else type(oc.species).__name__
-            name = name.replace("Fakemon", "CustomPokemon")
-            if name == "CustomPokemon":
+            if name == "Fakemon":
                 if get(oc.abilities, name="Beast Boost"):
-                    name = "CustomUltraBeast"
+                    name = "FakeUltraBeast"
                 elif get(oc.abilities, name="Protosynthesis") or get(oc.abilities, name="Quark Drive"):
-                    name = "CustomParadox"
+                    name = "FakeParadox"
 
             try:
                 template = Template[name]
