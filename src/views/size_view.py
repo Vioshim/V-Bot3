@@ -215,12 +215,8 @@ class HeightView(Basic):
                     description=Size.M.height_info(item.height),
                     default=item == self.species,
                 )
-        else:
-            self.reference.add_option(
-                label="Default",
-                description="Default height",
-                default=True,
-            )
+        elif self.reference in self.children:
+            self.remove_item(self.reference)
 
         height = self.species.height if self.species else 0
         if isinstance(self.oc.size, Size):
@@ -304,12 +300,8 @@ class WeightView(Basic):
                     description=Size.M.weight_info(item.weight),
                     default=item == self.species,
                 )
-        else:
-            self.reference.add_option(
-                label="Default",
-                description="Default weight",
-                default=True,
-            )
+        elif self.reference in self.children:
+            self.remove_item(self.reference)
 
         weight = self.species.weight if self.species else 0
 
