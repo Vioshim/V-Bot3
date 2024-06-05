@@ -1187,6 +1187,18 @@ class Submission(commands.Cog):
         file = File(buf, filename="plot.png")
         await ctx.reply(file=file, ephemeral=True, embed=embed)
 
+    @commands.command(aliases=["close", "end"])
+    async def free(self, ctx: commands.Context[CustomBot]):
+        embed = Embed(
+            title="Channel is free",
+            description="You can now use this channel for any other roleplay.",
+            color=ctx.author.color,
+        )
+        file = await ctx.author.display_avatar.with_size(4096).to_file()
+        embed.set_author(name=ctx.author.display_name, icon_url=f"attachment://{file.filename}")
+        embed.set_image(url=WHITE_BAR)
+        await ctx.reply(file=file, embed=embed)
+
 
 async def setup(bot: CustomBot) -> None:
     """Default Cog loader
