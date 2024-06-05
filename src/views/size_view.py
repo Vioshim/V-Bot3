@@ -202,6 +202,8 @@ class HeightView(Basic):
 
         if isinstance(self.oc.species, Fusion):
             bases = self.oc.species.bases
+        elif isinstance(self.oc.species, Fakemon):
+            bases = []
         else:
             bases = [self.oc.species] if self.oc.species else []
 
@@ -215,9 +217,8 @@ class HeightView(Basic):
                 )
         else:
             self.reference.add_option(
-                label="No Species",
-                value="0",
-                description="No Species",
+                label="Default",
+                description="Default height",
                 default=True,
             )
 
@@ -290,16 +291,24 @@ class WeightView(Basic):
 
         if isinstance(self.oc.species, Fusion):
             bases = self.oc.species.bases
+        elif isinstance(self.oc.species, Fakemon):
+            bases = []
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        data = {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}
-        for item in sorted(data, key=lambda x: x.weight, reverse=True):
+        if data := {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}:
+            for item in sorted(data, key=lambda x: x.weight, reverse=True):
+                self.reference.add_option(
+                    label=item.name,
+                    value=item.id,
+                    description=Size.M.weight_info(item.weight),
+                    default=item == self.species,
+                )
+        else:
             self.reference.add_option(
-                label=item.name,
-                value=item.id,
-                description=Size.M.weight_info(item.weight),
-                default=item == self.species,
+                label="Default",
+                description="Default weight",
+                default=True,
             )
 
         weight = self.species.weight if self.species else 0

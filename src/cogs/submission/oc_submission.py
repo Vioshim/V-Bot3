@@ -685,10 +685,11 @@ class WeightField(TemplateField):
         else:
             weight_a = weight_b = oc.species.weight
 
-        if not (Size.Mini_XXXS.weight_value(weight_a) <= oc.weight <= Size.Alpha_XXXL.weight_value(weight_b)):
-            info1 = Size.Mini_XXXS.weight_info(weight_a)
-            info2 = Size.Alpha_XXXL.weight_info(weight_b)
-            return f"Min {info1}, Max: {info2}"
+        if oc.weight < Size.Mini_XXXS.weight_value(weight_a):
+            return f"Min {Size.Mini_XXXS.weight_info(weight_a)}"
+
+        if oc.weight > Size.Alpha_XXXL.weight_value(weight_b):
+            return f"Max {Size.Alpha_XXXL.weight_info(weight_b)}"
 
     @classmethod
     async def on_submit(
