@@ -398,7 +398,7 @@ class GroupByComplex(Complex[tuple[str, list[Character]]]):
 D = TypeVar("D")
 
 
-class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix=":"):
+class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="--"):
     species: Optional[DefaultSpeciesArg] = commands.flag(
         positional=True,
         default=None,
@@ -433,7 +433,7 @@ class GroupByArg(StrEnum):
     Weight = auto()
 
 
-class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix=":"):
+class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="--"):
     name: Optional[str] = commands.flag(default=None, description="Name to look for", positional=True)
     kind: Optional[Kind] = commands.flag(default=None, description="Kind to look for")
     type: Optional[TypingEnum] = commands.flag(default=None, description="Type to look for")
