@@ -638,12 +638,13 @@ class SizeField(TemplateField):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
-            height_a = height_b = oc.species.height
+            height_a = height_b = oc.species.height if oc.species else 1.0
 
-        if not (Size.Mini_XXXS.height_value(height_a) <= oc.size <= Size.Alpha_XXXL.height_value(height_b)):
-            info1 = Size.Mini_XXXS.height_info(height_a)
-            info2 = Size.Alpha_XXXL.height_info(height_b)
-            return f"Min {info1}, Max: {info2}"
+        if oc.size <= Size.Mini_XXXS.height_value(height_a):
+            return f"Min {Size.Mini_XXXS.height_info(height_a)}"
+
+        if oc.size > Size.Alpha_XXXL.height_value(height_b):
+            return f"Max {Size.Alpha_XXXL.height_info(height_b)}"
 
     @classmethod
     async def on_submit(
