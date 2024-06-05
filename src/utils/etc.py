@@ -119,7 +119,7 @@ class MapPair:
     short_desc: str = ""
     desc: str = ""
     image: str = ""
-    weather: dict[Month, dict[Weather, int]] = field(default_factory=dict)
+    weather: dict[Month, dict[Weather, int]] = field(default_factory=dict, hash=False)
 
 
 MAP_ELEMENTS = [
