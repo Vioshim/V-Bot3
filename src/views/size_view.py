@@ -202,12 +202,10 @@ class HeightView(Basic):
 
         if isinstance(self.oc.species, Fusion):
             bases = self.oc.species.bases
-        elif isinstance(self.oc.species, Fakemon):
-            bases = []
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        if data := {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}:
+        if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: x.height, reverse=True):
                 self.reference.add_option(
                     label=item.name,
@@ -241,9 +239,10 @@ class HeightView(Basic):
 
         return self
 
-    @select(placeholder="Species for reference")
+    @select(placeholder="Species for reference", min_values=0)
     async def reference(self, itx: Interaction, sct: Select):
-        self.species = Fusion.from_ID(sct.values[0])
+        if sct.values:
+            self.species = Fusion.from_ID(sct.values[0])
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Select a Size.")
@@ -287,12 +286,10 @@ class WeightView(Basic):
 
         if isinstance(self.oc.species, Fusion):
             bases = self.oc.species.bases
-        elif isinstance(self.oc.species, Fakemon):
-            bases = []
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        if data := {Fusion(*x) for x in combinations_with_replacement(bases, len(bases))}:
+        if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: x.weight, reverse=True):
                 self.reference.add_option(
                     label=item.name,
@@ -327,9 +324,10 @@ class WeightView(Basic):
 
         return self
 
-    @select(placeholder="Species for reference")
+    @select(placeholder="Species for reference", min_values=0)
     async def reference(self, itx: Interaction, sct: Select):
-        self.species = Fusion.from_ID(sct.values[0])
+        if sct.values:
+            self.species = Fusion.from_ID(sct.values[0])
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Single Choice.")
