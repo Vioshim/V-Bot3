@@ -341,13 +341,13 @@ class Roles(commands.Cog):
 
         event = None
         image = await user.display_avatar.read()
-        if info := await db.find_one({"user": ctx.author.id, "server": ctx.guild.id}):
+        if info := await db.find_one({"user": user.id, "server": user.guild.id}):
 
             try:
                 if not (event := ctx.guild.get_scheduled_event(info["id"])):
                     event = await ctx.guild.fetch_scheduled_event(info["id"])
             except Exception:
-                await db.delete_one({"user": ctx.author.id, "server": ctx.guild.id})
+                await db.delete_one({"user": user.id, "server": user.guild.id})
                 event = None
 
         if event:
@@ -374,12 +374,12 @@ class Roles(commands.Cog):
 
             await db.replace_one(
                 {
-                    "user": ctx.author.id,
-                    "server": ctx.guild.id,
+                    "user": user.id,
+                    "server": user.guild.id,
                 },
                 {
-                    "user": ctx.author.id,
-                    "server": ctx.guild.id,
+                    "user": user.id,
+                    "server": user.guild.id,
                     "id": event.id,
                 },
                 upsert=True,
