@@ -484,27 +484,5 @@ class TimeConverter(commands.Converter[datetime], Transformer):
             return date
         raise commands.BadArgument(f"Invalid date: {value}")
 
-    async def autocomplete(self, itx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:  # type: ignore
-
-        if value and (date := await self._parse_date(itx.created_at, value)):
-            date1, date2 = itx.message.created_at, date
-            ref = abs(date2 - date1).seconds
-            it = sorted(range(-48 * 1800, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref))
-            dates = [
-                date1.replace(
-                    hour=(date1.hour + x // 3600) % 24,
-                    minute=(date1.minute + (x % 3600) // 60) % 60,
-                    second=0,
-                )
-                for x in it[:5]
-            ]
-        else:
-            dates = [itx.created_at]
-
-        return [self.choice_parser(x) for x in dates]
-
-    def choice_parser(self, date: datetime, /) -> Choice[str]:
-        return Choice(name=date.strftime("%I:%M %p"), value=str(date))
-
 
 TimeArg = Transform[datetime, TimeConverter]
