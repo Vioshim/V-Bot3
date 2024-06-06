@@ -322,7 +322,12 @@ class Movepool:
             or (self.level and item in self.level_moves)
         )
 
-    def assign(self, key: str, value: Optional[str | set[Move] | dict[int, set[Move]]] = None):
+    def assign(
+        self,
+        key: str,
+        value: Optional[str | set[Move] | dict[int, set[Move]]] = None,
+        notify: bool = False,
+    ):
         """Assigning method for movepool
 
         Parameters
@@ -347,6 +352,8 @@ class Movepool:
             else:
                 value = value.split(",")
 
+        unused = set()
+
         if key == "LEVEL" and isinstance(value := value or {}, dict):
             level: dict[int, set[Move]] = {}
             for k, v in value.items():
@@ -354,14 +361,28 @@ class Movepool:
                 if not k.isdigit():
                     continue
 
-                moves = frozenset({data for item in v if (data := Move.deduce(item))})
+                moves = set()
+                for item in v:
+                    if data := Move.deduce(item):
+                        moves.add(data)
+                    else:
+                        unused.add(item)
+
+                moves = frozenset(moves)
+
                 if (k := int(k)) != 0:
                     level[k] = moves
                 else:
                     self.levelup |= moves
             self.level = frozendict(level)
         elif isinstance(value := value or set(), Iterable):
-            moves = frozenset({data for item in value if (data := Move.deduce(item))})
+            moves = set()
+            for item in value:
+                if data := Move.deduce(item):
+                    moves.add(data)
+                else:
+                    unused.add(item)
+            moves = frozenset(moves)
             match key:
                 case "TM":
                     self.tm |= moves
@@ -375,6 +396,9 @@ class Movepool:
                     self.levelup |= moves
                 case _:
                     self.other |= moves
+
+        if unused and notify:
+            print("Missing: ", "\n".join(unused))
 
     def __setitem__(self, key: str, value: set[Move] | dict[int, set[Move]]):
         """Assigning method for movepool
@@ -471,6 +495,21 @@ class Movepool:
 
     @classmethod
     def from_dict(cls, **kwargs) -> Movepool:
+        """Returns a Movepool which corresponds to the kwargs provided
+
+        Returns
+        -------
+        Movepool
+            Generated movepool
+        """
+        movepool = cls()
+        for item in movepool.__slots__:
+            if value := kwargs.get(item):
+                movepool.assign(key=item, value=value)
+        return movepool
+
+    @classmethod
+    def from_notif_dict(cls, **kwargs) -> Movepool:
         """Returns a Movepool which corresponds to the kwargs provided
 
         Returns

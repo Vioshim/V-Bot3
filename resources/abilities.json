@@ -2390,5 +2390,13 @@
         "battle": "",
         "outside": "",
         "random_fact": ""
+    },
+    {
+        "id": "POISONPUPPETEER",
+        "name": "Poison Puppeteer",
+        "description": "Pokémon poisoned by Pecharunt's moves will also become confused.",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
     }
 ]
