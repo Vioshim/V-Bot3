@@ -348,11 +348,18 @@ class Roles(commands.Cog):
         if date <= date1:
             date = date.replace(year=date.year + 1)
 
+        event = None
         image = await user.display_avatar.read()
         if info := await db.find_one({"user": ctx.author.id, "server": ctx.guild.id}):
-            if not (event := ctx.guild.get_scheduled_event(info["id"])):
-                event = await ctx.guild.fetch_scheduled_event(info["id"])
 
+            try:
+                if not (event := ctx.guild.get_scheduled_event(info["id"])):
+                    event = await ctx.guild.fetch_scheduled_event(info["id"])
+            except Exception:
+                await db.delete_one({"user": ctx.author.id, "server": ctx.guild.id})
+                event = None
+
+        if event:
             await event.edit(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
                 start_time=date,
@@ -363,7 +370,6 @@ class Roles(commands.Cog):
                 privacy_level=PrivacyLevel.guild_only,
                 location="Birthday",
             )
-
         else:
             event = await ctx.guild.create_scheduled_event(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
