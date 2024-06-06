@@ -30,6 +30,7 @@ from discord import (
     Interaction,
     Member,
     Message,
+    PrivacyLevel,
     RawReactionActionEvent,
     User,
     app_commands,
@@ -359,6 +360,7 @@ class Roles(commands.Cog):
                 status=EventStatus.scheduled,
                 image=image,
                 entity_type=EntityType.external,
+                privacy_level=PrivacyLevel.guild_only,
                 location="Birthday",
             )
 
@@ -369,6 +371,7 @@ class Roles(commands.Cog):
                 end_time=date + timedelta(days=1),
                 image=image,
                 entity_type=EntityType.external,
+                privacy_level=PrivacyLevel.guild_only,
                 location="Birthday",
             )
 
