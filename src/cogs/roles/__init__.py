@@ -360,6 +360,7 @@ class Roles(commands.Cog):
                 entity_type=EntityType.external,
                 privacy_level=PrivacyLevel.guild_only,
                 location="Birthday",
+                description=user.mention,
             )
         else:
             event = await ctx.guild.create_scheduled_event(
@@ -370,6 +371,7 @@ class Roles(commands.Cog):
                 entity_type=EntityType.external,
                 privacy_level=PrivacyLevel.guild_only,
                 location="Birthday",
+                description=user.mention,
             )
 
             await db.replace_one(
