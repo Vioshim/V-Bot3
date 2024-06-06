@@ -3505,7 +3505,8 @@
 		},
 		"abilities": ["MULTITYPE"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "ARCHEN",
@@ -25079,7 +25080,8 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "DIALGAORIGIN",
@@ -25172,7 +25174,8 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "DIANCIE",
@@ -40940,7 +40943,8 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "GIRATINAORIGIN",
@@ -41023,7 +41027,8 @@
 		},
 		"abilities": ["LEVITATE"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "GLACEON",
@@ -83015,7 +83020,8 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "PALKIAORIGIN",
@@ -83111,7 +83117,8 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"]
+		"egg_groups": ["no-eggs"],
+		"banned": true
 	},
 	{
 		"id": "PALOSSAND",
