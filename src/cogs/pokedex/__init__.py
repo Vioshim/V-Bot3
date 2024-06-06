@@ -105,6 +105,7 @@ class Pokedex(commands.Cog):
         ctx : Interaction[CustomBot]
             Interaction[CustomBot]
         """
+        await ctx.defer(ephemeral=True)
         embed = Embed(
             title="See Movepool",
             description="To use this command, provide Species and/or Move.",
@@ -120,112 +121,111 @@ class Pokedex(commands.Cog):
             movepool = flags.fakemon.movepool
             embed.title = f"See {species.name}'s movepool"
         else:
-            movepool = None
+            movepool = Movepool()
 
         view = None
-        if isinstance(movepool, Movepool):
+        if flags.move_id is None:
+            view = MovepoolView(member=ctx.author, movepool=movepool, target=ctx)
+
+        if species:
             if flags.move_id is None:
-                view = MovepoolView(member=ctx.author, movepool=movepool, target=ctx)
-
-            if species:
-                if flags.move_id is None:
-                    embed.title = f"{species.name}'s movepool"
-                elif description := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(flags.move_id)):
-                    embed.title = f"{species.name} learns {flags.move_id.name} by"
-                    embed.description = description
-                else:
-                    embed.title = f"{species.name} can not learn {flags.move_id.name}."
-
-                if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
-                    embed.add_field(name="Possible Types", value=possible_types, inline=False)
-
-                if isinstance(species, Character):
-                    base = species.species
-                    data1, data2 = species.size, species.weight
-                    height, val1 = (data1, 0.0) if isinstance(data1, Size) else (Size.M, data1)
-                    weight, val2 = (data2, 0.0) if isinstance(data2, Size) else (Size.M, data2)
-                else:
-                    base = species
-                    height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
-
-                if isinstance(base, Fakemon):
-                    embed.add_field(name="Height", value=height.height_info(val1), inline=False)
-                    embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
-                else:
-                    if isinstance(base, Fusion) and len(base.bases) >= 2:
-                        h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
-                        w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
-                        h1, h2, h3 = h1.height, val1, h2.height
-                        w1, w2, w3 = w1.weight, val2, w2.weight
-                    else:
-                        h1, h2, h3 = val1, val1, val1
-                        w1, w2, w3 = val2, val2, val2
-
-                    embed.add_field(name="Height (Min)", value=Size.XXXS.height_info(h1))
-                    embed.add_field(name="Height (Avg)", value=height.height_info(h2))
-                    embed.add_field(name="Height (Max)", value=Size.XXXL.height_info(h3))
-
-                    embed.add_field(name="Weight (Min)", value=Size.XXXS.weight_info(w1))
-                    embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
-                    embed.add_field(name="Weight (Max)", value=Size.XXXL.weight_info(w3))
-
-                evs, ivs, level = flags.evs, flags.ivs, flags.level
-                if isinstance(species, Species) and (evs or ivs or level):
-                    HP, ATK, DEF, SPA, SPD, SPE = (
-                        species.HP,
-                        species.ATK,
-                        species.DEF,
-                        species.SPA,
-                        species.SPD,
-                        species.SPE,
-                    )
-                    cHP = 1
-                    cATK, cDEF, cSPA, cSPD, cSPE = (
-                        int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
-                        int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
-                    )
-
-                    if ab := get(species.abilities, name="Wonder Guard"):
-                        hp_value = ab.name
-                    else:
-                        cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
-                        hp_value = f"{0.9*cHP:.0f} - {1.1*cHP:.0f}"
-                    embed.add_field(name=f"{HP=}, {cHP=}", value=hp_value)
-                    embed.add_field(name=f"{ATK:}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
-                    embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
-                    embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
-                    embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
-                    embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
-
-            elif flags.move_id:
-                mons = {x for x in Species.all() if flags.move_id in x.movepool}
-                db = ctx.bot.mongo_db("Characters")
-                key = {"server": ctx.guild.id}
-                if role := get(ctx.guild.roles, name="Roleplayer"):
-                    key["author"] = {"$in": [x.id for x in role.members]}
-                ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-                view = SpeciesComplex(member=ctx.author, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
-                embed = view.embed
-                embed.description = (
-                    f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
-                )
-                embed.title = flags.move_id.name
-                embed.color = flags.move_id.type.color
-                embed.set_thumbnail(url=flags.move_id.emoji.url)
-
-            self.bot.logger.info(
-                "%s is reading %s's movepool",
-                str(ctx.author),
-                getattr(species or flags.move_id, "name", "None"),
-            )
-
-            if view is None:
-                await ctx.reply(embed=embed, ephemeral=True)
+                embed.title = f"{species.name}'s movepool"
+            elif description := "\n".join(f"> • **{x.title()}**" for x in movepool.methods_for(flags.move_id)):
+                embed.title = f"{species.name} learns {flags.move_id.name} by"
+                embed.description = description
             else:
-                await view.simple_send(embed=embed, ephemeral=True)
+                embed.title = f"{species.name} can not learn {flags.move_id.name}."
+
+            if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
+                embed.add_field(name="Possible Types", value=possible_types, inline=False)
+
+            if isinstance(species, Character):
+                base = species.species
+                data1, data2 = species.size, species.weight
+                height, val1 = (data1, 0.0) if isinstance(data1, Size) else (Size.M, data1)
+                weight, val2 = (data2, 0.0) if isinstance(data2, Size) else (Size.M, data2)
+            else:
+                base = species
+                height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
+
+            if isinstance(base, Fakemon):
+                embed.add_field(name="Height", value=height.height_info(val1), inline=False)
+                embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
+            else:
+                if isinstance(base, Fusion) and len(base.bases) >= 2:
+                    h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
+                    w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
+                    h1, h2, h3 = h1.height, val1, h2.height
+                    w1, w2, w3 = w1.weight, val2, w2.weight
+                else:
+                    h1, h2, h3 = val1, val1, val1
+                    w1, w2, w3 = val2, val2, val2
+
+                embed.add_field(name="Height (Min)", value=Size.XXXS.height_info(h1))
+                embed.add_field(name="Height (Avg)", value=height.height_info(h2))
+                embed.add_field(name="Height (Max)", value=Size.XXXL.height_info(h3))
+
+                embed.add_field(name="Weight (Min)", value=Size.XXXS.weight_info(w1))
+                embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
+                embed.add_field(name="Weight (Max)", value=Size.XXXL.weight_info(w3))
+
+            evs, ivs, level = flags.evs, flags.ivs, flags.level
+            if isinstance(species, Species) and (evs or ivs or level):
+                HP, ATK, DEF, SPA, SPD, SPE = (
+                    species.HP,
+                    species.ATK,
+                    species.DEF,
+                    species.SPA,
+                    species.SPD,
+                    species.SPE,
+                )
+                cHP = 1
+                cATK, cDEF, cSPA, cSPD, cSPE = (
+                    int((ivs + 2 * ATK + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * DEF + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * SPA + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * SPD + (evs // 4)) * level / 100) + 5,
+                    int((ivs + 2 * SPE + (evs // 4)) * level / 100) + 5,
+                )
+
+                if ab := get(species.abilities, name="Wonder Guard"):
+                    hp_value = ab.name
+                else:
+                    cHP = int((ivs + 2 * HP + (evs // 4)) * level / 100) + 10 + level
+                    hp_value = f"{0.9*cHP:.0f} - {1.1*cHP:.0f}"
+                embed.add_field(name=f"{HP=}, {cHP=}", value=hp_value)
+                embed.add_field(name=f"{ATK:}, {cATK=}", value=f"{0.9*cATK:.0f} - {1.1*cATK:.0f}")
+                embed.add_field(name=f"{DEF=}, {cDEF=}", value=f"{0.9*cDEF:.0f} - {1.1*cDEF:.0f}")
+                embed.add_field(name=f"{SPA=}, {cSPA=}", value=f"{0.9*cSPA:.0f} - {1.1*cSPA:.0f}")
+                embed.add_field(name=f"{SPD=}, {cSPD=}", value=f"{0.9*cSPD:.0f} - {1.1*cSPD:.0f}")
+                embed.add_field(name=f"{SPE=}, {cSPE=}", value=f"{0.9*cSPE:.0f} - {1.1*cSPE:.0f}")
+
+        elif flags.move_id:
+            mons = {x for x in Species.all() if flags.move_id in x.movepool}
+            db = ctx.bot.mongo_db("Characters")
+            key = {"server": ctx.guild.id}
+            if role := get(ctx.guild.roles, name="Roleplayer"):
+                key["author"] = {"$in": [x.id for x in role.members]}
+            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
+            view = SpeciesComplex(member=ctx.author, target=ctx, mon_total=mons, keep_working=True, ocs=ocs)
+            embed = view.embed
+            embed.description = (
+                f"The following {len(mons):02d} species and its fusions/variants can usually learn the move."
+            )
+            embed.title = flags.move_id.name
+            embed.color = flags.move_id.type.color
+            embed.set_thumbnail(url=flags.move_id.emoji.url)
+
+        self.bot.logger.info(
+            "%s is reading %s's movepool",
+            str(ctx.author),
+            getattr(species or flags.move_id, "name", "None"),
+        )
+
+        if view is None:
+            await ctx.reply(embed=embed, ephemeral=True)
+        else:
+            await view.simple_send(embed=embed, ephemeral=True)
 
     @app_commands.guilds(952518750748438549, 1196879060173852702)
     @commands.hybrid_command()
