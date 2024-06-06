@@ -353,7 +353,7 @@ class Roles(commands.Cog):
 
             await event.edit(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
-                scheduled_time=date,
+                start_time=date,
                 end_time=date + timedelta(days=1),
                 status=EventStatus.scheduled,
                 image=image,
@@ -362,7 +362,7 @@ class Roles(commands.Cog):
         else:
             event = await ctx.guild.create_scheduled_event(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
-                scheduled_time=date,
+                start_time=date,
                 end_time=date + timedelta(days=1),
                 image=image,
             )
