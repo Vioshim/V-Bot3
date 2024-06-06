@@ -13,17 +13,17 @@
 # limitations under the License.
 
 
+from calendar import Month
 from datetime import datetime, time, timedelta, timezone
 from textwrap import TextWrapper
 from typing import Optional
-from urllib.parse import quote_plus
 
 from discord import (
     AllowedMentions,
     AutoModRule,
     AutoModTrigger,
     Embed,
-    Forbidden,
+    EventStatus,
     ForumChannel,
     Guild,
     Interaction,
@@ -37,7 +37,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 from discord.utils import get, snowflake_time
 
-from src.cogs.roles.roles import BasicRoleSelect, RPModal, RPSearchManage
+from src.cogs.roles.roles import BasicRoleSelect, RPModal, RPSearchManage, TimeArg
 from src.structures.bot import CustomBot
 from src.structures.character import Character
 from src.utils.etc import WHITE_BAR
@@ -301,6 +301,84 @@ class Roles(commands.Cog):
         modal = RPModal(user=user, ocs=ocs, to_user=member)
         if await modal.check(itx):
             await itx.response.send_modal(modal)
+
+    @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    async def birthday(
+        self,
+        itx: Interaction[CustomBot],
+        month: Month,
+        day: commands.Range[int, 1, 31],
+        time: TimeArg,
+    ):
+        """Set your birthday
+
+        Parameters
+        ----------
+        itx : Interaction[CustomBot],
+            Interaction[CustomBot],
+        month : Month
+            Month of the birthday
+        day : commands.Range[int, 1, 31]
+            Day of the birthday
+        time : TimeArg
+            Current time
+        """
+        db = self.bot.mongo_db("Birthday")
+        user: Member = self.bot.supporting.get(itx.user, itx.user)
+
+        date1, date2 = itx.created_at, time
+        ref = abs(date2 - date1).seconds
+        offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
+        if date1 > date2:
+            offset = -offset
+        tzinfo = timezone(offset=timedelta(hours=offset))
+
+        date = itx.created_at.replace(
+            month=month.value,
+            day=day,
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+            tzinfo=tzinfo,
+        )
+        if date <= itx.created_at:
+            date = date.replace(year=date.year + 1)
+
+        image = await user.display_avatar.read()
+        if info := await db.find_one({"user": itx.user.id, "server": itx.guild_id}):
+            if not (event := itx.guild.get_scheduled_event(info["id"])):
+                event = await itx.guild.fetch_scheduled_event(info["id"])
+
+            await event.edit(
+                name=f"\N{BIRTHDAY CAKE} {user.display_name}",
+                scheduled_time=date,
+                end_time=date + timedelta(days=1),
+                status=EventStatus.scheduled,
+                image=image,
+            )
+
+        else:
+            event = await itx.guild.create_scheduled_event(
+                name=f"\N{BIRTHDAY CAKE} {user.display_name}",
+                scheduled_time=date,
+                end_time=date + timedelta(days=1),
+                image=image,
+            )
+
+            await db.replace_one(
+                {
+                    "user": itx.user.id,
+                    "server": itx.guild_id,
+                },
+                {
+                    "user": itx.user.id,
+                    "server": itx.guild_id,
+                    "id": event.id,
+                },
+                upsert=True,
+            )
 
 
 async def setup(bot: CustomBot) -> None:

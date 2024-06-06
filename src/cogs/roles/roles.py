@@ -13,11 +13,13 @@
 # limitations under the License.
 
 
-from datetime import datetime, timedelta
+from contextlib import suppress
+from datetime import datetime, timedelta, timezone
 from itertools import chain
 from time import mktime
 from typing import Iterable, Optional
 
+import dateparser
 from discord import (
     AllowedMentions,
     ButtonStyle,
@@ -32,6 +34,8 @@ from discord import (
     SelectOption,
     TextStyle,
 )
+from discord.app_commands import Choice, Transform, Transformer
+from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, button
 from discord.utils import utcnow
 from rapidfuzz import process
@@ -443,3 +447,54 @@ class RPModal(Modal):
         )
 
         self.stop()
+
+
+def custom_strftime(t: datetime, format: str = "%B {S}, %Y %H:%M:%S") -> str:
+    return t.strftime(format).replace(
+        "{S}",
+        str(t.day) + {1: "st", 2: "nd", 3: "rd"}.get(t.day % 20, "th"),
+    )
+
+
+class TimeConverter(commands.Converter[datetime], Transformer):
+    async def _parse_date(self, current_date: datetime, value: str) -> Optional[datetime]:
+        try:
+            return datetime.fromisoformat(value)
+        except (TypeError, ValueError):
+            pass
+
+        with suppress(ValueError):
+            if date := dateparser.parse(
+                value,
+                settings={
+                    "PREFER_DATES_FROM": "past",
+                    "NORMALIZE": True,
+                    "TIMEZONE": timezone.utc,
+                    "RELATIVE_BASE": current_date,
+                },
+            ):
+                return date.replace(tzinfo=timezone.utc)
+
+    async def convert(self, ctx: commands.Context, argument: str, /) -> datetime:  # type: ignore
+        if date := await self._parse_date(ctx.message.created_at, argument):
+            return date
+        raise commands.BadArgument(f"Invalid date: {argument}")
+
+    async def transform(self, itx: Interaction[CustomBot], value: str, /) -> datetime:  # type: ignore
+        if date := await self._parse_date(itx.created_at, value):
+            return date
+        raise commands.BadArgument(f"Invalid date: {value}")
+
+    async def autocomplete(self, itx: Interaction[CustomBot], value: str, /) -> list[Choice[str]]:  # type: ignore
+
+        dates = [itx.created_at]
+        if value and (date := await self._parse_date(itx.created_at, value)):
+            dates.append(date)
+
+        return [self.choice_parser(x) for x in dates]
+
+    def choice_parser(self, date: datetime, /) -> Choice[str]:
+        return Choice(name=date.strftime("%I:%M %p"), value=str(date))
+
+
+TimeArg = Transform[datetime, TimeConverter]
