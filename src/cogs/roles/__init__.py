@@ -328,6 +328,7 @@ class Roles(commands.Cog):
         """
         db = self.bot.mongo_db("Birthday")
         user: Member = self.bot.supporting.get(ctx.author, ctx.author)
+        await ctx.defer(ephemeral=True)
 
         date1, date2 = ctx.message.created_at, time
         diff_seconds = (date2 - date1).total_seconds()
@@ -389,7 +390,7 @@ class Roles(commands.Cog):
 
         view = View()
         view.add_item(Button(label="View Event", url=event.url))
-        await ctx.send(f"Your birthday has been set to {date.strftime('%B %d, %Y')}", ephemeral=True, view=view)
+        await ctx.reply(f"Your birthday has been set to {date.strftime('%B %d, %Y')}", ephemeral=True, view=view)
 
 
 async def setup(bot: CustomBot) -> None:
