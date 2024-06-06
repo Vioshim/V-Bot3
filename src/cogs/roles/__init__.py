@@ -358,6 +358,7 @@ class Roles(commands.Cog):
                 end_time=date + timedelta(days=1),
                 status=EventStatus.scheduled,
                 image=image,
+                entity_type=EntityType.external,
                 location="Birthday",
             )
 
@@ -367,6 +368,7 @@ class Roles(commands.Cog):
                 start_time=date,
                 end_time=date + timedelta(days=1),
                 image=image,
+                entity_type=EntityType.external,
                 location="Birthday",
             )
 
