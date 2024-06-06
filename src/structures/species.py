@@ -109,7 +109,7 @@ class Species:
         self.abilities = Ability.deduce_many(*self.abilities)
 
         if isinstance(self.movepool, dict):
-            self.movepool = Movepool.from_dict(**self.movepool)
+            self.movepool = Movepool.from_notif_dict(**self.movepool)
 
         if isinstance(self.types, str):
             self.types = [self.types]
