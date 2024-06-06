@@ -756,7 +756,7 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
             oc.species.evolves_from = choice.id if choice else None
             progress.add(cls.name)
             moves = oc.species.movepool()
-            if not oc.moveset and len(moves) <= 6:
+            if not oc.moveset and len(moves) <= 4:
                 oc.moveset = frozenset(moves)
 
 
