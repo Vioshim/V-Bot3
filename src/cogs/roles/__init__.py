@@ -335,7 +335,16 @@ class Roles(commands.Cog):
         closest_half_hour = round(diff_seconds / 1800) * 1800
         offset = closest_half_hour / 3600
         tzinfo = timezone(offset=timedelta(hours=offset % 12))
-        date = date1.replace(month=month, day=day, tzinfo=tzinfo, hour=0, minute=0, second=1, microsecond=0)
+        date = datetime(
+            year=date1.year,
+            month=month,
+            day=day,
+            hour=0,
+            minute=0,
+            second=1,
+            microsecond=0,
+            tzinfo=tzinfo,
+        )
 
         if date <= date1:
             date = date.replace(year=date.year + 1)
