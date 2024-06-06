@@ -264,7 +264,7 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
         },
     }
-    FakeGmax = {
+    FakeGMax = {
         "description": "Fan-made. Gigantamax evolved and kept stuck like this.",
         "modifier": {"Species": ("Fakemon", "G-Max Species")},
     }
@@ -340,7 +340,7 @@ class Template(TemplateItem, Enum):
                 default_measure = not (isinstance(oc.species, CustomMega) and oc.species.base == choices[0])
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
-            case "FakeGmax":
+            case "FakeGMax":
                 default_measure = not (isinstance(oc.species, CustomGMax) and oc.species.base == choices[0])
                 oc.species = CustomGMax(choices[0])
                 oc.abilities &= oc.species.abilities
@@ -409,10 +409,12 @@ class Template(TemplateItem, Enum):
                 mon_total = Mega.all()
             case "GMax":
                 mon_total = GMax.all()
-            case "FakeMega" | "Variant" | "FakeParadox":
-                mon_total = Species.all(exclude=(Mega, Paradox))
+            case "FakeParadox" | "FakeGMax":
+                mon_total = Species.all(exclude=(Mega, Paradox, GMax))
+            case "FakeMega" | "Variant":
+                mon_total = Species.all(exclude=(Mega, GMax))
             case "FakeUltraBeast":
-                mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast))
+                mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast, GMax))
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
