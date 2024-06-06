@@ -343,8 +343,7 @@ class Roles(commands.Cog):
             minute=0,
             second=0,
             microsecond=0,
-            tzinfo=tzinfo,
-        )
+        ).astimezone(tzinfo)
         if date <= date1:
             date = date.replace(year=date.year + 1)
 
