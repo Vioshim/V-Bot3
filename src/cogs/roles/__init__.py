@@ -14,7 +14,7 @@
 
 
 from calendar import Month
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from textwrap import TextWrapper
 from typing import Optional
 
@@ -302,11 +302,11 @@ class Roles(commands.Cog):
         if await modal.check(itx):
             await itx.response.send_modal(modal)
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def birthday(
         self,
-        itx: Interaction[CustomBot],
+        ctx: commands.Context[CustomBot],
         month: Month,
         day: commands.Range[int, 1, 31],
         time: TimeArg,
@@ -315,8 +315,8 @@ class Roles(commands.Cog):
 
         Parameters
         ----------
-        itx : Interaction[CustomBot],
-            Interaction[CustomBot],
+        ctx : commands.Context[CustomBot]
+            Context
         month : Month
             Month of the birthday
         day : commands.Range[int, 1, 31]
@@ -325,16 +325,16 @@ class Roles(commands.Cog):
             Current time
         """
         db = self.bot.mongo_db("Birthday")
-        user: Member = self.bot.supporting.get(itx.user, itx.user)
+        user: Member = self.bot.supporting.get(ctx.author, ctx.author)
 
-        date1, date2 = itx.created_at, time
+        date1, date2 = ctx.message.created_at, time
         ref = abs(date2 - date1).seconds
         offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
         if date1 > date2:
             offset = -offset
         tzinfo = timezone(offset=timedelta(hours=offset))
 
-        date = itx.created_at.replace(
+        date = date1.replace(
             month=month.value,
             day=day,
             hour=0,
@@ -343,13 +343,13 @@ class Roles(commands.Cog):
             microsecond=0,
             tzinfo=tzinfo,
         )
-        if date <= itx.created_at:
+        if date <= date1:
             date = date.replace(year=date.year + 1)
 
         image = await user.display_avatar.read()
-        if info := await db.find_one({"user": itx.user.id, "server": itx.guild_id}):
-            if not (event := itx.guild.get_scheduled_event(info["id"])):
-                event = await itx.guild.fetch_scheduled_event(info["id"])
+        if info := await db.find_one({"user": ctx.author.id, "server": ctx.guild.id}):
+            if not (event := ctx.guild.get_scheduled_event(info["id"])):
+                event = await ctx.guild.fetch_scheduled_event(info["id"])
 
             await event.edit(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
@@ -360,7 +360,7 @@ class Roles(commands.Cog):
             )
 
         else:
-            event = await itx.guild.create_scheduled_event(
+            event = await ctx.guild.create_scheduled_event(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
                 scheduled_time=date,
                 end_time=date + timedelta(days=1),
@@ -369,12 +369,12 @@ class Roles(commands.Cog):
 
             await db.replace_one(
                 {
-                    "user": itx.user.id,
-                    "server": itx.guild_id,
+                    "user": ctx.author.id,
+                    "server": ctx.guild.id,
                 },
                 {
-                    "user": itx.user.id,
-                    "server": itx.guild_id,
+                    "user": ctx.author.id,
+                    "server": ctx.guild.id,
                     "id": event.id,
                 },
                 upsert=True,
