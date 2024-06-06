@@ -520,7 +520,7 @@ class Movepool:
         movepool = cls()
         for item in movepool.__slots__:
             if value := kwargs.get(item):
-                movepool.assign(key=item, value=value)
+                movepool.assign(key=item, value=value, notify=True)
         return movepool
 
     def to_dict(self, allow_empty: bool = False, flatten_levels: bool = False):

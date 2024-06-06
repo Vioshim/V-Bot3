@@ -2398,5 +2398,29 @@
         "battle": "",
         "outside": "",
         "random_fact": ""
+    },
+    {
+        "id": "TERASHIFT",
+        "name": "Tera Shift",
+        "description": "Absorbs the energy around itself and transforms into its Terastal Form.",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
+    },
+    {
+        "id": "TERASHELL",
+        "name": "Tera Shell",
+        "description": "All damage-dealing moves that hit the Pokémon when its HP is full will not be very effective.",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
+    },
+    {
+        "id": "TERAFORMZERO",
+        "name": "Teraform Zero",
+        "description": "It uses its hidden powers to eliminate all effects of weather and terrain, reducing them to zero.",
+        "battle": "",
+        "outside": "",
+        "random_fact": ""
     }
 ]
