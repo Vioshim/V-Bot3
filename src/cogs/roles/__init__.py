@@ -394,6 +394,10 @@ class Roles(commands.Cog):
                 upsert=True,
             )
 
+        view = View()
+        view.add_item(Button(label="View Event", url=event.url))
+        await ctx.send(f"Your birthday has been set to {date.strftime('%B %d, %Y')}", ephemeral=True, view=view)
+
 
 async def setup(bot: CustomBot) -> None:
     """Default Cog loader
