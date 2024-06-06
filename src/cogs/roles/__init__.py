@@ -23,6 +23,7 @@ from discord import (
     AutoModRule,
     AutoModTrigger,
     Embed,
+    EntityType,
     EventStatus,
     ForumChannel,
     Guild,
@@ -357,6 +358,7 @@ class Roles(commands.Cog):
                 end_time=date + timedelta(days=1),
                 status=EventStatus.scheduled,
                 image=image,
+                location="Birthday",
             )
 
         else:
@@ -365,6 +367,7 @@ class Roles(commands.Cog):
                 start_time=date,
                 end_time=date + timedelta(days=1),
                 image=image,
+                location="Birthday",
             )
 
             await db.replace_one(
