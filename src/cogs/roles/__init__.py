@@ -336,14 +336,14 @@ class Roles(commands.Cog):
             offset = -offset
         tzinfo = timezone(offset=timedelta(hours=offset))
 
-        date = date1.replace(
+        date = date1.astimezone(tzinfo).replace(
             month=month.value,
             day=day,
             hour=0,
             minute=0,
             second=0,
             microsecond=0,
-        ).astimezone(tzinfo)
+        )
         if date <= date1:
             date = date.replace(year=date.year + 1)
 
