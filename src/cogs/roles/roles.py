@@ -468,7 +468,7 @@ class TimeConverter(commands.Converter[datetime], Transformer):
                 value,
                 settings={
                     "PREFER_DATES_FROM": "future",
-                    "TIMEZONE": timezone.utc,
+                    "TIMEZONE": str(timezone.utc),
                     "RELATIVE_BASE": current_date,
                 },
             ):
