@@ -444,7 +444,9 @@ class Pokedex(commands.Cog):
             def method(x: TypingEnum) -> float:
                 return type1.when_attacked_by(x, inverse=inverse)
 
-        for k, v in groupby(sorted(TypingEnum, key=method, reverse=True), key=method):
+        items = [x for x in TypingEnum if x not in (TypingEnum.Shadow, TypingEnum.Typeless)]
+        items.sort(key=method, reverse=True)
+        for k, v in groupby(items, key=method):
             if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):
                 embed.add_field(name=f"Damage {k}x", value=item)
 

@@ -523,7 +523,11 @@ class TypingEnum(Typing, Enum):
         return get(TypingEnum, **kwargs)
 
     @classmethod
-    def deduce(cls, item: str | TypingEnum, lang: str = "en-US") -> Optional[TypingEnum]:
+    async def convert(cls, ctx, argument: str):
+        return cls.deduce(argument)
+
+    @classmethod
+    def deduce(cls, item: str | TypingEnum) -> Optional[TypingEnum]:
         """This is a method that determines the Typing out of
         the existing entries, it has a 85% of precision.
 
@@ -545,13 +549,9 @@ class TypingEnum(Typing, Enum):
         name = fix(item).title()
         if data := TypingEnum.get(name=name):
             return data
-        if data := process.extractOne(
-            name,
-            TypingEnum,
-            processor=lambda x: getattr(x, "name", x),
-            score_cutoff=85,
-        ):
-            return data[0]
+        items = {x: x.name for x in TypingEnum}
+        if data := process.extractOne(name, items, score_cutoff=85):
+            return data[-1]
 
     @classmethod
     def deduce_many(cls, *elems: str | TypingEnum, lang: str = "en-US"):
