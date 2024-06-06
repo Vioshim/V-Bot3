@@ -331,18 +331,19 @@ class Roles(commands.Cog):
 
         date1, date2 = ctx.message.created_at, time
         ref = abs(date2 - date1).seconds
-        offset = min(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
+        offset = min(range(-48 * 1800, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
         if date1 > date2:
             offset = -offset
+        tzinfo = timezone(offset=timedelta(hours=offset))
 
-        date = date1.replace(
+        date = date1.astimezone(tzinfo).replace(
             month=month.value,
             day=day,
             hour=0,
             minute=0,
             second=0,
             microsecond=0,
-        ) + timedelta(hours=offset)
+        )
         if date <= date1:
             date = date.replace(year=date.year + 1)
 
@@ -361,7 +362,7 @@ class Roles(commands.Cog):
             await event.edit(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
                 start_time=date,
-                end_time=date + timedelta(days=1),
+                end_time=date.replace(hour=23, minute=59, second=59),
                 status=EventStatus.scheduled,
                 image=image,
                 entity_type=EntityType.external,
@@ -372,7 +373,7 @@ class Roles(commands.Cog):
             event = await ctx.guild.create_scheduled_event(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
                 start_time=date,
-                end_time=date + timedelta(days=1),
+                end_time=date.replace(hour=23, minute=59, second=59),
                 image=image,
                 entity_type=EntityType.external,
                 privacy_level=PrivacyLevel.guild_only,
