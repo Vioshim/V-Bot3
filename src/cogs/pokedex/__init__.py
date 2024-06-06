@@ -299,13 +299,7 @@ class Pokedex(commands.Cog):
             filters.append(lambda oc: name_pattern.search(oc.name))
         if flags.age:
             filters.append(lambda oc: oc.age == flags.age)
-        if isinstance(flags.location, ForumChannel):
-            filters.append(
-                lambda oc: (ch := guild.get_channel_or_thread(oc.location))
-                and (ch.parent if isinstance(ch, Thread) else ch) == flags.location
-            )
-        if isinstance(flags.location, Thread):
-            filters.append(lambda oc: oc.location == flags.location.id)
+
         if member_id := getattr(flags.member, "id", flags.member):
             filters.append(lambda oc: oc.author == member_id)
         else:

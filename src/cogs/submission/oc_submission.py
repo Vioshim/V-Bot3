@@ -1531,7 +1531,7 @@ class CreationOCView(Basic):
             await resp.defer(ephemeral=True, thinking=True)
             cog = itx.client.get_cog("Submission")
             word = "modified" if self.oc.id else "registered"
-            self.oc.location, self.oc.last_used = None, itx.id
+            self.oc.last_used = itx.id
             await cog.register_oc(self.oc)
             msg = await itx.followup.send(f"Character {self.oc.name} {word} without Issues!", ephemeral=True, wait=True)
             await msg.delete(delay=2)
@@ -1794,7 +1794,7 @@ class SubmissionView(Basic):
                     await msg.delete(delay=0)
                 itx.client.logger.info("%s is deleting %s characters", str(itx.user), len(choices))
 
-    @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
+    # @button(label="Check Map", emoji="\N{WORLD MAP}", row=3, custom_id="see-map")
     async def see_map(self, itx: Interaction[CustomBot], _: Button):
         db = itx.client.mongo_db("Characters")
         key = {"server": itx.guild_id}

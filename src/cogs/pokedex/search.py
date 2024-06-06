@@ -215,14 +215,6 @@ class SpeciesTransformer(commands.Converter[str], Transformer):
             oc_filters.append(lambda x: x.kind == kind)
             pk_filters.append(lambda x: isinstance(x, kind.value))
 
-        if location := ctx.namespace.location:
-
-            def foo2(oc: Character) -> bool:
-                ref = ch.parent_id if (ch := guild.get_thread(oc.location)) else oc.location
-                return oc.species and ref == location.id
-
-            oc_filters.append(foo2)
-
         if not (
             ocs := {
                 o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in oc_filters)
@@ -423,7 +415,6 @@ class GroupByArg(StrEnum):
     Pronoun = auto()
     Move = auto()
     Ability = auto()
-    Location = auto()
     Member = auto()
     HiddenPower = auto()
     Nature = auto()
@@ -443,9 +434,6 @@ class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
     fused1: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Fusion to look for")
     fused2: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Fusion to look for")
     member: Optional[Member | User] = commands.flag(default=None, description="Member to look for")
-    location: Optional[TextChannel | ForumChannel | Thread] = commands.flag(
-        default=None, description="Location to look for"
-    )
     backstory: Optional[str] = commands.flag(default=None, description="Backstory to look for")
     personality: Optional[str] = commands.flag(default=None, description="Personality to look for")
     extra: Optional[str] = commands.flag(default=None, description="Extra to look for")
@@ -669,29 +657,6 @@ class OCGroupByAbility(OCGroupBy[Ability]):
         return {k: frozenset(v) for k, v in data.items()}
 
 
-class OCGroupByLocation(OCGroupBy[ForumChannel | None]):
-    @staticmethod
-    def inner_parser(group: ForumChannel | None, elements: list[Character]):
-        if group is None:
-            return "Unknown", f"Total unassigned: {len(elements):02d} OCs."
-        return group.name, f"Explored by {len(elements):02d} OCs."
-
-    @classmethod
-    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
-        guild: Guild = ctx.guild
-
-        def foo(oc: Character):
-            if ch := guild.get_channel_or_thread(oc.location):
-                if isinstance(ch, Thread):
-                    ch = ch.parent
-                if isinstance(ch, ForumChannel):
-                    return ch
-
-        ocs = sorted(ocs, key=lambda x: o.id if (o := foo(x)) else 0)
-
-        return {k: frozenset(v) for k, v in groupby(ocs, key=foo)}
-
-
 class OCGroupByMember(OCGroupBy[Member]):
     @staticmethod
     def inner_parser(group: Member, elements: list[Character]):
@@ -794,7 +759,6 @@ class GroupBy(Enum):
     Pronoun = OCGroupByPronoun
     Move = OCGroupByMove
     Ability = OCGroupByAbility
-    Location = OCGroupByLocation
     Member = OCGroupByMember
     HiddenPower = OCGroupByHiddenPower
     Nature = OCGroupByNature

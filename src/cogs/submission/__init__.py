@@ -507,13 +507,6 @@ class Submission(commands.Cog):
         elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
             key, oc = ocs[0]
 
-        if oc.id:
-            db = self.bot.mongo_db("Characters")
-            await db.update_one(
-                {"id": oc.id, "server": oc.server},
-                {"$set": {"location": oc.location, "last_used": oc.last_used}},
-            )
-
         if not (
             info_channel := find(
                 lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"),
