@@ -15,7 +15,6 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import Enum
 from typing import Optional, TypedDict
 
@@ -46,7 +45,7 @@ from discord.ui import (
     button,
     select,
 )
-from discord.utils import MISSING, get, time_snowflake
+from discord.utils import MISSING, get
 from frozendict import frozendict
 from motor.motor_asyncio import AsyncIOMotorCollection
 
@@ -65,11 +64,13 @@ from src.structures.movepool import Movepool
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
+    CustomGMax,
     CustomMega,
     CustomParadox,
     CustomUltraBeast,
     Fakemon,
     Fusion,
+    GMax,
     Legendary,
     Mega,
     Mythical,
@@ -204,6 +205,7 @@ class Template(TemplateItem, Enum):
     Mythical = {"description": "Normal residents that resemble Mythical Pokemon."}
     UltraBeast = {"description": "Normal residents that resemble Ultra Beasts."}
     Paradox = {"description": "Normal residents that resemble Paradox Pokemon."}
+    GMax = {"description": "Normal residents that resemble Gigantamax Pokemon."}
     Mega = {
         "description": "Permanent Mega Evolutions.",
         "docs": {
@@ -261,6 +263,10 @@ class Template(TemplateItem, Enum):
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
             "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
         },
+    }
+    FakeGmax = {
+        "description": "Fan-made. Gigantamax evolved and kept stuck like this.",
+        "modifier": {"Species": ("Fakemon", "G-Max Species")},
     }
 
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
@@ -334,6 +340,10 @@ class Template(TemplateItem, Enum):
                 default_measure = not (isinstance(oc.species, CustomMega) and oc.species.base == choices[0])
                 oc.species = CustomMega(choices[0])
                 oc.abilities &= oc.species.abilities
+            case "FakeGmax":
+                default_measure = not (isinstance(oc.species, CustomGMax) and oc.species.base == choices[0])
+                oc.species = CustomGMax(choices[0])
+                oc.abilities &= oc.species.abilities
             case "Fakemon":
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
@@ -397,6 +407,8 @@ class Template(TemplateItem, Enum):
                 mon_total = Paradox.all()
             case "Mega":
                 mon_total = Mega.all()
+            case "GMax":
+                mon_total = GMax.all()
             case "FakeMega" | "Variant" | "FakeParadox":
                 mon_total = Species.all(exclude=(Mega, Paradox))
             case "FakeUltraBeast":
@@ -588,14 +600,17 @@ class SpeciesField(TemplateField, required=True):
         if species.banned:
             return f"{species.name} as species are banned."
 
+        if isinstance(species, CustomMega) and isinstance(species.base, Mega):
+            return f"{species.base.name} is already a mega evolution."
+
         if isinstance(species, CustomUltraBeast) and isinstance(species.base, UltraBeast):
             return f"{species.base.name} is already an ultra beast."
 
+        if isinstance(species, CustomGMax) and isinstance(species.base, GMax):
+            return f"{species.base.name} is already a G-Max pokemon."
+
         if isinstance(species, CustomParadox) and isinstance(species.base, Paradox):
             return f"{species.base.name} is already a paradox pokemon."
-
-        if isinstance(species, CustomMega) and isinstance(species.base, Mega):
-            return f"{species.base.name} is already a mega evolution."
 
         if isinstance(
             species,
@@ -604,11 +619,12 @@ class SpeciesField(TemplateField, required=True):
                 CustomMega,
                 CustomParadox,
                 CustomUltraBeast,
+                CustomGMax,
             ),
-        ) and isinstance(species.base, (Paradox, Mega)):
+        ) and isinstance(species.base, (Mega, GMax)):
             return f"{species.base.name} can't have variants."
 
-        if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
+        if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega, GMax)):
             return f"{species.species_evolves_from.name} can't custom evolve."
 
         if isinstance(species, Fusion) and len(species.bases) < 2:

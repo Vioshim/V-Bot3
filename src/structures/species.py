@@ -449,6 +449,11 @@ class Paradox(Species):
 
 
 @dataclass(unsafe_hash=True, slots=True)
+class GMax(Species):
+    "This class Represents a Gigantamax"
+
+
+@dataclass(unsafe_hash=True, slots=True)
 class Fakemon(Species):
     "This class Represents a fakemon"
     height: float = 1.0
@@ -557,6 +562,75 @@ class CustomMega(Species):
     def as_data(self):
         return {
             "mega": self.id,
+            "types": [x.name for x in self.types],
+        }
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomGMax(Species):
+    "This class Represents a Custom GMax"
+
+    base: Optional[Species] = None
+
+    def __init__(self, base: Species, types: frozenset[TypingEnum] = None):
+        if isinstance(base, str):
+            base = Species.single_deduce(base)
+
+        super(CustomGMax, self).__init__(
+            id=base.id,
+            name=base.name,
+            shape=base.shape,
+            height=base.height,
+            weight=base.weight,
+            HP=base.HP * 2 if base.HP != 1 else 1,
+            ATK=base.ATK,
+            DEF=base.DEF,
+            SPA=base.SPA,
+            SPD=base.SPD,
+            SPE=base.SPE,
+            types=types or base.types.copy(),
+            movepool=base.movepool,
+            abilities=base.abilities.copy(),
+            evolves_from=base.id,
+            base_image=base.base_image,
+            base_image_shiny=base.base_image_shiny,
+            female_image=base.female_image,
+            female_image_shiny=base.female_image_shiny,
+        )
+        self.base = base
+
+    @classmethod
+    def deduce(cls, item: str) -> Optional[CustomGMax]:
+        """Method deduce but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+
+        Returns
+        -------
+        Optional[CustomGMax]
+            Result
+        """
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
+            return cls(base=mon)
+
+    @classmethod
+    def from_ID(cls, item: str) -> Optional[CustomGMax]:
+        """Method from ID but filtered
+
+        Parameters
+        ----------
+        item : str
+            placeholder
+        """
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
+            return cls(base=mon)
+
+    def as_data(self):
+        return {
+            "gmax": self.id,
             "types": [x.name for x in self.types],
         }
 
