@@ -648,7 +648,7 @@ class SizeField(TemplateField):
         else:
             height_a = height_b = oc.species.height if oc.species else 1.0
 
-        if oc.size <= Size.Mini_XXXS.height_value(height_a):
+        if oc.size < Size.Mini_XXXS.height_value(height_a):
             return f"Min {Size.Mini_XXXS.height_info(height_a)}"
 
         if oc.size > Size.Alpha_XXXL.height_value(height_b):
