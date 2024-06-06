@@ -588,6 +588,15 @@ class SpeciesField(TemplateField, required=True):
         if species.banned:
             return f"{species.name} as species are banned."
 
+        if isinstance(species, CustomUltraBeast) and isinstance(species.base, UltraBeast):
+            return f"{species.base.name} is already an ultra beast."
+
+        if isinstance(species, CustomParadox) and isinstance(species.base, Paradox):
+            return f"{species.base.name} is already a paradox pokemon."
+
+        if isinstance(species, CustomMega) and isinstance(species.base, Mega):
+            return f"{species.base.name} is already a mega evolution."
+
         if isinstance(
             species,
             (
@@ -598,9 +607,6 @@ class SpeciesField(TemplateField, required=True):
             ),
         ) and isinstance(species.base, (Paradox, Mega)):
             return f"{species.base.name} can't have variants."
-
-        if isinstance(species, CustomUltraBeast) and isinstance(species.base, UltraBeast):
-            return f"{species.base.name} is already an ultra beast."
 
         if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega)):
             return f"{species.species_evolves_from.name} can't custom evolve."
