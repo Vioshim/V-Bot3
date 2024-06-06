@@ -205,16 +205,16 @@ class Template(TemplateItem, Enum):
     Mythical = {"description": "Normal residents that resemble Mythical Pokemon."}
     UltraBeast = {"description": "Normal residents that resemble Ultra Beasts."}
     Paradox = {"description": "Normal residents that resemble Paradox Pokemon."}
-    GMax = {"description": "Normal residents that resemble Gigantamax Pokemon."}
+    GMax = {"description": "Character's Gigantamax."}
     Mega = {
-        "description": "Permanent Mega Evolutions.",
+        "description": "Character's Mega Evolution.",
         "docs": {
             "Standard": "1QRlm692RM5lXBv3bx8YKdnkkeYqz8bYY9MLzR8ElX4s",
             "Unique Trait": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
         },
     }
     Fusion = {
-        "description": "Individuals that share traits of more than two species.",
+        "description": "Fan-made Fusion Pokemon.",
         "modifier": {"Species": ("Species", "Species 1, Species 2")},
         "exclude": [],
         "docs": {
@@ -223,7 +223,7 @@ class Template(TemplateItem, Enum):
         },
     }
     Variant = {
-        "description": "Fan-made. Species variations (movesets, types)",
+        "description": "Fan-made Variant Pokemon.",
         "modifier": {"Species": ("Variant", "Variant Species")},
         "docs": {
             "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
@@ -231,7 +231,7 @@ class Template(TemplateItem, Enum):
         },
     }
     Fakemon = {
-        "description": "Fan-made. They are normal residents.",
+        "description": "Fan-made Pokemon.",
         "modifier": {"Species": ("Fakemon", "Fakemon Species")},
         "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
@@ -241,7 +241,7 @@ class Template(TemplateItem, Enum):
         },
     }
     FakeMega = {
-        "description": "Fan-made. Mega evolved and kept stuck like this.",
+        "description": "Fan-made Character's Mega.",
         "modifier": {"Species": ("Fakemon", "Mega Species")},
         "docs": {
             "Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0",
@@ -249,7 +249,7 @@ class Template(TemplateItem, Enum):
         },
     }
     FakeParadox = {
-        "description": "Fan-made. From distant past/future, somehow ended up here.",
+        "description": "Fan-made Paradox Pokemon.",
         "modifier": {"Species": ("Fakemon", "Paradox Species")},
         "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
@@ -257,7 +257,7 @@ class Template(TemplateItem, Enum):
         },
     }
     FakeUltraBeast = {
-        "description": "Fan-made. From other dimensions, somehow ended up here.",
+        "description": "Fan-made Ultra Beast.",
         "modifier": {"Species": ("Fakemon", "Ultra Beast Species")},
         "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
@@ -265,8 +265,12 @@ class Template(TemplateItem, Enum):
         },
     }
     FakeGMax = {
-        "description": "Fan-made. Gigantamax evolved and kept stuck like this.",
+        "description": "Fan-made Character's Gigantamax.",
         "modifier": {"Species": ("Fakemon", "G-Max Species")},
+    }
+    FakeTera = {
+        "description": "Fan-made Character's Terastal.",
+        "modifier": {"Species": ("Fakemon", "Tera Species")},
     }
 
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
