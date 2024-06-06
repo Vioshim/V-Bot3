@@ -330,20 +330,12 @@ class Roles(commands.Cog):
         user: Member = self.bot.supporting.get(ctx.author, ctx.author)
 
         date1, date2 = ctx.message.created_at, time
-        ref = abs(date2 - date1).seconds
-        offset = min(range(-48 * 1800, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref)) / 3600
-        if date1 > date2:
-            offset = -offset
-        tzinfo = timezone(offset=timedelta(hours=offset))
+        diff_seconds = (date2 - date1).total_seconds()
+        closest_half_hour = round(diff_seconds / 1800) * 1800
+        offset = closest_half_hour / 3600
+        tzinfo = timezone(offset=timedelta(hours=offset % 12))
+        date = date1.replace(month=month, day=day, tzinfo=tzinfo, hour=0, minute=0, second=0, microsecond=0)
 
-        date = date1.astimezone(tzinfo).replace(
-            month=month.value,
-            day=day,
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=1,
-        )
         if date <= date1:
             date = date.replace(year=date.year + 1)
 

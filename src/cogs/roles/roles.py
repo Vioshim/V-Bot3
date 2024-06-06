@@ -489,7 +489,7 @@ class TimeConverter(commands.Converter[datetime], Transformer):
         if value and (date := await self._parse_date(itx.created_at, value)):
             date1, date2 = itx.message.created_at, date
             ref = abs(date2 - date1).seconds
-            it = sorted(range(0, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref))
+            it = sorted(range(-48 * 1800, 48 * 1800 + 1, 1800), key=lambda x: abs(x - ref))
             dates = [
                 date1.replace(
                     hour=(date1.hour + x // 3600) % 24,
