@@ -402,6 +402,7 @@ class Pokedex(commands.Cog):
         ctx: commands.Context[CustomBot],
         type1: TypingEnum,
         type2: Optional[TypingEnum],
+        type3: Optional[TypingEnum],
         mode: Literal["Attacking", "Defending"] = "Defending",
         inverse: bool = False,
     ):
@@ -415,6 +416,8 @@ class Pokedex(commands.Cog):
             Type 1
         type2 : Optional[TypingArg]
             Type 2
+        type3 : Optional[TypingArg]
+            Type 3
         mode : str
             Method to calculate
         inverse : bool
@@ -422,6 +425,9 @@ class Pokedex(commands.Cog):
         """
         if type2:
             type1 += type2
+
+        if type3:
+            type1 += type3
 
         embed = Embed(title=f"{type1.name} when {mode}", color=type1.color)
         if inverse:
