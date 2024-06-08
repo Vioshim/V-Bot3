@@ -668,7 +668,10 @@ class SizeField(TemplateField):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
-            height_a = height_b = oc.species.height if oc.species else 1.0
+            height = 0
+            if oc.species and not isinstance(oc.species, Fakemon):
+                height = oc.species.height
+            height_a = height_b = height
 
         if oc.size < Size.Mini_XXXS.height_value(height_a):
             return f"Min {Size.Mini_XXXS.height_info(height_a)}"
@@ -713,7 +716,10 @@ class WeightField(TemplateField):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
             weight_a, weight_b = s_a.weight, s_b.weight
         else:
-            weight_a = weight_b = oc.species.weight
+            weight = 0
+            if oc.species and not isinstance(oc.species, Fakemon):
+                weight = oc.species.weight
+            weight_a = weight_b = weight
 
         if oc.weight < Size.Mini_XXXS.weight_value(weight_a):
             return f"Min {Size.Mini_XXXS.weight_info(weight_a)}"
