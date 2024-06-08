@@ -212,25 +212,25 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    Alpha_XXXL = 15
-    Alpha_XXL = 14
-    Alpha_XL = 13.5
-    Alpha_L = 13
-    Alpha = 12.5
-    XXXL = 12
-    XXL = 11.5
-    XL = 11
-    L = 10.5
-    M = 10
-    S = 9.5
-    XS = 9
-    XXS = 8.5
-    XXXS = 8
-    Mini = 7.5
-    Mini_S = 7
-    Mini_XS = 6.5
-    Mini_XXS = 6
-    Mini_XXXS = 5
+    Alpha_XXXL = 1.50
+    Alpha_XXL = 1.40
+    Alpha_XL = 1.35
+    Alpha_L = 1.30
+    Alpha = 1.25
+    XXXL = 1.20
+    XXL = 1.15
+    XL = 1.10
+    L = 1.50
+    M = 1.00
+    S = 0.95
+    XS = 0.90
+    XXS = 0.85
+    XXXS = 0.80
+    Mini = 0.75
+    Mini_S = 0.70
+    Mini_XS = 0.65
+    Mini_XXS = 0.60
+    Mini_XXXS = 0.50
 
     @property
     def emoji(self):
@@ -249,17 +249,13 @@ class Size(float, Enum):
 
     def height_value(self, value: float = 0):
         if value:
-            value *= self.value / 10
-        else:
-            value = self.value / 5
-        return round(value, 2)
+            return round(value * self, 2)
+        return round(0.825 * self.value**2, 2)
 
     def weight_value(self, value: float = 0):
         if value:
-            value *= self.value / 10
-        else:
-            value = self.value * 5
-        return round(value, 2)
+            return round(value * self.value, 2)
+        return round(10 * ((self.value - 0.25) / 0.6) ** 3, 2)
 
     @staticmethod
     def meters_to_ft_inches(value: float = 0):
