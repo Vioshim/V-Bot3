@@ -285,6 +285,7 @@ class Pokedex(commands.Cog):
         ctx : Context[CustomBot]
             Context[CustomBot]
         """
+        await ctx.defer(ephemeral=True)
         text: str = ""
         guild: Guild = ctx.guild
         embed = Embed(title="Select the Character", url=PLACEHOLDER, color=ctx.author.color)

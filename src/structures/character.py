@@ -212,25 +212,25 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    Alpha_XXXL = 20
-    Alpha_XXL = 19
-    Alpha_XL = 18
-    Alpha_L = 17
-    Alpha = 16
-    XXXL = 14
-    XXL = 13
-    XL = 12
-    L = 11
+    Alpha_XXXL = 15
+    Alpha_XXL = 14
+    Alpha_XL = 13.5
+    Alpha_L = 13
+    Alpha = 12.5
+    XXXL = 12
+    XXL = 11.5
+    XL = 11
+    L = 10.5
     M = 10
-    S = 9
-    XS = 8
-    XXS = 7
-    XXXS = 6
-    Mini = 5
-    Mini_S = 4
-    Mini_XS = 3
-    Mini_XXS = 2
-    Mini_XXXS = 1
+    S = 9.5
+    XS = 9
+    XXS = 8.5
+    XXXS = 8
+    Mini = 7.5
+    Mini_S = 7
+    Mini_XS = 6.5
+    Mini_XXS = 6
+    Mini_XXXS = 5
 
     @property
     def emoji(self):
