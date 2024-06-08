@@ -216,7 +216,10 @@ class HeightView(Basic):
         else:
             self.remove_item(self.reference)
 
-        height = self.species.height if self.species else 0
+        height = 0
+        if self.species and not isinstance(self.species, Fakemon):
+            height = self.species.height
+
         if isinstance(self.oc.size, Size):
             info = self.oc.size.height_info(height)
         else:
@@ -300,7 +303,9 @@ class WeightView(Basic):
         else:
             self.remove_item(self.reference)
 
-        weight = self.species.weight if self.species else 0
+        weight = 0
+        if self.species and not isinstance(self.species, Fakemon):
+            weight = self.species.weight
 
         if isinstance(self.oc.weight, Size):
             info = self.oc.weight.height_info(weight)
