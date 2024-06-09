@@ -843,15 +843,7 @@ class Submission(commands.Cog):
 
         if message.channel.id == item.get("oc_submission"):
             await self.on_message_submission(message)
-        elif (
-            (
-                message.channel.category_id not in item.get("no_thread_categories", [])
-                if hasattr(message.channel, "category_id")
-                else True
-            )
-            and not message.channel.name.endswith(" Logs")
-            and not message.webhook_id
-        ):
+        elif not (message.channel.flags.pinned or message.webhook_id):
             if message.application_id and message.application_id != self.bot.user.id:
                 self.bot.msg_cache_add(message)
                 await message.delete(delay=3)
