@@ -35,6 +35,7 @@ from discord import (
     Member,
     Message,
     NotFound,
+    Object,
     PartialMessage,
     TextChannel,
     Thread,
@@ -327,6 +328,9 @@ class CustomBot(Bot):
         """
         if webhook := self.webhook_lazy(channel):
             return webhook
+
+        if isinstance(channel, Object):
+            channel = channel.id
 
         if isinstance(channel, int):
             aux = self.get_channel(channel)

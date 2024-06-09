@@ -859,8 +859,9 @@ class Submission(commands.Cog):
         content: str = payload.data.get("content", "")
         db = self.bot.mongo_db("RP Logs")
         if item := await db.find_one({"id": payload.message_id, "channel": payload.channel_id}):
-            w = await self.bot.webhook(item["log-channel"])
-            await w.edit_message(item["log"], content=content)
+            log_channel = Object(id=item["log-channel"])
+            w = await self.bot.webhook(log_channel.id)
+            await w.edit_message(item["log"], content=content, thread=log_channel)
 
     @commands.Cog.listener()
     async def on_message_edit(self, previous: Message, message: Message):
@@ -894,8 +895,9 @@ class Submission(commands.Cog):
             and not message.channel.name.endswith("OOC")
         ):
             if item := await db.find_one({"id": message.id, "channel": message.channel.id}):
-                w = await self.bot.webhook(item["log-channel"])
-                await w.edit_message(item["log"], content=message.content)
+                log_channel = Object(id=item["log-channel"])
+                w = await self.bot.webhook(log_channel.id)
+                await w.edit_message(item["log"], content=message.content, thread=log_channel)
             elif not message.webhook_id:
                 await self.on_message_proxy(message)
 
@@ -961,10 +963,8 @@ class Submission(commands.Cog):
         proxy_db = self.bot.mongo_db("Tupper-logs")
         if item := await log_db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
             guild = self.bot.get_guild(payload.guild_id)
-            if not (log_channel := guild.get_channel_or_thread(item["log-channel"])):
-                log_channel = await guild.fetch_channel(item["log-channel"])
-
-            w = await self.bot.webhook(log_channel)
+            log_channel = Object(id=item["log-channel"])
+            w = await self.bot.webhook(log_channel.id)
             await proxy_db.delete_one({"channel": log_channel.id, "id": item["log"]})
             with suppress(DiscordException):
                 await w.delete_message(item["log"], thread=log_channel)
