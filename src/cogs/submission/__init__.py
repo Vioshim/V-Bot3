@@ -839,7 +839,7 @@ class Submission(commands.Cog):
             await self.on_message_submission(message)
         elif (
             (
-                message.channel.category_id in item.get("no_thread_categories", [])
+                message.channel.category_id not in item.get("no_thread_categories", [])
                 if hasattr(message.channel, "category_id")
                 else True
             )
