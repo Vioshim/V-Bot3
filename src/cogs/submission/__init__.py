@@ -578,7 +578,7 @@ class Submission(commands.Cog):
                 content=paragraph,
                 username=safe_username(message.author.display_name),
                 avatar_url=message.author.display_avatar.url,
-                thread=channel,
+                thread=info_channel,
                 files=[await x.to_file() for x in message.attachments],
                 allowed_mentions=AllowedMentions.none(),
                 view=view if len(text) == index + 1 else MISSING,
