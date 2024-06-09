@@ -514,8 +514,7 @@ class Submission(commands.Cog):
         log_w = await self.bot.webhook(info_channel)
 
         view = View()
-        name, emoji = name_emoji_from_channel(message.channel)
-        view.add_item(Button(label=name, url=message.jump_url, emoji=emoji))
+        view.add_item(Button(label=message.channel.name, url=message.jump_url, emoji=info_channel.name[0]))
         if oc_jump_url := oc.jump_url:
             view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.emoji))
         else:
