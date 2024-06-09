@@ -960,11 +960,14 @@ class Submission(commands.Cog):
         log_db = self.bot.mongo_db("RP Logs")
         proxy_db = self.bot.mongo_db("Tupper-logs")
         if item := await log_db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
-            log_channel = self.bot.get_channel(item["log-channel"])
+            guild = self.bot.get_guild(payload.guild_id)
+            if not (log_channel := guild.get_channel_or_thread(item["log-channel"])):
+                log_channel = await guild.fetch_channel(item["log-channel"])
+
             w = await self.bot.webhook(log_channel)
             await proxy_db.delete_one({"channel": log_channel.id, "id": item["log"]})
             with suppress(DiscordException):
-                await w.delete_message(item["log"])
+                await w.delete_message(item["log"], thread=log_channel)
 
     @app_commands.command(name="ocs")
     @app_commands.guilds(952518750748438549, 1196879060173852702)
