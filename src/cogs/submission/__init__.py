@@ -490,7 +490,14 @@ class Submission(commands.Cog):
         kwargs: Optional[Character | dict[str, Character]] = None,
     ):
         channel: Thread = message.channel  # type: ignore
-        parent: ForumChannel = channel.parent  # type: ignore
+        parent = channel.parent  # type: ignore
+
+        if not parent:
+            parent = await self.bot.fetch_channel(channel.parent_id)
+
+        if not isinstance(parent, ForumChannel):
+            return
+
         author = message.author.name.title()
         db = self.bot.mongo_db("RP Logs")
         db2 = self.bot.mongo_db("Tupper-logs")
@@ -508,7 +515,7 @@ class Submission(commands.Cog):
         elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
             key, oc = ocs[0]
 
-        if not (info_channel := find(lambda x: x.name.endswith(" Logs"), parent.threads)):
+        if not (info_channel := find(lambda x: x.flags.pinned, parent.threads)):
             return
 
         log_w = await self.bot.webhook(info_channel)
@@ -848,7 +855,7 @@ class Submission(commands.Cog):
             if message.application_id and message.application_id != self.bot.user.id:
                 self.bot.msg_cache_add(message)
                 await message.delete(delay=3)
-            elif isinstance(message.channel, Thread) and isinstance(message.channel.parent, ForumChannel):
+            elif isinstance(message.channel, Thread):
                 await self.on_message_proxy(message)
 
     @commands.Cog.listener()
