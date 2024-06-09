@@ -843,9 +843,6 @@ class Submission(commands.Cog):
 
         if message.channel.id == item.get("oc_submission"):
             await self.on_message_submission(message)
-        elif message.application_id and message.application_id != self.bot.user.id:
-            self.bot.msg_cache_add(message)
-            await message.delete(delay=3)
         elif isinstance(message.channel, Thread) and not (message.channel.flags.pinned or message.webhook_id):
             await self.on_message_proxy(message)
 
