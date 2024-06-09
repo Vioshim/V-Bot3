@@ -878,7 +878,6 @@ class Submission(commands.Cog):
             return
 
         db = self.bot.mongo_db("RP Logs")
-
         if not (info := self.data_db.get(message.guild.id)):
             db1 = self.bot.mongo_db("Server")
             info = await db1.find_one(
@@ -891,8 +890,9 @@ class Submission(commands.Cog):
             await self.on_message_submission(message)
         elif (
             isinstance(message.channel, Thread)
-            and message.channel.category_id in info.get("no_thread_categories", [])
-            and not message.channel.name.endswith("OOC")
+            and isinstance(message.channel.parent, ForumChannel)
+            and message.channel.category_id not in info.get("no_thread_categories", [])
+            and not message.channel.name.endswith(" Logs")
         ):
             if item := await db.find_one({"id": message.id, "channel": message.channel.id}):
                 log_channel = Object(id=item["log-channel"])
@@ -962,7 +962,6 @@ class Submission(commands.Cog):
         log_db = self.bot.mongo_db("RP Logs")
         proxy_db = self.bot.mongo_db("Tupper-logs")
         if item := await log_db.find_one_and_delete({"id": payload.message_id, "channel": payload.channel_id}):
-            guild = self.bot.get_guild(payload.guild_id)
             log_channel = Object(id=item["log-channel"])
             w = await self.bot.webhook(log_channel.id)
             await proxy_db.delete_one({"channel": log_channel.id, "id": item["log"]})
