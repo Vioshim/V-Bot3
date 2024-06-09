@@ -489,7 +489,8 @@ class Submission(commands.Cog):
         user: Member,
         kwargs: Optional[Character | dict[str, Character]] = None,
     ):
-        channel = message.channel
+        channel: Thread = message.channel  # type: ignore
+        parent: ForumChannel = channel.parent  # type: ignore
         author = message.author.name.title()
         db = self.bot.mongo_db("RP Logs")
         db2 = self.bot.mongo_db("Tupper-logs")
@@ -507,12 +508,7 @@ class Submission(commands.Cog):
         elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
             key, oc = ocs[0]
 
-        if not (
-            info_channel := find(
-                lambda x: isinstance(x, TextChannel) and x.name.endswith("-logs"),
-                channel.category.channels,
-            )
-        ):
+        if not (info_channel := find(lambda x: x.name.endswith(" Logs"), parent.threads)):
             return
 
         log_w = await self.bot.webhook(info_channel)
@@ -549,17 +545,18 @@ class Submission(commands.Cog):
                     channel_id, message_id = map(int, btn.url.split("/")[-2:])
                     phrase = btn.label or phrase
 
-        size = 60 if EMOJI_MATCHER.match(content) else 44
-        for item in EMOJI_REGEX.finditer(content):
-            match item.groupdict():
-                case {"animated": "a", "name": name, "id": id}:
-                    if id.isdigit() and not self.bot.get_emoji(int(id)):
-                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?{size=})"
-                        content = EMOJI_REGEX.sub(url, content)
-                case {"name": name, "id": id}:
-                    if id.isdigit() and not self.bot.get_emoji(int(id)):
-                        url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?{size=})"
-                        content = EMOJI_REGEX.sub(url, content)
+        if log_w.user == self.bot.user:
+            size = 60 if EMOJI_MATCHER.match(content) else 44
+            for item in EMOJI_REGEX.finditer(content):
+                match item.groupdict():
+                    case {"animated": "a", "name": name, "id": id}:
+                        if id.isdigit() and not self.bot.get_emoji(int(id)):
+                            url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.gif?{size=})"
+                            content = EMOJI_REGEX.sub(url, content)
+                    case {"name": name, "id": id}:
+                        if id.isdigit() and not self.bot.get_emoji(int(id)):
+                            url = f"[{name}](https://cdn.discordapp.com/emojis/{id}.webp?{size=})"
+                            content = EMOJI_REGEX.sub(url, content)
 
         if channel_id and message_id:
             if item := await db.find_one({"id": message_id, "channel": channel_id}):
@@ -581,6 +578,7 @@ class Submission(commands.Cog):
                 content=paragraph,
                 username=safe_username(message.author.display_name),
                 avatar_url=message.author.display_avatar.url,
+                thread=channel,
                 files=[await x.to_file() for x in message.attachments],
                 allowed_mentions=AllowedMentions.none(),
                 view=view if len(text) == index + 1 else MISSING,
@@ -845,13 +843,13 @@ class Submission(commands.Cog):
                 if hasattr(message.channel, "category_id")
                 else True
             )
-            and not message.channel.name.endswith("OOC")
+            and not message.channel.name.endswith(" Logs")
             and not message.webhook_id
         ):
             if message.application_id and message.application_id != self.bot.user.id:
                 self.bot.msg_cache_add(message)
                 await message.delete(delay=3)
-            else:
+            elif isinstance(message.channel, Thread) and isinstance(message.channel.parent, ForumChannel):
                 await self.on_message_proxy(message)
 
     @commands.Cog.listener()
