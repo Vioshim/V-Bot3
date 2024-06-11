@@ -1174,7 +1174,7 @@ class Submission(commands.Cog):
         file = File(buf, filename="plot.png")
         await ctx.reply(file=file, ephemeral=True, embed=embed)
 
-    @commands.command(aliases=["close", "end"])
+    @commands.command(aliases=["close", "end", "finish"])
     async def free(self, ctx: commands.Context[CustomBot]):
         embed = Embed(
             title="Channel is free",
