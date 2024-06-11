@@ -14,12 +14,11 @@
 
 
 import base64
-import math
 import os
 from io import BytesIO
 from typing import Optional
 
-from discord import Attachment, File, app_commands
+from discord import Attachment, File, Message, app_commands
 from discord.ext import commands
 from novelai import (
     Action,
@@ -126,11 +125,20 @@ class AiCog(commands.Cog):
         """Generate images using the AI"""
         async with ctx.typing(ephemeral=False):
 
-            if not flags.image and not flags.mask and ctx.message.attachments:
-                try:
-                    flags.image, flags.mask, *_ = ctx.message.attachments
-                except ValueError:
-                    flags.image, flags.mask = ctx.message.attachments[0], None
+            if not flags.image and not flags.mask:
+                if ctx.message.attachments:
+                    try:
+                        flags.image, flags.mask, *_ = ctx.message.attachments
+                    except ValueError:
+                        flags.image, flags.mask = ctx.message.attachments[0], None
+                elif ctx.message.reference:
+                    if not isinstance(message := ctx.message.reference.resolved, Message):
+                        message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+                    if message.attachments:
+                        try:
+                            flags.image, flags.mask, *_ = ctx.message.reference.resolved.attachments
+                        except ValueError:
+                            flags.image, flags.mask = ctx.message.reference.resolved.attachments[0], None
 
             if flags.image is None:
                 payload = Metadata(
