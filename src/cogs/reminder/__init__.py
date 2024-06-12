@@ -37,28 +37,7 @@ from src.utils.etc import WHITE_BAR
 
 class ReminderFlags(commands.FlagConverter, prefix="--", delimiter=" "):
     message: str = commands.flag(positional=True, description="Message to remind")
-    due: Literal[
-        "1 minute",
-        "5 minutes",
-        "10 minutes",
-        "15 minutes",
-        "30 minutes",
-        "1 hour",
-        "2 hours",
-        "3 hours",
-        "6 hours",
-        "12 hours",
-        "1 day",
-        "2 days",
-        "3 days",
-        "1 week",
-        "2 weeks",
-        "1 month",
-        "2 months",
-        "3 months",
-        "6 months",
-        "1 year",
-    ] = commands.flag(description="Time until notification")
+    due: str = commands.flag(description="Time until notification")
 
 
 class ReminderPayload(TypedDict):
@@ -141,9 +120,12 @@ class Reminder(commands.Cog):
         itx : Interaction[CustomBot]
             Interaction[CustomBot]
         """
-
         remind = self.bot.mongo_db("Reminder")
-        due = itx.created_at + parse(flags.due, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+
+        try:
+            due = itx.created_at + parse(flags.due, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+        except Exception:
+            return await itx.response.send_message("Invalid date format.", ephemeral=True)
 
         if due <= itx.created_at:
             return await itx.response.send_message("Invalid date, only future dates can be used.", ephemeral=True)
