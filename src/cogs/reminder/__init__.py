@@ -37,11 +37,6 @@ from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
 
-class ReminderFlags(commands.FlagConverter, prefix="--", delimiter=" "):
-    message: str = commands.flag(positional=True, description="Message to remind")
-    due: str = commands.flag(description="Time until notification")
-
-
 class ReminderPayload(TypedDict):
     _id: ObjectId
     author: int
@@ -114,22 +109,31 @@ class Reminder(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def remind(self, itx: Interaction[CustomBot], *, flags: ReminderFlags):
+    async def remind(
+        self,
+        itx: Interaction[CustomBot],
+        text: str,
+        due: str,
+    ):
         """Fennekin Reminder System
 
         Parameters
         ----------
         itx : Interaction[CustomBot]
             Interaction[CustomBot]
+        text: str
+            Message to remind
+        due: str
+            Time until notification, e.g. "in 5 hours", "tomorrow at 3pm", "next week", etc.
         """
         remind = self.bot.mongo_db("Reminder")
 
         try:
-            due = itx.created_at + parse(flags.due, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+            until = itx.created_at + parse(due, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
         except Exception:
             return await itx.response.send_message("Invalid date format.", ephemeral=True)
 
-        if due <= itx.created_at:
+        if until <= itx.created_at:
             return await itx.response.send_message("Invalid date, only future dates can be used.", ephemeral=True)
 
         if isinstance(itx.channel, Thread):
@@ -141,15 +145,15 @@ class Reminder(commands.Cog):
             "author": itx.user.id,
             "channel": channel_id,
             "thread": thread_id,
-            "message": flags.message,
-            "due": due,
+            "message": text,
+            "due": until,
         }
         result = await remind.insert_one(params)
         params["_id"] = result.inserted_id
         await itx.response.send_message("Reminder has been created successfully.!", ephemeral=True)
         await self.bot.scheduler.add_schedule(
             self.remind_action,
-            trigger=DateTrigger(due),
+            trigger=DateTrigger(until),
             id=f"reminder-{result.inserted_id}",
             args=(params,),
         )
