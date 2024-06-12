@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Literal, Optional, TypedDict
+from typing import Optional, TypedDict
 
 from apscheduler.triggers.date import DateTrigger
 from bson import ObjectId
