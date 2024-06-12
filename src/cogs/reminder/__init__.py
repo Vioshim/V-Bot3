@@ -62,59 +62,38 @@ class Reminder(commands.Cog):
 
     async def remind_action(self, payload: ReminderPayload):
         remind = self.bot.mongo_db("Reminder")
-        tupper_log = self.bot.mongo_db("Tupper-logs")
 
-        author_id, channel_id, thread_id, text, due = (
+        author_id, channel_id, text, due = (
             payload["author"],
             payload["channel"],
-            payload["thread"],
             payload["message"],
             payload["due"],
         )
 
         embed = Embed(title="Reminder!", color=Color.blurple(), timestamp=due)
         embed.set_image(url=WHITE_BAR)
+        embed.set_thumbnail(url="https://hmp.me/dx4e")
 
         if not (channel := self.bot.get_channel(channel_id)):
             channel = await self.bot.fetch_channel(channel_id)
 
-        thread = Object(id=thread_id) if thread_id else MISSING
-
-        webhook = await self.bot.webhook(channel)
         embed.description = text
-        msg = await webhook.send(
+        await channel.send(
             content=f"<@{author_id}>",
-            username="Fennekin Reminder",
-            avatar_url="https://hmp.me/dx4e",
             embed=embed,
-            thread=thread,
             allowed_mentions=AllowedMentions(users=True),
-            wait=True,
-        )
-        await tupper_log.insert_one(
-            {
-                "channel": msg.channel.id,
-                "id": msg.id,
-                "author": author_id,
-            }
         )
         await remind.delete_one(
             {
                 "author": author_id,
                 "channel": channel_id,
-                "thread": thread_id,
                 "message": text,
             }
         )
 
     @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def remind(
-        self,
-        itx: Interaction[CustomBot],
-        text: str,
-        due: str,
-    ):
+    async def remind(self, itx: Interaction[CustomBot], text: str, due: str):
         """Fennekin Reminder System
 
         Parameters
@@ -139,15 +118,9 @@ class Reminder(commands.Cog):
         if not until or until <= itx.created_at:
             return await itx.response.send_message("Invalid date, only future dates can be used.", ephemeral=True)
 
-        if isinstance(itx.channel, Thread):
-            channel_id, thread_id = itx.channel.parent_id, itx.channel.id
-        else:
-            channel_id, thread_id = itx.channel_id, None
-
         params = {
             "author": itx.user.id,
-            "channel": channel_id,
-            "thread": thread_id,
+            "channel": itx.channel_id,
             "message": text,
             "due": until,
         }
