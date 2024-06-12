@@ -515,13 +515,13 @@ class Submission(commands.Cog):
         elif ocs := [(k, v) for k, v in kwargs.items() if k in author or author in k]:
             key, oc = ocs[0]
 
-        if not (info_channel := find(lambda x: x.flags.pinned, parent.threads)):
+        if not (info_channel := find(lambda x: x.flags.pinned and x.name.endswith(" Logs"), parent.threads)):
             return
 
         log_w = await self.bot.webhook(info_channel)
 
         view = View()
-        view.add_item(Button(label=message.channel.name, url=message.jump_url, emoji=info_channel.name[0]))
+        view.add_item(Button(label=message.channel.name, url=message.jump_url, emoji=message.channel.name[0]))
         if oc_jump_url := oc.jump_url:
             view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.emoji))
         else:
