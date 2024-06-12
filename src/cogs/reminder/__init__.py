@@ -129,7 +129,7 @@ class Reminder(commands.Cog):
         remind = self.bot.mongo_db("Reminder")
 
         try:
-            until = parse(due, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+            until = parse(due, settings=dict(PREFER_DATES_FROM="future", RELATIVE_BASE=itx.created_at))
         except Exception:
             return await itx.response.send_message("Invalid date format.", ephemeral=True)
 
