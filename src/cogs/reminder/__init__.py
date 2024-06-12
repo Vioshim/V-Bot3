@@ -130,6 +130,9 @@ class Reminder(commands.Cog):
 
         try:
             until = parse(due, settings=dict(PREFER_DATES_FROM="future", RELATIVE_BASE=itx.created_at))
+            if not until:
+                raise Exception
+            until = until.astimezone(itx.created_at.tzinfo)
         except Exception:
             return await itx.response.send_message("Invalid date format.", ephemeral=True)
 
