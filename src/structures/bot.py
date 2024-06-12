@@ -111,6 +111,7 @@ class CustomBot(Bot):
 
     async def setup_hook(self) -> None:
         await self.load_extension("jishaku")
+        await self.scheduler.start_in_background()
         path = Path("src/cogs")
         for cog in map(PurePath, path.glob("*/__init__.py")):
             route = ".".join(cog.parts[:-1])
