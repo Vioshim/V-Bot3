@@ -13,162 +13,162 @@
 # limitations under the License.
 
 
-from contextlib import suppress
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime
+from typing import Literal, Optional, TypedDict
 
+from apscheduler.triggers.date import DateTrigger
+from bson import ObjectId
 from dateparser import parse
 from discord import (
     AllowedMentions,
     Color,
-    DiscordException,
     Embed,
     Interaction,
     Object,
-    TextStyle,
     Thread,
     app_commands,
 )
 from discord.ext import commands
-from discord.ext.tasks import loop
-from discord.ui import Modal, TextInput
-from discord.utils import MISSING, utcnow
+from discord.utils import MISSING
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
 
 
-class ReminderModal(Modal, title="Reminder"):
-    due = TextInput(
-        label="Due (When should I notify you?)",
-        placeholder="In 1 hour",
-    )
-    message = TextInput(
-        label="Message",
-        style=TextStyle.paragraph,
-        placeholder="This is what I'll be reminding you of.",
-    )
+class ReminderFlags(commands.FlagConverter, prefix="--", delimiter=" "):
+    message: str = commands.flag(positional=True, description="Message to remind")
+    due: Literal[
+        "1 minute",
+        "5 minutes",
+        "10 minutes",
+        "15 minutes",
+        "30 minutes",
+        "1 hour",
+        "2 hours",
+        "3 hours",
+        "6 hours",
+        "12 hours",
+        "1 day",
+        "2 days",
+        "3 days",
+        "1 week",
+        "2 weeks",
+        "1 month",
+        "2 months",
+        "3 months",
+        "6 months",
+        "1 year",
+    ] = commands.flag(description="Time until notification")
 
-    async def on_error(self, interaction: Interaction[CustomBot], error: Exception, /) -> None:
-        interaction.client.logger.error("Ignoring exception in modal %r:", self, exc_info=error)
 
-    @classmethod
-    async def send(cls, interaction: Interaction[CustomBot], date: Optional[str], message: str):
-        bot: CustomBot = interaction.client
-        embed = Embed(title="Reminder Command", color=Color.blurple())
-        embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon)
-        date: datetime = parse(date or "", settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
-        if not date or date.astimezone(timezone.utc) <= interaction.created_at:
-            embed.description = "Invalid date, unable to identify. Only future dates can be used."
-        else:
-            embed.timestamp = date
-            embed.description = "Reminder has been created successfully.!"
-            channel, thread = interaction.channel, None
-            if isinstance(channel, Thread):
-                thread = channel.id
-                channel = channel.parent
-            await bot.mongo_db("Reminder").insert_one(
-                {
-                    "author": interaction.user.id,
-                    "channel": channel.id,
-                    "thread": thread,
-                    "message": message,
-                    "due": date,
-                }
-            )
-        await interaction.followup.send(embed=embed, ephemeral=True)
-
-    async def on_submit(self, interaction: Interaction[CustomBot]) -> None:
-        await interaction.response.defer(ephemeral=True, thinking=True)
-        await self.send(interaction, self.due.value, self.message.value)
-        self.stop()
+class ReminderPayload(TypedDict):
+    _id: ObjectId
+    author: int
+    channel: int
+    thread: Optional[int]
+    message: str
+    due: datetime
 
 
 class Reminder(commands.Cog):
-    def __init__(self, bot: CustomBot) -> None:
+    def __init__(self, bot: CustomBot):
         self.bot = bot
-        self.processed_reminders = set()
 
-    async def cog_load(self) -> None:
-        self.remind_action.start()
+    async def cog_load(self):
+        remind = self.bot.mongo_db("Reminder")
+        async for item in remind.find({}):
+            await self.bot.scheduler.add_schedule(
+                self.remind_action,
+                trigger=DateTrigger(item["due"]),
+                id=f"reminder-{item['_id']}",
+                args=(item,),
+            )
 
-    async def cog_unload(self) -> None:
-        self.remind_action.stop()
-
-    @loop(seconds=5)
-    async def remind_action(self):
+    async def remind_action(self, payload: ReminderPayload):
         remind = self.bot.mongo_db("Reminder")
         tupper_log = self.bot.mongo_db("Tupper-logs")
-        embed = Embed(title="Reminder!", color=Color.blurple())
+
+        author_id, channel_id, thread_id, text, due = (
+            payload["author"],
+            payload["channel"],
+            payload["thread"],
+            payload["message"],
+            payload["due"],
+        )
+
+        embed = Embed(title="Reminder!", color=Color.blurple(), timestamp=due)
         embed.set_image(url=WHITE_BAR)
-        embed.set_footer(text="You can react with ❌ to delete this message.")
 
-        async for item in remind.find(
+        if not (channel := self.bot.get_channel(channel_id)):
+            channel = await self.bot.fetch_channel(channel_id)
+
+        thread = Object(id=thread_id) if thread_id else MISSING
+
+        webhook = await self.bot.webhook(channel)
+        embed.description = text
+        msg = await webhook.send(
+            content=f"<@{author_id}>",
+            username="Fennekin Reminder",
+            avatar_url="https://hmp.me/dx4e",
+            embed=embed,
+            thread=thread,
+            allowed_mentions=AllowedMentions(users=True),
+            wait=True,
+        )
+        await tupper_log.insert_one(
             {
-                "due": {"$lte": utcnow()},
-                "_id": {"$nin": list(self.processed_reminders)},
+                "channel": msg.channel.id,
+                "id": msg.id,
+                "author": author_id,
             }
-        ):
-
-            self.processed_reminders.add(item["_id"])
-
-            author_id, channel_id, thread_id, message = (
-                item["author"],
-                item["channel"],
-                item["thread"],
-                item["message"],
-            )
-            channel = self.bot.get_channel(channel_id)
-            thread = Object(id=thread_id) if thread_id else MISSING
-            if not channel:
-                continue
-            guild = channel.guild
-            member = guild.get_member(author_id)
-            if not member:
-                continue
-            webhook = await self.bot.webhook(channel)
-            embed.description = message
-            msg = await webhook.send(
-                content=member.mention,
-                username="Fennekin Reminder",
-                avatar_url="https://hmp.me/dx4e",
-                embed=embed,
-                thread=thread,
-                allowed_mentions=AllowedMentions(users=True),
-                wait=True,
-            )
-            await msg.add_reaction("\N{CROSS MARK}")
-            await tupper_log.insert_one(
-                {
-                    "channel": msg.channel.id,
-                    "id": msg.id,
-                    "author": author_id,
-                }
-            )
-
-        self.processed_reminders.clear()
+        )
+        await remind.delete_one(
+            {
+                "author": author_id,
+                "channel": channel_id,
+                "thread": thread_id,
+                "message": text,
+            }
+        )
 
     @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def remind(self, ctx: Interaction[CustomBot], message: Optional[str], due: Optional[str]):
+    async def remind(self, itx: Interaction[CustomBot], *, flags: ReminderFlags):
         """Fennekin Reminder System
 
         Parameters
         ----------
-        ctx : Interaction[CustomBot]
+        itx : Interaction[CustomBot]
             Interaction[CustomBot]
-        message : str
-            Message to remind
-        due : str
-            Time until notification
         """
-        if message and due:
-            await ctx.response.defer(ephemeral=True, thinking=True)
-            await ReminderModal.send(ctx, due, message)
+
+        remind = self.bot.mongo_db("Reminder")
+        due = itx.created_at + parse(flags.due, settings=dict(PREFER_DATES_FROM="future", TIMEZONE="utc"))
+
+        if due <= itx.created_at:
+            return await itx.response.send_message("Invalid date, only future dates can be used.", ephemeral=True)
+
+        if isinstance(itx.channel, Thread):
+            channel_id, thread_id = itx.channel.parent_id, itx.channel.id
         else:
-            modal = ReminderModal(timeout=None)
-            await ctx.response.send_modal(modal)
+            channel_id, thread_id = itx.channel_id, None
+
+        params = {
+            "author": itx.user.id,
+            "channel": channel_id,
+            "thread": thread_id,
+            "message": flags.message,
+            "due": due,
+        }
+        result = await remind.insert_one(params)
+        params["_id"] = result.inserted_id
+        await itx.response.send_message("Reminder has been created successfully.!", ephemeral=True)
+        await self.bot.scheduler.add_schedule(
+            self.remind_action,
+            trigger=DateTrigger(due),
+            id=f"reminder-{result.inserted_id}",
+            args=(params,),
+        )
 
 
 async def setup(bot: CustomBot):
