@@ -966,7 +966,7 @@ class AbilitiesField(TemplateField, required=True):
     def evaluate(cls, oc: Character) -> Optional[str]:
         m = Move.get(name="Transform")
 
-        if len(oc.abilities) > 1:
+        if len(oc.abilities) != 1:
             return "You can only have one ability."
 
         if len(values := [x.name for x in oc.abilities if x.name in ABILITIES_DEFINING]) > 1:
