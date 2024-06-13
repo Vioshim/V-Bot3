@@ -72,7 +72,9 @@ class Reminder(commands.Cog):
 
         embed = Embed(title="Reminder!", color=Color.blurple(), timestamp=due)
         embed.set_image(url=WHITE_BAR)
-        embed.set_thumbnail(url="https://hmp.me/dx4e")
+        embed.set_thumbnail(
+            url="https://cdn.discordapp.com/attachments/1196879060232573021/1250846338728333422/Fennekin.png"
+        )
 
         if not (channel := self.bot.get_channel(channel_id)):
             channel = await self.bot.fetch_channel(channel_id)
