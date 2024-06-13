@@ -21,17 +21,8 @@ from typing import Optional, TypedDict
 from apscheduler.triggers.date import DateTrigger
 from bson import ObjectId
 from dateparser import parse
-from discord import (
-    AllowedMentions,
-    Color,
-    Embed,
-    Interaction,
-    Object,
-    Thread,
-    app_commands,
-)
+from discord import AllowedMentions, Color, Embed, Interaction, app_commands
 from discord.ext import commands
-from discord.utils import MISSING
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
@@ -85,13 +76,7 @@ class Reminder(commands.Cog):
             embed=embed,
             allowed_mentions=AllowedMentions(users=True),
         )
-        await remind.delete_one(
-            {
-                "author": author_id,
-                "channel": channel_id,
-                "message": text,
-            }
-        )
+        await remind.delete_one({"_id": payload["_id"]})
 
     @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
