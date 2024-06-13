@@ -966,8 +966,8 @@ class AbilitiesField(TemplateField, required=True):
     def evaluate(cls, oc: Character) -> Optional[str]:
         m = Move.get(name="Transform")
 
-        if not 1 <= len(oc.abilities) <= 2:
-            return "Abilities, Min: 1, Max: 2"
+        if len(oc.abilities) > 1:
+            return "You can only have one ability."
 
         if len(values := [x.name for x in oc.abilities if x.name in ABILITIES_DEFINING]) > 1:
             return f"Carrying {', '.join(values)}"
@@ -995,7 +995,21 @@ class AbilitiesField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
         abilities, m = oc.species.abilities, Move.get(name="Transform")
-        if isinstance(oc.species, (Fakemon, Variant, CustomMega)) or (not abilities) or m in oc.total_movepool:
+        if (
+            isinstance(
+                oc.species,
+                (
+                    Fakemon,
+                    Variant,
+                    CustomMega,
+                    CustomGMax,
+                    CustomParadox,
+                    CustomUltraBeast,
+                ),
+            )
+            or (not abilities)
+            or m in oc.total_movepool
+        ):
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](
@@ -1003,7 +1017,7 @@ class AbilitiesField(TemplateField, required=True):
             values=abilities,
             timeout=None,
             target=itx,
-            max_values=min(len(abilities), 2),
+            max_values=min(len(abilities), 1),
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, x.description),
             silent_mode=True,
@@ -1017,7 +1031,17 @@ class AbilitiesField(TemplateField, required=True):
         ) as choices:
             if choices:
                 oc.abilities = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant)):
+                if isinstance(
+                    oc.species,
+                    (
+                        Fakemon,
+                        Variant,
+                        CustomMega,
+                        CustomGMax,
+                        CustomParadox,
+                        CustomUltraBeast,
+                    ),
+                ):
                     oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
