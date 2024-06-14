@@ -662,9 +662,7 @@ class SizeField(TemplateField):
         if isinstance(oc.size, Size):
             return
 
-        if Move.get(name="Transform") in oc.total_movepool:
-            height_a, height_b = 0.1, 20.0
-        elif isinstance(oc.species, Fusion):
+        if isinstance(oc.species, Fusion):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
@@ -710,9 +708,7 @@ class WeightField(TemplateField):
         if isinstance(oc.weight, Size):
             return
 
-        if Move.get(name="Transform") in oc.total_movepool:
-            weight_a, weight_b = 0.1, 999.9
-        elif isinstance(oc.species, Fusion):
+        if isinstance(oc.species, Fusion):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
             weight_a, weight_b = s_a.weight, s_b.weight
         else:
@@ -883,13 +879,7 @@ class MovesetField(TemplateField, required=True):
         if len(oc.moveset) > 4:
             return "Max 4 Preferred Moves."
 
-        m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
-
         movepool = Movepool.default(oc.total_movepool)
-
-        if m1 in movepool or m2 in movepool:
-            movepool = Movepool(other=Move.all(banned=False, shadow=False))
-
         moves = movepool()
         return ", ".join(x.name for x in oc.moveset if x not in moves)
 
@@ -906,12 +896,7 @@ class MovesetField(TemplateField, required=True):
         oc: Character,
         ephemeral: bool = False,
     ):
-        m1, m2 = Move.get(name="Transform"), Move.get(name="Sketch")
         movepool = Movepool.default(oc.total_movepool)
-
-        if m1 in movepool or m2 in movepool:
-            movepool = Movepool(other=Move.all(banned=False, shadow=False))
-
         view = MovepoolMoveComplex(
             member=itx.user,
             movepool=movepool,
@@ -964,8 +949,6 @@ class AbilitiesField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        m = Move.get(name="Transform")
-
         if len(oc.abilities) != 1:
             return "You can only have one ability."
 
@@ -978,8 +961,7 @@ class AbilitiesField(TemplateField, required=True):
         if isinstance(oc.species, CustomUltraBeast) and "Beast Boost" not in values:
             return "Beast boost needed."
 
-        if not isinstance(oc.species, (Fakemon, Variant, CustomMega)) and m not in oc.total_movepool:
-            return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
+        return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
@@ -994,22 +976,18 @@ class AbilitiesField(TemplateField, required=True):
         oc: Character,
         ephemeral: bool = False,
     ):
-        abilities, m = oc.species.abilities, Move.get(name="Transform")
-        if (
-            isinstance(
-                oc.species,
-                (
-                    Fakemon,
-                    Variant,
-                    CustomMega,
-                    CustomGMax,
-                    CustomParadox,
-                    CustomUltraBeast,
-                ),
-            )
-            or (not abilities)
-            or m in oc.total_movepool
-        ):
+        abilities = oc.species.abilities
+        if isinstance(
+            oc.species,
+            (
+                Fakemon,
+                Variant,
+                CustomMega,
+                CustomGMax,
+                CustomParadox,
+                CustomUltraBeast,
+            ),
+        ) or (not abilities):
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](

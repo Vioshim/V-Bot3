@@ -21,7 +21,6 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size
-from src.structures.move import Move
 from src.structures.species import Fakemon, Fusion, Species
 
 __all__ = (
@@ -41,22 +40,16 @@ class HeightModal(Modal, title="Height"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        m = Move.get(name="Transform")
         height: float = getattr(self.species, "height", 0.0)
 
-        if m and m in self.oc.total_movepool:
-            heights = 0.1, 20
-        elif isinstance(self.species, Fusion):
+        if isinstance(self.species, Fusion):
             heights = [x.height for x in self.species.bases]
         else:
             heights = (height,)
 
-        items = [x.height_value(height) for height in heights for x in Size]
-
-        answer = self.value
-        if not (min(items) <= answer <= max(items)):
-            answer = min(items, key=lambda x: abs(x - answer))
-
+        items = {x.height_value(height) for height in heights for x in Size}
+        min_item, max_item = min(items), max(items)
+        answer = max(min_item, min(max_item, self.value))
         self.oc.size = Size.M if answer <= 0 else answer
 
         if isinstance(self.oc.size, Size):
@@ -123,22 +116,16 @@ class WeightModal(Modal, title="Weight"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        m = Move.get(name="Transform")
         weight: float = getattr(self.species, "weight", 0)
 
-        if m and m in self.oc.total_movepool:
-            weights = 0.1, 999.9
-        elif isinstance(self.species, Fusion):
+        if isinstance(self.species, Fusion):
             weights = [x.weight for x in sorted(self.species.bases, key=lambda x: x.weight)]
         else:
             weights = (weight,)
 
-        items = [x.weight_value(weight) for weight in weights for x in Size]
-
-        answer = self.value
-        if not (min(items) <= answer <= max(items)):
-            answer = min(items, key=lambda x: abs(x - answer))
-
+        items = {x.weight_value(weight) for weight in weights for x in Size}
+        min_item, max_item = min(items), max(items)
+        answer = max(min_item, min(max_item, self.value))
         self.oc.weight = Size.M if answer <= 0 else answer
 
         if isinstance(self.oc.weight, Size):
