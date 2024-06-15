@@ -213,36 +213,23 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    Alpha_XXXL = 1.50
-    Alpha_XXL = 1.40
-    Alpha_XL = 1.35
-    Alpha_L = 1.30
-    Alpha = 1.25
-    XXXL = 1.20
-    XXL = 1.15
-    XL = 1.10
-    L = 1.50
+    XXXL = 1.50
+    XXL = 1.375
+    XL = 1.25
+    L = 1.125
     M = 1.00
-    S = 0.95
-    XS = 0.90
-    XXS = 0.85
-    XXXS = 0.80
-    Mini = 0.75
-    Mini_S = 0.70
-    Mini_XS = 0.65
-    Mini_XXS = 0.60
-    Mini_XXXS = 0.50
+    S = 0.875
+    XS = 0.75
+    XXS = 0.625
+    XXXS = 0.50
 
     @property
     def emoji(self):
-        name = self.name.split("_")[0]
-        match name:
-            case "Alpha":
-                return "🟧"
-            case "Mini":
-                return "🟦"
-            case "M":
-                return "🟩"
+        if self.name.endswith("S"):
+            return "🟦"
+        if self.name.endswith("L"):
+            return "🟧"
+        return "🟩"
 
     @property
     def reference_name(self):

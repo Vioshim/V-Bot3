@@ -668,6 +668,17 @@ class CustomSpecies(Species):
                 data["movepool"] = self.movepool.as_dict
             if self.evolves_from != self.base.id:
                 data["evolves_from"] = self.evolves_from
+        else:
+            if self.name:
+                data["name"] = self.name
+            if self.abilities:
+                data["abilities"] = [x.id for x in self.abilities]
+            if self.types:
+                data["types"] = [x.name for x in self.types]
+            if self.movepool:
+                data["movepool"] = self.movepool.as_dict
+            if self.evolves_from:
+                data["evolves_from"] = self.evolves_from
 
         return data
 
