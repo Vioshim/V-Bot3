@@ -30818,7 +30818,14 @@
 				"SNORE",
 				"SUBSTITUTE",
 				"SWAGGER",
-				"SWIFT"
+				"SWIFT",
+				"BOUNCYBUBBLE",
+				"BUZZYBUZZ",
+				"SIZZLYSLIDE",
+				"BADDYBAD",
+				"SAPPYSEED",
+				"FREEZYFROST",
+				"SPARKLYSWIRL"
 			]
 		},
 		"abilities": ["ADAPTABILITY", "ANTICIPATION", "RUNAWAY"],
@@ -86033,7 +86040,10 @@
 				"THUNDERWAVE",
 				"UPROAR",
 				"VOLTTACKLE",
-				"WILDCHARGE"
+				"WILDCHARGE",
+				"ZIPPYZAP",
+				"FLOATYFALL",
+				"SPLISHYSPLASH"
 			],
 			"other": ["VOLTTACKLE"]
 		},
