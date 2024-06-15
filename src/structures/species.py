@@ -86,8 +86,8 @@ class Species:
     female_image: Optional[str] = None
     female_image_shiny: Optional[str] = None
     types: frozenset[TypingEnum] = field(default_factory=frozenset)
-    height: float = 0.0
-    weight: float = 0.0
+    height: float = 1.0
+    weight: float = 50.0
     HP: int = 0
     ATK: int = 0
     DEF: int = 0
@@ -153,8 +153,8 @@ class Species:
     def all(
         cls,
         *,
-        include: Iterable[Type[Species]] | Type[Species] = None,
-        exclude: Iterable[Type[Species]] | Type[Species] = None,
+        include: Optional[Iterable[Type[Species]] | Type[Species]] = None,
+        exclude: Optional[Iterable[Type[Species]] | Type[Species]] = None,
     ) -> frozenset[Species]:
         include = tuple(include) if isinstance(include, Iterable) else (include or cls)
         exclude = tuple(exclude) if isinstance(exclude, Iterable) else (exclude or None)
@@ -394,13 +394,12 @@ class Species:
         if not value or isinstance(value, str):
             return cls.from_ID(value)
 
+        children_classes = {x.__name__.removeprefix("Custom").lower(): x for x in CustomSpecies.__subclasses__()}
+        children_classes["base"] = Variant
+        children_classes["ub"] = CustomUltraBeast
+
         item = value.copy()
-        for k, v in {
-            "mega": CustomMega,
-            "ub": CustomUltraBeast,
-            "paradox": CustomParadox,
-            "base": Variant,
-        }.items():
+        for k, v in children_classes.items():
             if data := item.pop(k, None):
                 return v(base=data, **item)
 
@@ -451,426 +450,6 @@ class Paradox(Species):
 @dataclass(unsafe_hash=True, slots=True)
 class GMax(Species):
     "This class Represents a Gigantamax"
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class Fakemon(Species):
-    "This class Represents a fakemon"
-    height: float = 1.0
-    weight: float = 50.0
-
-    @classmethod
-    def deduce(cls, item: str):
-        """Method deduce but filtered, (fakemon that evolved from a canon species)
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[Fakemon]
-            Result
-        """
-        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
-            return cls(evolves_from=mon.id)
-
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[Fakemon]:
-        """Method from ID but filtered, (fakemon that evolved from a canon species)
-
-        Parameters
-        ----------
-        item : str
-            placeholder
-        """
-        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
-            return Fakemon(evolves_from=mon.id)
-
-    def as_data(self):
-        return {
-            "name": self.name,
-            "types": [x.name for x in self.types],
-            "evolves_from": self.evolves_from,
-            "movepool": self.movepool.as_dict,
-        }
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomMega(Species):
-    "This class Represents a Custom Mega"
-
-    base: Optional[Species] = None
-
-    def __init__(self, base: Species, types: frozenset[TypingEnum] = None):
-        if isinstance(base, str):
-            base = Species.single_deduce(base)
-
-        super(CustomMega, self).__init__(
-            id=base.id,
-            name=base.name,
-            shape=base.shape,
-            height=base.height,
-            weight=base.weight,
-            HP=base.HP,
-            ATK=base.ATK,
-            DEF=base.DEF,
-            SPA=base.SPA,
-            SPD=base.SPD,
-            SPE=base.SPE,
-            types=types or base.types.copy(),
-            movepool=base.movepool,
-            abilities=base.abilities.copy(),
-            evolves_from=base.id,
-            base_image=base.base_image,
-            base_image_shiny=base.base_image_shiny,
-            female_image=base.female_image,
-            female_image_shiny=base.female_image_shiny,
-        )
-        self.base = base
-
-    @classmethod
-    def deduce(cls, item: str) -> Optional[CustomMega]:
-        """Method deduce but filtered
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[CustomMega]
-            Result
-        """
-        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
-            return cls(base=mon)
-
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[CustomMega]:
-        """Method from ID but filtered
-
-        Parameters
-        ----------
-        item : str
-            placeholder
-        """
-        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
-            return CustomMega(base=mon)
-
-    def as_data(self):
-        return {
-            "mega": self.id,
-            "types": [x.name for x in self.types],
-        }
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomGMax(Species):
-    "This class Represents a Custom GMax"
-
-    base: Optional[Species] = None
-
-    def __init__(self, base: Species, types: frozenset[TypingEnum] = None):
-        if isinstance(base, str):
-            base = Species.single_deduce(base)
-
-        super(CustomGMax, self).__init__(
-            id=base.id,
-            name=base.name,
-            shape=base.shape,
-            height=base.height,
-            weight=base.weight,
-            HP=base.HP * 2 if base.HP != 1 else 1,
-            ATK=base.ATK,
-            DEF=base.DEF,
-            SPA=base.SPA,
-            SPD=base.SPD,
-            SPE=base.SPE,
-            types=types or base.types.copy(),
-            movepool=base.movepool,
-            abilities=base.abilities.copy(),
-            evolves_from=base.id,
-            base_image=base.base_image,
-            base_image_shiny=base.base_image_shiny,
-            female_image=base.female_image,
-            female_image_shiny=base.female_image_shiny,
-        )
-        self.base = base
-
-    @classmethod
-    def deduce(cls, item: str) -> Optional[CustomGMax]:
-        """Method deduce but filtered
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[CustomGMax]
-            Result
-        """
-        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
-            return cls(base=mon)
-
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[CustomGMax]:
-        """Method from ID but filtered
-
-        Parameters
-        ----------
-        item : str
-            placeholder
-        """
-        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
-            return cls(base=mon)
-
-    def as_data(self):
-        return {
-            "gmax": self.id,
-            "types": [x.name for x in self.types],
-        }
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomParadox(Species):
-    "This class Represents a Custom Paradox"
-
-    base: Optional[Species] = None
-
-    def __init__(self, base: Species, name: str = None, movepool: Movepool = None, types: frozenset[TypingEnum] = None):
-        if isinstance(base, str):
-            base = Species.single_deduce(base)
-
-        movepool = movepool or base.movepool
-
-        abilities = frozenset({Ability.get(name="Protosynthesis"), Ability.get(name="Quark Drive")})
-
-        super(CustomParadox, self).__init__(
-            id=base.id,
-            name=name or base.name,
-            shape=base.shape,
-            height=base.height,
-            weight=base.weight,
-            HP=base.HP,
-            ATK=base.ATK,
-            DEF=base.DEF,
-            SPA=base.SPA,
-            SPD=base.SPD,
-            SPE=base.SPE,
-            types=types or base.types.copy(),
-            movepool=movepool.copy(),
-            abilities=base.abilities | abilities,
-            evolves_from=base.id,
-            base_image=base.base_image,
-            base_image_shiny=base.base_image_shiny,
-            female_image=base.female_image,
-            female_image_shiny=base.female_image_shiny,
-        )
-        self.base = base
-
-    @classmethod
-    def deduce(cls, item: str) -> Optional[CustomParadox]:
-        """Method deduce but filtered
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[CustomMega]
-            Result
-        """
-        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
-            return cls(base=mon)
-
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[CustomParadox]:
-        """Method from ID but filtered
-
-        Parameters
-        ----------
-        item : str
-            placeholder
-        """
-        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
-            return CustomParadox(base=mon)
-
-    def as_data(self):
-        return {
-            "paradox": self.id,
-            "name": self.name,
-            "movepool": self.movepool.as_dict,
-            "types": [x.name for x in self.types],
-        }
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomUltraBeast(Species):
-    "This class Represents a Custom Ultra Beast"
-
-    base: Optional[Species] = None
-
-    def __init__(self, base: Species, name: str = None, movepool: Movepool = None, types: frozenset[TypingEnum] = None):
-        if isinstance(base, str):
-            base = Species.single_deduce(base)
-
-        movepool = movepool or base.movepool
-
-        abilities = frozenset({Ability.get(name="Beast Boost")})
-
-        super(CustomUltraBeast, self).__init__(
-            id=base.id,
-            name=name or base.name,
-            shape=base.shape,
-            height=base.height,
-            weight=base.weight,
-            HP=base.HP,
-            ATK=base.ATK,
-            DEF=base.DEF,
-            SPA=base.SPA,
-            SPD=base.SPD,
-            SPE=base.SPE,
-            types=types or base.types.copy(),
-            movepool=movepool.copy(),
-            abilities=base.abilities | abilities,
-            evolves_from=base.id,
-            base_image=base.base_image,
-            base_image_shiny=base.base_image_shiny,
-            female_image=base.female_image,
-            female_image_shiny=base.female_image_shiny,
-        )
-        self.base = base
-
-    @classmethod
-    def deduce(cls, item: str) -> Optional[CustomUltraBeast]:
-        """Method deduce but filtered
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[CustomMega]
-            Result
-        """
-        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
-            return cls(base=mon)
-
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[CustomUltraBeast]:
-        """Method from ID but filtered
-
-        Parameters
-        ----------
-        item : str
-            placeholder
-        """
-        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
-            return CustomUltraBeast(base=mon)
-
-    def as_data(self):
-        return {
-            "ub": self.id,
-            "name": self.name,
-            "movepool": self.movepool.as_dict,
-            "types": [x.name for x in self.types],
-        }
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class Variant(Species):
-    "This class Represents a Variant"
-
-    base: Optional[Species] = None
-
-    def __init__(
-        self,
-        base: Species,
-        name: str,
-        types: frozenset[TypingEnum] = None,
-        evolves_from: Optional[str] = None,
-        abilities: frozenset[Ability] = None,
-        movepool: Optional[Movepool] = None,
-    ):
-        if isinstance(base, str):
-            base = Species.single_deduce(base)
-
-        super(Variant, self).__init__(
-            id=base.id,
-            name=name.title(),
-            shape=base.shape,
-            height=base.height,
-            weight=base.weight,
-            HP=base.HP,
-            ATK=base.ATK,
-            DEF=base.DEF,
-            SPA=base.SPA,
-            SPD=base.SPD,
-            SPE=base.SPE,
-            types=types or base.types.copy(),
-            movepool=movepool or base.movepool.copy(),
-            abilities=abilities or base.abilities.copy(),
-            base_image=base.base_image,
-            base_image_shiny=base.base_image_shiny,
-            female_image=base.female_image,
-            female_image_shiny=base.female_image_shiny,
-            evolves_from=evolves_from or base.evolves_from,
-            evolves_to=base.evolves_to,
-        )
-        self.base = base
-
-    @classmethod
-    def deduce(cls, item: str) -> Optional[Variant]:
-        """Method deduce but filtered
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[Variant]
-            Result
-        """
-        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
-            return cls(base=mon, name=f"Variant {mon.name.title()}")
-
-    @classmethod
-    def from_ID(cls, item: str) -> Optional[Variant]:
-        """Method from ID but filtered
-
-        Parameters
-        ----------
-        item : str
-            item to look for
-
-        Returns
-        -------
-        Optional[Variant]
-            Result
-        """
-        if not item:
-            return
-        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
-            return Variant(base=mon, name=f"Variant {mon.name.title()}")
-
-    def as_data(self):
-        return {
-            "name": self.name,
-            "evolves_from": self.evolves_from,
-            "movepool": self.movepool.as_dict,
-            "types": [x.name for x in self.types],
-            "base": self.base.id,
-        }
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -992,6 +571,213 @@ class Fusion(Species):
             "fusion": {"species": [x.id for x in self.bases]},
             "types": [x.name for x in self.types],
         }
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomSpecies(Species):
+    "This class Represents a Custom Pokemon"
+    base: Optional[Species] = None
+
+    def __init__(
+        self,
+        name: str = "",
+        base: Optional[Species] = None,
+        abilities: Optional[frozenset[Ability]] = None,
+        movepool: Optional[Movepool] = None,
+        types: Optional[frozenset[TypingEnum]] = None,
+        evolves_from: Optional[str] = None,
+    ):
+        if isinstance(base, str):
+            base = Species.single_deduce(base)  # type: ignore
+
+        if base is None:
+            super().__init__(
+                name=name,
+                abilities=frozenset() if abilities is None else abilities.copy(),
+                types=types or frozenset(),
+                movepool=Movepool() if movepool is None else movepool.copy(),
+                evolves_from=evolves_from,
+            )
+        else:
+            super().__init__(
+                id=base.id,
+                name=name or base.name,
+                shape=base.shape,
+                height=base.height,
+                weight=base.weight,
+                HP=base.HP,
+                ATK=base.ATK,
+                DEF=base.DEF,
+                SPA=base.SPA,
+                SPD=base.SPD,
+                SPE=base.SPE,
+                banned=base.banned,
+                abilities=(abilities or base.abilities).copy(),
+                types=types or base.types.copy(),
+                movepool=(movepool or base.movepool).copy(),
+                evolves_from=evolves_from or base.id,
+                base_image=base.base_image,
+                base_image_shiny=base.base_image_shiny,
+                female_image=base.female_image,
+                female_image_shiny=base.female_image_shiny,
+            )
+        self.base = base
+
+    @classmethod
+    def deduce(cls, item: str):
+        """Method deduce but filtered
+
+        Parameters
+        ----------
+        item : str
+            item to look for
+        """
+        items = set()
+        if (mon := Species.single_deduce(item)) and not isinstance(mon, cls):
+            cls_name = cls.__name__.removeprefix("Custom")
+            items.add(cls(base=mon, name=f"{cls_name} {mon.name}"))
+        return frozenset(items)
+
+    @classmethod
+    def from_ID(cls, item: str):
+        """Method from ID but filtered
+
+        Parameters
+        ----------
+        item : str
+            placeholder
+        """
+        if (mon := Species.from_ID(item)) and not isinstance(mon, Fusion):
+            cls_name = cls.__name__.removeprefix("Custom")
+            return cls(base=mon, name=f"{cls_name} {mon.name}")
+
+    def as_data(self):
+        data: dict[str, Any] = {
+            self.__class__.__name__.removeprefix("Custom").lower(): self.id,
+        }
+
+        if self.base is not None:
+            if self.name != self.base.name:
+                data["name"] = self.name
+            if self.abilities != self.base.abilities:
+                data["abilities"] = [x.id for x in self.abilities]
+            if self.types != self.base.types:
+                data["types"] = [x.name for x in self.types]
+            if self.movepool != self.base.movepool:
+                data["movepool"] = self.movepool.as_dict
+            if self.evolves_from != self.base.id:
+                data["evolves_from"] = self.evolves_from
+
+        return data
+
+    def can_change_movepool(self):
+        if self.base is None:
+            return False
+        return self.movepool != self.base.movepool
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class GimmickSpecies(CustomSpecies):
+    "This class Represents a Gimmick Species"
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomMega(GimmickSpecies):
+    "This class Represents a Custom Mega"
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomTera(GimmickSpecies):
+    "This class Represents a Custom Tera"
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomGMax(GimmickSpecies):
+    "This class Represents a Custom GMax"
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class Fakemon(CustomSpecies):
+    "This class Represents a Fakemon"
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomParadox(CustomSpecies):
+    "This class Represents a Custom Paradox"
+
+    def __init__(
+        self,
+        base: Species,
+        name: str = "",
+        abilities: Optional[frozenset[Ability]] = None,
+        movepool: Optional[Movepool] = None,
+        types: Optional[frozenset[TypingEnum]] = None,
+    ):
+        super().__init__(
+            base=base,
+            name=name,
+            abilities=frozenset(
+                {
+                    o
+                    for x in (
+                        "Protosynthesis",
+                        "Quark Drive",
+                    )
+                    if (o := Ability.get(name=x))
+                }
+            ),
+            movepool=movepool,
+            types=types,
+        )
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class CustomUltraBeast(CustomSpecies):
+    "This class Represents a Custom Ultra Beast"
+
+    def __init__(
+        self,
+        base: Species,
+        name: str = "",
+        abilities: Optional[frozenset[Ability]] = None,
+        movepool: Optional[Movepool] = None,
+        types: Optional[frozenset[TypingEnum]] = None,
+    ):
+        super(CustomUltraBeast, self).__init__(
+            base=base,
+            name=name,
+            abilities=frozenset({o for x in ("Beast Boost",) if (o := Ability.get(name=x))}),
+            movepool=movepool,
+            types=types,
+        )
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class Variant(CustomSpecies):
+    "This class Represents a Variant"
+
+
+@dataclass(unsafe_hash=True, slots=True)
+class AuraBot(CustomSpecies):
+    "This class Represents an Aura Bot"
+
+    def __init__(
+        self,
+        base: Species,
+        name: str = "",
+        abilities: Optional[frozenset[Ability]] = None,
+        movepool: Optional[Movepool] = None,
+        types: Optional[frozenset[TypingEnum]] = None,
+    ):
+        super(AuraBot, self).__init__(
+            base=base,
+            name=name,
+            abilities=abilities,
+            movepool=movepool,
+            types=types,
+        )
+        self.height /= 10
+        self.weight /= 10
 
 
 class SpeciesEncoder(JSONEncoder):

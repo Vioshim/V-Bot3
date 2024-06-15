@@ -22,9 +22,7 @@ from src.pagination.complex import Complex
 from src.structures.character import Character
 from src.structures.mon_typing import TypingEnum
 from src.structures.species import (
-    CustomMega,
-    CustomParadox,
-    CustomUltraBeast,
+    CustomSpecies,
     Fusion,
     Legendary,
     Mega,
@@ -33,7 +31,6 @@ from src.structures.species import (
     Pokemon,
     Species,
     UltraBeast,
-    Variant,
 )
 from src.utils.etc import LIST_EMOJI, WHITE_BAR
 
@@ -67,7 +64,7 @@ class SpeciesComplex(Complex[Species]):
         max_values: int = 1,
         silent_mode: bool = True,
         keep_working: bool = False,
-        ocs: set[Character] = None,
+        ocs: Optional[set[Character]] = None,
     ):
         self.total = mon_total = sorted({x for x in mon_total if not x.banned}, key=lambda x: x.name)
         max_values = min(len(self.total), max_values)
@@ -85,9 +82,10 @@ class SpeciesComplex(Complex[Species]):
                 for x in mon.bases:
                     self.reference1.setdefault(x, 0)
                     self.reference1[x] += 1
-            elif isinstance(mon, (Variant, CustomMega, CustomParadox, CustomUltraBeast)):
-                self.reference2.setdefault(mon.base, 0)
-                self.reference2[mon.base] += 1
+            elif isinstance(mon, CustomSpecies):
+                if mon.base:
+                    self.reference2.setdefault(mon.base, 0)
+                    self.reference2[mon.base] += 1
             elif isinstance(mon, Species):
                 self.reference3.setdefault(mon, 0)
                 self.reference3[mon] += 1

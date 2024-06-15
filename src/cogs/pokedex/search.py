@@ -20,7 +20,7 @@ from enum import Enum, StrEnum, auto
 from itertools import groupby
 from typing import Any, Callable, Generic, Iterable, Optional, TypeVar
 
-from discord import ForumChannel, Guild, Interaction, Member, TextChannel, Thread, User
+from discord import Guild, Interaction, Member, User
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.ext import commands
@@ -31,10 +31,9 @@ from src.cogs.submission.oc_submission import ModCharactersView
 from src.pagination.complex import Complex
 from src.structures.ability import Ability, UTraitKind
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Kind, Nature, Size
+from src.structures.character import AgeGroup, Character, Kind, Nature, Size, Trope
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
-from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     CustomMega,
@@ -419,7 +418,7 @@ class GroupByArg(StrEnum):
     HiddenPower = auto()
     Nature = auto()
     UniqueTrait = auto()
-    Pokeball = auto()
+    Trope = auto()
     Height = auto()
     Weight = auto()
 
@@ -695,17 +694,11 @@ class OCGroupByUniqueTrait(OCGroupBy[UTraitKind | None]):
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.sp_ability.kind if x.sp_ability else None)}
 
 
-class OCGroupByPokeball(OCGroupBy[Pokeball | None]):
-    @staticmethod
-    def inner_parser(group: Pokeball | None, elements: list[Character]):
-        if group is None:
-            return "None", f"Total without: {len(elements):02d} OCs."
-        return group.label, f"Obtained by {len(elements):02d} OCs."
-
+class OCGroupByTrope(OCGroupBy[Trope]):
     @classmethod
     def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
-        ocs = sorted(ocs, key=lambda x: x.pokeball.name if x.pokeball else "None")
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.pokeball)}
+        ocs = sorted(ocs, key=lambda x: x.trope.name)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.trope)}
 
 
 class OCGroupByNature(OCGroupBy[Nature | None]):
@@ -763,7 +756,7 @@ class GroupBy(Enum):
     HiddenPower = OCGroupByHiddenPower
     Nature = OCGroupByNature
     UniqueTrait = OCGroupByUniqueTrait
-    Pokeball = OCGroupByPokeball
+    Trope = OCGroupByTrope
     Height = OCGroupByHeight
     Weight = OCGroupByWeight
 

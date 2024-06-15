@@ -55,21 +55,21 @@ from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ABILITIES_DEFINING, ALL_ABILITIES, Ability
+from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Nature, Size
+from src.structures.character import AgeGroup, Character, Nature, Size, Trope
 from src.structures.mon_typing import TypingEnum
-from src.structures.move import Move
 from src.structures.movepool import Movepool
-from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     CustomGMax,
     CustomMega,
     CustomParadox,
+    CustomSpecies,
     CustomUltraBeast,
     Fakemon,
     Fusion,
+    GimmickSpecies,
     GMax,
     Legendary,
     Mega,
@@ -618,20 +618,11 @@ class SpeciesField(TemplateField, required=True):
         if isinstance(species, CustomParadox) and isinstance(species.base, Paradox):
             return f"{species.base.name} is already a paradox pokemon."
 
-        if isinstance(
-            species,
-            (
-                Variant,
-                CustomMega,
-                CustomParadox,
-                CustomUltraBeast,
-                CustomGMax,
-            ),
-        ) and isinstance(species.base, (Mega, GMax)):
+        if isinstance(species, CustomSpecies) and isinstance(species.base, (Mega, GMax)):
             return f"{species.base.name} can't have variants."
 
-        if isinstance(species, Fakemon) and isinstance(species.species_evolves_from, (Paradox, Mega, GMax)):
-            return f"{species.species_evolves_from.name} can't custom evolve."
+        if isinstance(species, Fakemon) and not isinstance(species.species_evolves_from, Pokemon):
+            return "Invalid Pre-Evolution Species."
 
         if isinstance(species, Fusion) and len(species.bases) < 2:
             return "Must include at least 2 species."
@@ -765,7 +756,7 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
         oc: Character,
         ephemeral: bool = False,
     ):
-        mon_total = {x for x in Species.all(exclude=(Paradox, Mega)) if not x.banned}
+        mon_total = {x for x in Pokemon.all() if not x.banned}
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
         key = {"server": itx.guild_id}
         if role := get(itx.guild.roles, name="Roleplayer"):
@@ -922,7 +913,8 @@ class MovepoolField(TemplateField, required=True):
     @classmethod
     def check(cls, oc: Character) -> bool:
         return (
-            isinstance(oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast))
+            not isinstance(oc.species, GimmickSpecies)
+            and isinstance(oc.species, CustomSpecies)
             and TypingEnum.Shadow not in oc.types
         )
 
@@ -952,15 +944,6 @@ class AbilitiesField(TemplateField, required=True):
         if len(oc.abilities) != 1:
             return "You can only have one ability."
 
-        if len(values := [x.name for x in oc.abilities if x.name in ABILITIES_DEFINING]) > 1:
-            return f"Carrying {', '.join(values)}"
-
-        if isinstance(oc.species, CustomParadox) and "Protosynthesis" not in values and "Quark Drive" not in values:
-            return "Protosynthesis/Quark Drive needed."
-
-        if isinstance(oc.species, CustomUltraBeast) and "Beast Boost" not in values:
-            return "Beast boost needed."
-
         return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
 
     @classmethod
@@ -977,17 +960,7 @@ class AbilitiesField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
         abilities = oc.species.abilities
-        if isinstance(
-            oc.species,
-            (
-                Fakemon,
-                Variant,
-                CustomMega,
-                CustomGMax,
-                CustomParadox,
-                CustomUltraBeast,
-            ),
-        ) or (not abilities):
+        if isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](
@@ -1009,17 +982,7 @@ class AbilitiesField(TemplateField, required=True):
         ) as choices:
             if choices:
                 oc.abilities = frozenset(choices)
-                if isinstance(
-                    oc.species,
-                    (
-                        Fakemon,
-                        Variant,
-                        CustomMega,
-                        CustomGMax,
-                        CustomParadox,
-                        CustomUltraBeast,
-                    ),
-                ):
+                if isinstance(oc.species, (Fakemon, Variant)):
                     oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
@@ -1044,7 +1007,7 @@ class HiddenPowerField(TemplateField, name="Hidden Power"):
         view = Complex[TypingEnum](
             member=itx.user,
             target=itx,
-            values=TypingEnum.all(TypingEnum.Shadow, TypingEnum.Typeless),
+            values=TypingEnum.all("Shadow", "Typeless"),
             timeout=None,
             sort_key=lambda x: x.name,
             parser=lambda x: (x.name, f"Sets the typing {x.name}"),
@@ -1254,12 +1217,8 @@ class ImageField(TemplateField, required=True):
                     progress.add(cls.name)
 
 
-class PokeballField:
-    "Specify if OC has a pokeball or not"
-
-    @classmethod
-    def check(cls, oc: Character) -> bool:
-        return oc.species
+class TropeField(TemplateField, required=True):
+    "Modify the OC's Trope"
 
     @classmethod
     async def on_submit(
@@ -1270,25 +1229,25 @@ class PokeballField:
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = Complex[Pokeball](
+        view = Complex[Trope](
             member=itx.user,
             target=itx,
             timeout=None,
-            values=Pokeball,
-            parser=lambda x: (x.label, None),
+            values=Trope,
+            parser=lambda x: (x.name.replace("_", " "), x.value),
             sort_key=lambda x: x.name,
             silent_mode=True,
             auto_text_component=True,
         )
-        current = oc.pokeball.label if oc.pokeball else None
         async with view.send(
-            title=f"{template.title} Character's Pokeball.",
-            description=f"> {current}",
+            title=f"{template.title} Character's Trope.",
+            description=f"> {oc.trope.name}",
             single=True,
             ephemeral=ephemeral,
-        ) as pokeball:
-            oc.pokeball = pokeball
-            progress.add(cls.name)
+        ) as trope:
+            if trope:
+                oc.trope = trope
+                progress.add(cls.name)
 
 
 class CreationOCView(Basic):

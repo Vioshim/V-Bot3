@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import asdict, dataclass, field
-from enum import Enum, StrEnum
+from enum import Enum, IntEnum, StrEnum, auto
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
@@ -55,6 +55,7 @@ from src.structures.pronouns import Pronoun
 from src.structures.species import (
     CustomMega,
     CustomParadox,
+    CustomSpecies,
     CustomUltraBeast,
     Fakemon,
     Fusion,
@@ -276,6 +277,9 @@ class Size(float, Enum):
     def height_info(self, value: float = 0):
         value = self.height_value(value)
         feet, inches = self.meters_to_ft_inches(value)
+        if (feet, inches) <= (1, 0):
+            inches = 12 * feet + inches
+            return f'{value*100:.2f} cm / {inches:02d}" in'
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_info(self, value: float = 0):
@@ -336,6 +340,20 @@ class Nature(Enum):
     # fmt: on
 
 
+class Trope(Enum):
+    Normal = "Normal character."
+    Drifter = "Comes from another world."
+    Prime = "Prime of their species."
+    Feral = "Feral character."
+    Reploid = "Character that is a reploid."
+    Aura_Bot = "Character that is an aura bot."
+
+
+PROPORTIONS = {
+    Trope.Aura_Bot: 1 / 10,
+}
+
+
 @dataclass(slots=True)
 class Character:
     species: Optional[Species] = None
@@ -358,10 +376,10 @@ class Character:
     hidden_power: Optional[TypingEnum] = None
     size: Size | float = Size.M
     weight: Size | float = Size.M
-    pokeball: Optional[Pokeball] = None
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
+    trope: Trope = Trope.Normal
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -378,7 +396,7 @@ class Character:
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
-        data["pokeball"] = self.pokeball.name if self.pokeball else None
+        data["trope"] = self.trope.name
         data["nature"] = self.nature.name if self.nature else None
         if isinstance(self.sp_ability, SpAbility):
             aux = asdict(self.sp_ability)
@@ -393,7 +411,7 @@ class Character:
         dct.pop("_id", None)
         species = dct.pop("species", None)
         dct["species"] = species and Species.from_data(species)
-        return Character(**dct)
+        return Character.from_dict(dct)
 
     def __post_init__(self):
         self.image_url = self.image
@@ -431,11 +449,11 @@ class Character:
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-        if isinstance(self.pokeball, str):
+        if isinstance(self.trope, str):
             try:
-                self.pokeball = Pokeball[self.pokeball]
+                self.trope = Trope[self.trope]
             except KeyError:
-                self.pokeball = None
+                self.trope = Trope.Normal
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -566,27 +584,31 @@ class Character:
 
     @property
     def height_text(self):
-        if isinstance(self.size, Size):
-            return self.size.height_info(self.species and self.species.height)
-        return Size.M.height_info(self.size)
+        return Size.M.height_info(self.height_value)
 
     @property
     def height_value(self):
         if isinstance(self.size, Size):
-            return self.size.height_value(self.species and self.species.height)
-        return round(self.size, 2)
+            height = self.species.height if self.species else 0
+            value = self.size.height_value(height)
+        else:
+            value = self.size
+        proportion = PROPORTIONS.get(self.trope, 1)
+        return round(proportion * value, 2)
 
     @property
     def weight_text(self):
-        if isinstance(self.weight, Size):
-            return self.weight.weight_info(self.species and self.species.weight)
-        return Size.M.weight_info(self.weight)
+        return Size.M.weight_info(self.weight_value)
 
     @property
     def weight_value(self):
         if isinstance(self.weight, Size):
-            return self.weight.weight_value(self.species and self.species.weight)
-        return round(self.weight, 2)
+            weight = self.species.weight if self.species else 0
+            value = self.size.weight_value(weight)
+        else:
+            value = self.weight
+        proportion = PROPORTIONS.get(self.trope, 1)
+        return round(proportion * value, 2)
 
     @property
     def default_image(self):
@@ -635,7 +657,7 @@ class Character:
                 return phrase, mon.name
             case mon if isinstance(mon, Species):
                 phrase = mon.__class__.__name__.removeprefix("Custom")
-                return phrase.replace("Pokemon", "Species"), mon.name
+                return phrase, mon.name
 
     @property
     def embed(self) -> Embed:
@@ -664,13 +686,9 @@ class Character:
         if species_data := self.species_data:
             name1, name2 = species_data
             if (
-                isinstance(self.species, Fakemon)
-                or (
-                    isinstance(self.species, (CustomMega, CustomParadox, CustomUltraBeast, Variant))
-                    and (self.species.base is None or self.species.base.types != self.types)
-                )
-                or (isinstance(self.species, Fusion) and self.species.possible_types != {self.types})
-            ):
+                isinstance(self.species, CustomSpecies)
+                and (self.species.base is None or self.species.base.types != self.types)
+            ) or (isinstance(self.species, Fusion) and self.species.possible_types != {self.types}):
                 name1 += "\n" + "".join(str(x.emoji) for x in self.types)
             c_embed.add_field(name=name1, value=name2)
 
@@ -701,14 +719,13 @@ class Character:
 
             embeds.append(sp_embed)
 
-        if pokeball := self.pokeball:
-            c_embed.set_thumbnail(url=pokeball.url)
+        moveset_title = f"{self.trope.name.replace('_', ' ')} Moveset"
 
         if hidden_power := self.hidden_power:
             color = Color(hidden_power.color)
-            moveset_title = f"{hidden_power.emoji} Moveset"
+            moveset_title = f"{hidden_power.emoji} {moveset_title}"
         else:
-            color, moveset_title = Color.blurple(), "Moveset"
+            color = Color.blurple()
 
         embeds[0].color, embeds[-1].color = color, color
         footer_elements: list[str] = []
@@ -755,8 +772,6 @@ class Character:
             "Hidden Power": self.hidden_power.name if self.hidden_power else "Unknown",
             "Nature": self.nature.name if self.nature else None,
         }
-        if self.pokeball:
-            data["Pokeball"] = self.pokeball.label
 
         data["Measure"] = "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")])
 
@@ -797,7 +812,7 @@ class Character:
             items = sorted(self.moveset, key=lambda x: x.name)
             table = doc.add_table(rows=1, cols=2)
             hdr_cells = table.rows[0].cells
-            for index, values in enumerate((items[:3], items[3:])):
+            for index, values in enumerate((items[:2], items[2:])):
                 move_args = []
 
                 for item in values:
@@ -843,15 +858,12 @@ class Character:
                 doc.add_heading("How does it make the character's life harder?", 2)
                 doc.add_paragraph(cons).alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
-        if isinstance(
-            self.species,
-            (
-                Variant,
-                CustomParadox,
-                CustomUltraBeast,
-                Fakemon,
-            ),
-        ) and (movepool := self.species.movepool):
+        if (
+            isinstance(self.species, CustomSpecies)
+            and self.species.can_change_movepool()
+            and (movepool := self.species.movepool)
+        ):
+
             doc.add_page_break()
             doc.add_heading("Movepool", level=1)
             if movepool.level:
@@ -1197,9 +1209,9 @@ class Character:
             hidden_power=self.hidden_power,
             size=self.size,
             weight=self.weight,
-            pokeball=self.pokeball,
             last_used=self.last_used,
             nature=self.nature,
+            trope=self.trope,
         )
 
     def __repr__(self) -> str:
@@ -1241,35 +1253,35 @@ class Character:
         )
 
         if mega := data.pop("mega", ""):
-            species = CustomMega.deduce(mega.removeprefix("Mega "))
+            species = CustomMega.single_deduce(mega.removeprefix("Mega "))
             data["species"] = species
         elif (paradox := data.pop("paradox", "")) and base:
-            species = CustomParadox.deduce(base)
+            species = CustomParadox.single_deduce(base)
             species.name = paradox
             data["species"] = species
-        elif (ub := data.pop("ub", "")) and base:
-            species = CustomUltraBeast.deduce(base)
+        elif (ub := common_pop_get(data, "ultrabeast", "ub")) and base:
+            species = CustomUltraBeast.single_deduce(base)
             species.name = ub
             data["species"] = species
         elif fakemon := data.pop("fakemon", ""):
             name: str = fakemon.title()
-            if species := Fakemon.deduce(base):
+            if species := Fakemon.single_deduce(base):
                 species.name = name
             else:
                 species = Fakemon(name=name)
 
             data["species"] = species
         elif variant := data.pop("variant", ""):
-            if species := Variant.deduce(base):
+            if species := Variant.single_deduce(base):
                 species.name = variant
             else:
                 for item in variant.split(" "):
-                    if species := Variant.deduce(item):
+                    if species := Variant.single_deduce(item):
                         species.name = variant.title()
                         break
 
             data["species"] = species
-        elif (species := Fusion.deduce(",".join(data.pop("fusion", [])))) or (
+        elif (species := Fusion.single_deduce(",".join(data.pop("fusion", [])))) or (
             (aux := common_pop_get(data, "species", "pokemon")) and (species := Species.any_deduce(aux))
         ):
             data["species"] = species
@@ -1292,23 +1304,13 @@ class Character:
         type_info = common_pop_get(data, "types", "type")
         ability_info = common_pop_get(data, "abilities", "ability")
         movepool = Movepool.from_dict(**data.pop("movepool", dict(event=data.get("moveset", set()))))
-        data["sp_ability"] = common_pop_get(data, "spability", "sp_ability")
+        data["sp_ability"] = common_pop_get(data, "spability", "sp_ability", "unique_trait")
 
         if not species:
             data.pop("moveset", None)
         else:
             if type_info and (types := TypingEnum.deduce_many(*type_info)):
-                if isinstance(
-                    species,
-                    (
-                        Fakemon,
-                        Fusion,
-                        Variant,
-                        CustomMega,
-                        CustomParadox,
-                        CustomUltraBeast,
-                    ),
-                ):
+                if isinstance(species, (Fusion, CustomSpecies)):
                     species.types = types
                 elif species.types != types:
                     types_txt = "/".join(i.name for i in types)
@@ -1321,24 +1323,14 @@ class Character:
                 if abilities := Ability.deduce_many(*ability_info):
                     data["abilities"] = abilities
 
-                if isinstance(
-                    species,
-                    (
-                        Fakemon,
-                        Fusion,
-                        Variant,
-                        CustomMega,
-                        CustomParadox,
-                        CustomUltraBeast,
-                    ),
-                ):
+                if isinstance(species, (Fusion, CustomSpecies)):
                     species.abilities = abilities
                 elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
                     species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
                     species.abilities = abilities
                     data["species"] = species
 
-            if isinstance(species, (Fakemon, Variant, CustomParadox)):
+            if isinstance(species, CustomSpecies) and (species.base is None or species.base.movepool != movepool):
                 species.movepool = movepool
 
             data = {k: v for k, v in data.items() if v}

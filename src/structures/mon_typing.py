@@ -511,8 +511,9 @@ class TypingEnum(Typing, Enum):
                 return MAX_MOVE_RANGE1
 
     @classmethod
-    def all(cls, *ignore: TypingEnum):
-        return frozenset({x for x in TypingEnum if x not in ignore})
+    def all(cls, *ignore: TypingEnum | str):
+        items = {cls.deduce(x) for x in ignore}
+        return frozenset({x for x in TypingEnum if x not in items})
 
     @classmethod
     def find(cls, predicate: Callable[[Typing], Any]):

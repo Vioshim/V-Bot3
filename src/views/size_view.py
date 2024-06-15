@@ -20,8 +20,8 @@ from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
-from src.structures.character import Character, Size
-from src.structures.species import Fakemon, Fusion, Species
+from src.structures.character import PROPORTIONS, Character, Size
+from src.structures.species import Fusion, Species
 
 __all__ = (
     "HeightView",
@@ -49,13 +49,15 @@ class HeightModal(Modal, title="Height"):
 
         items = {x.height_value(height) for height in heights for x in Size}
         min_item, max_item = min(items), max(items)
-        answer = max(min_item, min(max_item, self.value))
+        proportion = PROPORTIONS.get(self.oc.trope, 1)
+        value = self.value / proportion
+        answer = max(min_item, min(max_item, value))
         self.oc.size = Size.M if answer <= 0 else answer
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(height)
+            info = self.oc.size.height_info(proportion * height)
         else:
-            info = Size.M.height_info(self.oc.size)
+            info = Size.M.height_info(proportion * self.oc.size)
 
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -96,11 +98,13 @@ class HeightModal2(HeightModal):
     @property
     def value(self) -> float:
         try:
-            answer = Size.ft_inches_to_meters(
-                feet=float(self.text1.value or "0"),
-                inches=float(self.text2.value or "0"),
+            return round(
+                Size.ft_inches_to_meters(
+                    feet=float(self.text1.value or "0"),
+                    inches=float(self.text2.value or "0"),
+                ),
+                2,
             )
-            return round(answer, 2)
         except ValueError:
             return 0
 
@@ -125,13 +129,17 @@ class WeightModal(Modal, title="Weight"):
 
         items = {x.weight_value(weight) for weight in weights for x in Size}
         min_item, max_item = min(items), max(items)
-        answer = max(min_item, min(max_item, self.value))
+
+        proportion = PROPORTIONS.get(self.oc.trope, 1)
+        value = self.value / proportion
+
+        answer = max(min_item, min(max_item, value))
         self.oc.weight = Size.M if answer <= 0 else answer
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(weight)
+            info = self.oc.weight.weight_info(proportion * weight)
         else:
-            info = Size.M.weight_info(self.oc.weight)
+            info = Size.M.weight_info(proportion * self.oc.weight)
 
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -192,25 +200,24 @@ class HeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
+        proportion = PROPORTIONS.get(self.oc.trope, 1)
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: x.height, reverse=True):
                 self.reference.add_option(
                     label=item.name,
                     value=item.id,
-                    description=Size.M.height_info(item.height),
+                    description=Size.M.height_info(proportion * item.height),
                     default=item == self.species,
                 )
         else:
             self.remove_item(self.reference)
 
-        height = 0
-        if self.species and not isinstance(self.species, Fakemon):
-            height = self.species.height
+        height = self.species.height if self.species else 0
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(height)
+            info = self.oc.size.height_info(proportion * height)
         else:
-            info = Size.M.height_info(self.oc.size)
+            info = Size.M.height_info(proportion * self.oc.size)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
@@ -218,12 +225,13 @@ class HeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
         for item in items:
-            label = item.height_info(height)
+            label = item.height_info(proportion * height)
+            reference = item.height_value(height)
             self.choice.add_option(
                 label=label,
                 value=item.name,
                 description=item.reference_name,
-                default=label == info,
+                default=height == reference,
                 emoji=item.emoji,
             )
 
@@ -279,25 +287,24 @@ class WeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
+        proportion = PROPORTIONS.get(self.oc.trope, 1)
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: x.weight, reverse=True):
                 self.reference.add_option(
                     label=item.name,
                     value=item.id,
-                    description=Size.M.weight_info(item.weight),
+                    description=Size.M.weight_info(proportion * item.weight),
                     default=item == self.species,
                 )
         else:
             self.remove_item(self.reference)
 
-        weight = 0
-        if self.species and not isinstance(self.species, Fakemon):
-            weight = self.species.weight
+        weight = self.species.weight if self.species else 0
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.height_info(weight)
+            info = self.oc.weight.height_info(proportion * weight)
         else:
-            info = Size.M.height_info(self.oc.weight)
+            info = Size.M.height_info(proportion * self.oc.weight)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
@@ -305,7 +312,7 @@ class WeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
         for item in items:
-            label = item.weight_info(weight)
+            label = item.weight_info(proportion * weight)
             self.choice.add_option(
                 label=label,
                 value=item.name,

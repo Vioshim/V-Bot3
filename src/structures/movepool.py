@@ -748,7 +748,7 @@ class Movepool:
         return Movepool() + self
 
     @classmethod
-    def default(cls, movepool: Movepool = None):
+    def default(cls, movepool: Optional[Movepool] = None):
         base = cls.from_dict(tm=["TERABLAST"])
         if isinstance(movepool, Movepool):
             base += movepool
