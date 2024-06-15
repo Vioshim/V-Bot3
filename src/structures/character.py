@@ -604,7 +604,7 @@ class Character:
     def weight_value(self):
         if isinstance(self.weight, Size):
             weight = self.species.weight if self.species else 0
-            value = self.size.weight_value(weight)
+            value = self.weight.weight_value(weight)
         else:
             value = self.weight
         proportion = PROPORTIONS.get(self.trope, 1)
