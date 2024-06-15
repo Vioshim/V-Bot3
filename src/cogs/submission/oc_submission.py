@@ -368,16 +368,17 @@ class Template(TemplateItem, Enum):
                                 movepool=Movepool(other=oc.moveset.copy()),
                             )
             case _:
-                oc.species, abilities = choices[0], choices[0].abilities.copy()
-                if len(abilities) <= 2:
-                    oc.abilities = abilities
-                else:
-                    oc.abilities &= abilities
+                if choices:
+                    oc.species, abilities = choices[0], choices[0].abilities.copy()
+                    if len(abilities) <= 2:
+                        oc.abilities = abilities
+                    else:
+                        oc.abilities &= abilities
                 default_measure = True
 
         if species := oc.species:
             moves = species.total_movepool()
-            if not oc.moveset and len(moves) <= 6:
+            if not oc.moveset and len(moves) <= 4:
                 oc.moveset = frozenset(moves)
             if not oc.abilities and len(species.abilities) == 1:
                 oc.abilities = species.abilities.copy()
