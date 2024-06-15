@@ -395,6 +395,7 @@ class Species:
             return cls.from_ID(value)
 
         children_classes = {x.__name__.removeprefix("Custom").lower(): x for x in CustomSpecies.__subclasses__()}
+        children_classes |= {x.__name__.removeprefix("Custom").lower(): x for x in GimmickSpecies.__subclasses__()}
         children_classes["base"] = Variant
         children_classes["ub"] = CustomUltraBeast
 
