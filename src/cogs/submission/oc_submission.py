@@ -205,7 +205,7 @@ class Template(TemplateItem, Enum):
     Mythical = {"description": "Normal residents that resemble Mythical Pokemon."}
     UltraBeast = {"description": "Normal residents that resemble Ultra Beasts."}
     Paradox = {"description": "Normal residents that resemble Paradox Pokemon."}
-    GMax = {"description": "Character's Gigantamax."}
+    # GMax = {"description": "Character's Gigantamax."}
     Mega = {
         "description": "Character's Mega Evolution.",
         "docs": {
