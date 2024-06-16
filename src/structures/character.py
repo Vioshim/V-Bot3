@@ -354,7 +354,13 @@ class Trope(Enum):
     Ghost = "Ghost, spirit, or undead."
 
     def is_sizeable(self):
-        return self in {Trope.Prime, Trope.Ditto, Trope.Ghost}
+        return self in {
+            Trope.Prime,
+            Trope.Ditto,
+            Trope.Ghost,
+            Trope.Feral,
+            Trope.Reploid,
+        }
 
 
 PROPORTIONS = {
