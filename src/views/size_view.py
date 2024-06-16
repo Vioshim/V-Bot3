@@ -241,7 +241,7 @@ class HeightView(Basic):
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
-        for value, item in zip(np.linspace(min_value, max_value, len(items)), items):
+        for value, item in zip(np.linspace(max_value, min_value, len(items)), items):
             label = Size.Average.height_info(value)
             self.choice.add_option(
                 label=label,
@@ -345,7 +345,7 @@ class WeightView(Basic):
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
-        for value, item in zip(np.linspace(min_value, max_value, len(items)), items):
+        for value, item in zip(np.linspace(max_value, min_value, len(items)), items):
             label = Size.Average.weight_info(value)
             self.choice.add_option(
                 label=label,
