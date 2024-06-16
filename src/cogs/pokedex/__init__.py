@@ -300,6 +300,8 @@ class Pokedex(commands.Cog):
             filters.append(lambda oc: name_pattern.search(oc.name))
         if flags.age:
             filters.append(lambda oc: oc.age == flags.age)
+        if flags.trope:
+            filters.append(lambda oc: oc.trope == flags.trope)
 
         if member_id := getattr(flags.member, "id", flags.member):
             filters.append(lambda oc: oc.author == member_id)

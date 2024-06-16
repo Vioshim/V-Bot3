@@ -439,6 +439,7 @@ class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
     unique_trait: Optional[str] = commands.flag(default=None, description="Unique Trait to look for")
     pronoun: Optional[Pronoun] = commands.flag(default=None, description="Pronoun to look for")
     age: Optional[AgeGroup] = commands.flag(default=None, description="Age group to look for")
+    trope: Optional[Trope] = commands.flag(default=None, description="Trope to look for")
     group_by: Optional[GroupByArg] = commands.flag(default=None, description="Group by method")
     amount: Optional[str] = commands.flag(default=None, description="Amount to group by")
 
