@@ -471,7 +471,6 @@ class Character:
             except KeyError:
                 self.size_category = SizeCategory.Average
 
-
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
 
@@ -1239,25 +1238,8 @@ class Character:
         )
 
     def __repr__(self) -> str:
-        types = "/".join(i.name for i in self.types)
-        name = self.kind.title if self.kind else "Error"
-        match self.kind:
-            case Kind.Fakemon:
-                a1 = Ability.get(name="Beast Boost")
-                if a1 in self.abilities:
-                    name = "Fakemon UB"
-                elif self.species and self.species.species_evolves_from:
-                    name = "Fakemon Evo"
-            case Kind.Variant | Kind.CustomParadox:
-                a1 = Ability.get(name="Protosynthesis")
-                a2 = Ability.get(name="Quark Drive")
-                if a1 in self.abilities:
-                    name = "Past"
-                elif a2 in self.abilities:
-                    name = "Future"
         species = self.species.name if self.species else None
-        self.trope.
-        return f"{name}: {species}, Age: {self.age.title}, Types: {types}"
+        return f"{self.trope.name} - {species}"
 
     @classmethod
     def process(cls, **kwargs) -> Character:
