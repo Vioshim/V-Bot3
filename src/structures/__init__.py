@@ -21,7 +21,6 @@ from src.structures.logger import ColoredLogger
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
-from src.structures.pokeball import Pokeball
 from src.structures.species import (
     Fakemon,
     Fusion,
@@ -48,7 +47,6 @@ __all__ = (
     "TypingEnum",
     "Move",
     "Movepool",
-    "Pokeball",
     "Fakemon",
     "Fusion",
     "Legendary",

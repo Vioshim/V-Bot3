@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import operator
 from abc import ABC, abstractmethod
 from enum import Enum, StrEnum, auto
 from itertools import groupby
@@ -55,10 +56,10 @@ STANDARD = [
 ]
 
 OPERATORS = {
-    "<=": lambda x, y: x <= y,
-    "<": lambda x, y: x < y,
-    ">=": lambda x, y: x >= y,
-    ">": lambda x, y: x > y,
+    "<=": operator.le,
+    "<": operator.lt,
+    ">=": operator.ge,
+    ">": operator.gt,
 }
 
 

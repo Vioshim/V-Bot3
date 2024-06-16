@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 import re
 from dataclasses import asdict, dataclass, field
-from enum import Enum, IntEnum, StrEnum, auto
+from enum import Enum, StrEnum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
@@ -50,9 +50,9 @@ from src.structures.bot import CustomBot
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
-from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
+    CustomGMax,
     CustomMega,
     CustomParadox,
     CustomSpecies,
@@ -141,6 +141,7 @@ class Kind(Enum):
     CustomMega = CustomMega
     CustomParadox = CustomParadox
     CustomUltraBeast = CustomUltraBeast
+    CustomGMax = CustomGMax
 
     @property
     def title(self):
@@ -174,6 +175,10 @@ class Kind(Enum):
                 return "CUSTOM MEGA"
             case self.CustomUltraBeast:
                 return "CUSTOM ULTRA BEAST"
+            case self.CustomParadox:
+                return "CUSTOM PARADOX"
+            case self.CustomGMax:
+                return "CUSTOM GMAX"
 
     @classmethod
     def associated(cls, name: str) -> Optional[Kind]:
@@ -200,6 +205,10 @@ class Kind(Enum):
                 return cls.CustomMega
             case "CUSTOMULTRABEAST":
                 return cls.CustomUltraBeast
+            case "CUSTOMPARADOX":
+                return cls.CustomParadox
+            case "CUSTOMGMAX":
+                return cls.CustomGMax
 
     def all(self) -> frozenset[Species]:
         return self.value.all()
