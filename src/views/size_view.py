@@ -215,13 +215,13 @@ class HeightView(Basic):
 
         height = self.species.height if self.species else 0
 
-        if isinstance(self.oc.species, Fusion):
-            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+        if isinstance(self.species, Fusion):
+            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
             height = 0
-            if self.oc.species and not isinstance(self.oc.species, Fakemon):
-                height = self.oc.species.height
+            if self.species and not isinstance(self.species, Fakemon):
+                height = self.species.height
             height_a = height_b = height
 
         min_value, max_value = (
@@ -317,13 +317,13 @@ class WeightView(Basic):
 
         weight = self.species.weight if self.species else 0
 
-        if isinstance(self.oc.species, Fusion):
-            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+        if isinstance(self.species, Fusion):
+            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
             height = 0
-            if self.oc.species and not isinstance(self.oc.species, Fakemon):
-                height = self.oc.species.height
+            if self.species and not isinstance(self.species, Fakemon):
+                height = self.species.height
             height_a = height_b = height
 
         min_value, max_value = (
