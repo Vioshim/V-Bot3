@@ -16,12 +16,13 @@
 from itertools import combinations_with_replacement
 from typing import Optional
 
+import numpy as np
 from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size
-from src.structures.species import Fusion, Species
+from src.structures.species import Fakemon, Fusion, Species
 
 __all__ = (
     "HeightView",
@@ -214,24 +215,41 @@ class HeightView(Basic):
 
         height = self.species.height if self.species else 0
 
-        if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(proportion * height)
+        if isinstance(self.oc.species, Fusion):
+            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+            height_a, height_b = s_a.height, s_b.height
         else:
-            info = Size.Average.height_info(proportion * self.oc.size)
+            height = 0
+            if self.oc.species and not isinstance(self.oc.species, Fakemon):
+                height = self.oc.species.height
+            height_a = height_b = height
+
+        min_value, max_value = (
+            Size.Minimum.height_value(height_a),
+            Size.Maximum.height_value(height_b),
+        )
+        min_value *= proportion
+        max_value *= proportion
+
+        if isinstance(self.oc.size, Size):
+            height = self.oc.size.height_value(height) * proportion
+        else:
+            height = Size.Average.height_value(self.oc.size) * proportion
+
+        info = Size.Average.height_info(height)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
-        for item in items:
-            label = item.height_info(proportion * height)
-            reference = item.height_value(height)
+        for value, item in zip(np.linspace(min_value, max_value, len(items)), items):
+            label = item.height_info(value)
             self.choice.add_option(
                 label=label,
                 value=item.name,
                 description=item.reference_name,
-                default=height == reference,
+                default=info == label,
                 emoji=item.emoji,
             )
 
@@ -301,18 +319,36 @@ class WeightView(Basic):
 
         weight = self.species.weight if self.species else 0
 
-        if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.height_info(proportion * weight)
+        if isinstance(self.oc.species, Fusion):
+            s_a, *_, s_b = sorted(self.oc.species.bases, key=lambda x: x.height)
+            height_a, height_b = s_a.height, s_b.height
         else:
-            info = Size.Average.height_info(proportion * self.oc.weight)
+            height = 0
+            if self.oc.species and not isinstance(self.oc.species, Fakemon):
+                height = self.oc.species.height
+            height_a = height_b = height
 
+        min_value, max_value = (
+            Size.Minimum.height_value(height_a),
+            Size.Maximum.height_value(height_b),
+        )
+        min_value *= proportion
+        max_value *= proportion
+
+        if isinstance(self.oc.weight, Size):
+            weight = self.oc.weight.height_value(weight) * proportion
+
+        else:
+            weight = Size.Average.weight_value(self.oc.weight) * proportion
+
+        info = Size.Average.height_info(weight)
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
-        for item in items:
-            label = item.weight_info(proportion * weight)
+        for value, item in zip(np.linspace(min_value, max_value, len(items)), items):
+            label = item.weight_info(value)
             self.choice.add_option(
                 label=label,
                 value=item.name,
