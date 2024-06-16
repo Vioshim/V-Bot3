@@ -342,7 +342,7 @@ class Nature(Enum):
 
 
 class Trope(Enum):
-    Normal = "Normal character."
+    Common = "Common character."
     Drifter = "Comes from another world."
     Prime = "Prime of their species."
     Feral = "Feral character."
@@ -389,7 +389,7 @@ class Character:
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
-    trope: Trope = Trope.Normal
+    trope: Trope = Trope.Common
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -464,7 +464,13 @@ class Character:
             try:
                 self.trope = Trope[self.trope]
             except KeyError:
-                self.trope = Trope.Normal
+                self.trope = Trope.Common
+        if isinstance(self.size_category, str):
+            try:
+                self.size_category = SizeCategory[self.size_category]
+            except KeyError:
+                self.size_category = SizeCategory.Average
+
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -762,8 +768,8 @@ class Character:
             item = TypingEnum.Typeless if TypingEnum.Typeless in self.types else item
             return f"* [{x.name}] - {item.name} ({x.category.name})".title()
 
-        if moves_text := "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name))):
-            c_embed.add_field(name=moveset_title, value=moves_text, inline=False)
+        moves_text = "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name)))
+        c_embed.add_field(name=moveset_title, value=moves_text or "> No moveset available.", inline=False)
 
         if image := self.image_url:
             c_embed.set_image(url=image)
@@ -1229,6 +1235,7 @@ class Character:
             last_used=self.last_used,
             nature=self.nature,
             trope=self.trope,
+            size_category=self.size_category,
         )
 
     def __repr__(self) -> str:
@@ -1249,6 +1256,7 @@ class Character:
                 elif a2 in self.abilities:
                     name = "Future"
         species = self.species.name if self.species else None
+        self.trope.
         return f"{name}: {species}, Age: {self.age.title}, Types: {types}"
 
     @classmethod

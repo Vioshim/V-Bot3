@@ -725,7 +725,7 @@ class SizeCategoryField(TemplateField):
             target=itx,
             timeout=None,
             values=SizeCategory,
-            parser=lambda x: (x.name.replace("_", " "), f"Sets the size category to {x.name} ({x.value:.0%})"),
+            parser=lambda x: (x.name.replace("_", " "), ""),
             sort_key=lambda x: x.name,
             silent_mode=True,
             auto_choice_info=True,
@@ -738,6 +738,7 @@ class SizeCategoryField(TemplateField):
             ephemeral=ephemeral,
         ) as size_category:
             if size_category:
+                oc.copy
                 oc.size_category = size_category
                 progress.add(cls.name)
 
@@ -870,7 +871,7 @@ class TypesField(TemplateField, required=True):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fakemon, Variant, CustomMega, Fusion, CustomParadox, CustomUltraBeast))
+        return isinstance(oc.species, (Fusion, CustomSpecies))
 
     @classmethod
     async def on_submit(
