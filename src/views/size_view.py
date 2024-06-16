@@ -20,7 +20,7 @@ from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
-from src.structures.character import PROPORTIONS, Character, Size
+from src.structures.character import Character, Size
 from src.structures.species import Fusion, Species
 
 __all__ = (
@@ -49,12 +49,8 @@ class HeightModal(Modal, title="Height"):
 
         items = {x.height_value(height) for height in heights for x in Size}
         min_item, max_item = min(items), max(items)
-        if self.oc.trope.is_sizeable():
-            min_ratio, *_, max_ratio = sorted(PROPORTIONS.values())
-            min_item *= min_ratio
-            max_item *= max_ratio
 
-        proportion = PROPORTIONS.get(self.oc.trope, 1)
+        proportion = self.oc.size_category.value
         value = self.value / proportion
         answer = max(min_item, min(max_item, value))
         self.oc.size = Size.Average if answer <= 0 else answer
@@ -134,14 +130,9 @@ class WeightModal(Modal, title="Weight"):
 
         items = {x.weight_value(weight) for weight in weights for x in Size}
         min_item, max_item = min(items), max(items)
-        if self.oc.trope.is_sizeable():
-            min_ratio, *_, max_ratio = sorted(PROPORTIONS.values())
-            min_item *= min_ratio
-            max_item *= max_ratio
+        proportion = self.oc.size_category.value
 
-        proportion = PROPORTIONS.get(self.oc.trope, 1)
         value = self.value / proportion
-
         answer = max(min_item, min(max_item, value))
         self.oc.weight = Size.Average if answer <= 0 else answer
 
@@ -209,7 +200,7 @@ class HeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        proportion = PROPORTIONS.get(self.oc.trope, 1)
+        proportion = self.oc.size_category.value
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: x.height, reverse=True):
                 self.reference.add_option(
@@ -296,7 +287,7 @@ class WeightView(Basic):
         else:
             bases = [self.oc.species] if self.oc.species else []
 
-        proportion = PROPORTIONS.get(self.oc.trope, 1)
+        proportion = self.oc.size_category.value
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: x.weight, reverse=True):
                 self.reference.add_option(

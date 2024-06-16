@@ -58,11 +58,11 @@ from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import (
-    PROPORTIONS,
     AgeGroup,
     Character,
     Nature,
     Size,
+    SizeCategory,
     Trope,
 )
 from src.structures.mon_typing import TypingEnum
@@ -695,6 +695,45 @@ class SizeField(TemplateField):
         progress.add(cls.name)
 
 
+class SizeCategoryField(TemplateField):
+    "Modify the kind of size the OC is"
+
+    @classmethod
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if oc.size_category == SizeCategory.Kaiju:
+            return "Really big, huh?"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        itx: Interaction[CustomBot],
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        view = Complex[SizeCategory](
+            member=itx.user,
+            target=itx,
+            timeout=None,
+            values=SizeCategory,
+            parser=lambda x: (x.name.replace("_", " "), f"Sets the size category to {x.name} ({x.value:.0%})"),
+            sort_key=lambda x: x.name,
+            silent_mode=True,
+            auto_choice_info=True,
+            auto_conclude=False,
+        )
+        async with view.send(
+            title=f"{template.title} Character's Size Category.",
+            description=f"> {oc.size_category.name.replace('_', ' ')}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as size_category:
+            if size_category:
+                oc.size_category = size_category
+                progress.add(cls.name)
+
+
 class WeightField(TemplateField):
     "Modify the OC's Weight"
 
@@ -717,11 +756,9 @@ class WeightField(TemplateField):
             weight_a = weight_b = weight
 
         min_value, max_value = Size.Minimum.weight_value(weight_a), Size.Maximum.weight_value(weight_b)
-
-        if oc.trope.is_sizeable():
-            min_ratio, *_, max_ratio = sorted(PROPORTIONS.values())
-            min_value *= min_ratio
-            max_value *= max_ratio
+        ratio = oc.size_category.value
+        min_value *= ratio
+        max_value *= ratio
 
         if oc.weight < min_value:
             return f"Min {min_value}"

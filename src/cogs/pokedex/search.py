@@ -32,7 +32,15 @@ from src.cogs.submission.oc_submission import ModCharactersView
 from src.pagination.complex import Complex
 from src.structures.ability import Ability, UTraitKind
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Kind, Nature, Size, Trope
+from src.structures.character import (
+    AgeGroup,
+    Character,
+    Kind,
+    Nature,
+    Size,
+    SizeCategory,
+    Trope,
+)
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.pronouns import Pronoun
@@ -400,7 +408,7 @@ class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" "
     fused2: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="To check when fused")
     fakemon: Optional[FakemonArg] = commands.flag(default=None, description="Search fakemon species")
     move_id: Optional[MoveArg] = commands.flag(default=None, description="Move to lookup")
-    trope: Optional[Trope] = commands.flag(default=None, description="Trope to lookup")
+    size: Optional[SizeCategory] = commands.flag(default=None, description="Size to lookup")
     level: int = commands.flag(default=0, description="Level to calculate stats for")
     ivs: int = commands.flag(default=0, description="IVs to calculate stats for")
     evs: int = commands.flag(default=0, description="EVs to calculate stats for")

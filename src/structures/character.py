@@ -347,27 +347,20 @@ class Trope(Enum):
     Prime = "Prime of their species."
     Feral = "Feral character."
     Reploid = "Sentient robot or android."
-    Aura_Bot = "Toy robot, aura bot."
     Mini = "Pack tactics, small and cute."
     Alpha = "Tribal, live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."
     Ghost = "Ghost, spirit, or undead."
 
-    def is_sizeable(self):
-        return self in {
-            Trope.Prime,
-            Trope.Ditto,
-            Trope.Ghost,
-            Trope.Feral,
-            Trope.Reploid,
-        }
 
-
-PROPORTIONS = {
-    Trope.Aura_Bot: 0.1,
-    Trope.Mini: 0.2,
-    Trope.Alpha: 1.5,
-}
+class SizeCategory(float, Enum):
+    Mini = 0.1
+    Small = 0.2
+    Below_Average = 0.5
+    Average = 1.0
+    Large = 1.25
+    Alpha = 1.5
+    Kaiju = 12
 
 
 @dataclass(slots=True)
@@ -391,6 +384,7 @@ class Character:
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
     size: Size | float = Size.Average
+    size_category: SizeCategory = SizeCategory.Average
     weight: Size | float = Size.Average
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
@@ -409,6 +403,7 @@ class Character:
         data["age"] = self.age.name
         data["size"] = self.size.name if isinstance(self.size, Size) else self.size
         data["weight"] = self.weight.name if isinstance(self.weight, Size) else self.weight
+        data["size_category"] = self.size_category.name
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
@@ -609,7 +604,7 @@ class Character:
             value = self.size.height_value(height)
         else:
             value = self.size
-        proportion = PROPORTIONS.get(self.trope, 1)
+        proportion = self.size_category.value
         return round(proportion * value, 2)
 
     @property
@@ -623,7 +618,7 @@ class Character:
             value = self.weight.weight_value(weight)
         else:
             value = self.weight
-        proportion = PROPORTIONS.get(self.trope, 1)
+        proportion = self.size_category.value
         return round(proportion * value, 2)
 
     @property

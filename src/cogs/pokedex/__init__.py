@@ -28,7 +28,7 @@ from yarl import URL
 from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, GroupBy, MovepoolFlags
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.structures.bot import CustomBot
-from src.structures.character import PROPORTIONS, Character, Size
+from src.structures.character import Character, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Species
@@ -143,9 +143,10 @@ class Pokedex(commands.Cog):
                     species.weight,
                 )
 
-            proportion = PROPORTIONS.get(flags.trope, 1.0)
-            val1 *= proportion
-            val2 *= proportion
+            if flags.size:
+                proportion = flags.size.value
+                val1 *= proportion
+                val2 *= proportion
 
             if isinstance(base, Fakemon):
                 embed.add_field(name="Height", value=height.height_info(val1), inline=False)
