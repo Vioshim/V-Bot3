@@ -1045,6 +1045,28 @@ class Submission(commands.Cog):
         finally:
             self.ignore -= users
 
+    @app_commands.command()
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    async def hidden(self, itx: Interaction[CustomBot], *, oc: CharacterArg):
+        """Allows to show hidden info
+
+        Parameters
+        ----------
+        itx : Interaction
+            Interaction
+        oc : CharacterArg
+            Character to show hidden info
+        """
+        await itx.response.defer(ephemeral=True, thinking=True)
+        embed = Embed(title="Hidden Info", description=oc.hidden_info, color=oc.color)
+
+        view = View()
+        if jump_url := oc.jump_url:
+            view.add_item(Button(label="Jump URL", url=jump_url, emoji=REPLY_EMOJI))
+
+        embed.set_image(url=oc.image_url)
+        await itx.response.send_message(embed=embed, view=view, ephemeral=True)
+
     @commands.command()
     async def addchar(self, ctx: commands.Context[CustomBot], *, text: str = ""):
         """Allows to create OCs from text

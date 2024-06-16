@@ -669,6 +669,12 @@ class Character:
         return self.embeds[0]
 
     @property
+    def color(self) -> Color:
+        if hidden_power := self.hidden_power:
+            return Color(hidden_power.color)
+        return Color.blurple()
+
+    @property
     def embeds(self) -> list[Embed]:
         """Discord embed out of the character
 
