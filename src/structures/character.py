@@ -350,6 +350,11 @@ class Trope(Enum):
     Aura_Bot = "Toy robot, aura bot."
     Mini = "Pack tactics, small and cute."
     Alpha = "Tribal, live like people and ferals."
+    Ditto = "Shape-shifter, can transform into anything."
+    Ghost = "Ghost, spirit, or undead."
+
+    def is_sizeable(self):
+        return self in {Trope.Prime, Trope.Ditto, Trope.Ghost}
 
 
 PROPORTIONS = {

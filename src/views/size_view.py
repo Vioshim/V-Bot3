@@ -49,6 +49,11 @@ class HeightModal(Modal, title="Height"):
 
         items = {x.height_value(height) for height in heights for x in Size}
         min_item, max_item = min(items), max(items)
+        if self.oc.trope.is_sizeable():
+            min_ratio, *_, max_ratio = sorted(PROPORTIONS.values())
+            min_item *= min_ratio
+            max_item *= max_ratio
+
         proportion = PROPORTIONS.get(self.oc.trope, 1)
         value = self.value / proportion
         answer = max(min_item, min(max_item, value))
@@ -129,6 +134,10 @@ class WeightModal(Modal, title="Weight"):
 
         items = {x.weight_value(weight) for weight in weights for x in Size}
         min_item, max_item = min(items), max(items)
+        if self.oc.trope.is_sizeable():
+            min_ratio, *_, max_ratio = sorted(PROPORTIONS.values())
+            min_item *= min_ratio
+            max_item *= max_ratio
 
         proportion = PROPORTIONS.get(self.oc.trope, 1)
         value = self.value / proportion

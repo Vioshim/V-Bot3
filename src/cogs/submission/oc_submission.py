@@ -57,7 +57,14 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
-from src.structures.character import AgeGroup, Character, Nature, Size, Trope
+from src.structures.character import (
+    PROPORTIONS,
+    AgeGroup,
+    Character,
+    Nature,
+    Size,
+    Trope,
+)
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
@@ -709,11 +716,18 @@ class WeightField(TemplateField):
                 weight = oc.species.weight
             weight_a = weight_b = weight
 
-        if oc.weight < Size.Minimum.weight_value(weight_a):
-            return f"Min {Size.Minimum.weight_info(weight_a)}"
+        min_value, max_value = Size.Minimum.weight_value(weight_a), Size.Maximum.weight_value(weight_b)
 
-        if oc.weight > Size.Maximum.weight_value(weight_b):
-            return f"Max {Size.Maximum.weight_info(weight_b)}"
+        if oc.trope.is_sizeable():
+            min_ratio, *_, max_ratio = sorted(PROPORTIONS.values())
+            min_value *= min_ratio
+            max_value *= max_ratio
+
+        if oc.weight < min_value:
+            return f"Min {min_value}"
+
+        if oc.weight > max_value:
+            return f"Max {max_value}"
 
     @classmethod
     async def on_submit(
