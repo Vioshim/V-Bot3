@@ -215,7 +215,7 @@ class HeightView(Basic):
 
         height = self.species.height if self.species else 0
 
-        if isinstance(self.species, Fusion):
+        if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
             s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
         else:
