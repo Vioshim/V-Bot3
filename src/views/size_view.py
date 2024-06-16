@@ -225,11 +225,9 @@ class HeightView(Basic):
             height_a = height_b = height
 
         min_value, max_value = (
-            Size.Minimum.height_value(height_a),
-            Size.Maximum.height_value(height_b),
+            Size.Minimum.height_value(height_a) * proportion,
+            Size.Maximum.height_value(height_b) * proportion,
         )
-        min_value *= proportion
-        max_value *= proportion
 
         if isinstance(self.oc.size, Size):
             height = self.oc.size.height_value(height) * proportion
@@ -244,7 +242,7 @@ class HeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
         for value, item in zip(np.linspace(min_value, max_value, len(items)), items):
-            label = item.height_info(value)
+            label = Size.Average.height_info(value)
             self.choice.add_option(
                 label=label,
                 value=item.name,
@@ -348,7 +346,7 @@ class WeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
 
         for value, item in zip(np.linspace(min_value, max_value, len(items)), items):
-            label = item.weight_info(value)
+            label = Size.Average.weight_info(value)
             self.choice.add_option(
                 label=label,
                 value=item.name,
