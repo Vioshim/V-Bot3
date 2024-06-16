@@ -1065,7 +1065,7 @@ class Submission(commands.Cog):
             view.add_item(Button(label="Jump URL", url=jump_url, emoji=REPLY_EMOJI))
 
         embed.set_image(url=oc.image_url)
-        await itx.response.send_message(embed=embed, view=view, ephemeral=True)
+        await itx.followup.send(embed=embed, view=view, ephemeral=True)
 
     @commands.command()
     async def addchar(self, ctx: commands.Context[CustomBot], *, text: str = ""):
