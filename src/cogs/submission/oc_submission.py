@@ -384,8 +384,8 @@ class Template(TemplateItem, Enum):
                 oc.abilities = species.abilities.copy()
 
         if default_measure:
-            oc.size = Size.M
-            oc.weight = Size.M
+            oc.size = Size.Average
+            oc.weight = Size.Average
 
     @property
     def min_values(self):
@@ -663,11 +663,11 @@ class SizeField(TemplateField):
                 height = oc.species.height
             height_a = height_b = height
 
-        if oc.size < Size.XXXS.height_value(height_a):
-            return f"Min {Size.XXXS.height_info(height_a)}"
+        if oc.size < Size.Minimum.height_value(height_a):
+            return f"Min {Size.Minimum.height_info(height_a)}"
 
-        if oc.size > Size.XXXL.height_value(height_b):
-            return f"Max {Size.XXXL.height_info(height_b)}"
+        if oc.size > Size.Maximum.height_value(height_b):
+            return f"Max {Size.Maximum.height_info(height_b)}"
 
     @classmethod
     async def on_submit(
@@ -709,11 +709,11 @@ class WeightField(TemplateField):
                 weight = oc.species.weight
             weight_a = weight_b = weight
 
-        if oc.weight < Size.XXXS.weight_value(weight_a):
-            return f"Min {Size.XXXS.weight_info(weight_a)}"
+        if oc.weight < Size.Minimum.weight_value(weight_a):
+            return f"Min {Size.Minimum.weight_info(weight_a)}"
 
-        if oc.weight > Size.XXXL.weight_value(weight_b):
-            return f"Max {Size.XXXL.weight_info(weight_b)}"
+        if oc.weight > Size.Maximum.weight_value(weight_b):
+            return f"Max {Size.Maximum.weight_info(weight_b)}"
 
     @classmethod
     async def on_submit(
@@ -1361,7 +1361,7 @@ class CreationOCView(Basic):
             items = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
-            self.oc.size = self.oc.weight = Size.M
+            self.oc.size = self.oc.weight = Size.Average
             await self.update(itx)
         except Exception as e:
             self.bot.logger.exception("Exception in OC Creation", exc_info=e)

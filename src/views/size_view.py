@@ -52,12 +52,12 @@ class HeightModal(Modal, title="Height"):
         proportion = PROPORTIONS.get(self.oc.trope, 1)
         value = self.value / proportion
         answer = max(min_item, min(max_item, value))
-        self.oc.size = Size.M if answer <= 0 else answer
+        self.oc.size = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.size, Size):
             info = self.oc.size.height_info(proportion * height)
         else:
-            info = Size.M.height_info(proportion * self.oc.size)
+            info = Size.Average.height_info(proportion * self.oc.size)
 
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -134,12 +134,12 @@ class WeightModal(Modal, title="Weight"):
         value = self.value / proportion
 
         answer = max(min_item, min(max_item, value))
-        self.oc.weight = Size.M if answer <= 0 else answer
+        self.oc.weight = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.weight, Size):
             info = self.oc.weight.weight_info(proportion * weight)
         else:
-            info = Size.M.weight_info(proportion * self.oc.weight)
+            info = Size.Average.weight_info(proportion * self.oc.weight)
 
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -206,7 +206,7 @@ class HeightView(Basic):
                 self.reference.add_option(
                     label=item.name,
                     value=item.id,
-                    description=Size.M.height_info(proportion * item.height),
+                    description=Size.Average.height_info(proportion * item.height),
                     default=item == self.species,
                 )
         else:
@@ -217,7 +217,7 @@ class HeightView(Basic):
         if isinstance(self.oc.size, Size):
             info = self.oc.size.height_info(proportion * height)
         else:
-            info = Size.M.height_info(proportion * self.oc.size)
+            info = Size.Average.height_info(proportion * self.oc.size)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
@@ -293,7 +293,7 @@ class WeightView(Basic):
                 self.reference.add_option(
                     label=item.name,
                     value=item.id,
-                    description=Size.M.weight_info(proportion * item.weight),
+                    description=Size.Average.weight_info(proportion * item.weight),
                     default=item == self.species,
                 )
         else:
@@ -304,7 +304,7 @@ class WeightView(Basic):
         if isinstance(self.oc.weight, Size):
             info = self.oc.weight.height_info(proportion * weight)
         else:
-            info = Size.M.height_info(proportion * self.oc.weight)
+            info = Size.Average.height_info(proportion * self.oc.weight)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 

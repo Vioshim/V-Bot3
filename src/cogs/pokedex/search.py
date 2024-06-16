@@ -718,7 +718,7 @@ class OCGroupByHeight(OCGroupBy[float]):
 
     @staticmethod
     def inner_parser(group: float, elements: list[Character]):
-        key = Size.M.height_info(group)
+        key = Size.Average.height_info(group)
         return key, f"Group has {len(elements):02d} OCs."
 
     @staticmethod
@@ -735,7 +735,7 @@ class OCGroupByWeight(OCGroupBy[float]):
 
     @staticmethod
     def inner_parser(group: float, elements: list[Character]):
-        key = Size.M.weight_info(group)
+        key = Size.Average.weight_info(group)
         return key, f"Group has {len(elements):02d} OCs."
 
     @staticmethod

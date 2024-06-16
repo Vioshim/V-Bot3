@@ -142,11 +142,11 @@ class Pokedex(commands.Cog):
             if isinstance(species, Character):
                 base = species.species
                 data1, data2 = species.size, species.weight
-                height, val1 = (data1, 0.0) if isinstance(data1, Size) else (Size.M, data1)
-                weight, val2 = (data2, 0.0) if isinstance(data2, Size) else (Size.M, data2)
+                height, val1 = (data1, 0.0) if isinstance(data1, Size) else (Size.Average, data1)
+                weight, val2 = (data2, 0.0) if isinstance(data2, Size) else (Size.Average, data2)
             else:
                 base = species
-                height, weight, val1, val2 = Size.M, Size.M, species.height, species.weight
+                height, weight, val1, val2 = Size.Average, Size.Average, species.height, species.weight
 
             if isinstance(base, Fakemon):
                 embed.add_field(name="Height", value=height.height_info(val1), inline=False)
@@ -161,13 +161,13 @@ class Pokedex(commands.Cog):
                     h1, h2, h3 = val1, val1, val1
                     w1, w2, w3 = val2, val2, val2
 
-                embed.add_field(name="Height (Min)", value=Size.XXXS.height_info(h1))
+                embed.add_field(name="Height (Min)", value=Size.Minimum.height_info(h1))
                 embed.add_field(name="Height (Avg)", value=height.height_info(h2))
-                embed.add_field(name="Height (Max)", value=Size.XXXL.height_info(h3))
+                embed.add_field(name="Height (Max)", value=Size.Maximum.height_info(h3))
 
-                embed.add_field(name="Weight (Min)", value=Size.XXXS.weight_info(w1))
+                embed.add_field(name="Weight (Min)", value=Size.Minimum.weight_info(w1))
                 embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
-                embed.add_field(name="Weight (Max)", value=Size.XXXL.weight_info(w3))
+                embed.add_field(name="Weight (Max)", value=Size.Maximum.weight_info(w3))
 
             evs, ivs, level = flags.evs, flags.ivs, flags.level
             if isinstance(species, Species) and (evs or ivs or level):

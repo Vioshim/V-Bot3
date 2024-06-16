@@ -222,27 +222,27 @@ class Kind(Enum):
 
 
 class Size(float, Enum):
-    XXXL = 1.50
-    XXL = 1.375
-    XL = 1.25
-    L = 1.125
-    M = 1.00
-    S = 0.875
-    XS = 0.75
-    XXS = 0.625
-    XXXS = 0.50
+    Maximum = 1.5
+    Very_Large = 1.375
+    Large = 1.25
+    Above_Average = 1.125
+    Average = 1.0
+    Below_Average = 0.875
+    Small = 0.75
+    Very_Small = 0.625
+    Minimum = 0.5
 
     @property
     def emoji(self):
-        if self.name.endswith("S"):
-            return "🟦"
-        if self.name.endswith("L"):
+        if self.value > 1:
             return "🟧"
+        if self.value < 1:
+            return "🟦"
         return "🟩"
 
     @property
     def reference_name(self):
-        return "Default" if self == Size.M else self.name.replace("_", " ")
+        return "Default" if self == Size.Average else self.name.replace("_", " ")
 
     def height_value(self, value: float = 0):
         if value:
@@ -275,12 +275,17 @@ class Size(float, Enum):
         feet, inches = self.meters_to_ft_inches(value)
         if (feet, inches) <= (1, 0):
             inches = 12 * feet + inches
-            return f'{value*100:.2f} cm / {inches:02d}" in'
+            return f"{value*100:.2f} cm / {inches:02d} in"
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
-        return f"{value:.2f} kg / {self.kg_to_lbs(value):.2f} lbs"
+        lbs = self.kg_to_lbs(value)
+
+        if value < 1:
+            return f"{value*1000:.2f} g / {lbs*16:.2f} oz"
+
+        return f"{value:.2f} kg / {lbs:.2f} lbs"
 
 
 class Stats(StrEnum):
@@ -374,8 +379,8 @@ class Character:
     image: Optional[int | str | File] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
-    size: Size | float = Size.M
-    weight: Size | float = Size.M
+    size: Size | float = Size.Average
+    weight: Size | float = Size.Average
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
@@ -432,12 +437,12 @@ class Character:
             try:
                 self.size = Size[self.size.removesuffix("_")]
             except KeyError:
-                self.size = Size.M
+                self.size = Size.Average
         if isinstance(self.weight, str):
             try:
                 self.weight = Size[self.weight]
             except KeyError:
-                self.weight = Size.M
+                self.weight = Size.Average
         if isinstance(self.nature, str):
             try:
                 self.nature = Nature[self.nature]
@@ -584,7 +589,7 @@ class Character:
 
     @property
     def height_text(self):
-        return Size.M.height_info(self.height_value)
+        return Size.Average.height_info(self.height_value)
 
     @property
     def height_value(self):
@@ -598,7 +603,7 @@ class Character:
 
     @property
     def weight_text(self):
-        return Size.M.weight_info(self.weight_value)
+        return Size.Average.weight_info(self.weight_value)
 
     @property
     def weight_value(self):
