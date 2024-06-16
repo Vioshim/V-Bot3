@@ -332,12 +332,16 @@ class Trope(Enum):
     Drifter = "Comes from another world."
     Prime = "Prime of their species."
     Feral = "Feral character."
-    Reploid = "Character that is a reploid."
-    Aura_Bot = "Character that is an aura bot."
+    Reploid = "Sentient robot or android."
+    Aura_Bot = "Toy robot, aura bot."
+    Mini = "Pack tactics, small and cute."
+    Alpha = "Tribal, live like people and ferals."
 
 
 PROPORTIONS = {
-    Trope.Aura_Bot: 1 / 10,
+    Trope.Aura_Bot: 0.1,
+    Trope.Mini: 0.2,
+    Trope.Alpha: 1.5,
 }
 
 
