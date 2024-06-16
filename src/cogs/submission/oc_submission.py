@@ -670,11 +670,19 @@ class SizeField(TemplateField):
                 height = oc.species.height
             height_a = height_b = height
 
-        if oc.size < Size.Minimum.height_value(height_a):
-            return f"Min {Size.Minimum.height_info(height_a)}"
+        min_value, max_value = (
+            Size.Minimum.height_value(height_a),
+            Size.Maximum.height_value(height_b),
+        )
+        ratio = oc.size_category.value
+        min_value *= ratio
+        max_value *= ratio
 
-        if oc.size > Size.Maximum.height_value(height_b):
-            return f"Max {Size.Maximum.height_info(height_b)}"
+        if oc.size < min_value:
+            return f"Min {min_value}"
+
+        if oc.size > max_value:
+            return f"Max {max_value}"
 
     @classmethod
     async def on_submit(
@@ -755,7 +763,10 @@ class WeightField(TemplateField):
                 weight = oc.species.weight
             weight_a = weight_b = weight
 
-        min_value, max_value = Size.Minimum.weight_value(weight_a), Size.Maximum.weight_value(weight_b)
+        min_value, max_value = (
+            Size.Minimum.weight_value(weight_a),
+            Size.Maximum.weight_value(weight_b),
+        )
         ratio = oc.size_category.value
         min_value *= ratio
         max_value *= ratio
