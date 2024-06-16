@@ -738,7 +738,6 @@ class SizeCategoryField(TemplateField):
             ephemeral=ephemeral,
         ) as size_category:
             if size_category:
-                oc.copy
                 oc.size_category = size_category
                 progress.add(cls.name)
 
