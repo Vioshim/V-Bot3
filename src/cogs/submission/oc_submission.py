@@ -679,10 +679,10 @@ class SizeField(TemplateField):
         max_value *= ratio
 
         if oc.size < min_value:
-            return f"Min {min_value}"
+            return f"Fetus {Size.Average.height_info(min_value)}"
 
         if oc.size > max_value:
-            return f"Max {max_value}"
+            return f"Chungus {Size.Average.height_info(max_value)}"
 
     @classmethod
     async def on_submit(
@@ -773,10 +773,10 @@ class WeightField(TemplateField):
         max_value *= ratio
 
         if oc.weight < min_value:
-            return f"Min {min_value}"
+            return f"Thin Mf {Size.Average.weight_info(min_value)}"
 
         if oc.weight > max_value:
-            return f"Max {max_value}"
+            return f"Fat ass {Size.Average.weight_info(max_value)}"
 
     @classmethod
     async def on_submit(
