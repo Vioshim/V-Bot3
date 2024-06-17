@@ -1019,7 +1019,9 @@ class AbilitiesField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
         abilities = oc.species.abilities
-        if isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
+        if isinstance(oc.species, GimmickSpecies) and oc.species.base:
+            abilities = oc.species.base.abilities
+        elif isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
             abilities = ALL_ABILITIES.values()
 
         view = Complex[Ability](
@@ -1041,7 +1043,7 @@ class AbilitiesField(TemplateField, required=True):
         ) as choices:
             if choices:
                 oc.abilities = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant)):
+                if isinstance(oc.species, CustomSpecies):
                     oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
