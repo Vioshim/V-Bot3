@@ -89,7 +89,10 @@ class HeightModal2(HeightModal):
     def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
         super(HeightModal2, self).__init__(oc=oc, species=species)
         info = info.removesuffix('" ft') if info else ""
-        ft_info, in_info = info.split("' ")
+        try:
+            ft_info, in_info = info.split("' ")
+        except ValueError:
+            ft_info, in_info = "0", info
 
         self.text1 = TextInput(label="Feet", placeholder=ft_info, default=ft_info, required=False)
         self.text2 = TextInput(label="Inches", placeholder=in_info, default=in_info, required=False)
