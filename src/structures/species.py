@@ -657,7 +657,7 @@ class CustomSpecies(Species):
             self.__class__.__name__.removeprefix("Custom").lower(): self.id,
         }
 
-        if self.base is not None:
+        if isinstance(self.base, Species):
             if self.name != self.base.name:
                 data["name"] = self.name
             if self.abilities != self.base.abilities:
@@ -669,23 +669,18 @@ class CustomSpecies(Species):
             if self.evolves_from != self.base.id:
                 data["evolves_from"] = self.evolves_from
         else:
-            if self.name:
-                data["name"] = self.name
-            if self.abilities:
-                data["abilities"] = [x.id for x in self.abilities]
-            if self.types:
-                data["types"] = [x.name for x in self.types]
-            if self.movepool:
-                data["movepool"] = self.movepool.as_dict
-            if self.evolves_from:
-                data["evolves_from"] = self.evolves_from
+            data["name"] = self.name
+            data["abilities"] = [x.id for x in self.abilities]
+            data["types"] = [x.name for x in self.types]
+            data["movepool"] = self.movepool.as_dict
+            data["evolves_from"] = self.evolves_from
 
         return data
 
     def can_change_movepool(self):
-        if self.base is None:
-            return False
-        return self.movepool != self.base.movepool
+        if isinstance(self.base, Species):
+            return self.movepool != self.base.movepool
+        return False
 
 
 @dataclass(unsafe_hash=True, slots=True)
