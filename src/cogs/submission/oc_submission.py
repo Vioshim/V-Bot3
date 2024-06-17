@@ -1019,7 +1019,7 @@ class AbilitiesField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
         abilities = oc.species.abilities
-        if isinstance(oc.species, GimmickSpecies) and oc.species.base:
+        if isinstance(oc.species, GimmickSpecies) and isinstance(oc.species.base, Species):
             abilities = oc.species.base.abilities
         elif isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
             abilities = ALL_ABILITIES.values()
