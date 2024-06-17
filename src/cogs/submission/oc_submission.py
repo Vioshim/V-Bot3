@@ -247,38 +247,6 @@ class Template(TemplateItem, Enum):
             "Evolution w/ Unique Trait": "1NCHKjzdIQhxM4djpBrFrDxHgBU6ISCr_qRaRwHLJMWA",
         },
     }
-    FakeMega = {
-        "description": "Fan-made Character's Mega.",
-        "modifier": {"Species": ("Fakemon", "Mega Species")},
-        "docs": {
-            "Standard": "1KOQMm-ktM0Ad8nIncDxcYUQehF2elWYUg09FId6J_B0",
-            "Unique Trait": "1tQPKNdxQTA33eUwNgWVGZMYJ3iQzloZIbSNirRXqhj4",
-        },
-    }
-    FakeParadox = {
-        "description": "Fan-made Paradox Pokemon.",
-        "modifier": {"Species": ("Fakemon", "Paradox Species")},
-        "docs": {
-            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
-        },
-    }
-    FakeUltraBeast = {
-        "description": "Fan-made Ultra Beast.",
-        "modifier": {"Species": ("Fakemon", "Ultra Beast Species")},
-        "docs": {
-            "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
-            "Unique Trait": "1CSi0yHJngnWRVdVnqUWwnNK9qXSubxPNSWAZtShSDF8",
-        },
-    }
-    FakeGMax = {
-        "description": "Fan-made Character's Gigantamax.",
-        "modifier": {"Species": ("Fakemon", "G-Max Species")},
-    }
-    FakeTera = {
-        "description": "Fan-made Character's Terastal.",
-        "modifier": {"Species": ("Fakemon", "Tera Species")},
-    }
 
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
         choices: list[Species] = []
@@ -321,40 +289,6 @@ class Template(TemplateItem, Enum):
                         else:
                             oc.species = Variant(base=choices[0], name=answer)
                             default_measure = True
-            case "FakeParadox":
-                async with ModernInput(member=itx.user, target=itx).handle(
-                    label=f"Paradox {choices[0].name}"[:45],
-                    ephemeral=ephemeral,
-                    default=choices[0].name,
-                    required=True,
-                ) as answer:
-                    if isinstance(answer, str) and answer:
-                        if isinstance(oc.species, CustomParadox) and oc.species.base == choices[0]:
-                            oc.species.name = answer
-                        else:
-                            oc.species = CustomParadox(base=choices[0], name=answer)
-                            default_measure = True
-            case "FakeUltraBeast":
-                async with ModernInput(member=itx.user, target=itx).handle(
-                    label=f"UB {choices[0].name}"[:45],
-                    ephemeral=ephemeral,
-                    default=choices[0].name,
-                    required=True,
-                ) as answer:
-                    if isinstance(answer, str) and answer:
-                        if isinstance(oc.species, CustomUltraBeast) and oc.species.base == choices[0]:
-                            oc.species.name = answer
-                        else:
-                            oc.species = CustomUltraBeast(base=choices[0], name=answer)
-                            default_measure = True
-            case "FakeMega":
-                default_measure = not (isinstance(oc.species, CustomMega) and oc.species.base == choices[0])
-                oc.species = CustomMega(choices[0])
-                oc.abilities &= oc.species.abilities
-            case "FakeGMax":
-                default_measure = not (isinstance(oc.species, CustomGMax) and oc.species.base == choices[0])
-                oc.species = CustomGMax(choices[0])
-                oc.abilities &= oc.species.abilities
             case "Fakemon":
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
@@ -419,14 +353,8 @@ class Template(TemplateItem, Enum):
                 mon_total = Paradox.all()
             case "Mega":
                 mon_total = Mega.all()
-            case "GMax":
-                mon_total = GMax.all()
-            case "FakeParadox" | "FakeGMax":
-                mon_total = Species.all(exclude=(Mega, Paradox, GMax))
-            case "FakeMega" | "Variant" | "FakeTera":
+            case "Variant":
                 mon_total = Species.all(exclude=(Mega, GMax))
-            case "FakeUltraBeast":
-                mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast, GMax))
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
@@ -613,21 +541,6 @@ class SpeciesField(TemplateField, required=True):
 
         if species.banned:
             return f"{species.name} as species are banned."
-
-        if isinstance(species, CustomMega) and isinstance(species.base, Mega):
-            return f"{species.base.name} is already a mega evolution."
-
-        if isinstance(species, CustomUltraBeast) and isinstance(species.base, UltraBeast):
-            return f"{species.base.name} is already an ultra beast."
-
-        if isinstance(species, CustomGMax) and isinstance(species.base, GMax):
-            return f"{species.base.name} is already a G-Max pokemon."
-
-        if isinstance(species, CustomParadox) and isinstance(species.base, Paradox):
-            return f"{species.base.name} is already a paradox pokemon."
-
-        if isinstance(species, CustomSpecies) and isinstance(species.base, (Mega, GMax)):
-            return f"{species.base.name} can't have variants."
 
         if isinstance(species, Fakemon) and not isinstance(species.species_evolves_from, Pokemon):
             return "Invalid Pre-Evolution Species."

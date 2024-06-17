@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import operator
+import re
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import reduce
@@ -73,6 +74,32 @@ PHRASES = {
     "KANTO": "Kantoian",
     "PALDEA": "Paldean",
 }
+
+
+def merge_strings(s1, s2):
+    # Split strings into parts
+    parts1 = re.split(r"(\s+)", s1)
+    parts2 = re.split(r"(\s+)", s2)
+
+    if len(parts1) != len(parts2):
+        raise ValueError("The strings must have the same number of parts")
+
+    merged_parts = []
+
+    # Combine corresponding parts from both strings
+    for part1, part2 in zip(parts1, parts2):
+        if part1 == part2:
+            merged_parts.append(part1)
+        elif re.fullmatch(r"\s+", part1):
+            merged_parts.append(part1)
+        else:
+            merged_parts.append(f"{part1}/{part2}")
+
+    return "".join(merged_parts)
+
+
+def merge_multiple_strings(strings: Iterable[str]):
+    return reduce(merge_strings, strings)
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -466,7 +493,7 @@ class Fusion(Species):
         amount = len(mons) or 1
         super(Fusion, self).__init__(
             id="_".join(x.id for x in mons),
-            name="/".join(x.name for x in mons),
+            name=merge_multiple_strings([x.name for x in mons]),
             height=sum(x.height for x in mons) / amount,
             weight=sum(x.weight for x in mons) / amount,
             HP=sum(x.HP for x in mons) // amount,
