@@ -423,7 +423,7 @@ class Template(TemplateItem, Enum):
                 mon_total = GMax.all()
             case "FakeParadox" | "FakeGMax":
                 mon_total = Species.all(exclude=(Mega, Paradox, GMax))
-            case "FakeMega" | "Variant":
+            case "FakeMega" | "Variant" | "FakeTera":
                 mon_total = Species.all(exclude=(Mega, GMax))
             case "FakeUltraBeast":
                 mon_total = Species.all(exclude=(Mega, Paradox, UltraBeast, GMax))
