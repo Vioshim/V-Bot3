@@ -752,7 +752,7 @@ class WeightField(TemplateField):
         if isinstance(oc.weight, Size):
             return
 
-        if isinstance(oc.species, Fusion):
+        if isinstance(oc.species, Fusion) and len(oc.species.bases) > 1:
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
             weight_a, weight_b = s_a.weight, s_b.weight
         else:

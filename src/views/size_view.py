@@ -337,16 +337,16 @@ class WeightView(Basic):
             height_a = height_b = height
 
         min_value, max_value = (
-            Size.Minimum.height_value(height_a) * proportion,
-            Size.Maximum.height_value(height_b) * proportion,
+            Size.Minimum.weight_value(height_a) * proportion,
+            Size.Maximum.weight_value(height_b) * proportion,
         )
 
         if isinstance(self.oc.weight, Size):
-            weight = self.oc.weight.height_value(weight)
+            weight = self.oc.weight.weight_value(weight)
         else:
             weight = Size.Average.weight_value(self.oc.weight)
 
-        info = Size.Average.height_info(weight * proportion)
+        info = Size.Average.weight_info(weight * proportion)
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
