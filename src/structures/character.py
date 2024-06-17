@@ -274,7 +274,7 @@ class Size(float, Enum):
         value = self.height_value(value)
         feet, inches = self.meters_to_ft_inches(value)
         if (feet, inches) <= (1, 0):
-            inches = 12 * feet + inches
+            inches += 12 * feet
             return f"{value*100:.2f} cm / {inches:02d} in"
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
@@ -567,8 +567,6 @@ class Character:
 
     @property
     def pronoun_text(self):
-        if len(self.pronoun) == len(Pronoun):
-            return "Any"
         return ", ".join(sorted(x.name for x in self.pronoun))
 
     @property
