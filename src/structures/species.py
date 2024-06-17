@@ -438,6 +438,8 @@ class Species:
         if data := item.get("fusion", []):
             if isinstance(data, dict):
                 data = data.get("species", [])
+            if isinstance(data, str):
+                data = data.split("_")
 
             fusion = Fusion(*data)
 
@@ -600,7 +602,7 @@ class Fusion(Species):
 
     def as_data(self):
         data: dict[str, Any] = {
-            self.__class__.__name__.removeprefix("Custom").lower(): self.id,
+            self.__class__.__name__.removeprefix("Custom").lower(): [x.id for x in self.bases],
         }
         data["types"] = [x.name for x in self.types]
         data["movepool"] = self.movepool.as_dict
