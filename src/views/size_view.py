@@ -155,9 +155,15 @@ class WeightModal1(WeightModal):
     @property
     def value(self) -> float:
         text = self.text.value.lower().removesuffix(".")
-        text = text.removesuffix("kg").removesuffix("kgs")
+        text = text.removesuffix("kgs")
+
+        if "kg" in text:
+            ratio, text = 1 / 1, text.removesuffix("kg")
+        else:
+            ratio, text = 1 / 1000, text.removesuffix("g")
+
         try:
-            return round(float(text.strip()), 2)
+            return round(ratio * float(text.strip()), 2)
         except ValueError:
             return 0
 
@@ -171,9 +177,15 @@ class WeightModal2(WeightModal):
     @property
     def value(self) -> float:
         text = self.text.value.lower().removesuffix(".")
-        text = text.removesuffix("lbs").removesuffix("lb")
+        text = text.removesuffix("lbs")
+
+        if "oz" in text:
+            ratio, text = 1 / 16, text.removesuffix("oz")
+        else:
+            ratio, text = 1 / 1, text.removesuffix("lb")
+
         try:
-            return round(Size.lbs_to_kgs(float(text.strip())), 2)
+            return round(ratio * Size.lbs_to_kgs(float(text.strip())), 2)
         except ValueError:
             return 0
 
@@ -214,7 +226,6 @@ class HeightView(Basic):
             self.remove_item(self.reference)
 
         height = self.species.height if self.species else 0
-
         if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
             s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
@@ -230,11 +241,11 @@ class HeightView(Basic):
         )
 
         if isinstance(self.oc.size, Size):
-            height = self.oc.size.height_value(height) * proportion
+            height = self.oc.size.height_value(height)
         else:
-            height = Size.Average.height_value(self.oc.size) * proportion
+            height = Size.Average.height_value(self.oc.size)
 
-        info = Size.Average.height_info(height)
+        info = Size.Average.height_info(height * proportion)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
@@ -316,7 +327,6 @@ class WeightView(Basic):
             self.remove_item(self.reference)
 
         weight = self.species.weight if self.species else 0
-
         if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
             s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
@@ -327,19 +337,16 @@ class WeightView(Basic):
             height_a = height_b = height
 
         min_value, max_value = (
-            Size.Minimum.height_value(height_a),
-            Size.Maximum.height_value(height_b),
+            Size.Minimum.height_value(height_a) * proportion,
+            Size.Maximum.height_value(height_b) * proportion,
         )
-        min_value *= proportion
-        max_value *= proportion
 
         if isinstance(self.oc.weight, Size):
-            weight = self.oc.weight.height_value(weight) * proportion
-
+            weight = self.oc.weight.height_value(weight)
         else:
-            weight = Size.Average.weight_value(self.oc.weight) * proportion
+            weight = Size.Average.weight_value(self.oc.weight)
 
-        info = Size.Average.height_info(weight)
+        info = Size.Average.height_info(weight * proportion)
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)

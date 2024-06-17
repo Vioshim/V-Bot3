@@ -609,8 +609,7 @@ class Character:
             value = self.size.height_value(height)
         else:
             value = self.size
-        proportion = self.size_category.value
-        return round(proportion * value, 2)
+        return round(value, 2)
 
     @property
     def weight_text(self):
@@ -623,8 +622,7 @@ class Character:
             value = self.weight.weight_value(weight)
         else:
             value = self.weight
-        proportion = self.size_category.value
-        return round(proportion * value, 2)
+        return round(value, 2)
 
     @property
     def default_image(self):

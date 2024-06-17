@@ -670,13 +670,11 @@ class SizeField(TemplateField):
                 height = oc.species.height
             height_a = height_b = height
 
-        min_value, max_value = (
-            Size.Minimum.height_value(height_a),
-            Size.Maximum.height_value(height_b),
-        )
         ratio = oc.size_category.value
-        min_value *= ratio
-        max_value *= ratio
+        min_value, max_value = (
+            Size.Minimum.height_value(height_a) * ratio,
+            Size.Maximum.height_value(height_b) * ratio,
+        )
 
         if oc.size < min_value:
             return f"Fetus {Size.Average.height_info(min_value)}"
@@ -725,8 +723,8 @@ class SizeCategoryField(TemplateField):
             target=itx,
             timeout=None,
             values=SizeCategory,
-            parser=lambda x: (x.name.replace("_", " "), ""),
-            sort_key=lambda x: x.name,
+            parser=lambda x: (x.name.replace("_", " "), f"Multiplies the size by {x.value:.2f}x"),
+            sort_key=lambda x: x.value,
             silent_mode=True,
             auto_choice_info=True,
             auto_conclude=False,
@@ -763,13 +761,11 @@ class WeightField(TemplateField):
                 weight = oc.species.weight
             weight_a = weight_b = weight
 
-        min_value, max_value = (
-            Size.Minimum.weight_value(weight_a),
-            Size.Maximum.weight_value(weight_b),
-        )
         ratio = oc.size_category.value
-        min_value *= ratio
-        max_value *= ratio
+        min_value, max_value = (
+            Size.Minimum.weight_value(weight_a) * ratio,
+            Size.Maximum.weight_value(weight_b) * ratio,
+        )
 
         if oc.weight < min_value:
             return f"Thin Mf {Size.Average.weight_info(min_value)}"
