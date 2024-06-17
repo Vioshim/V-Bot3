@@ -81,8 +81,10 @@ def merge_strings(s1, s2):
     parts1 = re.split(r"(\s+)", s1)
     parts2 = re.split(r"(\s+)", s2)
 
-    if len(parts1) != len(parts2):
-        raise ValueError("The strings must have the same number of parts")
+    # Pad the shorter list with empty strings
+    max_length = max(len(parts1), len(parts2))
+    parts1.extend([""] * (max_length - len(parts1)))
+    parts2.extend([""] * (max_length - len(parts2)))
 
     merged_parts = []
 
@@ -92,6 +94,8 @@ def merge_strings(s1, s2):
             merged_parts.append(part1)
         elif re.fullmatch(r"\s+", part1):
             merged_parts.append(part1)
+        elif re.fullmatch(r"\s+", part2):
+            merged_parts.append(part2)
         else:
             merged_parts.append(f"{part1}/{part2}")
 
