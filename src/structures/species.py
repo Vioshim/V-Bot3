@@ -588,8 +588,7 @@ class CustomSpecies(Species):
         types: Optional[frozenset[TypingEnum]] = None,
         evolves_from: Optional[str] = None,
     ):
-        if isinstance(base, str):
-            base = Species.single_deduce(base)  # type: ignore
+        base = Species.single_deduce(base)
 
         if base is None:
             super().__init__(
@@ -622,6 +621,7 @@ class CustomSpecies(Species):
                 female_image=base.female_image,
                 female_image_shiny=base.female_image_shiny,
             )
+
         self.base = base
 
     @classmethod
