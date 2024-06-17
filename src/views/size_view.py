@@ -103,13 +103,11 @@ class HeightModal2(HeightModal):
     @property
     def value(self) -> float:
         try:
-            return round(
-                Size.ft_inches_to_meters(
-                    feet=float(self.text1.value or "0"),
-                    inches=float(self.text2.value or "0"),
-                ),
-                2,
+            result = Size.ft_inches_to_meters(
+                feet=float(self.text1.value or "0"),
+                inches=float(self.text2.value or "0"),
             )
+            return round(result, 2)
         except ValueError:
             return 0
 
