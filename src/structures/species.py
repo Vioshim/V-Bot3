@@ -618,7 +618,8 @@ class CustomSpecies(Species):
         types: Optional[frozenset[TypingEnum]] = None,
         evolves_from: Optional[str] = None,
     ):
-        base = Species.single_deduce(base)
+        if isinstance(base, str):
+            base = Species.single_deduce(base)
 
         if base is None:
             super().__init__(
