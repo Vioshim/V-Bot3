@@ -446,6 +446,9 @@ class Species:
             if not fusion.types:
                 fusion.types = TypingEnum.deduce_many(*item.get("types", []))
 
+            if movepool := item.get("movepool"):
+                fusion.movepool = Movepool.from_dict(**movepool)
+
             return fusion
 
         return Fakemon(**item)
@@ -605,7 +608,8 @@ class Fusion(Species):
             self.__class__.__name__.removeprefix("Custom").lower(): [x.id for x in self.bases],
         }
         data["types"] = [x.name for x in self.types]
-        data["movepool"] = self.movepool.as_dict
+        if self.movepool != reduce(operator.add, (x.movepool for x in self.bases), Movepool()):
+            data["movepool"] = self.movepool.as_dict
 
         return data
 
