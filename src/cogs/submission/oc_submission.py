@@ -886,7 +886,7 @@ class MovepoolField(TemplateField, required=True):
     def check(cls, oc: Character) -> bool:
         return (
             not isinstance(oc.species, GimmickSpecies)
-            and isinstance(oc.species, CustomSpecies)
+            and isinstance(oc.species, (CustomSpecies, Fusion))
             and TypingEnum.Shadow not in oc.types
         )
 

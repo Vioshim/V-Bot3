@@ -595,10 +595,13 @@ class Fusion(Species):
             return Fusion(*items)
 
     def as_data(self):
-        return {
-            "fusion": {"species": [x.id for x in self.bases]},
-            "types": [x.name for x in self.types],
+        data: dict[str, Any] = {
+            self.__class__.__name__.removeprefix("Custom").lower(): self.id,
         }
+        data["types"] = [x.name for x in self.types]
+        data["movepool"] = self.movepool.as_dict
+
+        return data
 
 
 @dataclass(unsafe_hash=True, slots=True)
