@@ -48,18 +48,18 @@ class HeightModal(Modal, title="Height"):
         else:
             heights = (height,)
 
-        items = {x.height_value(height) for height in heights for x in Size}
-        min_item, max_item = min(items), max(items)
-
         proportion = self.oc.size_category.value
-        value = self.value / proportion
+        items = {x.height_value(height) for height in heights for x in Size}
+        min_item, max_item = min(items) * proportion, max(items) * proportion
+
+        value = self.value
         answer = max(min_item, min(max_item, value))
         self.oc.size = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(proportion * height)
+            info = self.oc.size.height_info(height)
         else:
-            info = Size.Average.height_info(proportion * self.oc.size)
+            info = Size.Average.height_info(self.oc.size)
 
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -129,18 +129,18 @@ class WeightModal(Modal, title="Weight"):
         else:
             weights = (weight,)
 
-        items = {x.weight_value(weight) for weight in weights for x in Size}
-        min_item, max_item = min(items), max(items)
         proportion = self.oc.size_category.value
+        items = {x.weight_value(weight) for weight in weights for x in Size}
+        min_item, max_item = min(items) * proportion, max(items) * proportion
 
-        value = self.value / proportion
+        value = self.value
         answer = max(min_item, min(max_item, value))
         self.oc.weight = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(proportion * weight)
+            info = self.oc.weight.weight_info(weight)
         else:
-            info = Size.Average.weight_info(proportion * self.oc.weight)
+            info = Size.Average.weight_info(self.oc.weight)
 
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
