@@ -157,10 +157,10 @@ class WeightModal1(WeightModal):
         text = self.text.value.lower().removesuffix(".")
         text = text.removesuffix("kgs")
 
-        if "kg" in text:
-            ratio, text = 1 / 1, text.removesuffix("kg")
-        else:
+        if "kg" not in text and "g" in text:
             ratio, text = 1 / 1000, text.removesuffix("g")
+        else:
+            ratio, text = 1 / 1, text.removesuffix("kg")
 
         try:
             return round(ratio * float(text.strip()), 2)
@@ -236,8 +236,8 @@ class HeightView(Basic):
             height_a = height_b = height
 
         min_value, max_value = (
-            Size.Minimum.height_value(height_a) * proportion,
-            Size.Maximum.height_value(height_b) * proportion,
+            round(Size.Minimum.height_value(height_a) * proportion, 2),
+            round(Size.Maximum.height_value(height_b) * proportion, 2),
         )
 
         if isinstance(self.oc.size, Size):
@@ -328,17 +328,17 @@ class WeightView(Basic):
 
         weight = self.species.weight if self.species else 0
         if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
-            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
-            height_a, height_b = s_a.height, s_b.height
+            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.weight)
+            weight_a, weight_b = s_a.weight, s_b.weight
         else:
-            height = 0
+            weight = 0
             if self.species and not isinstance(self.species, Fakemon):
-                height = self.species.height
-            height_a = height_b = height
+                weight = self.species.weight
+            weight_a = weight_b = weight
 
         min_value, max_value = (
-            Size.Minimum.weight_value(height_a) * proportion,
-            Size.Maximum.weight_value(height_b) * proportion,
+            round(Size.Minimum.weight_value(weight_a) * proportion, 2),
+            round(Size.Maximum.weight_value(weight_b) * proportion, 2),
         )
 
         if isinstance(self.oc.weight, Size):
