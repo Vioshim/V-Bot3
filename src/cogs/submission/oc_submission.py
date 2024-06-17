@@ -672,8 +672,8 @@ class SizeField(TemplateField):
 
         ratio = oc.size_category.value
         min_value, max_value = (
-            Size.Minimum.height_value(height_a) * ratio,
-            Size.Maximum.height_value(height_b) * ratio,
+            round(Size.Minimum.height_value(height_a) * ratio, 2),
+            round(Size.Maximum.height_value(height_b) * ratio, 2),
         )
 
         if oc.size < min_value:
@@ -763,8 +763,8 @@ class WeightField(TemplateField):
 
         ratio = oc.size_category.value
         min_value, max_value = (
-            Size.Minimum.weight_value(weight_a) * ratio,
-            Size.Maximum.weight_value(weight_b) * ratio,
+            round(Size.Minimum.weight_value(weight_a) * ratio, 2),
+            round(Size.Maximum.weight_value(weight_b) * ratio, 2),
         )
 
         if oc.weight < min_value:
