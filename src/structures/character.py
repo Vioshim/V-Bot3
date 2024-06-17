@@ -705,7 +705,7 @@ class Character:
             name1, name2 = species_data
             if (
                 isinstance(self.species, CustomSpecies)
-                and (self.species.base is None or self.species.base.types != self.types)
+                and (not isinstance(self.species.base, Species) or self.species.base.types != self.types)
             ) or (isinstance(self.species, Fusion) and self.species.possible_types != {self.types}):
                 name1 += "\n" + "".join(str(x.emoji) for x in self.types)
             c_embed.add_field(name=name1, value=name2)
