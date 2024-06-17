@@ -245,7 +245,7 @@ class HeightView(Basic):
         else:
             height = Size.Average.height_value(self.oc.size)
 
-        info = Size.Average.height_info(height * proportion)
+        info = Size.Average.height_info(height)
 
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
@@ -346,7 +346,7 @@ class WeightView(Basic):
         else:
             weight = Size.Average.weight_value(self.oc.weight)
 
-        info = Size.Average.weight_info(weight * proportion)
+        info = Size.Average.weight_info(weight)
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
