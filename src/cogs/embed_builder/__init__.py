@@ -216,7 +216,7 @@ class EmbedBuilder(commands.Cog):
         editing_attachments: bool
             if raw extracting
         """
-        if ctx.message.interaction:
+        if ctx.message.interaction_metadata:
             if isinstance(ctx.channel, Thread) and ctx.channel.archived:
                 await ctx.channel.edit(archived=False)
             await ctx.defer(ephemeral=True)

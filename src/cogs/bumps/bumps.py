@@ -89,7 +89,7 @@ class BumpBot:
         if not embed.image:
             embed.set_image(url=WHITE_BAR)
 
-        if interaction := ctx.interaction:
+        if interaction := ctx.interaction_metadata:
             user = interaction.user
             embed.set_author(name=user.display_name, icon_url=user.display_avatar)
 
