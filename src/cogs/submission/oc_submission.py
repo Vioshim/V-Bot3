@@ -1248,8 +1248,7 @@ class CreationOCView(Basic):
         self.oc = oc
         self.user = user
         self.embeds = oc.embeds
-        message = getattr(itx, "message", itx)
-        self.ephemeral = isinstance(message, Message) and message.flags.ephemeral
+        self.ephemeral = True
         if not isinstance(template, Template):
             name = template if isinstance(template, str) else type(oc.species).__name__
             if name == "Fakemon":
@@ -1398,7 +1397,7 @@ class CreationOCView(Basic):
         except DiscordException:
             await self.help_method(itx)
 
-    async def handler_send(self, *, ephemeral: bool = False, embeds: list[Embed] | None = None):
+    async def handler_send(self, *, ephemeral: bool = True, embeds: list[Embed] | None = None):
         self.ephemeral = ephemeral
         self.embeds = embeds or self.embeds
         return await self.send(embeds=self.embeds, ephemeral=ephemeral, content=str(self.oc.id or ""))
@@ -1407,18 +1406,16 @@ class CreationOCView(Basic):
     async def fields1(self, itx: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = itx.response
         if item := TemplateField.get(name=sct.values[0]):
-            self.ephemeral = (itx.message and itx.message.flags.ephemeral) or self.ephemeral
             await resp.defer(ephemeral=self.ephemeral, thinking=True)
-            await item.on_submit(itx, self.ref_template, self.progress, self.oc, self.ephemeral)
+            await item.on_submit(itx, self.ref_template, self.progress, self.oc, True)
         await self.update(itx)
 
     @select(placeholder="Extras. Click here!", row=2)
     async def fields2(self, itx: Interaction[CustomBot], sct: Select):
         resp: InteractionResponse = itx.response
         if item := TemplateField.get(name=sct.values[0]):
-            self.ephemeral = (itx.message and itx.message.flags.ephemeral) or self.ephemeral
             await resp.defer(ephemeral=self.ephemeral, thinking=True)
-            await item.on_submit(itx, self.ref_template, self.progress, self.oc, self.ephemeral)
+            await item.on_submit(itx, self.ref_template, self.progress, self.oc, True)
         await self.update(itx)
 
     async def delete(self, itx: Optional[Interaction] = None) -> None:
@@ -1468,7 +1465,7 @@ class CreationOCView(Basic):
             },
         ):
             channel = itx.guild.get_channel(info["oc_submission"])
-
+            self.ephemeral = False
             view = CreationOCView(
                 bot=self.bot,
                 itx=channel,
@@ -1477,7 +1474,7 @@ class CreationOCView(Basic):
                 template=self.ref_template,
                 progress=self.progress,
             )
-            await view.handler_send(ephemeral=False)
+            await view.handler_send(ephemeral=self.ephemeral)
 
         if isinstance(self.oc.image, str) and (oc_file := await itx.client.get_file(self.oc.image)):
             embeds = view.embeds
