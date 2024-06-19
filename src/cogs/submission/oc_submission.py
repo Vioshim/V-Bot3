@@ -1466,7 +1466,6 @@ class CreationOCView(Basic):
             },
         ):
             channel = itx.guild.get_channel(info["oc_submission"])
-            self.ephemeral = False
             view = CreationOCView(
                 bot=self.bot,
                 itx=channel,
@@ -1475,7 +1474,8 @@ class CreationOCView(Basic):
                 template=self.ref_template,
                 progress=self.progress,
             )
-            await view.handler_send(ephemeral=self.ephemeral)
+            view.ephemeral = False
+            await view.handler_send(ephemeral=False)
 
         if isinstance(self.oc.image, str) and (oc_file := await itx.client.get_file(self.oc.image)):
             embeds = view.embeds
