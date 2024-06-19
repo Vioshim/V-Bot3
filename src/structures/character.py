@@ -704,12 +704,8 @@ class Character:
 
         if species_data := self.species_data:
             name1, name2 = species_data
-            if (
-                isinstance(self.species, CustomSpecies)
-                and (not isinstance(self.species.base, Species) or self.species.base.types != self.types)
-            ) or (isinstance(self.species, Fusion) and self.species.possible_types != {self.types}):
-                name1 += "\n" + "".join(str(x.emoji) for x in self.types)
-            c_embed.add_field(name=name1, value=name2)
+            types_text = "".join(str(x.emoji) for x in self.types)
+            c_embed.add_field(name=f"{name1}\n{types_text}", value=name2)
 
         for index, ability in enumerate(sorted(self.abilities, key=lambda x: x.name), start=1):
             c_embed.add_field(
