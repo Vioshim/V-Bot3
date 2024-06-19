@@ -358,8 +358,9 @@ class SizeCategory(float, Enum):
     Small = 0.2
     Below_Average = 0.5
     Average = 1.0
-    Large = 1.25
-    Alpha = 1.5
+    Above_Average = 1.25
+    Large = 1.5
+    Alpha = Large
     Kaiju = 12
 
 
