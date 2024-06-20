@@ -216,7 +216,7 @@ class HeightView(Basic):
 
         proportion = self.oc.size_category.value
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
-            for item in sorted(data, key=lambda x: x.height, reverse=True):
+            for item in sorted(data, key=lambda x: (x.height, len(x.bases)), reverse=True):
                 self.reference.add_option(
                     label=item.name,
                     value=item.id,
@@ -226,16 +226,10 @@ class HeightView(Basic):
         else:
             self.remove_item(self.reference)
 
-        height = Size.Average.height_value(self.species.height if self.species else 0)
-        if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
-            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
-            height_a, height_b = s_a.height, s_b.height
-        else:
-            height_a = height_b = height
-
+        height = 0 if not self.species or isinstance(self.species, Fakemon) else self.species.height
         min_value, max_value = (
-            Size.Minimum.height_value(height_a * proportion),
-            Size.Maximum.height_value(height_b * proportion),
+            Size.Minimum.height_value(height * proportion),
+            Size.Maximum.height_value(height * proportion),
         )
 
         if isinstance(self.oc.size, Size):
@@ -249,7 +243,7 @@ class HeightView(Basic):
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
-        heights = np.linspace(min_value, max_value, len(items))
+        heights = np.linspace(max_value, min_value, len(items))
 
         for value, item in zip(heights, items):
             label = Size.Average.height_info(value)
@@ -315,7 +309,7 @@ class WeightView(Basic):
 
         proportion = self.oc.size_category.value
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
-            for item in sorted(data, key=lambda x: x.weight, reverse=True):
+            for item in sorted(data, key=lambda x: (x.weight, len(x.bases)), reverse=True):
                 self.reference.add_option(
                     label=item.name,
                     value=item.id,
@@ -325,16 +319,11 @@ class WeightView(Basic):
         else:
             self.remove_item(self.reference)
 
-        weight = Size.Average.weight_value(self.species.weight if self.species else 0)
-        if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
-            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.weight)
-            weight_a, weight_b = s_a.weight, s_b.weight
-        else:
-            weight_a = weight_b = weight
+        weight = 0 if not self.species or isinstance(self.species, Fakemon) else self.species.weight
 
         min_value, max_value = (
-            Size.Minimum.weight_value(weight_a) * proportion,
-            Size.Maximum.weight_value(weight_b) * proportion,
+            Size.Minimum.weight_value(weight) * proportion,
+            Size.Maximum.weight_value(weight) * proportion,
         )
 
         if isinstance(self.oc.weight, Size):
@@ -347,7 +336,7 @@ class WeightView(Basic):
 
         items = sorted(Size, key=lambda x: x.value, reverse=True)
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
-        weights = np.linspace(min_value, max_value, len(items))
+        weights = np.linspace(max_value, min_value, len(items))
 
         for value, item in zip(weights, items):
             label = Size.Average.weight_info(value)
