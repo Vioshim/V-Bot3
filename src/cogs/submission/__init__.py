@@ -1015,35 +1015,29 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
-    @commands.hybrid_command(name="register", aliases=["create"])
+    @commands.hybrid_command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def register(
-        self,
-        ctx: commands.Context[CustomBot],
-        template: Template = Template.Pokemon,
-    ):
-        """Allows to create OCs
+    async def emoji(self, ctx: commands.Context[CustomBot], oc: CharacterArg, emoji: str):
+        """Sets an emoji to an OC
 
         Parameters
         ----------
         ctx : commands.Context[CustomBot]
             Context
-        template : Template, optional
-            Template to use, by default Pokemon
+        oc : CharacterArg
+            Character to set emoji
+        emoji : str
+            Emoji to set
         """
-        user: Member = self.bot.supporting.get(ctx.author, ctx.author)
-        await ctx.defer(ephemeral=True)
-        users = {ctx.author.id, user.id}
+        converter = commands.PartialEmojiConverter()
         try:
-            self.ignore |= users
-            view = CreationOCView(bot=self.bot, itx=ctx, user=user, template=template)
-            await view.handler_send(ephemeral=True)
-            await view.wait()
-        except Exception as e:
-            await ctx.send(str(e), ephemeral=True)
-            self.bot.logger.exception("Character Creation Exception", exc_info=e)
-        finally:
-            self.ignore -= users
+            emoji = await converter.convert(ctx, emoji)
+        except commands.BadArgument:
+            return await ctx.reply("Invalid emoji", ephemeral=True)
+        else:
+            db = self.bot.mongo_db("Characters")
+            await db.update_one({"id": oc.id}, {"$set": {"emoji": str(emoji)}})
+            await ctx.reply(f"Emoji set to {emoji}", ephemeral=True)
 
     @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)

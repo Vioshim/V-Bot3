@@ -22,7 +22,7 @@ from enum import Enum, StrEnum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
-from discord import Color, Embed, File, Interaction
+from discord import Color, Embed, File, Interaction, PartialEmoji
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
@@ -391,6 +391,7 @@ class Character:
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
     trope: Trope = Trope.Common
+    emoji: Optional[PartialEmoji] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -410,6 +411,7 @@ class Character:
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
         data["trope"] = self.trope.name
         data["nature"] = self.nature.name if self.nature else None
+        data["emoji"] = self.emoji and str(self.emoji)
         if isinstance(self.sp_ability, SpAbility):
             aux = asdict(self.sp_ability)
             aux["kind"] = self.sp_ability.kind.name
@@ -471,6 +473,11 @@ class Character:
                 self.size_category = SizeCategory[self.size_category]
             except KeyError:
                 self.size_category = SizeCategory.Average
+        if isinstance(self.emoji, str):
+            try:
+                self.emoji = PartialEmoji.from_str(self.emoji)
+            except ValueError:
+                self.emoji = None
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -557,7 +564,7 @@ class Character:
         return self.species and self.species.species_evolves_to
 
     @property
-    def emoji(self):
+    def pronoun_emoji(self):
         match self.pronoun:
             case x if Pronoun.He in x and Pronoun.She not in x:
                 return Pronoun.He.emoji
@@ -800,7 +807,7 @@ class Character:
 
         params_header = self.params_header
 
-        doc.add_heading(f"{self.emoji}〛{self.name}", 0)
+        doc.add_heading(f"{self.pronoun_emoji}〛{self.name}", 0)
 
         table = doc.add_table(rows=1, cols=len(params_header))
         hdr_cells = table.rows[0].cells
@@ -931,7 +938,7 @@ class Character:
         ]
 
         # Add heading
-        content.append(Paragraph(f"<strong>{self.emoji}〛{self.name}</strong>", styles["Heading1"]))
+        content.append(Paragraph(f"<strong>{self.pronoun_emoji}〛{self.name}</strong>", styles["Heading1"]))
 
         # Add an image
         if img_file := await bot.get_file(self.image_url):
