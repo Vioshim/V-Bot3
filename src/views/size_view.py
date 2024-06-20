@@ -228,8 +228,8 @@ class HeightView(Basic):
 
         height = 0 if not self.species or isinstance(self.species, Fakemon) else self.species.height
         min_value, max_value = (
-            round(Size.Minimum.height_value(height * proportion), 2),
-            round(Size.Maximum.height_value(height * proportion), 2),
+            round(Size.Minimum.height_value(height) * proportion, 2),
+            round(Size.Maximum.height_value(height) * proportion, 2),
         )
 
         if isinstance(self.oc.size, Size):
