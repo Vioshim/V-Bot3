@@ -763,8 +763,8 @@ class Character:
             footer_elements.append(self.height_text)
             footer_elements.append(self.weight_text)
 
-        if footer_text := "\n".join(footer_elements):
-            c_embed.set_footer(text=footer_text)
+        footer_text = "\n".join(footer_elements) or "No additional information."
+        c_embed.set_footer(text=footer_text, icon_url=self.emoji and self.emoji.url)
 
         def move_parser(x: Move):
             item = self.hidden_power if x.move_id in {237, 851} and self.hidden_power else x.type
