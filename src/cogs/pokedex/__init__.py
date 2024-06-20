@@ -152,7 +152,7 @@ class Pokedex(commands.Cog):
                 embed.add_field(name="Height", value=height.height_info(val1), inline=False)
                 embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
             else:
-                if isinstance(base, Fusion) and len(base.bases) >= 2:
+                if isinstance(base, Fusion) and len(base.bases) > 1:
                     h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
                     w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
                     h1, h2, h3 = h1.height, val1, h2.height
