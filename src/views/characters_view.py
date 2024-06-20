@@ -200,6 +200,10 @@ class PingView(View):
         self.stop()
 
 
+def emoji_parser(oc: Character):
+    return oc.emoji or oc.pronoun_emoji
+
+
 class BaseCharactersView(Complex[Character]):
     def __init__(
         self,
@@ -223,6 +227,7 @@ class BaseCharactersView(Complex[Character]):
             auto_conclude=auto_conclude,
             auto_choice_info=True,
             auto_text_component=True,
+            emoji_parser=emoji_parser,
         )
         self.embed.title = "Select a character"
 
