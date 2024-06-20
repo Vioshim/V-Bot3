@@ -1379,22 +1379,21 @@ class CreationOCView(Basic):
             embed.set_image(url=image)
 
         try:
-            if message := self.message or itx.message:
+            if resp.is_done() and (message := self.message or itx.message):
                 try:
-                    message = await message.edit(embeds=embeds, view=self, attachments=files)
+                    m = await message.edit(embeds=embeds, view=self, attachments=files)
                 except DiscordException:
-                    if resp.is_done():
-                        message = await itx.edit_original_response(embeds=embeds, view=self, attachments=files)
-                    else:
-                        await resp.edit_message(embeds=embeds, view=self, attachments=files)
-                        message = await itx.original_response()
+                    m = await itx.edit_original_response(embeds=embeds, view=self, attachments=files)
+            else:
+                await resp.edit_message(embeds=embeds, view=self, attachments=files)
+                m = await itx.original_response()
 
-            if message and files and message.embeds:
-                self.oc.image = message.embeds[0].image.proxy_url or message.embeds[0].image.url
+            if files and m.embeds:
+                self.oc.image = m.embeds[0].image.proxy_url or m.embeds[0].image.url
                 self.setup(embed_update=False)
-                message = await message.edit(view=self)
+                m = await m.edit(view=self)
 
-            self.message = message
+            self.message = m
         except DiscordException:
             await self.help_method(itx)
 
