@@ -226,19 +226,13 @@ class HeightView(Basic):
         else:
             self.remove_item(self.reference)
 
-        height = self.species.height if self.species else 0
-        if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
-            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.height)
-            height_a, height_b = s_a.height, s_b.height
-        else:
-            height = 0
-            if self.species and not isinstance(self.species, Fakemon):
-                height = self.species.height
-            height_a = height_b = height
+        height = 0
+        if self.species and not isinstance(self.species, Fakemon):
+            height = self.species.height
 
         min_value, max_value = (
-            round(Size.Minimum.height_value(height_a) * proportion, 2),
-            round(Size.Maximum.height_value(height_b) * proportion, 2),
+            round(Size.Minimum.height_value(height) * proportion, 2),
+            round(Size.Maximum.height_value(height) * proportion, 2),
         )
 
         if isinstance(self.oc.size, Size):
@@ -327,19 +321,13 @@ class WeightView(Basic):
         else:
             self.remove_item(self.reference)
 
-        weight = self.species.weight if self.species else 0
-        if isinstance(self.species, Fusion) and len(self.species.bases) > 1:
-            s_a, *_, s_b = sorted(self.species.bases, key=lambda x: x.weight)
-            weight_a, weight_b = s_a.weight, s_b.weight
-        else:
-            weight = 0
-            if self.species and not isinstance(self.species, Fakemon):
-                weight = self.species.weight
-            weight_a = weight_b = weight
+        weight = 0
+        if self.species and not isinstance(self.species, Fakemon):
+            weight = self.species.weight
 
         min_value, max_value = (
-            round(Size.Minimum.weight_value(weight_a) * proportion, 2),
-            round(Size.Maximum.weight_value(weight_b) * proportion, 2),
+            round(Size.Minimum.weight_value(weight) * proportion, 2),
+            round(Size.Maximum.weight_value(weight) * proportion, 2),
         )
 
         if isinstance(self.oc.weight, Size):
