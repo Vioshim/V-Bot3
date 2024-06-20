@@ -95,7 +95,7 @@ class PingModal(Modal):
         embed.set_image(url=WHITE_BAR)
         webhook: Webhook = await interaction.client.webhook(channel)
         view = View()
-        view.add_item(Button(label=self.oc.name[:80], emoji=self.oc.emoji, url=self.oc.jump_url))
+        view.add_item(Button(label=self.oc.name[:80], emoji=self.oc.default_image, url=self.oc.jump_url))
         msg = await webhook.send(
             receiver.mention,
             file=oc_file,
@@ -201,7 +201,7 @@ class PingView(View):
 
 
 def emoji_parser(oc: Character):
-    return oc.emoji or oc.pronoun_emoji
+    return oc.default_emoji
 
 
 class BaseCharactersView(Complex[Character]):

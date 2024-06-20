@@ -574,6 +574,10 @@ class Character:
                 return Pronoun.Them.emoji
 
     @property
+    def default_emoji(self):
+        return self.emoji or self.pronoun_emoji
+
+    @property
     def pronoun_text(self):
         return ", ".join(sorted(x.name for x in self.pronoun))
 

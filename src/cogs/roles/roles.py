@@ -308,7 +308,7 @@ class RPModal(Modal):
                             label=oc.name[:100],
                             value=str(oc.id),
                             description=f"{oc!r}"[:100],
-                            emoji=oc.emoji,
+                            emoji=oc.default_image,
                         )
                         for oc in characters
                     ]
@@ -416,7 +416,7 @@ class RPModal(Modal):
 
         view = RPSearchManage(base.thread.id, self.user, items)
         for idx, x in enumerate(items[:6]):
-            view.add_item(Button(label=x.name[:80], emoji=x.emoji, url=x.jump_url, row=idx // 3))
+            view.add_item(Button(label=x.name[:80], emoji=x.default_image, url=x.jump_url, row=idx // 3))
 
         cog1.cool_down[self.user.id] = itx.created_at
         cog1.role_cool_down[item.id] = itx.created_at

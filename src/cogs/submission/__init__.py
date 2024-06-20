@@ -528,7 +528,7 @@ class Submission(commands.Cog):
             emoji = REPLY_EMOJI
         view.add_item(Button(label=message.channel.name, url=message.jump_url, emoji=emoji))
         if oc_jump_url := oc.jump_url:
-            view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.emoji))
+            view.add_item(Button(label=key[:80], url=oc_jump_url, emoji=oc.default_image))
         else:
             view.add_item(Button(label=key[:80], disabled=True))
 

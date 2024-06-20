@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 import operator
-import re
+from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from functools import reduce
@@ -76,34 +76,28 @@ PHRASES = {
 }
 
 
-def merge_strings(s1, s2):
-    # Split strings into parts
-    parts1 = re.split(r"(\s+)", s1)
-    parts2 = re.split(r"(\s+)", s2)
-
-    # Pad the shorter list with empty strings
-    max_length = max(len(parts1), len(parts2))
-    parts1.extend([""] * (max_length - len(parts1)))
-    parts2.extend([""] * (max_length - len(parts2)))
-
-    merged_parts = []
-
-    # Combine corresponding parts from both strings
-    for part1, part2 in zip(parts1, parts2):
-        if part1 == part2:
-            merged_parts.append(part1)
-        elif re.fullmatch(r"\s+", part1):
-            merged_parts.append(part1)
-        elif re.fullmatch(r"\s+", part2):
-            merged_parts.append(part2)
-        else:
-            merged_parts.append(f"{part1}/{part2}")
-
-    return "".join(merged_parts)
-
-
 def merge_multiple_strings(strings: Iterable[str]):
-    return reduce(merge_strings, strings)
+
+    groups = defaultdict(list)
+
+    # Populate the groups dictionary
+    for s in strings:
+        parts = s.split(maxsplit=1)
+        groups[parts[0]].append(parts[1] if len(parts) > 1 else "")
+
+    # Create the grouped result
+    result = []
+
+    for key in sorted(groups):
+        suffixes = groups[key]
+        if len(suffixes) > 1:
+            non_empty_suffixes = sorted(filter(None, suffixes))
+            plus = "+" if len(non_empty_suffixes) < len(suffixes) else ""
+            result.append(f"{key} [{plus}{'|'.join(non_empty_suffixes)}]")
+        else:
+            result.append(f"{key} {suffixes[0]}" if suffixes[0] else key)
+
+    return "/".join(result)
 
 
 @dataclass(unsafe_hash=True, slots=True)
