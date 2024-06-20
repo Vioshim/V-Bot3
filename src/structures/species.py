@@ -93,7 +93,7 @@ def merge_multiple_strings(strings: Iterable[str]):
         if len(suffixes) > 1:
             non_empty_suffixes = sorted(filter(None, suffixes))
             plus = "+" if len(non_empty_suffixes) < len(suffixes) else ""
-            result.append(f"{key} [{plus}{'|'.join(non_empty_suffixes)}]")
+            result.append(f"{key} [{plus}{'/'.join(non_empty_suffixes)}]")
         else:
             result.append(f"{key} {suffixes[0]}" if suffixes[0] else key)
 
