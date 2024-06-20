@@ -322,8 +322,8 @@ class WeightView(Basic):
         weight = 0 if not self.species or isinstance(self.species, Fakemon) else self.species.weight
 
         min_value, max_value = (
-            Size.Minimum.weight_value(weight) * proportion,
-            Size.Maximum.weight_value(weight) * proportion,
+            round(Size.Minimum.weight_value(weight) * proportion, 2),
+            round(Size.Maximum.weight_value(weight) * proportion, 2),
         )
 
         if isinstance(self.oc.weight, Size):
