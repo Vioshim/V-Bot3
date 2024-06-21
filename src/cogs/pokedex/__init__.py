@@ -14,13 +14,20 @@
 
 
 from itertools import groupby
-from random import random
+from random import choice, random
 from re import IGNORECASE
 from re import compile as re_compile
 from typing import Callable, Literal, Optional
 
 from bs4 import BeautifulSoup
-from discord import Embed, Guild, Interaction, app_commands
+from discord import (
+    CategoryChannel,
+    Embed,
+    Guild,
+    Interaction,
+    TextChannel,
+    app_commands,
+)
 from discord.ext import commands
 from discord.utils import get
 from yarl import URL
@@ -32,7 +39,7 @@ from src.structures.character import Character, Size
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.species import Fakemon, Fusion, Species
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import WHITE_BAR, MapElements
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex
 
@@ -446,6 +453,34 @@ class Pokedex(commands.Cog):
         for k, v in groupby(items, key=method):
             if item := "\n".join(f"{x.emoji} {x.name}" for x in sorted(v, key=lambda x: x.name)):
                 embed.add_field(name=f"Damage {k}x", value=item)
+
+        await ctx.reply(embed=embed, ephemeral=True)
+
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    @commands.hybrid_group(fallback="location", aliases=["location"])
+    async def random(self, ctx: commands.Context[CustomBot], *, category: Optional[MapElements] = None):
+        """Command to get Random RP Channel
+
+        Parameters
+        ----------
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
+        category : Optional[MapElements]
+            Category to choose from
+        """
+        item = category or choice(list(MapElements))
+        cat_id = item.value.category
+        if not (cat := ctx.guild.get_channel(cat_id)):
+            cat = await ctx.guild.fetch_channel(cat_id)
+
+        channels = [x for x in cat.channels if isinstance(x, TextChannel)]
+        channel = choice(channels)
+
+        embed = Embed(
+            title=f"Category: {item.name}",
+            description=channel.mention,
+            color=ctx.author.color,
+        )
 
         await ctx.reply(embed=embed, ephemeral=True)
 

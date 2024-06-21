@@ -16,7 +16,7 @@
 from calendar import Month
 from dataclasses import dataclass, field
 from datetime import timedelta, timezone
-from enum import StrEnum
+from enum import Enum, StrEnum
 from typing import NamedTuple
 
 from discord import PartialEmoji
@@ -108,8 +108,8 @@ class MapPair:
     weather: dict[Month, dict[Weather, int]] = field(default_factory=dict, hash=False)
 
 
-MAP_ELEMENTS = [
-    MapPair(
+class MapElements(Enum):
+    Mysterious_Island = MapPair(
         name="Mysterious Island",
         category=1211907937442865232,
         emoji="\N{DRAGON FACE}",
@@ -260,8 +260,8 @@ MAP_ELEMENTS = [
                 Weather.Harsh_Sunlight: 0,
             },
         },
-    ),
-    MapPair(
+    )
+    Celesterra_Kingdom = MapPair(
         name="Celesterra Kingdom",
         category=1196879061411176514,
         emoji="\N{GEAR}",
@@ -412,8 +412,8 @@ MAP_ELEMENTS = [
                 Weather.Harsh_Sunlight: 5,
             },
         },
-    ),
-    MapPair(
+    )
+    Startrail_Kingdom = MapPair(
         name="Startrail Kingdom",
         category=1244398986853482607,
         emoji="\N{SHOOTING STAR}",
@@ -564,8 +564,8 @@ MAP_ELEMENTS = [
                 Weather.Harsh_Sunlight: 1,
             },
         },
-    ),
-    MapPair(
+    )
+    Wilderness = MapPair(
         name="Wilderness",
         category=1196879061872541823,
         emoji="\N{EVERGREEN TREE}",
@@ -716,6 +716,8 @@ MAP_ELEMENTS = [
                 Weather.Harsh_Sunlight: 0,
             },
         },
-    ),
-]
+    )
+
+
+MAP_ELEMENTS = [x.value for x in MapElements]
 MAP_ELEMENTS2 = {x.category: x for x in MAP_ELEMENTS}
