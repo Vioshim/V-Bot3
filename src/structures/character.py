@@ -1239,6 +1239,7 @@ class Character:
             nature=self.nature,
             trope=self.trope,
             size_category=self.size_category,
+            emoji=self.emoji,
         )
 
     def __repr__(self) -> str:
