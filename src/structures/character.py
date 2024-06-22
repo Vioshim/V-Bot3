@@ -344,7 +344,6 @@ class Nature(Enum):
 class Trope(Enum):
     Common = "Common character."
     Drifter = "Comes from another world."
-    Prime = "Prime of their species."
     Feral = "Feral character."
     Pack_Leader = "Feral pack leader."
     Reploid = "Sentient robot or android."

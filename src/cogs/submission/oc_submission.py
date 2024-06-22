@@ -1195,11 +1195,6 @@ class TropeField(TemplateField, required=True):
     "Modify the OC's Trope"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.trope == Trope.Prime:
-            return "Prime Trope is not valid."
-
-    @classmethod
     async def on_submit(
         cls,
         itx: Interaction[CustomBot],
