@@ -346,9 +346,9 @@ class Trope(Enum):
     Drifter = "Comes from another world."
     Prime = "Prime of their species."
     Feral = "Feral character."
+    Pack_Leader = "Feral pack leader."
     Reploid = "Sentient robot or android."
-    Mini = "Pack tactics, small and cute."
-    Alpha = "Tribal, live like people and ferals."
+    Tribal = "Live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."
     Ghost = "Ghost, spirit, or undead."
 
