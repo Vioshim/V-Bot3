@@ -349,7 +349,7 @@ class Trope(Enum):
     Reploid = "Sentient robot or android."
     Tribal = "Live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."
-    Ghost = "Ghost, spirit, or undead."
+    Spirit = "Good, neutral or evil spirit."
 
 
 class SizeCategory(float, Enum):
