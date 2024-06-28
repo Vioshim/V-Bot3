@@ -21,7 +21,7 @@ from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
-from src.structures.character import Character, Size
+from src.structures.character import Character, Size, SizeCategory
 from src.structures.species import Fakemon, Fusion, Species
 
 __all__ = (
@@ -245,6 +245,15 @@ class HeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
         heights = np.linspace(max_value, min_value, len(items))
 
+        self.category.options.clear()
+        for item in SizeCategory:
+            self.category.add_option(
+                label=item.name.replace("_", " "),
+                value=item.name,
+                default=item == self.oc.size_category,
+                description=f"Multiplies the size by {item.value:.2f}x",
+            )
+
         for value, item in zip(heights, items):
             label = Size.Average.height_info(value)
             self.choice.add_option(
@@ -256,6 +265,16 @@ class HeightView(Basic):
             )
 
         return self
+
+    @select(placeholder="Multiplier for Size", min_values=0)
+    async def category(self, itx: Interaction, sct: Select):
+
+        try:
+            self.oc.size_category = SizeCategory[sct.values[0]]
+        except (KeyError, IndexError):
+            self.oc.size_category = SizeCategory.Average
+
+        await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Species for reference", min_values=0)
     async def reference(self, itx: Interaction, sct: Select):
@@ -338,6 +357,15 @@ class WeightView(Basic):
         self.choice.placeholder = f"Single Choice. Options: {len(items)}"
         weights = np.linspace(max_value, min_value, len(items))
 
+        self.category.options.clear()
+        for item in SizeCategory:
+            self.category.add_option(
+                label=item.name.replace("_", " "),
+                value=item.name,
+                default=item == self.oc.size_category,
+                description=f"Multiplies the size by {item.value:.2f}x",
+            )
+
         for value, item in zip(weights, items):
             label = Size.Average.weight_info(value)
             self.choice.add_option(
@@ -349,6 +377,16 @@ class WeightView(Basic):
             )
 
         return self
+
+    @select(placeholder="Multiplier for Size", min_values=0)
+    async def category(self, itx: Interaction, sct: Select):
+
+        try:
+            self.oc.size_category = SizeCategory[sct.values[0]]
+        except (KeyError, IndexError):
+            self.oc.size_category = SizeCategory.Average
+
+        await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Species for reference", min_values=0)
     async def reference(self, itx: Interaction, sct: Select):

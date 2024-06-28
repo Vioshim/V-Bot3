@@ -614,45 +614,6 @@ class SizeField(TemplateField):
         progress.add(cls.name)
 
 
-class SizeCategoryField(TemplateField):
-    "Modify the kind of size the OC is"
-
-    @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.size_category == SizeCategory.Kaiju:
-            return "Really big, huh?"
-
-    @classmethod
-    async def on_submit(
-        cls,
-        itx: Interaction[CustomBot],
-        template: Template,
-        progress: set[str],
-        oc: Character,
-        ephemeral: bool = False,
-    ):
-        view = Complex[SizeCategory](
-            member=itx.user,
-            target=itx,
-            timeout=None,
-            values=SizeCategory,
-            parser=lambda x: (x.name.replace("_", " "), f"Multiplies the size by {x.value:.2f}x"),
-            sort_key=lambda x: x.value,
-            silent_mode=True,
-            auto_choice_info=True,
-            auto_conclude=False,
-        )
-        async with view.send(
-            title=f"{template.title} Character's Size Category.",
-            description=f"> {oc.size_category.name.replace('_', ' ')}",
-            single=True,
-            ephemeral=ephemeral,
-        ) as size_category:
-            if size_category:
-                oc.size_category = size_category
-                progress.add(cls.name)
-
-
 class WeightField(TemplateField):
     "Modify the OC's Weight"
 
