@@ -281,29 +281,29 @@ class Template(TemplateItem, Enum):
                     label=f"{choices[0].name} Variant"[:45],
                     ephemeral=ephemeral,
                     default=choices[0].name,
-                    required=True,
+                    required=False,
                 ) as answer:
-                    if isinstance(answer, str) and answer:
+                    if isinstance(answer, str):
                         if isinstance(oc.species, Variant) and oc.species.base == choices[0]:
-                            oc.species.name = answer
+                            oc.species.name = answer or choices[0].name
                         else:
-                            oc.species = Variant(base=choices[0], name=answer)
+                            oc.species = Variant(base=choices[0], name=answer or choices[0].name)
                             default_measure = True
             case "Fakemon":
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
                     label="OC's Species.",
-                    required=True,
+                    required=False,
                     ephemeral=ephemeral,
                     default=name,
                 ) as answer:
-                    if isinstance(answer, str) and answer:
+                    if isinstance(answer, str):
                         if isinstance(oc.species, Fakemon):
-                            oc.species.name = answer
+                            oc.species.name = answer or oc.name
                         else:
                             default_measure = True
                             oc.species = Fakemon(
-                                name=answer,
+                                name=answer or oc.name,
                                 abilities=oc.abilities,
                                 base_image=oc.image_url,
                                 movepool=Movepool(other=oc.moveset.copy()),
