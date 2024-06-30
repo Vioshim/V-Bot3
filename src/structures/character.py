@@ -350,6 +350,16 @@ class Trope(Enum):
     Tribal = "Live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."
     Spirit = "Good, neutral or evil spirit."
+    Alchemist = "Master of potions and transmutations."
+    Chef = "Master of cooking."
+    Inventor = "Creates gadgets and machines."
+    Naturalist = "Loves nature and animals."
+    Guard = "Protects others."
+    Healer = "Heals others."
+    Weaponry = "Master of weapons."
+    Armory = "Master of armor."
+    Prime = "Cosmic guardians of the universe."
+    Monk = "Handles spiritual matters."
 
 
 class SizeCategory(float, Enum):
