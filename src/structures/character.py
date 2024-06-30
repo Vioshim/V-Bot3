@@ -349,6 +349,7 @@ class Trope(Enum):
     Reploid = "Sentient robot or android."
     Tribal = "Live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."
+    Illusionist = "Illusionist, can create illusions."
     Spirit = "Good, neutral or evil spirit."
     Alchemist = "Master of potions and transmutations."
     Chef = "Master of cooking."
