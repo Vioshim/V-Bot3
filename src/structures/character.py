@@ -343,6 +343,7 @@ class Nature(Enum):
 
 class Trope(Enum):
     Common = "Common character."
+    Bartender = "Alcoholic drink maker."
     Drifter = "Comes from another world."
     Feral = "Feral character."
     Pack_Leader = "Feral pack leader."
