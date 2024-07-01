@@ -730,7 +730,7 @@ class TypesField(TemplateField, required=True):
             if len(oc.types) != 1:
                 return "Typeless can't have types, duh."
 
-            if not isinstance(oc.species, (Variant, Fakemon)):
+            if not isinstance(oc.species, CustomSpecies):
                 return "For Variants or Custom pokemon"
 
         limit = max(len(oc.species.bases), 2) if isinstance(oc.species, Fusion) else 2
@@ -763,10 +763,10 @@ class TypesField(TemplateField, required=True):
         else:
 
             def parser(x: TypingEnum):
-                return (x.name, f"Adds the typing {x.name}")
+                return (x.name, x.effect or f"Adds the typing {x.name}")
 
             ignore = [TypingEnum.Shadow, TypingEnum.Typeless]
-            if template.name in ["Variant", "Fakemon"]:
+            if isinstance(species, CustomSpecies):
                 ignore.remove(TypingEnum.Typeless)
 
             values, max_values = TypingEnum.all(*ignore), 2
@@ -926,11 +926,6 @@ class HiddenPowerField(TemplateField, name="Hidden Power"):
     "Typing that matches with their soul's"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.hidden_power and oc.hidden_power in [TypingEnum.Shadow, TypingEnum.Typeless]:
-            return "Invalid Hidden Power."
-
-    @classmethod
     async def on_submit(
         cls,
         itx: Interaction[CustomBot],
@@ -942,10 +937,10 @@ class HiddenPowerField(TemplateField, name="Hidden Power"):
         view = Complex[TypingEnum](
             member=itx.user,
             target=itx,
-            values=TypingEnum.all("Shadow", "Typeless"),
+            values=TypingEnum.all(),
             timeout=None,
             sort_key=lambda x: x.name,
-            parser=lambda x: (x.name, f"Sets the typing {x.name}"),
+            parser=lambda x: (x.name, x.effect),
             silent_mode=True,
             auto_text_component=True,
         )

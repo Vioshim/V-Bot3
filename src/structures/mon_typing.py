@@ -92,6 +92,8 @@ class Typing:
     chart: frozendict[int, float]
         dict with the type charts' values that involve the typing
         format is {ID: multiplier} e.g.: {7: 2.0}
+    effect: str = ""
+        Type's effect
     """
 
     name: str = ""
@@ -104,6 +106,7 @@ class Typing:
     max_effect: str = ""
     chart: frozendict[int, float] = field(default_factory=frozendict)
     game_id: int = 0
+    effect: str = ""
 
     def __init__(self, data: dict[str, Any]) -> None:
         self.name = data.get("name", "")
@@ -119,6 +122,7 @@ class Typing:
         self.max_effect = data.get("max_effect", "")
         self.chart = frozendict(data.get("chart", {}))
         self.game_id = data.get("game_id", 0)
+        self.effect = data.get("effect", "")
 
     @property
     def url(self):
@@ -245,6 +249,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Strike",
         "max_effect": "Decreases the Speed of the target and its allies by one stage.",
         "chart": {7: 2.0, 14: 0, 19: 2},
+        "effect": "Adaptability, Endurance",
     }
     Fire = {
         "name": "Fire",
@@ -257,6 +262,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Flare",
         "max_effect": "Creates harsh sunlight for five turns.",
         "chart": {3: 2.0, 9: 2.0, 13: 2.0, 2: 0.5, 5: 0.5, 6: 0.5, 12: 0.5, 17: 0.5, 18: 0.5, 19: 2},
+        "effect": "Heat Resistance, Flame Affinity",
     }
     Water = {
         "name": "Water",
@@ -269,6 +275,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Geyser",
         "max_effect": "Creates rain for five turns.",
         "chart": {4: 2.0, 5: 2.0, 2: 0.5, 3: 0.5, 6: 0.5, 17: 0.5, 19: 2},
+        "effect": "Aquatic Affinity, Hydration",
     }
     Electric = {
         "name": "Electric",
@@ -281,6 +288,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Lightning",
         "max_effect": "Creates Electric Terrain for five turns.",
         "chart": {9: 2.0, 4: 0.5, 10: 0.5, 17: 0.5, 19: 2},
+        "effect": "Static Charge, Alertness",
     }
     Grass = {
         "name": "Grass",
@@ -293,6 +301,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Overgrowth",
         "max_effect": "Creates Grassy Terrain for five turns.",
         "chart": {2: 2.0, 6: 2.0, 8: 2.0, 10: 2.0, 12: 2.0, 4: 0.5, 5: 0.5, 9: 0.5, 3: 0.5, 19: 2},
+        "effect": "Nature's Touch, Camouflage",
     }
     Ice = {
         "name": "Ice",
@@ -305,6 +314,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Hailstorm",
         "max_effect": "Creates hail for five turns.",
         "chart": {2: 2.0, 7: 2.0, 13: 2.0, 17: 2.0, 6: 0.5, 19: 2},
+        "effect": "Cold Resistance, Frost Touch",
     }
     Fighting = {
         "name": "Fighting",
@@ -317,6 +327,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Knuckle",
         "max_effect": "Increases the Attack of the user and its allies by one stage.",
         "chart": {10: 2.0, 11: 2.0, 18: 2.0, 12: 0.5, 13: 0.5, 16: 0.5, 19: 2},
+        "effect": "Martial Prowess, Bravery",
     }
     Poison = {
         "name": "Poison",
@@ -329,6 +340,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Ooze",
         "max_effect": "Increases the Special Attack of the user and its allies by one stage.",
         "chart": {9: 2.0, 11: 2.0, 5: 0.5, 7: 0.5, 8: 0.5, 12: 0.5, 18: 0.5, 19: 2},
+        "effect": "Toxin Resistance, Venomous Touch",
     }
     Ground = {
         "name": "Ground",
@@ -341,6 +353,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Quake",
         "max_effect": "Increases the Special Defense of the user and its allies by one stage",
         "chart": {3: 2.0, 5: 2.0, 6: 2.0, 8: 0.5, 13: 0.5, 4: 0, 19: 2},
+        "effect": "Earth Affinity, Stability",
     }
     Flying = {
         "name": "Flying",
@@ -353,6 +366,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Airstream",
         "max_effect": "Increases the Speed of the user and its allies by one stage.",
         "chart": {4: 2.0, 6: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 12: 0.5, 9: 0, 19: 2},
+        "effect": "Lightweight, Wind Affinity",
     }
     Psychic = {
         "name": "Psychic",
@@ -365,6 +379,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Mindstorm",
         "max_effect": "Creates Psychic Terrain for five turns.",
         "chart": {12: 2.0, 14: 2.0, 16: 2.0, 7: 0.5, 11: 0.5, 19: 2},
+        "effect": "Mental Clarity, Telepathy",
     }
     Bug = {
         "name": "Bug",
@@ -377,6 +392,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Flutterby",
         "max_effect": "Decreases the Special Attack of the target and its allies by one stage.",
         "chart": {2: 2.0, 10: 2.0, 13: 2.0, 5: 0.5, 7: 0.5, 9: 0.5, 19: 2},
+        "effect": "Insect Affinity, Survival Instincts",
     }
     Rock = {
         "name": "Rock",
@@ -389,6 +405,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Rockfall",
         "max_effect": "Creates a sandstorm for five turns.",
         "chart": {3: 2.0, 5: 2.0, 7: 2.0, 9: 2.0, 17: 2.0, 1: 0.5, 2: 0.5, 8: 0.5, 10: 0.5, 19: 2},
+        "effect": "Rock Hardness, Stone Affinity",
     }
     Ghost = {
         "name": "Ghost",
@@ -401,6 +418,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Phantasm",
         "max_effect": "Decreases the Defense of the target and its allies by one stage.",
         "chart": {14: 2.0, 16: 2.0, 8: 0.5, 12: 0.5, 1: 0, 7: 0, 19: 2},
+        "effect": "Incorporeal Touch, Ethereal Presence",
     }
     Dragon = {
         "name": "Dragon",
@@ -413,6 +431,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Wyrmwind",
         "max_effect": "Decreases the Attack of the target and its allies by one stage.",
         "chart": {6: 2.0, 15: 2.0, 18: 2.0, 2: 0.5, 3: 0.5, 4: 0.5, 5: 0.5, 19: 2},
+        "effect": "Draconic Heritage, Dragon's Breath",
     }
     Dark = {
         "name": "Dark",
@@ -425,6 +444,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Darkness",
         "max_effect": "Decreases the Special Defense of the target and its allies by one stage.",
         "chart": {7: 2.0, 12: 2.0, 18: 2.0, 14: 0.5, 16: 0.5, 11: 0, 19: 2},
+        "effect": "Shadow Affinity, Fearsome Aura",
     }
     Steel = {
         "name": "Steel",
@@ -453,6 +473,7 @@ class TypingEnum(Typing, Enum):
             8: 0,
             19: 2,
         },
+        "effect": "Metallic Skin, Magnetic Affinity",
     }
     Fairy = {
         "name": "Fairy",
@@ -465,6 +486,7 @@ class TypingEnum(Typing, Enum):
         "max_move": "Max Starfall",
         "max_effect": "Creates Misty Terrain for five turns.",
         "chart": {8: 2.0, 17: 2.0, 7: 0.5, 12: 0.5, 16: 0.5, 15: 0, 19: 2},
+        "effect": "Charm, Fairy Dust",
     }
     Shadow = {
         "name": "Shadow",
@@ -472,10 +494,12 @@ class TypingEnum(Typing, Enum):
         "id": 19,
         "game_id": 18,
         "color": 4076373,
+        "emoji": "<:Shadow:1257395881548710059>",
         "z_move": "Gale of Darkness",
         "max_move": "Max Nightmare",
         "max_effect": "All Shadow Pokemon in the area to get in Hyper Mode.",
         "chart": {x: 1.0 if x == 19 else 0.5 for x in range(1, 20)},
+        "effect": "Shadow Aura, Dark Affinity",
     }
     Typeless = {
         "name": "Typeless",
@@ -483,9 +507,11 @@ class TypingEnum(Typing, Enum):
         "id": 20,
         "game_id": 19,
         "color": 6856848,
+        "emoji": "<:Purified:1257395880487686174>",
         "z_move": "Wide Slash",
         "max_move": "Vacuum-Cut",
         "max_effect": "Types get ignored for five turns.",
+        "effect": "Pure Power, Cleanse",
     }
 
     @property

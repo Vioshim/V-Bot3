@@ -362,6 +362,7 @@ class Trope(Enum):
     Armory = "Master of armor."
     Prime = "Cosmic guardians of the universe."
     Monk = "Handles spiritual matters."
+    Gambler = "Risk-taker, loves games of chance."
 
 
 class SizeCategory(float, Enum):
