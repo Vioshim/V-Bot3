@@ -574,6 +574,9 @@ class SizeField(TemplateField):
         if isinstance(oc.size, Size):
             return
 
+        if oc.size_category == SizeCategory.Kaiju:
+            return "Too big for this world."
+
         if isinstance(oc.species, Fusion):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
             height_a, height_b = s_a.height, s_b.height
@@ -625,6 +628,9 @@ class WeightField(TemplateField):
     def evaluate(cls, oc: Character):
         if isinstance(oc.weight, Size):
             return
+
+        if oc.size_category == SizeCategory.Kaiju:
+            return "Too big for this world."
 
         if isinstance(oc.species, Fusion) and len(oc.species.bases) > 1:
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
