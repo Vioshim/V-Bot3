@@ -258,7 +258,7 @@ class HeightView(Basic):
             label = Size.Average.height_info(value)
             self.choice.add_option(
                 label=label,
-                value=str(round(value, 2)),
+                value=str(value),
                 description=item.reference_name,
                 default=info == label,
                 emoji=item.emoji,
@@ -284,7 +284,7 @@ class HeightView(Basic):
 
     @select(placeholder="Select a Size.")
     async def choice(self, itx: Interaction, sct: Select):
-        self.oc.size = float(sct.values[0])
+        self.oc.size = round(float(sct.values[0]), 2)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
@@ -370,7 +370,7 @@ class WeightView(Basic):
             label = Size.Average.weight_info(value)
             self.choice.add_option(
                 label=label,
-                value=str(round(value, 2)),
+                value=str(value),
                 description=item.reference_name,
                 default=label == info,
                 emoji=item.emoji,
@@ -396,7 +396,7 @@ class WeightView(Basic):
 
     @select(placeholder="Single Choice.")
     async def choice(self, itx: Interaction, sct: Select):
-        self.oc.weight = float(sct.values[0])
+        self.oc.weight = round(float(sct.values[0]), 2)
         await self.delete(itx)
 
     @button(label="Kg", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
