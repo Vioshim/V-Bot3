@@ -311,8 +311,8 @@ class Template(TemplateItem, Enum):
             case _:
                 if choices:
                     oc.species, abilities = choices[0], choices[0].abilities.copy()
-                    if len(abilities) <= 2:
-                        oc.abilities = abilities
+                    if len(abilities) == 1:
+                        oc.abilities = abilities.copy()
                     else:
                         oc.abilities &= abilities
                 default_measure = True

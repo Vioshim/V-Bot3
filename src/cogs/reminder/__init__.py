@@ -15,26 +15,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Optional, TypedDict
-
 from apscheduler.triggers.date import DateTrigger
-from bson import ObjectId
 from dateparser import parse
 from discord import AllowedMentions, Color, Embed, Interaction, app_commands
 from discord.ext import commands
 
 from src.structures.bot import CustomBot
 from src.utils.etc import WHITE_BAR
-
-
-class ReminderPayload(TypedDict):
-    _id: ObjectId
-    author: int
-    channel: int
-    thread: Optional[int]
-    message: str
-    due: datetime
 
 
 class Reminder(commands.Cog):
@@ -51,7 +38,7 @@ class Reminder(commands.Cog):
                 args=(item,),
             )
 
-    async def remind_action(self, payload: ReminderPayload):
+    async def remind_action(self, payload: dict[str, int]):
         remind = self.bot.mongo_db("Reminder")
 
         author_id, channel_id, text, due = (
