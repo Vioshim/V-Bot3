@@ -363,6 +363,8 @@ class Trope(Enum):
     Prime = "Cosmic guardians of the universe."
     Monk = "Handles spiritual matters."
     Gambler = "Risk-taker, loves games of chance."
+    Librarian = "Loves books and knowledge."
+    Researcher = "Writes and researches."
 
 
 class SizeCategory(float, Enum):
