@@ -207,7 +207,6 @@ class HeightView(Basic):
 
     def format(self):
         self.reference.options.clear()
-        self.choice.options.clear()
 
         if isinstance(self.oc.species, Fusion):
             bases = self.oc.species.bases
@@ -254,6 +253,7 @@ class HeightView(Basic):
                 description=f"Multiplies the size by {item.value:.2f}x",
             )
 
+        self.choice.options.clear()
         for value, item in zip(heights, items):
             label = Size.Average.height_info(value)
             self.choice.add_option(
@@ -266,7 +266,7 @@ class HeightView(Basic):
 
         return self
 
-    @select(placeholder="Multiplier for Size", min_values=0)
+    @select(placeholder="Multiplier for Size", min_values=0, max_values=1)
     async def category(self, itx: Interaction, sct: Select):
 
         try:
@@ -276,13 +276,13 @@ class HeightView(Basic):
 
         await itx.response.edit_message(view=self.format())
 
-    @select(placeholder="Species for reference", min_values=0)
+    @select(placeholder="Species for reference", min_values=0, max_values=1)
     async def reference(self, itx: Interaction, sct: Select):
         if sct.values:
             self.species = Fusion.from_ID(sct.values[0])
         await itx.response.edit_message(view=self.format())
 
-    @select(placeholder="Select a Size.")
+    @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
         self.oc.size = round(float(sct.values[0]), 2)
         await self.delete(itx)
@@ -318,15 +318,13 @@ class WeightView(Basic):
         self.format()
 
     def format(self):
-        self.reference.options.clear()
-        self.choice.options.clear()
-
         if isinstance(self.oc.species, Fusion):
             bases = self.oc.species.bases
         else:
             bases = [self.oc.species] if self.oc.species else []
 
         proportion = self.oc.size_category.value
+        self.reference.options.clear()
         if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
             for item in sorted(data, key=lambda x: (x.weight, len(x.bases)), reverse=True):
                 self.reference.add_option(
@@ -366,6 +364,7 @@ class WeightView(Basic):
                 description=f"Multiplies the size by {item.value:.2f}x",
             )
 
+        self.choice.options.clear()
         for value, item in zip(weights, items):
             label = Size.Average.weight_info(value)
             self.choice.add_option(
@@ -378,7 +377,7 @@ class WeightView(Basic):
 
         return self
 
-    @select(placeholder="Multiplier for Size", min_values=0)
+    @select(placeholder="Multiplier for Size", min_values=0, max_values=1)
     async def category(self, itx: Interaction, sct: Select):
 
         try:
@@ -388,13 +387,13 @@ class WeightView(Basic):
 
         await itx.response.edit_message(view=self.format())
 
-    @select(placeholder="Species for reference", min_values=0)
+    @select(placeholder="Species for reference", min_values=0, max_values=1)
     async def reference(self, itx: Interaction, sct: Select):
         if sct.values:
             self.species = Fusion.from_ID(sct.values[0])
         await itx.response.edit_message(view=self.format())
 
-    @select(placeholder="Single Choice.")
+    @select(placeholder="Single Choice.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
         self.oc.weight = round(float(sct.values[0]), 2)
         await self.delete(itx)
