@@ -254,13 +254,16 @@ class HeightView(Basic):
             )
 
         self.choice.options.clear()
+        uses_default = False
         for value, item in zip(heights, items):
             label = Size.Average.height_info(value)
+            default = not uses_default and label == info
+            uses_default |= default
             self.choice.add_option(
                 label=label,
                 value=str(value),
                 description=item.reference_name,
-                default=info == label,
+                default=default,
                 emoji=item.emoji,
             )
 
@@ -365,13 +368,16 @@ class WeightView(Basic):
             )
 
         self.choice.options.clear()
+        uses_default = False
         for value, item in zip(weights, items):
             label = Size.Average.weight_info(value)
+            default = not uses_default and label == info
+            uses_default |= default
             self.choice.add_option(
                 label=label,
                 value=str(value),
                 description=item.reference_name,
-                default=label == info,
+                default=default,
                 emoji=item.emoji,
             )
 
