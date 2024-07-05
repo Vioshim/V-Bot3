@@ -759,7 +759,10 @@ class Submission(commands.Cog):
             return
 
         await asyncio.sleep(1)
-        msg = await thread.get_partial_message(thread.id).fetch()
+        try:
+            msg = await thread.get_partial_message(thread.id).fetch()
+        except NotFound:
+            return
 
         if thread.parent_id == item.get("rp_planning"):
             db = self.bot.mongo_db("RP Search Banner")
