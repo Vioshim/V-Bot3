@@ -1158,8 +1158,8 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.trope == Trope.Prime:
-            return "Prime Trope is not valid."
+        if oc.trope in (Trope.Prime, Trope.GM):
+            return f"Invalid Trope: {oc.trope.name}"
 
     @classmethod
     async def on_submit(

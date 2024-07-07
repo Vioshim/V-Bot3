@@ -361,6 +361,8 @@ class Trope(Enum):
     Weaponry = "Master of weapons."
     Armory = "Master of armor."
     Prime = "Cosmic guardians of the universe."
+    Player = "Player character, external to the story."
+    GM = "Game Master character."
     Monk = "Handles spiritual matters."
     Gambler = "Risk-taker, loves games of chance."
     Librarian = "Loves books and knowledge."

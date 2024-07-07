@@ -922,7 +922,7 @@ class Submission(commands.Cog):
 
         db = self.bot.mongo_db("Roleplayers")
 
-        data: Optional[dict[str, int]] = await db.find_one({"server": guild.id, "id": payload.thread_id})
+        data = await db.find_one({"server": guild.id, "id": payload.thread_id})
         if not (data and guild.get_member(data["user"])):
             return
 
