@@ -367,6 +367,8 @@ class Trope(Enum):
     Gambler = "Risk-taker, loves games of chance."
     Librarian = "Loves books and knowledge."
     Researcher = "Writes and researches."
+    Antagonist = "Villain or rival character."
+    Asshole = "Rude and mean character."
 
 
 class SizeCategory(float, Enum):
