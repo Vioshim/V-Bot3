@@ -369,6 +369,7 @@ class Trope(Enum):
     Researcher = "Writes and researches."
     Antagonist = "Villain or rival character."
     Asshole = "Rude and mean character."
+    Aura_Bot = "Redwood network reploid assistant."
 
 
 class SizeCategory(float, Enum):
