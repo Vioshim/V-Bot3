@@ -370,6 +370,7 @@ class Trope(Enum):
     Antagonist = "Villain or rival character."
     Asshole = "Rude and mean character."
     Aura_Bot = "Redwood network reploid assistant."
+    Adopt_Care = "Seeking adoption, foster or care."
 
 
 class SizeCategory(float, Enum):
