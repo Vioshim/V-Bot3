@@ -371,6 +371,7 @@ class Trope(Enum):
     Asshole = "Rude and mean character."
     Aura_Bot = "Redwood network reploid assistant."
     Adopt_Care = "Seeking adoption, foster or care."
+    Caretaker = "Cares for others, like a parent."
 
 
 class SizeCategory(float, Enum):
