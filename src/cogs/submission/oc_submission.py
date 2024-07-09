@@ -738,13 +738,21 @@ class TypesField(TemplateField, required=True):
         if TypingEnum.Shadow in oc.types:
             return "Shadow typing is not valid"
 
-        if TypingEnum.Typeless in oc.types and len(oc.types) != 1:
-            return "Typeless can't have types, duh."
+        if TypingEnum.Typeless in oc.types:
+            if len(oc.types) != 1:
+                return "Typeless can't have types, duh."
+
+            if not isinstance(oc.species, CustomSpecies):
+                return "For Variants or Custom pokemon"
 
         limit = max(len(oc.species.bases), 2) if isinstance(oc.species, Fusion) else 2
 
         if len(oc.types) > limit:
             return f"Max {limit} Pokemon Types: ({', '.join(x.name for x in oc.types)})"
+
+    @classmethod
+    def check(cls, oc: Character) -> bool:
+        return isinstance(oc.species, (Fusion, CustomSpecies))
 
     @classmethod
     async def on_submit(
@@ -791,9 +799,6 @@ class TypesField(TemplateField, required=True):
             ephemeral=ephemeral,
         ) as types:
             if types:
-                if not isinstance(oc.species, (CustomSpecies, Fusion)):
-                    oc.species = CustomSpecies(base=species)
-
                 species.types = frozenset(types)
                 progress.add(cls.name)
 
@@ -848,7 +853,11 @@ class MovepoolField(TemplateField, required=True):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return TypingEnum.Shadow not in oc.types
+        return (
+            not isinstance(oc.species, GimmickSpecies)
+            and isinstance(oc.species, (CustomSpecies, Fusion))
+            and TypingEnum.Shadow not in oc.types
+        )
 
     @classmethod
     async def on_submit(
