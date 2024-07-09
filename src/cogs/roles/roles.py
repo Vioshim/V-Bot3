@@ -336,17 +336,6 @@ class RPModal(Modal):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
 
-        def processor(checking: bool = False):
-
-            def inner(oc: Character):
-
-                if isinstance(oc, str):
-                    return oc
-
-                return f"{oc.name} - {oc!r}" if checking else oc.name
-
-            return inner
-
         items = []
         for item in map(
             str.strip,
