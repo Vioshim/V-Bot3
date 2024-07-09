@@ -738,21 +738,13 @@ class TypesField(TemplateField, required=True):
         if TypingEnum.Shadow in oc.types:
             return "Shadow typing is not valid"
 
-        if TypingEnum.Typeless in oc.types:
-            if len(oc.types) != 1:
-                return "Typeless can't have types, duh."
-
-            if not isinstance(oc.species, CustomSpecies):
-                return "For Variants or Custom pokemon"
+        if TypingEnum.Typeless in oc.types and len(oc.types) != 1:
+            return "Typeless can't have types, duh."
 
         limit = max(len(oc.species.bases), 2) if isinstance(oc.species, Fusion) else 2
 
         if len(oc.types) > limit:
             return f"Max {limit} Pokemon Types: ({', '.join(x.name for x in oc.types)})"
-
-    @classmethod
-    def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fusion, CustomSpecies))
 
     @classmethod
     async def on_submit(
@@ -777,11 +769,7 @@ class TypesField(TemplateField, required=True):
             def parser(x: TypingEnum):
                 return (x.name, x.effect or f"Adds the typing {x.name}")
 
-            ignore = [TypingEnum.Shadow, TypingEnum.Typeless]
-            if isinstance(species, CustomSpecies):
-                ignore.remove(TypingEnum.Typeless)
-
-            values, max_values = TypingEnum.all(*ignore), 2
+            values, max_values = TypingEnum.all(TypingEnum.Shadow), 2
 
         view = Complex(
             member=itx.user,
@@ -803,6 +791,9 @@ class TypesField(TemplateField, required=True):
             ephemeral=ephemeral,
         ) as types:
             if types:
+                if not isinstance(oc.species, (CustomSpecies, Fusion)):
+                    oc.species = CustomSpecies(base=species)
+
                 species.types = frozenset(types)
                 progress.add(cls.name)
 
@@ -857,11 +848,7 @@ class MovepoolField(TemplateField, required=True):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return (
-            not isinstance(oc.species, GimmickSpecies)
-            and isinstance(oc.species, (CustomSpecies, Fusion))
-            and TypingEnum.Shadow not in oc.types
-        )
+        return TypingEnum.Shadow not in oc.types
 
     @classmethod
     async def on_submit(

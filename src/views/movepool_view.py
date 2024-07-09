@@ -88,6 +88,8 @@ class MovepoolModal(Modal):
         )
 
         movepool.event |= {x for x in self.oc.moveset if x not in movepool}
+        if not isinstance(self.oc.species, (CustomSpecies, Fusion)):
+            self.oc.species = CustomSpecies(base=self.oc.species)
 
         self.oc.species.movepool = movepool
         await resp.send_message(repr(movepool), ephemeral=True, delete_after=3)
