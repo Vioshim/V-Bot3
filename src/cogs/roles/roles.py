@@ -358,7 +358,7 @@ class RPModal(Modal):
                 name.strip(),
                 self.ocs,
                 score_cutoff=85,
-                processor=processor(checking=bool(reference_name)),
+                processor=processor,
             ):
                 items.append(data[0])
 
