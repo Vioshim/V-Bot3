@@ -294,9 +294,9 @@ class RPModal(Modal):
         )
 
         if mobile:
-            text = "\n".join(f"- {x.species.name} | {x.name}" for x in self.ocs if x.species)
+            text = "\n".join(f"{x.name} - {x!r}" for x in self.ocs if x.species)
             if len(text) > 4000:
-                text = "\n".join(f"- {x.name}" for x in self.ocs)[:4000]
+                text = "\n".join(x.name for x in self.ocs)[:4000]
             self.names.default = text
             self.add_item(self.names)
         elif self.ocs:
@@ -336,21 +336,42 @@ class RPModal(Modal):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
 
-        items = [
-            data[0]
-            for item in map(
-                lambda x: x.removeprefix("-").strip(),
-                self.names.value.title().split("\n"),
-            )
-            if (
-                data := process.extractOne(
-                    item.split("|")[-1].strip(),
-                    self.ocs,
-                    score_cutoff=85,
-                    processor=lambda x: getattr(x, "name", x),
-                )
-            )
-        ]
+        def processor(checking: bool = False):
+
+            def inner(oc: Character):
+
+                if isinstance(oc, str):
+                    return oc
+
+                return f"{oc.name} - {oc!r}" if checking else oc.name
+
+            return inner
+
+        items = []
+        for item in map(
+            str.strip,
+            self.names.value.title().split("\n"),
+        ):
+
+            name, *reference_name = item.split(" - ")
+
+            if reference_name:
+
+                def processor(oc: Character):
+                    return (oc if isinstance(oc, str) else f"{oc.name} - {oc!r}").title()
+
+            else:
+
+                def processor(oc: Character):
+                    return (oc if isinstance(oc, str) else oc.name).title()
+
+            if data := process.extractOne(
+                name.strip(),
+                self.ocs,
+                score_cutoff=85,
+                processor=processor(checking=bool(reference_name)),
+            ):
+                items.append(data[0])
 
         cog1 = itx.client.get_cog("Roles")
         db = itx.client.mongo_db("Characters")
