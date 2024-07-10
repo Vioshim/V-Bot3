@@ -577,8 +577,11 @@ class SizeField(TemplateField):
         if oc.trope == Trope.Aura_Bot and oc.size_category <= SizeCategory.Small:
             return "Aura Bots must be Small."
 
-        if oc.size_category == SizeCategory.Kaiju:
-            return "Too big for this world."
+        if oc.trope != Trope.Great_Feral:
+            if oc.size_category == SizeCategory.Kaiju:
+                return "Too big for this world."
+        elif oc.size_category != SizeCategory.Kaiju:
+            return "Size must be Kaiju for Great Feral."
 
         if isinstance(oc.species, Fusion):
             s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
@@ -632,8 +635,11 @@ class WeightField(TemplateField):
         if isinstance(oc.weight, Size):
             return
 
-        if oc.size_category == SizeCategory.Kaiju:
-            return "Too big for this world."
+        if oc.trope != Trope.Great_Feral:
+            if oc.size_category == SizeCategory.Kaiju:
+                return "Too big for this world."
+        elif oc.size_category != SizeCategory.Kaiju:
+            return "Size must be Kaiju for Great Feral."
 
         if oc.trope == Trope.Aura_Bot and oc.size_category <= SizeCategory.Small:
             return "Aura Bots must be Small."
