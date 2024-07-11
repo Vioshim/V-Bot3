@@ -373,6 +373,8 @@ class Trope(Enum):
     Aura_Bot = "Redwood network reploid assistant."
     Adopt_Care = "Seeking adoption, foster or care."
     Caretaker = "Cares for others, like a parent."
+    Tailor = "Makes clothes and accessories."
+    Model = "Poses for art and fashion."
 
 
 class SizeCategory(float, Enum):
