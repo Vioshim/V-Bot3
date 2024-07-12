@@ -375,6 +375,10 @@ class Trope(Enum):
     Caretaker = "Cares for others, like a parent."
     Tailor = "Makes clothes and accessories."
     Model = "Poses for art and fashion."
+    Fighter = "Fights for fun or sport."
+    Brawler = "Fights for survival."
+    Warrior = "Fights for honor."
+    Gladiator = "Fights for entertainment."
 
 
 class SizeCategory(float, Enum):
