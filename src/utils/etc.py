@@ -98,9 +98,10 @@ class Month(IntEnum):
     November = 11
     December = 12
 
-    async def convert(self, ctx: commands.Context, value: str):
+    @classmethod
+    async def convert(cls, ctx: commands.Context, value: str):
         try:
-            return Month(int(value)) if value.isdigit() else Month[value.casefold()]
+            return cls(int(value)) if value.isdigit() else cls[value.casefold()]
         except (KeyError, ValueError):
             raise commands.BadArgument(f"Invalid month {value!r}.") from None
 
