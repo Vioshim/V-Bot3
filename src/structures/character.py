@@ -50,6 +50,7 @@ from src.structures.bot import CustomBot
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.movepool import Movepool
+from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
     CustomGMax,
@@ -420,6 +421,7 @@ class Character:
     hidden_info: Optional[str] = None
     trope: Trope = Trope.Common
     emoji: Optional[PartialEmoji] = None
+    pokeball: Optional[Pokeball] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -429,6 +431,7 @@ class Character:
     def to_mongo_dict(self):
         data = asdict(self)
         data["abilities"] = [x.id for x in self.abilities]
+        data["pokeball"] = self.pokeball and self.pokeball.name
         data["species"] = self.species and self.species.as_data()
         data["age"] = self.age.name
         data["size"] = self.size.name if isinstance(self.size, Size) else self.size
@@ -480,6 +483,12 @@ class Character:
                 self.weight = Size[self.weight]
             except KeyError:
                 self.weight = Size.Average
+        if isinstance(self.pokeball, str):
+            try:
+                self.pokeball = Pokeball[self.pokeball]
+            except KeyError:
+                self.pokeball = None
+
         if isinstance(self.nature, str):
             try:
                 self.nature = Nature[self.nature]
@@ -780,6 +789,9 @@ class Character:
             moveset_title = f"{hidden_power.emoji} {moveset_title}"
         else:
             color = Color.blurple()
+
+        if self.pokeball:
+            embeds[-1].set_thumbnail(url=self.pokeball.url)
 
         embeds[0].color, embeds[-1].color = color, color
         footer_elements: list[str] = []
@@ -1268,6 +1280,7 @@ class Character:
             trope=self.trope,
             size_category=self.size_category,
             emoji=self.emoji,
+            pokeball=self.pokeball,
         )
 
     def __repr__(self) -> str:

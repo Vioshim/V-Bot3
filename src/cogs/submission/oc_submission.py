@@ -67,10 +67,9 @@ from src.structures.character import (
 )
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
+from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    CustomGMax,
-    CustomMega,
     CustomParadox,
     CustomSpecies,
     CustomUltraBeast,
@@ -1197,6 +1196,38 @@ class TropeField(TemplateField, required=True):
             if trope:
                 oc.trope = trope
                 progress.add(cls.name)
+
+
+class PokeballField(TemplateField):
+    "Modify the OC's Pokeball"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        itx: Interaction[CustomBot],
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        view = Complex[Pokeball](
+            member=itx.user,
+            target=itx,
+            timeout=None,
+            values=Pokeball,
+            parser=lambda x: (x.label, None),
+            sort_key=lambda x: x.name,
+            silent_mode=True,
+            auto_text_component=True,
+        )
+        async with view.send(
+            title=f"{template.title} Character's Pokeball.",
+            description=f"> {oc.pokeball and oc.pokeball.label}",
+            single=True,
+            ephemeral=ephemeral,
+        ) as pokeball:
+            oc.pokeball = pokeball
+            progress.add(cls.name)
 
 
 class CreationOCView(Basic):
