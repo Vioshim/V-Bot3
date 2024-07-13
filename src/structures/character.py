@@ -381,6 +381,7 @@ class Trope(Enum):
     Warrior = "Fights for honor."
     Gladiator = "Fights for entertainment."
     Orb_Launcher = "Orb launcher, uses orbs."
+    Lorekeeper = "Dungeon researcher and historian."
 
 
 class SizeCategory(float, Enum):
