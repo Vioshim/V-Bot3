@@ -380,6 +380,7 @@ class Trope(Enum):
     Brawler = "Fights for survival."
     Warrior = "Fights for honor."
     Gladiator = "Fights for entertainment."
+    Orb_Launcher = "Orb launcher, uses orbs."
 
 
 class SizeCategory(float, Enum):
