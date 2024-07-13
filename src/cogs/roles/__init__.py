@@ -343,8 +343,7 @@ class Roles(commands.Cog):
             minute=0,
             second=1,
             microsecond=0,
-            tzinfo=tzinfo,
-        )
+        ).astimezone(tzinfo)
 
         if date <= date1:
             date = date.replace(year=date.year + 1)
@@ -361,18 +360,22 @@ class Roles(commands.Cog):
                 event = None
 
         if event:
-            await event.edit(
-                name=f"\N{BIRTHDAY CAKE} {user.display_name}",
-                start_time=date,
-                end_time=date + timedelta(days=1),
-                status=EventStatus.scheduled,
-                image=image,
-                entity_type=EntityType.external,
-                privacy_level=PrivacyLevel.guild_only,
-                location="Birthday",
-                description=user.mention,
-            )
-        else:
+            try:
+                await event.edit(
+                    name=f"\N{BIRTHDAY CAKE} {user.display_name}",
+                    start_time=date,
+                    end_time=date + timedelta(days=1),
+                    status=EventStatus.scheduled,
+                    image=image,
+                    entity_type=EntityType.external,
+                    privacy_level=PrivacyLevel.guild_only,
+                    location="Birthday",
+                    description=user.mention,
+                )
+            except Exception:
+                event = await event.delete()
+
+        if not event:
             event = await ctx.guild.create_scheduled_event(
                 name=f"\N{BIRTHDAY CAKE} {user.display_name}",
                 start_time=date,
