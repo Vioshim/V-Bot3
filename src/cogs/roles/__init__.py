@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from calendar import Month
 from datetime import datetime, timedelta, timezone
 from textwrap import TextWrapper
 from typing import Optional
@@ -42,7 +41,7 @@ from discord.utils import get, snowflake_time
 from src.cogs.roles.roles import BasicRoleSelect, RPModal, RPSearchManage, TimeArg
 from src.structures.bot import CustomBot
 from src.structures.character import Character
-from src.utils.etc import WHITE_BAR
+from src.utils.etc import WHITE_BAR, Month
 
 __all__ = ("Roles", "setup")
 
@@ -311,7 +310,8 @@ class Roles(commands.Cog):
         ctx: commands.Context[CustomBot],
         month: Month,
         day: commands.Range[int, 1, 31],
-        time: TimeArg,
+        *,
+        time: Optional[TimeArg] = None,
     ):
         """Set your birthday
 
@@ -323,14 +323,14 @@ class Roles(commands.Cog):
             Month of the birthday
         day : commands.Range[int, 1, 31]
             Day of the birthday
-        time : TimeArg
-            Current time
+        time : Optional[TimeArg], optional
+            Current time, by default None
         """
         db = self.bot.mongo_db("Birthday")
         user: Member = self.bot.supporting.get(ctx.author, ctx.author)
         await ctx.defer(ephemeral=True)
 
-        date1, date2 = ctx.message.created_at, time
+        date1, date2 = ctx.message.created_at, (time or ctx.message.created_at)
         diff_seconds = (date2 - date1).total_seconds()
         closest_half_hour = round(diff_seconds / 1800) * 1800
         offset = closest_half_hour / 3600

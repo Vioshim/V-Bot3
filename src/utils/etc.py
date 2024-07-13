@@ -13,13 +13,13 @@
 # limitations under the License.
 
 
-from calendar import Month
 from dataclasses import dataclass, field
 from datetime import timedelta, timezone
-from enum import Enum, StrEnum
+from enum import Enum, IntEnum, StrEnum
 from typing import NamedTuple
 
 from discord import PartialEmoji
+from discord.ext import commands
 
 from src.structures.weather import Weather
 
@@ -84,6 +84,27 @@ DICE_NUMBERS = [
 ]
 
 
+class Month(IntEnum):
+    January = 1
+    February = 2
+    March = 3
+    April = 4
+    May = 5
+    June = 6
+    July = 7
+    August = 8
+    September = 9
+    October = 10
+    November = 11
+    December = 12
+
+    async def convert(self, ctx: commands.Context, value: str):
+        try:
+            return Month(int(value)) if value.isdigit() else Month[value.casefold()]
+        except (KeyError, ValueError):
+            raise commands.BadArgument(f"Invalid month {value!r}.") from None
+
+
 class RTFMPages(StrEnum):
     Discord = "https://discordpy.readthedocs.io/en/master/"
     Python = "https://docs.python.org/3"
@@ -115,7 +136,7 @@ class MapElements(Enum):
         emoji="\N{DRAGON FACE}",
         desc="A mysterious island with a lot of secrets.",
         weather={
-            Month.JANUARY: {
+            Month.January: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -127,7 +148,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.FEBRUARY: {
+            Month.February: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 45,
                 Weather.Rain: 25,
@@ -139,7 +160,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.MARCH: {
+            Month.March: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 30,
                 Weather.Rain: 30,
@@ -151,7 +172,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.APRIL: {
+            Month.April: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 60,
@@ -163,7 +184,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.MAY: {
+            Month.May: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 30,
@@ -175,7 +196,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.JUNE: {
+            Month.June: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 10,
                 Weather.Rain: 10,
@@ -187,7 +208,7 @@ class MapElements(Enum):
                 Weather.Fog: 0,
                 Weather.Harsh_Sunlight: 7,
             },
-            Month.JULY: {
+            Month.July: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 5,
                 Weather.Rain: 25,
@@ -199,7 +220,7 @@ class MapElements(Enum):
                 Weather.Fog: 0,
                 Weather.Harsh_Sunlight: 7,
             },
-            Month.AUGUST: {
+            Month.August: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 10,
                 Weather.Rain: 30,
@@ -211,7 +232,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 6,
             },
-            Month.SEPTEMBER: {
+            Month.September: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 50,
                 Weather.Rain: 20,
@@ -223,7 +244,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.OCTOBER: {
+            Month.October: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 30,
@@ -235,7 +256,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.NOVEMBER: {
+            Month.November: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -247,7 +268,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.DECEMBER: {
+            Month.December: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 10,
@@ -267,7 +288,7 @@ class MapElements(Enum):
         emoji="\N{GEAR}",
         desc="A steampunk kingdom with a lot of technology.",
         weather={
-            Month.JANUARY: {
+            Month.January: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 40,
                 Weather.Rain: 10,
@@ -279,7 +300,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.FEBRUARY: {
+            Month.February: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 20,
@@ -291,7 +312,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.MARCH: {
+            Month.March: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -303,7 +324,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.APRIL: {
+            Month.April: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 40,
                 Weather.Rain: 40,
@@ -315,7 +336,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.MAY: {
+            Month.May: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 10,
                 Weather.Rain: 20,
@@ -327,7 +348,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.JUNE: {
+            Month.June: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 5,
                 Weather.Rain: 5,
@@ -339,7 +360,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 8,
             },
-            Month.JULY: {
+            Month.July: {
                 Weather.Clear: 64,
                 Weather.Cloudy: 20,
                 Weather.Rain: 10,
@@ -351,7 +372,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 9,
             },
-            Month.AUGUST: {
+            Month.August: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 10,
@@ -363,7 +384,7 @@ class MapElements(Enum):
                 Weather.Fog: 5,
                 Weather.Harsh_Sunlight: 7,
             },
-            Month.SEPTEMBER: {
+            Month.September: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -375,7 +396,7 @@ class MapElements(Enum):
                 Weather.Fog: 6,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.OCTOBER: {
+            Month.October: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 40,
                 Weather.Rain: 20,
@@ -387,7 +408,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.NOVEMBER: {
+            Month.November: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 20,
@@ -399,7 +420,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.DECEMBER: {
+            Month.December: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 40,
                 Weather.Rain: 5,
@@ -419,7 +440,7 @@ class MapElements(Enum):
         emoji="\N{SHOOTING STAR}",
         desc="A star-themed kingdom with a lot of ice.",
         weather={
-            Month.JANUARY: {
+            Month.January: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 1,
@@ -431,7 +452,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.FEBRUARY: {
+            Month.February: {
                 Weather.Clear: 10,
                 Weather.Cloudy: 60,
                 Weather.Rain: 5,
@@ -443,7 +464,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.MARCH: {
+            Month.March: {
                 Weather.Clear: 10,
                 Weather.Cloudy: 40,
                 Weather.Rain: 5,
@@ -455,7 +476,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 0,
             },
-            Month.APRIL: {
+            Month.April: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 40,
@@ -467,7 +488,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.MAY: {
+            Month.May: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 10,
                 Weather.Rain: 40,
@@ -479,7 +500,7 @@ class MapElements(Enum):
                 Weather.Fog: 50,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.JUNE: {
+            Month.June: {
                 Weather.Clear: 70,
                 Weather.Cloudy: 15,
                 Weather.Rain: 50,
@@ -491,7 +512,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 3,
             },
-            Month.JULY: {
+            Month.July: {
                 Weather.Clear: 80,
                 Weather.Cloudy: 10,
                 Weather.Rain: 60,
@@ -503,7 +524,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.AUGUST: {
+            Month.August: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 10,
                 Weather.Rain: 30,
@@ -515,7 +536,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.SEPTEMBER: {
+            Month.September: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 20,
@@ -527,7 +548,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.OCTOBER: {
+            Month.October: {
                 Weather.Clear: 69,
                 Weather.Cloudy: 40,
                 Weather.Rain: 10,
@@ -539,7 +560,7 @@ class MapElements(Enum):
                 Weather.Fog: 50,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.NOVEMBER: {
+            Month.November: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 60,
                 Weather.Rain: 5,
@@ -551,7 +572,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.DECEMBER: {
+            Month.December: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 80,
                 Weather.Rain: 5,
@@ -571,7 +592,7 @@ class MapElements(Enum):
         emoji="\N{EVERGREEN TREE}",
         desc="A vast area of land with no civilization.",
         weather={
-            Month.JANUARY: {
+            Month.January: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 50,
                 Weather.Rain: 10,
@@ -583,7 +604,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.FEBRUARY: {
+            Month.February: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 30,
                 Weather.Rain: 30,
@@ -595,7 +616,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.MARCH: {
+            Month.March: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 40,
                 Weather.Rain: 20,
@@ -607,7 +628,7 @@ class MapElements(Enum):
                 Weather.Fog: 30,
                 Weather.Harsh_Sunlight: 6,
             },
-            Month.APRIL: {
+            Month.April: {
                 Weather.Clear: 60,
                 Weather.Cloudy: 80,
                 Weather.Rain: 30,
@@ -619,7 +640,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.MAY: {
+            Month.May: {
                 Weather.Clear: 70,
                 Weather.Cloudy: 30,
                 Weather.Rain: 10,
@@ -631,7 +652,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.JUNE: {
+            Month.June: {
                 Weather.Clear: 50,
                 Weather.Cloudy: 20,
                 Weather.Rain: 40,
@@ -643,7 +664,7 @@ class MapElements(Enum):
                 Weather.Fog: 20,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.JULY: {
+            Month.July: {
                 Weather.Clear: 70,
                 Weather.Cloudy: 30,
                 Weather.Rain: 20,
@@ -655,7 +676,7 @@ class MapElements(Enum):
                 Weather.Fog: 5,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.AUGUST: {
+            Month.August: {
                 Weather.Clear: 40,
                 Weather.Cloudy: 20,
                 Weather.Rain: 10,
@@ -667,7 +688,7 @@ class MapElements(Enum):
                 Weather.Fog: 1,
                 Weather.Harsh_Sunlight: 5,
             },
-            Month.SEPTEMBER: {
+            Month.September: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 50,
                 Weather.Rain: 25,
@@ -679,7 +700,7 @@ class MapElements(Enum):
                 Weather.Fog: 10,
                 Weather.Harsh_Sunlight: 4,
             },
-            Month.OCTOBER: {
+            Month.October: {
                 Weather.Clear: 30,
                 Weather.Cloudy: 70,
                 Weather.Rain: 30,
@@ -691,7 +712,7 @@ class MapElements(Enum):
                 Weather.Fog: 50,
                 Weather.Harsh_Sunlight: 2,
             },
-            Month.NOVEMBER: {
+            Month.November: {
                 Weather.Clear: 20,
                 Weather.Cloudy: 50,
                 Weather.Rain: 20,
@@ -703,7 +724,7 @@ class MapElements(Enum):
                 Weather.Fog: 40,
                 Weather.Harsh_Sunlight: 1,
             },
-            Month.DECEMBER: {
+            Month.December: {
                 Weather.Clear: 10,
                 Weather.Cloudy: 30,
                 Weather.Rain: 15,
