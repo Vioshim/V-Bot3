@@ -705,10 +705,18 @@ class OCGroupByUniqueTrait(OCGroupBy[UTraitKind | None]):
 
 
 class OCGroupByTrope(OCGroupBy[Trope]):
+    @staticmethod
+    def inner_parser(group: Trope, elements: list[Character]):
+        return group.name.replace("_", " "), f"Carried by {len(elements):02d} OCs."
+
     @classmethod
     def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
-        ocs = sorted(ocs, key=lambda x: x.trope.name)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.trope)}
+        data: dict[Trope, set[Character]] = {}
+        for oc in ocs:
+            for x in oc.tropes:
+                data.setdefault(x, set())
+                data[x].add(oc)
+        return {k: frozenset(v) for k, v in data.items()}
 
 
 class OCGroupByNature(OCGroupBy[Nature | None]):

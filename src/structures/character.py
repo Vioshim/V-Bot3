@@ -430,7 +430,7 @@ class Character:
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
-    trope: Trope = Trope.Common
+    tropes: frozenset[Trope] = field(default_factory=frozenset)
     emoji: Optional[PartialEmoji] = None
     pokeball: Optional[Pokeball] = None
 
@@ -451,7 +451,7 @@ class Character:
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
-        data["trope"] = self.trope.name
+        data["tropes"] = [x.name for x in self.tropes]
         data["nature"] = self.nature.name if self.nature else None
         data["emoji"] = self.emoji and str(self.emoji)
         if isinstance(self.sp_ability, SpAbility):
@@ -466,6 +466,7 @@ class Character:
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
         species = dct.pop("species", None)
+        dct["tropes"] = dct.get("trope", [])
         dct["species"] = species and Species.from_data(species)
         return Character.from_dict(dct)
 
@@ -511,11 +512,16 @@ class Character:
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-        if isinstance(self.trope, str):
+
+        if isinstance(self.tropes, str):
+            self.tropes = [self.tropes]
+
+        if isinstance(self.tropes, list):
             try:
-                self.trope = Trope[self.trope]
+                self.tropes = frozenset({Trope[x] for x in self.tropes})
             except KeyError:
-                self.trope = Trope.Common
+                self.tropes = frozenset()
+
         if isinstance(self.size_category, str):
             try:
                 self.size_category = SizeCategory[self.size_category]
@@ -750,7 +756,7 @@ class Character:
         list[Embed]
             Embed with the character's information
         """
-        c_embed = Embed(title=self.name.title(), url=self.document_url, timestamp=self.created_at)
+        c_embed = Embed(title=self.name[:256].title(), url=self.document_url, timestamp=self.created_at)
         embeds = [c_embed]
 
         if backstory := self.backstory:
@@ -766,10 +772,19 @@ class Character:
             types_text = "".join(str(x.emoji) for x in self.types)
             c_embed.add_field(name=f"{name1}\n{types_text}", value=name2)
 
-        for index, ability in enumerate(sorted(self.abilities, key=lambda x: x.name), start=1):
+        for ability in sorted(self.abilities, key=lambda x: x.name):
             c_embed.add_field(
-                name=f"Ability {index} - {ability.name}",
+                name=f"Ability: {ability.name}",
                 value=f"> {ability.description}",
+                inline=False,
+            )
+
+        if tropes := self.tropes:
+            c_embed.add_field(
+                name="Tropes",
+                value="\n".join(
+                    f"* {x.name.replace('_', ' ')}: {x.value}" for x in sorted(tropes, key=lambda x: x.name)
+                ),
                 inline=False,
             )
 
@@ -793,13 +808,12 @@ class Character:
 
             embeds.append(sp_embed)
 
-        moveset_title = f"{self.trope.name.replace('_', ' ')} Moveset"
-
         if hidden_power := self.hidden_power:
             color = Color(hidden_power.color)
-            moveset_title = f"{hidden_power.emoji} {moveset_title}"
+            moveset_title = f"{hidden_power.emoji} Moveset"
         else:
             color = Color.blurple()
+            moveset_title = "Moveset"
 
         if self.pokeball:
             embeds[-1].set_thumbnail(url=self.pokeball.url)
@@ -823,7 +837,7 @@ class Character:
             return f"* [{x.name}] - {item.name} ({x.category.name})".title()
 
         moves_text = "\n".join(map(move_parser, sorted(self.moveset, key=lambda x: x.name)))
-        c_embed.add_field(name=moveset_title, value=moves_text or "> No moveset available.", inline=False)
+        c_embed.add_field(name=moveset_title, value=moves_text or "> No information.", inline=False)
 
         if image := self.image_url:
             c_embed.set_image(url=image)
@@ -835,10 +849,10 @@ class Character:
             c_embed.set_image(url="attachment://image.png")
 
         if self.personality:
-            c_embed.add_field(name="Personality", value=self.personality[:200], inline=False)
+            c_embed.add_field(name="Personality", value=self.personality[:512], inline=False)
 
         if self.extra:
-            c_embed.add_field(name="Extra", value=self.extra[:256], inline=False)
+            c_embed.add_field(name="Extra", value=self.extra[:512], inline=False)
 
         return embeds
 
@@ -1288,7 +1302,7 @@ class Character:
             weight=self.weight,
             last_used=self.last_used,
             nature=self.nature,
-            trope=self.trope,
+            tropes=self.tropes,
             size_category=self.size_category,
             emoji=self.emoji,
             pokeball=self.pokeball,
@@ -1296,7 +1310,7 @@ class Character:
 
     def __repr__(self) -> str:
         species = self.species.name if self.species else None
-        return f"{self.trope.name} - {species}"
+        return f"{self.size_category.name} - {species}"
 
     @classmethod
     def process(cls, **kwargs) -> Character:

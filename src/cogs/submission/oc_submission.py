@@ -284,9 +284,9 @@ class Template(TemplateItem, Enum):
                 ) as answer:
                     if isinstance(answer, str):
                         if isinstance(oc.species, Variant) and oc.species.base == choices[0]:
-                            oc.species.name = answer or choices[0].name
+                            oc.species.name = answer[:45] or choices[0].name
                         else:
-                            oc.species = Variant(base=choices[0], name=answer or choices[0].name)
+                            oc.species = Variant(base=choices[0], name=answer[:45] or choices[0].name)
                             default_measure = True
             case "Fakemon":
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
@@ -561,6 +561,9 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
+REF_TROPES = (Trope.Great_Feral, Trope.Prime, Trope.Player, Trope.GM)
+
+
 class SizeField(TemplateField):
     "Modify the OC's Size"
 
@@ -573,13 +576,13 @@ class SizeField(TemplateField):
         if isinstance(oc.size, Size):
             return
 
-        if oc.trope == Trope.Aura_Bot and oc.size_category <= SizeCategory.Small:
+        if Trope.Aura_Bot in oc.tropes and oc.size_category <= SizeCategory.Small:
             return "Aura Bots must be Small."
 
         if oc.size_category == SizeCategory.Kaiju:
-            if oc.trope not in (Trope.Great_Feral, Trope.Prime, Trope.Player, Trope.GM):
+            if not any(x in oc.tropes for x in REF_TROPES):
                 return "Too big for this world."
-        elif oc.trope == Trope.Great_Feral:
+        elif Trope.Great_Feral in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
         if isinstance(oc.species, Fusion):
@@ -635,12 +638,12 @@ class WeightField(TemplateField):
             return
 
         if oc.size_category == SizeCategory.Kaiju:
-            if oc.trope not in (Trope.Great_Feral, Trope.Prime, Trope.Player, Trope.GM):
+            if not any(x in oc.tropes for x in REF_TROPES):
                 return "Too big for this world."
-        elif oc.trope == Trope.Great_Feral:
+        elif Trope.Great_Feral in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
-        if oc.trope == Trope.Aura_Bot and oc.size_category <= SizeCategory.Small:
+        if Trope.Aura_Bot in oc.tropes and oc.size_category <= SizeCategory.Small:
             return "Aura Bots must be Small."
 
         if isinstance(oc.species, Fusion) and len(oc.species.bases) > 1:
@@ -1165,8 +1168,8 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.trope in (Trope.Prime, Trope.GM):
-            return f"Invalid Trope: {oc.trope.name}"
+        if Trope.Prime in oc.tropes or Trope.GM in oc.tropes:
+            return "Prime and GM tropes are exclusive."
 
     @classmethod
     async def on_submit(
@@ -1186,15 +1189,15 @@ class TropeField(TemplateField, required=True):
             sort_key=lambda x: x.name,
             silent_mode=True,
             auto_text_component=True,
+            max_values=3,
         )
         async with view.send(
-            title=f"{template.title} Character's Trope.",
-            description=f"> {oc.trope.name}",
-            single=True,
+            title=f"{template.title} Character's Tropes.",
+            description=", ".join(f"* {x.name.replace('_', ' ')}" for x in oc.tropes),
             ephemeral=ephemeral,
-        ) as trope:
-            if trope:
-                oc.trope = trope
+        ) as tropes:
+            if tropes:
+                oc.tropes = tropes
                 progress.add(cls.name)
 
 
