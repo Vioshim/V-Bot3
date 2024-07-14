@@ -386,6 +386,8 @@ class Trope(Enum):
     Blacksmith = "Makes weapons and armor."
     Enchanter = "Enchants items and weapons."
     Merchant = "Sells goods and services."
+    Vigilante = "Fights crime and corruption."
+    Mercenary = "Hired for missions and tasks."
 
 
 class SizeCategory(float, Enum):
