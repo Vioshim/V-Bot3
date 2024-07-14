@@ -1310,7 +1310,7 @@ class Character:
 
     def __repr__(self) -> str:
         species = self.species.name if self.species else None
-        return f"{self.size_category.name} - {species}"
+        return f"{self.age.title} - {species}"
 
     @classmethod
     def process(cls, **kwargs) -> Character:
