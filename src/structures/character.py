@@ -382,6 +382,10 @@ class Trope(Enum):
     Gladiator = "Fights for entertainment."
     Orb_Launcher = "Orb launcher, uses orbs."
     Lorekeeper = "Dungeon researcher and historian."
+    Miner = "Digs and mines for resources."
+    Blacksmith = "Makes weapons and armor."
+    Enchanter = "Enchants items and weapons."
+    Merchant = "Sells goods and services."
 
 
 class SizeCategory(float, Enum):
