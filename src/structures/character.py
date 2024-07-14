@@ -375,7 +375,7 @@ class Trope(Enum):
     Adopt_Care = "Seeking adoption, foster or care."
     Caretaker = "Cares for others, like a parent."
     Tailor = "Makes clothes and accessories."
-    Model = "Poses for art and fashion."
+    Fashion_Model = "Poses for art and fashion."
     Fighter = "Fights for fun or sport."
     Brawler = "Fights for survival."
     Warrior = "Fights for honor."
@@ -388,6 +388,8 @@ class Trope(Enum):
     Merchant = "Sells goods and services."
     Vigilante = "Fights crime and corruption."
     Mercenary = "Hired for missions and tasks."
+    Entertainer = "Performs for others."
+    Musician = "Plays or composes music."
 
 
 class SizeCategory(float, Enum):
