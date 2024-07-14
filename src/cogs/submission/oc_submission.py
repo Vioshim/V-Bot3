@@ -1196,9 +1196,8 @@ class TropeField(TemplateField, required=True):
             description=", ".join(f"* {x.name.replace('_', ' ')}" for x in oc.tropes),
             ephemeral=ephemeral,
         ) as tropes:
-            if tropes:
-                oc.tropes = tropes
-                progress.add(cls.name)
+            oc.tropes = tropes
+            progress.add(cls.name)
 
 
 class PokeballField(TemplateField):
