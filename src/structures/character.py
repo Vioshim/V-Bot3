@@ -391,6 +391,7 @@ class Trope(Enum):
     Entertainer = "Performs for others."
     Musician = "Plays or composes music."
     Thief = "Steals for profit or fun."
+    Politician = "Affiliated with politics."
 
 
 class SizeCategory(float, Enum):
