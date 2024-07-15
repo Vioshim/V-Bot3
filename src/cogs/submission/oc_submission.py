@@ -1196,13 +1196,15 @@ class TropeField(TemplateField, required=True):
             parser=lambda x: (x.name.replace("_", " "), x.value),
             sort_key=lambda x: x.name,
             silent_mode=True,
+            auto_conclude=False,
             auto_text_component=True,
+            auto_choice_info=True,
             max_values=3,
         )
         view.choices.update(oc.tropes)
         async with view.send(
             title=f"{template.title} Character's Tropes.",
-            description=", ".join(f"* {x.name.replace('_', ' ')}" for x in oc.tropes),
+            description="\n".join(f"* {x.name.replace('_', ' ')}" for x in oc.tropes),
             ephemeral=ephemeral,
         ) as tropes:
             oc.tropes = tropes
