@@ -463,6 +463,11 @@ class AgeField(TemplateField, required=True):
     "Modify the OC's Age"
 
     @classmethod
+    def evaluate(cls, oc: Character) -> Optional[str]:
+        if not oc.age or oc.age == AgeGroup.Timeless:
+            return "Not a valid age group."
+
+    @classmethod
     async def on_submit(
         cls,
         itx: Interaction[CustomBot],
