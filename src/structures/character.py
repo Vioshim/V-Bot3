@@ -393,6 +393,7 @@ class Trope(Enum):
     Thief = "Steals for profit or fun."
     Politician = "Affiliated with politics."
     Clairvoyant = "Reads past, predicts behavior."
+    Carpenter = "Builds and repairs structures."
 
 
 class SizeCategory(float, Enum):
