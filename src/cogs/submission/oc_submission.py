@@ -1173,8 +1173,11 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if Trope.Prime in oc.tropes or Trope.GM in oc.tropes:
-            return "Prime and GM tropes are exclusive."
+        if any(x in oc.tropes for x in REF_TROPES):
+            return "Stricter rules for this trope."
+
+        if len(oc.tropes) > 3:
+            return "Max 3 Tropes."
 
     @classmethod
     async def on_submit(
@@ -1196,6 +1199,7 @@ class TropeField(TemplateField, required=True):
             auto_text_component=True,
             max_values=3,
         )
+        view.choices.update(oc.tropes)
         async with view.send(
             title=f"{template.title} Character's Tropes.",
             description=", ".join(f"* {x.name.replace('_', ' ')}" for x in oc.tropes),
