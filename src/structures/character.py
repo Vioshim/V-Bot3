@@ -490,7 +490,8 @@ class Character:
     def from_mongo_dict(cls, dct: dict[str, Any]):
         dct.pop("_id", None)
         species = dct.pop("species", None)
-        dct["tropes"] = dct.get("trope", [])
+        if trope := dct.get("trope", []):
+            dct["tropes"] = trope
         dct["species"] = species and Species.from_data(species)
         return Character.from_dict(dct)
 
