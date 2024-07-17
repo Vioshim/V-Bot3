@@ -527,10 +527,7 @@ class Character:
             except KeyError:
                 self.size = Size.Average
 
-        if isinstance(self.weight, float):
-            self.weight = min(Weight, key=lambda x: abs(x - self.weight))
-
-        if isinstance(self.weight, str):
+        if not isinstance(self.weight, Weight):
             try:
                 self.weight = Weight[self.weight]
             except KeyError:
