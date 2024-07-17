@@ -693,8 +693,7 @@ class Character:
     @property
     def height_value(self):
         if isinstance(self.size, Size):
-            height = self.species.height if self.species else 0
-            value = self.size.height_value(height)
+            value = self.size.height_value(1)
         else:
             value = self.size
         return round(value, 2)
