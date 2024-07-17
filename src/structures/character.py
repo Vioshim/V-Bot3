@@ -427,6 +427,18 @@ class SizeCategory(float, Enum):
     Kaiju = 12
 
 
+class Weight(float, Enum):
+    Obese = 1.5
+    Very_Overweight = 1.375
+    Overweight = 1.25
+    Slightly_Overweight = 1.125
+    Average = 1.0
+    Slightly_Underweight = 0.875
+    Underweight = 0.75
+    Very_Underweight = 0.625
+    Scrawny = 0.5
+
+
 @dataclass(slots=True)
 class Character:
     species: Optional[Species] = None
@@ -449,7 +461,7 @@ class Character:
     hidden_power: Optional[TypingEnum] = None
     size: Size | float = Size.Average
     size_category: SizeCategory = SizeCategory.Average
-    weight: Size | float = Size.Average
+    weight: Weight = Weight.Average
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
@@ -469,7 +481,7 @@ class Character:
         data["species"] = self.species and self.species.as_data()
         data["age"] = self.age.name
         data["size"] = self.size.name if isinstance(self.size, Size) else self.size
-        data["weight"] = self.weight.name if isinstance(self.weight, Size) else self.weight
+        data["weight"] = self.weight.name
         data["size_category"] = self.size_category.name
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
@@ -514,11 +526,16 @@ class Character:
                 self.size = Size[self.size.removesuffix("_")]
             except KeyError:
                 self.size = Size.Average
+
+        if isinstance(self.weight, float):
+            self.weight = min(Weight, key=lambda x: abs(x - self.weight))
+
         if isinstance(self.weight, str):
             try:
-                self.weight = Size[self.weight]
+                self.weight = Weight[self.weight]
             except KeyError:
-                self.weight = Size.Average
+                self.weight = Weight.Average
+
         if isinstance(self.pokeball, str):
             try:
                 self.pokeball = Pokeball[self.pokeball]
@@ -700,7 +717,7 @@ class Character:
 
     @property
     def weight_text(self):
-        return Size.Average.weight_info(self.weight_value)
+        return self.weight.name.replace("_", " ")
 
     @property
     def weight_value(self):
@@ -847,8 +864,7 @@ class Character:
             footer_elements.append(f"Nature: {self.nature.name}")
 
         if self.species:
-            footer_elements.append(self.height_text)
-            footer_elements.append(self.weight_text)
+            footer_elements.append(f"{self.height_text} - {self.weight_text}")
 
         footer_text = "\n".join(footer_elements) or "No additional information."
         c_embed.set_footer(text=footer_text, icon_url=self.emoji and self.emoji.url)
@@ -886,7 +902,7 @@ class Character:
             "Nature": self.nature.name if self.nature else None,
         }
 
-        data["Measure"] = "\n".join([*self.height_text.split(" / "), *self.weight_text.split(" / ")])
+        data["Measure"] = "\n".join([*self.height_text.split(" / "), f"Weight: {self.weight_text}"])
 
         if species_data := self.species_data:
             data[species_data[0]] = species_data[1]

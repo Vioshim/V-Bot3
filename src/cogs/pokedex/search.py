@@ -40,6 +40,7 @@ from src.structures.character import (
     Size,
     SizeCategory,
     Trope,
+    Weight,
 )
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
@@ -449,6 +450,7 @@ class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
     unique_trait: Optional[str] = commands.flag(default=None, description="Unique Trait to look for")
     pronoun: Optional[Pronoun] = commands.flag(default=None, description="Pronoun to look for")
     age: Optional[AgeGroup] = commands.flag(default=None, description="Age group to look for")
+    weight: Optional[Weight] = commands.flag(default=None, description="Weight to look for")
     group_by: Optional[GroupByArg] = commands.flag(default=None, description="Group by method")
     amount: Optional[str] = commands.flag(default=None, description="Amount to group by")
 
@@ -743,21 +745,15 @@ class OCGroupByHeight(OCGroupBy[float]):
         return ref, -len(items)
 
 
-class OCGroupByWeight(OCGroupBy[float]):
+class OCGroupByWeight(OCGroupBy[Weight]):
     @classmethod
     def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.weight_value, reverse=True)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight_value) if k}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.weight)}
 
     @staticmethod
-    def inner_parser(group: float, elements: list[Character]):
-        key = Size.Average.weight_info(group)
-        return key, f"Group has {len(elements):02d} OCs."
-
-    @staticmethod
-    def sort_key(item: tuple[float, list[Character]]):
-        ref, items = item
-        return ref, -len(items)
+    def inner_parser(group: Weight, elements: list[Character]):
+        return group.name.replace("_", " "), f"Group has {len(elements):02d} OCs."
 
 
 class GroupBy(Enum):
