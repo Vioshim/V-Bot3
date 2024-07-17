@@ -590,19 +590,10 @@ class SizeField(TemplateField):
         elif Trope.Great_Feral in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
-        if isinstance(oc.species, Fusion):
-            s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.height)
-            height_a, height_b = s_a.height, s_b.height
-        else:
-            height = 0
-            if oc.species and not isinstance(oc.species, Fakemon):
-                height = oc.species.height
-            height_a = height_b = height
-
         ratio = oc.size_category.value
         min_value, max_value = (
-            round(Size.Minimum.height_value(height_a) * ratio, 2),
-            round(Size.Maximum.height_value(height_b) * ratio, 2),
+            round(Size.Minimum.height_value(1) * ratio, 2),
+            round(Size.Maximum.height_value(1) * ratio, 2),
         )
 
         if oc.size < min_value:
@@ -651,19 +642,10 @@ class WeightField(TemplateField):
         if Trope.Aura_Bot in oc.tropes and oc.size_category <= SizeCategory.Small:
             return "Aura Bots must be Small."
 
-        if isinstance(oc.species, Fusion) and len(oc.species.bases) > 1:
-            s_a, *_, s_b = sorted(oc.species.bases, key=lambda x: x.weight)
-            weight_a, weight_b = s_a.weight, s_b.weight
-        else:
-            weight = 0
-            if oc.species and not isinstance(oc.species, Fakemon):
-                weight = oc.species.weight
-            weight_a = weight_b = weight
-
         ratio = oc.size_category.value
         min_value, max_value = (
-            round(Size.Minimum.weight_value(weight_a) * ratio, 2),
-            round(Size.Maximum.weight_value(weight_b) * ratio, 2),
+            round(Size.Minimum.weight_value(1) * ratio, 2),
+            round(Size.Maximum.weight_value(1) * ratio, 2),
         )
 
         if oc.weight < min_value:

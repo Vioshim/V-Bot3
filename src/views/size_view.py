@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from itertools import combinations_with_replacement
 from typing import Optional
 
 import numpy as np
@@ -22,7 +21,6 @@ from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size, SizeCategory
-from src.structures.species import Fakemon, Fusion, Species
 
 __all__ = (
     "HeightView",
@@ -31,25 +29,17 @@ __all__ = (
 
 
 class HeightModal(Modal, title="Height"):
-    def __init__(self, oc: Character, species: Optional[Species] = None) -> None:
+    def __init__(self, oc: Character) -> None:
         super(HeightModal, self).__init__(title="Height", timeout=None)
         self.oc = oc
-        self.species = oc.species if species is None else species
 
     @property
     def value(self) -> float:
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        height: float = getattr(self.species, "height", 0.0)
-
-        if isinstance(self.species, Fusion):
-            heights = [x.height for x in self.species.bases]
-        else:
-            heights = (height,)
-
         proportion = self.oc.size_category.value
-        items = {x.height_value(height) for height in heights for x in Size}
+        items = {x.height_value(1) for x in Size}
         min_item, max_item = min(items) * proportion, max(items) * proportion
 
         value = self.value
@@ -57,7 +47,7 @@ class HeightModal(Modal, title="Height"):
         self.oc.size = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(height)
+            info = self.oc.size.height_info(1)
         else:
             info = Size.Average.height_info(self.oc.size)
 
@@ -66,8 +56,8 @@ class HeightModal(Modal, title="Height"):
 
 
 class HeightModal1(HeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
-        super(HeightModal1, self).__init__(oc=oc, species=species)
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
+        super(HeightModal1, self).__init__(oc=oc)
         self.text = TextInput(label="Meters", placeholder=info, default=info)
         self.add_item(self.text)
 
@@ -86,8 +76,8 @@ class HeightModal1(HeightModal):
 
 
 class HeightModal2(HeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
-        super(HeightModal2, self).__init__(oc=oc, species=species)
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
+        super(HeightModal2, self).__init__(oc=oc)
         info = info.removesuffix('" ft') if info else ""
         try:
             ft_info, in_info = info.split("' ")
@@ -113,25 +103,18 @@ class HeightModal2(HeightModal):
 
 
 class WeightModal(Modal, title="Weight"):
-    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
         super(WeightModal, self).__init__(title="Weight", timeout=None)
         self.oc = oc
-        self.species = oc.species if species is None else species
 
     @property
     def value(self) -> float:
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        weight: float = getattr(self.species, "weight", 0)
-
-        if isinstance(self.species, Fusion):
-            weights = [x.weight for x in sorted(self.species.bases, key=lambda x: x.weight)]
-        else:
-            weights = (weight,)
 
         proportion = self.oc.size_category.value
-        items = {x.weight_value(weight) for weight in weights for x in Size}
+        items = {x.weight_value(1) for x in Size}
         min_item, max_item = min(items) * proportion, max(items) * proportion
 
         value = self.value
@@ -139,7 +122,7 @@ class WeightModal(Modal, title="Weight"):
         self.oc.weight = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(weight)
+            info = self.oc.weight.weight_info(1)
         else:
             info = Size.Average.weight_info(self.oc.weight)
 
@@ -148,8 +131,8 @@ class WeightModal(Modal, title="Weight"):
 
 
 class WeightModal1(WeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
-        super(WeightModal1, self).__init__(oc=oc, species=species)
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
+        super(WeightModal1, self).__init__(oc=oc)
         self.text = TextInput(label="kg", placeholder=info, default=info)
         self.add_item(self.text)
 
@@ -170,8 +153,8 @@ class WeightModal1(WeightModal):
 
 
 class WeightModal2(WeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None, species: Optional[Species] = None) -> None:
-        super(WeightModal2, self).__init__(oc=oc, species=species)
+    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
+        super(WeightModal2, self).__init__(oc=oc)
         self.text = TextInput(label="lbs", placeholder=info, default=info)
         self.add_item(self.text)
 
@@ -192,47 +175,22 @@ class WeightModal2(WeightModal):
 
 
 class HeightView(Basic):
-    def __init__(
-        self,
-        *,
-        target: Interaction,
-        member: Member,
-        oc: Character,
-        species: Optional[Species] = None,
-    ):
+    def __init__(self, *, target: Interaction, member: Member, oc: Character):
         super(HeightView, self).__init__(target=target, member=member, timeout=None)
         self.oc = oc
-        self.species = oc.species if species is None else species
         self.format()
 
     def format(self):
         self.reference.options.clear()
 
-        if isinstance(self.oc.species, Fusion):
-            bases = self.oc.species.bases
-        else:
-            bases = [self.oc.species] if self.oc.species else []
-
         proportion = self.oc.size_category.value
-        if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
-            for item in sorted(data, key=lambda x: (x.height, len(x.bases)), reverse=True):
-                self.reference.add_option(
-                    label=item.name,
-                    value=item.id,
-                    description=Size.Average.height_info(proportion * item.height),
-                    default=item == self.species,
-                )
-        else:
-            self.remove_item(self.reference)
-
-        height = 0 if not self.species or isinstance(self.species, Fakemon) else self.species.height
         min_value, max_value = (
-            round(Size.Minimum.height_value(height) * proportion, 2),
-            round(Size.Maximum.height_value(height) * proportion, 2),
+            round(Size.Minimum.height_value(1) * proportion, 2),
+            round(Size.Maximum.height_value(1) * proportion, 2),
         )
 
         if isinstance(self.oc.size, Size):
-            height = self.oc.size.height_value(height)
+            height = self.oc.size.height_value(1)
         else:
             height = Size.Average.height_value(self.oc.size)
 
@@ -279,12 +237,6 @@ class HeightView(Basic):
 
         await itx.response.edit_message(view=self.format())
 
-    @select(placeholder="Species for reference", min_values=0, max_values=1)
-    async def reference(self, itx: Interaction, sct: Select):
-        if sct.values:
-            self.species = Fusion.from_ID(sct.values[0])
-        await itx.response.edit_message(view=self.format())
-
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
         self.oc.size = round(float(sct.values[0]), 2)
@@ -292,14 +244,14 @@ class HeightView(Basic):
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_1(self, itx: Interaction, btn: Button):
-        modal = HeightModal1(oc=self.oc, info=btn.label, species=self.species)
+        modal = HeightModal1(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
 
     @button(label="Feet & Inches", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
-        modal = HeightModal2(oc=self.oc, info=btn.label, species=self.species)
+        modal = HeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
@@ -313,41 +265,21 @@ class HeightView(Basic):
 
 
 class WeightView(Basic):
-    def __init__(self, *, target: Interaction, member: Member, oc: Character, species: Optional[Species] = None):
+    def __init__(self, *, target: Interaction, member: Member, oc: Character):
         super(WeightView, self).__init__(target=target, member=member, timeout=None)
         self.choice.options.clear()
         self.oc = oc
-        self.species = oc.species if species is None else species
         self.format()
 
     def format(self):
-        if isinstance(self.oc.species, Fusion):
-            bases = self.oc.species.bases
-        else:
-            bases = [self.oc.species] if self.oc.species else []
-
         proportion = self.oc.size_category.value
-        self.reference.options.clear()
-        if data := {f for x in combinations_with_replacement(bases, len(bases)) if (f := Fusion(*x)) and f.id}:
-            for item in sorted(data, key=lambda x: (x.weight, len(x.bases)), reverse=True):
-                self.reference.add_option(
-                    label=item.name,
-                    value=item.id,
-                    description=Size.Average.weight_info(proportion * item.weight),
-                    default=item == self.species,
-                )
-        else:
-            self.remove_item(self.reference)
-
-        weight = 0 if not self.species or isinstance(self.species, Fakemon) else self.species.weight
-
         min_value, max_value = (
-            round(Size.Minimum.weight_value(weight) * proportion, 2),
-            round(Size.Maximum.weight_value(weight) * proportion, 2),
+            round(Size.Minimum.weight_value(1) * proportion, 2),
+            round(Size.Maximum.weight_value(1) * proportion, 2),
         )
 
         if isinstance(self.oc.weight, Size):
-            weight = self.oc.weight.weight_value(weight)
+            weight = self.oc.weight.weight_value(1)
         else:
             weight = Size.Average.weight_value(self.oc.weight)
 
@@ -393,12 +325,6 @@ class WeightView(Basic):
 
         await itx.response.edit_message(view=self.format())
 
-    @select(placeholder="Species for reference", min_values=0, max_values=1)
-    async def reference(self, itx: Interaction, sct: Select):
-        if sct.values:
-            self.species = Fusion.from_ID(sct.values[0])
-        await itx.response.edit_message(view=self.format())
-
     @select(placeholder="Single Choice.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
         self.oc.weight = round(float(sct.values[0]), 2)
@@ -406,14 +332,14 @@ class WeightView(Basic):
 
     @button(label="Kg", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_1(self, itx: Interaction, btn: Button):
-        modal = WeightModal1(oc=self.oc, info=btn.label, species=self.species)
+        modal = WeightModal1(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)
 
     @button(label="Lbs", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
-        modal = WeightModal2(oc=self.oc, info=btn.label, species=self.species)
+        modal = WeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)

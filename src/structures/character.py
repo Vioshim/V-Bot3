@@ -417,11 +417,12 @@ class Trope(Enum):
 
 class SizeCategory(float, Enum):
     Mini = 0.1
-    Small = 0.2
+    Small = 0.3
     Below_Average = 0.5
     Average = 1.0
-    Above_Average = 1.25
     Large = 1.5
+    Above_Average = Large
+    Huge = 2.0
     Alpha = Large
     Kaiju = 12
 
