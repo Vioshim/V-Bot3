@@ -181,8 +181,6 @@ class HeightView(Basic):
         self.format()
 
     def format(self):
-        self.reference.options.clear()
-
         proportion = self.oc.size_category.value
         min_value, max_value = (
             round(Size.Minimum.height_value(1) * proportion, 2),
