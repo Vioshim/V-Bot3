@@ -693,7 +693,7 @@ class Character:
     @property
     def height_value(self):
         if isinstance(self.size, Size):
-            value = self.size.height_value(1)
+            value = self.size.height_value(1.65)
         else:
             value = self.size
         return round(value, 2)
@@ -705,7 +705,7 @@ class Character:
     @property
     def weight_value(self):
         if isinstance(self.weight, Size):
-            value = self.weight.weight_value(25)
+            value = self.weight.weight_value(60)
         else:
             value = self.weight
         return round(value, 2)

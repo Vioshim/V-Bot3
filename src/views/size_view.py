@@ -39,7 +39,7 @@ class HeightModal(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         proportion = self.oc.size_category.value
-        items = {x.height_value(1) for x in Size}
+        items = {x.height_value(1.65) for x in Size}
         min_item, max_item = min(items) * proportion, max(items) * proportion
 
         value = self.value
@@ -47,7 +47,7 @@ class HeightModal(Modal, title="Height"):
         self.oc.size = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(1)
+            info = self.oc.size.height_info(1.65)
         else:
             info = Size.Average.height_info(self.oc.size)
 
@@ -114,7 +114,7 @@ class WeightModal(Modal, title="Weight"):
     async def on_submit(self, interaction: Interaction, /) -> None:
 
         proportion = self.oc.size_category.value
-        items = {x.weight_value(25) for x in Size}
+        items = {x.weight_value(60) for x in Size}
         min_item, max_item = min(items) * proportion, max(items) * proportion
 
         value = self.value
@@ -122,7 +122,7 @@ class WeightModal(Modal, title="Weight"):
         self.oc.weight = Size.Average if answer <= 0 else answer
 
         if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(1)
+            info = self.oc.weight.weight_info(60)
         else:
             info = Size.Average.weight_info(self.oc.weight)
 
@@ -183,12 +183,12 @@ class HeightView(Basic):
     def format(self):
         proportion = self.oc.size_category.value
         min_value, max_value = (
-            round(Size.Minimum.height_value(1) * proportion, 2),
-            round(Size.Maximum.height_value(1) * proportion, 2),
+            round(Size.Minimum.height_value(1.65) * proportion, 2),
+            round(Size.Maximum.height_value(1.65) * proportion, 2),
         )
 
         if isinstance(self.oc.size, Size):
-            height = self.oc.size.height_value(1)
+            height = self.oc.size.height_value(1.65)
         else:
             height = Size.Average.height_value(self.oc.size)
 
@@ -272,12 +272,12 @@ class WeightView(Basic):
     def format(self):
         proportion = self.oc.size_category.value
         min_value, max_value = (
-            round(Size.Minimum.weight_value(25) * proportion, 2),
-            round(Size.Maximum.weight_value(25) * proportion, 2),
+            round(Size.Minimum.weight_value(60) * proportion, 2),
+            round(Size.Maximum.weight_value(60) * proportion, 2),
         )
 
         if isinstance(self.oc.weight, Size):
-            weight = self.oc.weight.weight_value(25)
+            weight = self.oc.weight.weight_value(60)
         else:
             weight = Size.Average.weight_value(self.oc.weight)
 
