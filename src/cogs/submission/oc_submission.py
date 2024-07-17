@@ -64,6 +64,7 @@ from src.structures.character import (
     Size,
     SizeCategory,
     Trope,
+    Weight,
 )
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
@@ -625,36 +626,6 @@ class WeightField(TemplateField):
     "Modify the OC's Weight"
 
     @classmethod
-    def check(cls, oc: Character) -> bool:
-        return bool(oc.species)
-
-    @classmethod
-    def evaluate(cls, oc: Character):
-        if isinstance(oc.weight, Size):
-            return
-
-        if oc.size_category == SizeCategory.Kaiju:
-            if not any(x in oc.tropes for x in REF_TROPES):
-                return "Too big for this world."
-        elif Trope.Great_Feral in oc.tropes:
-            return "Size must be Kaiju for Great Feral."
-
-        if Trope.Aura_Bot in oc.tropes and oc.size_category > SizeCategory.Small:
-            return "Aura Bots must be Small."
-
-        ratio = oc.size_category.value
-        min_value, max_value = (
-            round(Size.Minimum.weight_value(60) * ratio, 2),
-            round(Size.Maximum.weight_value(60) * ratio, 2),
-        )
-
-        if oc.weight < min_value:
-            return f"Thin Mf {Size.Average.weight_info(min_value)}"
-
-        if oc.weight > max_value:
-            return f"Fat ass {Size.Average.weight_info(max_value)}"
-
-    @classmethod
     async def on_submit(
         cls,
         itx: Interaction[CustomBot],
@@ -663,14 +634,25 @@ class WeightField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = WeightView(target=itx, member=itx.user, oc=oc)
-        await view.send(
+        view = Complex[Weight](
+            member=itx.user,
+            target=itx,
+            timeout=None,
+            values=Weight,
+            parser=lambda x: (x.name.replace("_", " "), None),
+            sort_key=lambda x: x.value,
+            silent_mode=True,
+            auto_choice_info=True,
+        )
+        async with view.send(
             title=f"{template.title} Character's Weight.",
             description=f"> {oc.weight_text}",
             ephemeral=ephemeral,
-        )
-        await view.wait()
-        progress.add(cls.name)
+            single=True,
+        ) as weight:
+            if weight:
+                oc.weight = weight
+                progress.add(cls.name)
 
 
 class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
