@@ -705,8 +705,7 @@ class Character:
     @property
     def weight_value(self):
         if isinstance(self.weight, Size):
-            weight = self.species.weight if self.species else 0
-            value = self.weight.weight_value(weight)
+            value = self.weight.weight_value(25)
         else:
             value = self.weight
         return round(value, 2)

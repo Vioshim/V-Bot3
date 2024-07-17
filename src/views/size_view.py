@@ -114,7 +114,7 @@ class WeightModal(Modal, title="Weight"):
     async def on_submit(self, interaction: Interaction, /) -> None:
 
         proportion = self.oc.size_category.value
-        items = {x.weight_value(1) for x in Size}
+        items = {x.weight_value(25) for x in Size}
         min_item, max_item = min(items) * proportion, max(items) * proportion
 
         value = self.value
@@ -272,12 +272,12 @@ class WeightView(Basic):
     def format(self):
         proportion = self.oc.size_category.value
         min_value, max_value = (
-            round(Size.Minimum.weight_value(1) * proportion, 2),
-            round(Size.Maximum.weight_value(1) * proportion, 2),
+            round(Size.Minimum.weight_value(25) * proportion, 2),
+            round(Size.Maximum.weight_value(25) * proportion, 2),
         )
 
         if isinstance(self.oc.weight, Size):
-            weight = self.oc.weight.weight_value(1)
+            weight = self.oc.weight.weight_value(25)
         else:
             weight = Size.Average.weight_value(self.oc.weight)
 
