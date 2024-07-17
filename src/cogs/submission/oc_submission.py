@@ -581,7 +581,7 @@ class SizeField(TemplateField):
         if isinstance(oc.size, Size):
             return
 
-        if Trope.Aura_Bot in oc.tropes and oc.size_category <= SizeCategory.Small:
+        if Trope.Aura_Bot in oc.tropes and oc.size_category > SizeCategory.Small:
             return "Aura Bots must be Small."
 
         if oc.size_category == SizeCategory.Kaiju:
@@ -639,7 +639,7 @@ class WeightField(TemplateField):
         elif Trope.Great_Feral in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
-        if Trope.Aura_Bot in oc.tropes and oc.size_category <= SizeCategory.Small:
+        if Trope.Aura_Bot in oc.tropes and oc.size_category > SizeCategory.Small:
             return "Aura Bots must be Small."
 
         ratio = oc.size_category.value
