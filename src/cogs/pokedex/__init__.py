@@ -382,6 +382,8 @@ class Pokedex(commands.Cog):
                 embed.description = description
         if flags.kind:
             filters.append(lambda oc: oc.kind == flags.kind)
+        if flags.weight:
+            filters.append(lambda oc: oc.weight == flags.weight)
 
         ocs = [mon for mon in ocs if all(i(mon) for i in filters)]
 
