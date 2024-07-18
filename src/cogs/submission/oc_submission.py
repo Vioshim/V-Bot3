@@ -568,6 +568,7 @@ class SpeciesField(TemplateField, required=True):
 
 
 REF_TROPES = (Trope.Great_Feral, Trope.Prime, Trope.Player, Trope.GM)
+RESTRICTED_TROPES = (Trope.Prime, Trope.Player, Trope.GM)
 
 
 class SizeField(TemplateField):
@@ -1137,7 +1138,7 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if any(x in oc.tropes for x in REF_TROPES):
+        if any(x in oc.tropes for x in RESTRICTED_TROPES):
             return "Stricter rules for this trope."
 
         if len(oc.tropes) > 3:
