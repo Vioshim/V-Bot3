@@ -413,6 +413,7 @@ class Trope(Enum):
     Witch = "Uses nature magic and potions."
     Shaman = "Uses spirit magic and rituals."
     Bomber = "Uses explosives and bombs."
+    Analyst = "Analyzes data and information."
 
 
 class SizeCategory(float, Enum):
