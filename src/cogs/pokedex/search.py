@@ -482,6 +482,7 @@ class OCGroupBy(Generic[D], ABC):
         dict[str, frozenset[Character]]
             Characters per category
         """
+        return {}
 
     @staticmethod
     def inner_parser(group: D, elements: list[Character]):
