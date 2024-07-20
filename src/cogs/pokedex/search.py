@@ -630,6 +630,11 @@ class OCGroupByGender(OCGroupBy[Gender]):
     def inner_parser(group: Gender, elements: list[Character]):
         return group.name, f"Gendered by {len(elements):02d} OCs."
 
+    @classmethod
+    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
+        ocs = sorted(ocs, key=lambda x: x.gender.name)
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
+
 
 class OCGroupByPronoun(OCGroupBy[Pronoun]):
     @staticmethod
