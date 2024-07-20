@@ -35,6 +35,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import (
     AgeGroup,
     Character,
+    Gender,
     Kind,
     Nature,
     Size,
@@ -422,6 +423,7 @@ class GroupByArg(StrEnum):
     Species = auto()
     EvoLine = auto()
     Type = auto()
+    Gender = auto()
     Pronoun = auto()
     Move = auto()
     Ability = auto()
@@ -623,6 +625,12 @@ class OCGroupByType(OCGroupBy[TypingEnum]):
         return {k: frozenset(v) for k, v in data.items()}
 
 
+class OCGroupByGender(OCGroupBy[Gender]):
+    @staticmethod
+    def inner_parser(group: Gender, elements: list[Character]):
+        return group.name, f"Gendered by {len(elements):02d} OCs."
+
+
 class OCGroupByPronoun(OCGroupBy[Pronoun]):
     @staticmethod
     def inner_parser(group: Pronoun, elements: list[Character]):
@@ -763,6 +771,7 @@ class GroupBy(Enum):
     Species = OCGroupBySpecies
     EvoLine = OCGroupByEvoLine
     Type = OCGroupByType
+    Gender = OCGroupByGender
     Pronoun = OCGroupByPronoun
     Move = OCGroupByMove
     Ability = OCGroupByAbility
