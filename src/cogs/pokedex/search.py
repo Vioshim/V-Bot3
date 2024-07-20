@@ -633,7 +633,7 @@ class OCGroupByGender(OCGroupBy[Gender]):
     @classmethod
     def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
         ocs = sorted(ocs, key=lambda x: x.gender.name)
-        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.kind)}
+        return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.gender)}
 
 
 class OCGroupByPronoun(OCGroupBy[Pronoun]):
