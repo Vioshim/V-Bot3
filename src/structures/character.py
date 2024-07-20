@@ -688,7 +688,7 @@ class Character:
 
     @property
     def pronoun_text(self):
-        return ", ".join(sorted(x.name for x in self.pronoun))
+        return ", ".join(sorted(x.name for x in self.pronoun)) or "Them"
 
     @property
     def movepool(self) -> Movepool:
