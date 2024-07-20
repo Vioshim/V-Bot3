@@ -477,7 +477,7 @@ class Character:
     tropes: frozenset[Trope] = field(default_factory=frozenset)
     emoji: Optional[PartialEmoji] = None
     pokeball: Optional[Pokeball] = None
-    gender: Optional[Gender] = None
+    gender: Gender = Gender.Genderless
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -538,11 +538,11 @@ class Character:
             except KeyError:
                 self.size = Size.Average
 
-        if isinstance(self.gender, str):
+        if not isinstance(self.gender, Gender):
             try:
                 self.gender = Gender[self.gender]
             except KeyError:
-                self.gender = None
+                self.gender = Gender.Genderless
 
         if not isinstance(self.weight, Weight):
             try:
@@ -815,7 +815,7 @@ class Character:
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]
 
-        gender_text = self.gender.name if self.gender else "Pronouns"
+        gender_text = self.gender.name if self.gender != Gender.Genderless else "Pronouns"
         c_embed.add_field(name=gender_text, value=self.pronoun_text or "Unknown")
         c_embed.add_field(name="Age", value=self.age.title)
 

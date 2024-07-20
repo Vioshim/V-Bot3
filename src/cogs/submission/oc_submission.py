@@ -522,12 +522,13 @@ class GenderField(TemplateField, required=True):
         )
         async with view.send(
             title=f"{template.title} Character's Gender",
-            description=f"> **{oc.gender.name}:** {oc.gender.value}" if oc.gender else "> No gender was provided",
+            description=f"> **{oc.gender.name}:** {oc.gender.value}",
             single=True,
             ephemeral=ephemeral,
         ) as gender:
-            oc.gender = gender
-            progress.add(cls.name)
+            if gender:
+                oc.gender = gender
+                progress.add(cls.name)
 
 
 class PronounField(TemplateField, required=True):
