@@ -60,6 +60,7 @@ from src.structures.bot import CustomBot
 from src.structures.character import (
     AgeGroup,
     Character,
+    Gender,
     Nature,
     Size,
     SizeCategory,
@@ -99,7 +100,7 @@ from src.views.characters_view import BaseCharactersView, CharactersView, PingVi
 from src.views.image_view import ImageView
 from src.views.move_view import MovepoolMoveComplex
 from src.views.movepool_view import MovepoolView
-from src.views.size_view import HeightView, WeightView
+from src.views.size_view import HeightView
 from src.views.species_view import SpeciesComplex
 
 
@@ -495,6 +496,38 @@ class AgeField(TemplateField, required=True):
             if isinstance(age, AgeGroup):
                 oc.age = age
                 progress.add(cls.name)
+
+
+class GenderField(TemplateField, required=True):
+    "Modify the character's gender"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        itx: Interaction[CustomBot],
+        template: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        view = Complex[Gender](
+            member=itx.user,
+            target=itx,
+            values=Gender,
+            timeout=None,
+            sort_key=lambda x: x.name,
+            parser=lambda x: (x.name, x.value),
+            silent_mode=True,
+            auto_text_component=True,
+        )
+        async with view.send(
+            title=f"{template.title} Character's Gender",
+            description=f"> **{oc.gender.name}:** {oc.gender.value}" if oc.gender else "> No gender was provided",
+            single=True,
+            ephemeral=ephemeral,
+        ) as gender:
+            oc.gender = gender
+            progress.add(cls.name)
 
 
 class PronounField(TemplateField, required=True):

@@ -416,6 +416,14 @@ class Trope(Enum):
     Analyst = "Analyzes data and information."
 
 
+class Gender(Enum):
+    Male = "Has male features in its body."
+    Female = "Has female features in its body."
+    Genderless = "Lacks distinct male or female features."
+    Intersex = "Has both male and female features."
+    Fluid = "Uses transformations to change gender frequently."
+
+
 class SizeCategory(float, Enum):
     Mini = 0.1
     Small = 0.3
@@ -469,6 +477,7 @@ class Character:
     tropes: frozenset[Trope] = field(default_factory=frozenset)
     emoji: Optional[PartialEmoji] = None
     pokeball: Optional[Pokeball] = None
+    gender: Optional[Gender] = None
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -490,6 +499,7 @@ class Character:
         data["tropes"] = [x.name for x in self.tropes]
         data["nature"] = self.nature.name if self.nature else None
         data["emoji"] = self.emoji and str(self.emoji)
+        data["gender"] = self.gender and self.gender.name
         if isinstance(self.sp_ability, SpAbility):
             aux = asdict(self.sp_ability)
             aux["kind"] = self.sp_ability.kind.name
@@ -527,6 +537,12 @@ class Character:
                 self.size = Size[self.size.removesuffix("_")]
             except KeyError:
                 self.size = Size.Average
+
+        if isinstance(self.gender, str):
+            try:
+                self.gender = Gender[self.gender]
+            except KeyError:
+                self.gender = None
 
         if not isinstance(self.weight, Weight):
             try:
@@ -799,9 +815,8 @@ class Character:
         if backstory := self.backstory:
             c_embed.description = backstory[:2000]
 
-        if pronoun := self.pronoun_text:
-            c_embed.add_field(name="Pronoun", value=pronoun)
-
+        gender_text = self.gender.name if self.gender else "Pronouns"
+        c_embed.add_field(name=gender_text, value=self.pronoun_text or "Unknown")
         c_embed.add_field(name="Age", value=self.age.title)
 
         if species_data := self.species_data:
@@ -1343,6 +1358,7 @@ class Character:
             size_category=self.size_category,
             emoji=self.emoji,
             pokeball=self.pokeball,
+            gender=self.gender,
         )
 
     def __repr__(self) -> str:
