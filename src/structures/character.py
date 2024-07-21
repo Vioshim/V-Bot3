@@ -461,7 +461,7 @@ class SizeCategory(Enum):
         return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"
 
     def __contains__(self, item: float):
-        return self.minimum <= item < self.maximum
+        return self.minimum <= item <= self.maximum
 
 
 class Weight(float, Enum):
