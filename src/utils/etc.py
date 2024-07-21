@@ -130,7 +130,7 @@ class MapPair:
     short_desc: str = ""
     desc: str = ""
     image: str = ""
-    weather: dict[Month, dict[Weather, int]] = field(default=DEFAULT_WEATHER, hash=False)
+    weather: dict[Month, dict[Weather, int]] = field(hash=False, default_factory=DEFAULT_WEATHER.copy)
 
 
 class MapElements(Enum):
