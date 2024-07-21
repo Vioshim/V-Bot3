@@ -274,18 +274,11 @@ class Size(float, Enum):
     def height_info(self, value: float = 0):
         value = self.height_value(value)
         feet, inches = self.meters_to_ft_inches(value)
-        if (feet, inches) <= (1, 0):
-            inches += 12 * feet
-            return f"{value*100:.2f} cm / {inches:02d} in"
         return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
         lbs = self.kg_to_lbs(value)
-
-        if value < 1:
-            return f"{value*1000:.2f} g / {lbs*16:.2f} oz"
-
         return f"{value:.2f} kg / {lbs:.2f} lbs"
 
 
@@ -458,8 +451,10 @@ class SizeCategory(Enum):
         ma = self.maximum
         ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
         n = self.name.replace("_", " ")
+
         if self == SizeCategory.Mini:
             return f"{n} (Up to {ma_ft}' {ma_in}\" ft / {ma:.2f} m)"
+
         mi = self.minimum
         mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
         return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"

@@ -90,6 +90,35 @@ class HeightModal2(HeightModal):
             return 0
 
 
+PHRASES = [
+    "Extremely Tall",
+    "Very Tall",
+    "Tall",
+    "Quite Tall",
+    "Somewhat Tall",
+    "Above Average",
+    "Slightly Tall",
+    "A Bit Tall",
+    "Close to Tall",
+    "Nearly Tall",
+    "Slightly Above Average",
+    "Just Above Average",
+    "Average",
+    "Almost Average",
+    "Just Below Average",
+    "Slightly Below Average",
+    "Close to Average",
+    "Nearly Average",
+    "A Bit Short",
+    "Below Average",
+    "Slightly Short",
+    "Somewhat Short",
+    "Quite Short",
+    "Short",
+    "Very Short",
+]
+
+
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
         super(HeightView, self).__init__(target=target, member=member, timeout=None)
@@ -114,10 +143,12 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         uses_default = False
-        for value in np.linspace(
-            current_category.maximum,
-            current_category.minimum,
-            9,
+        for index, value in enumerate(
+            np.linspace(
+                current_category.maximum,
+                current_category.minimum,
+                len(PHRASES),
+            ),
         ):
             label = Size.Average.height_info(value)
             default = not uses_default and label == info
@@ -126,6 +157,7 @@ class HeightView(Basic):
                 label=label,
                 value=str(value),
                 default=default,
+                description=PHRASES[index],
             )
 
         return self
