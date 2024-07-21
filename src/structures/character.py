@@ -458,7 +458,7 @@ class SizeCategory(Enum):
             return f"{n} (Up to {ma_ft}' {ma_in}\" ft / {ma:.2f} m)"
         mi = self.minimum
         mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
-        return f"{n} ({mi_ft} - {mi_in} ft / {mi:.2f} - {ma:.2f} m)"
+        return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"
 
     def __contains__(self, item: float):
         return self.minimum <= item < self.maximum
