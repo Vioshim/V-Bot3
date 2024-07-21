@@ -517,6 +517,10 @@ class Character:
         dct["species"] = species and Species.from_data(species)
         return Character.from_dict(dct)
 
+    def copy(self):
+        data = self.to_mongo_dict()
+        return Character.from_mongo_dict(data)
+
     def __post_init__(self):
         self.image_url = self.image
         self.url = self.url or ""
@@ -1328,38 +1332,6 @@ class Character:
                         padding=15,
                     )
         return kit.url
-
-    def copy(self):
-        sp_ability = self.sp_ability.copy() if self.sp_ability else None
-        return Character(
-            species=self.species,
-            id=self.id,
-            author=self.author,
-            thread=self.thread,
-            server=self.server,
-            name=self.name,
-            age=self.age,
-            pronoun=self.pronoun,
-            backstory=self.backstory,
-            personality=self.personality,
-            extra=self.extra,
-            abilities=self.abilities.copy(),
-            moveset=self.moveset.copy(),
-            sp_ability=sp_ability,
-            url=self.url,
-            image=self.image,
-            location=self.location,
-            hidden_power=self.hidden_power,
-            size=self.size,
-            weight=self.weight,
-            last_used=self.last_used,
-            nature=self.nature,
-            tropes=self.tropes,
-            size_category=self.size_category,
-            emoji=self.emoji,
-            pokeball=self.pokeball,
-            gender=self.gender,
-        )
 
     def __repr__(self) -> str:
         species = self.species.name if self.species else None

@@ -271,12 +271,9 @@ class Template(TemplateItem, Enum):
                 else:
                     return
 
-        default_measure: bool = False
-
         match self.name:
             case "Fusion" | "Crossbreed":
                 oc.species = Fusion(*choices)
-                default_measure = True
             case "Variant":
                 async with ModernInput(member=itx.user, target=itx).handle(
                     label=f"{choices[0].name} Variant"[:45],
@@ -289,7 +286,6 @@ class Template(TemplateItem, Enum):
                             oc.species.name = answer[:45] or choices[0].name
                         else:
                             oc.species = Variant(base=choices[0], name=answer[:45] or choices[0].name)
-                            default_measure = True
             case "Fakemon":
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
@@ -302,7 +298,6 @@ class Template(TemplateItem, Enum):
                         if isinstance(oc.species, Fakemon):
                             oc.species.name = answer or oc.name
                         else:
-                            default_measure = True
                             oc.species = Fakemon(
                                 name=answer or oc.name,
                                 abilities=oc.abilities,
@@ -316,7 +311,6 @@ class Template(TemplateItem, Enum):
                         oc.abilities = abilities.copy()
                     else:
                         oc.abilities &= abilities
-                default_measure = True
 
         if species := oc.species:
             moves = species.total_movepool()
@@ -324,10 +318,6 @@ class Template(TemplateItem, Enum):
                 oc.moveset = frozenset(moves)
             if not oc.abilities and len(species.abilities) == 1:
                 oc.abilities = species.abilities.copy()
-
-        if default_measure:
-            oc.size = Size.Average
-            oc.weight = Size.Average
 
     @property
     def min_values(self):
