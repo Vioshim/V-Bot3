@@ -1161,11 +1161,17 @@ class TropeField(TemplateField, required=True):
         oc: Character,
         ephemeral: bool = False,
     ):
+
+        if itx.permissions.administrator:
+            tropes = Trope
+        else:
+            tropes = {x for x in Trope if x not in REF_TROPES}
+
         view = Complex[Trope](
             member=itx.user,
             target=itx,
             timeout=None,
-            values=Trope,
+            values=tropes,
             parser=lambda x: (x.name.replace("_", " "), x.value),
             sort_key=lambda x: x.name,
             silent_mode=True,
