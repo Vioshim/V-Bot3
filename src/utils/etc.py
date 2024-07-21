@@ -119,6 +119,9 @@ class RTFMPages(StrEnum):
     Python_Docx = "https://python-docx.readthedocs.io/en/latest/"
 
 
+DEFAULT_WEATHER = {x: {y: 1 for y in Weather} for x in Month}
+
+
 @dataclass(unsafe_hash=True, slots=True)
 class MapPair:
     name: str
@@ -127,7 +130,7 @@ class MapPair:
     short_desc: str = ""
     desc: str = ""
     image: str = ""
-    weather: dict[Month, dict[Weather, int]] = field(default_factory=dict, hash=False)
+    weather: dict[Month, dict[Weather, int]] = field(default=DEFAULT_WEATHER, hash=False)
 
 
 class MapElements(Enum):
@@ -740,7 +743,7 @@ class MapElements(Enum):
         },
     )
     Wilderness_2 = MapPair(
-        name="Wilderness",
+        name="Wilderness 2",
         category=1263893136623796314,
         emoji="\N{EVERGREEN TREE}",
         desc="A vast area of land with no civilization.",
