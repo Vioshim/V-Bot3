@@ -3505,8 +3505,7 @@
 		},
 		"abilities": ["MULTITYPE"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "ARCHEN",
@@ -25080,8 +25079,7 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "DIALGAORIGIN",
@@ -25174,8 +25172,7 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "DIANCIE",
@@ -33439,7 +33436,6 @@
 		"SPA": 125,
 		"SPD": 250,
 		"SPE": 130,
-		"banned": true,
 		"evolves_from": "ETERNATUS",
 		"abilities": ["PRESSURE"],
 		"kind": "Legendary",
@@ -40950,8 +40946,7 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "GIRATINAORIGIN",
@@ -41034,8 +41029,7 @@
 		},
 		"abilities": ["LEVITATE"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "GLACEON",
@@ -63193,7 +63187,6 @@
 		"SPD": 154,
 		"SPE": 110,
 		"movepool": {},
-		"banned": true,
 		"abilities": ["MULTISCALE", "PRESSURE"],
 		"kind": "Legendary",
 		"egg_groups": ["no-eggs"]
@@ -83027,8 +83020,7 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "PALKIAORIGIN",
@@ -83124,8 +83116,7 @@
 		},
 		"abilities": ["PRESSURE", "TELEPATHY"],
 		"kind": "Legendary",
-		"egg_groups": ["no-eggs"],
-		"banned": true
+		"egg_groups": ["no-eggs"]
 	},
 	{
 		"id": "PALOSSAND",
