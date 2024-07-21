@@ -450,6 +450,10 @@ class SizeCategory(Enum):
         return (self.minimum + self.maximum) / 2.0
 
     @property
+    def ref_name(self):
+        return self.name.replace("_", " ")
+
+    @property
     def label(self):
         ma = self.maximum
         ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
@@ -827,6 +831,10 @@ class Character:
         return Color.blurple()
 
     @property
+    def size_category(self) -> SizeCategory:
+        return next((x for x in SizeCategory if self.size in x), SizeCategory.Average)
+
+    @property
     def embeds(self) -> list[Embed]:
         """Discord embed out of the character
 
@@ -843,7 +851,8 @@ class Character:
 
         gender_text = self.gender.name if self.gender != Gender.Genderless else "Pronouns"
         c_embed.add_field(name=gender_text, value=self.pronoun_text or "Unknown")
-        c_embed.add_field(name="Age", value=self.age.title)
+        cat = self.size_category
+        c_embed.add_field(name=cat.ref_name, value=self.age.title)
 
         if species_data := self.species_data:
             name1, name2 = species_data

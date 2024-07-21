@@ -101,7 +101,7 @@ class HeightView(Basic):
         info = Size.Average.height_info(height)
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
-        current_category = find(lambda x: self.oc.size in x, SizeCategory) or SizeCategory.Average
+        current_category = self.oc.size_category
 
         self.category.options.clear()
         for item in SizeCategory:
