@@ -143,6 +143,7 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         uses_default = False
+        middle = len(PHRASES) // 2
         for index, value in enumerate(
             np.linspace(
                 current_category.maximum,
@@ -150,6 +151,14 @@ class HeightView(Basic):
                 len(PHRASES),
             ),
         ):
+
+            if index == middle:
+                emoji = "🟩"
+            elif index < middle:
+                emoji = "🟦"
+            else:
+                emoji = "🟧"
+
             label = Size.Average.height_info(value)
             default = not uses_default and label == info
             uses_default |= default
@@ -158,6 +167,7 @@ class HeightView(Basic):
                 value=str(value),
                 default=default,
                 description=PHRASES[index],
+                emoji=emoji,
             )
 
         return self
