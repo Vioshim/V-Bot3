@@ -18,14 +18,12 @@ from typing import Optional
 import numpy as np
 from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
+from discord.utils import find
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size, SizeCategory
 
-__all__ = (
-    "HeightView",
-    "WeightView",
-)
+__all__ = ("HeightView",)
 
 
 class HeightModal(Modal, title="Height"):
@@ -38,19 +36,9 @@ class HeightModal(Modal, title="Height"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        proportion = self.oc.size_category.value
-        items = {x.height_value(1.65) for x in Size}
-        min_item, max_item = min(items) * proportion, max(items) * proportion
-
         value = self.value
-        answer = max(min_item, min(max_item, value))
-        self.oc.size = Size.Average if answer <= 0 else answer
-
-        if isinstance(self.oc.size, Size):
-            info = self.oc.size.height_info(1.65)
-        else:
-            info = Size.Average.height_info(self.oc.size)
-
+        self.oc.size = max(0.1, min(30, value))
+        info = Size.Average.height_info(self.oc.size)
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
 
@@ -102,78 +90,6 @@ class HeightModal2(HeightModal):
             return 0
 
 
-class WeightModal(Modal, title="Weight"):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(WeightModal, self).__init__(title="Weight", timeout=None)
-        self.oc = oc
-
-    @property
-    def value(self) -> float:
-        return 0
-
-    async def on_submit(self, interaction: Interaction, /) -> None:
-
-        proportion = self.oc.size_category.value
-        items = {x.weight_value(60) for x in Size}
-        min_item, max_item = min(items) * proportion, max(items) * proportion
-
-        value = self.value
-        answer = max(min_item, min(max_item, value))
-        self.oc.weight = Size.Average if answer <= 0 else answer
-
-        if isinstance(self.oc.weight, Size):
-            info = self.oc.weight.weight_info(60)
-        else:
-            info = Size.Average.weight_info(self.oc.weight)
-
-        await interaction.response.send_message(info, ephemeral=True, delete_after=3)
-        self.stop()
-
-
-class WeightModal1(WeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(WeightModal1, self).__init__(oc=oc)
-        self.text = TextInput(label="kg", placeholder=info, default=info)
-        self.add_item(self.text)
-
-    @property
-    def value(self) -> float:
-        text = self.text.value.lower().removesuffix(".")
-        text = text.removesuffix("kgs")
-
-        if "kg" not in text and "g" in text:
-            ratio, text = 1 / 1000, text.removesuffix("g")
-        else:
-            ratio, text = 1 / 1, text.removesuffix("kg")
-
-        try:
-            return round(ratio * float(text.strip()), 2)
-        except ValueError:
-            return 0
-
-
-class WeightModal2(WeightModal):
-    def __init__(self, oc: Character, info: Optional[str] = None) -> None:
-        super(WeightModal2, self).__init__(oc=oc)
-        self.text = TextInput(label="lbs", placeholder=info, default=info)
-        self.add_item(self.text)
-
-    @property
-    def value(self) -> float:
-        text = self.text.value.lower().removesuffix(".")
-        text = text.removesuffix("lbs")
-
-        if "oz" in text:
-            ratio, text = 1 / 16, text.removesuffix("oz")
-        else:
-            ratio, text = 1 / 1, text.removesuffix("lb")
-
-        try:
-            return round(ratio * Size.lbs_to_kgs(float(text.strip())), 2)
-        except ValueError:
-            return 0
-
-
 class HeightView(Basic):
     def __init__(self, *, target: Interaction, member: Member, oc: Character):
         super(HeightView, self).__init__(target=target, member=member, timeout=None)
@@ -181,58 +97,53 @@ class HeightView(Basic):
         self.format()
 
     def format(self):
-        proportion = self.oc.size_category.value
-        min_value, max_value = (
-            round(Size.Minimum.height_value(1.65) * proportion, 2),
-            round(Size.Maximum.height_value(1.65) * proportion, 2),
-        )
-
-        if isinstance(self.oc.size, Size):
-            height = self.oc.size.height_value(1.65)
-        else:
-            height = Size.Average.height_value(self.oc.size)
-
+        height = Size.Average.height_value(self.oc.size)
         info = Size.Average.height_info(height)
-
         self.manual_1.label, self.manual_2.label = info.split(" / ")
 
-        items = sorted(Size, key=lambda x: x.value, reverse=True)
-        self.choice.placeholder = f"Single Choice. Options: {len(items)}"
-        heights = np.linspace(max_value, min_value, len(items))
+        current_category = (
+            find(
+                lambda x: self.oc.size in x.value,
+                reversed(SizeCategory),
+            )
+            or SizeCategory.Average
+        )
 
         self.category.options.clear()
         for item in SizeCategory:
             self.category.add_option(
-                label=item.name.replace("_", " "),
+                label=item.label,
                 value=item.name,
-                default=item == self.oc.size_category,
-                description=f"Multiplies the size by {item.value:.2f}x",
+                default=item == current_category,
+                description=item.description,
             )
 
         self.choice.options.clear()
         uses_default = False
-        for value, item in zip(heights, items):
+        for value in np.linspace(
+            current_category.maximum,
+            current_category.minimum,
+            9,
+        ):
             label = Size.Average.height_info(value)
             default = not uses_default and label == info
             uses_default |= default
             self.choice.add_option(
                 label=label,
                 value=str(value),
-                description=item.reference_name,
                 default=default,
-                emoji=item.emoji,
             )
 
         return self
 
     @select(placeholder="Multiplier for Size", min_values=0, max_values=1)
     async def category(self, itx: Interaction, sct: Select):
-
         try:
-            self.oc.size_category = SizeCategory[sct.values[0]]
+            size_category = SizeCategory[sct.values[0]]
         except (KeyError, IndexError):
-            self.oc.size_category = SizeCategory.Average
+            size_category = SizeCategory.Average
 
+        self.oc.size = size_category.average
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
@@ -250,94 +161,6 @@ class HeightView(Basic):
     @button(label="Feet & Inches", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
     async def manual_2(self, itx: Interaction, btn: Button):
         modal = HeightModal2(oc=self.oc, info=btn.label)
-        await itx.response.send_modal(modal)
-        await modal.wait()
-        await self.delete(itx)
-
-    @button(label="Close", style=ButtonStyle.gray)
-    async def finish(self, itx: Interaction, btn: Button):
-        if btn.label and "Confirm" not in btn.label:
-            btn.label = f"{btn.label} (Confirm)"
-            return await itx.response.edit_message(view=self)
-        await self.delete(itx)
-
-
-class WeightView(Basic):
-    def __init__(self, *, target: Interaction, member: Member, oc: Character):
-        super(WeightView, self).__init__(target=target, member=member, timeout=None)
-        self.choice.options.clear()
-        self.oc = oc
-        self.format()
-
-    def format(self):
-        proportion = self.oc.size_category.value
-        min_value, max_value = (
-            round(Size.Minimum.weight_value(60) * proportion, 2),
-            round(Size.Maximum.weight_value(60) * proportion, 2),
-        )
-
-        if isinstance(self.oc.weight, Size):
-            weight = self.oc.weight.weight_value(60)
-        else:
-            weight = Size.Average.weight_value(self.oc.weight)
-
-        info = Size.Average.weight_info(weight)
-        self.manual_1.label, self.manual_2.label = info.split(" / ")
-
-        items = sorted(Size, key=lambda x: x.value, reverse=True)
-        self.choice.placeholder = f"Single Choice. Options: {len(items)}"
-        weights = np.linspace(max_value, min_value, len(items))
-
-        self.category.options.clear()
-        for item in SizeCategory:
-            self.category.add_option(
-                label=item.name.replace("_", " "),
-                value=item.name,
-                default=item == self.oc.size_category,
-                description=f"Multiplies the size by {item.value:.2f}x",
-            )
-
-        self.choice.options.clear()
-        uses_default = False
-        for value, item in zip(weights, items):
-            label = Size.Average.weight_info(value)
-            default = not uses_default and label == info
-            uses_default |= default
-            self.choice.add_option(
-                label=label,
-                value=str(value),
-                description=item.reference_name,
-                default=default,
-                emoji=item.emoji,
-            )
-
-        return self
-
-    @select(placeholder="Multiplier for Size", min_values=0, max_values=1)
-    async def category(self, itx: Interaction, sct: Select):
-
-        try:
-            self.oc.size_category = SizeCategory[sct.values[0]]
-        except (KeyError, IndexError):
-            self.oc.size_category = SizeCategory.Average
-
-        await itx.response.edit_message(view=self.format())
-
-    @select(placeholder="Single Choice.", min_values=1, max_values=1)
-    async def choice(self, itx: Interaction, sct: Select):
-        self.oc.weight = round(float(sct.values[0]), 2)
-        await self.delete(itx)
-
-    @button(label="Kg", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
-    async def manual_1(self, itx: Interaction, btn: Button):
-        modal = WeightModal1(oc=self.oc, info=btn.label)
-        await itx.response.send_modal(modal)
-        await modal.wait()
-        await self.delete(itx)
-
-    @button(label="Lbs", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
-    async def manual_2(self, itx: Interaction, btn: Button):
-        modal = WeightModal2(oc=self.oc, info=btn.label)
         await itx.response.send_modal(modal)
         await modal.wait()
         await self.delete(itx)

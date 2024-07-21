@@ -424,16 +424,45 @@ class Gender(Enum):
     Fluid = "Uses transformations to change gender frequently."
 
 
-class SizeCategory(float, Enum):
-    Mini = 0.1
-    Small = 0.3
-    Below_Average = 0.5
-    Average = 1.0
-    Large = 1.5
-    Above_Average = Large
-    Huge = 2.0
-    Alpha = Large
-    Kaiju = 12
+class SizeCategory(Enum):
+    Mini = 0.1, 0.5, "As strong as a mouse."
+    Small = 0.5, 1.0, "As strong as a rabbit."
+    Below_Average = 1.0, 1.4, "As strong as a medium-sized dog."
+    Average = 1.4, 1.8, "As strong as a human."
+    Large = 1.8, 2.5, "As strong as a horse."
+    Huge = 2.5, 5.0, "As strong as a bear."
+    Kaiju = 5.0, 30.0, "As strong as a whale."
+
+    @property
+    def minimum(self):
+        return self.value[0]
+
+    @property
+    def maximum(self):
+        return self.value[1]
+
+    @property
+    def description(self):
+        return self.value[2]
+
+    @property
+    def average(self):
+        return (self.minimum + self.maximum) / 2.0
+
+    @property
+    def label(self):
+        ma_ft = self.maximum * 30.48
+        ma = self.maximum
+        n = self.name.replace("_", " ")
+        if self == SizeCategory.Mini:
+            return f"{n} ({ma_ft:.2f} ft / {ma:.2f} m)"
+
+        mi = self.minimum
+        mi_ft = self.minimum * 30.48
+        return f"{n} ({mi_ft:.2f} - {ma_ft:.2f} ft / {mi:.2f} - {ma:.2f} m)"
+
+    def __contains__(self, item: float):
+        return self.minimum <= item < self.maximum
 
 
 class Weight(float, Enum):
@@ -468,8 +497,7 @@ class Character:
     image: Optional[int | str | File] = None
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
-    size: Size | float = Size.Average
-    size_category: SizeCategory = SizeCategory.Average
+    size: float = 1.65
     weight: Weight = Weight.Average
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
@@ -490,9 +518,8 @@ class Character:
         data["pokeball"] = self.pokeball and self.pokeball.name
         data["species"] = self.species and self.species.as_data()
         data["age"] = self.age.name
-        data["size"] = self.size.name if isinstance(self.size, Size) else self.size
+        data["size"] = self.size
         data["weight"] = self.weight.name
-        data["size_category"] = self.size_category.name
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
@@ -515,6 +542,7 @@ class Character:
         if trope := dct.get("trope", []):
             dct["tropes"] = trope
         dct["species"] = species and Species.from_data(species)
+        dct.pop("size_category", None)
         return Character.from_dict(dct)
 
     def copy(self):
@@ -536,11 +564,11 @@ class Character:
         if isinstance(self.moveset, str):
             self.moveset = [self.moveset]
         self.moveset = Move.deduce_many(*self.moveset)
-        if isinstance(self.size, str):
-            try:
-                self.size = Size[self.size.removesuffix("_")]
-            except KeyError:
-                self.size = Size.Average
+
+        try:
+            self.size = Size[self.size].height_value(1.65) if isinstance(self.size, str) else float(self.size)
+        except (KeyError, ValueError):
+            self.size = 1.65
 
         if not isinstance(self.gender, Gender):
             try:
@@ -581,11 +609,6 @@ class Character:
             except KeyError:
                 self.tropes = frozenset()
 
-        if isinstance(self.size_category, str):
-            try:
-                self.size_category = SizeCategory[self.size_category]
-            except KeyError:
-                self.size_category = SizeCategory.Average
         if isinstance(self.emoji, str):
             try:
                 self.emoji = PartialEmoji.from_str(self.emoji)

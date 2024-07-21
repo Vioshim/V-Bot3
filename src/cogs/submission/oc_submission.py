@@ -604,29 +604,18 @@ class SizeField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        if isinstance(oc.size, Size):
-            return
 
-        if Trope.Aura_Bot in oc.tropes and oc.size_category > SizeCategory.Small:
+        if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
             return "Aura Bots must be Small."
 
-        if oc.size_category == SizeCategory.Kaiju:
+        if oc.size in SizeCategory.Kaiju:
             if not any(x in oc.tropes for x in REF_TROPES):
                 return "Too big for this world."
         elif Trope.Great_Feral in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
-        ratio = oc.size_category.value
-        min_value, max_value = (
-            round(Size.Minimum.height_value(1.65) * ratio, 2),
-            round(Size.Maximum.height_value(1.65) * ratio, 2),
-        )
-
-        if oc.size < min_value:
-            return f"Fetus {Size.Average.height_info(min_value)}"
-
-        if oc.size > max_value:
-            return f"Chungus {Size.Average.height_info(max_value)}"
+        if not (0 <= oc.size <= 30):
+            return "Invalid Size."
 
     @classmethod
     async def on_submit(
