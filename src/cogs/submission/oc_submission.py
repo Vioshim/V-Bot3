@@ -599,10 +599,6 @@ class SizeField(TemplateField):
     "Modify the OC's Size"
 
     @classmethod
-    def check(cls, oc: Character) -> bool:
-        return bool(oc.species)
-
-    @classmethod
     def evaluate(cls, oc: Character):
 
         if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
