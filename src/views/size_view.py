@@ -103,7 +103,7 @@ class HeightView(Basic):
 
         current_category = (
             find(
-                lambda x: self.oc.size in x.value,
+                lambda x: self.oc.size in x,
                 reversed(SizeCategory),
             )
             or SizeCategory.Average
