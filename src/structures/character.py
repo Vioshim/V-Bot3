@@ -428,8 +428,8 @@ class SizeCategory(Enum):
     Mini = 0.1, 0.5, "As strong as a mouse."
     Small = 0.5, 1.0, "As strong as a rabbit."
     Below_Average = 1.0, 1.4, "As strong as a medium-sized dog."
-    Average = 1.4, 1.8, "As strong as a human."
-    Large = 1.8, 2.5, "As strong as a horse."
+    Average = 1.4, 1.9, "As strong as a human."
+    Large = 1.9, 2.5, "As strong as a horse."
     Huge = 2.5, 5.0, "As strong as a bear."
     Kaiju = 5.0, 30.0, "As strong as a whale."
 
