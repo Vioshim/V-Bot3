@@ -407,6 +407,7 @@ class Trope(Enum):
     Shaman = "Uses spirit magic and rituals."
     Bomber = "Uses explosives and bombs."
     Analyst = "Analyzes data and information."
+    Guild = "Direct/indirect member of the guild."
 
 
 class Gender(Enum):
