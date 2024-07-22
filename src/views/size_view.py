@@ -90,15 +90,7 @@ class HeightModal2(HeightModal):
             return 0
 
 
-PHRASES = [
-    "Very Tall",
-    "Tall",
-    "Slightly Tall",
-    "Average",
-    "Slightly Short",
-    "Short",
-    "Very Short",
-]
+AMOUNT = 9
 
 
 class HeightView(Basic):
@@ -125,12 +117,12 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         uses_default = False
-        middle = len(PHRASES) // 2
+        middle = AMOUNT // 2
         for index, value in enumerate(
             np.linspace(
                 current_category.maximum,
                 current_category.minimum,
-                len(PHRASES),
+                AMOUNT,
             ),
         ):
 
@@ -148,7 +140,6 @@ class HeightView(Basic):
                 label=label,
                 value=str(value),
                 default=default,
-                description=PHRASES[index],
                 emoji=emoji,
             )
 
