@@ -125,7 +125,6 @@ class HeightView(Basic):
                 AMOUNT,
             ),
         ):
-
             if index == middle:
                 emoji = "🟩"
             elif index < middle:
