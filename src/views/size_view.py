@@ -91,7 +91,6 @@ class HeightModal2(HeightModal):
 
 
 PHRASES = [
-    "Extremely Tall",
     "Very Tall",
     "Quite Tall",
     "Above Average",
@@ -101,7 +100,6 @@ PHRASES = [
     "Below Average",
     "Quite Short",
     "Very Short",
-    "Extremely Short",
 ]
 
 
