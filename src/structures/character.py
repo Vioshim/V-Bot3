@@ -909,10 +909,7 @@ class Character:
 
         if self.nature:
             footer_elements.append(f"Nature: {self.nature.name}")
-
-        if self.species:
-            footer_elements.append(f"Height: {self.height_text}")
-
+        footer_elements.append(f"Height: {self.height_text}")
         footer_elements.append(f"Weight: {self.weight_text}")
         footer_text = "\n".join(footer_elements) or "No additional information."
         c_embed.set_footer(text=footer_text, icon_url=self.emoji and self.emoji.url)
