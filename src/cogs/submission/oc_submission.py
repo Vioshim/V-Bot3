@@ -603,11 +603,12 @@ class SizeField(TemplateField):
         if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
             return "Aura Bots must be Small."
 
-        if oc.size >= SizeCategory.Regular_Kaiju.maximum:
+        if oc.size < SizeCategory.Regular_Kaiju.minimum:
+            if Trope.Kaiju in oc.tropes:
+                return "Size must be Kaiju for Great Feral."
+        elif oc.size >= SizeCategory.Regular_Kaiju.maximum:
             if not any(x in oc.tropes for x in AUX_TROPES):
                 return "Locked to admins, GMs, and Primes."
-        elif Trope.Kaiju in oc.tropes:
-            return "Size must be Kaiju for Great Feral."
 
         if not (0 <= oc.size <= 30):
             return "Invalid Size."
