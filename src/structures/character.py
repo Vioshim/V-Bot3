@@ -341,7 +341,8 @@ class Trope(Enum):
     Drifter = "Comes from another world."
     Feral = "Feral character."
     Pack_Leader = "Feral pack leader."
-    Great_Feral = "Kaiju or giant feral."
+    Kaiju = "Kaiju or giant feral."
+    Great_Feral = Kaiju
     Reploid = "Sentient robot or android."
     Tribal = "Live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."
@@ -408,6 +409,8 @@ class Trope(Enum):
     Bomber = "Uses explosives and bombs."
     Analyst = "Analyzes data and information."
     Guild = "Direct/indirect member of the guild."
+    Stylist = "Cosmetic and fashion stylist."
+    Geneticist = "Studies and manipulates genes."
 
 
 class Gender(Enum):

@@ -591,7 +591,6 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
-REF_TROPES = (Trope.Great_Feral, Trope.Prime, Trope.Player, Trope.GM)
 AUX_TROPES = (Trope.Prime, Trope.Player, Trope.GM)
 
 
@@ -604,10 +603,10 @@ class SizeField(TemplateField):
         if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
             return "Aura Bots must be Small."
 
-        if oc.size >= SizeCategory.Huge.maximum:
-            if not any(x in oc.tropes for x in REF_TROPES):
-                return "Must be Great Feral, Prime, Player, or GM."
-        elif Trope.Great_Feral in oc.tropes:
+        if oc.size >= SizeCategory.Regular_Kaiju.maximum:
+            if not any(x in oc.tropes for x in AUX_TROPES):
+                return "Locked to admins, GMs, and Primes."
+        elif Trope.Kaiju in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
         if not (0 <= oc.size <= 30):
