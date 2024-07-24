@@ -411,6 +411,7 @@ class Trope(Enum):
     Guild = "Direct/indirect member of the guild."
     Stylist = "Cosmetic and fashion stylist."
     Geneticist = "Studies and manipulates genes."
+    Sportsman = "Competes in sports and games."
 
 
 class Gender(Enum):
