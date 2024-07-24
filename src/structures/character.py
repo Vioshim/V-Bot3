@@ -426,9 +426,9 @@ class SizeCategory(Enum):
     Above_Average = 1.8, 2.0, "As strong as a human."
     Large = 2.0, 2.5, "As strong as a horse."
     Huge = 2.5, 5.0, "As strong as a bear."
-    Lesser_Kaiju = 5.0, 10.0, "As strong as a whale."
-    Regular_Kaiju = 10.0, 20.0, "As strong as a dragon."
-    Greater_Kaiju = 20.0, 30.0, "As strong as a mountain."
+    Regular_Kaiju = 5.0, 10.0, "As strong as a small truck"
+    Major_Kaiju = 10.0, 20.0, "As strong as a whale"
+    Grand_Kaiju = 20.0, 30.0, "As strong as a natural disaster"
 
     @property
     def minimum(self):

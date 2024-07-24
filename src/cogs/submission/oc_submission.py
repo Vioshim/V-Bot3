@@ -592,6 +592,7 @@ class SpeciesField(TemplateField, required=True):
 
 
 REF_TROPES = (Trope.Great_Feral, Trope.Prime, Trope.Player, Trope.GM)
+AUX_TROPES = (Trope.Prime, Trope.Player, Trope.GM)
 
 
 class SizeField(TemplateField):
@@ -605,7 +606,7 @@ class SizeField(TemplateField):
 
         if oc.size >= SizeCategory.Huge.maximum:
             if not any(x in oc.tropes for x in REF_TROPES):
-                return "Too big for this world."
+                return "Must be Great Feral, Prime, Player, or GM."
         elif Trope.Great_Feral in oc.tropes:
             return "Size must be Kaiju for Great Feral."
 
@@ -1146,7 +1147,7 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if any(x in oc.tropes for x in REF_TROPES):
+        if any(x in oc.tropes for x in AUX_TROPES):
             return "Stricter rules for this trope."
 
         if len(oc.tropes) > 3:
@@ -1165,7 +1166,7 @@ class TropeField(TemplateField, required=True):
         if itx.permissions.administrator:
             tropes = Trope
         else:
-            tropes = {x for x in Trope if x not in REF_TROPES}
+            tropes = {x for x in Trope if x not in AUX_TROPES}
 
         view = Complex[Trope](
             member=itx.user,
