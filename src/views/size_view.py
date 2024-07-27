@@ -18,7 +18,6 @@ from typing import Optional
 import numpy as np
 from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
-from discord.utils import find
 
 from src.pagination.view_base import Basic
 from src.structures.character import Character, Size, SizeCategory

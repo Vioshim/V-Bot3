@@ -608,7 +608,7 @@ class SizeField(TemplateField):
             if Trope.Kaiju in oc.tropes:
                 return "Size must be Kaiju for Great Feral."
         elif oc.size >= SizeCategory.Regular_Kaiju.maximum:
-            if not any(x in oc.tropes for x in AUX_TROPES):
+            if not any(x in oc.tropes for x in STRICT_TROPES):
                 return "Locked to admins, GMs, and Primes."
 
         if not (0 <= oc.size <= 30):
