@@ -1148,11 +1148,11 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if tropes := ", ".join(x.name for x in oc.tropes if x in STRICT_TROPES):
-            return f"Stricter rules for: {tropes}"
-
         if len(oc.tropes) > 3:
             return "Max 3 Tropes."
+
+        if tropes := ", ".join(x.name for x in oc.tropes if x in STRICT_TROPES):
+            return f"Stricter rules for: {tropes}"
 
     @classmethod
     async def on_submit(
