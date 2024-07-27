@@ -1148,8 +1148,8 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if any(x in oc.tropes for x in STRICT_TROPES):
-            return "Stricter rules for this trope."
+        if tropes := ", ".join(x.name in oc.tropes for x in STRICT_TROPES):
+            return f"Stricter rules for: {tropes}"
 
         if len(oc.tropes) > 3:
             return "Max 3 Tropes."
@@ -1164,16 +1164,11 @@ class TropeField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
 
-        if itx.permissions.administrator:
-            tropes = Trope
-        else:
-            tropes = {x for x in Trope if x not in AUX_TROPES}
-
         view = Complex[Trope](
             member=itx.user,
             target=itx,
             timeout=None,
-            values=tropes,
+            values=Trope,
             parser=lambda x: (x.name.replace("_", " "), x.value),
             sort_key=lambda x: x.name,
             silent_mode=True,
