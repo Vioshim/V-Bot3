@@ -1148,7 +1148,7 @@ class TropeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if tropes := ", ".join(x.name in oc.tropes for x in STRICT_TROPES):
+        if tropes := ", ".join(x.name for x in oc.tropes if x in STRICT_TROPES):
             return f"Stricter rules for: {tropes}"
 
         if len(oc.tropes) > 3:
