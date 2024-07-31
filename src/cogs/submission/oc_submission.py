@@ -1097,9 +1097,9 @@ class URLField(TemplateField, name="URL", required=False):
         text_view = ModernInput(member=itx.user, target=itx)
         async with text_view.handle(
             label="OC's URL.",
-            placeholder=oc.url,
+            placeholder=oc.document_url,
             ephemeral=ephemeral,
-            default=oc.url,
+            default=oc.document_url,
             required=False,
             style=TextStyle.paragraph,
         ) as answer:
