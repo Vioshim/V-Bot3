@@ -29,7 +29,6 @@ from discord import (
     Interaction,
     InteractionResponse,
     Member,
-    Message,
     Object,
     SelectOption,
     TextChannel,
@@ -95,6 +94,7 @@ from src.utils.etc import (
     WHITE_BAR,
 )
 from src.utils.functions import safe_username
+from src.utils.matches import G_DOCUMENT
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import BaseCharactersView, CharactersView, PingView
 from src.views.image_view import ImageView
@@ -1079,6 +1079,35 @@ class PersonalityField(TemplateField, required=False):
         ) as answer:
             if isinstance(answer, str):
                 oc.personality = answer or None
+                progress.add(cls.name)
+
+
+class URLField(TemplateField, name="URL", required=False):
+    "Modify the OC's URL"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        itx: Interaction[CustomBot],
+        _: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        text_view = ModernInput(member=itx.user, target=itx)
+        async with text_view.handle(
+            label="OC's URL.",
+            placeholder=oc.url,
+            ephemeral=ephemeral,
+            default=oc.url,
+            required=False,
+            style=TextStyle.paragraph,
+        ) as answer:
+            if isinstance(answer, str):
+                if data := G_DOCUMENT.match(answer):
+                    oc.url = data.group() or ""
+                else:
+                    oc.url = ""
                 progress.add(cls.name)
 
 
