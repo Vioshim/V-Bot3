@@ -82,8 +82,8 @@ def comparison_handler(before: Character, now: Character):
         elem1 = {field.name: (field.value, field.inline) for field in aux1.fields}
         elem2 = {field.name: (field.value, field.inline) for field in aux2.fields}
 
-        e1 = Embed(title=aux1.title, description=aux1.description, color=Color.red())
-        e2 = Embed(title=aux2.title, description=aux2.description, color=Color.brand_green())
+        e1 = Embed(title=aux1.title, url=aux1.url, description=aux1.description, color=Color.red())
+        e2 = Embed(title=aux2.title, url=aux2.url, description=aux2.description, color=Color.brand_green())
 
         if e1.description == e2.description:
             e1.description = e2.description = None
@@ -112,11 +112,11 @@ def comparison_handler(before: Character, now: Character):
                 if value2:
                     e2.add_field(name=key, value=value2, inline=inline2)
 
-        key1 = e1.title, e1.description, e1.image, e1.thumbnail, e1.footer, e1.fields
-        key2 = e2.title, e2.description, e2.image, e2.thumbnail, e2.footer, e2.fields
+        key1 = e1.title, e1.url, e1.description, e1.image, e1.thumbnail, e1.footer, e1.fields
+        key2 = e2.title, e2.url, e2.description, e2.image, e2.thumbnail, e2.footer, e2.fields
 
         if key1 != key2:
-            if e1.title == e2.title:
+            if e1.title == e2.title and e1.url == e2.url:
                 e2.title = None
             yield e1, e2
 
