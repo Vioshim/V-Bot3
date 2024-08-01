@@ -174,7 +174,7 @@ class Move:
     def banned(self) -> bool:
         # fmt: off
         return (
-            self.move_id in {0, 449, 1000}  # No ID, Judgement, GMax Moves
+            self.move_id in {0, 1000}  # No ID, GMax Moves
             or self.is_z_move()
             or self.is_max_move()
         )
