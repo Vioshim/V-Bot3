@@ -3302,7 +3302,7 @@
 				"70": ["RECOVER"],
 				"80": ["HYPERBEAM"],
 				"90": ["PERISHSONG"],
-				"100": ["JUDGMENT"]
+				"100": ["JUDGEMENT"]
 			},
 			"event": [
 				"BLASTBURN",
@@ -3310,7 +3310,7 @@
 				"EXTREMESPEED",
 				"HYDROCANNON",
 				"HYPERBEAM",
-				"JUDGMENT",
+				"JUDGEMENT",
 				"PERISHSONG",
 				"RECOVER",
 				"ROAROFTIME",
