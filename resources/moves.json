@@ -34049,7 +34049,7 @@
 	},
 	{
 		"MoveID": 449,
-		"Name": "Judgment",
+		"Name": "Judgement",
 		"Description": "The user releases countless shots of light at the target. This move’s type changes depending on the kind of plate held by the user.",
 		"CanUseMove": true,
 		"Type": 0,
