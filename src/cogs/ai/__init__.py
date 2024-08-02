@@ -234,11 +234,10 @@ class AiCog(commands.Cog):
             )
 
     @app_commands.guilds(1196879060173852702)
-    @commands.command(aliases=["close", "end", "finish"])
     @commands.max_concurrency(1, wait=False)
     @commands.guild_only()
-    @commands.hybrid_command()
-    async def free(self, ctx: commands.Context[CustomBot]):
+    @commands.hybrid_command(aliases=["close", "end", "free"])
+    async def finish(self, ctx: commands.Context[CustomBot]):
         embed = Embed(
             title="Channel is free",
             description="You can now use this channel for any other roleplay.",
