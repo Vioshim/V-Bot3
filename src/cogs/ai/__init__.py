@@ -18,7 +18,7 @@ import os
 from io import BytesIO
 from typing import Optional
 
-from discord import Attachment, File, Message, app_commands
+from discord import Attachment, Embed, File, Message, app_commands
 from discord.ext import commands
 from novelai import (
     Action,
@@ -117,6 +117,7 @@ class AiCog(commands.Cog):
         await self.client.close()
 
     @app_commands.guilds(1196879060173852702)
+    @app_commands.default_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
     @commands.is_nsfw()
     @commands.guild_only()
@@ -133,12 +134,16 @@ class AiCog(commands.Cog):
                         flags.image, flags.mask = ctx.message.attachments[0], None
                 elif ctx.message.reference:
                     if not isinstance(message := ctx.message.reference.resolved, Message):
+                        if not ctx.message.reference.message_id:
+                            raise commands.UserInputError("No image provided")
+
                         message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+
                     if message.attachments:
                         try:
-                            flags.image, flags.mask, *_ = ctx.message.reference.resolved.attachments
+                            flags.image, flags.mask, *_ = message.attachments
                         except ValueError:
-                            flags.image, flags.mask = ctx.message.reference.resolved.attachments[0], None
+                            flags.image, flags.mask = message.attachments[0], None
 
             if flags.image is None:
                 payload = Metadata(
@@ -211,7 +216,7 @@ class AiCog(commands.Cog):
             if result := payload.calculate_cost(is_opus=True):
                 raise commands.UserInputError(f"Estimated cost: {result} credits")
 
-            await ctx.send(
+            await ctx.reply(
                 files=[
                     File(
                         fp=BytesIO(img.data),
@@ -227,6 +232,21 @@ class AiCog(commands.Cog):
                     for img in await self.client.generate_image(payload, is_opus=True, verbose=True)
                 ]
             )
+
+    @app_commands.guilds(1196879060173852702)
+    @commands.command(aliases=["close", "end", "finish"])
+    @commands.max_concurrency(1, wait=False)
+    @commands.guild_only()
+    @commands.hybrid_command()
+    async def free(self, ctx: commands.Context[CustomBot]):
+        embed = Embed(
+            title="Channel is free",
+            description="You can now use this channel for any other roleplay.",
+            color=ctx.author.color,
+        )
+        file = await ctx.author.display_avatar.with_size(4096).to_file()
+        embed.set_author(name=ctx.author.display_name, icon_url=f"attachment://{file.filename}")
+        await ctx.reply(file=file, embed=embed)
 
 
 async def setup(bot: CustomBot) -> None:
