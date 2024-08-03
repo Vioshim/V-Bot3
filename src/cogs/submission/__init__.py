@@ -88,6 +88,9 @@ def comparison_handler(before: Character, now: Character):
         if e1.description == e2.description:
             e1.description = e2.description = None
 
+        if e1.url == e2.url:
+            e1.url = e2.url = None
+
         if before.image != now.image:
             e1.set_image(url=before.image_url or before.image)
             e2.set_image(url=now.image_url or now.image)
@@ -116,7 +119,7 @@ def comparison_handler(before: Character, now: Character):
         key2 = e2.title, e2.url, e2.description, e2.image, e2.thumbnail, e2.footer, e2.fields
 
         if key1 != key2:
-            if e1.title == e2.title and e1.url == e2.url:
+            if e1.title == e2.title:
                 e2.title = None
             yield e1, e2
 
