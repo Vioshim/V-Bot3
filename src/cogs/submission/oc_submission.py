@@ -94,7 +94,6 @@ from src.utils.etc import (
     WHITE_BAR,
 )
 from src.utils.functions import safe_username
-from src.utils.matches import G_DOCUMENT
 from src.views.ability_view import SPAbilityView
 from src.views.characters_view import BaseCharactersView, CharactersView, PingView
 from src.views.image_view import ImageView
