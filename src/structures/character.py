@@ -71,6 +71,7 @@ from src.structures.species import (
 )
 from src.utils.functions import common_pop_get, fix, int_check
 from src.utils.imagekit import Fonts, ImageKit
+from src.utils.matches import G_DOCUMENT
 
 __all__ = ("Character", "CharacterArg", "Kind", "Size")
 
@@ -689,8 +690,11 @@ class Character:
 
     @document_url.setter
     def document_url(self, url: str):
-        url = url.removeprefix("https://docs.google.com/document/d/")
-        url = url.removesuffix("/edit?usp=sharing")
+        if item := G_DOCUMENT.match(url):
+            url = item.group(1)
+        else:
+            url = url.removeprefix("https://docs.google.com/document/d/")
+            url = url.removesuffix("/edit?usp=sharing")
         self.url = url
 
     @document_url.deleter

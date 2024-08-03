@@ -1104,10 +1104,7 @@ class URLField(TemplateField, name="URL", required=False):
             style=TextStyle.paragraph,
         ) as answer:
             if isinstance(answer, str):
-                if data := G_DOCUMENT.match(answer):
-                    oc.url = data.group() or ""
-                else:
-                    oc.url = ""
+                oc.document_url = answer
                 progress.add(cls.name)
 
 
