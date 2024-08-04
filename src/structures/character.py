@@ -413,6 +413,11 @@ class Trope(Enum):
     Stylist = "Cosmetic and fashion stylist."
     Geneticist = "Studies and manipulates genes."
     Sportsman = "Competes in sports and games."
+    Milkman = "Delivers milk and dairy products."
+    Baker = "Makes and sells bread and pastries."
+    Butcher = "Sells meat and animal products."
+    Barista = "Makes and serves coffee and tea."
+    Mycologist = "Studies and cultivates mushrooms."
 
 
 class Gender(Enum):
