@@ -418,6 +418,8 @@ class Trope(Enum):
     Butcher = "Sells meat and animal products."
     Barista = "Makes and serves coffee and tea."
     Mycologist = "Studies and cultivates mushrooms."
+    Angel = "Spirit, promotes goodness and harmony"
+    Demon = "Spirit, promote chaos and harm"
 
 
 class Gender(Enum):
