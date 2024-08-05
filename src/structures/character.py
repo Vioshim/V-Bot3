@@ -420,6 +420,7 @@ class Trope(Enum):
     Mycologist = "Studies and cultivates mushrooms."
     Angel = "Spirit, promotes goodness and harmony"
     Demon = "Spirit, promote chaos and harm"
+    Businessman = "Runs and manages businesses."
 
 
 class Gender(Enum):
