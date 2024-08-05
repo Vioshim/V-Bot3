@@ -421,6 +421,13 @@ class Trope(Enum):
     Angel = "Spirit, promotes goodness and harmony"
     Demon = "Spirit, promote chaos and harm"
     Businessman = "Runs and manages businesses."
+    Lawyer = "Defends and prosecutes in court."
+    Detective = "Solves crimes and mysteries."
+    Journalist = "Reports news and stories."
+    Photographer = "Takes and edits photos."
+    Artist = "Creates art and crafts."
+    Writer = "Writes stories and books."
+    Judge = "Decides and enforces laws."
 
 
 class Gender(Enum):
