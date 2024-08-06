@@ -213,9 +213,6 @@ class AiCog(commands.Cog):
                     ucPreset=UndesiredPreset.HEAVY,
                 )
 
-            if result := payload.calculate_cost():
-                raise commands.UserInputError(f"Estimated cost: {result} credits")
-
             await ctx.reply(
                 files=[
                     File(
