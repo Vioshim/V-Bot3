@@ -213,7 +213,7 @@ class AiCog(commands.Cog):
                     ucPreset=UndesiredPreset.HEAVY,
                 )
 
-            if result := payload.calculate_cost(is_opus=True):
+            if result := payload.calculate_cost():
                 raise commands.UserInputError(f"Estimated cost: {result} credits")
 
             await ctx.reply(
@@ -229,7 +229,7 @@ class AiCog(commands.Cog):
                             )
                         )[:1024],
                     )
-                    for img in await self.client.generate_image(payload, is_opus=True, verbose=True)
+                    for img in await self.client.generate_image(payload, verbose=True)
                 ]
             )
 
