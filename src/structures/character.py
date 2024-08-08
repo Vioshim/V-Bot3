@@ -428,6 +428,7 @@ class Trope(Enum):
     Artist = "Creates art and crafts."
     Writer = "Writes stories and books."
     Judge = "Decides and enforces laws."
+    Fourth_Wall = "Breaks the fourth wall."
 
 
 class Gender(Enum):
