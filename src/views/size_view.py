@@ -115,7 +115,6 @@ class HeightView(Basic):
             )
 
         self.choice.options.clear()
-        uses_default = False
         middle = AMOUNT // 2
         for index, value in enumerate(
             np.linspace(
@@ -132,14 +131,7 @@ class HeightView(Basic):
                 emoji = "🟧"
 
             label = Size.Average.height_info(value)
-            default = not uses_default and label == info
-            uses_default |= default
-            self.choice.add_option(
-                label=label,
-                value=str(value),
-                default=default,
-                emoji=emoji,
-            )
+            self.choice.add_option(label=label, value=str(value), emoji=emoji)
 
         return self
 

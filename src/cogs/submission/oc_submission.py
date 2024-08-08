@@ -622,6 +622,7 @@ class SizeField(TemplateField):
             title=f"{template.title} Character's Size.",
             description=f"> {oc.height_text}",
             ephemeral=ephemeral,
+            image="https://cdn.discordapp.com/attachments/1244123820004999270/1270002674863046748/image.png",
         )
         await view.wait()
         progress.add(cls.name)
