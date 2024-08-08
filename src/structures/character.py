@@ -357,8 +357,8 @@ class Trope(Enum):
     Healer = "Heals others."
     Weaponry = "Master of weapons."
     Armory = "Master of armor."
-    Prime = "Cosmic guardians of the universe."
-    Player = "Player character, external to the story."
+    Prime = "Player character, external to the story."
+    Player = Prime
     GM = "Game Master character."
     Monk = "Handles spiritual matters."
     Gambler = "Risk-taker, loves games of chance."

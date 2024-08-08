@@ -590,10 +590,6 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
-AUX_TROPES = (Trope.Prime, Trope.Player, Trope.GM)
-STRICT_TROPES = (Trope.Prime, Trope.GM)
-
-
 class SizeField(TemplateField):
     "Modify the OC's Size"
 
@@ -606,9 +602,8 @@ class SizeField(TemplateField):
         if oc.size < SizeCategory.Regular_Kaiju.minimum:
             if Trope.Kaiju in oc.tropes:
                 return "Size must be Kaiju for Great Feral."
-        elif oc.size >= SizeCategory.Regular_Kaiju.maximum:
-            if not any(x in oc.tropes for x in STRICT_TROPES):
-                return "Locked to admins, GMs, and Primes."
+        elif oc.size >= SizeCategory.Regular_Kaiju.maximum and Trope.GM not in oc.tropes:
+            return "Locked to GMs."
 
         if not (0 <= oc.size <= 30):
             return "Invalid Size."
@@ -1176,8 +1171,8 @@ class TropeField(TemplateField, required=True):
         if len(oc.tropes) > 3:
             return "Max 3 Tropes."
 
-        if tropes := ", ".join(x.name for x in oc.tropes if x in STRICT_TROPES):
-            return f"Stricter rules for: {tropes}"
+        if Trope.GM in oc.tropes:
+            return "Locked to GMs."
 
     @classmethod
     async def on_submit(
