@@ -702,8 +702,7 @@ class Character:
 
     @property
     def document_url(self):
-        url = self.url or "1WMbhRmfAAWFue0wRPHZbmqfBMN7CsfRQUIX1Vmc1_Ns"
-        return f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
+        return f"https://docs.google.com/document/d/{self.url}/edit?usp=sharing" if self.url else ""
 
     @document_url.setter
     def document_url(self, url: str):

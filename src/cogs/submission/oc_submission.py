@@ -1090,11 +1090,13 @@ class URLField(TemplateField, name="URL", required=False):
         ephemeral: bool = False,
     ):
         text_view = ModernInput(member=itx.user, target=itx)
+        url = oc.url or "1WMbhRmfAAWFue0wRPHZbmqfBMN7CsfRQUIX1Vmc1_Ns"
+        ref_url = f"https://docs.google.com/document/d/{url}/edit?usp=sharing"
         async with text_view.handle(
             label="OC's URL.",
-            placeholder=oc.document_url,
+            placeholder=ref_url,
             ephemeral=ephemeral,
-            default=oc.document_url,
+            default=ref_url,
             required=False,
             style=TextStyle.paragraph,
         ) as answer:
