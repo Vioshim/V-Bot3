@@ -1096,6 +1096,7 @@ class URLField(TemplateField, name="URL", required=False):
             ephemeral=ephemeral,
             default=oc.document_url,
             required=False,
+            url="https://docs.google.com/document/d/1WMbhRmfAAWFue0wRPHZbmqfBMN7CsfRQUIX1Vmc1_Ns/edit?usp=sharing",
             style=TextStyle.paragraph,
         ) as answer:
             if isinstance(answer, str):
