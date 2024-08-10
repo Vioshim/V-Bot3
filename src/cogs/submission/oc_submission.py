@@ -590,6 +590,9 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
+LOCKED_TROPES = (Trope.GM, Trope.Great_Feral)
+
+
 class SizeField(TemplateField):
     "Modify the OC's Size"
 
@@ -599,10 +602,7 @@ class SizeField(TemplateField):
         if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
             return "Aura Bots must be Small."
 
-        if oc.size < SizeCategory.Regular_Kaiju.minimum:
-            if Trope.Kaiju in oc.tropes:
-                return "Size must be Kaiju for Great Feral."
-        elif oc.size >= SizeCategory.Regular_Kaiju.maximum and Trope.GM not in oc.tropes:
+        if oc.size >= SizeCategory.Huge.maximum and not any(x in oc.tropes for x in LOCKED_TROPES):
             return "Locked to GMs."
 
         if not (0 <= oc.size <= 30):
@@ -1174,7 +1174,7 @@ class TropeField(TemplateField, required=True):
         if len(oc.tropes) > 3:
             return "Max 3 Tropes."
 
-        if Trope.GM in oc.tropes:
+        if any(x in oc.tropes for x in LOCKED_TROPES):
             return "Locked to GMs."
 
     @classmethod
