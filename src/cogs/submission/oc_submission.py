@@ -602,7 +602,7 @@ class SizeField(TemplateField):
         if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
             return "Aura Bots must be Small."
 
-        if oc.size >= SizeCategory.Huge.maximum and not any(x in oc.tropes for x in LOCKED_TROPES):
+        if oc.size > SizeCategory.Huge.maximum and not any(x in oc.tropes for x in LOCKED_TROPES):
             return "Locked to GMs."
 
         if not (0 <= oc.size <= 30):
