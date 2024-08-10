@@ -116,8 +116,6 @@ class AiCog(commands.Cog):
     async def cog_unload(self) -> None:
         await self.client.close()
 
-    @app_commands.allowed_installs(users=True, guilds=True)
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @commands.max_concurrency(1, wait=False)
     @commands.check(
         lambda ctx: ctx.author.id
@@ -128,6 +126,8 @@ class AiCog(commands.Cog):
         )
     )
     @commands.hybrid_command()
+    @app_commands.allowed_installs(users=True, guilds=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate images using the AI"""
         async with ctx.typing(ephemeral=False):
