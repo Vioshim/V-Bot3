@@ -118,9 +118,15 @@ class AiCog(commands.Cog):
 
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    @app_commands.default_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
-    @commands.is_nsfw()
+    @commands.check(
+        lambda ctx: ctx.author.id
+        in (
+            339957281921695745,
+            406908562023907329,
+            678374009045254198,
+        )
+    )
     @commands.hybrid_command()
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate images using the AI"""
