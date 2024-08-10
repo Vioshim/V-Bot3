@@ -473,14 +473,9 @@ class SizeCategory(Enum):
 
     @property
     def label(self):
-        ma = self.maximum
-        ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
+        ma, mi = self.maximum, self.minimum
         n = self.name.replace("_", " ")
-
-        if self == SizeCategory.Mini:
-            return f"{n} (Up to {ma_ft}' {ma_in}\" ft / {ma:.2f} m)"
-
-        mi = self.minimum
+        ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
         mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
         return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"
 
