@@ -116,11 +116,11 @@ class AiCog(commands.Cog):
     async def cog_unload(self) -> None:
         await self.client.close()
 
-    @app_commands.guilds(1196879060173852702)
+    @app_commands.allowed_installs(users=True, guilds=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.default_permissions(administrator=True)
     @commands.max_concurrency(1, wait=False)
     @commands.is_nsfw()
-    @commands.guild_only()
     @commands.hybrid_command()
     async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
         """Generate images using the AI"""
