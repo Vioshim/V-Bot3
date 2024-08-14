@@ -590,7 +590,7 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
-LOCKED_TROPES = (Trope.GM, Trope.Kaiju, Trope.Player)
+LOCKED_TROPES = (Trope.GM, Trope.Kaiju, Trope.Prime)
 
 
 class SizeField(TemplateField):
@@ -1174,7 +1174,7 @@ class TropeField(TemplateField, required=True):
         if len(oc.tropes) > 3:
             return "Max 3 Tropes."
 
-        if any(x in oc.tropes for x in LOCKED_TROPES):
+        if Trope.GM in oc.tropes:
             return "Locked to GMs."
 
     @classmethod
