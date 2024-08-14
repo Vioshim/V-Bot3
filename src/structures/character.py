@@ -342,7 +342,6 @@ class Trope(Enum):
     Drifter = "Comes from another world."
     Feral = "Feral character."
     Pack_Leader = "Feral pack leader."
-    Kaiju = "Kaiju or giant feral."
     Reploid = "Sentient robot or android."
     Tribal = "Live like people and ferals."
     Ditto = "Shape-shifter, can transform into anything."

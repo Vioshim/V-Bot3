@@ -590,7 +590,7 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
-LOCKED_TROPES = (Trope.GM, Trope.Kaiju, Trope.Prime)
+LOCKED_TROPES = (Trope.GM, Trope.Prime)
 
 
 class SizeField(TemplateField):
