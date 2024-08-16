@@ -134,6 +134,7 @@ class AgeGroup(Enum):
         _, _, scale = self.value
         return scale
 
+
 class Kind(Enum):
     Common = Pokemon
     Legendary = Legendary
@@ -480,8 +481,10 @@ class SizeCategory(Enum):
         mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
         return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"
 
-    def __contains__(self, item: float):
-        return self.minimum <= item <= self.maximum
+    def check_for(self, scale: float = 1.0, value: float = 1.65):
+        mi = self.minimum * scale
+        ma = self.maximum * scale
+        return mi <= value <= ma
 
 
 class Weight(float, Enum):
@@ -851,7 +854,17 @@ class Character:
 
     @property
     def size_category(self) -> SizeCategory:
-        return next((x for x in SizeCategory if self.size in x), SizeCategory.Average)
+        return next(
+            (
+                x
+                for x in SizeCategory
+                if x.check_for(
+                    self.age.scale,
+                    self.size,
+                )
+            ),
+            SizeCategory.Average,
+        )
 
     @property
     def embeds(self) -> list[Embed]:
