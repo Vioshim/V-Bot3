@@ -108,7 +108,7 @@ class HeightView(Basic):
         self.category.options.clear()
         for item in SizeCategory:
             self.category.add_option(
-                label=item.label,
+                label=item.label_for(self.oc.age.scale),
                 value=item.name,
                 default=item == current_category,
                 description=item.description,
@@ -116,13 +116,9 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         middle = AMOUNT // 2
-        for index, value in enumerate(
-            np.linspace(
-                current_category.maximum,
-                current_category.minimum,
-                AMOUNT,
-            ),
-        ):
+        minimum = current_category.minimum * self.oc.age.scale
+        maximum = current_category.maximum * self.oc.age.scale
+        for index, value in enumerate(np.linspace(maximum, minimum, AMOUNT)):
             if index == middle:
                 emoji = "🟩"
             elif index < middle:
@@ -142,7 +138,7 @@ class HeightView(Basic):
         except (KeyError, IndexError):
             size_category = SizeCategory.Average
 
-        self.oc.size = size_category.average
+        self.oc.size = size_category.average * self.oc.age.scale
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Select a Size.", min_values=1, max_values=1)

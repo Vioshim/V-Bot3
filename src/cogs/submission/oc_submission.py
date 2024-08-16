@@ -590,7 +590,7 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
-LOCKED_TROPES = (Trope.GM, Trope.Prime)
+LOCKED_TROPES = (Trope.GM, Trope.Great_Feral)
 
 
 class SizeField(TemplateField):
@@ -599,13 +599,10 @@ class SizeField(TemplateField):
     @classmethod
     def evaluate(cls, oc: Character):
 
-        if Trope.Aura_Bot in oc.tropes and oc.size > SizeCategory.Small.maximum:
-            return "Aura Bots must be Small."
-
-        if oc.size > SizeCategory.Regular_Kaiju.maximum and not any(x in oc.tropes for x in LOCKED_TROPES):
+        if oc.size > (SizeCategory.Huge.maximum * oc.age.scale) and not any(x in oc.tropes for x in LOCKED_TROPES):
             return "Locked to GMs."
 
-        if not (0 <= oc.size <= 30):
+        if not (0 <= oc.size <= 30 * oc.age.scale):
             return "Invalid Size."
 
     @classmethod
@@ -1174,7 +1171,7 @@ class TropeField(TemplateField, required=True):
         if len(oc.tropes) > 3:
             return "Max 3 Tropes."
 
-        if Trope.GM in oc.tropes:
+        if any(x in oc.tropes for x in LOCKED_TROPES):
             return "Locked to GMs."
 
     @classmethod

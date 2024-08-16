@@ -77,19 +77,19 @@ __all__ = ("Character", "CharacterArg", "Kind", "Size")
 
 
 class AgeGroup(Enum):
-    Unknown = 0, "The age is Unknown."
-    Egg = 1, "Newly hatched Pokémon."
-    Baby = 5, "Recently evolved from an egg, still in early stages"
-    Toddler = 10, "Learning and developing, but not quite a child."
-    Child = 15, "Considered a child in their species."
-    Adolescent = 18, "15 - 17 (Rough equivalent in human years)"
-    Young_Adult = 26, "18 - 25 (Rough equivalent in human years)"
-    Adult = 40, "26 - 39 (Rough equivalent in human years)"
-    Middle_Aged = 55, "40 - 54 (Rough equivalent in human years)"
-    Senior = 70, "55 - 69 (Rough equivalent in human years)"
-    Elderly = 85, "70 - 84 (Rough equivalent in human years)"
-    Ancient = 100, "85 - 99 (Rough equivalent in human years)"
-    Timeless = 125, "Magic, pokeball from past, or lived long enough."
+    Unknown = 0, "The age is Unknown.", 1.0
+    Egg = 1, "Newly hatched Pokémon.", 0.1
+    Baby = 5, "Recently evolved from an egg, still in early stages", 0.3
+    Toddler = 10, "Learning and developing, but not quite a child.", 0.5
+    Child = 15, "Considered a child in their species.", 0.75
+    Adolescent = 18, "15 - 17 (Rough equivalent in human years)", 0.85
+    Young_Adult = 26, "18 - 25 (Rough equivalent in human years)", 1.0
+    Adult = 40, "26 - 39 (Rough equivalent in human years)", 1.0
+    Middle_Aged = 55, "40 - 54 (Rough equivalent in human years)", 0.95
+    Senior = 70, "55 - 69 (Rough equivalent in human years)", 0.90
+    Elderly = 85, "70 - 84 (Rough equivalent in human years)", 0.85
+    Ancient = 100, "85 - 99 (Rough equivalent in human years)", 0.80
+    Timeless = 125, "Magic, pokeball from past, or lived long enough.", 1.0
 
     @classmethod
     def parse(cls, item: AgeGroup | Optional[int] | str):
@@ -121,14 +121,18 @@ class AgeGroup(Enum):
 
     @property
     def key(self):
-        value, _ = self.value
+        value, _, _ = self.value
         return value
 
     @property
     def description(self):
-        _, desc = self.value
+        _, desc, _ = self.value
         return desc
 
+    @property
+    def scale(self):
+        _, _, scale = self.value
+        return scale
 
 class Kind(Enum):
     Common = Pokemon
@@ -469,9 +473,8 @@ class SizeCategory(Enum):
     def ref_name(self):
         return self.name.replace("_", " ")
 
-    @property
-    def label(self):
-        ma, mi = self.maximum, self.minimum
+    def label_for(self, scale: float = 1.0):
+        ma, mi = self.maximum * scale, self.minimum * scale
         n = self.name.replace("_", " ")
         ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
         mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
