@@ -450,13 +450,13 @@ class SizeCategory(Enum):
     Above_Average = 1.8, 2.0, "As strong as a human."
     Large = 2.0, 2.5, "As strong as a horse."
     Huge = 2.5, 5.0, "As strong as a bear."
-    Regular_Kaiju = 5.0, 7.5, "As strong as a large bear"
-    Enormous_Kaiju = 7.5, 10.0, "As strong as a small truck"
-    Titanic_Kaiju = 10.0, 13.5, "As strong as a truck"
-    Major_Kaiju = 13.5, 17.5, "As strong as a whale"
-    Colossal_Kaiju = 17.5, 22.0, "As strong as a large whale"
-    Gargantuan_Kaiju = 22.0, 27.5, "As strong as a natural disaster"
-    Grand_Kaiju = 27.5, 35.0, "As strong as a natural disaster"
+    Giant = 5.0, 7.5, "As strong as a large bear"
+    Scale_1_Kaiju = 7.5, 10.0, "As strong as a small truck"
+    Scale_2_Kaiju = 10.0, 13.5, "As strong as a large truck"
+    Scale_3_Kaiju = 13.5, 17.5, "As strong as a whale"
+    Scale_4_Kaiju = 17.5, 22.0, "As strong as a large whale"
+    Scale_5_Kaiju = 22.0, 27.5, "As strong as a natural disaster"
+    Scale_6_Kaiju = 27.5, 35.0, "As strong as a natural disaster"
 
     @property
     def minimum(self):
