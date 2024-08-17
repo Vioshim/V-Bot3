@@ -525,7 +525,6 @@ class Character:
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
     tropes: frozenset[Trope] = field(default_factory=frozenset)
-    emoji: Optional[PartialEmoji] = None
     pokeball: Optional[Pokeball] = None
     gender: Gender = Gender.Genderless
 
@@ -547,7 +546,6 @@ class Character:
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
         data["tropes"] = [x.name for x in self.tropes]
         data["nature"] = self.nature.name if self.nature else None
-        data["emoji"] = self.emoji and str(self.emoji)
         data["gender"] = self.gender and self.gender.name
         if isinstance(self.sp_ability, SpAbility):
             aux = asdict(self.sp_ability)
@@ -630,12 +628,6 @@ class Character:
                 self.tropes = frozenset({Trope[x] for x in self.tropes})
             except KeyError:
                 self.tropes = frozenset()
-
-        if isinstance(self.emoji, str):
-            try:
-                self.emoji = PartialEmoji.from_str(self.emoji)
-            except ValueError:
-                self.emoji = None
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -736,7 +728,7 @@ class Character:
 
     @property
     def default_emoji(self):
-        return self.emoji or self.pronoun_emoji
+        return self.pronoun_emoji
 
     @property
     def pronoun_text(self):
@@ -945,7 +937,7 @@ class Character:
         footer_elements.append(f"Height: {self.height_text}")
         footer_elements.append(f"Weight: {self.weight_text}")
         footer_text = "\n".join(footer_elements) or "No additional information."
-        c_embed.set_footer(text=footer_text, icon_url=self.emoji and self.emoji.url)
+        c_embed.set_footer(text=footer_text)
 
         def move_parser(x: Move):
             item = self.hidden_power if x.move_id in {237, 851} and self.hidden_power else x.type
