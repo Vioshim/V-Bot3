@@ -482,17 +482,33 @@ class SizeCategory(Enum):
     def ref_name(self):
         return self.name.replace("_", " ")
 
-    def label_for(self, scale: float = 1.0):
-        ma, mi = self.maximum * scale, self.minimum * scale
+    def label_for(
+        self,
+        scale: float = 1.0,
+        minimum: float = 0.0,
+        maximum: float = 0.0,
+    ):
         n = self.name.replace("_", " ")
+        ma = (maximum or self.maximum) * scale
+        mi = (minimum or self.minimum) * scale
         ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
         mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
         return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"
 
-    def check_for(self, scale: float = 1.0, value: float = 1.65):
-        mi = self.minimum * scale
-        ma = self.maximum * scale
-        return mi <= value <= ma
+    def check_for(
+        self,
+        scale: float = 1.0,
+        value: float = 1.65,
+        minimum: float = 0.0,
+        maximum: float = 0.0,
+    ):
+        ma = (maximum or self.maximum) * scale
+        if self == SizeCategory.Mini:
+            mi = 0
+        else:
+            mi = (minimum or self.minimum) * scale
+
+        return mi < value <= ma
 
 
 class Weight(float, Enum):
