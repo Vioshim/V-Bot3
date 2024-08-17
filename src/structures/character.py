@@ -483,23 +483,11 @@ class SizeCategory(Enum):
     Scale_4_Kaiju = 24.0, 29.5, "As strong as a large whale", "🟥"
     Scale_5_Kaiju = 29.5, 35.0, "As strong as a natural disaster", "🟥"
 
-    Scale_1_Cosmic = 35.0, 100.0, "As strong as a small planet", "🟪"
-    Scale_2_Cosmic = 100.0, 500.0, "As strong as a large planet", "🟪"
-    Scale_3_Cosmic = 500.0, 1000.0, "As strong as a small star", "🟪"
-    Scale_4_Cosmic = 1000.0, 5000.0, "As strong as a large star", "🟪"
-    Scale_5_Cosmic = 5000.0, 10000.0, "As strong as a small galaxy", "🟪"
-
-    Scale_1_Godlike = 10000.0, 50000.0, "As strong as a large galaxy", "🟫"
-    Scale_2_Godlike = 50000.0, 100000.0, "As strong as a small universe", "🟫"
-    Scale_3_Godlike = 100000.0, 500000.0, "As strong as a large universe", "🟫"
-    Scale_4_Godlike = 500000.0, 1000000.0, "As strong as a small multiverse", "🟫"
-    Scale_5_Godlike = 1000000.0, 5000000.0, "As strong as a large multiverse", "🟫"
-
-    Scale_1_Omniversal = 5000000.0, 9.461e15 * 0.5, "As strong as a small omniverse", "⬛"
-    Scale_2_Omniversal = 9.461e15 * 0.5, 9.461e15, "As strong as a large omniverse", "⬛"
-    Scale_3_Omniversal = 9.461e15, 9.461e15 * 1.5, "As strong as a small omniverse", "⬛"
-    Scale_4_Omniversal = 9.461e15 * 1.5, 9.461e15 * 2.0, "As strong as a large omniverse", "⬛"
-    Scale_5_Omniversal = 9.461e15 * 2.0, 9.461e15 * 2.5, "As strong as a large omniverse", "⬛"
+    Scale_1_Cosmic = 35.0, 10000.0, "As strong as a small planet", "🟪"
+    Scale_2_Cosmic = 10000.0, 5000000.0, "As strong as a large planet", "🟪"
+    Scale_3_Cosmic = 5000000.0, 9.461e15 * 0.5, "As strong as a small star", "🟪"
+    Scale_4_Cosmic = 9.461e15 * 0.5, 9.461e15, "As strong as a large star", "🟪"
+    Scale_5_Cosmic = 9.461e15, 9.461e15 * 2.5, "As strong as a small galaxy", "🟪"
 
     def is_valid(self):
         return not self.name.startswith("Scale_")
