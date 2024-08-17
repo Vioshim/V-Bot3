@@ -876,7 +876,7 @@ class Character:
                     self.size,
                 )
             ),
-            SizeCategory.Average,
+            SizeCategory.Scale_6_Kaiju,
         )
 
     @property
