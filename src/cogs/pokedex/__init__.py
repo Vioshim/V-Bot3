@@ -136,46 +136,6 @@ class Pokedex(commands.Cog):
             if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
                 embed.add_field(name="Possible Types", value=possible_types, inline=False)
 
-            if isinstance(species, Character):
-                base = species.species
-                data1, data2 = species.size, species.weight
-                height, val1 = (data1, 0.0) if isinstance(data1, Size) else (Size.Average, data1)
-                weight, val2 = (data2, 0.0) if isinstance(data2, Size) else (Size.Average, data2)
-            else:
-                base = species
-                height, weight, val1, val2 = (
-                    Size.Average,
-                    Size.Average,
-                    species.height,
-                    species.weight,
-                )
-
-            if flags.size:
-                proportion = flags.size.value
-                val1 *= proportion
-                val2 *= proportion
-
-            if isinstance(base, Fakemon):
-                embed.add_field(name="Height", value=height.height_info(val1), inline=False)
-                embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
-            else:
-                if isinstance(base, Fusion) and len(base.bases) > 1:
-                    h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
-                    w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
-                    h1, h2, h3 = h1.height, val1, h2.height
-                    w1, w2, w3 = w1.weight, val2, w2.weight
-                else:
-                    h1, h2, h3 = val1, val1, val1
-                    w1, w2, w3 = val2, val2, val2
-
-                embed.add_field(name="Height (Min)", value=Size.Minimum.height_info(h1))
-                embed.add_field(name="Height (Avg)", value=height.height_info(h2))
-                embed.add_field(name="Height (Max)", value=Size.Maximum.height_info(h3))
-
-                embed.add_field(name="Weight (Min)", value=Size.Minimum.weight_info(w1))
-                embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
-                embed.add_field(name="Weight (Max)", value=Size.Maximum.weight_info(w3))
-
             evs, ivs, level = flags.evs, flags.ivs, flags.level
             if isinstance(species, Species) and (evs or ivs or level):
                 HP, ATK, DEF, SPA, SPD, SPE = (
