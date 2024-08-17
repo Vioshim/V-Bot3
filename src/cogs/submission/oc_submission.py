@@ -594,10 +594,8 @@ class SizeField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        mi = 0.1 * oc.age.scale
-        ma = 7.5 * oc.age.scale
-        if not (mi <= oc.size <= ma):
-            return oc.size_category.label_for(oc.age.scale)
+        if not oc.size_category.is_valid():
+            return "Invalid Size Category"
 
     @classmethod
     async def on_submit(

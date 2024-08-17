@@ -253,17 +253,17 @@ class Size(float, Enum):
 
     def height_value(self, value: float = 0):
         if value:
-            return round(value * self, 2)
-        return round(0.825 * self.value**2, 2)
+            return round(value * self, 4)
+        return round(0.825 * self.value**2, 4)
 
     def weight_value(self, value: float = 0):
         if value:
-            return round(value * self.value, 2)
-        return round(10 * ((self.value - 0.25) / 0.6) ** 3, 2)
+            return round(value * self.value, 4)
+        return round(10 * ((self.value - 0.25) / 0.6) ** 3, 4)
 
     @staticmethod
     def meters_to_ft_inches(value: float = 0):
-        return int(value / 0.3048), int(value / 0.3048 % 1 * 12)
+        return int(value / 0.3048), float(value / 0.3048 % 1 * 12)
 
     @staticmethod
     def kg_to_lbs(value: float = 0):
@@ -280,11 +280,15 @@ class Size(float, Enum):
     def height_info(self, value: float = 0):
         value = self.height_value(value)
         feet, inches = self.meters_to_ft_inches(value)
-        return f"{value:.2f} m / {feet}' {inches:02d}\" ft"
+        if feet == 0:
+            return f'{value*100:.2f} cm / {inches:.2f}" in'
+        return f"{value:.2f} m / {feet}' {int(inches):02d}\" ft"
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
         lbs = self.kg_to_lbs(value)
+        if value < 1:
+            return f"{value*1000:.2f} g / {lbs*16:.2f} oz"
         return f"{value:.2f} kg / {lbs:.2f} lbs"
 
 
@@ -443,20 +447,32 @@ class Gender(Enum):
 
 
 class SizeCategory(Enum):
-    Mini = 0.1, 0.5, "As strong as a mouse.", "🟦"
-    Small = 0.5, 1.0, "As strong as a rabbit.", "🟦"
-    Below_Average = 1.0, 1.5, "As strong as a medium-sized dog.", "🟩"
+    Scale_5_Mini = 0.001, 0.01, "As strong as an ant.", "⬜"
+    Scale_4_Mini = 0.01, 0.05, "As strong as a bug.", "⬜"
+    Scale_3_Mini = 0.05, 0.10, "As strong as a quail.", "⬜"
+    Scale_2_Mini = 0.10, 0.15, "As strong as a mouse.", "⬜"
+    Scale_1_Mini = 0.20, 0.25, "As strong as a rabbit.", "⬜"
+
+    Tiny = 0.25, 0.5, "As strong as a rabbit.", "🟦"
+    Small = 0.5, 0.75, "As strong as a medium-sized dog.", "🟦"
+    Below_Average = 0.75, 1.25, "As strong as a human.", "🟦"
+    Slightly_Average = 1.25, 1.5, "As strong as a human.", "🟩"
+
     Average = 1.5, 1.8, "As strong as a human.", "🟩"
+
     Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
     Large = 2.0, 2.5, "As strong as a horse.", "🟧"
     Huge = 2.5, 5.0, "As strong as a bear.", "🟧"
     Giant = 5.0, 7.5, "As strong as a large bear", "🟧"
-    Scale_1_Kaiju = 7.5, 10.0, "As strong as a small truck", "🟥"
-    Scale_2_Kaiju = 10.0, 13.5, "As strong as a large truck", "🟥"
-    Scale_3_Kaiju = 13.5, 17.5, "As strong as a whale", "🟥"
-    Scale_4_Kaiju = 17.5, 22.0, "As strong as a large whale", "🟥"
-    Scale_5_Kaiju = 22.0, 27.5, "As strong as a natural disaster", "🟥"
-    Scale_6_Kaiju = 27.5, 35.0, "As strong as a natural disaster", "🟥"
+
+    Scale_1_Kaiju = 7.5, 13.0, "As strong as a small truck", "🟥"
+    Scale_2_Kaiju = 13.0, 18.5, "As strong as a large truck", "🟥"
+    Scale_3_Kaiju = 18.5, 24.0, "As strong as a whale", "🟥"
+    Scale_4_Kaiju = 24.0, 29.5, "As strong as a large whale", "🟥"
+    Scale_5_Kaiju = 29.5, 35.0, "As strong as a natural disaster", "🟥"
+
+    def is_valid(self):
+        return "Mini" not in self.name and "Kaiju" not in self.name
 
     @property
     def minimum(self):
@@ -503,7 +519,7 @@ class SizeCategory(Enum):
         maximum: float = 0.0,
     ):
         ma, mi = (maximum or self.maximum) * scale, 0
-        if self != SizeCategory.Mini:
+        if self != SizeCategory.Scale_5_Mini:
             mi = (minimum or self.minimum) * scale
         return mi < value <= ma
 
@@ -792,7 +808,7 @@ class Character:
             value = self.size.height_value(1.65)
         else:
             value = self.size
-        return round(value, 2)
+        return round(value, 4)
 
     @property
     def weight_text(self):
@@ -804,7 +820,7 @@ class Character:
             value = self.weight.weight_value(60)
         else:
             value = self.weight
-        return round(value, 2)
+        return round(value, 4)
 
     @property
     def default_image(self):

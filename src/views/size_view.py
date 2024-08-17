@@ -57,7 +57,7 @@ class HeightModal1(HeightModal):
             ratio, text = 1.00, text.removesuffix("m")
 
         try:
-            return round(ratio * float(text.strip()), 2)
+            return round(ratio * float(text.strip()), 4)
         except ValueError:
             return 0
 
@@ -84,7 +84,7 @@ class HeightModal2(HeightModal):
                 feet=float(self.text1.value or "0"),
                 inches=float(self.text2.value or "0"),
             )
-            return round(result, 2)
+            return round(result, 4)
         except ValueError:
             return 0
 
@@ -106,7 +106,7 @@ class HeightView(Basic):
         current_category = self.oc.size_category
 
         self.category.options.clear()
-        for item in SizeCategory:
+        for item in filter(SizeCategory.is_valid, SizeCategory):
             self.category.add_option(
                 label=item.label_for(self.oc.age.scale),
                 value=item.name,
@@ -145,12 +145,12 @@ class HeightView(Basic):
         except (KeyError, IndexError):
             size_category = SizeCategory.Average
 
-        self.oc.size = size_category.average * self.oc.age.scale
+        self.oc.size = round(size_category.average * self.oc.age.scale, 4)
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
-        self.oc.size = round(float(sct.values[0]), 2)
+        self.oc.size = round(float(sct.values[0]), 4)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")
