@@ -496,15 +496,15 @@ class SizeCategory(Enum):
 
 
 class Weight(float, Enum):
-    Obese = 1.5
+    Obese = 1.500
     Very_Overweight = 1.375
-    Overweight = 1.25
+    Overweight = 1.250
     Slightly_Overweight = 1.125
-    Average = 1.0
+    Average = 1.000
     Slightly_Underweight = 0.875
-    Underweight = 0.75
+    Underweight = 0.750
     Very_Underweight = 0.625
-    Scrawny = 0.5
+    Scrawny = 0.500
 
 
 @dataclass(slots=True)
