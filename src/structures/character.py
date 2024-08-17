@@ -507,9 +507,20 @@ class SizeCategory(Enum):
         n = self.name.replace("_", " ")
         ma = (maximum or self.maximum) * scale
         mi = (minimum or self.minimum) * scale
-        ma_ft, ma_in = int(ma / 0.3048), int(ma / 0.3048 % 1 * 12)
-        mi_ft, mi_in = int(mi / 0.3048), int(mi / 0.3048 % 1 * 12)
-        return f"{n} ({mi_ft}' {mi_in}\" - {ma_ft}' {ma_in}\" ft / {mi:.2f} - {ma:.2f} m)"
+
+        if ma >= 1000:
+            return f"{n} ({mi/1000:.2f} km / {ma/1609.34:.2f} mi - {ma/1000:.2f} km / {mi/1609.34:.2f} mi)"
+
+        ma_ft, ma_in = int(ma / 0.3048), float(ma / 0.3048 % 1 * 12)
+        mi_ft, mi_in = int(mi / 0.3048), float(mi / 0.3048 % 1 * 12)
+
+        if ma_ft >= 100:
+            return f"{n} ({mi:.2f} m / {mi/0.9144:.2f} yd - {ma:.2f} m / {ma/0.9144:.2f} yd)"
+
+        if ma_ft >= 1:
+            return f"{n} ({mi_ft}' {mi_in:.0f}\" - {ma_ft}' {ma_in:.0f}\" ft / {mi:.2f} - {ma:.2f} m)"
+
+        return f'{n} ({mi*100:.2f} cm / {mi_in:.2f}" - {ma*100:.2f} cm / {ma_in:.2f}" in)'
 
     def check_for(
         self,

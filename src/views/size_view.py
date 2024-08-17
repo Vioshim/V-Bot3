@@ -50,13 +50,15 @@ class HeightModal1(HeightModal):
     @property
     def value(self) -> float:
         text = self.text.value.removesuffix(".").lower()
-        if "cm" in text:
-            ratio, text = 0.01, text.removesuffix("cm")
+        if "km" in text:
+            ratio, text = 1000, text.removesuffix("km")
+        elif "cm" in text:
+            ratio, text = 1 / 100, text.removesuffix("cm")
         else:
-            ratio, text = 1.00, text.removesuffix("m")
+            ratio, text = 1, text.removesuffix("m")
 
         try:
-            return round(ratio * float(text.strip()), 4)
+            return round(float(text.strip()) * ratio, 4)
         except ValueError:
             return 0
 
