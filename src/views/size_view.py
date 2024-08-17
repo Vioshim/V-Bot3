@@ -118,6 +118,7 @@ class HeightView(Basic):
         middle = AMOUNT // 2
         minimum = current_category.minimum * self.oc.age.scale
         maximum = current_category.maximum * self.oc.age.scale
+        ref = current_category.average * self.oc.age.scale
         for index, value in enumerate(np.linspace(maximum, minimum, AMOUNT)):
             if index == middle:
                 emoji = "🟩"
@@ -127,7 +128,8 @@ class HeightView(Basic):
                 emoji = "🟧"
 
             label = Size.Average.height_info(value)
-            self.choice.add_option(label=label, value=str(value), emoji=emoji)
+            info = Size.Average.height_info(1.65 * value / ref)
+            self.choice.add_option(label=label, value=str(value), emoji=emoji, description=f"POV: {info}")
 
         return self
 
