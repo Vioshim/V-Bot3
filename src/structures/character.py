@@ -280,8 +280,8 @@ class Size(float, Enum):
     def height_info(self, value: float = 0):
         value = self.height_value(value)
 
-        if value >= 9.461e15:
-            return f"{value/9.461e+15:.2f} ly / {value/3.086e+16:.2f} pc"
+        if value >= 9.461e15 * 0.5:
+            return f"{value/9.461e+15:.2f} ly"
 
         if value >= 1000:
             return f"{value/1000:.2f} km / {value/1609.34:.2f} mi"
@@ -526,10 +526,8 @@ class SizeCategory(Enum):
         ma = (maximum or self.maximum) * scale
         mi = (minimum or self.minimum) * scale
 
-        if mi >= 9.461e15:
-            return (
-                f"{n} ({mi/9.461e+15:.2f} ly / {mi/3.086e+16:.2f} pc - {ma/9.461e+15:.2f} ly / {ma/3.086e+16:.2f} pc)"
-            )
+        if mi >= 9.461e15 * 0.5:
+            return f"{n} ({mi/9.461e+15:.2f} ly - {ma/9.461e+15:.2f} ly )"
 
         if ma >= 1000:
             return f"{n} ({mi/1000:.2f} km / {ma/1609.34:.2f} mi - {ma/1000:.2f} km / {mi/1609.34:.2f} mi)"
