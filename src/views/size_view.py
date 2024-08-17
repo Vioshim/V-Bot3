@@ -35,8 +35,7 @@ class HeightModal(Modal, title="Height"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        value = self.value
-        self.oc.size = max(0.1, min(30, value))
+        self.oc.size = self.value
         info = Size.Average.height_info(self.oc.size)
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
