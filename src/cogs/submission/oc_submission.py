@@ -62,7 +62,6 @@ from src.structures.character import (
     Gender,
     Nature,
     Size,
-    SizeCategory,
     Trope,
     Weight,
 )
