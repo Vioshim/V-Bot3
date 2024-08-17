@@ -502,12 +502,9 @@ class SizeCategory(Enum):
         minimum: float = 0.0,
         maximum: float = 0.0,
     ):
-        ma = (maximum or self.maximum) * scale
-        if self == SizeCategory.Mini:
-            mi = 0
-        else:
+        ma, mi = (maximum or self.maximum) * scale, 0
+        if self != SizeCategory.Mini:
             mi = (minimum or self.minimum) * scale
-
         return mi < value <= ma
 
 
