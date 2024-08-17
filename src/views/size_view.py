@@ -113,7 +113,11 @@ class HeightView(Basic):
     def format(self):
         height = Size.Average.height_value(self.oc.size)
         info = Size.Average.height_info(height)
-        self.manual_1.label, self.manual_2.label = info.split(" / ")
+
+        try:
+            self.manual_1.label, self.manual_2.label = info.split(" / ")
+        except ValueError:
+            self.manual_1.label, self.manual_2.label = info, "Feet & Inches"
 
         current_category = self.oc.size_category
 
