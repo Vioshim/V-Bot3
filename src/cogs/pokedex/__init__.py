@@ -120,6 +120,10 @@ class Pokedex(commands.Cog):
         else:
             movepool = Movepool()
 
+        if flags.size:
+            scale = species.age.scale if isinstance(species, Character) else 1
+            embed.add_field(name="Height", value=flags.size.label_for(scale))
+
         view = None
         if flags.move_id is None:
             view = MovepoolView(member=ctx.author, movepool=movepool, target=ctx)
@@ -135,10 +139,6 @@ class Pokedex(commands.Cog):
 
             if possible_types := "\n".join(f"• {'/'.join(i.name for i in x)}" for x in species.possible_types):
                 embed.add_field(name="Possible Types", value=possible_types, inline=False)
-
-            if flags.size:
-                scale = species.age.scale if isinstance(species, Character) else 1
-                embed.add_field(name="Height", value=flags.size.label_for(scale))
 
             evs, ivs, level = flags.evs, flags.ivs, flags.level
             if isinstance(species, Species) and (evs or ivs or level):
