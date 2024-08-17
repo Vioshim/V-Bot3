@@ -288,10 +288,10 @@ class Size(float, Enum):
         if value_ft > 0:
             return f"{value:.2f} m / {value_ft}' {value_in:.0f}\" ft"
 
-        if value_in > 0.1:
+        if value_in >= 0.1:
             return f"{value*100:.2f} cm / {value_in:.2f} in"
 
-        return f"{value*100:.2f} cm / {value_in*1000:.2f} th"
+        return f"{value*1000:.2f} mm / {value_in*1000:.2f} th"
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
@@ -544,7 +544,7 @@ class SizeCategory(Enum):
         if mi_in >= 0.1:
             return f"{n} ({mi*100:.2f} cm / {mi_in:.2f} - {ma*100:.2f} cm / {ma_in:.2f} in)"
 
-        return f"{n} ({mi*100:.2f} cm / {mi_in*1000:.2f} th - {ma*100:.2f} cm / {ma_in*1000:.2f} th)"
+        return f"{n} ({mi*1000:.2f} mm / {mi_in*1000:.2f} th - {ma*1000:.2f} mm / {ma_in*1000:.2f} th)"
 
     def check_for(
         self,
