@@ -104,9 +104,10 @@ AMOUNT = 9
 
 
 class HeightView(Basic):
-    def __init__(self, *, target: Interaction, member: Member, oc: Character):
+    def __init__(self, *, target: Interaction, member: Member, oc: Character, unlock: bool = False):
         super(HeightView, self).__init__(target=target, member=member, timeout=None)
         self.oc = oc
+        self.unlock = unlock
         self.format()
 
     def format(self):
@@ -117,7 +118,12 @@ class HeightView(Basic):
         current_category = self.oc.size_category
 
         self.category.options.clear()
-        for item in filter(SizeCategory.is_valid, SizeCategory):
+        if self.unlock:
+            items = SizeCategory
+        else:
+            items = filter(SizeCategory.is_valid, SizeCategory)
+
+        for item in items:
             self.category.add_option(
                 label=item.label_for(self.oc.age.scale),
                 value=item.name,

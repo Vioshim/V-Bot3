@@ -603,7 +603,7 @@ class SizeField(TemplateField):
         oc: Character,
         ephemeral: bool = False,
     ):
-        view = HeightView(target=itx, member=itx.user, oc=oc)
+        view = HeightView(target=itx, member=itx.user, oc=oc, unlock=itx.permissions.administrator)
         await view.send(
             title=f"{template.title} Character's Size.",
             description=f"> {oc.height_text}",
@@ -1170,11 +1170,16 @@ class TropeField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
 
+        if itx.permissions.administrator:
+            tropes = [x for x in Trope if x != Trope.GM]
+        else:
+            tropes = Trope
+
         view = Complex[Trope](
             member=itx.user,
             target=itx,
             timeout=None,
-            values=Trope,
+            values=tropes,
             parser=lambda x: (x.name.replace("_", " "), x.value),
             sort_key=lambda x: x.name,
             silent_mode=True,
