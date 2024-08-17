@@ -1019,30 +1019,6 @@ class Submission(commands.Cog):
         async with view.send(ephemeral=True):
             self.bot.logger.info("User %s is reading the OCs of %s", str(itx.user), str(member))
 
-    @commands.hybrid_command()
-    @app_commands.guilds(952518750748438549, 1196879060173852702)
-    async def emoji(self, ctx: commands.Context[CustomBot], oc: CharacterArg, emoji: str):
-        """Sets an emoji to an OC
-
-        Parameters
-        ----------
-        ctx : commands.Context[CustomBot]
-            Context
-        oc : CharacterArg
-            Character to set emoji
-        emoji : str
-            Emoji to set
-        """
-        converter = commands.PartialEmojiConverter()
-        try:
-            emoji = await converter.convert(ctx, emoji)
-        except commands.BadArgument:
-            return await ctx.reply("Invalid emoji", ephemeral=True)
-        else:
-            db = self.bot.mongo_db("Characters")
-            await db.update_one({"id": oc.id}, {"$set": {"emoji": str(emoji)}})
-            await ctx.reply(f"Emoji set to {emoji}", ephemeral=True)
-
     @app_commands.command()
     @app_commands.guilds(952518750748438549, 1196879060173852702)
     async def hidden(self, itx: Interaction[CustomBot], *, oc: CharacterArg):
