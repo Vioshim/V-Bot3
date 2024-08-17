@@ -460,24 +460,24 @@ class Gender(Enum):
 
 class SizeCategory(Enum):
     Scale_5_Mini = 0.001, 0.01, "As strong as an ant.", "⬜"
-    Scale_4_Mini = 0.01, 0.05, "As strong as a bug.", "⬜"
-    Scale_3_Mini = 0.05, 0.10, "As strong as a quail.", "⬜"
-    Scale_2_Mini = 0.10, 0.15, "As strong as a mouse.", "⬜"
-    Scale_1_Mini = 0.20, 0.25, "As strong as a rabbit.", "⬜"
+    Scale_4_Mini = 0.010, 0.05, "As strong as a bug.", "⬜"
+    Scale_3_Mini = 0.050, 0.10, "As strong as a quail.", "⬜"
+    Scale_2_Mini = 0.100, 0.15, "As strong as a mouse.", "⬜"
+    Scale_1_Mini = 0.200, 0.25, "As strong as a rabbit.", "⬜"
 
     Tiny = 0.25, 0.5, "As strong as a rabbit.", "🟦"
     Small = 0.5, 0.75, "As strong as a medium-sized dog.", "🟦"
     Below_Average = 0.75, 1.25, "As strong as a human.", "🟦"
 
     Slightly_Average = 1.25, 1.5, "As strong as a human.", "🟩"
-    Average = 1.5, 1.8, "As strong as a human.", "🟩"
+    Average = 1.5, 1.80, "As strong as a human.", "🟩"
     Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
 
     Large = 2.0, 2.5, "As strong as a horse.", "🟧"
-    Huge = 2.5, 5.0, "As strong as a bear.", "🟧"
+    Huge = 2.50, 5.0, "As strong as a bear.", "🟧"
     Giant = 5.0, 7.5, "As strong as a large bear", "🟧"
 
-    Scale_1_Kaiju = 7.5, 13.0, "As strong as a small truck", "🟥"
+    Scale_1_Kaiju = 7.50, 13.0, "As strong as a small truck", "🟥"
     Scale_2_Kaiju = 13.0, 18.5, "As strong as a large truck", "🟥"
     Scale_3_Kaiju = 18.5, 24.0, "As strong as a whale", "🟥"
     Scale_4_Kaiju = 24.0, 29.5, "As strong as a large whale", "🟥"
