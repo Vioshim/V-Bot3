@@ -892,7 +892,7 @@ class Character:
                     self.size,
                 )
             ),
-            SizeCategory.Scale_6_Kaiju,
+            SizeCategory.Scale_5_Kaiju,
         )
 
     @property
