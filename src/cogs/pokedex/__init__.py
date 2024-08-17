@@ -157,24 +157,16 @@ class Pokedex(commands.Cog):
 
             if isinstance(base, Fakemon):
                 embed.add_field(name="Height", value=height.height_info(val1), inline=False)
-                embed.add_field(name="Weight", value=weight.weight_info(val2), inline=False)
             else:
                 if isinstance(base, Fusion) and len(base.bases) > 1:
                     h1, *_, h2 = sorted(base.bases, key=lambda x: x.height)
-                    w1, *_, w2 = sorted(base.bases, key=lambda x: x.weight)
                     h1, h2, h3 = h1.height, val1, h2.height
-                    w1, w2, w3 = w1.weight, val2, w2.weight
                 else:
                     h1, h2, h3 = val1, val1, val1
-                    w1, w2, w3 = val2, val2, val2
 
                 embed.add_field(name="Height (Min)", value=Size.Minimum.height_info(h1))
                 embed.add_field(name="Height (Avg)", value=height.height_info(h2))
                 embed.add_field(name="Height (Max)", value=Size.Maximum.height_info(h3))
-
-                embed.add_field(name="Weight (Min)", value=Size.Minimum.weight_info(w1))
-                embed.add_field(name="Weight (Avg)", value=weight.weight_info(w2))
-                embed.add_field(name="Weight (Max)", value=Size.Maximum.weight_info(w3))
 
             evs, ivs, level = flags.evs, flags.ivs, flags.level
             if isinstance(species, Species) and (evs or ivs or level):
