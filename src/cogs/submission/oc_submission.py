@@ -569,9 +569,6 @@ class SpeciesField(TemplateField, required=True):
         if species.banned:
             return f"{species.name} as species are banned."
 
-        if isinstance(species, Fakemon) and not isinstance(species.species_evolves_from, Pokemon):
-            return "Invalid Pre-Evolution Species."
-
         if isinstance(species, Fusion) and len(species.bases) < 2:
             return "Must include at least 2 species."
 
@@ -595,7 +592,7 @@ class SizeField(TemplateField):
     @classmethod
     def evaluate(cls, oc: Character):
         if not oc.size_category.is_valid():
-            return "Invalid Size Category"
+            return oc.size_category.label_for(oc.age.scale)
 
     @classmethod
     async def on_submit(

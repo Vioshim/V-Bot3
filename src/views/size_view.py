@@ -50,10 +50,20 @@ class HeightModal1(HeightModal):
     @property
     def value(self) -> float:
         text = self.text.value.removesuffix(".").lower()
-        if "km" in text:
+        if "pc" in text:
+            ratio, text = 3.086e16, text.removesuffix("pc")
+        elif "ly" in text:
+            ratio, text = 9.461e15, text.removesuffix("ly")
+        elif "au" in text:
+            ratio, text = 1.496e11, text.removesuffix("au")
+        elif "mi" in text:
+            ratio, text = 1609.34, text.removesuffix("mi")
+        elif "km" in text:
             ratio, text = 1000, text.removesuffix("km")
         elif "cm" in text:
             ratio, text = 1 / 100, text.removesuffix("cm")
+        elif "mm" in text:
+            ratio, text = 1 / 1000, text.removesuffix("mm")
         else:
             ratio, text = 1, text.removesuffix("m")
 
