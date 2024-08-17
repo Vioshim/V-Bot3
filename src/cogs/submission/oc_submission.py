@@ -455,7 +455,7 @@ class AgeField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if oc.age in (None, AgeGroup.Timeless, AgeGroup.Unknown):
+        if oc.age in (None, AgeGroup.Timeless):
             return "Not a valid age group."
 
     @classmethod
