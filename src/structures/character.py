@@ -472,7 +472,7 @@ class SizeCategory(Enum):
 
     @property
     def average(self):
-        return (self.minimum + self.maximum) / 2.0
+        return (self.value[0] + self.value[1]) / 2.0
 
     @property
     def ref_name(self):
