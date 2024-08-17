@@ -443,20 +443,20 @@ class Gender(Enum):
 
 
 class SizeCategory(Enum):
-    Mini = 0.1, 0.5, "As strong as a mouse."
-    Small = 0.5, 1.0, "As strong as a rabbit."
-    Below_Average = 1.0, 1.5, "As strong as a medium-sized dog."
-    Average = 1.5, 1.8, "As strong as a human."
-    Above_Average = 1.8, 2.0, "As strong as a human."
-    Large = 2.0, 2.5, "As strong as a horse."
-    Huge = 2.5, 5.0, "As strong as a bear."
-    Giant = 5.0, 7.5, "As strong as a large bear"
-    Scale_1_Kaiju = 7.5, 10.0, "As strong as a small truck"
-    Scale_2_Kaiju = 10.0, 13.5, "As strong as a large truck"
-    Scale_3_Kaiju = 13.5, 17.5, "As strong as a whale"
-    Scale_4_Kaiju = 17.5, 22.0, "As strong as a large whale"
-    Scale_5_Kaiju = 22.0, 27.5, "As strong as a natural disaster"
-    Scale_6_Kaiju = 27.5, 35.0, "As strong as a natural disaster"
+    Mini = 0.1, 0.5, "As strong as a mouse.", "🟦"
+    Small = 0.5, 1.0, "As strong as a rabbit.", "🟦"
+    Below_Average = 1.0, 1.5, "As strong as a medium-sized dog.", "🟩"
+    Average = 1.5, 1.8, "As strong as a human.", "🟩"
+    Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
+    Large = 2.0, 2.5, "As strong as a horse.", "🟧"
+    Huge = 2.5, 5.0, "As strong as a bear.", "🟧"
+    Giant = 5.0, 7.5, "As strong as a large bear", "🟧"
+    Scale_1_Kaiju = 7.5, 10.0, "As strong as a small truck", "🟥"
+    Scale_2_Kaiju = 10.0, 13.5, "As strong as a large truck", "🟥"
+    Scale_3_Kaiju = 13.5, 17.5, "As strong as a whale", "🟥"
+    Scale_4_Kaiju = 17.5, 22.0, "As strong as a large whale", "🟥"
+    Scale_5_Kaiju = 22.0, 27.5, "As strong as a natural disaster", "🟥"
+    Scale_6_Kaiju = 27.5, 35.0, "As strong as a natural disaster", "🟥"
 
     @property
     def minimum(self):
@@ -469,6 +469,10 @@ class SizeCategory(Enum):
     @property
     def description(self):
         return self.value[2]
+
+    @property
+    def emoji(self):
+        return self.value[3]
 
     @property
     def average(self):
