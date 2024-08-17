@@ -281,7 +281,7 @@ class Size(float, Enum):
         value = self.height_value(value)
 
         if value >= 1000:
-            return f'{value/1000:.2f} km / {value/1609.34:.2f}" mi'
+            return f"{value/1000:.2f} km / {value/1609.34:.2f} mi"
 
         value_ft, value_in = value // 0.3048, value / 0.3048 % 1 * 12
 
