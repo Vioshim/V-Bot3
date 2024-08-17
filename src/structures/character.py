@@ -279,10 +279,16 @@ class Size(float, Enum):
 
     def height_info(self, value: float = 0):
         value = self.height_value(value)
-        feet, inches = self.meters_to_ft_inches(value)
-        if feet == 0:
-            return f'{value*100:.2f} cm / {inches:.2f}" in'
-        return f"{value:.2f} m / {feet}' {int(inches):02d}\" ft"
+
+        if value >= 1000:
+            return f'{value/1000:.2f} km / {value/1609.34:.2f}" mi'
+
+        value_ft, value_in = value // 0.3048, value / 0.3048 % 1 * 12
+
+        if value_ft > 0:
+            return f"{value:.2f} m / {value_ft}' {value_in:.0f}\" ft"
+
+        return f"{value*100:.2f} cm / {value_in:.2f} in"
 
     def weight_info(self, value: float = 0):
         value = self.weight_value(value)
