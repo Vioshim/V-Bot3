@@ -468,11 +468,11 @@ class SizeCategory(Enum):
     Tiny = 0.25, 0.5, "As strong as a rabbit.", "🟦"
     Small = 0.5, 0.75, "As strong as a medium-sized dog.", "🟦"
     Below_Average = 0.75, 1.25, "As strong as a human.", "🟦"
+
     Slightly_Average = 1.25, 1.5, "As strong as a human.", "🟩"
-
     Average = 1.5, 1.8, "As strong as a human.", "🟩"
-
     Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
+
     Large = 2.0, 2.5, "As strong as a horse.", "🟧"
     Huge = 2.5, 5.0, "As strong as a bear.", "🟧"
     Giant = 5.0, 7.5, "As strong as a large bear", "🟧"
