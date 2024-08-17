@@ -590,15 +590,11 @@ class SpeciesField(TemplateField, required=True):
             progress.add(cls.name)
 
 
-
 class SizeField(TemplateField):
     "Modify the OC's Size"
 
     @classmethod
     def evaluate(cls, oc: Character):
-
-        if oc.size > (SizeCategory.Regular_Kaiju.maximum * oc.age.scale):
-            return "Locked to GMs."
 
         if not (0.1 * oc.age.scale <= oc.size <= 30 * oc.age.scale):
             return "Invalid Size."
@@ -712,9 +708,6 @@ class TypesField(TemplateField, required=True):
 
         if not oc.types:
             return "Types have not been specified."
-
-        if TypingEnum.Shadow in oc.types:
-            return "Shadow typing is not valid"
 
         if TypingEnum.Typeless in oc.types:
             if len(oc.types) != 1:
