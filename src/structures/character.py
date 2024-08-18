@@ -22,7 +22,7 @@ from enum import Enum, StrEnum
 from io import BytesIO
 from typing import Any, Iterable, Optional, Type
 
-from discord import Color, Embed, File, Interaction, PartialEmoji
+from discord import Color, Embed, File, Interaction
 from discord.app_commands import Choice
 from discord.app_commands.transformers import Transform, Transformer
 from discord.utils import snowflake_time, utcnow
@@ -36,6 +36,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import (
+    Flowable,
     Image,
     PageBreak,
     Paragraph,
@@ -1171,7 +1172,7 @@ class Character:
         doc = SimpleDocTemplate(buffer, pagesize=letter)
         styles = getSampleStyleSheet()
 
-        content = [
+        content: list[Flowable | tuple[Flowable]] = [
             Table(
                 [[k, v] for k, v in self.params_header.items()],
                 colWidths=[100, 300],

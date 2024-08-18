@@ -342,10 +342,9 @@ class Submission(commands.Cog):
                 info = await db1.find_one(
                     {
                         "id": oc.server,
-                        "oc_modifications": {"$exists": True},
-                        "staff": {"$exists": True},
+                        "oc_modifications.channel": {"$exists": True},
                     },
-                    {"_id": 0, "oc_modifications": 1, "staff": 1},
+                    {"_id": 0, "oc_modifications": 1},
                 )
 
             if logging and info:
@@ -361,7 +360,7 @@ class Submission(commands.Cog):
                     if former:
                         pack_embeds: list[list[Embed]] = []
                         pack_files: list[list[File]] = []
-                        log = await self.bot.webhook(info["staff"], reason="Logging")
+                        log = await self.bot.webhook(info["oc_modifications"]["channel"], reason="Logging")
                         if isinstance(user, (User, Member)):
                             username, avatar_url = user.display_name, user.display_avatar.url
                         else:
@@ -396,11 +395,15 @@ class Submission(commands.Cog):
                             pack_embeds.append(embeds)
                             pack_files.append(files)
 
+                        thread = MISSING
+                        if thread_id := info["oc_modifications"].get("thread"):
+                            thread = Object(id=thread_id)
+
                         for embeds, files in zip(pack_embeds, pack_files):
                             await log.send(
                                 embeds=embeds,
                                 files=files,
-                                thread=Object(id=info["oc_modifications"]),
+                                thread=thread,
                                 username=safe_username(username),
                                 avatar_url=avatar_url,
                                 view=view,
