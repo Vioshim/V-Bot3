@@ -581,14 +581,8 @@ class Submission(commands.Cog):
                 aux = ch.get_partial_message(message_id)
             view.add_item(Button(label=phrase[:80], url=aux.jump_url, emoji=REPLY_EMOJI))
 
-        for index, paragraph in enumerate(
-            text := wrap(
-                content or "\u200b",
-                2000,
-                replace_whitespace=False,
-                placeholder="",
-            )
-        ):
+        text = wrap(content or "\u200b", 2000, replace_whitespace=False, placeholder="")
+        for index, paragraph in enumerate(text):
             msg = await log_w.send(
                 content=paragraph,
                 username=safe_username(message.author.display_name),
