@@ -455,7 +455,6 @@ class Gender(Enum):
     Male = "Has male features in its body."
     Female = "Has female features in its body."
     Genderless = "Lacks distinct male or female features."
-    Intersex = "Has both male and female features."
     Fluid = "Uses transformations to change gender frequently."
 
 
