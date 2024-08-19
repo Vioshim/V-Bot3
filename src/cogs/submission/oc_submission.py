@@ -26,6 +26,7 @@ from discord import (
     DiscordException,
     Embed,
     File,
+    ForumChannel,
     Interaction,
     InteractionResponse,
     Member,
@@ -136,7 +137,7 @@ class TicketModal(Modal, title="Ticket"):
             webhook = await itx.client.webhook(channel)
             thread = await channel.create_thread(name=name, type=ChannelType.private_thread, invitable=False)
             embed = Embed(
-                title=f"Ticket {name}"[:256],
+                title=f"Ticket: {name}"[:256],
                 description=self.content.value,
                 timestamp=data,
                 color=member.color,
@@ -156,9 +157,22 @@ class TicketModal(Modal, title="Ticket"):
             view = View()
             view.add_item(Button(label="Go to Message", url=msg.jump_url, emoji=STICKER_EMOJI))
 
-            channel = itx.client.get_partial_messageable(id=info["staff_chat"], guild_id=itx.guild_id)
+            forum: ForumChannel = await itx.guild.fetch_channel(info["staff_chat"])  # type: ignore
+            tags = [x for x in forum.available_tags if x.name == "Tickets"]
+            file = await member.display_avatar.with_size(4096).to_file()
+            data = await forum.create_thread(
+                name=f"Ticket: {name}"[:256],
+                content=member.mention,
+                embed=embed,
+                view=view,
+                applied_tags=tags,
+                file=file,
+            )
 
-            await channel.send(embed=embed, view=view)
+            await data.message.pin()
+            for m in filter(lambda x: x.guild_permissions.administrator, itx.guild.members):
+                await data.thread.add_user(m)
+
             await itx.followup.send("Ticket created successfully", ephemeral=True, view=view)
         else:
             await itx.followup.send("Ticket system not setup yet.", ephemeral=True)
