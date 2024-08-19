@@ -160,6 +160,7 @@ class TicketModal(Modal, title="Ticket"):
             forum: ForumChannel = await itx.guild.fetch_channel(info["staff_chat"])  # type: ignore
             tags = [x for x in forum.available_tags if x.name == "Tickets"]
             file = await member.display_avatar.with_size(4096).to_file()
+            embed.set_thumbnail(url=f"attachment://{file.filename}")
             data = await forum.create_thread(
                 name=f"Ticket: {name}"[:256],
                 content=member.mention,
