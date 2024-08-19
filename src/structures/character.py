@@ -459,13 +459,13 @@ class Gender(Enum):
 
 
 class SizeCategory(Enum):
-    Scale_5_Mini = 0.001, 0.01, "As strong as an ant.", "⬜"
-    Scale_4_Mini = 0.010, 0.05, "As strong as a bug.", "⬜"
-    Scale_3_Mini = 0.050, 0.10, "As strong as a quail.", "⬜"
-    Scale_2_Mini = 0.100, 0.15, "As strong as a mouse.", "⬜"
-    Scale_1_Mini = 0.200, 0.25, "As strong as a rabbit.", "⬜"
+    Scale_5_Itty_Bitty = 0.0001, 0.001, "As strong as an ant.", "⬜"
+    Scale_4_Itty_Bitty = 0.001, 0.010, "As strong as a bug.", "⬜"
+    Scale_3_Itty_Bitty = 0.010, 0.025, "As strong as an ant.", "⬜"
+    Scale_2_Itty_Bitty = 0.025, 0.05, "As strong as a bug.", "⬜"
+    Scale_1_Itty_Bitty = 0.05, 0.1, "As strong as a mouse.", "⬜"
 
-    Tiny = 0.25, 0.5, "As strong as a rabbit.", "🟦"
+    Tiny = 0.1, 0.5, "As strong as a rabbit.", "🟦"
     Small = 0.5, 0.75, "As strong as a medium-sized dog.", "🟦"
     Below_Average = 0.75, 1.25, "As strong as a human.", "🟦"
 
@@ -495,10 +495,8 @@ class SizeCategory(Enum):
     @classmethod
     def category_for(cls, value: float, scale: float = 1.0):
         items = sorted(cls, key=lambda x: (x.is_valid(), x.minimum))
-        return next(
-            (x for x in items if x.check_for(scale, value)),
-            max(items, key=lambda x: x.minimum),
-        )
+        minimal = min(filter(cls.is_valid, cls), key=lambda x: abs(x.average - value))
+        return next((x for x in items if x.check_for(scale, value)), minimal)
 
     @property
     def minimum(self):
