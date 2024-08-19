@@ -492,6 +492,14 @@ class SizeCategory(Enum):
     def is_valid(self):
         return not self.name.startswith("Scale_")
 
+    @classmethod
+    def category_for(cls, value: float, scale: float = 1.0):
+        items = sorted(cls, key=lambda x: (x.is_valid(), x.minimum))
+        return next(
+            (x for x in items if x.check_for(scale, value)),
+            max(items, key=lambda x: x.minimum),
+        )
+
     @property
     def minimum(self):
         return self.value[0]
@@ -556,7 +564,7 @@ class SizeCategory(Enum):
         ma, mi = (maximum or self.maximum) * scale, 0
         if self != SizeCategory.Scale_5_Mini:
             mi = (minimum or self.minimum) * scale
-        return mi < value <= ma
+        return mi <= value <= ma
 
 
 class Weight(float, Enum):
@@ -917,18 +925,8 @@ class Character:
         return Color.blurple()
 
     @property
-    def size_category(self) -> SizeCategory:
-        return next(
-            (
-                x
-                for x in SizeCategory
-                if x.check_for(
-                    self.age.scale,
-                    self.size,
-                )
-            ),
-            max(SizeCategory, key=lambda x: x.minimum),
-        )
+    def size_category(self):
+        return SizeCategory.category_for(self.size, self.age.scale)
 
     @property
     def embeds(self) -> list[Embed]:
