@@ -494,7 +494,7 @@ class SizeCategory(Enum):
 
     @classmethod
     def category_for(cls, value: float, scale: float = 1.0):
-        items = sorted(cls, key=lambda x: (x.is_valid(), x.minimum))
+        items = sorted(cls, key=lambda x: (not x.is_valid(), x.minimum))
         minimal = min(filter(cls.is_valid, cls), key=lambda x: abs(x.average - value))
         return next((x for x in items if x.check_for(scale, value)), minimal)
 
@@ -560,7 +560,7 @@ class SizeCategory(Enum):
         maximum: float = 0.0,
     ):
         ma, mi = (maximum or self.maximum) * scale, 0
-        minimal = min(SizeCategory, key=lambda x: x.average)
+        minimal = min(SizeCategory, key=lambda x: x.minimum)
         if self != minimal:
             mi = (minimum or self.minimum) * scale
         return mi <= value <= ma
