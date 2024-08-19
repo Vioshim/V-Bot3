@@ -460,19 +460,19 @@ class Gender(Enum):
 
 class SizeCategory(Enum):
     Scale_5_Itty_Bitty = 0.0001, 0.001, "As strong as an ant.", "⬜"
-    Scale_4_Itty_Bitty = 0.001, 0.010, "As strong as a bug.", "⬜"
-    Scale_3_Itty_Bitty = 0.010, 0.025, "As strong as an ant.", "⬜"
-    Scale_2_Itty_Bitty = 0.025, 0.05, "As strong as a bug.", "⬜"
-    Scale_1_Itty_Bitty = 0.05, 0.1, "As strong as a mouse.", "⬜"
+    Scale_4_Itty_Bitty = 0.0010, 0.010, "As strong as a bug.", "⬜"
+    Scale_3_Itty_Bitty = 0.0100, 0.025, "As strong as an ant.", "⬜"
+    Scale_2_Itty_Bitty = 0.0250, 0.050, "As strong as a bug.", "⬜"
+    Scale_1_Itty_Bitty = 0.0500, 0.100, "As strong as a mouse.", "⬜"
 
     Tiny = 0.1, 0.5, "As strong as a rabbit.", "🟦"
     Small = 0.5, 0.75, "As strong as a medium-sized dog.", "🟦"
     Below_Average = 0.75, 1.25, "As strong as a human.", "🟦"
-
     Slightly_Average = 1.25, 1.5, "As strong as a human.", "🟩"
-    Average = 1.5, 1.80, "As strong as a human.", "🟩"
-    Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
 
+    Average = 1.5, 1.80, "As strong as a human.", "🟩"
+
+    Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
     Large = 2.0, 2.5, "As strong as a horse.", "🟧"
     Huge = 2.50, 5.0, "As strong as a bear.", "🟧"
     Giant = 5.0, 7.5, "As strong as a large bear", "🟧"
