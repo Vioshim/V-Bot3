@@ -560,7 +560,8 @@ class SizeCategory(Enum):
         maximum: float = 0.0,
     ):
         ma, mi = (maximum or self.maximum) * scale, 0
-        if self != SizeCategory.Scale_5_Mini:
+        minimal = min(SizeCategory, key=lambda x: x.average)
+        if self != minimal:
             mi = (minimum or self.minimum) * scale
         return mi <= value <= ma
 
