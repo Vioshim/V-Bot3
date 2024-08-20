@@ -95,7 +95,7 @@ class CustomBot(Bot):
         self.logger = logger
         self.aiogoogle = aiogoogle
         self.session = ClientSession(json_serialize=dumps, raise_for_status=True)
-        self.m_bin = MystBinClient(token=getenv("MYSTBIN_TOKEN"), session=self.session)
+        self.m_bin = MystBinClient(session=self.session)
         self.mongodb = AsyncIOMotorClient(getenv("MONGO_URI"))
         self.start_time = utcnow()
         self.msg_cache: set[int] = set()
