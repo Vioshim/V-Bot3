@@ -219,6 +219,9 @@ class AiCog(commands.Cog):
                     ucPreset=UndesiredPreset.HEAVY,
                 )
 
+            if (result := payload.calculate_cost(is_opus=True)) and ctx.author.id != 339957281921695745:
+                raise commands.UserInputError(f"Estimated cost: {result} credits")
+
             await ctx.reply(
                 files=[
                     File(
@@ -232,7 +235,7 @@ class AiCog(commands.Cog):
                             )
                         )[:1024],
                     )
-                    for img in await self.client.generate_image(payload, verbose=True)
+                    for img in await self.client.generate_image(payload, verbose=True, is_opus=True)
                 ]
             )
 
