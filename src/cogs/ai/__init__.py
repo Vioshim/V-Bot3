@@ -117,7 +117,7 @@ class AiCog(commands.Cog):
     async def cog_unload(self) -> None:
         await self.client.close()
 
-    @commands.max_concurrency(1, wait=True)
+    @commands.max_concurrency(1, wait=False)
     @commands.check(lambda ctx: get(ctx.author.mutual_guilds, id=1196879060173852702) is not None)
     @commands.hybrid_command()
     @app_commands.allowed_installs(users=True, guilds=True)
