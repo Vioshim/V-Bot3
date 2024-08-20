@@ -866,10 +866,8 @@ class Submission(commands.Cog):
         if message.channel.id == item.get("oc_submission"):
             await self.on_message_submission(message)
         elif isinstance(message.channel, Thread):
-            if message.channel.parent_id == item.get("oc_list"):
-                tag = get(message.channel.applied_tags, name="Do Not Interact")
-                if not (tag and message.application_id != self.bot.user.id):
-                    return
+            tag = get(message.channel.applied_tags, name="Don't Chat Here")
+            if tag and message.application_id != self.bot.user.id:
 
                 if (user_id := self.thread_owner.get(message.channel.id)) is None:
                     member = message.channel.owner
