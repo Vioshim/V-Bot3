@@ -122,7 +122,7 @@ class AiCog(commands.Cog):
     @commands.hybrid_command(nsfw=True)
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def ai(self, ctx: commands.Context, *, flags: GenerateFlags):
+    async def ai(self, ctx: commands.Context[CustomBot], *, flags: GenerateFlags):
         """Generate images using the AI"""
         async with ctx.typing(ephemeral=False):
 
@@ -216,7 +216,7 @@ class AiCog(commands.Cog):
             if (result := payload.calculate_cost(is_opus=True)) and ctx.author.id != 339957281921695745:
                 raise commands.UserInputError(f"Estimated cost: {result} credits")
 
-            await ctx.reply(
+            msg = await ctx.reply(
                 files=[
                     File(
                         fp=BytesIO(img.data),
@@ -232,6 +232,26 @@ class AiCog(commands.Cog):
                     for img in await self.client.generate_image(payload, verbose=True, is_opus=True)
                 ]
             )
+
+            ctx.bot.logger.info(
+                "User %s (%s) generated an image with the following flags:\n"
+                "Prompt: %s\n"
+                "Negative Prompt: %s\n"
+                "Model: %s\n"
+                "Seed: %s\n"
+                "URL: %s",
+                ctx.author,
+                ctx.author.id,
+                flags.prompt,
+                flags.negative_prompt,
+                flags.model,
+                flags.seed,
+                msg.attachments[0].url,
+            )
+
+            
+
+
 
     @app_commands.guilds(1196879060173852702)
     @commands.max_concurrency(1, wait=False)
