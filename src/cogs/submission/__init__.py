@@ -871,16 +871,20 @@ class Submission(commands.Cog):
                 if not (tag and message.application_id != self.bot.user.id):
                     return
 
-                member = message.channel.owner
+                if (user_id := self.thread_owner.get(message.channel.id)) is None:
+                    member = message.channel.owner
 
-                if member and member.bot:
-                    try:
-                        m = await message.channel.fetch_message(message.channel.id)
-                        member = m.mentions[0] if m.mentions else None
-                    except NotFound:
-                        member = None
+                    if member and member.bot:
+                        try:
+                            m = await message.channel.fetch_message(message.channel.id)
+                            member = m.mentions[0] if m.mentions else None
+                        except NotFound:
+                            member = None
 
-                if member != message.author:
+                    user_id = member.id if member else 0
+                    self.thread_owner[message.channel.id] = user_id
+
+                if user_id != message.author.id:
                     await message.delete(delay=0)
 
             elif not (message.channel.flags.pinned or message.webhook_id):
