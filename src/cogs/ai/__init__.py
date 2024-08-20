@@ -20,6 +20,7 @@ from typing import Optional
 
 from discord import Attachment, Embed, File, Message, app_commands
 from discord.ext import commands
+from discord.utils import get
 from novelai import (
     Action,
     Metadata,
@@ -116,15 +117,8 @@ class AiCog(commands.Cog):
     async def cog_unload(self) -> None:
         await self.client.close()
 
-    @commands.max_concurrency(1, wait=False)
-    @commands.check(
-        lambda ctx: ctx.author.id
-        in (
-            339957281921695745,
-            406908562023907329,
-            678374009045254198,
-        )
-    )
+    @commands.max_concurrency(1, wait=True)
+    @commands.check(lambda ctx: get(ctx.author.mutual_guilds, id=1196879060173852702) is not None)
     @commands.hybrid_command()
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
