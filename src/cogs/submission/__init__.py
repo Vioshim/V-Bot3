@@ -859,8 +859,12 @@ class Submission(commands.Cog):
 
         if message.channel.id == item.get("oc_submission"):
             await self.on_message_submission(message)
-        elif isinstance(message.channel, Thread) and not (message.channel.flags.pinned or message.webhook_id):
-            await self.on_message_proxy(message)
+        elif isinstance(message.channel, Thread):
+            if message.channel.parent_id == item.get("oc_list"):
+                if get(message.channel.applied_tags, name="Do Not Interact") and message.application_id != self.bot.user.id:
+                    await message.delete(delay=0)
+            elif not (message.channel.flags.pinned or message.webhook_id):
+                await self.on_message_proxy(message)
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: RawMessageUpdateEvent):
