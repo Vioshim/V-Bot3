@@ -20,14 +20,7 @@ from re import compile as re_compile
 from typing import Callable, Literal, Optional
 
 from bs4 import BeautifulSoup
-from discord import (
-    CategoryChannel,
-    Embed,
-    Guild,
-    Interaction,
-    TextChannel,
-    app_commands,
-)
+from discord import Embed, Guild, Interaction, TextChannel, app_commands
 from discord.ext import commands
 from discord.utils import get
 from yarl import URL

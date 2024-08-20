@@ -315,13 +315,20 @@ class Submission(commands.Cog):
                     msg_oc = await thread.send(**kwargs)
                     word = "registered"
                     former = oc
-            elif msg_oc := await thread.send(**kwargs):
+            else:
+                msg_oc = await thread.send(**kwargs)
                 reference_id = msg_oc.id
                 word = "registered"
                 former = oc
 
             oc.id = msg_oc.id
             oc.image_url = msg_oc.embeds[0].image.url
+
+            if word == "registered":
+                try:
+                    await msg_oc.pin()
+                except DiscordException:
+                    pass
 
             db = self.bot.mongo_db("Characters")
 
