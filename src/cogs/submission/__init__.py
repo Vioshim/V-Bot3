@@ -14,12 +14,15 @@
 
 
 import asyncio
+from datetime import datetime, timedelta
 import io
 import random
 from contextlib import suppress
 from itertools import zip_longest
 from textwrap import wrap
 from typing import Optional
+
+from cachetools import LRUCache
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -123,13 +126,16 @@ def comparison_handler(before: Character, now: Character):
                 e2.title = None
             yield e1, e2
 
+def datetime_ttu(_, value: timedelta, now: datetime):
+    return now + timedelta(hours=value.hours)
+
 
 class Submission(commands.Cog):
     def __init__(self, bot: CustomBot):
         self.bot = bot
         self.data_db: dict[int, dict] = {}
         self.ignore: set[int] = set()
-        self.data_msg: dict[int, Message] = {}
+        self.thread_owner: LRUCache[int, int] = LRUCache(maxsize=1000)
         self.ready = False
         self.itx_menu1 = ContextMenu(
             name="Moves & Abilities",
@@ -861,8 +867,22 @@ class Submission(commands.Cog):
             await self.on_message_submission(message)
         elif isinstance(message.channel, Thread):
             if message.channel.parent_id == item.get("oc_list"):
-                if get(message.channel.applied_tags, name="Do Not Interact") and message.application_id != self.bot.user.id:
+                tag = get(message.channel.applied_tags, name="Do Not Interact")
+                if not (tag and message.application_id != self.bot.user.id):
+                    return
+
+                member = message.channel.owner
+
+                if member and member.bot:
+                    try:
+                        m = await message.channel.fetch_message(message.channel.id)
+                        member = m.mentions[0] if m.mentions else None
+                    except NotFound:
+                        member = None
+
+                if member != message.author:
                     await message.delete(delay=0)
+
             elif not (message.channel.flags.pinned or message.webhook_id):
                 await self.on_message_proxy(message)
 
