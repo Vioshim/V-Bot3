@@ -14,18 +14,17 @@
 
 
 import asyncio
-from datetime import datetime, timedelta
 import io
 import random
 from contextlib import suppress
+from datetime import datetime, timedelta
 from itertools import zip_longest
 from textwrap import wrap
 from typing import Optional
 
-from cachetools import LRUCache
-
 import matplotlib.pyplot as plt
 import numpy as np
+from cachetools import LRUCache
 from discord import (
     AllowedMentions,
     Color,
@@ -125,6 +124,7 @@ def comparison_handler(before: Character, now: Character):
             if e1.title == e2.title and e1.url == e2.url:
                 e2.title = None
             yield e1, e2
+
 
 def datetime_ttu(_, value: timedelta, now: datetime):
     return now + timedelta(hours=value.hours)
@@ -338,8 +338,8 @@ class Submission(commands.Cog):
 
             db = self.bot.mongo_db("Characters")
 
-            if former is None and (former := await db.find_one({"id": oc.id})):
-                former = Character.from_mongo_dict(former)
+            if former is None and (data := await db.find_one({"id": oc.id})):
+                former = Character.from_mongo_dict(data)
 
             await db.replace_one(
                 {
@@ -362,11 +362,10 @@ class Submission(commands.Cog):
 
             if logging and info:
                 self.bot.logger.info(
-                    "Character has been %s! > %s > %s > %s",
+                    "Character has been %s! > %s > %s",
                     word,
                     str(user),
                     repr(oc),
-                    oc.document_url or "Manual",
                 )
 
                 try:
@@ -867,7 +866,7 @@ class Submission(commands.Cog):
             await self.on_message_submission(message)
         elif isinstance(message.channel, Thread):
             tag = get(message.channel.applied_tags, name="Don't Chat Here")
-            if tag and(message.author != self.bot.user):
+            if tag and (message.author != self.bot.user):
 
                 if (user_id := self.thread_owner.get(message.channel.id)) is None:
                     member = message.channel.owner
