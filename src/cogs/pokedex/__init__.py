@@ -28,10 +28,10 @@ from yarl import URL
 from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, GroupBy, MovepoolFlags
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.structures.bot import CustomBot
-from src.structures.character import Character, Size
+from src.structures.character import Character
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
-from src.structures.species import Fakemon, Fusion, Species
+from src.structures.species import Fusion, Species
 from src.utils.etc import WHITE_BAR, MapElements
 from src.views.move_view import MovepoolView
 from src.views.species_view import SpeciesComplex

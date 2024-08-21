@@ -836,14 +836,15 @@ class Submission(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
-        if past.display_name == now.display_name and past.display_avatar == now.display_avatar:
+        if past.name == now.name and past.display_avatar == now.display_avatar:
             return
+
         db = self.bot.mongo_db("Roleplayers")
         if data := await db.find_one({"user": now.id, "server": now.guild.id}):
             thread = await self.list_update(now, now.guild.id, data)
-            if thread.name != now.display_name:
-                reason = f"{thread.name} -> {now.display_name}."
-                await thread.edit(name=now.display_name, reason=reason)
+            if thread.name != now.name:
+                reason = f"{thread.name} -> {now.name}."
+                await thread.edit(name=now.name, reason=reason)
 
     @commands.Cog.listener()
     async def on_message(self, message: Message) -> None:
