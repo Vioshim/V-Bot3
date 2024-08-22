@@ -222,18 +222,6 @@ class TemplateItem:
 
 class Template(TemplateItem, Enum):
     Pokemon = {"description": "Normal residents that resemble Pokemon."}
-    Legendary = {"description": "Normal residents that resemble Legendary Pokemon."}
-    Mythical = {"description": "Normal residents that resemble Mythical Pokemon."}
-    UltraBeast = {"description": "Normal residents that resemble Ultra Beasts."}
-    Paradox = {"description": "Normal residents that resemble Paradox Pokemon."}
-    # GMax = {"description": "Character's Gigantamax."}
-    Mega = {
-        "description": "Character's Mega Evolution.",
-        "docs": {
-            "Standard": "1QRlm692RM5lXBv3bx8YKdnkkeYqz8bYY9MLzR8ElX4s",
-            "Unique Trait": "1FWmqSlYpyo-h3TpUXS1F6AlA4AmsshXvTAA2GZMM8_M",
-        },
-    }
     Fusion = {
         "description": "Fan-made Fusion Pokemon.",
         "modifier": {"Species": ("Species", "Species 1, Species 2")},
@@ -243,16 +231,8 @@ class Template(TemplateItem, Enum):
             "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
     }
-    Variant = {
-        "description": "Fan-made Variant Pokemon.",
-        "modifier": {"Species": ("Variant", "Variant Species")},
-        "docs": {
-            "Standard": "1T4Y8rVotXpRnAmCrOrVguIHszi8lY_iuSZcP2v2MiTY",
-            "Unique Trait": "1o2C_GEp9qg2G8R49tC_j_9EIRgFsvc225gEku8NYE7A",
-        },
-    }
     Fakemon = {
-        "description": "Fan-made Pokemon.",
+        "description": "Any kind of Species that is not an official Pokemon.",
         "modifier": {"Species": ("Fakemon", "Fakemon Species")},
         "docs": {
             "Standard": "1R9s-o018-ClHHP_u-eEIa038dfmQdNxssbP74PfVezY",
@@ -343,22 +323,8 @@ class Template(TemplateItem, Enum):
     @property
     def total_species(self) -> frozenset[Species]:
         match self.name:
-            case "Pokemon" | "Crossbreed":
-                mon_total = Pokemon.all()
-            case "Fusion":
+            case "Pokemon" | "Fusion" | "Variant":
                 mon_total = Species.all()
-            case "Legendary":
-                mon_total = Legendary.all()
-            case "Mythical":
-                mon_total = Mythical.all()
-            case "UltraBeast":
-                mon_total = UltraBeast.all()
-            case "Paradox":
-                mon_total = Paradox.all()
-            case "Mega":
-                mon_total = Mega.all()
-            case "Variant":
-                mon_total = Species.all(exclude=(Mega, GMax))
             case _:
                 mon_total = []
         return frozenset({x for x in mon_total if not x.banned})
