@@ -71,20 +71,11 @@ from src.structures.movepool import Movepool
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    CustomParadox,
     CustomSpecies,
-    CustomUltraBeast,
     Fakemon,
     Fusion,
-    GimmickSpecies,
-    GMax,
-    Legendary,
-    Mega,
-    Mythical,
-    Paradox,
     Pokemon,
     Species,
-    UltraBeast,
     Variant,
 )
 from src.utils.etc import (
@@ -670,6 +661,9 @@ class TypesField(TemplateField, required=True):
         def parser(x: TypingEnum):
             return x.name, "Traditional" if x in possible_types else ""
 
+        def sorter(x: TypingEnum):
+            return (x not in possible_types, x.name)
+
         values, max_values = TypingEnum.all(), 2
 
         view = Complex(
@@ -677,7 +671,7 @@ class TypesField(TemplateField, required=True):
             target=itx,
             values=values,
             parser=parser,
-            sort_key=parser,
+            sort_key=sorter,
             max_values=max_values,
             timeout=None,
             silent_mode=True,
@@ -792,7 +786,6 @@ class AbilitiesField(TemplateField, required=True):
             abilities = oc.species.species_evolves_from.abilities
         elif isinstance(oc.species, CustomSpecies) and oc.species.base:
             abilities = oc.species.base.abilities
-
         else:
             abilities = oc.species.abilities
 
@@ -802,7 +795,7 @@ class AbilitiesField(TemplateField, required=True):
             timeout=None,
             target=itx,
             max_values=1,
-            sort_key=lambda x: (x in abilities, x.name),
+            sort_key=lambda x: (x not in abilities, x.name),
             parser=lambda x: (x.name, x.description),
             emoji_parser=lambda x: "✅" if not abilities or x in abilities else "🔒",
             silent_mode=True,
