@@ -879,39 +879,19 @@ class Character:
     def species_data(self):
         match self.species:
             case mon if isinstance(mon, Fusion):
-                return "Fusion", "\n".join(f"* {x.name}" for x in mon.bases)[:1024]
+                mon_name = "\n".join(f"* {x.name}" for x in mon.bases)[:1024]
             case mon if isinstance(mon, Fakemon):
-                a1 = Ability.get(name="Beast Boost")
-                if a1 in self.abilities:
-                    name = "Fakemon Ultra Beast"
-                elif evolves_from := mon.species_evolves_from:
-                    name = "Fakemon Evo" if evolves_from.name == mon.name else f"{evolves_from.name} Evo"
-                else:
-                    name = "Fakemon Species"
-                return name, mon.name
-            case mon if isinstance(mon, CustomMega):
-                return "Mega", mon.name
-            case mon if isinstance(mon, (CustomParadox, CustomUltraBeast, Variant)):
-                a1 = Ability.get(name="Protosynthesis")
-                a2 = Ability.get(name="Quark Drive")
-
-                if a1 in self.abilities:
-                    phrase = "Past"
-                elif a2 in self.abilities:
-                    phrase = "Future"
-                elif TypingEnum.Typeless in mon.types:
-                    phrase = "Typeless"
-                else:
-                    phrase = ""
-
-                if mon.base and mon.base.name != mon.name:
-                    phrase = {"UltraBeast": "UB"}.get(phrase, phrase)
-                    phrase = f"{phrase} {mon.base.name}".strip()
-
-                return phrase, mon.name
+                if (evolves_from := mon.species_evolves_from) and evolves_from.name != mon.name:
+                    return f"{evolves_from.name} Evo", mon.name
+                mon_name = mon.name
+            case mon if isinstance(mon, CustomSpecies) and mon.base:
+                mon_name = mon.name or mon.base.name
             case mon if isinstance(mon, Species):
-                phrase = mon.__class__.__name__.removeprefix("Custom")
-                return phrase, mon.name
+                mon_name = mon.name
+            case _:
+                return "Unknown", "Unknown"
+
+        return "Species", mon_name
 
     @property
     def embed(self) -> Embed:

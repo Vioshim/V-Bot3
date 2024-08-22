@@ -255,8 +255,24 @@ class Template(TemplateItem, Enum):
                     return
 
         match len(choices):
-            case 0 if self == self.Pokemon:
-                return
+            case 0 if self == self.Fakemon:
+                name = oc.species.name if isinstance(oc.species, Fakemon) else None
+                async with ModernInput(member=itx.user, target=itx).handle(
+                    label="OC's Species.",
+                    required=False,
+                    ephemeral=ephemeral,
+                    default=name,
+                ) as answer:
+                    if isinstance(answer, str):
+                        if isinstance(oc.species, Fakemon):
+                            oc.species.name = answer or oc.name
+                        else:
+                            oc.species = Fakemon(
+                                name=answer or oc.name,
+                                abilities=oc.abilities,
+                                base_image=oc.image_url,
+                                movepool=Movepool(other=oc.moveset.copy()),
+                            )
             case 1:
                 oc.species, abilities = Variant(base=choices[0]), choices[0].abilities.copy()
                 if len(abilities) == 1:
@@ -678,7 +694,7 @@ class TypesField(TemplateField, required=True):
                 if isinstance(species, (Fusion, CustomSpecies)):
                     species.types = frozenset(types)
                 else:
-                    oc.species = Variant(name=species.name, base=species, types=types)
+                    oc.species = Variant(base=species, types=types)
                 progress.add(cls.name)
 
 
