@@ -54,11 +54,7 @@ from src.structures.movepool import Movepool
 from src.structures.pokeball import Pokeball
 from src.structures.pronouns import Pronoun
 from src.structures.species import (
-    CustomGMax,
-    CustomMega,
-    CustomParadox,
     CustomSpecies,
-    CustomUltraBeast,
     Fakemon,
     Fusion,
     Legendary,
@@ -146,10 +142,6 @@ class Kind(Enum):
     Mega = Mega
     Fusion = Fusion
     Paradox = Paradox
-    CustomMega = CustomMega
-    CustomParadox = CustomParadox
-    CustomUltraBeast = CustomUltraBeast
-    CustomGMax = CustomGMax
 
     @property
     def title(self):
@@ -209,14 +201,6 @@ class Kind(Enum):
                 return cls.Mega
             case "FUSION":
                 return cls.Fusion
-            case "CUSTOMMEGA":
-                return cls.CustomMega
-            case "CUSTOMULTRABEAST":
-                return cls.CustomUltraBeast
-            case "CUSTOMPARADOX":
-                return cls.CustomParadox
-            case "CUSTOMGMAX":
-                return cls.CustomGMax
 
     def all(self) -> frozenset[Species]:
         return self.value.all()
@@ -1232,15 +1216,7 @@ class Character:
                 content.append(Paragraph("How was it obtained?", styles["Heading3"]))
                 content.append(Paragraph(sp_ability.origin, styles["Normal"]))
 
-        if isinstance(
-            self.species,
-            (
-                Variant,
-                CustomParadox,
-                CustomUltraBeast,
-                Fakemon,
-            ),
-        ) and (movepool := self.species.movepool):
+        if isinstance(self.species, (Variant, Fakemon)) and (movepool := self.species.movepool):
             content.extend(
                 (
                     PageBreak(),
@@ -1456,18 +1432,7 @@ class Character:
             "pre_evo",
         )
 
-        if mega := data.pop("mega", ""):
-            species = CustomMega.single_deduce(mega.removeprefix("Mega "))
-            data["species"] = species
-        elif (paradox := data.pop("paradox", "")) and base:
-            species = CustomParadox.single_deduce(base)
-            species.name = paradox
-            data["species"] = species
-        elif (ub := common_pop_get(data, "ultrabeast", "ub")) and base:
-            species = CustomUltraBeast.single_deduce(base)
-            species.name = ub
-            data["species"] = species
-        elif fakemon := data.pop("fakemon", ""):
+        if fakemon := data.pop("fakemon", ""):
             name: str = fakemon.title()
             if species := Fakemon.single_deduce(base):
                 species.name = name
@@ -1476,7 +1441,7 @@ class Character:
 
             data["species"] = species
         elif variant := data.pop("variant", ""):
-            if species := Variant.single_deduce(base):
+            if species := Variant.from_base(base=base):
                 species.name = variant
             else:
                 for item in variant.split(" "):

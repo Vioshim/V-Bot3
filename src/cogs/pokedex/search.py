@@ -107,9 +107,9 @@ def amount_parser(text: Optional[str], ocs: Iterable[Character]):
         if len(op) == 2 and op[0] <= amount <= op[1]:
             return True
 
-        for key, operator in filter(lambda x: x[0] in text, OPERATORS.items()):
+        for key, logic in filter(lambda x: x[0] in text, OPERATORS.items()):
             op = [foo(x) or 0 for x in item.split(key)]
-            if operator(op[0], amount) if op[0] else operator(amount, op[1]):
+            if logic(op[0], amount) if op[0] else logic(amount, op[1]):
                 return True
 
     return False
@@ -142,9 +142,9 @@ def age_parser(text: str, oc: Character):
         if len(op) == 2 and op[0] <= age <= op[1]:
             return age != 0
 
-        for key, operator in filter(lambda x: x[0] in text, OPERATORS.items()):
+        for key, logic in filter(lambda x: x[0] in text, OPERATORS.items()):
             op = [foo(x) or 0 for x in item.split(key)]
-            if operator(op[0], age) if op[0] else operator(age, op[1]):
+            if logic(op[0], age) if op[0] else logic(age, op[1]):
                 return age != 0
 
     return False
