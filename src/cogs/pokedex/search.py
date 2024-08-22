@@ -230,7 +230,7 @@ class SpeciesTransformer(commands.Converter[str], Transformer):
                 o async for x in db.find(key) if (o := Character.from_mongo_dict(x)) and all(i(o) for i in oc_filters)
             }
         ):
-            ocs = [x for x in Species.all() if all(i(x) for i in pk_filters)]
+            ocs = [x for x in Species.all() if not x.banned and all(i(x) for i in pk_filters)]
 
         if data := process.extract(value, choices=ocs, limit=25, processor=item_name, score_cutoff=60):
             options = [x[0] for x in data]
