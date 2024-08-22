@@ -657,12 +657,12 @@ class TypesField(TemplateField, required=True):
         def sorter(x: TypingEnum):
             return (x not in possible_types, x.name)
 
-        values, max_values = TypingEnum.all(), 2
+        max_values = min(2, len(species.bases)) if isinstance(species, Fusion) else 2
 
         view = Complex(
             member=itx.user,
             target=itx,
-            values=values,
+            values=TypingEnum.all(),
             parser=parser,
             sort_key=sorter,
             max_values=max_values,
