@@ -668,7 +668,8 @@ class TypesField(TemplateField, required=True):
         possible_types = species.flatten_types
 
         def parser(x: TypingEnum):
-            return x.name, "Traditional" if x in possible_types else ""
+            name = x.name if x in possible_types else f"~~{x.name}~~"
+            return name, x.effect
 
         def sorter(x: TypingEnum):
             return (x not in possible_types, x.name)
