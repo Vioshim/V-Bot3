@@ -206,6 +206,10 @@ class Species:
         return frozenset(items)
 
     @property
+    def flatten_types(self):
+        return frozenset().union(*self.possible_types)
+
+    @property
     def total_movepool(self):
         if TypingEnum.Shadow in self.types:
             return Movepool.shadow()

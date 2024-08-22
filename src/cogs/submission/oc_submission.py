@@ -221,14 +221,13 @@ class TemplateItem:
 
 
 class Template(TemplateItem, Enum):
-    Pokemon = {"description": "Normal residents that resemble Pokemon."}
-    Fusion = {
-        "description": "Fan-made Fusion Pokemon.",
-        "modifier": {"Species": ("Species", "Species 1, Species 2")},
-        "exclude": [],
+    Pokemon = {
+        "description": "Normal residents that resemble Pokemon.",
         "docs": {
-            "Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
-            "Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
+            "Standard": "1_fj55cpyiHJ6zZ4I3FF0o9FbBhl936baflE_7EV8wUc",
+            "Unique Trait": "1dyRmRALOGgDCwscJoEXblIvoDcKwioNlsRoWw7VrOb8",
+            "Fusion Standard": "1i023rpuSBi8kLtiZ559VaxaOn-GMKqPo53QGiKZUFxM",
+            "Fusion Unique Trait": "1pQ-MXvidesq9JjK1sXcsyt7qBVMfDHDAqz9fXdf5l6M",
         },
     }
     Fakemon = {
@@ -264,46 +263,17 @@ class Template(TemplateItem, Enum):
                 else:
                     return
 
-        match self.name:
-            case "Fusion" | "Crossbreed":
+        match len(choices):
+            case 0 if self == self.Pokemon:
+                return
+            case 1:
+                oc.species, abilities = choices[0], choices[0].abilities.copy()
+                if len(abilities) == 1:
+                    oc.abilities = abilities.copy()
+                else:
+                    oc.abilities &= abilities
+            case 2 | 3:
                 oc.species = Fusion(*choices)
-            case "Variant":
-                async with ModernInput(member=itx.user, target=itx).handle(
-                    label=f"{choices[0].name} Variant"[:45],
-                    ephemeral=ephemeral,
-                    default=choices[0].name,
-                    required=False,
-                ) as answer:
-                    if isinstance(answer, str):
-                        if isinstance(oc.species, Variant) and oc.species.base == choices[0]:
-                            oc.species.name = answer[:45] or choices[0].name
-                        else:
-                            oc.species = Variant(base=choices[0], name=answer[:45] or choices[0].name)
-            case "Fakemon":
-                name = oc.species.name if isinstance(oc.species, Fakemon) else None
-                async with ModernInput(member=itx.user, target=itx).handle(
-                    label="OC's Species.",
-                    required=False,
-                    ephemeral=ephemeral,
-                    default=name,
-                ) as answer:
-                    if isinstance(answer, str):
-                        if isinstance(oc.species, Fakemon):
-                            oc.species.name = answer or oc.name
-                        else:
-                            oc.species = Fakemon(
-                                name=answer or oc.name,
-                                abilities=oc.abilities,
-                                base_image=oc.image_url,
-                                movepool=Movepool(other=oc.moveset.copy()),
-                            )
-            case _:
-                if choices:
-                    oc.species, abilities = choices[0], choices[0].abilities.copy()
-                    if len(abilities) == 1:
-                        oc.abilities = abilities.copy()
-                    else:
-                        oc.abilities &= abilities
 
         if species := oc.species:
             moves = species.total_movepool()
@@ -314,16 +284,16 @@ class Template(TemplateItem, Enum):
 
     @property
     def min_values(self):
-        return 2 if self == self.Fusion else 1
+        return 1
 
     @property
     def max_values(self):
-        return 3 if self == self.Fusion else 1
+        return 3 if self == self.Pokemon else 1
 
     @property
     def total_species(self) -> frozenset[Species]:
         match self.name:
-            case "Pokemon" | "Fusion" | "Variant":
+            case "Pokemon":
                 mon_total = Species.all()
             case _:
                 mon_total = []
@@ -632,13 +602,6 @@ class PreEvoSpeciesField(TemplateField, name="Pre-Evolution"):
     "Modify the OC's Pre evo Species"
 
     @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if isinstance(species := oc.species, Fakemon):
-            mon = species.species_evolves_from
-            if mon and not isinstance(mon, Pokemon):
-                return "Invalid Pre-Evolution Species. Has to be a Common Pokemon"
-
-    @classmethod
     def check(cls, oc: Character) -> bool:
         return isinstance(oc.species, Fakemon)
 
@@ -674,32 +637,23 @@ class TypesField(TemplateField, required=True):
     "Modify the OC's Types"
 
     @classmethod
+    def check(cls, oc: Character) -> bool:
+        return bool(oc.species)
+
+    @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if isinstance(species := oc.species, Species):
-            if not (mon_types := species.possible_types):
-                return "No possible types for current species"
-
-            if oc.types not in mon_types:
-                return ", ".join("/".join(y.name for y in x) for x in mon_types)
-
         if not oc.types:
             return "Types have not been specified."
 
-        if TypingEnum.Typeless in oc.types:
-            if len(oc.types) != 1:
-                return "Typeless can't have types, duh."
+        if TypingEnum.Typeless in oc.types and len(oc.types) != 1:
+            return "Typeless can't have types, duh."
 
-            if not isinstance(oc.species, CustomSpecies):
-                return "For Variants or Custom pokemon"
+        if TypingEnum.Shadow in oc.types and len(oc.types) != 1:
+            return "Shadow can't have types, duh."
 
         limit = max(len(oc.species.bases), 2) if isinstance(oc.species, Fusion) else 2
-
         if len(oc.types) > limit:
             return f"Max {limit} Pokemon Types: ({', '.join(x.name for x in oc.types)})"
-
-    @classmethod
-    def check(cls, oc: Character) -> bool:
-        return isinstance(oc.species, (Fusion, CustomSpecies))
 
     @classmethod
     async def on_submit(
@@ -711,20 +665,12 @@ class TypesField(TemplateField, required=True):
         ephemeral: bool = False,
     ):
         species = oc.species
+        possible_types = species.flatten_types
 
-        if single := isinstance(species, Fusion):
+        def parser(x: TypingEnum):
+            return x.name, "Traditional" if x in possible_types else ""
 
-            def parser(x: set[TypingEnum]):
-                return (y := "/".join(i.name for i in x), f"Adds the typing {y}")
-
-            values, max_values = species.possible_types, 1
-
-        else:
-
-            def parser(x: TypingEnum):
-                return (x.name, x.effect or f"Adds the typing {x.name}")
-
-            values, max_values = TypingEnum.all(TypingEnum.Shadow), 2
+        values, max_values = TypingEnum.all(), 2
 
         view = Complex(
             member=itx.user,
@@ -740,13 +686,12 @@ class TypesField(TemplateField, required=True):
             auto_conclude=False,
         )
 
-        async with view.send(
-            title=f"{template.title} Character's Typing",
-            single=single,
-            ephemeral=ephemeral,
-        ) as types:
+        async with view.send(title=f"{template.title} Character's Typing", ephemeral=ephemeral) as types:
             if types:
-                species.types = frozenset(types)
+                if isinstance(species, (Fusion, CustomSpecies)):
+                    species.types = frozenset(types)
+                else:
+                    oc.species = Variant(name=species.name, base=species, types=types)
                 progress.add(cls.name)
 
 
@@ -764,7 +709,7 @@ class MovesetField(TemplateField, required=True):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return oc.species and oc.total_movepool
+        return bool(oc.species)
 
     @classmethod
     async def on_submit(
@@ -785,7 +730,7 @@ class MovesetField(TemplateField, required=True):
         async with view.send(title=f"{template.title} Character's Moveset", ephemeral=ephemeral) as choices:
             if choices:
                 oc.moveset = frozenset(choices)
-                if isinstance(oc.species, (Fakemon, Variant, CustomParadox, CustomUltraBeast)) and not oc.movepool:
+                if isinstance(oc.species, CustomSpecies) and not oc.movepool:
                     oc.species.movepool = Movepool(tutor=oc.moveset.copy())
                     progress.add(MovepoolField.name)
                 progress.add(cls.name)
@@ -800,11 +745,7 @@ class MovepoolField(TemplateField, required=True):
 
     @classmethod
     def check(cls, oc: Character) -> bool:
-        return (
-            not isinstance(oc.species, GimmickSpecies)
-            and isinstance(oc.species, (CustomSpecies, Fusion))
-            and TypingEnum.Shadow not in oc.types
-        )
+        return TypingEnum.Shadow not in oc.types
 
     @classmethod
     async def on_submit(
@@ -847,20 +788,23 @@ class AbilitiesField(TemplateField, required=True):
         oc: Character,
         ephemeral: bool = False,
     ):
-        abilities = oc.species.abilities
-        if isinstance(oc.species, GimmickSpecies) and isinstance(oc.species.base, Species):
+        if isinstance(oc.species, Fakemon) and oc.species.species_evolves_from:
+            abilities = oc.species.species_evolves_from.abilities
+        elif isinstance(oc.species, CustomSpecies) and oc.species.base:
             abilities = oc.species.base.abilities
-        elif isinstance(oc.species, (Fakemon, Variant)) or (not abilities):
-            abilities = ALL_ABILITIES.values()
+
+        else:
+            abilities = oc.species.abilities
 
         view = Complex[Ability](
             member=itx.user,
-            values=abilities,
+            values=ALL_ABILITIES.values(),
             timeout=None,
             target=itx,
-            max_values=min(len(abilities), 1),
-            sort_key=lambda x: x.name,
+            max_values=1,
+            sort_key=lambda x: (x in abilities, x.name),
             parser=lambda x: (x.name, x.description),
+            emoji_parser=lambda x: "✅" if not abilities or x in abilities else "🔒",
             silent_mode=True,
             auto_text_component=True,
             auto_choice_info=True,
@@ -872,8 +816,6 @@ class AbilitiesField(TemplateField, required=True):
         ) as choices:
             if choices:
                 oc.abilities = frozenset(choices)
-                if isinstance(oc.species, CustomSpecies):
-                    oc.species.abilities = frozenset(choices)
                 progress.add(cls.name)
 
 
