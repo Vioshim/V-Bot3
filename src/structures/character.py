@@ -1518,7 +1518,7 @@ class Character:
                     species.types = types
                 elif species.types != types:
                     types_txt = "/".join(i.name for i in types)
-                    species = Variant(base=species, name=f"{types_txt}-Typed {species.name}")
+                    species = Variant.from_base(base=species, name=f"{types_txt}-Typed {species.name}")
                     species.types = types
 
             if ability_info:
@@ -1530,7 +1530,7 @@ class Character:
                 if isinstance(species, (Fusion, CustomSpecies)):
                     species.abilities = abilities
                 elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
-                    species = Variant(base=species, name=f"{abilities_txt}-Granted {species.name}")
+                    species = Variant.from_base(base=species, name=f"{abilities_txt}-Granted {species.name}")
                     species.abilities = abilities
                     data["species"] = species
 

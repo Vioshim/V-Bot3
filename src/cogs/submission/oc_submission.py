@@ -274,7 +274,7 @@ class Template(TemplateItem, Enum):
                                 movepool=Movepool(other=oc.moveset.copy()),
                             )
             case 1:
-                oc.species, abilities = Variant(base=choices[0]), choices[0].abilities.copy()
+                oc.species, abilities = Variant.from_base(base=choices[0]), choices[0].abilities.copy()
                 if len(abilities) == 1:
                     oc.abilities = abilities.copy()
                 else:
@@ -694,7 +694,7 @@ class TypesField(TemplateField, required=True):
                 if isinstance(species, (Fusion, CustomSpecies)):
                     species.types = frozenset(types)
                 else:
-                    oc.species = Variant(base=species, types=types)
+                    oc.species = Variant.from_base(base=species, types=types)
                 progress.add(cls.name)
 
 

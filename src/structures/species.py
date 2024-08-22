@@ -43,10 +43,7 @@ __all__ = (
     "Mega",
     "Fusion",
     "Pokemon",
-    "CustomMega",
     "Variant",
-    "CustomParadox",
-    "CustomUltraBeast",
     "ALL_SPECIES",
     "SPECIES_BY_NAME",
 )
@@ -424,9 +421,7 @@ class Species:
             return cls.from_ID(value)
 
         children_classes = {x.__name__.removeprefix("Custom").lower(): x for x in CustomSpecies.__subclasses__()}
-        children_classes |= {x.__name__.removeprefix("Custom").lower(): x for x in GimmickSpecies.__subclasses__()}
         children_classes["base"] = Variant
-        children_classes["ub"] = CustomUltraBeast
 
         item = value.copy()
         for k, v in children_classes.items():
@@ -617,8 +612,9 @@ class CustomSpecies(Species):
     "This class Represents a Custom Pokemon"
     base: Optional[Species] = None
 
-    def __init__(
-        self,
+    @classmethod
+    def from_base(
+        cls,
         name: str = "",
         base: Optional[Species] = None,
         abilities: Optional[frozenset[Ability]] = None,
@@ -630,38 +626,37 @@ class CustomSpecies(Species):
             base = Species.single_deduce(base)
 
         if base is None:
-            super().__init__(
+            return cls(
                 name=name,
                 abilities=frozenset() if abilities is None else abilities.copy(),
                 types=types or frozenset(),
                 movepool=Movepool() if movepool is None else movepool.copy(),
                 evolves_from=evolves_from,
             )
-        else:
-            super().__init__(
-                id=base.id,
-                name=name or base.name,
-                shape=base.shape,
-                height=base.height,
-                weight=base.weight,
-                HP=base.HP,
-                ATK=base.ATK,
-                DEF=base.DEF,
-                SPA=base.SPA,
-                SPD=base.SPD,
-                SPE=base.SPE,
-                banned=base.banned,
-                abilities=(abilities or base.abilities).copy(),
-                types=types or base.types.copy(),
-                movepool=(movepool or base.movepool).copy(),
-                evolves_from=evolves_from or base.id,
-                base_image=base.base_image,
-                base_image_shiny=base.base_image_shiny,
-                female_image=base.female_image,
-                female_image_shiny=base.female_image_shiny,
-            )
 
-        self.base = base
+        return cls(
+            id=base.id,
+            name=name or base.name,
+            shape=base.shape,
+            height=base.height,
+            weight=base.weight,
+            HP=base.HP,
+            ATK=base.ATK,
+            DEF=base.DEF,
+            SPA=base.SPA,
+            SPD=base.SPD,
+            SPE=base.SPE,
+            banned=base.banned,
+            abilities=(abilities or base.abilities).copy(),
+            types=types or base.types.copy(),
+            movepool=(movepool or base.movepool).copy(),
+            evolves_from=evolves_from or base.id,
+            base_image=base.base_image,
+            base_image_shiny=base.base_image_shiny,
+            female_image=base.female_image,
+            female_image_shiny=base.female_image_shiny,
+            base=base,
+        )
 
     @classmethod
     def deduce(cls, item: str):
@@ -723,107 +718,13 @@ class CustomSpecies(Species):
 
 
 @dataclass(unsafe_hash=True, slots=True)
-class GimmickSpecies(CustomSpecies):
-    "This class Represents a Gimmick Species"
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomMega(GimmickSpecies):
-    "This class Represents a Custom Mega"
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomTera(GimmickSpecies):
-    "This class Represents a Custom Tera"
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomGMax(GimmickSpecies):
-    "This class Represents a Custom GMax"
-
-
-@dataclass(unsafe_hash=True, slots=True)
 class Fakemon(CustomSpecies):
     "This class Represents a Fakemon"
 
 
 @dataclass(unsafe_hash=True, slots=True)
-class CustomParadox(CustomSpecies):
-    "This class Represents a Custom Paradox"
-
-    def __init__(
-        self,
-        base: Species,
-        name: str = "",
-        abilities: Optional[frozenset[Ability]] = None,
-        movepool: Optional[Movepool] = None,
-        types: Optional[frozenset[TypingEnum]] = None,
-    ):
-        super().__init__(
-            base=base,
-            name=name,
-            abilities=frozenset(
-                {
-                    o
-                    for x in (
-                        "Protosynthesis",
-                        "Quark Drive",
-                    )
-                    if (o := Ability.get(name=x))
-                }
-            ),
-            movepool=movepool,
-            types=types,
-        )
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class CustomUltraBeast(CustomSpecies):
-    "This class Represents a Custom Ultra Beast"
-
-    def __init__(
-        self,
-        base: Species,
-        name: str = "",
-        abilities: Optional[frozenset[Ability]] = None,
-        movepool: Optional[Movepool] = None,
-        types: Optional[frozenset[TypingEnum]] = None,
-    ):
-        super(CustomUltraBeast, self).__init__(
-            base=base,
-            name=name,
-            abilities=frozenset({o for x in ("Beast Boost",) if (o := Ability.get(name=x))}),
-            movepool=movepool,
-            types=types,
-        )
-
-
-@dataclass(unsafe_hash=True, slots=True)
 class Variant(CustomSpecies):
     "This class Represents a Variant"
-
-
-@dataclass(unsafe_hash=True, slots=True)
-class AuraBot(CustomSpecies):
-    "This class Represents an Aura Bot"
-
-    def __init__(
-        self,
-        base: Species,
-        name: str = "",
-        abilities: Optional[frozenset[Ability]] = None,
-        movepool: Optional[Movepool] = None,
-        types: Optional[frozenset[TypingEnum]] = None,
-    ):
-        super(AuraBot, self).__init__(
-            base=base,
-            name=name,
-            abilities=abilities,
-            movepool=movepool,
-            types=types,
-        )
-        self.height /= 10
-        self.weight /= 10
 
 
 class SpeciesEncoder(JSONEncoder):

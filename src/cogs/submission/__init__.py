@@ -65,7 +65,6 @@ from src.structures.ability import Ability, SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
-from src.structures.species import GimmickSpecies
 from src.structures.weather import Weather
 from src.utils.etc import MAP_ELEMENTS2, REPLY_EMOJI, WHITE_BAR, Month
 from src.utils.functions import safe_username
@@ -684,9 +683,6 @@ class Submission(commands.Cog):
             }
         ):
             oc = Character.from_mongo_dict(x)
-            if isinstance(oc.species, GimmickSpecies):
-                continue
-
             for name in oc.name.split(","):
                 if name := name.strip():
                     kwargs[name.split()[0]] = oc
