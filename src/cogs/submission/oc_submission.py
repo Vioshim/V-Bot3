@@ -258,20 +258,13 @@ class Template(TemplateItem, Enum):
             case 0 if self == self.Pokemon:
                 return
             case 1:
-                oc.species, abilities = choices[0], choices[0].abilities.copy()
+                oc.species, abilities = Variant(base=choices[0]), choices[0].abilities.copy()
                 if len(abilities) == 1:
                     oc.abilities = abilities.copy()
                 else:
                     oc.abilities &= abilities
             case 2 | 3:
                 oc.species = Fusion(*choices)
-
-        if species := oc.species:
-            moves = species.total_movepool()
-            if not oc.moveset and len(moves) <= 4:
-                oc.moveset = frozenset(moves)
-            if not oc.abilities and len(species.abilities) == 1:
-                oc.abilities = species.abilities.copy()
 
     @property
     def min_values(self):
@@ -801,7 +794,6 @@ class AbilitiesField(TemplateField, required=True):
             silent_mode=True,
             auto_text_component=True,
             auto_choice_info=True,
-            auto_conclude=False,
         )
         async with view.send(
             title=f"{template.title} Character's Abilities",
