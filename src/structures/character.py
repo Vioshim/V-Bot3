@@ -902,11 +902,11 @@ class Character:
                 elif TypingEnum.Typeless in mon.types:
                     phrase = "Typeless"
                 else:
-                    phrase = mon.__class__.__name__.removeprefix("Custom")
+                    phrase = ""
 
                 if mon.base and mon.base.name != mon.name:
                     phrase = {"UltraBeast": "UB"}.get(phrase, phrase)
-                    phrase = f"{phrase} {mon.base.name}"
+                    phrase = f"{phrase} {mon.base.name}".strip()
 
                 return phrase, mon.name
             case mon if isinstance(mon, Species):
