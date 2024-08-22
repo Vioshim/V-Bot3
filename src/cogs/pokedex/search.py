@@ -46,15 +46,7 @@ from src.structures.character import (
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
 from src.structures.pronouns import Pronoun
-from src.structures.species import (
-    CustomMega,
-    CustomParadox,
-    CustomUltraBeast,
-    Fakemon,
-    Fusion,
-    Species,
-    Variant,
-)
+from src.structures.species import CustomSpecies, Fakemon, Fusion, Species
 
 STANDARD = [
     Kind.Common,
@@ -535,7 +527,7 @@ class OCGroupByShape(OCGroupBy[str]):
                     data.setdefault(mon.shape, set())
                     data[mon.shape].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant, CustomParadox, CustomUltraBeast)):
+                if isinstance(species, CustomSpecies) and species.base:
                     shape = species.base.shape
                 elif isinstance(species, Fakemon):
                     if mon := species.species_evolves_from:
@@ -595,7 +587,7 @@ class OCGroupByEvoLine(OCGroupBy[Species]):
                     data.setdefault(mon, set())
                     data[mon].add(oc)
             elif mon := species:
-                if isinstance(species, (CustomMega, Variant, CustomParadox, CustomUltraBeast)) and species.base:
+                if isinstance(species, CustomSpecies) and species.base:
                     mon = species.base.first_evo
                 elif isinstance(species, Fakemon):
                     mon = species.species_evolves_from
