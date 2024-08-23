@@ -643,7 +643,7 @@ class TypesField(TemplateField, required=True):
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         if not oc.types:
-            return "Types have not been specified."
+            oc.types = frozenset({TypingEnum.Typeless})
 
         if TypingEnum.Typeless in oc.types and len(oc.types) != 1:
             return "Typeless can't have types, duh."
@@ -653,7 +653,7 @@ class TypesField(TemplateField, required=True):
 
         limit = max(len(oc.species.bases), 2) if isinstance(oc.species, Fusion) else 2
         if len(oc.types) > limit:
-            return f"Max {limit} Pokemon Types: ({', '.join(x.name for x in oc.types)})"
+            return f"Max {limit} Pokemon Types"
 
     @classmethod
     async def on_submit(
@@ -771,13 +771,6 @@ class MovepoolField(TemplateField, required=True):
 
 class AbilitiesField(TemplateField, required=True):
     "Modify the OC's Abilities"
-
-    @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if len(oc.abilities) != 1:
-            return "You can only have one ability."
-
-        return ", ".join(x.name for x in oc.abilities if x not in oc.species.abilities)
 
     @classmethod
     def check(cls, oc: Character) -> bool:
