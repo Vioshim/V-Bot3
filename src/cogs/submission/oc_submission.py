@@ -476,7 +476,7 @@ class PronounField(TemplateField, required=True):
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
         if not oc.pronoun:
-            return "No pronoun added."
+            oc.pronoun = frozenset({Pronoun.Them})
 
     @classmethod
     async def on_submit(
