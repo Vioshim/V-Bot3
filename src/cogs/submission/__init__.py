@@ -248,7 +248,7 @@ class Submission(commands.Cog):
                             member = await self.bot.fetch_user(member.id)
 
                 if isinstance(member, (User, Member)):
-                    thread = await thread.edit(name=member.display_name, archived=False)
+                    thread = await thread.edit(name=member.name, archived=False)
                     file = await member.display_avatar.with_size(4096).to_file()
                     msg = await msg.edit(content=member.mention, attachments=[file])
             except DiscordException:
@@ -264,7 +264,7 @@ class Submission(commands.Cog):
             if isinstance(member, (User, Member)):
                 file = await member.display_avatar.with_size(4096).to_file()
                 x = await channel.create_thread(
-                    name=member.display_name,
+                    name=member.name,
                     content=member.mention,
                     file=file,
                     allowed_mentions=AllowedMentions(users=[member]),
@@ -818,8 +818,8 @@ class Submission(commands.Cog):
         if data := await db.find_one({"user": member.id, "server": member.guild.id}):
             thread = await self.list_update(member, member.guild.id, data)
             await thread.edit(
-                name=member.display_name if thread.name != member.display_name else MISSING,
-                reason=f"{thread.name} -> {member.display_name}",
+                name=member.name if thread.name != member.name else MISSING,
+                reason=f"{thread.name} -> {member.name}",
                 archived=False,
             )
 
@@ -828,7 +828,7 @@ class Submission(commands.Cog):
         db = self.bot.mongo_db("Roleplayers")
         if data := await db.find_one({"user": member.id, "server": member.guild.id}):
             thread = await self.list_update(member, member.guild.id, data)
-            await thread.edit(name=member.display_name, reason=f"Member left: {member.display_name}", archived=True)
+            await thread.edit(name=member.name, reason=f"Member left: {member.name}", archived=True)
 
     @commands.Cog.listener()
     async def on_member_update(self, past: Member, now: Member):
