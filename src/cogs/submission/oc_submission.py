@@ -642,9 +642,6 @@ class TypesField(TemplateField, required=True):
 
     @classmethod
     def evaluate(cls, oc: Character) -> Optional[str]:
-        if not oc.types:
-            oc.types = frozenset({TypingEnum.Typeless})
-
         if TypingEnum.Typeless in oc.types and len(oc.types) != 1:
             return "Typeless can't have types, duh."
 

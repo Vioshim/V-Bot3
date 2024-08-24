@@ -716,7 +716,10 @@ class Character:
 
     @property
     def types(self) -> frozenset[TypingEnum]:
-        return frozenset(self.species.types) if self.species else frozenset()
+        mon_types = [TypingEnum.Typeless]
+        if self.species and self.species.types:
+            mon_types = self.species.types
+        return frozenset(mon_types)
 
     @property
     def possible_types(self) -> frozenset[frozenset[TypingEnum]]:
