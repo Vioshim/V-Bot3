@@ -57,15 +57,7 @@ from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
-from src.structures.character import (
-    AgeGroup,
-    Character,
-    Gender,
-    Nature,
-    Size,
-    Trope,
-    Weight,
-)
+from src.structures.character import AgeGroup, Character, Gender, Nature, Size, Weight
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pokeball import Pokeball
@@ -1062,55 +1054,6 @@ class ImageField(TemplateField, required=True):
                 oc.image_url = text or default_image
                 if oc.image:
                     progress.add(cls.name)
-
-
-class TropeField(TemplateField, required=True):
-    "Modify the OC's Trope"
-
-    @classmethod
-    def evaluate(cls, oc: Character) -> Optional[str]:
-        if len(oc.tropes) > 3:
-            return "Max 3 Tropes."
-
-        if Trope.GM in oc.tropes:
-            return "Locked to Admin."
-
-    @classmethod
-    async def on_submit(
-        cls,
-        itx: Interaction[CustomBot],
-        template: Template,
-        progress: set[str],
-        oc: Character,
-        ephemeral: bool = False,
-    ):
-
-        if itx.permissions.administrator:
-            tropes = [x for x in Trope if x != Trope.GM]
-        else:
-            tropes = Trope
-
-        view = Complex[Trope](
-            member=itx.user,
-            target=itx,
-            timeout=None,
-            values=tropes,
-            parser=lambda x: (x.name.replace("_", " "), x.value),
-            sort_key=lambda x: x.name,
-            silent_mode=True,
-            auto_conclude=False,
-            auto_text_component=True,
-            auto_choice_info=True,
-            max_values=3,
-        )
-        view.choices.update(oc.tropes)
-        async with view.send(
-            title=f"{template.title} Character's Tropes.",
-            description="\n".join(f"* {x.name.replace('_', ' ')}" for x in oc.tropes),
-            ephemeral=ephemeral,
-        ) as tropes:
-            oc.tropes = tropes
-            progress.add(cls.name)
 
 
 class PokeballField(TemplateField):

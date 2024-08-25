@@ -171,14 +171,6 @@ class Kind(Enum):
                 return "MEGA"
             case self.Fusion:
                 return "FUSION"
-            case self.CustomMega:
-                return "CUSTOM MEGA"
-            case self.CustomUltraBeast:
-                return "CUSTOM ULTRA BEAST"
-            case self.CustomParadox:
-                return "CUSTOM PARADOX"
-            case self.CustomGMax:
-                return "CUSTOM GMAX"
 
     @classmethod
     def associated(cls, name: str) -> Optional[Kind]:
@@ -342,99 +334,6 @@ class Nature(Enum):
     # fmt: on
 
 
-class Trope(Enum):
-    Common = "Common character."
-    Bartender = "Alcoholic drink maker."
-    Drifter = "Comes from another world."
-    Feral = "Feral character."
-    Pack_Leader = "Feral pack leader."
-    Reploid = "Sentient robot or android."
-    Tribal = "Live like people and ferals."
-    Ditto = "Shape-shifter, can transform into anything."
-    Illusionist = "Illusionist, can create illusions."
-    Spirit = "Good, neutral or evil spirit."
-    Alchemist = "Master of potions and transmutations."
-    Chef = "Master of cooking."
-    Inventor = "Creates gadgets and machines."
-    Naturalist = "Loves nature and animals."
-    Guard = "Protects others."
-    Healer = "Heals others."
-    Weaponry = "Master of weapons."
-    Armory = "Master of armor."
-    Prime = "Player character, external to the story."
-    Player = Prime
-    GM = "Game Master character."
-    Monk = "Handles spiritual matters."
-    Gambler = "Risk-taker, loves games of chance."
-    Librarian = "Loves books and knowledge."
-    Researcher = "Writes and researches."
-    Antagonist = "Villain or rival character."
-    Asshole = "Rude and mean character."
-    Aura_Bot = "Redwood network reploid assistant."
-    Adopt_Care = "Seeking adoption, foster or care."
-    Caretaker = "Cares for others, like a parent."
-    Tailor = "Makes clothes and accessories."
-    Fashion_Model = "Poses for art and fashion."
-    Fighter = "Fights for fun or sport."
-    Brawler = "Fights for survival."
-    Warrior = "Fights for honor."
-    Gladiator = "Fights for entertainment."
-    Orb_Launcher = "Orb launcher, uses orbs."
-    Lorekeeper = "Dungeon researcher and historian."
-    Miner = "Digs and mines for resources."
-    Blacksmith = "Makes weapons and armor."
-    Enchanter = "Enchants items and weapons."
-    Merchant = "Sells goods and services."
-    Vigilante = "Fights crime and corruption."
-    Mercenary = "Hired for missions and tasks."
-    Entertainer = "Performs for others."
-    Musician = "Plays or composes music."
-    Thief = "Steals for profit or fun."
-    Politician = "Affiliated with politics."
-    Clairvoyant = "Reads past, predicts behavior."
-    Carpenter = "Builds and repairs structures."
-    Engineer = "Designs and builds machines."
-    Mechanic = "Repairs and maintains machines."
-    Transport = "Drives or pilots pokemon or vehicles."
-    Fisherman = "Catches fish and seafood."
-    Hunter = "Hunts animals for food or sport."
-    Farmer = "Grows crops and raises animals."
-    Gardener = "Cares for plants and flowers."
-    Herbalist = "Uses plants for medicine."
-    Doctor = "Heals and treats injuries."
-    Nurse = "Assists doctors and patients."
-    Surgeon = "Performs surgeries and operations."
-    Therapist = "Counsels and treats mental health."
-    Mage = "Uses magic and spells."
-    Sorcerer = "Uses dark magic and curses."
-    Wizard = "Uses arcane magic and rituals."
-    Warlock = "Uses demonic magic and pacts."
-    Witch = "Uses nature magic and potions."
-    Shaman = "Uses spirit magic and rituals."
-    Bomber = "Uses explosives and bombs."
-    Analyst = "Analyzes data and information."
-    Guild = "Direct/indirect member of the guild."
-    Stylist = "Cosmetic and fashion stylist."
-    Geneticist = "Studies and manipulates genes."
-    Sportsman = "Competes in sports and games."
-    Milkman = "Delivers milk and dairy products."
-    Baker = "Makes and sells bread and pastries."
-    Butcher = "Sells meat and animal products."
-    Barista = "Makes and serves coffee and tea."
-    Mycologist = "Studies and cultivates mushrooms."
-    Angel = "Spirit, promotes goodness and harmony"
-    Demon = "Spirit, promote chaos and harm"
-    Businessman = "Runs and manages businesses."
-    Lawyer = "Defends and prosecutes in court."
-    Detective = "Solves crimes and mysteries."
-    Journalist = "Reports news and stories."
-    Photographer = "Takes and edits photos."
-    Artist = "Creates art and crafts."
-    Writer = "Writes stories and books."
-    Judge = "Decides and enforces laws."
-    Fourth_Wall = "Breaks the fourth wall."
-
-
 class Gender(Enum):
     Male = "Has male features in its body."
     Female = "Has female features in its body."
@@ -587,7 +486,6 @@ class Character:
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
-    tropes: frozenset[Trope] = field(default_factory=frozenset)
     pokeball: Optional[Pokeball] = None
     gender: Gender = Gender.Genderless
 
@@ -607,7 +505,6 @@ class Character:
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
-        data["tropes"] = [x.name for x in self.tropes]
         data["nature"] = self.nature.name if self.nature else None
         data["gender"] = self.gender and self.gender.name
         if isinstance(self.sp_ability, SpAbility):
@@ -682,15 +579,6 @@ class Character:
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-
-        if isinstance(self.tropes, str):
-            self.tropes = [self.tropes]
-
-        if isinstance(self.tropes, list):
-            try:
-                self.tropes = frozenset({Trope[x] for x in self.tropes})
-            except KeyError:
-                self.tropes = frozenset()
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -923,15 +811,6 @@ class Character:
             c_embed.add_field(
                 name=f"Ability: {ability.name}",
                 value=f"> {ability.description}",
-                inline=False,
-            )
-
-        if tropes := self.tropes:
-            c_embed.add_field(
-                name="Tropes",
-                value="\n".join(
-                    f"* {x.name.replace('_', ' ')}: {x.value}" for x in sorted(tropes, key=lambda x: x.name)
-                ),
                 inline=False,
             )
 

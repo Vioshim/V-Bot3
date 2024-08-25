@@ -40,7 +40,6 @@ from src.structures.character import (
     Nature,
     Size,
     SizeCategory,
-    Trope,
     Weight,
 )
 from src.structures.mon_typing import TypingEnum
@@ -712,21 +711,6 @@ class OCGroupByUniqueTrait(OCGroupBy[UTraitKind | None]):
         return {k: frozenset(v) for k, v in groupby(ocs, key=lambda x: x.sp_ability.kind if x.sp_ability else None)}
 
 
-class OCGroupByTrope(OCGroupBy[Trope]):
-    @staticmethod
-    def inner_parser(group: Trope, elements: list[Character]):
-        return group.name.replace("_", " "), f"Carried by {len(elements):02d} OCs."
-
-    @classmethod
-    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
-        data: dict[Trope, set[Character]] = {}
-        for oc in ocs:
-            for x in oc.tropes:
-                data.setdefault(x, set())
-                data[x].add(oc)
-        return {k: frozenset(v) for k, v in data.items()}
-
-
 class OCGroupByNature(OCGroupBy[Nature | None]):
     @classmethod
     def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
@@ -777,7 +761,6 @@ class GroupBy(Enum):
     HiddenPower = OCGroupByHiddenPower
     Nature = OCGroupByNature
     UniqueTrait = OCGroupByUniqueTrait
-    Trope = OCGroupByTrope
     Height = OCGroupByHeight
     Weight = OCGroupByWeight
 
