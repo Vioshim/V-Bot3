@@ -61,7 +61,7 @@ from src.cogs.submission.oc_submission import (
     ModCharactersView,
     SubmissionView,
 )
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.character import Character, CharacterArg
 from src.structures.move import Move
@@ -158,11 +158,11 @@ class Submission(commands.Cog):
     async def info_checker(self, itx: Interaction[CustomBot], message: Message):
         resp: InteractionResponse = itx.response
         await resp.defer(ephemeral=True, thinking=True)
-        moves: list[SpAbility | Ability | Move] = []
+        moves: list[SpAbility | Move] = []
         db = self.bot.mongo_db("Characters")
         if data := await db.find_one({"id": message.id, "server": itx.guild_id}):
             oc = Character.from_mongo_dict(data)
-            moves = list(oc.moveset) + list(oc.abilities)
+            moves = list(oc.moveset)
             if sp_ability := oc.sp_ability:
                 moves.append(sp_ability)
         elif text := message.content:
@@ -170,7 +170,7 @@ class Submission(commands.Cog):
                 x[0]
                 for x in process.extract(
                     text,
-                    choices=Move.all() | Ability.all(),
+                    choices=Move.all(),
                     score_cutoff=60,
                     processor=lambda x: getattr(x, "name", x),
                 )

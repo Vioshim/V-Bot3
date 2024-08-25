@@ -55,7 +55,6 @@ from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
-from src.structures.ability import ALL_ABILITIES, Ability
 from src.structures.bot import CustomBot
 from src.structures.character import AgeGroup, Character, Gender, Nature, Size, Weight
 from src.structures.mon_typing import TypingEnum
@@ -261,16 +260,11 @@ class Template(TemplateItem, Enum):
                         else:
                             oc.species = Fakemon(
                                 name=answer or oc.name,
-                                abilities=oc.abilities,
                                 base_image=oc.image_url,
                                 movepool=Movepool(other=oc.moveset.copy()),
                             )
             case 1:
-                oc.species, abilities = Variant.from_base(base=choices[0]), choices[0].abilities.copy()
-                if len(abilities) == 1:
-                    oc.abilities = abilities.copy()
-                else:
-                    oc.abilities &= abilities
+                oc.species = Variant.from_base(base=choices[0])
             case 2 | 3:
                 oc.species = Fusion(*choices)
 
@@ -758,51 +752,6 @@ class MovepoolField(TemplateField, required=True):
         progress.add(cls.name)
 
 
-class AbilitiesField(TemplateField, required=True):
-    "Modify the OC's Abilities"
-
-    @classmethod
-    def check(cls, oc: Character) -> bool:
-        return bool(oc.species)
-
-    @classmethod
-    async def on_submit(
-        cls,
-        itx: Interaction[CustomBot],
-        template: Template,
-        progress: set[str],
-        oc: Character,
-        ephemeral: bool = False,
-    ):
-        if isinstance(oc.species, Fakemon) and oc.species.species_evolves_from:
-            abilities = oc.species.species_evolves_from.abilities
-        elif isinstance(oc.species, CustomSpecies) and oc.species.base:
-            abilities = oc.species.base.abilities
-        else:
-            abilities = oc.species.abilities
-
-        view = Complex[Ability](
-            member=itx.user,
-            values=ALL_ABILITIES.values(),
-            timeout=None,
-            target=itx,
-            max_values=1,
-            sort_key=lambda x: (x not in abilities, x.name),
-            parser=lambda x: (x.name, x.description),
-            emoji_parser=lambda x: "✅" if not abilities or x in abilities else "🔒",
-            silent_mode=True,
-            auto_text_component=True,
-            auto_choice_info=True,
-        )
-        async with view.send(
-            title=f"{template.title} Character's Abilities",
-            ephemeral=ephemeral,
-        ) as choices:
-            if choices:
-                oc.abilities = frozenset(choices)
-                progress.add(cls.name)
-
-
 class HiddenPowerField(TemplateField, name="Hidden Power"):
     "Typing that matches with their soul's"
 
@@ -1110,12 +1059,6 @@ class CreationOCView(Basic):
         self.ephemeral = True
         if not isinstance(template, Template):
             name = template if isinstance(template, str) else type(oc.species).__name__
-            if name == "Fakemon":
-                if get(oc.abilities, name="Beast Boost"):
-                    name = "FakeUltraBeast"
-                elif get(oc.abilities, name="Protosynthesis") or get(oc.abilities, name="Quark Drive"):
-                    name = "FakeParadox"
-
             try:
                 template = Template[name]
             except KeyError:

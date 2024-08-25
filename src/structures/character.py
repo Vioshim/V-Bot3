@@ -46,7 +46,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
@@ -474,7 +474,6 @@ class Character:
     backstory: Optional[str] = None
     personality: Optional[str] = None
     extra: Optional[str] = None
-    abilities: frozenset[Ability] = field(default_factory=frozenset)
     moveset: frozenset[Move] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
     url: str = ""
@@ -496,7 +495,6 @@ class Character:
 
     def to_mongo_dict(self):
         data = asdict(self)
-        data["abilities"] = [x.id for x in self.abilities]
         data["pokeball"] = self.pokeball and self.pokeball.name
         data["species"] = self.species and self.species.as_data()
         data["age"] = self.age.name
@@ -538,9 +536,6 @@ class Character:
             self.server = 1196879060173852702
         if isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
-        if isinstance(self.abilities, str):
-            self.abilities = [self.abilities]
-        self.abilities = Ability.deduce_many(*self.abilities)
         if isinstance(self.moveset, str):
             self.moveset = [self.moveset]
         self.moveset = Move.deduce_many(*self.moveset)
@@ -573,9 +568,11 @@ class Character:
                 self.nature = Nature[self.nature]
             except KeyError:
                 self.nature = None
+
         if isinstance(self.pronoun, str):
             self.pronoun = [self.pronoun]
         self.pronoun = Pronoun.deduce_many(*self.pronoun)
+
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
@@ -807,13 +804,6 @@ class Character:
             types_text = "".join(str(x.emoji) for x in self.types)
             c_embed.add_field(name=f"{name1}\n{types_text}", value=name2)
 
-        for ability in sorted(self.abilities, key=lambda x: x.name):
-            c_embed.add_field(
-                name=f"Ability: {ability.name}",
-                value=f"> {ability.description}",
-                inline=False,
-            )
-
         if (sp_ability := self.sp_ability) and sp_ability.valid:
             sp_embed = Embed(
                 title=name if (name := sp_ability.name[:100]) else f"{self.name[:92]}'s Trait",
@@ -912,14 +902,6 @@ class Character:
 
         if img_file := await bot.get_file(self.image_url):
             doc.add_picture(img_file.fp, width=Inches(6))
-
-        if self.abilities:
-            doc.add_heading("Abilities", level=1)
-            table = doc.add_table(rows=0, cols=2)
-            for item in sorted(self.abilities, key=lambda x: x.name):
-                row_cells = table.add_row().cells
-                row_cells[0].text = item.name
-                row_cells[1].text = item.description
 
         if self.moveset:
             doc.add_heading("Favorite Moves", level=1)
@@ -1036,12 +1018,6 @@ class Character:
         if img_file := await bot.get_file(self.image_url):
             img_stream = BytesIO(img_file.fp.read())
             content.append(Image(img_stream))
-
-        # Add abilities and moveset sections
-        if self.abilities:
-            content.append(Paragraph("Abilities", styles["Heading2"]))
-            for item in self.abilities:
-                content.append(Paragraph(f"<strong>{item.name}</strong> - {item.description}", styles["Normal"]))
 
         if self.moveset:
             content.append(Paragraph("Favorite Moves", styles["Heading2"]))
@@ -1353,7 +1329,6 @@ class Character:
                 data["moveset"] = moveset
 
         type_info = common_pop_get(data, "types", "type")
-        ability_info = common_pop_get(data, "abilities", "ability")
         movepool = Movepool.from_dict(**data.pop("movepool", dict(event=data.get("moveset", set()))))
         data["sp_ability"] = common_pop_get(data, "spability", "sp_ability", "unique_trait")
 
@@ -1367,19 +1342,6 @@ class Character:
                     types_txt = "/".join(i.name for i in types)
                     species = Variant.from_base(base=species, name=f"{types_txt}-Typed {species.name}")
                     species.types = types
-
-            if ability_info:
-                if isinstance(ability_info, str):
-                    ability_info = [ability_info]
-                if abilities := Ability.deduce_many(*ability_info):
-                    data["abilities"] = abilities
-
-                if isinstance(species, (Fusion, CustomSpecies)):
-                    species.abilities = abilities
-                elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
-                    species = Variant.from_base(base=species, name=f"{abilities_txt}-Granted {species.name}")
-                    species.abilities = abilities
-                    data["species"] = species
 
             if isinstance(species, CustomSpecies) and (species.base is None or species.base.movepool != movepool):
                 species.movepool = movepool

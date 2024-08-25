@@ -122,7 +122,7 @@ def age_parser(text: str, oc: Character):
     if not text:
         return True
 
-    age = oc.age or 0
+    age = oc.age.key
 
     text = text.replace(",", ";").replace("|", ";")
     for item in map(lambda x: x.strip(), text.split(";")):
@@ -417,7 +417,6 @@ class GroupByArg(StrEnum):
     Gender = auto()
     Pronoun = auto()
     Move = auto()
-    Ability = auto()
     Member = auto()
     HiddenPower = auto()
     Nature = auto()
@@ -431,7 +430,6 @@ class FindFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pr
     name: Optional[str] = commands.flag(default=None, description="Name to look for", positional=True)
     kind: Optional[Kind] = commands.flag(default=None, description="Kind to look for")
     type: Optional[TypingEnum] = commands.flag(default=None, description="Type to look for")
-    ability: Optional[AbilityArg] = commands.flag(default=None, description="Ability to look for")
     move: Optional[MoveArg] = commands.flag(default=None, description="Move to look for")
     species: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Species to look for")
     fused1: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="Fusion to look for")
@@ -658,21 +656,6 @@ class OCGroupByMove(OCGroupBy[Move]):
         return {k: frozenset(v) for k, v in data.items()}
 
 
-class OCGroupByAbility(OCGroupBy[Ability]):
-    @staticmethod
-    def inner_parser(group: Ability, elements: list[Character]):
-        return group.name, f"Carried by {len(elements):02d} OCs."
-
-    @classmethod
-    def method(cls, ctx: commands.Context[CustomBot], ocs: Iterable[Character], flags: FindFlags):
-        data: dict[Ability, set[Character]] = {}
-        for oc in ocs:
-            for x in oc.abilities:
-                data.setdefault(x, set())
-                data[x].add(oc)
-        return {k: frozenset(v) for k, v in data.items()}
-
-
 class OCGroupByMember(OCGroupBy[Member]):
     @staticmethod
     def inner_parser(group: Member, elements: list[Character]):
@@ -756,7 +739,6 @@ class GroupBy(Enum):
     Gender = OCGroupByGender
     Pronoun = OCGroupByPronoun
     Move = OCGroupByMove
-    Ability = OCGroupByAbility
     Member = OCGroupByMember
     HiddenPower = OCGroupByHiddenPower
     Nature = OCGroupByNature
