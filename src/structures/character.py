@@ -46,7 +46,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from src.structures.ability import Ability, SpAbility
+from src.structures.ability import SpAbility
 from src.structures.bot import CustomBot
 from src.structures.mon_typing import TypingEnum
 from src.structures.move import Move
@@ -171,14 +171,6 @@ class Kind(Enum):
                 return "MEGA"
             case self.Fusion:
                 return "FUSION"
-            case self.CustomMega:
-                return "CUSTOM MEGA"
-            case self.CustomUltraBeast:
-                return "CUSTOM ULTRA BEAST"
-            case self.CustomParadox:
-                return "CUSTOM PARADOX"
-            case self.CustomGMax:
-                return "CUSTOM GMAX"
 
     @classmethod
     def associated(cls, name: str) -> Optional[Kind]:
@@ -342,99 +334,6 @@ class Nature(Enum):
     # fmt: on
 
 
-class Trope(Enum):
-    Common = "Common character."
-    Bartender = "Alcoholic drink maker."
-    Drifter = "Comes from another world."
-    Feral = "Feral character."
-    Pack_Leader = "Feral pack leader."
-    Reploid = "Sentient robot or android."
-    Tribal = "Live like people and ferals."
-    Ditto = "Shape-shifter, can transform into anything."
-    Illusionist = "Illusionist, can create illusions."
-    Spirit = "Good, neutral or evil spirit."
-    Alchemist = "Master of potions and transmutations."
-    Chef = "Master of cooking."
-    Inventor = "Creates gadgets and machines."
-    Naturalist = "Loves nature and animals."
-    Guard = "Protects others."
-    Healer = "Heals others."
-    Weaponry = "Master of weapons."
-    Armory = "Master of armor."
-    Prime = "Player character, external to the story."
-    Player = Prime
-    GM = "Game Master character."
-    Monk = "Handles spiritual matters."
-    Gambler = "Risk-taker, loves games of chance."
-    Librarian = "Loves books and knowledge."
-    Researcher = "Writes and researches."
-    Antagonist = "Villain or rival character."
-    Asshole = "Rude and mean character."
-    Aura_Bot = "Redwood network reploid assistant."
-    Adopt_Care = "Seeking adoption, foster or care."
-    Caretaker = "Cares for others, like a parent."
-    Tailor = "Makes clothes and accessories."
-    Fashion_Model = "Poses for art and fashion."
-    Fighter = "Fights for fun or sport."
-    Brawler = "Fights for survival."
-    Warrior = "Fights for honor."
-    Gladiator = "Fights for entertainment."
-    Orb_Launcher = "Orb launcher, uses orbs."
-    Lorekeeper = "Dungeon researcher and historian."
-    Miner = "Digs and mines for resources."
-    Blacksmith = "Makes weapons and armor."
-    Enchanter = "Enchants items and weapons."
-    Merchant = "Sells goods and services."
-    Vigilante = "Fights crime and corruption."
-    Mercenary = "Hired for missions and tasks."
-    Entertainer = "Performs for others."
-    Musician = "Plays or composes music."
-    Thief = "Steals for profit or fun."
-    Politician = "Affiliated with politics."
-    Clairvoyant = "Reads past, predicts behavior."
-    Carpenter = "Builds and repairs structures."
-    Engineer = "Designs and builds machines."
-    Mechanic = "Repairs and maintains machines."
-    Transport = "Drives or pilots pokemon or vehicles."
-    Fisherman = "Catches fish and seafood."
-    Hunter = "Hunts animals for food or sport."
-    Farmer = "Grows crops and raises animals."
-    Gardener = "Cares for plants and flowers."
-    Herbalist = "Uses plants for medicine."
-    Doctor = "Heals and treats injuries."
-    Nurse = "Assists doctors and patients."
-    Surgeon = "Performs surgeries and operations."
-    Therapist = "Counsels and treats mental health."
-    Mage = "Uses magic and spells."
-    Sorcerer = "Uses dark magic and curses."
-    Wizard = "Uses arcane magic and rituals."
-    Warlock = "Uses demonic magic and pacts."
-    Witch = "Uses nature magic and potions."
-    Shaman = "Uses spirit magic and rituals."
-    Bomber = "Uses explosives and bombs."
-    Analyst = "Analyzes data and information."
-    Guild = "Direct/indirect member of the guild."
-    Stylist = "Cosmetic and fashion stylist."
-    Geneticist = "Studies and manipulates genes."
-    Sportsman = "Competes in sports and games."
-    Milkman = "Delivers milk and dairy products."
-    Baker = "Makes and sells bread and pastries."
-    Butcher = "Sells meat and animal products."
-    Barista = "Makes and serves coffee and tea."
-    Mycologist = "Studies and cultivates mushrooms."
-    Angel = "Spirit, promotes goodness and harmony"
-    Demon = "Spirit, promote chaos and harm"
-    Businessman = "Runs and manages businesses."
-    Lawyer = "Defends and prosecutes in court."
-    Detective = "Solves crimes and mysteries."
-    Journalist = "Reports news and stories."
-    Photographer = "Takes and edits photos."
-    Artist = "Creates art and crafts."
-    Writer = "Writes stories and books."
-    Judge = "Decides and enforces laws."
-    Fourth_Wall = "Breaks the fourth wall."
-
-
 class Gender(Enum):
     Male = "Has male features in its body."
     Female = "Has female features in its body."
@@ -575,7 +474,6 @@ class Character:
     backstory: Optional[str] = None
     personality: Optional[str] = None
     extra: Optional[str] = None
-    abilities: frozenset[Ability] = field(default_factory=frozenset)
     moveset: frozenset[Move] = field(default_factory=frozenset)
     sp_ability: Optional[SpAbility] = None
     url: str = ""
@@ -587,7 +485,6 @@ class Character:
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
     hidden_info: Optional[str] = None
-    tropes: frozenset[Trope] = field(default_factory=frozenset)
     pokeball: Optional[Pokeball] = None
     gender: Gender = Gender.Genderless
 
@@ -598,7 +495,6 @@ class Character:
 
     def to_mongo_dict(self):
         data = asdict(self)
-        data["abilities"] = [x.id for x in self.abilities]
         data["pokeball"] = self.pokeball and self.pokeball.name
         data["species"] = self.species and self.species.as_data()
         data["age"] = self.age.name
@@ -607,7 +503,6 @@ class Character:
         data["pronoun"] = [x.name for x in self.pronoun]
         data["moveset"] = [x.id for x in self.moveset]
         data["hidden_power"] = self.hidden_power.name if self.hidden_power else None
-        data["tropes"] = [x.name for x in self.tropes]
         data["nature"] = self.nature.name if self.nature else None
         data["gender"] = self.gender and self.gender.name
         if isinstance(self.sp_ability, SpAbility):
@@ -641,9 +536,6 @@ class Character:
             self.server = 1196879060173852702
         if isinstance(self.sp_ability, dict):
             self.sp_ability = SpAbility(**self.sp_ability)
-        if isinstance(self.abilities, str):
-            self.abilities = [self.abilities]
-        self.abilities = Ability.deduce_many(*self.abilities)
         if isinstance(self.moveset, str):
             self.moveset = [self.moveset]
         self.moveset = Move.deduce_many(*self.moveset)
@@ -676,21 +568,14 @@ class Character:
                 self.nature = Nature[self.nature]
             except KeyError:
                 self.nature = None
+
         if isinstance(self.pronoun, str):
             self.pronoun = [self.pronoun]
         self.pronoun = Pronoun.deduce_many(*self.pronoun)
+
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
-
-        if isinstance(self.tropes, str):
-            self.tropes = [self.tropes]
-
-        if isinstance(self.tropes, list):
-            try:
-                self.tropes = frozenset({Trope[x] for x in self.tropes})
-            except KeyError:
-                self.tropes = frozenset()
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -716,7 +601,10 @@ class Character:
 
     @property
     def types(self) -> frozenset[TypingEnum]:
-        return frozenset(self.species.types) if self.species else frozenset()
+        mon_types = [TypingEnum.Typeless]
+        if self.species and self.species.types:
+            mon_types = self.species.types
+        return frozenset(mon_types)
 
     @property
     def possible_types(self) -> frozenset[frozenset[TypingEnum]]:
@@ -916,22 +804,6 @@ class Character:
             types_text = "".join(str(x.emoji) for x in self.types)
             c_embed.add_field(name=f"{name1}\n{types_text}", value=name2)
 
-        for ability in sorted(self.abilities, key=lambda x: x.name):
-            c_embed.add_field(
-                name=f"Ability: {ability.name}",
-                value=f"> {ability.description}",
-                inline=False,
-            )
-
-        if tropes := self.tropes:
-            c_embed.add_field(
-                name="Tropes",
-                value="\n".join(
-                    f"* {x.name.replace('_', ' ')}: {x.value}" for x in sorted(tropes, key=lambda x: x.name)
-                ),
-                inline=False,
-            )
-
         if (sp_ability := self.sp_ability) and sp_ability.valid:
             sp_embed = Embed(
                 title=name if (name := sp_ability.name[:100]) else f"{self.name[:92]}'s Trait",
@@ -1030,14 +902,6 @@ class Character:
 
         if img_file := await bot.get_file(self.image_url):
             doc.add_picture(img_file.fp, width=Inches(6))
-
-        if self.abilities:
-            doc.add_heading("Abilities", level=1)
-            table = doc.add_table(rows=0, cols=2)
-            for item in sorted(self.abilities, key=lambda x: x.name):
-                row_cells = table.add_row().cells
-                row_cells[0].text = item.name
-                row_cells[1].text = item.description
 
         if self.moveset:
             doc.add_heading("Favorite Moves", level=1)
@@ -1154,12 +1018,6 @@ class Character:
         if img_file := await bot.get_file(self.image_url):
             img_stream = BytesIO(img_file.fp.read())
             content.append(Image(img_stream))
-
-        # Add abilities and moveset sections
-        if self.abilities:
-            content.append(Paragraph("Abilities", styles["Heading2"]))
-            for item in self.abilities:
-                content.append(Paragraph(f"<strong>{item.name}</strong> - {item.description}", styles["Normal"]))
 
         if self.moveset:
             content.append(Paragraph("Favorite Moves", styles["Heading2"]))
@@ -1471,7 +1329,6 @@ class Character:
                 data["moveset"] = moveset
 
         type_info = common_pop_get(data, "types", "type")
-        ability_info = common_pop_get(data, "abilities", "ability")
         movepool = Movepool.from_dict(**data.pop("movepool", dict(event=data.get("moveset", set()))))
         data["sp_ability"] = common_pop_get(data, "spability", "sp_ability", "unique_trait")
 
@@ -1485,19 +1342,6 @@ class Character:
                     types_txt = "/".join(i.name for i in types)
                     species = Variant.from_base(base=species, name=f"{types_txt}-Typed {species.name}")
                     species.types = types
-
-            if ability_info:
-                if isinstance(ability_info, str):
-                    ability_info = [ability_info]
-                if abilities := Ability.deduce_many(*ability_info):
-                    data["abilities"] = abilities
-
-                if isinstance(species, (Fusion, CustomSpecies)):
-                    species.abilities = abilities
-                elif abilities_txt := "/".join(x.name for x in abilities if x not in species.abilities):
-                    species = Variant.from_base(base=species, name=f"{abilities_txt}-Granted {species.name}")
-                    species.abilities = abilities
-                    data["species"] = species
 
             if isinstance(species, CustomSpecies) and (species.base is None or species.base.movepool != movepool):
                 species.movepool = movepool

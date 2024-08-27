@@ -328,19 +328,7 @@ class Pokedex(commands.Cog):
             if embed.color == ctx.author.color:
                 embed.color = flags.type.color
             embed.set_thumbnail(url=flags.type.emoji.url)
-        if flags.ability:
-            filters.append(lambda oc: flags.ability in oc.abilities)
-            if embed.description:
-                embed.add_field(name=f"Ability - {flags.ability.name}", value=flags.ability.description, inline=False)
-            else:
-                embed.title = flags.ability.name
-                embed.description = flags.ability.description
-            if battle := flags.ability.battle:
-                embed.add_field(name="Battle effect", value=battle, inline=False)
-            if outside := flags.ability.outside:
-                embed.add_field(name="Usage", value=outside, inline=False)
-            if random_fact := flags.ability.random_fact:
-                embed.add_field(name="Random Fact", value=random_fact, inline=False)
+
         if flags.move:
             filters.append(lambda oc: flags.move in oc.moveset)
             title = repr(flags.move)
