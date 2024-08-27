@@ -713,7 +713,7 @@ with open("resources/shadow_moves.json", mode="r", encoding="utf8") as f:
     DATA.extend(Move(x) for x in load(f) if x)
 
 for cat in Category:
-    with open(f"resources/dex_{cat.name.lower()}_moves.json", mode="r", encoding="utf8") as f:
+    with open(f"resources/dex_{cat.name.lower()}.json", mode="r", encoding="utf8") as f:
         ALL_MOVES_DEX[cat.name] = load(f)
 
 
