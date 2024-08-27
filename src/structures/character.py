@@ -487,6 +487,7 @@ class Character:
     hidden_info: Optional[str] = None
     pokeball: Optional[Pokeball] = None
     gender: Gender = Gender.Genderless
+    static: bool = False
 
     @classmethod
     def from_dict(cls, kwargs: dict[str, Any]) -> Character:
@@ -824,12 +825,13 @@ class Character:
 
             embeds.append(sp_embed)
 
+        phrase = "OC's Moveset" if not self.static else "NPC's Moveset"
         if hidden_power := self.hidden_power:
             color = Color(hidden_power.color)
-            moveset_title = f"{hidden_power.emoji} Moveset"
+            moveset_title = f"{hidden_power.emoji} {phrase}"
         else:
             color = Color.blurple()
-            moveset_title = "Moveset"
+            moveset_title = phrase
 
         if self.pokeball:
             embeds[-1].set_thumbnail(url=self.pokeball.url)

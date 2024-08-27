@@ -53,6 +53,7 @@ from src.cogs.roles.roles import RPModal
 from src.cogs.submission.area_selection import RegionViewComplex
 from src.cogs.submission.oc_parsers import ParserMethods
 from src.pagination.complex import Complex
+from src.pagination.boolean import BooleanView
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot
@@ -916,6 +917,29 @@ class PersonalityField(TemplateField, required=False):
                 progress.add(cls.name)
 
 
+class StaticField(TemplateField, required=False):
+    "Modify the OC's Static Information"
+
+    @classmethod
+    async def on_submit(
+        cls,
+        itx: Interaction[CustomBot],
+        _: Template,
+        progress: set[str],
+        oc: Character,
+        ephemeral: bool = False,
+    ):
+        view = BooleanView(member=itx.user, target=itx)
+        async with view.send(
+            title="Is the OC Static?",
+            description=f"Static characters won't change over time. Current status: {oc.static}",
+            ephemeral=ephemeral,
+        ) as static:
+            if isinstance(static, bool):
+                oc.static = static
+                progress.add(cls.name)
+
+
 class URLField(TemplateField, name="URL", required=False):
     "Modify the OC's URL"
 
@@ -1132,7 +1156,7 @@ class CreationOCView(Basic):
     async def kind(self, itx: Interaction[CustomBot], sct: Select):
         try:
             self.oc.species = None
-            items = [SpeciesField, TypesField, AbilitiesField, MovepoolField]
+            items = [SpeciesField, TypesField, MovepoolField]
             self.progress -= {x.name for x in items}
             self.ref_template = Template[sct.values[0]]
             self.oc.size = self.oc.weight = Size.Average
