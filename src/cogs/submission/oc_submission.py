@@ -930,7 +930,7 @@ class StaticField(TemplateField, required=False):
         ephemeral: bool = False,
     ):
         view = BooleanView(member=itx.user, target=itx)
-        async with view.send(
+        async with view.handle(
             title="Is the OC Static?",
             description=f"Static characters won't change over time. Current status: {oc.static}",
             ephemeral=ephemeral,
