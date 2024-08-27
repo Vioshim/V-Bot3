@@ -25,7 +25,7 @@ from discord.ext import commands
 from discord.utils import get
 from yarl import URL
 
-from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, GroupBy, MovepoolFlags
+from src.cogs.pokedex.search import DefaultSpeciesArg, FindFlags, GroupBy, MovepoolFlags, DexFlags
 from src.cogs.submission.oc_submission import ModCharactersView
 from src.structures.bot import CustomBot
 from src.structures.character import Character
@@ -191,6 +191,25 @@ class Pokedex(commands.Cog):
         else:
             await view.simple_send(embed=embed, ephemeral=True)
 
+    @app_commands.guilds(952518750748438549, 1196879060173852702)
+    @commands.hybrid_command(aliases=["pokedex"])
+    async def dex(self, ctx: commands.Context[CustomBot], *, flags: DexFlags):
+        embed = Embed(title="Pokedex", color=ctx.author.color)
+
+        if mon := flags.species:
+            for k, v in mon.dex.items():
+                embed.add_field(name=f"{mon.name} | {k}", value=v, inline=False)
+    
+        if move := flags.move_id:
+            for k, v in move.dex.items():
+                embed.add_field(name=f"{move.name} | {k}", value=v, inline=False)
+
+        if mon_type := flags.type:
+            for k, v in mon_type.dex.items():
+                embed.add_field(name=f"{mon_type.emoji} | {k}", value=v, inline=False)
+        
+        await ctx.reply(embed=embed, ephemeral=True)
+    
     @app_commands.guilds(952518750748438549, 1196879060173852702)
     @commands.hybrid_command()
     async def fusion(

@@ -38,6 +38,7 @@ __all__ = (
 
 ALL_MOVES = frozendict()
 ALL_MOVES_BY_NAME = frozendict()
+ALL_MOVES_DEX: dict[str, dict[str, dict[str, str]]] = {"Physical": {}, "Special": {}, "Status": {}}
 
 
 class Category(IntEnum):
@@ -129,6 +130,10 @@ class Move:
     def data(self):
         return self._data
 
+    @property
+    def dex(self):
+        return ALL_MOVES_DEX.get(self.category.name, {}).get(self.name, {})
+    
     @property
     def move_id(self) -> int:
         return self.data.get("MoveID", 0)
@@ -706,6 +711,11 @@ with open("resources/moves.json", mode="r", encoding="utf8") as f:
 
 with open("resources/shadow_moves.json", mode="r", encoding="utf8") as f:
     DATA.extend(Move(x) for x in load(f) if x)
+
+for cat in Category:
+    with open(f"resources/dex_{cat.name.lower()}_moves.json", mode="r", encoding="utf8") as f:
+        ALL_MOVES_DEX[cat.name] = load(f)
+
 
 ALL_MOVES = frozendict({item.id: item for item in DATA})
 ALL_MOVES_BY_NAME = frozendict({item.name: item for item in DATA})

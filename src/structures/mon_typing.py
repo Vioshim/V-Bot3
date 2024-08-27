@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from json import load
 from re import split
 from typing import Any, Callable, Optional
 
@@ -69,6 +70,8 @@ MAX_MOVE_RANGE2 = frozendict(
         250: 100,
     }
 )
+
+DEX_TYPES: dict[str, dict[str, str]] = {}
 
 
 @dataclass(unsafe_hash=True, slots=True)
@@ -536,6 +539,10 @@ class TypingEnum(Typing, Enum):
             case _:
                 return MAX_MOVE_RANGE1
 
+    @property
+    def dex(self):
+        return DEX_TYPES.get(self.name, {})
+    
     @classmethod
     def all(cls, *ignore: TypingEnum | str):
         items = {cls.deduce(x) for x in ignore}
@@ -624,3 +631,7 @@ class TypingEnum(Typing, Enum):
         """
         data = [o for x in others if (o := TypingEnum.deduce(x) if isinstance(x, str) else TypingEnum(x))]
         return super(TypingEnum, self).when_attacking(*data, inverse=inverse)
+
+
+with open("resources/dex_types.json", mode="r", encoding="utf8") as f:
+    DEX_TYPES = load(f)

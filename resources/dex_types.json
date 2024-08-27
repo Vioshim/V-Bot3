@@ -1,0 +1,122 @@
+{
+    "Normal": {
+        "Adaptability": "Your character is highly versatile, able to learn and master new skills more quickly than others.",
+        "Endurance": "They possess a greater resistance to fatigue, allowing them to endure physically and mentally demanding tasks for longer periods.",
+        "Harmonious Presence": "Normal-types can blend in seamlessly in most environments, often going unnoticed due to their balanced nature.",
+        "Insightful Perception": "Your character has an acute sense of observation and understanding, allowing them to quickly grasp underlying patterns, motives, and details that others might miss."
+    },
+    "Fire": {
+        "Heat Resistance": "Your character thrives in hot environments, remaining comfortable and resilient against burns and high temperatures.",
+        "Flame Affinity": "They can generate warmth and create small sparks, useful for starting fires or heating objects.",
+        "Ignition Touch": "By concentrating, they can ignite flammable objects with a mere touch, setting them ablaze.",
+        "Fiery Spirit": "A Fire-type’s passion burns bright, allowing them to inspire others with their determination and courage."
+    },
+    "Water": {
+        "Aqua Affinity": "Your character is at home in aquatic environments, able to breathe underwater for extended periods and swim with exceptional grace.",
+        "Hydration": "They maintain optimal hydration levels, resisting dehydration and staying refreshed even in dry conditions.",
+        "Soothing Waves": "They can emit a calming aura, reducing tension and bringing a sense of peace to those around them.",
+        "Aqua Veil": "They can summon a thin layer of water around their body, offering slight protection from heat and physical damage."
+    },
+    "Electric": {
+        "Static Charge": "Your character can generate small electrical discharges, useful for powering devices or delivering a mild shock.",
+        "Alertness": "Their reflexes are heightened, allowing them to react quickly and anticipate threats with greater accuracy.",
+        "Electrifying Aura": "They can energize those around them, boosting morale and providing a burst of motivation.",
+        "Conductive Touch": "By focusing their energy, they can electrify metal objects, turning them into makeshift weapons or tools."
+    },
+    "Grass": {
+        "Nature’s Touch": "Your character has a deep connection to plants, capable of minor healing when in contact with flora or accelerating plant growth.",
+        "Camouflage": "They can blend seamlessly with their natural surroundings, becoming harder to detect when in forests or grassy areas.",
+        "Photosynthesis": "They can absorb sunlight to restore a small amount of energy, reducing fatigue and healing minor wounds.",
+        "Verdant Shield": "They can summon a barrier of leaves or vines, providing temporary protection against physical or magical attacks."
+    },
+    "Ice": {
+        "Cold Resistance": "Your character is perfectly comfortable in freezing environments, with a natural resistance to frostbite and cold-based attacks.",
+        "Frost Touch": "They can lower the temperature of objects or surfaces with a touch, creating frost or icy patches.",
+        "Glacial Calm": "Their presence brings a sense of tranquility, helping to calm heated situations or soothe irritated individuals.",
+        "Ice Armor": "They can form a thin layer of ice over their skin, offering slight protection against physical damage and extreme heat."
+    },
+    "Fighting": {
+        "Martial Prowess": "Your character has a natural aptitude for combat, mastering fighting techniques with ease and demonstrating exceptional physical strength.",
+        "Bravery": "They are nearly fearless, resisting intimidation and standing firm even in the face of overwhelming odds.",
+        "Warrior’s Focus": "They can enter a state of heightened focus, allowing them to anticipate and counter enemy moves with precision.",
+        "Aura Strike": "By channeling their fighting spirit, they can infuse their attacks with raw energy, increasing their impact and effectiveness."
+    },
+    "Poison": {
+        "Toxin Resistance": "Your character is highly resistant to poisons, able to withstand toxic substances that would harm others.",
+        "Venomous Touch": "They can secrete a mild toxin from their skin, which can be used to coat weapons or deter attackers.",
+        "Corrosive Aura": "Their presence can weaken the resolve of their enemies, making them more susceptible to fear and confusion.",
+        "Poisonous Mist": "They can exhale a cloud of noxious fumes, creating an area of poisonous gas that can deter or incapacitate opponents."
+    },
+    "Ground": {
+        "Earth Affinity": "Your character can sense vibrations in the ground, allowing them to detect movements and anticipate potential threats.",
+        "Stability": "They have an unshakable balance, making them resistant to being knocked down or pushed around.",
+        "Tremor Sense": "They can cause minor tremors, shaking the ground beneath them to destabilize opponents or structures.",
+        "Mud Armor": "They can coat their body in mud, providing a layer of protection that can absorb impacts and reduce damage."
+    },
+    "Flying": {
+        "Lightweight": "Your character is incredibly agile and quick, capable of swift movements and graceful maneuvers.",
+        "Wind Affinity": "They can generate small gusts of wind, which can be used to knock objects over, clear obstacles, or push opponents back.",
+        "Soaring Spirit": "Their presence lifts the spirits of those around them, providing a sense of freedom and optimism.",
+        "Aerial Slash": "By focusing their energy, they can create a sharp wind blade that can cut through objects or strike opponents from a distance."
+    },
+    "Psychic": {
+        "Mental Clarity": "Your character has exceptional focus and is resistant to mental fatigue, able to maintain concentration in the most chaotic situations.",
+        "Telepathy": "They can communicate minor thoughts or feelings with willing subjects, allowing for silent and subtle communication.",
+        "Mind Shield": "They can create a mental barrier that protects against psychic attacks and mental intrusions.",
+        "Psychic Projection": "They can project their energy into objects, allowing them to move or manipulate them from a distance."
+    },
+    "Bug": {
+        "Insect Affinity": "Your character can communicate with insect-like ferals on a basic level, often gaining their assistance or avoiding their attacks.",
+        "Survival Instincts": "They have enhanced natural survival skills, particularly in the wild, allowing them to find food, shelter, and avoid dangers with ease.",
+        "Cocoon Defense": "They can encase themselves in a protective shell, offering significant resistance to physical and elemental attacks.",
+        "Swarm Sense": "They can summon a small swarm of insects to distract or overwhelm opponents, providing a temporary advantage in battle."
+    },
+    "Rock": {
+        "Rock Hardness": "Your character’s body is incredibly durable, providing increased resistance to physical damage and blunt force.",
+        "Stone Affinity": "They can slightly manipulate small stones, such as moving, shaping, or stacking them into barriers or weapons.",
+        "Fortress Stance": "They can adopt a defensive stance that makes them even harder to move or damage, ideal for holding ground in battle.",
+        "Stone Edge": "By focusing their energy, they can sharpen stones and hurl them with precision, turning even pebbles into deadly projectiles."
+    },
+    "Ghost": {
+        "Incorporeal Touch": "Your character can phase through solid objects slightly, allowing them to bypass barriers or escape restraints.",
+        "Haunting Presence": "They can instill fear or unease in others, making it harder for enemies to focus or coordinate.",
+        "Spectral Cloak": "They can become partially invisible for short periods, making them harder to detect in dim or dark environments.",
+        "Ethereal Voice": "They can mimic sounds or voices, creating auditory illusions that can confuse or mislead opponents."
+    },
+    "Dragon": {
+        "Draconic Resilience": "Your character has extraordinary stamina and resistance to both physical and elemental attacks, particularly when pushed to their limits.",
+        "Ancient Knowledge": "They possess an innate understanding of ancient lore and can often decipher old texts or recognize lost symbols.",
+        "Dragon’s Roar": "They can emit a terrifying roar that can stun or intimidate opponents, breaking their focus or resolve.",
+        "Elemental Fusion": "They can briefly channel the power of another type they’ve come into contact with, temporarily gaining access to that element’s abilities."
+    },
+    "Dark": {
+        "Shadow Affinity": "Your character can blend into shadows, becoming almost invisible in darkness and harder to detect by normal means.",
+        "Deceptive Mind": "They are immune to psychic intrusions and can create false thoughts or emotions to mislead others.",
+        "Fear Aura": "They can exude an aura of dread, weakening the resolve of their enemies and making them more susceptible to fear-based attacks.",
+        "Shadow Strike": "By focusing their energy, they can attack from the shadows, making their strikes harder to predict or counter."
+    },
+    "Steel": {
+        "Metallic Skin": "Your character’s body has a natural affinity with metal, offering enhanced protection against physical damage and making them resistant to rust or corrosion.",
+        "Weapon Mastery": "They can wield metal weapons with exceptional skill, often enhancing their durability and sharpness through sheer will.",
+        "Magnetic Aura": "They can generate a magnetic field that attracts or repels small metal objects, useful for both defense and attack.",
+        "Steel Strike": "By focusing their energy, they can harden their body or weapon, increasing its impact and making it more effective against tough opponents."
+    },
+    "Fairy": {
+        "Fae Charm": "Your character has a natural charm and allure, making it easier to influence or persuade others through social interactions.",
+        "Pixie Dust": "They can create a small, sparkling dust that can heal minor wounds, alleviate fatigue, or create minor illusions.",
+        "Magical Resistance": "They are highly resistant to magic-based attacks, particularly those with dark or draconic origins.",
+        "Gleam Shield": "They can summon a barrier of light that deflects attacks, particularly effective against dark and dragon types."
+    },
+    "Shadow": {
+        "Shadow Aura": "Your character emits a shadowy aura that slightly reduces the combat effectiveness of those around them. This aura can make opponents feel uneasy, reducing their accuracy or making them hesitate during attacks.",
+        "Night Prowess": "Enhanced agility and strength in darkness, your character becomes more powerful and quicker when fighting in dimly lit or shadowy environments. Their senses are heightened, allowing them to strike with greater precision and evade attacks more easily.",
+        "Umbral Veil": "Your character can shroud themselves in darkness, becoming difficult to detect. This ability helps them move unseen in shadowed areas or at night, ideal for stealth operations or surprise attacks.",
+        "Cursed Presence": "By focusing their shadow energy, your character can inflict a subtle curse on their surroundings, causing minor misfortune or weariness to those who oppose them. This might make opponents more prone to mistakes or reduce their stamina over time."
+    },
+    "Typeless": {
+        "Pure Power": "Your character possesses an innate increase in physical and mental strength. They excel in both combat and intellectual challenges, making them versatile and formidable in any situation.",
+        "Cleanse": "Your character can nullify and dispel elemental energies, effectively purifying any space of harmful or chaotic forces. This ability can be used to protect allies, dispel curses, or counteract powerful elemental attacks.",
+        "Serene Presence": "Your character's purified nature radiates a calming, stabilizing aura that can reduce chaos or aggression in their surroundings. This ability is useful in diffusing tense situations or healing emotional wounds.",
+        "Elemental Resistance": "Due to their purified nature, your character has a natural resistance to elemental attacks. While they don’t have a specific type advantage, they can endure a variety of elemental strikes with greater ease than others."
+    }
+}

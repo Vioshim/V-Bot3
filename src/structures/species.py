@@ -64,6 +64,7 @@ class Colors(Enum):
 
 ALL_SPECIES = frozendict()
 SPECIES_BY_NAME = frozendict()
+ALL_DEX_SPECIES = frozendict()
 PHRASES = {
     "GALAR": "Galarian",
     "HISUI": "Hisuian",
@@ -201,6 +202,10 @@ class Species:
     def possible_types(self):
         items = {self.types} if self.types else []
         return frozenset(items)
+
+    @property
+    def dex(self):
+        return ALL_DEX_SPECIES.get(self.name, {})
 
     @property
     def flatten_types(self):
@@ -760,3 +765,7 @@ with open("resources/species.json", mode="r", encoding="utf8") as f:
     SPECIES_BY_NAME: frozendict[str, Species] = frozendict(
         {item.name: item for item in DATA if isinstance(item, Species)}
     )
+
+
+with open("resources/dex_species.json", mode="r", encoding="utf8") as f:
+    ALL_DEX_SPECIES: dict[str, dict[str, str]] = load(f)

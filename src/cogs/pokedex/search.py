@@ -407,6 +407,15 @@ class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" "
     ivs: int = commands.flag(default=0, description="IVs to calculate stats for")
     evs: int = commands.flag(default=0, description="EVs to calculate stats for")
 
+class DexFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="--"):
+    species: Optional[DefaultSpeciesArg] = commands.flag(
+        positional=True,
+        default=None,
+        description="Species to look up info about",
+    )
+    move_id: Optional[MoveArg] = commands.flag(default=None, description="Move Descriptions")
+    type: Optional[TypingEnum] = commands.flag(default=None, description="Hidden Powers")
+
 
 class GroupByArg(StrEnum):
     Kind = auto()
