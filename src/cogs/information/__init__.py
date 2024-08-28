@@ -275,6 +275,8 @@ class Information(commands.Cog):
                 await db.delete_one(role_data)
             elif role not in ctx.author.roles:
                 await ctx.author.add_roles(role)
+        else:
+            role = None
 
         if icon and not str(icon.content_type).startswith("image"):
             return await ctx.reply("Valid File Format: image/png", ephemeral=True)
