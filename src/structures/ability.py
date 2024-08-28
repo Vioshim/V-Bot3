@@ -170,8 +170,8 @@ class Ability:
     @classmethod
     def hook(cls, data: dict[str, str]):
         return cls(
-            id=fix(data["name"]),
-            name=data["name"],
+            id=fix(data["Name"]),
+            name=data["Name"],
             description=data.get("Short Description", ""),
             battle=data.get("Battle Effect", ""),
             outside=data.get("Casual RP Effect", ""),
@@ -296,4 +296,4 @@ class AbilityEncoder(JSONEncoder):
 
 
 with open("resources/abilities.json", mode="r", encoding="utf8") as f:
-    ALL_ABILITIES = frozendict({ab.id: ab for ab in map(Ability.hook, load(f))})
+    ALL_ABILITIES = frozendict({ab.id: ab for ab in map(Ability.hook, load(f)) if ab})
