@@ -245,13 +245,13 @@ class Information(commands.Cog):
 
         self.ready = True
 
-    @app_commands.command()
+    @commands.hybrid_command()
     @app_commands.guilds(1065784144417787994, 952518750748438549, 1196879060173852702)
     @app_commands.checks.has_any_role("Booster", "Supporter")
     async def custom_role(
         self,
-        itx: discord.Interaction[CustomBot],
-        name: Optional[str] = None,
+        ctx: commands.Context[CustomBot],
+        name: Optional[commands.Range[str, 1, 100]] = None,
         color: Optional[ColorConverter] = None,
         icon: Optional[discord.Attachment] = None,
     ):
@@ -269,15 +269,15 @@ class Information(commands.Cog):
             Role Icon
         """
         db = self.bot.mongo_db("Custom Role")
-        if role_data := await db.find_one({"author": itx.user.id, "server": itx.guild_id}):
-            role = itx.guild.get_role(role_data["id"])
+        if role_data := await db.find_one({"author": ctx.author.id, "server": ctx.guild.id}):
+            role = ctx.guild.get_role(role_data["id"])
             if not role:
                 await db.delete_one(role_data)
-            elif role not in itx.user.roles:
-                await itx.user.add_roles(role)
+            elif role not in ctx.author.roles:
+                await ctx.author.add_roles(role)
 
         if icon and not str(icon.content_type).startswith("image"):
-            return await itx.response.send_message("Valid File Format: image/png", ephemeral=True)
+            return await ctx.reply("Valid File Format: image/png", ephemeral=True)
 
         if role:
             if not name and not icon and not color:
@@ -294,26 +294,26 @@ class Information(commands.Cog):
             except discord.NotFound:
                 role = None
             except discord.HTTPException as e:
-                return await itx.response.send_message(f"Error: {e}", ephemeral=True)
+                return await ctx.reply(f"Error: {e}", ephemeral=True)
 
         if not role:
             display_icon = await icon.read() if icon else MISSING
-            booster = get(itx.guild.roles, name="Booster")
-            role = await itx.guild.create_role(
-                name=name or itx.user.display_name,
+            booster = get(ctx.guild.roles, name="Booster")
+            role = await ctx.guild.create_role(
+                name=name or ctx.author.display_name,
                 colour=color or discord.Colour.default(),
                 display_icon=display_icon,
             )
             await role.edit(position=booster.position + 1)
-            await itx.user.add_roles(role)
+            await ctx.author.add_roles(role)
             await db.replace_one(
-                {"author": itx.user.id, "server": itx.guild_id},
-                {"author": itx.user.id, "id": role.id, "server": itx.guild_id},
+                {"author": ctx.author.id, "server": ctx.guild.id},
+                {"author": ctx.author.id, "id": role.id, "server": ctx.guild.id},
                 upsert=True,
             )
-            await itx.response.send_message("Role Created Successfully", ephemeral=True)
+            await ctx.reply("Role Created Successfully", ephemeral=True)
         else:
-            await itx.response.send_message("Role Updated Successfully", ephemeral=True)
+            await ctx.reply("Role Updated Successfully", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
