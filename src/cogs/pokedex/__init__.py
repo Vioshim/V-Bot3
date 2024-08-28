@@ -173,8 +173,9 @@ class Pokedex(commands.Cog):
         category : Optional[Category]
             Category to check
         """ 
-        embed = Embed(title=move.name, color=ctx.author.color)
+        embed = Embed(title=move.name, color=move.color)
         category = category or move.category
+        embed.set_thumbnail(url=move.type.emoji.url)
         embed.set_footer(text=category.name, icon_url=category.emoji.url)
         for k, v in move.dex_category(category).items():
             embed.add_field(name=k, value=v, inline=False)
