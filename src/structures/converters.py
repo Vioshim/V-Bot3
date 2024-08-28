@@ -40,15 +40,37 @@ from src.structures.mon_typing import TypingEnum
 from src.structures.move import Category, Move
 from src.structures.species import Species
 from src.utils.matches import REGEX_URL
+from discord.app_commands.transformers import Transform, Transformer
+from discord.app_commands import Choice
+
+from rapidfuzz.utils import default_process
+import webcolors
+
+AUTOCOMPLETE_SCORE = 60
 
 
-class ColorConverter(commands.Converter[discord.Color]):
+class ColorConverter(commands.Converter[discord.Color], Transformer):
     async def convert(self, ctx: commands.Context[CustomBot], argument: str, /) -> discord.Color:
         with suppress(ValueError):
             color = webcolors.name_to_rgb(argument)
             return discord.Color.from_rgb(color.red, color.green, color.blue)
 
         return await commands.ColourConverter().convert(ctx, argument)
+
+    async def transform(self, itx: discord.Interaction[CustomBot], value: str, /) -> discord.Color:  # type: ignore
+        return await self.convert(itx, value)  # type: ignore
+
+    async def autocomplete(self, itx: discord.Interaction[CustomBot], value: str, /) -> list[Choice[str]]:  # type: ignore
+        return [
+            Choice(name=name, value=value)
+            for name, _, value in process.extract(
+                value.casefold(),
+                choices=webcolors.names(),
+                score_cutoff=AUTOCOMPLETE_SCORE,
+                limit=25,
+                processor=default_process,
+            )
+        ]
 
 
 class DateConverter(commands.Converter[datetime]):
@@ -710,3 +732,6 @@ class EmbedFlags(commands.FlagConverter, prefix="--", delimiter=" "):
                 )
             )
         return "\n".join(text)
+
+ColorArg = Transform[discord.Colour, ColorConverter]
+
