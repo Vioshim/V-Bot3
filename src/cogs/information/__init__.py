@@ -30,7 +30,6 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from rapidfuzz import fuzz
 from yaml import dump
 
-from src.cogs.information.perks import CustomPerks
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
@@ -248,31 +247,70 @@ class Information(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(1065784144417787994, 952518750748438549, 1196879060173852702)
     @app_commands.checks.has_any_role("Booster", "Supporter")
-    async def perks(
+    async def custom_role(
         self,
         itx: discord.Interaction[CustomBot],
-        perk: CustomPerks,
+        name: Optional[commands.Range[str, 1, 100]] = None,
+        color: Optional[discord.Colour] = None,
         icon: Optional[discord.Attachment] = None,
     ):
-        """Custom Functions for Supporters!
+        """Custom Role for Supporters!
 
         Parameters
         ----------
         ctx : Interaction
             Interaction
-        perk : Perks
-            Perk to Use
-        icon : Attachment
-            Image File
+        name : Optional[Range[str, 1, 100]]
+            Role Name
+        color : Optional[Colour]
+            Role Color
+        icon : Optional[Attachment]
+            Role Icon
         """
-        if not icon or str(icon.content_type).startswith("image"):
+        db = self.bot.mongo_db("Custom Role")
+        if role_data := await db.find_one({"author": itx.user.id, "server": itx.guild_id}):
+            role = itx.guild.get_role(role_data["id"])
+            if not role:
+                await db.delete_one(role_data)
+            elif role not in itx.user.roles:
+                await itx.user.add_roles(role)
+
+        if icon and not str(icon.content_type).startswith("image"):
+            return await itx.response.send_message("Valid File Format: image/png", ephemeral=True)
+        
+        if role:
+            if not name and not icon and not color:
+                return await role.delete()
+            
+            display_icon = await icon.read() if icon else MISSING
+
             try:
-                await perk.method(itx, icon)
-            except Exception as e:
-                self.bot.logger.exception("Exception in perks", exc_info=e)
-                await itx.response.send_message(str(e), ephemeral=True)
+                await role.edit(
+                    name=name or role.name,
+                    color=color or role.color,
+                    display_icon=display_icon,
+                )
+            except discord.NotFound:
+                role = None
+
+        if not role:
+            display_icon = await icon.read() if icon else MISSING
+            booster = get(itx.guild.roles, name="Booster")
+            role = await itx.guild.create_role(
+                name=name or itx.user.display_name,
+                colour=color or discord.Colour.default(),
+                display_icon=display_icon,
+            )
+            await role.edit(position=booster.position + 1)
+            await itx.user.add_roles(role)
+            await db.replace_one(
+                {"author": itx.user.id, "server": itx.guild_id},
+                {"author": itx.user.id, "id": role.id, "server": itx.guild_id},
+                upsert=True,
+            )
+            await itx.response.send_message("Role Created Successfully", ephemeral=True)
         else:
-            await itx.response.send_message("Valid File Format: image/png", ephemeral=True)
+            await itx.response.send_message("Role Updated Successfully", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
