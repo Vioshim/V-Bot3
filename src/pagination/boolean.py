@@ -44,6 +44,7 @@ class BooleanView(Basic):
         target: _M = None,
         timeout: Optional[float] = None,
         embed: Optional[Embed] = None,
+        value: Optional[bool] = None,
     ):
         super(BooleanView, self).__init__(
             member=member,
@@ -51,7 +52,17 @@ class BooleanView(Basic):
             timeout=timeout,
             embed=embed,
         )
-        self.value: Optional[bool] = None
+        self.value = value
+        
+        if value is True:
+            self.confirm.label = "Yes (Selected)"
+        else:
+            self.confirm.label = "Yes"
+
+        if value is False:
+            self.deny.label = "No (Selected)"
+        else:
+            self.deny.label = "No"
 
     @asynccontextmanager
     async def handle(self, **kwargs):
@@ -60,6 +71,7 @@ class BooleanView(Basic):
             target=kwargs.get("target", self.target),
             embed=kwargs.get("embed", self.embed),
             timeout=kwargs.get("timeout", self.timeout),
+            value=kwargs.get("value", self.value),
         )
 
         data["embed"] = embed_modifier(data["embed"], **kwargs)
@@ -77,14 +89,14 @@ class BooleanView(Basic):
         finally:
             await aux.delete()
 
-    @button(label="Yes", row=0)
+    @button(label="Yes", row=0, emoji="✅", style = ButtonStyle.blurple)
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         self.value = True
         await resp.edit_message(content=f"{self.embed.title}\nAnswer: Yes", view=None)
         await self.delete()
 
-    @button(label="No", row=0)
+    @button(label="No", row=0, emoji="❌", style = ButtonStyle.blurple)
     async def deny(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         self.value = False
