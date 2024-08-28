@@ -201,7 +201,7 @@ class Pokedex(commands.Cog):
                 embed.add_field(name=f"{mon.name} | {k}", value=v, inline=False)
     
         if move := flags.move_id:
-            for k, v in move.dex.items():
+            for k, v in move.dex_category(flags.category).items():
                 embed.add_field(name=f"{move.name} | {k}", value=v, inline=False)
 
         if mon_type := flags.type:

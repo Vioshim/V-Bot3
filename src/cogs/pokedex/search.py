@@ -43,7 +43,7 @@ from src.structures.character import (
     Weight,
 )
 from src.structures.mon_typing import TypingEnum
-from src.structures.move import Move
+from src.structures.move import Move, Category
 from src.structures.pronouns import Pronoun
 from src.structures.species import CustomSpecies, Fakemon, Fusion, Species
 
@@ -414,6 +414,7 @@ class DexFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", pre
     )
     move_id: Optional[MoveArg] = commands.flag(default=None, description="Move Descriptions")
     type: Optional[TypingEnum] = commands.flag(default=None, description="Hidden Powers")
+    category: Optional[Category] = commands.flag(default=None, description="Move category")
 
 
 class GroupByArg(StrEnum):

@@ -132,7 +132,11 @@ class Move:
 
     @property
     def dex(self):
-        return ALL_MOVES_DEX.get(self.category.name, {}).get(self.name, {})
+        return self.dex_category()
+    
+    def dex_category(self, cat: Optional[Category] = None):
+        cat = cat or self.category
+        return ALL_MOVES_DEX.get(cat.name, {}).get(self.name, {})
     
     @property
     def move_id(self) -> int:
