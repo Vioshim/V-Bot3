@@ -32,6 +32,7 @@ from yaml import dump
 
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
+from src.structures.converters import ColorConverter
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
 from src.utils.functions import message_line, name_emoji_from_channel, safe_username
 from src.utils.matches import TUPPER_REPLY_PATTERN
@@ -251,7 +252,7 @@ class Information(commands.Cog):
         self,
         itx: discord.Interaction[CustomBot],
         name: Optional[str] = None,
-        color: Optional[discord.Colour] = None,
+        color: Optional[ColorConverter] = None,
         icon: Optional[discord.Attachment] = None,
     ):
         """Custom Role for Supporters!
@@ -277,11 +278,11 @@ class Information(commands.Cog):
 
         if icon and not str(icon.content_type).startswith("image"):
             return await itx.response.send_message("Valid File Format: image/png", ephemeral=True)
-        
+
         if role:
             if not name and not icon and not color:
                 return await role.delete()
-            
+
             display_icon = await icon.read() if icon else MISSING
 
             try:

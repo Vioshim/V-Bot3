@@ -146,7 +146,7 @@ class Pokedex(commands.Cog):
     @dex.command()
     async def species(self, ctx: commands.Context[CustomBot], *, species: DefaultSpeciesArg):
         """Command to check Species Information
-        
+
         Parameters
         ----------
         ctx : Interaction[CustomBot]
@@ -161,7 +161,13 @@ class Pokedex(commands.Cog):
         await ctx.reply(embed=embed, ephemeral=True)
 
     @dex.command()
-    async def move(self, ctx: commands.Context[CustomBot], move: MoveArg, *, category: Optional[Category] = None,):
+    async def move(
+        self,
+        ctx: commands.Context[CustomBot],
+        move: MoveArg,
+        *,
+        category: Optional[Category] = None,
+    ):
         """Command to check Move Information
 
         Parameters
@@ -172,7 +178,7 @@ class Pokedex(commands.Cog):
             Move to check
         category : Optional[Category]
             Category to check
-        """ 
+        """
         embed = Embed(title=move.name, color=move.color)
         category = category or move.category
         embed.set_thumbnail(url=move.type.emoji.url)
