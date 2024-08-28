@@ -157,10 +157,29 @@ class Ability:
         """
         return item if isinstance(item, Ability) else ALL_ABILITIES.get(item)
 
+    @property
+    def dex(self) -> dict[str, str]:
+        data = {
+            "Short Description": self.description,
+            "Battle Effect": self.battle,
+            "Casual RP Effect": self.outside,
+            "Random Fact": self.random_fact,
+        }
+        return {key: value for key, value in data.items() if value}
+
     @classmethod
     def hook(cls, data: dict[str, str]):
-        if all(x in data for x in cls.__slots__):
-            return cls(**data)
+        if "name" not in data:
+            return
+
+        return cls(
+            id=fix(data["name"]),
+            name=data["name"],
+            description=data.get("Short Description", ""),
+            battle=data.get("Battle Effect", ""),
+            outside=data.get("Casual RP Effect", ""),
+            random_fact=data.get("Random Fact", ""),
+        )
 
 
 class UTraitKind(Enum):

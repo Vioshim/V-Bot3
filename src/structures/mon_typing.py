@@ -542,7 +542,7 @@ class TypingEnum(Typing, Enum):
     @property
     def dex(self):
         return DEX_TYPES.get(self.name, {})
-    
+
     @classmethod
     def all(cls, *ignore: TypingEnum | str):
         items = {cls.deduce(x) for x in ignore}

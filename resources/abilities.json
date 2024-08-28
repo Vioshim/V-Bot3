@@ -1,2426 +1,2123 @@
 [
     {
-        "id": "ADAPTABILITY",
-        "name": "Adaptability",
-        "description": "This Pokemon's same-type attack bonus (STAB) is 2 instead of 1.5.",
-        "battle": "The pokemon's energies allow the pokemon to grow slightly stronger, allowing them to hit harder. The boost may not be as strong as how it is in main games, but it's decent enough for changing the odds in a battle. Example: An eevee using Swift, it's assumed to be more likely to hit through blocking obstacles, less likely to get thrown away but also bit more hamrful than the usual.",
-        "outside": "It allows the pokemon to use its typings in clever ways, trying to adapt to the situations for problem solving, for example, If this ability is being worn by a fire type, it'd be assumed that its likely to use fire without a move, in order to adapt to the circumstances and do something in specific.",
-        "random_fact": "Moves casted by this ability tend to look slightly more brilliant than the usual due to them being an overload of typing energy."
-    },
-    {
-        "id": "AERILATE",
-        "name": "Aerilate",
-        "description": "This Pokemon's Normal-type moves become Flying type and have 1.2x power.",
-        "battle": "As expected, this ability turns Normal type moves in Flying type, they are stronger that's for sure, but due to the flying waves it keeps sending, they are unable to hit ground types with it.",
-        "outside": "This pokemon is quite able to use its ability to generate wind for its daily activities, such as being able to carry a light object with it, or even blew off someone's card castle.",
-        "random_fact": ""
-    },
-    {
-        "id": "AFTERMATH",
-        "name": "Aftermath",
-        "description": "If this Pokemon is KOed with a contact move, that move's user loses 1/4 its max HP.",
-        "battle": "In battle, as expected, this ability causes collateral damage to the one that defeated him, this only happens if the pokemon was quite close to the individual during it. And this damage may spread to allies if they are in range.",
-        "outside": "Outside of battle, this ability doesn't really have much use, but it's known by many that they are able to resist diseases given to their property of harming entities that kill its cells (In summary, its hp reduction applies in a cell level as well)",
-        "random_fact": "This ability is often skill swapped in hospitals to help fight diseases."
-    },
-    {
-        "id": "AIRLOCK",
-        "name": "Air Lock",
-        "description": "While this Pokemon is active, the effects of weather conditions are disabled.",
-        "battle": "When a battle occurs, the weather can't be used against the pokemon and its allies, it simply right away can't be used, its energies oppose with the move or abilities that cast those.",
-        "outside": "As expected, this ability can always be disabled by the pokemon voluntarily.",
-        "random_fact": "Air lock is quite popular among the people in Estelia, given the fact it was the name of a popular Album during the 80s."
-    },
-    {
-        "id": "ANALYTIC",
-        "name": "Analytic",
-        "description": "This Pokemon's attacks have 1.3x power if it is the last to move in a turn.",
-        "battle": "This ability only benefits if the pokemon doesn't dodge nor evade in the turn, as stated it has to be the last to move in a turn, which means that after taking a hit, it analyzes its advantage with the pokemon and attacks such weak spot during the turn, which allows the character to hit harder.",
-        "outside": "The perception is very high, being more likely to detect details in the overworld and allows to have a high precision in writing.",
-        "random_fact": "Having this ability is usually a safe way to get hired for any judge-related job."
-    },
-    {
-        "id": "ANGERPOINT",
-        "name": "Anger Point",
-        "description": "If this Pokemon (not its substitute) takes a critical hit, its Attack is raised to 10+ stages.",
-        "battle": "When someone hits the Pokemon by taking advantage of its weak spots, it gets upset, adrenaline makes the pokemon get angered which causes it to attack twice as strong.",
-        "outside": "This ability doesn't necessarily trigger by being hit with a critical hit, sometimes it can trigger if the character is feeling way angry and frustrated, making it be twice as strong, allowing them to break a rock or something.",
-        "random_fact": "Anger isn't healthy, if used frequently the character may have to go to the hospital."
-    },
-    {
-        "id": "ANTICIPATION",
-        "name": "Anticipation",
-        "description": "On switch-in, this Pokemon shudders if any foe has a supereffective or OHKO move.",
-        "battle": "When a battle starts, the pokemon is able to tell when a move its harmful for them, this is very useful before starting the battle, because that way your character can know if it's worth battling or escaping.",
-        "outside": "This anticipation also works like a sense of doing the right thing to do for them, plus it really helps them to notice whoever is looking at them or listening their conversation.",
-        "random_fact": "Guaranteed job as guard or police, being able to spot things wrong is a very useful skill in jobs, even more in political related ones."
-    },
-    {
-        "id": "ARENATRAP",
-        "name": "Arena Trap",
-        "description": "Prevents adjacent foes from choosing to switch unless they are airborne.",
-        "battle": "A circle with 30ft of diameter around the pokemon cause anyone that go near to struggle for escaping, it will most likely have a hard time to escape or approach if they just wanna mindlessly attack ",
-        "outside": "Well, the pokemon is pretty much able to control the area on the ground as long as there's sand. It can use it to even make temporary forts, or even making a hammer out of sand to hit someone that is way way too close.",
-        "random_fact": ""
-    },
-    {
-        "id": "AROMAVEIL",
-        "name": "Aroma Veil",
-        "description": "Protects user/allies from Attract, Disable, Encore, Heal Block, Taunt, and Torment.",
-        "battle": "A support role takes place in battle, any abilities or special abilities that work in a similar way to the moves stated above, will simply not work as the pokemon is determined.",
-        "outside": "The pokemon can use this ability to help others feel better and even prevent disturbs",
-        "random_fact": "Most Police teams tend to have at least one of them to prevent effects on them."
-    },
-    {
-        "id": "AURABREAK",
-        "name": "Aura Break",
-        "description": "While this Pokemon is active, the Dark Aura and Fairy Aura power modifier is 0.75x.",
-        "battle": "This ability tends to decrease the harm of aura oriented energies, it affects the moves as stated.",
-        "outside": "It's known that this affects Lucarios and Riolus, making them unable to read energies or have aura usage.",
-        "random_fact": "It's not noticieable for the pokemon when this ability is used, which can give the impression of something going wrong."
-    },
-    {
-        "id": "BADDREAMS",
-        "name": "Bad Dreams",
-        "description": "Causes sleeping adjacent foes to lose 1/8 of their max HP at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "BALLFETCH",
-        "name": "Ball Fetch",
-        "description": "The pokemon can return a thrown pokeball if it failed.",
-        "battle": "This ability in battle works as Counter to moves that are affected by Bulletproof, the pokemon after getting hit by the damaging attack, it can keep holding the move's energy in its mouth and then throw it back. Not guaranteed to hit.",
-        "outside": "The pokemon is more eager to use its mouth to hold things firmly, even if it's a cold or hot item.",
-        "random_fact": "Yes-- People with the ability are known for being great at ball related sports."
-    },
-    {
-        "id": "BATTERY",
-        "name": "Battery",
-        "description": "This Pokemon's allies have the power of their special attacks multiplied by 1.3.",
-        "battle": "As stated, it is a living battery, its energy is used to fill the typing of people, which increases their attack",
-        "outside": "Increasing people's typing energy can help for non battling purposes as well.",
-        "random_fact": "It's known for also helping with Magic, like any energy typing increase."
+        "Name": "Adaptability",
+        "Short Description": "Boosts moves of the Pokémon's type",
+        "Battle Effect": "STAB (Same Type Attack Bonus) is increased from 1.5x to 2x",
+        "Casual RP Effect": "Often mistaken for being overly enthusiastic or obsessive about certain things",
+        "Random Fact": "Sometimes causes confusion with NPCs thinking the Pokémon is an overachiever"
     },
     {
-        "id": "BATTLEARMOR",
-        "name": "Battle Armor",
-        "description": "This Pokemon cannot be struck by a critical hit.",
-        "battle": "There's literally no way to find weak spots in this pokemon, if you're gonna try to hit them point blank, they'll always be able to try to reduce the impact or protect themselves in a way it makes less damage.",
-        "outside": "This boosts their perception, so when they are gonna get hit by something as result of their clumsyness, the ability triggers and moves their body in such the damage is decreased.",
-        "random_fact": "Not much to add here other than the cliche of people referring to it as plot armor"
+        "Name": "Aerilate",
+        "Short Description": "Turns Normal-type moves into Flying-type",
+        "Battle Effect": "Normal-type moves become Flying-type and get a 20% power boost",
+        "Casual RP Effect": "Can suddenly cause a draft indoors or send papers flying everywhere",
+        "Random Fact": "Pokémon with this ability sometimes unknowingly cause breezes strong enough to flip hats"
     },
     {
-        "id": "BATTLEBOND",
-        "name": "Battle Bond",
-        "description": "When the Pokémon knocks out a target, its bond with its Trainer is strengthened, and its Attack, Sp. Atk, and Speed stats are boosted.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Aftermath",
+        "Short Description": "Causes damage if knocked out by a contact move",
+        "Battle Effect": "Deals 25% of the attacker's max HP in damage if KO’d by contact",
+        "Casual RP Effect": "Often leaves behind a small explosion of confetti or sparkles when they get upset",
+        "Random Fact": "Pokémon with Aftermath might be banned from parties because of their explosive exits"
     },
     {
-        "id": "BEASTBOOST",
-        "name": "Beast Boost",
-        "description": "This Pokemon's highest stat is raised by 1 if it attacks and KOes another Pokemon.",
-        "battle": "As soon as they defeat someone, a monster or a npc, they get stronger.",
-        "outside": "It allows to safely breathe in the ultra worm holes and be able to move within them.",
-        "random_fact": "All UltraBeast have this ability and only have this one."
+        "Name": "Air Lock",
+        "Short Description": "Negates all weather effects",
+        "Battle Effect": "Weather moves have no effect",
+        "Casual RP Effect": "Can instantly clear foggy glasses or mess up someone's perfect sunny day",
+        "Random Fact": "Might cause others to carry umbrellas for no reason when around"
     },
     {
-        "id": "BERSERK",
-        "name": "Berserk",
-        "description": "This Pokemon's Sp. Atk is raised by 1 when it reaches 1/2 or less of its max HP.",
-        "battle": "When the pokemon have received hits for a while, its heart proceeds to accelerate, giving an increse of a 25%.",
-        "outside": "It can also trigger when frustrated or angry",
-        "random_fact": "Repeated use of this ability may require a visit to the hospital."
+        "Name": "Analytic",
+        "Short Description": "Powers up moves if the user moves last",
+        "Battle Effect": "Moves get a 30% power boost if the Pokémon moves last",
+        "Casual RP Effect": "Sometimes slow to react but delivers unexpected, well-timed comebacks",
+        "Random Fact": "Known to pause awkwardly in conversations, then drop the perfect line"
     },
     {
-        "id": "BIGPECKS",
-        "name": "Big Pecks",
-        "description": "Prevents other Pokemon from lowering this Pokemon's Defense stat stage.",
-        "battle": "They rely on their own body rather than the typing energy, which makes defense drops useless.",
-        "outside": "Strength, not much else to say.",
-        "random_fact": "It's a good ability to have in physicial oriented jobs"
+        "Name": "Anger Point",
+        "Short Description": "Maxes Attack stat when hit by a critical hit",
+        "Battle Effect": "Attack stat is maxed out after receiving a critical hit",
+        "Casual RP Effect": "Can go from 0 to 100 real quick, especially when losing in games",
+        "Random Fact": "Might accidentally flip tables in frustration when things don’t go their way"
     },
     {
-        "id": "BLAZE",
-        "name": "Blaze",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Fire attacks.",
-        "battle": "Heart is beating, tries to accelerate given the circumstances and the Fire is increased",
-        "outside": "When feeling depressed or sad, fire may lower, and if feeling too angry, it can be activated",
-        "random_fact": "Activating it often, may require a visit to the hospital"
+        "Name": "Anger Shell",
+        "Short Description": "Raises Attack, Sp. Attack, and Speed when below half HP, lowers Defense and Sp. Defense",
+        "Battle Effect": "Increases Attack, Sp. Attack, and Speed; decreases Defense and Sp. Defense when HP is below 50%",
+        "Casual RP Effect": "Tends to become more reckless and aggressive when pushed to their limits",
+        "Random Fact": "Known to get overly dramatic, making any situation seem like a life-or-death scenario"
     },
     {
-        "id": "BULLETPROOF",
-        "name": "Bulletproof",
-        "description": "Makes user immune to ballistic moves (Shadow Ball, Sludge Bomb, Focus Blast, etc).",
-        "battle": "The skin of the character protects the pokemon very well, making them not get hurt and continue using that turn in advantage",
-        "outside": "It can protect with thrown projectiles.",
-        "random_fact": "Police tends to have at least one of them in their teams."
+        "Name": "Anticipation",
+        "Short Description": "Shudders if it senses a dangerous move",
+        "Battle Effect": "Shudders if the opponent has a super-effective or OHKO move",
+        "Casual RP Effect": "Often gives an exaggerated \"bad feeling\" before something minor happens",
+        "Random Fact": "May ruin surprises by sensing them too early"
     },
     {
-        "id": "CHEEKPOUCH",
-        "name": "Cheek Pouch",
-        "description": "If this Pokemon eats a Berry, it restores 1/3 of its max HP after the Berry's effect.",
-        "battle": "Berries will always heal the pokemon, regardless of the Berry's effect, however it takes them a while to eat due to the way they eat (wait 1 turn)",
-        "outside": "It allows the pokemon to easily store berries in its cheeks",
-        "random_fact": "Not much to add here aside of having big cheeks."
+        "Name": "Arena Trap",
+        "Short Description": "Prevents opponents from escaping",
+        "Battle Effect": "Opponents cannot switch or flee",
+        "Casual RP Effect": "Can make others feel awkwardly stuck in conversations or situations",
+        "Random Fact": "Perfect for those who never know when to end a chat"
     },
     {
-        "id": "CHILLINGNEIGH",
-        "name": "Chilling Neigh",
-        "description": "This Pokemon's Attack is raised by 1 stage if it attacks and KOes another Pokemon.",
-        "battle": "As soon as they defeat someone, a monster or a npc, they get stronger.",
-        "outside": "Getting angry or too emotive can trigger the ability",
-        "random_fact": ""
+        "Name": "Armor Tail",
+        "Short Description": "Prevents opponents from using priority moves",
+        "Battle Effect": "Opponents cannot use priority moves",
+        "Casual RP Effect": "Can use their tail as an effective umbrella or to balance snacks",
+        "Random Fact": "Often seen flaunting their tails at social events, sometimes accidentally causing messes"
     },
     {
-        "id": "CHLOROPHYLL",
-        "name": "Chlorophyll",
-        "description": "If Sunny Day is active, this Pokemon's Speed is doubled.",
-        "battle": "This speed allows the pokemon to be able to react to the things that are being used against them more easily.",
-        "outside": "Speed affects travel, and can trigger if there's harsh sunlight.",
-        "random_fact": "It's way too popular for most NPCs"
+        "Name": "Aroma Veil",
+        "Short Description": "Protects allies from mental conditions",
+        "Battle Effect": "Prevents allies from being affected by Taunt, Torment, etc.",
+        "Casual RP Effect": "May release calming scents to ease tensions in heated discussions",
+        "Random Fact": "Known for being popular in spas due to their naturally soothing presence"
     },
     {
-        "id": "CLEARBODY",
-        "name": "Clear Body",
-        "description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
-        "battle": "The pokemon's body works fully by itself, being unreliant in Type energies, making decreases impossible to happen",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Aura Break",
+        "Short Description": "Reverses the effects of Aura Abilities",
+        "Battle Effect": "Powers of Fairy Aura and Dark Aura are halved",
+        "Casual RP Effect": "Sometimes causes lights to flicker or electronics to glitch when entering a room",
+        "Random Fact": "Often mistaken for bad luck or haunted, despite their cheerful demeanor"
     },
     {
-        "id": "CLOUDNINE",
-        "name": "Cloud Nine",
-        "description": "While this Pokemon is active, the effects of weather conditions are disabled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Bad Dreams",
+        "Short Description": "Causes damage to sleeping foes",
+        "Battle Effect": "Inflicts damage to opponents who are asleep",
+        "Casual RP Effect": "Tends to make eerie noises at night, scaring off others from sleeping nearby",
+        "Random Fact": "Rumored to be the cause of many unexplained nightmares in town"
     },
     {
-        "id": "COLORCHANGE",
-        "name": "Color Change",
-        "description": "This Pokemon's type changes to the type of a move it's hit by, unless it has the type.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Ball Fetch",
+        "Short Description": "Fetches the first Poké Ball that fails",
+        "Battle Effect": "Retrieves failed Poké Balls if not holding an item",
+        "Casual RP Effect": "Always eager to retrieve lost or thrown objects, regardless of their importance",
+        "Random Fact": "Often brings back items no one remembers losing"
     },
     {
-        "id": "COMATOSE",
-        "name": "Comatose",
-        "description": "This Pokemon cannot be statused, and is considered to be asleep.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Battery",
+        "Short Description": "Powers up allies' special moves",
+        "Battle Effect": "Increases allies' Special Attack by 30%",
+        "Casual RP Effect": "Can temporarily charge gadgets by being near them",
+        "Random Fact": "Sometimes found in the middle of a group, powering everyone's devices without knowing"
     },
     {
-        "id": "COMPETITIVE",
-        "name": "Competitive",
-        "description": "This Pokemon's Sp. Atk is raised by 2 for each of its stats that is lowered by a foe.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Battle Armor",
+        "Short Description": "Blocks critical hits",
+        "Battle Effect": "Prevents critical hits",
+        "Casual RP Effect": "Can take an accidental bump like a champ and keep moving",
+        "Random Fact": "Sometimes mistaken for a statue due to their rock-solid appearance"
     },
     {
-        "id": "COMPOUNDEYES",
-        "name": "Compound Eyes",
-        "description": "This Pokemon's moves have their accuracy multiplied by 1.3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Battle Bond",
+        "Short Description": "Transforms with a deep connection",
+        "Battle Effect": "Boosts power and transforms when defeating an opponent",
+        "Casual RP Effect": "Can cause dramatic visual changes when teaming up with friends or partners",
+        "Random Fact": "The bond is so strong that they can finish each other's sentences—or battles!"
     },
     {
-        "id": "CONTRARY",
-        "name": "Contrary",
-        "description": "If this Pokemon has a stat stage raised it is lowered instead, and vice versa.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Beads of Ruin",
+        "Short Description": "Lowers the Special Defense of all other Pokémon",
+        "Battle Effect": "Lowers all other Pokémon's Special Defense by 25%",
+        "Casual RP Effect": "Might unintentionally make others more sensitive or easily affected emotionally",
+        "Random Fact": "Known to make people cry during movie scenes they’ve seen a hundred times"
     },
     {
-        "id": "CORROSION",
-        "name": "Corrosion",
-        "description": "This Pokemon can poison or badly poison other Pokemon regardless of their typing.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Beast Boost",
+        "Short Description": "Boosts the user's highest stat upon KO",
+        "Battle Effect": "The highest stat increases after knocking out an opponent",
+        "Casual RP Effect": "Can get a huge confidence boost from the smallest victories",
+        "Random Fact": "Sometimes gets a little too full of themselves after winning a game of tic-tac-toe"
     },
     {
-        "id": "COTTONDOWN",
-        "name": "Cotton Down",
-        "description": "If this Pokemon is hit, it lowers the Speed of all other Pokemon on the field 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Berserk",
+        "Short Description": "Raises Special Attack when HP drops below half",
+        "Battle Effect": "Raises Special Attack by one stage when HP falls below 50%",
+        "Casual RP Effect": "Tends to go off on wild tangents in conversations when they’re not feeling great",
+        "Random Fact": "Known to get overly passionate about random topics after a minor inconvenience"
     },
     {
-        "id": "CURIOUSMEDICINE",
-        "name": "Curious Medicine",
-        "description": "On switch-in, this Pokemon's allies have their stat stages reset to 0.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Big Pecks",
+        "Short Description": "Prevents Defense from being lowered",
+        "Battle Effect": "Defense stat cannot be lowered",
+        "Casual RP Effect": "Takes a lot of pride in their appearance, particularly their chest or feathers",
+        "Random Fact": "Often seen flexing or fluffing up when they walk by a reflective surface"
     },
     {
-        "id": "CURSEDBODY",
-        "name": "Cursed Body",
-        "description": "If this Pokemon is hit by an attack, there is a 30% chance that move gets disabled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Blaze",
+        "Short Description": "Powers up Fire-type moves when HP is low",
+        "Battle Effect": "Fire-type moves are boosted by 50% when HP is below 33%",
+        "Casual RP Effect": "May suddenly warm up a room or cook food without realizing it when stressed",
+        "Random Fact": "Sometimes causes small accidental fires when overly excited or angry"
     },
     {
-        "id": "CUTECHARM",
-        "name": "Cute Charm",
-        "description": "30% chance of infatuating Pokemon of the opposite gender if they make contact.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Bulletproof",
+        "Short Description": "Protects from ball and bomb moves",
+        "Battle Effect": "Immune to ball, bomb, and pulse moves",
+        "Casual RP Effect": "Often uses this to confidently dodge snowballs or water balloons",
+        "Random Fact": "Sometimes challenges others to games involving balls, knowing they have a clear advantage"
     },
     {
-        "id": "DAMP",
-        "name": "Damp",
-        "description": "Prevents Explosion/Mind Blown/Misty Explosion/Self-Destruct/Aftermath while active.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Cheek Pouch",
+        "Short Description": "Restores HP when eating a Berry",
+        "Battle Effect": "Restores extra HP when consuming a Berry",
+        "Casual RP Effect": "Can store snacks for later in their cheeks, often resulting in surprise snacks",
+        "Random Fact": "Known to be great at parties, always having some extra food hidden away"
     },
     {
-        "id": "DANCER",
-        "name": "Dancer",
-        "description": "After another Pokemon uses a dance move, this Pokemon uses the same move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Chilling Neigh",
+        "Short Description": "Boosts Attack after knocking out a target",
+        "Battle Effect": "Raises Attack by one stage after KO’ing an opponent",
+        "Casual RP Effect": "Sometimes leaves others shivering in their wake, even in warm weather",
+        "Random Fact": "Has been known to cause chills or goosebumps just by passing by, especially in cold weather"
     },
     {
-        "id": "DARKAURA",
-        "name": "Dark Aura",
-        "description": "While this Pokemon is active, a Dark move used by any Pokemon has 1.33x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Chlorophyll",
+        "Short Description": "Boosts Speed in sunny weather",
+        "Battle Effect": "Doubles Speed in harsh sunlight",
+        "Casual RP Effect": "Loves sunbathing and might become hyperactive on sunny days",
+        "Random Fact": "Often seen wearing sunglasses, even indoors, due to their sensitivity to sunlight"
     },
     {
-        "id": "DAUNTLESSSHIELD",
-        "name": "Dauntless Shield",
-        "description": "On switch-in, this Pokemon's Defense is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Clear Body",
+        "Short Description": "Prevents stat reductions",
+        "Battle Effect": "Immune to stat-lowering effects",
+        "Casual RP Effect": "Always appears confident and unaffected by criticism or insults",
+        "Random Fact": "Has a reputation for being unflinchingly positive, even in awkward situations"
     },
     {
-        "id": "DAZZLING",
-        "name": "Dazzling",
-        "description": "While this Pokemon is active, allies are protected from opposing priority moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Cloud Nine",
+        "Short Description": "Negates all weather effects",
+        "Battle Effect": "Cancels out weather effects",
+        "Casual RP Effect": "Always seems to have a sunny disposition, even in the middle of a storm",
+        "Random Fact": "Sometimes seen floating just above the ground, lost in their own world"
     },
     {
-        "id": "DEFEATIST",
-        "name": "Defeatist",
-        "description": "While this Pokemon has 1/2 or less of its max HP, its Attack and Sp. Atk are halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Color Change",
+        "Short Description": "Changes type to match the last move that hit",
+        "Battle Effect": "Type changes to the type of the last move received",
+        "Casual RP Effect": "Loves to blend into their surroundings or match others’ vibes",
+        "Random Fact": "Known to be the life of the party, constantly adapting their mood to fit the environment"
     },
     {
-        "id": "DEFIANT",
-        "name": "Defiant",
-        "description": "This Pokemon's Attack is raised by 2 for each of its stats that is lowered by a foe.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Comatose",
+        "Short Description": "Always in a drowsing state, cannot be statused",
+        "Battle Effect": "Immune to all status conditions",
+        "Casual RP Effect": "Often appears sleepy or disinterested, but always aware of what’s going on",
+        "Random Fact": "Despite their lethargic appearance, they never actually sleep, just rest constantly"
     },
     {
-        "id": "DELTASTREAM",
-        "name": "Delta Stream",
-        "description": "On switch-in, strong winds begin until this Ability is not active in battle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Commander",
+        "Short Description": "Transforms under specific conditions",
+        "Battle Effect": "When Dondozo is on the field, Tatsugiri enters its mouth and boosts its stats",
+        "Casual RP Effect": "Can dramatically change demeanor when taking the lead in any situation",
+        "Random Fact": "Known for being quiet in groups, then suddenly taking over when least expected"
     },
     {
-        "id": "DESOLATELAND",
-        "name": "Desolate Land",
-        "description": "On switch-in, extremely harsh sunlight begins until this Ability is not active in battle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Competitive",
+        "Short Description": "Boosts Special Attack when a stat is lowered",
+        "Battle Effect": "Raises Special Attack by two stages if any stat is lowered",
+        "Casual RP Effect": "Can become extra chatty or show off when feeling underestimated",
+        "Random Fact": "Known for outdoing others in friendly competitions, sometimes without even trying"
     },
     {
-        "id": "DISGUISE",
-        "name": "Disguise",
-        "description": "(Mimikyu only) The first hit it takes is blocked, and it takes 1/8 HP damage instead.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Compound Eyes",
+        "Short Description": "Increases accuracy of moves",
+        "Battle Effect": "Boosts accuracy by 30%",
+        "Casual RP Effect": "Rarely misses details or objects, making them great at spotting lost items",
+        "Random Fact": "Often seen as the go-to friend for finding things or noticing tiny details"
     },
     {
-        "id": "DOWNLOAD",
-        "name": "Download",
-        "description": "On switch-in, Attack or Sp. Atk is raised 1 stage based on the foes' weaker Defense.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Contrary",
+        "Short Description": "Reverses stat changes",
+        "Battle Effect": "Any stat change is reversed",
+        "Casual RP Effect": "Loves doing the opposite of what’s expected, especially in conversations",
+        "Random Fact": "May accidentally start trends by always doing the opposite of what’s popular"
     },
     {
-        "id": "DRAGONSMAW",
-        "name": "Dragon's Maw",
-        "description": "This Pokemon's attacking stat is multiplied by 1.5 while using a Dragon-type attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Corrosion",
+        "Short Description": "Can inflict Poison on any Pokémon",
+        "Battle Effect": "Can poison even Steel- and Poison-type Pokémon",
+        "Casual RP Effect": "Known to have an acidic or biting sense of humor, which can sting even tough folks",
+        "Random Fact": "Sometimes leaves a faint smell of chemicals, like they've just been near something corrosive"
     },
     {
-        "id": "DRIZZLE",
-        "name": "Drizzle",
-        "description": "On switch-in, this Pokemon summons Rain Dance.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Costar",
+        "Short Description": "Copies an ally's stat changes",
+        "Battle Effect": "Matches all stat changes of an ally when it enters the field",
+        "Casual RP Effect": "Often imitates friends’ habits, sometimes to a comical degree",
+        "Random Fact": "Can perfectly mimic others' accents or mannerisms after spending just a little time with them"
     },
     {
-        "id": "DROUGHT",
-        "name": "Drought",
-        "description": "On switch-in, this Pokemon summons Sunny Day.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Cotton Down",
+        "Short Description": "Lowers the Speed of all other Pokémon",
+        "Battle Effect": "Lowers Speed of all other Pokémon when hit",
+        "Casual RP Effect": "Might slow down a conversation with long-winded stories or soft-spoken tales",
+        "Random Fact": "Known to cause drowsiness in others just by talking, especially in cozy settings"
     },
     {
-        "id": "DRYSKIN",
-        "name": "Dry Skin",
-        "description": "This Pokemon is healed 1/4 by Water, 1/8 by Rain; is hurt 1.25x by Fire, 1/8 by Sun.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Cud Chew",
+        "Short Description": "Consumes the same Berry twice",
+        "Battle Effect": "Eats the Berry again at the end of the next turn",
+        "Casual RP Effect": "Can be seen nibbling on snacks for an unusually long time",
+        "Random Fact": "Sometimes saves half of a meal for later, surprising others with how long they can make food last"
     },
     {
-        "id": "EARLYBIRD",
-        "name": "Early Bird",
-        "description": "This Pokemon's sleep counter drops by 2 instead of 1.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Curious Medicine",
+        "Short Description": "Resets allies' stat changes",
+        "Battle Effect": "Resets all ally Pokémon's stat changes when it enters the field",
+        "Casual RP Effect": "Often unintentionally resets the mood in group settings, leading to a fresh start",
+        "Random Fact": "Known to bring up offbeat topics in conversations, completely changing the direction"
     },
     {
-        "id": "EFFECTSPORE",
-        "name": "Effect Spore",
-        "description": "30% chance of poison/paralysis/sleep on others making contact with this Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Cursed Body",
+        "Short Description": "May disable a move that hits the Pokémon",
+        "Battle Effect": "30% chance to disable a move that makes contact",
+        "Casual RP Effect": "Has an eerie presence that causes others to forget what they were doing",
+        "Random Fact": "Often blamed for items mysteriously disappearing, only to reappear later in odd places"
     },
     {
-        "id": "ELECTRICSURGE",
-        "name": "Electric Surge",
-        "description": "On switch-in, this Pokemon summons Electric Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Cute Charm",
+        "Short Description": "May infatuate attackers upon contact",
+        "Battle Effect": "30% chance to infatuate any Pokémon that makes contact",
+        "Casual RP Effect": "Often causes others to become smitten or distracted by their cuteness",
+        "Random Fact": "Known to unintentionally cause crushes, leading to awkward social situations"
     },
     {
-        "id": "EMERGENCYEXIT",
-        "name": "Emergency Exit",
-        "description": "This Pokemon switches out when it reaches 1/2 or less of its maximum HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Damp",
+        "Short Description": "Prevents the use of explosive moves",
+        "Battle Effect": "Prevents Self-Destruct, Explosion, and similar moves",
+        "Casual RP Effect": "Can accidentally spoil fireworks displays or other explosive celebrations",
+        "Random Fact": "Often blamed for putting out campfires or stopping small explosions before they happen"
     },
     {
-        "id": "FAIRYAURA",
-        "name": "Fairy Aura",
-        "description": "While this Pokemon is active, a Fairy move used by any Pokemon has 1.33x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Dancer",
+        "Short Description": "Copies the dance moves of others",
+        "Battle Effect": "Uses the same move as an ally if it's a dance move",
+        "Casual RP Effect": "Loves to join in on any dancing, regardless of skill level",
+        "Random Fact": "Often the life of the party, quickly picking up and mimicking any new dance craze"
     },
     {
-        "id": "FILTER",
-        "name": "Filter",
-        "description": "This Pokemon receives 3/4 damage from supereffective attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Dark Aura",
+        "Short Description": "Boosts the power of Dark-type moves",
+        "Battle Effect": "Increases the power of all Dark-type moves",
+        "Casual RP Effect": "Sometimes casts an ominous feeling over a room, making others uneasy",
+        "Random Fact": "Often seen hanging out in dimly lit areas, seemingly making them even darker"
     },
     {
-        "id": "FLAMEBODY",
-        "name": "Flame Body",
-        "description": "30% chance a Pokemon making contact with this Pokemon will be burned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Dauntless Shield",
+        "Short Description": "Raises Defense upon entering battle",
+        "Battle Effect": "Increases Defense by one stage when entering battle",
+        "Casual RP Effect": "Exudes a sense of unwavering confidence in any situation",
+        "Random Fact": "Known to be the person you want by your side in any challenging scenario"
     },
     {
-        "id": "FLAREBOOST",
-        "name": "Flare Boost",
-        "description": "While this Pokemon is burned, its special attacks have 1.5x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Dazzling",
+        "Short Description": "Prevents priority moves from hitting",
+        "Battle Effect": "Blocks all priority moves",
+        "Casual RP Effect": "Often shines brightly in social settings, making it hard for others to interrupt",
+        "Random Fact": "Has a habit of drawing attention, sometimes to the point of being the center of everything"
     },
     {
-        "id": "FLASHFIRE",
-        "name": "Flash Fire",
-        "description": "This Pokemon's Fire attacks do 1.5x damage if hit by one Fire move; Fire immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Defeatist",
+        "Short Description": "Halves stats when HP is below half",
+        "Battle Effect": "Halves Attack and Special Attack when HP is below 50%",
+        "Casual RP Effect": "Tends to give up or lose motivation quickly when things don’t go well",
+        "Random Fact": "Known for having a love-hate relationship with competition, often claiming they never wanted to win anyway"
     },
     {
-        "id": "FLOWERGIFT",
-        "name": "Flower Gift",
-        "description": "If user is Cherrim and Sunny Day is active, it and allies' Attack and Sp. Def are 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Defiant",
+        "Short Description": "Raises Attack when a stat is lowered",
+        "Battle Effect": "Attack rises by two stages if any stat is lowered",
+        "Casual RP Effect": "Always ready to push back or stand up for themselves, even in minor situations",
+        "Random Fact": "Sometimes seen as stubborn, refusing to back down even in trivial matters"
     },
     {
-        "id": "FLOWERVEIL",
-        "name": "Flower Veil",
-        "description": "This side's Grass types can't have stats lowered or status inflicted by other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Delta Stream",
+        "Short Description": "Creates strong winds that negate weaknesses",
+        "Battle Effect": "Strong winds remove all Flying-type weaknesses",
+        "Casual RP Effect": "Known for calming or neutralizing tense situations with a refreshing breeze",
+        "Random Fact": "Often associated with strange weather patterns whenever they’re nearby"
     },
     {
-        "id": "FLUFFY",
-        "name": "Fluffy",
-        "description": "This Pokemon takes 1/2 damage from contact moves, 2x damage from Fire moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Desolate Land",
+        "Short Description": "Summons intense sunlight that stops Water-type moves",
+        "Battle Effect": "Summons harsh sunlight that prevents Water-type moves",
+        "Casual RP Effect": "Can suddenly make an area unbearably hot or bright, even indoors",
+        "Random Fact": "Known to cause plants to wilt and water to evaporate faster than usual when they’re around"
     },
     {
-        "id": "FORECAST",
-        "name": "Forecast",
-        "description": "Castform's type changes to the current weather condition's type, except Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Disguise",
+        "Short Description": "Takes no damage from the first hit",
+        "Battle Effect": "Prevents damage from the first hit it takes",
+        "Casual RP Effect": "Often plays pranks by pretending to be someone or something else",
+        "Random Fact": "Known to spook friends by popping up out of nowhere, revealing themselves with a laugh"
     },
     {
-        "id": "FOREWARN",
-        "name": "Forewarn",
-        "description": "On switch-in, this Pokemon is alerted to the foes' move with the highest power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Download",
+        "Short Description": "Adjusts stats based on the opponent’s defenses",
+        "Battle Effect": "Raises Attack or Special Attack based on the opponent’s weaker Defense",
+        "Casual RP Effect": "Can quickly adapt to any conversation or scenario, making them a social chameleon",
+        "Random Fact": "Often surprises others with how quickly they pick up on things or match someone’s energy"
     },
     {
-        "id": "FRIENDGUARD",
-        "name": "Friend Guard",
-        "description": "This Pokemon's allies receive 3/4 damage from other Pokemon's attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Dragon's Maw",
+        "Short Description": "Boosts Dragon-type moves",
+        "Battle Effect": "Increases the power of Dragon-type moves by 50%",
+        "Casual RP Effect": "Often gives off a fierce aura, causing others to be wary of crossing them",
+        "Random Fact": "Known to have an intense, almost mythical presence that draws awe or fear from others"
     },
     {
-        "id": "FRISK",
-        "name": "Frisk",
-        "description": "On switch-in, this Pokemon identifies the held items of all opposing Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Drizzle",
+        "Short Description": "Summons rain when entering battle",
+        "Battle Effect": "Causes rain for five turns",
+        "Casual RP Effect": "Tends to bring an umbrella wherever they go, just in case",
+        "Random Fact": "Often blamed for sudden downpours, even if they just arrived"
     },
     {
-        "id": "FULLMETALBODY",
-        "name": "Full Metal Body",
-        "description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Drought",
+        "Short Description": "Summons harsh sunlight when entering battle",
+        "Battle Effect": "Causes harsh sunlight for five turns",
+        "Casual RP Effect": "Might suddenly brighten up a room or make it feel warmer, even if unintentional",
+        "Random Fact": "Known to cause sunglasses sales to spike wherever they’re headed"
     },
     {
-        "id": "FURCOAT",
-        "name": "Fur Coat",
-        "description": "This Pokemon's Defense is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Dry Skin",
+        "Short Description": "Heals in rain but is hurt by Fire and sunlight",
+        "Battle Effect": "Heals in rain, takes more damage from Fire, and loses HP in sunlight",
+        "Casual RP Effect": "Complains about dry weather and constantly seeks out water sources",
+        "Random Fact": "Often seen carrying a water bottle or hanging out near fountains or bodies of water"
     },
     {
-        "id": "GALEWINGS",
-        "name": "Gale Wings",
-        "description": "If this Pokemon is at full HP, its Flying-type moves have their priority increased by 1.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Early Bird",
+        "Short Description": "Wakes up quickly from sleep",
+        "Battle Effect": "Reduces sleep duration by half",
+        "Casual RP Effect": "Rarely needs an alarm clock and can be annoyingly perky in the morning",
+        "Random Fact": "Known for being the first one up and out the door, even after a late night"
     },
     {
-        "id": "GALVANIZE",
-        "name": "Galvanize",
-        "description": "This Pokemon's Normal-type moves become Electric type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Earth Eater",
+        "Short Description": "Heals when hit by a Ground-type move",
+        "Battle Effect": "Immune to Ground-type moves; restores HP when hit by one",
+        "Casual RP Effect": "Loves digging in the dirt or spending time in natural settings like gardens",
+        "Random Fact": "Often found with dirt under their nails or a collection of interesting rocks"
     },
     {
-        "id": "GLUTTONY",
-        "name": "Gluttony",
-        "description": "When this Pokemon has 1/2 or less of its maximum HP, it uses certain Berries early.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Effect Spore",
+        "Short Description": "May inflict a status condition upon contact",
+        "Battle Effect": "30% chance to cause Poison, Paralysis, or Sleep when hit",
+        "Casual RP Effect": "Might leave others feeling oddly drowsy, itchy, or sneezy after a close encounter",
+        "Random Fact": "Often leaves a trail of spores or pollen that can cause mild allergic reactions"
     },
     {
-        "id": "GOOEY",
-        "name": "Gooey",
-        "description": "Pokemon making contact with this Pokemon have their Speed lowered by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Electric Surge",
+        "Short Description": "Summons Electric Terrain when entering battle",
+        "Battle Effect": "Sets up Electric Terrain for five turns",
+        "Casual RP Effect": "Tends to shock or startle others, especially with static electricity",
+        "Random Fact": "Known to accidentally fry electronics or cause lights to flicker when they’re excited"
     },
     {
-        "id": "GORILLATACTICS",
-        "name": "Gorilla Tactics",
-        "description": "This Pokemon's Attack is 1.5x, but it can only select the first move it executes.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Electromorphosis",
+        "Short Description": "Charges up power when hit",
+        "Battle Effect": "Boosts the power of the next Electric-type move after being hit",
+        "Casual RP Effect": "Has an electrifying presence, often causing static shocks or sparks",
+        "Random Fact": "Known for causing hair to stand on end, especially after a tense or exciting situation"
     },
     {
-        "id": "GRASSPELT",
-        "name": "Grass Pelt",
-        "description": "If Grassy Terrain is active, this Pokemon's Defense is multiplied by 1.5.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Emergency Exit",
+        "Short Description": "Switches out when HP falls below half",
+        "Battle Effect": "Automatically switches out when HP drops below 50%",
+        "Casual RP Effect": "Tends to bail on social situations when things get too heated or stressful",
+        "Random Fact": "Known for having a knack for disappearing right when things are about to get complicated"
     },
     {
-        "id": "GRASSYSURGE",
-        "name": "Grassy Surge",
-        "description": "On switch-in, this Pokemon summons Grassy Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Fairy Aura",
+        "Short Description": "Boosts the power of Fairy-type moves",
+        "Battle Effect": "Increases the power of all Fairy-type moves",
+        "Casual RP Effect": "Often exudes a whimsical, magical aura that makes others feel enchanted",
+        "Random Fact": "Has a tendency to attract small, mysterious creatures, like butterflies or fireflies"
     },
     {
-        "id": "GRIMNEIGH",
-        "name": "Grim Neigh",
-        "description": "This Pokemon's Sp. Atk is raised by 1 stage if it attacks and KOes another Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Filter",
+        "Short Description": "Reduces damage from super-effective moves",
+        "Battle Effect": "Reduces the damage taken from super-effective moves by 25%",
+        "Casual RP Effect": "Seen as having thick skin, easily shrugging off harsh comments or criticism",
+        "Random Fact": "Known to filter out bad vibes, making them a calming presence in stressful situations"
     },
     {
-        "id": "GULPMISSILE",
-        "name": "Gulp Missile",
-        "description": "When hit after Surf/Dive, attacker takes 1/4 max HP and -1 Defense or paralysis.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Flame Body",
+        "Short Description": "May burn attackers on contact",
+        "Battle Effect": "30% chance to burn any Pokémon that makes contact",
+        "Casual RP Effect": "Often gives off warmth, making them great to be around in cold weather",
+        "Random Fact": "Frequently surrounded by a warm glow, like a cozy campfire"
     },
     {
-        "id": "GUTS",
-        "name": "Guts",
-        "description": "If this Pokemon is statused, its Attack is 1.5x; ignores burn halving physical damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Flare Boost",
+        "Short Description": "Increases Special Attack when burned",
+        "Battle Effect": "Boosts Special Attack by 50% when burned",
+        "Casual RP Effect": "Often becomes more energetic or spirited when things are heating up",
+        "Random Fact": "Known for having a fiery personality that gets stronger when under pressure"
     },
     {
-        "id": "HARVEST",
-        "name": "Harvest",
-        "description": "If last item used is a Berry, 50% chance to restore it each end of turn. 100% in Sun.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Flash Fire",
+        "Short Description": "Absorbs Fire-type moves to power up",
+        "Battle Effect": "Immune to Fire-type moves; Fire-type moves are boosted",
+        "Casual RP Effect": "Tends to absorb the energy of heated situations, redirecting it in a positive way",
+        "Random Fact": "Known to be unflappable, even in the face of fiery tempers or hot debates"
     },
     {
-        "id": "HEALER",
-        "name": "Healer",
-        "description": "30% chance of curing an adjacent ally's status at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Flower Gift",
+        "Short Description": "Powers up allies during sunny weather",
+        "Battle Effect": "Boosts Attack and Special Defense of allies in sunlight",
+        "Casual RP Effect": "Has a talent for brightening up a room, especially on sunny days",
+        "Random Fact": "Often surrounded by blooming flowers, even in the most unlikely places"
     },
     {
-        "id": "HEATPROOF",
-        "name": "Heatproof",
-        "description": "The power of Fire-type attacks against this Pokemon is halved; burn damage halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Flower Veil",
+        "Short Description": "Protects Grass-types from status conditions",
+        "Battle Effect": "Grass-type allies are immune to status conditions",
+        "Casual RP Effect": "Tends to be a protective presence, especially in natural settings",
+        "Random Fact": "Known to have a natural green thumb, with plants thriving in their care"
     },
     {
-        "id": "HEAVYMETAL",
-        "name": "Heavy Metal",
-        "description": "This Pokemon's weight is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Fluffy",
+        "Short Description": "Halves damage from contact moves but doubles Fire damage",
+        "Battle Effect": "Takes less damage from physical moves but more from Fire",
+        "Casual RP Effect": "Known for their soft, comforting presence, but can get overheated easily",
+        "Random Fact": "Often mistaken for a walking pillow, leading to spontaneous snuggle sessions"
     },
     {
-        "id": "HONEYGATHER",
-        "name": "Honey Gather",
-        "description": "No competitive use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Forecast",
+        "Short Description": "Changes form based on weather",
+        "Battle Effect": "Changes the Pokémon's type based on the current weather",
+        "Casual RP Effect": "Has a chameleon-like ability to adapt to any environment or situation",
+        "Random Fact": "Known to accurately predict weather changes, often before anyone else notices"
     },
     {
-        "id": "HUGEPOWER",
-        "name": "Huge Power",
-        "description": "This Pokemon's Attack is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Forewarn",
+        "Short Description": "Reveals one of the opponent's moves",
+        "Battle Effect": "Alerts to the move with the highest power",
+        "Casual RP Effect": "Tends to have an eerie sense of foreknowledge, predicting what others might do",
+        "Random Fact": "Often gives cryptic warnings that turn out to be strangely accurate"
     },
     {
-        "id": "HUNGERSWITCH",
-        "name": "Hunger Switch",
-        "description": "If Morpeko, it changes between Full Belly and Hangry Mode at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Friend Guard",
+        "Short Description": "Reduces damage to allies",
+        "Battle Effect": "Reduces damage taken by allies by 25%",
+        "Casual RP Effect": "Always looking out for friends, making sure they’re safe and protected",
+        "Random Fact": "Known to be the reliable friend who’s always there in times of need"
     },
     {
-        "id": "HUSTLE",
-        "name": "Hustle",
-        "description": "This Pokemon's Attack is 1.5x and accuracy of its physical attacks is 0.8x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Frisk",
+        "Short Description": "Reveals the opponent's held item",
+        "Battle Effect": "Identifies the opponent's held item",
+        "Casual RP Effect": "Has a knack for figuring out what others are hiding or holding onto",
+        "Random Fact": "Often surprises people with how easily they notice even the smallest details"
     },
     {
-        "id": "HYDRATION",
-        "name": "Hydration",
-        "description": "This Pokemon has its status cured at the end of each turn if Rain Dance is active.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Full Metal Body",
+        "Short Description": "Prevents stats from being lowered",
+        "Battle Effect": "Immune to stat-lowering effects",
+        "Casual RP Effect": "Known for their unshakeable confidence and resistance to negativity",
+        "Random Fact": "Often compared to an immovable object, especially in the face of criticism"
     },
     {
-        "id": "HYPERCUTTER",
-        "name": "Hyper Cutter",
-        "description": "Prevents other Pokemon from lowering this Pokemon's Attack stat stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Fur Coat",
+        "Short Description": "Halves damage from physical moves",
+        "Battle Effect": "Halves the damage taken from physical moves",
+        "Casual RP Effect": "Known for their luxurious fur, which is both stylish and protective",
+        "Random Fact": "Often mistaken for someone who’s all about fashion, but they’re tougher than they look"
     },
     {
-        "id": "ICEBODY",
-        "name": "Ice Body",
-        "description": "If Hail is active, this Pokemon heals 1/16 of its max HP each turn; immunity to Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Gale Wings",
+        "Short Description": "Gives priority to Flying-type moves when at full HP",
+        "Battle Effect": "Flying-type moves have priority if the user is at full HP",
+        "Casual RP Effect": "Known for being quick to act, especially when feeling on top of the world",
+        "Random Fact": "Often seen as the first to arrive and the first to leave, especially in high-energy situations"
     },
     {
-        "id": "ICEFACE",
-        "name": "Ice Face",
-        "description": "If Eiscue, the first physical hit it takes deals 0 damage. This effect is restored in Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Galvanize",
+        "Short Description": "Converts Normal-type moves to Electric-type",
+        "Battle Effect": "Normal-type moves become Electric-type and get a power boost",
+        "Casual RP Effect": "Has an electrifying presence that can turn any ordinary situation into a shocking experience",
+        "Random Fact": "Often causes electronics to act up or flicker when they’re nearby"
     },
     {
-        "id": "ICESCALES",
-        "name": "Ice Scales",
-        "description": "This Pokemon receives 1/2 damage from special attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Gluttony",
+        "Short Description": "Consumes held Berries early",
+        "Battle Effect": "Eats Berries at 50% HP instead of 25%",
+        "Casual RP Effect": "Known for always having snacks on hand, often eating them before anyone else",
+        "Random Fact": "Often finishes their food first, and might be seen eyeing others’ leftovers"
     },
     {
-        "id": "ILLUMINATE",
-        "name": "Illuminate",
-        "description": "No competitive use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Good as Gold",
+        "Short Description": "Immune to status moves",
+        "Battle Effect": "Immune to all status-inducing moves",
+        "Casual RP Effect": "Known for their impeccable behavior and resistance to bad influences",
+        "Random Fact": "Often admired for their golden personality and unshakeable moral compass"
     },
     {
-        "id": "ILLUSION",
-        "name": "Illusion",
-        "description": "This Pokemon appears as the last Pokemon in the party until it takes direct damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Gooey",
+        "Short Description": "Lowers the Speed of attackers on contact",
+        "Battle Effect": "Reduces the Speed of any Pokémon that makes contact",
+        "Casual RP Effect": "Tends to leave a sticky impression on others, making them feel sluggish or stuck",
+        "Random Fact": "Often seen trailing a gooey substance that’s oddly hard to clean up"
     },
     {
-        "id": "IMMUNITY",
-        "name": "Immunity",
-        "description": "This Pokemon cannot be poisoned. Gaining this Ability while poisoned cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Gorilla Tactics",
+        "Short Description": "Boosts Attack but locks the user into one move",
+        "Battle Effect": "Increases Attack by 50% but restricts to one move",
+        "Casual RP Effect": "Known for their intense focus on one task, often ignoring all else",
+        "Random Fact": "Often surprises others with their tunnel vision, sometimes to the point of absurdity"
     },
     {
-        "id": "IMPOSTER",
-        "name": "Imposter",
-        "description": "On switch-in, this Pokemon Transforms into the opposing Pokemon that is facing it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Grass Pelt",
+        "Short Description": "Boosts Defense in Grassy Terrain",
+        "Battle Effect": "Increases Defense by 50% in Grassy Terrain",
+        "Casual RP Effect": "Feels most comfortable and protected in grassy areas, like parks or meadows",
+        "Random Fact": "Often seen napping or relaxing in grassy fields, feeling almost invincible there"
     },
     {
-        "id": "INFILTRATOR",
-        "name": "Infiltrator",
-        "description": "Moves ignore substitutes and foe's Reflect/Light Screen/Safeguard/Mist/Aurora Veil.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Grassy Surge",
+        "Short Description": "Summons Grassy Terrain when entering battle",
+        "Battle Effect": "Creates Grassy Terrain for five turns",
+        "Casual RP Effect": "Known to make any area feel more natural and serene, even indoors",
+        "Random Fact": "Often leaves behind a trail of grass or flowers, making spaces feel more alive"
     },
     {
-        "id": "INNARDSOUT",
-        "name": "Innards Out",
-        "description": "If this Pokemon is KOed with a move, that move's user loses an equal amount of HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Grim Neigh",
+        "Short Description": "Boosts Special Attack when it KOs a Pokémon",
+        "Battle Effect": "Raises Special Attack by one stage upon KOing a Pokémon",
+        "Casual RP Effect": "Often gets more intense or excited when they’ve had a significant victory",
+        "Random Fact": "Known for their eerie laughter, which gets louder after every success"
     },
     {
-        "id": "INNERFOCUS",
-        "name": "Inner Focus",
-        "description": "This Pokemon cannot be made to flinch. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Guard Dog",
+        "Short Description": "Boosts Attack when intimidated; immune to Intimidate",
+        "Battle Effect": "Increases Attack when hit by Intimidate, and blocks the effect",
+        "Casual RP Effect": "Always ready to defend friends, especially against bullies",
+        "Random Fact": "Often has a protective streak, making them the friend you want around in tense situations"
     },
     {
-        "id": "INSOMNIA",
-        "name": "Insomnia",
-        "description": "This Pokemon cannot fall asleep. Gaining this Ability while asleep cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Gulp Missile",
+        "Short Description": "Returns swallowed prey to attack",
+        "Battle Effect": "After using Surf or Dive, fires the prey at the opponent",
+        "Casual RP Effect": "Known for spitting out surprising things at the most unexpected moments",
+        "Random Fact": "Often surprises others by suddenly coughing up or revealing something they swallowed earlier"
     },
     {
-        "id": "INTIMIDATE",
-        "name": "Intimidate",
-        "description": "On switch-in, this Pokemon lowers the Attack of adjacent opponents by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Guts",
+        "Short Description": "Boosts Attack when afflicted by a status condition",
+        "Battle Effect": "Increases Attack by 50% when burned, paralyzed, or poisoned",
+        "Casual RP Effect": "Often seen pushing through difficult situations with an unexpected burst of energy",
+        "Random Fact": "Known for their resilience, even when everyone else would have given up"
     },
     {
-        "id": "INTREPIDSWORD",
-        "name": "Intrepid Sword",
-        "description": "On switch-in, this Pokemon's Attack is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Hadron Engine",
+        "Short Description": "Sets Electric Terrain and boosts Special Attack",
+        "Battle Effect": "Creates Electric Terrain and boosts Special Attack by 50%",
+        "Casual RP Effect": "Known for their futuristic, almost sci-fi presence that energizes everyone around them",
+        "Random Fact": "Often causes technology to function better, or even glitch out, when they’re around"
     },
     {
-        "id": "IRONBARBS",
-        "name": "Iron Barbs",
-        "description": "Pokemon making contact with this Pokemon lose 1/8 of their max HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Harvest",
+        "Short Description": "May reuse a held Berry",
+        "Battle Effect": "50% chance to recycle a used Berry (100% in sunlight)",
+        "Casual RP Effect": "Known for being resourceful, often reusing or recycling items creatively",
+        "Random Fact": "Often surprises others with how they can stretch supplies, making things last much longer"
     },
     {
-        "id": "IRONFIST",
-        "name": "Iron Fist",
-        "description": "This Pokemon's punch-based attacks have 1.2x power. Sucker Punch is not boosted.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Healer",
+        "Short Description": "May heal an ally’s status condition",
+        "Battle Effect": "30% chance to heal an ally’s status condition",
+        "Casual RP Effect": "Often seen as a natural caretaker, always ready to help others feel better",
+        "Random Fact": "Known for having a soothing presence, making others feel better just by being around them"
     },
     {
-        "id": "JUSTIFIED",
-        "name": "Justified",
-        "description": "This Pokemon's Attack is raised by 1 stage after it is damaged by a Dark-type move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Heatproof",
+        "Short Description": "Halves damage from Fire-type moves and burns",
+        "Battle Effect": "Reduces Fire-type damage and burn effects by 50%",
+        "Casual RP Effect": "Often seen as cool under pressure, even in heated arguments",
+        "Random Fact": "Known for thriving in hot environments, like deserts or kitchens, where others might struggle"
     },
     {
-        "id": "KEENEYE",
-        "name": "Keen Eye",
-        "description": "This Pokemon's accuracy can't be lowered by others; ignores their evasiveness stat.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Heavy Metal",
+        "Short Description": "Doubles the Pokémon’s weight",
+        "Battle Effect": "Doubles the Pokémon's weight",
+        "Casual RP Effect": "Known for having a heavy presence, often making the floor creak when they walk",
+        "Random Fact": "Often causes furniture to groan or crack under their weight, even if they don’t look that heavy"
     },
     {
-        "id": "KLUTZ",
-        "name": "Klutz",
-        "description": "This Pokemon's held item has no effect, except Macho Brace. Fling cannot be used.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Honey Gather",
+        "Short Description": "May collect Honey after battle",
+        "Battle Effect": "Has a chance to collect Honey after every battle",
+        "Casual RP Effect": "Known for being sweet and attracting others with their charm",
+        "Random Fact": "Often surrounded by a faint, sweet scent, making others feel hungry or nostalgic for something sweet"
     },
     {
-        "id": "LEAFGUARD",
-        "name": "Leaf Guard",
-        "description": "If Sunny Day is active, this Pokemon cannot be statused and Rest will fail for it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Hospitability",
+        "Short Description": "Heals an ally when it switches in",
+        "Battle Effect": "Restores an ally’s HP when switching in",
+        "Casual RP Effect": "Known for being the ultimate host, making sure everyone is comfortable and happy",
+        "Random Fact": "Often seen offering food, drinks, or a place to rest, even to strangers"
     },
     {
-        "id": "LEVITATE",
-        "name": "Levitate",
-        "description": "This Pokemon is immune to Ground; Gravity/Ingrain/Smack Down/Iron Ball nullify it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Huge Power",
+        "Short Description": "Doubles the Pokémon’s Attack stat",
+        "Battle Effect": "Doubles the Pokémon’s Attack stat",
+        "Casual RP Effect": "Known for being deceptively strong, often surprising others with their power",
+        "Random Fact": "Often mistaken for being weak or frail, only to prove everyone wrong with their incredible strength"
     },
     {
-        "id": "LIBERO",
-        "name": "Libero",
-        "description": "This Pokemon's type changes to match the type of the move it is about to use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Hunger Switch",
+        "Short Description": "Changes form depending on hunger level",
+        "Battle Effect": "Alternates between Full Belly and Hangry Mode every turn",
+        "Casual RP Effect": "Known for having mood swings based on their hunger, often becoming cranky if not fed",
+        "Random Fact": "Often carries snacks to avoid getting 'hangry' in social situations"
     },
     {
-        "id": "LIGHTMETAL",
-        "name": "Light Metal",
-        "description": "This Pokemon's weight is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Hustle",
+        "Short Description": "Boosts Attack but lowers accuracy",
+        "Battle Effect": "Increases Attack by 50% but lowers move accuracy by 20%",
+        "Casual RP Effect": "Known for being a bit reckless, often rushing through tasks without paying attention to detail",
+        "Random Fact": "Often gets things done quickly but might miss a few important steps along the way"
     },
     {
-        "id": "LIGHTNINGROD",
-        "name": "Lightning Rod",
-        "description": "This Pokemon draws Electric moves to itself to raise Sp. Atk by 1; Electric immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Hydration",
+        "Short Description": "Heals status conditions in rain",
+        "Battle Effect": "Cures all status conditions in rain",
+        "Casual RP Effect": "Known for feeling refreshed and energized by rainy weather, often dancing in the rain",
+        "Random Fact": "Often carries an umbrella just in case, but only uses it to twirl around while enjoying the downpour"
     },
     {
-        "id": "LIMBER",
-        "name": "Limber",
-        "description": "This Pokemon cannot be paralyzed. Gaining this Ability while paralyzed cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Hyper Cutter",
+        "Short Description": "Prevents Attack from being lowered",
+        "Battle Effect": "Attack stat cannot be lowered",
+        "Casual RP Effect": "Known for their sharp focus and determination, not easily swayed by criticism",
+        "Random Fact": "Often seen carrying or using sharp objects, like scissors or knives, with surprising precision"
     },
     {
-        "id": "LIQUIDOOZE",
-        "name": "Liquid Ooze",
-        "description": "This Pokemon damages those draining HP from it for as much as they would heal.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Ice Body",
+        "Short Description": "Heals HP in hail",
+        "Battle Effect": "Recovers HP each turn during hail",
+        "Casual RP Effect": "Known for thriving in cold environments, often appearing more lively in the snow",
+        "Random Fact": "Often seen with a frosty appearance, even in warmer weather"
     },
     {
-        "id": "LIQUIDVOICE",
-        "name": "Liquid Voice",
-        "description": "This Pokemon's sound-based moves become Water type.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Ice Face",
+        "Short Description": "Takes no damage from physical moves once per battle",
+        "Battle Effect": "Ignores the first physical hit, then changes form",
+        "Casual RP Effect": "Known for having a tough exterior that cracks under pressure but bounces back quickly",
+        "Random Fact": "Often surprises others with their resilience, quickly recovering from even the hardest hits"
     },
     {
-        "id": "LONGREACH",
-        "name": "Long Reach",
-        "description": "This Pokemon's attacks do not make contact with the target.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Ice Scales",
+        "Short Description": "Halves damage from special moves",
+        "Battle Effect": "Takes half damage from special moves",
+        "Casual RP Effect": "Known for being cool under pressure, especially in verbal confrontations",
+        "Random Fact": "Often seen as having an icy demeanor, but they’re just great at keeping their cool"
     },
     {
-        "id": "MAGICBOUNCE",
-        "name": "Magic Bounce",
-        "description": "This Pokemon blocks certain status moves and bounces them back to the user.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Illuminate",
+        "Short Description": "Boosts encounter rate",
+        "Battle Effect": "Increases the chance of encountering wild Pokémon",
+        "Casual RP Effect": "Known for having a bright, noticeable presence that draws attention",
+        "Random Fact": "Often mistaken for a natural leader, simply because they’re hard to miss"
     },
     {
-        "id": "MAGICGUARD",
-        "name": "Magic Guard",
-        "description": "This Pokemon can only be damaged by direct attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Illusion",
+        "Short Description": "Disguises itself as the last Pokémon in the party",
+        "Battle Effect": "Appears as the last Pokémon in the party until hit",
+        "Casual RP Effect": "Known for being a master of disguise, often blending into the background",
+        "Random Fact": "Often surprises others by revealing their true self at the most unexpected moments"
     },
     {
-        "id": "MAGICIAN",
-        "name": "Magician",
-        "description": "If this Pokemon has no item, it steals the item off a Pokemon it hits with an attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Immunity",
+        "Short Description": "Prevents poisoning",
+        "Battle Effect": "Cannot be poisoned",
+        "Casual RP Effect": "Known for having a strong constitution, rarely getting sick or feeling unwell",
+        "Random Fact": "Often seen eating questionable food without any ill effects"
     },
     {
-        "id": "MAGMAARMOR",
-        "name": "Magma Armor",
-        "description": "This Pokemon cannot be frozen. Gaining this Ability while frozen cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Imposter",
+        "Short Description": "Transforms into the opposing Pokémon",
+        "Battle Effect": "Transforms into the opponent when entering battle",
+        "Casual RP Effect": "Known for mimicking others perfectly, often confusing people with their impressions",
+        "Random Fact": "Often gets into trouble by impersonating others, whether for fun or by accident"
     },
     {
-        "id": "MAGNETPULL",
-        "name": "Magnet Pull",
-        "description": "Prevents adjacent Steel-type foes from choosing to switch.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Infiltrator",
+        "Short Description": "Bypasses barriers and substitutes",
+        "Battle Effect": "Ignores Light Screen, Reflect, and Substitute",
+        "Casual RP Effect": "Known for being able to get past any obstacle, whether physical or social",
+        "Random Fact": "Often surprises others by finding ways to sneak into places they shouldn’t be"
     },
     {
-        "id": "MARVELSCALE",
-        "name": "Marvel Scale",
-        "description": "If this Pokemon is statused, its Defense is 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Innards Out",
+        "Short Description": "Deals damage equal to HP lost when knocked out",
+        "Battle Effect": "Deals damage equal to the amount of HP lost when KO'd",
+        "Casual RP Effect": "Known for giving it their all, even at the very end",
+        "Random Fact": "Often surprises others with their tenacity, refusing to go down without a fight"
     },
     {
-        "id": "MEGALAUNCHER",
-        "name": "Mega Launcher",
-        "description": "This Pokemon's pulse moves have 1.5x power. Heal Pulse heals 3/4 target's max HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Inner Focus",
+        "Short Description": "Prevents flinching",
+        "Battle Effect": "Cannot flinch",
+        "Casual RP Effect": "Known for their unbreakable concentration, especially in tense situations",
+        "Random Fact": "Often seen as unflappable, even in the most chaotic environments"
     },
     {
-        "id": "MERCILESS",
-        "name": "Merciless",
-        "description": "This Pokemon's attacks are critical hits if the target is poisoned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Insomnia",
+        "Short Description": "Prevents sleep",
+        "Battle Effect": "Cannot fall asleep",
+        "Casual RP Effect": "Known for being a night owl, often staying up late with no signs of fatigue",
+        "Random Fact": "Often carries dark circles under their eyes, but never seems tired"
     },
     {
-        "id": "MIMICRY",
-        "name": "Mimicry",
-        "description": "This Pokemon's type changes to match the Terrain. Type reverts when Terrain ends.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Intimidate",
+        "Short Description": "Lowers the opponent's Attack when entering battle",
+        "Battle Effect": "Reduces the opponent's Attack by one stage",
+        "Casual RP Effect": "Known for their commanding presence, often making others think twice before acting",
+        "Random Fact": "Often surprises others with how easily they can take control of a situation"
     },
     {
-        "id": "MINUS",
-        "name": "Minus",
-        "description": "If an active ally has this Ability or the Plus Ability, this Pokemon's Sp. Atk is 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Intrepid Sword",
+        "Short Description": "Boosts Attack when entering battle",
+        "Battle Effect": "Increases Attack by one stage when entering battle",
+        "Casual RP Effect": "Known for their fierce bravery, especially when facing new challenges",
+        "Random Fact": "Often seen carrying a sword or other weapon, even in casual settings"
     },
     {
-        "id": "MIRRORARMOR",
-        "name": "Mirror Armor",
-        "description": "If this Pokemon's stat stages would be lowered, the attacker's are lowered instead.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Iron Barbs",
+        "Short Description": "Deals damage to attackers on contact",
+        "Battle Effect": "Inflicts damage equal to 1/8 of the attacker's HP on contact",
+        "Casual RP Effect": "Known for their spiky personality, often leaving a lasting impression",
+        "Random Fact": "Often surprises others with how prickly they can be, even when they don’t mean to be"
     },
     {
-        "id": "MISTYSURGE",
-        "name": "Misty Surge",
-        "description": "On switch-in, this Pokemon summons Misty Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Iron Fist",
+        "Short Description": "Boosts the power of punching moves",
+        "Battle Effect": "Increases the power of punch-based moves by 20%",
+        "Casual RP Effect": "Known for their strong handshake and powerful punches",
+        "Random Fact": "Often seen practicing martial arts or boxing, with a focus on punches"
     },
     {
-        "id": "MOLDBREAKER",
-        "name": "Mold Breaker",
-        "description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Justified",
+        "Short Description": "Boosts Attack when hit by a Dark-type move",
+        "Battle Effect": "Increases Attack by one stage when hit by a Dark-type move",
+        "Casual RP Effect": "Known for their strong sense of justice, especially when defending others",
+        "Random Fact": "Often seen stepping in to help those in need, even at personal risk"
     },
     {
-        "id": "MOODY",
-        "name": "Moody",
-        "description": "Boosts a random stat (except accuracy/evasion) +2 and another stat -1 every turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Keen Eye",
+        "Short Description": "Prevents accuracy from being lowered",
+        "Battle Effect": "Accuracy cannot be lowered",
+        "Casual RP Effect": "Known for their sharp vision, often noticing details others miss",
+        "Random Fact": "Often surprises others with how quickly they spot things, even in chaotic situations"
     },
     {
-        "id": "MOTORDRIVE",
-        "name": "Motor Drive",
-        "description": "This Pokemon's Speed is raised 1 stage if hit by an Electric move; Electric immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Klutz",
+        "Short Description": "Cannot use held items",
+        "Battle Effect": "Unable to use held items",
+        "Casual RP Effect": "Known for being clumsy, often dropping or forgetting things",
+        "Random Fact": "Often seen tripping over their own feet or accidentally bumping into things"
     },
     {
-        "id": "MOXIE",
-        "name": "Moxie",
-        "description": "This Pokemon's Attack is raised by 1 stage if it attacks and KOes another Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Leaf Guard",
+        "Short Description": "Prevents status conditions in sunny weather",
+        "Battle Effect": "Immune to status conditions during sunlight",
+        "Casual RP Effect": "Known for their healthy, vibrant appearance, especially on sunny days",
+        "Random Fact": "Often seen sunbathing or spending time outdoors, looking especially radiant in the sunlight"
     },
     {
-        "id": "MULTISCALE",
-        "name": "Multiscale",
-        "description": "If this Pokemon is at full HP, damage taken from attacks is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Levitate",
+        "Short Description": "Immunity to Ground-type moves",
+        "Battle Effect": "Immune to Ground-type moves",
+        "Casual RP Effect": "Known for their light, almost floating presence, often moving gracefully",
+        "Random Fact": "Often seen hovering slightly above the ground, giving them an ethereal appearance"
     },
     {
-        "id": "MULTITYPE",
-        "name": "Multitype",
-        "description": "If this Pokemon is an Arceus, its type changes to match its held Plate or Z-Crystal.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Libero",
+        "Short Description": "Changes type to match the move used",
+        "Battle Effect": "Changes the user's type to the move being used",
+        "Casual RP Effect": "Known for their versatility, often adapting to any situation with ease",
+        "Random Fact": "Often surprises others with how easily they change their approach or style"
     },
     {
-        "id": "MUMMY",
-        "name": "Mummy",
-        "description": "Pokemon making contact with this Pokemon have their Ability changed to Mummy.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Light Metal",
+        "Short Description": "Halves the Pokémon’s weight",
+        "Battle Effect": "Pokémon's weight is halved",
+        "Casual RP Effect": "Known for being light on their feet, often moving quickly and effortlessly",
+        "Random Fact": "Often seen gliding or dancing gracefully, as if weightless"
     },
     {
-        "id": "NATURALCURE",
-        "name": "Natural Cure",
-        "description": "This Pokemon has its non-volatile status condition cured when it switches out.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Lightning Rod",
+        "Short Description": "Draws in Electric-type moves",
+        "Battle Effect": "Draws in Electric-type moves and boosts Special Attack",
+        "Casual RP Effect": "Known for attracting attention, especially in high-energy situations",
+        "Random Fact": "Often seen as a lightning rod for drama or excitement, drawing in others without trying"
     },
     {
-        "id": "NEUROFORCE",
-        "name": "Neuroforce",
-        "description": "This Pokemon's attacks that are super effective against the target do 1.25x damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Limber",
+        "Short Description": "Prevents paralysis",
+        "Battle Effect": "Cannot be paralyzed",
+        "Casual RP Effect": "Known for their flexibility, both physically and mentally",
+        "Random Fact": "Often surprises others with their ability to bend or stretch in ways that seem impossible"
     },
     {
-        "id": "NEUTRALIZINGGAS",
-        "name": "Neutralizing Gas",
-        "description": "While this Pokemon is active, Abilities have no effect.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Lingering Aroma",
+        "Short Description": "Inflicts the ability on contact",
+        "Battle Effect": "Changes the attacker's ability to Lingering Aroma upon contact",
+        "Casual RP Effect": "Known for leaving a lasting impression, whether good or bad",
+        "Random Fact": "Often surprises others with how their presence lingers even after they've left"
     },
     {
-        "id": "NOGUARD",
-        "name": "No Guard",
-        "description": "Every move used by or against this Pokemon will always hit.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Liquid Ooze",
+        "Short Description": "Drains HP from moves that drain the user's HP",
+        "Battle Effect": "Converts HP-draining moves into damage for the attacker",
+        "Casual RP Effect": "Known for their toxic personality, often turning others’ negativity back on them",
+        "Random Fact": "Often seen as someone to avoid, especially when in a bad mood"
     },
     {
-        "id": "NORMALIZE",
-        "name": "Normalize",
-        "description": "This Pokemon's moves are changed to be Normal type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Liquid Voice",
+        "Short Description": "Converts sound-based moves to Water-type",
+        "Battle Effect": "All sound-based moves become Water-type moves",
+        "Casual RP Effect": "Known for having a smooth, calming voice that can wash away worries",
+        "Random Fact": "Often surprises others with how soothing their voice is, even in tense situations"
     },
     {
-        "id": "OBLIVIOUS",
-        "name": "Oblivious",
-        "description": "This Pokemon cannot be infatuated or taunted. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Long Reach",
+        "Short Description": "Uses moves without making contact",
+        "Battle Effect": "Moves do not make contact with the opponent",
+        "Casual RP Effect": "Known for their ability to reach others without getting too close",
+        "Random Fact": "Often seen as aloof or distant, but they’re just good at keeping their distance"
     },
     {
-        "id": "OVERCOAT",
-        "name": "Overcoat",
-        "description": "This Pokemon is immune to powder moves and damage from Sandstorm or Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Magic Bounce",
+        "Short Description": "Reflects status moves back at the opponent",
+        "Battle Effect": "Reflects status-inducing moves back at the opponent",
+        "Casual RP Effect": "Known for their ability to turn the tables in any situation, often surprising others",
+        "Random Fact": "Often surprises others with their quick wit and ability to deflect criticism"
     },
     {
-        "id": "OVERGROW",
-        "name": "Overgrow",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Grass attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Magic Guard",
+        "Short Description": "Prevents damage except from direct attacks",
+        "Battle Effect": "Immune to indirect damage like status conditions or weather",
+        "Casual RP Effect": "Known for being protected from harm, often seen as lucky or blessed",
+        "Random Fact": "Often surprises others with how they avoid accidents or mishaps with ease"
     },
     {
-        "id": "OWNTEMPO",
-        "name": "Own Tempo",
-        "description": "This Pokemon cannot be confused. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Magician",
+        "Short Description": "Steals the opponent's held item when attacking",
+        "Battle Effect": "Takes the opponent's item after using a move",
+        "Casual RP Effect": "Known for their sleight of hand, often making things disappear and reappear",
+        "Random Fact": "Often surprises others with their tricks, often leaving them wondering where their stuff went"
     },
     {
-        "id": "PARENTALBOND",
-        "name": "Parental Bond",
-        "description": "This Pokemon's damaging moves hit twice. The second hit has its damage quartered.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Magma Armor",
+        "Short Description": "Prevents freezing",
+        "Battle Effect": "Cannot be frozen",
+        "Casual RP Effect": "Known for their warm, fiery personality, often bringing warmth to any situation",
+        "Random Fact": "Often seen as someone who’s always hot, even in the coldest weather"
     },
     {
-        "id": "PASTELVEIL",
-        "name": "Pastel Veil",
-        "description": "This Pokemon and its allies cannot be poisoned. On switch-in, cures poisoned allies.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Magnet Pull",
+        "Short Description": "Prevents Steel-type Pokémon from escaping",
+        "Battle Effect": "Traps Steel-type Pokémon in battle",
+        "Casual RP Effect": "Known for their magnetic personality, often attracting others without trying",
+        "Random Fact": "Often surprises others with how easily they draw people in, even those who seem uninterested"
     },
     {
-        "id": "PERISHBODY",
-        "name": "Perish Body",
-        "description": "Making contact with this Pokemon starts the Perish Song effect for it and the attacker.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Marvel Scale",
+        "Short Description": "Boosts Defense when inflicted by a status condition",
+        "Battle Effect": "Increases Defense by 50% when suffering from a status condition",
+        "Casual RP Effect": "Known for their resilience, often growing stronger under pressure",
+        "Random Fact": "Often seen as someone who thrives in tough situations, getting better as things get worse"
     },
     {
-        "id": "PICKPOCKET",
-        "name": "Pickpocket",
-        "description": "If this Pokemon has no item and is hit by a contact move, it steals the attacker's item.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Mega Launcher",
+        "Short Description": "Boosts the power of aura and pulse moves",
+        "Battle Effect": "Increases the power of pulse moves by 50%",
+        "Casual RP Effect": "Known for their powerful presence, often seen as a force to be reckoned with",
+        "Random Fact": "Often surprises others with how strong and commanding they can be, especially in groups"
     },
     {
-        "id": "PICKUP",
-        "name": "Pickup",
-        "description": "If this Pokemon has no item, it finds one used by an adjacent Pokemon this turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Merciless",
+        "Short Description": "Always lands critical hits on poisoned targets",
+        "Battle Effect": "Guaranteed critical hits on poisoned opponents",
+        "Casual RP Effect": "Known for their ruthless tactics, often striking when their opponents are at their weakest",
+        "Random Fact": "Often seen as someone not to be crossed, as they’re known for going for the jugular"
     },
     {
-        "id": "PIXILATE",
-        "name": "Pixilate",
-        "description": "This Pokemon's Normal-type moves become Fairy type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Mimicry",
+        "Short Description": "Changes type depending on the terrain",
+        "Battle Effect": "Changes type based on the battlefield terrain",
+        "Casual RP Effect": "Known for their ability to blend in with their surroundings, often unnoticed",
+        "Random Fact": "Often surprises others with how well they adapt to different environments"
     },
     {
-        "id": "PLUS",
-        "name": "Plus",
-        "description": "If an active ally has this Ability or the Minus Ability, this Pokemon's Sp. Atk is 1.5x.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Minus",
+        "Short Description": "Boosts Special Attack when paired with Plus",
+        "Battle Effect": "Increases Special Attack when an ally has Plus",
+        "Casual RP Effect": "Known for their negative attitude, often bringing down the mood",
+        "Random Fact": "Often seen as someone who balances out overly positive situations, bringing a dose of realism"
     },
     {
-        "id": "POISONHEAL",
-        "name": "Poison Heal",
-        "description": "This Pokemon is healed by 1/8 of its max HP each turn when poisoned; no HP loss.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Mirror Armor",
+        "Short Description": "Reflects stat-lowering effects",
+        "Battle Effect": "Bounces back stat-lowering moves to the opponent",
+        "Casual RP Effect": "Known for their reflective nature, often turning criticism back on the giver",
+        "Random Fact": "Often surprises others with how easily they can deflect negative comments or attacks"
     },
     {
-        "id": "POISONPOINT",
-        "name": "Poison Point",
-        "description": "30% chance a Pokemon making contact with this Pokemon will be poisoned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Misty Surge",
+        "Short Description": "Activates Misty Terrain when entering battle",
+        "Battle Effect": "Sets Misty Terrain for five turns",
+        "Casual RP Effect": "Known for their mystical, otherworldly aura, often leaving others in awe",
+        "Random Fact": "Often seen surrounded by a mysterious fog or mist, adding to their ethereal appearance"
     },
     {
-        "id": "POISONTOUCH",
-        "name": "Poison Touch",
-        "description": "This Pokemon's contact moves have a 30% chance of poisoning.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Mold Breaker",
+        "Short Description": "Ignores the opponent's abilities",
+        "Battle Effect": "Moves ignore the opponent’s abilities",
+        "Casual RP Effect": "Known for breaking the mold, often doing things differently from everyone else",
+        "Random Fact": "Often surprises others with their unconventional approach to life and challenges"
     },
     {
-        "id": "POWERCONSTRUCT",
-        "name": "Power Construct",
-        "description": "If Zygarde 10%/50%, changes to Complete if at 1/2 max HP or less at end of turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Moody",
+        "Short Description": "Randomly boosts one stat and lowers another each turn",
+        "Battle Effect": "Randomly increases one stat and decreases another",
+        "Casual RP Effect": "Known for their unpredictable mood swings, often leaving others unsure of what to expect",
+        "Random Fact": "Often surprises others with how quickly they can change from one emotion to another"
     },
     {
-        "id": "POWEROFALCHEMY",
-        "name": "Power of Alchemy",
-        "description": "This Pokemon copies the Ability of an ally that faints.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Motor Drive",
+        "Short Description": "Boosts Speed when hit by an Electric-type move",
+        "Battle Effect": "Increases Speed by one stage when hit by an Electric move",
+        "Casual RP Effect": "Known for being fast and energetic, especially in high-energy situations",
+        "Random Fact": "Often seen zipping around, as if powered by electricity, always on the go"
     },
     {
-        "id": "POWERSPOT",
-        "name": "Power Spot",
-        "description": "This Pokemon's allies have the power of their moves multiplied by 1.3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Moxie",
+        "Short Description": "Boosts Attack after knocking out a target",
+        "Battle Effect": "Increases Attack by one stage after KO'ing an opponent",
+        "Casual RP Effect": "Known for their confidence, often growing stronger with each success",
+        "Random Fact": "Often seen as someone who gains momentum, becoming more formidable as they achieve their goals"
     },
     {
-        "id": "PRANKSTER",
-        "name": "Prankster",
-        "description": "This Pokemon's Status moves have priority raised by 1, but Dark types are immune.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Multiscale",
+        "Short Description": "Reduces damage when at full HP",
+        "Battle Effect": "Takes half damage when at full health",
+        "Casual RP Effect": "Known for their incredible durability, especially when they’re in peak condition",
+        "Random Fact": "Often surprises others with how tough they are, especially when they’re at their best"
     },
     {
-        "id": "PRESSURE",
-        "name": "Pressure",
-        "description": "If this Pokemon is the target of a foe's move, that move loses one additional PP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Multitype",
+        "Short Description": "Changes type to match the held Plate or Memory",
+        "Battle Effect": "Type changes to match the held Plate or Memory",
+        "Casual RP Effect": "Known for their versatility, able to adapt to any situation with ease",
+        "Random Fact": "Often surprises others with how easily they can change their approach or style, depending on their tools"
     },
     {
-        "id": "PRIMORDIALSEA",
-        "name": "Primordial Sea",
-        "description": "On switch-in, heavy rain begins until this Ability is not active in battle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Mummy",
+        "Short Description": "Changes the opponent's ability to Mummy on contact",
+        "Battle Effect": "Opponent's ability becomes Mummy upon contact",
+        "Casual RP Effect": "Known for their eerie presence, often leaving others feeling a bit unsettled",
+        "Random Fact": "Often seen as someone who’s best avoided, due to their spooky or unsettling aura"
     },
     {
-        "id": "PRISMARMOR",
-        "name": "Prism Armor",
-        "description": "This Pokemon receives 3/4 damage from supereffective attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Mycelium Might",
+        "Short Description": "Moves always go last but ignore abilities",
+        "Battle Effect": "Moves always go last, but ignore the opponent’s abilities",
+        "Casual RP Effect": "Known for their slow, deliberate actions, often ensuring success despite delays",
+        "Random Fact": "Often surprises others with how methodical they are, taking their time to ensure everything goes perfectly"
     },
     {
-        "id": "PROPELLERTAIL",
-        "name": "Propeller Tail",
-        "description": "This Pokemon's moves cannot be redirected to a different target by any effect.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Natural Cure",
+        "Short Description": "Heals status conditions when switching out",
+        "Battle Effect": "Cures status conditions upon switching out",
+        "Casual RP Effect": "Known for their regenerative abilities, often recovering quickly from any ailment",
+        "Random Fact": "Often surprises others with how quickly they bounce back from illness or injury"
     },
     {
-        "id": "PROTEAN",
-        "name": "Protean",
-        "description": "This Pokemon's type changes to match the type of the move it is about to use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Neuroforce",
+        "Short Description": "Boosts the power of super-effective moves",
+        "Battle Effect": "Increases the power of super-effective moves",
+        "Casual RP Effect": "Known for their strategic mind, often knowing exactly how to exploit weaknesses",
+        "Random Fact": "Often seen as a tactician, always planning their moves carefully to ensure maximum impact"
     },
     {
-        "id": "PSYCHICSURGE",
-        "name": "Psychic Surge",
-        "description": "On switch-in, this Pokemon summons Psychic Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Neutralizing Gas",
+        "Short Description": "Suppresses all abilities on the field",
+        "Battle Effect": "All abilities are nullified while active",
+        "Casual RP Effect": "Known for their ability to neutralize situations, often calming things down quickly",
+        "Random Fact": "Often surprises others with how quickly they can diffuse tense situations, bringing calm to chaos"
     },
     {
-        "id": "PUNKROCK",
-        "name": "Punk Rock",
-        "description": "This Pokemon receives 1/2 damage from sound moves. Its own have 1.3x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "No Guard",
+        "Short Description": "Ensures all moves hit",
+        "Battle Effect": "Guarantees that all moves hit their targets",
+        "Casual RP Effect": "Known for their relentless pursuit of their goals, never missing an opportunity",
+        "Random Fact": "Often seen as someone who never lets anything slip by, always on target"
     },
     {
-        "id": "PUREPOWER",
-        "name": "Pure Power",
-        "description": "This Pokemon's Attack is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Normalize",
+        "Short Description": "Converts all moves to Normal-type",
+        "Battle Effect": "All moves become Normal-type and receive a boost in power",
+        "Casual RP Effect": "Known for making everything seem ordinary, even the most extraordinary events",
+        "Random Fact": "Often surprises others with their ability to make even the strangest situations seem normal"
     },
     {
-        "id": "QUEENLYMAJESTY",
-        "name": "Queenly Majesty",
-        "description": "While this Pokemon is active, allies are protected from opposing priority moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Oblivious",
+        "Short Description": "Prevents attraction and intimidation",
+        "Battle Effect": "Immune to infatuation and Intimidate",
+        "Casual RP Effect": "Known for being blissfully unaware of romantic advances or intimidation attempts",
+        "Random Fact": "Often seen as someone who’s completely oblivious to flirting or bullying"
     },
     {
-        "id": "QUICKDRAW",
-        "name": "Quick Draw",
-        "description": "This Pokemon has a 30% chance to move first in its priority bracket with attacking moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Opportunist",
+        "Short Description": "Copies the stat boosts of an opponent",
+        "Battle Effect": "Copies the opponent's stat boosts when they occur",
+        "Casual RP Effect": "Known for seizing opportunities, often copying others’ successes",
+        "Random Fact": "Often seen as someone who’s always in the right place at the right time, ready to take advantage"
     },
     {
-        "id": "QUICKFEET",
-        "name": "Quick Feet",
-        "description": "If this Pokemon is statused, its Speed is 1.5x; ignores Speed drop from paralysis.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Orichalcum Pulse",
+        "Short Description": "Sets up harsh sunlight when entering battle",
+        "Battle Effect": "Activates harsh sunlight when entering battle and boosts Attack",
+        "Casual RP Effect": "Known for their fiery, commanding presence, often heating up any situation they enter",
+        "Random Fact": "Often surprises others with their intense energy, as if they bring the sun with them wherever they go"
     },
     {
-        "id": "RAINDISH",
-        "name": "Rain Dish",
-        "description": "If Rain Dance is active, this Pokemon heals 1/16 of its max HP each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Overcoat",
+        "Short Description": "Protects from weather effects and powder moves",
+        "Battle Effect": "Immune to weather and powder-based moves",
+        "Casual RP Effect": "Known for their protective nature, often shielding others from harm",
+        "Random Fact": "Often seen as someone who’s always prepared for anything, with a protective aura"
     },
     {
-        "id": "RATTLED",
-        "name": "Rattled",
-        "description": "Speed is raised 1 stage if hit by a Bug-, Dark-, or Ghost-type attack, or Intimidated.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Overgrow",
+        "Short Description": "Boosts Grass-type moves when HP is low",
+        "Battle Effect": "Grass-type moves gain 50% power when HP is low",
+        "Casual RP Effect": "Known for their resilience, especially when they’re backed into a corner",
+        "Random Fact": "Often surprises others with how strong they become when their back is against the wall"
     },
     {
-        "id": "RECEIVER",
-        "name": "Receiver",
-        "description": "This Pokemon copies the Ability of an ally that faints.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Own Tempo",
+        "Short Description": "Prevents confusion",
+        "Battle Effect": "Immune to confusion",
+        "Casual RP Effect": "Known for their independent nature, often doing things their own way without being swayed",
+        "Random Fact": "Often seen as someone who marches to the beat of their own drum, unaffected by others’ opinions"
     },
     {
-        "id": "RECKLESS",
-        "name": "Reckless",
-        "description": "This Pokemon's attacks with recoil or crash damage have 1.2x power; not Struggle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Parental Bond",
+        "Short Description": "Allows an extra hit from a move",
+        "Battle Effect": "Hits twice with each attack, with the second hit at reduced power",
+        "Casual RP Effect": "Known for their nurturing, protective nature, especially towards younger individuals",
+        "Random Fact": "Often seen as someone who’s always looking out for others, especially those who are vulnerable"
     },
     {
-        "id": "REFRIGERATE",
-        "name": "Refrigerate",
-        "description": "This Pokemon's Normal-type moves become Ice type and have 1.2x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Pastel Veil",
+        "Short Description": "Protects allies from being poisoned",
+        "Battle Effect": "Prevents poison for the user and their allies",
+        "Casual RP Effect": "Known for their soothing presence, often bringing calm and protection to those around them",
+        "Random Fact": "Often surprises others with how easily they can diffuse tension, especially in stressful situations"
     },
     {
-        "id": "REGENERATOR",
-        "name": "Regenerator",
-        "description": "This Pokemon restores 1/3 of its maximum HP, rounded down, when it switches out.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Perish Body",
+        "Short Description": "Causes both the user and attacker to faint in 3 turns",
+        "Battle Effect": "Both Pokémon faint after three turns",
+        "Casual RP Effect": "Known for their dramatic, often self-sacrificial tendencies",
+        "Random Fact": "Often seen as someone who’s willing to go down with the ship, especially if it means taking others with them"
     },
     {
-        "id": "RIPEN",
-        "name": "Ripen",
-        "description": "When this Pokemon eats a Berry, its effect is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Pickpocket",
+        "Short Description": "Steals an item when hit by a move",
+        "Battle Effect": "Takes the opponent's held item when hit",
+        "Casual RP Effect": "Known for their light fingers, often getting away with others’ belongings unnoticed",
+        "Random Fact": "Often surprises others with their ability to acquire things without anyone realizing it"
     },
     {
-        "id": "RIVALRY",
-        "name": "Rivalry",
-        "description": "This Pokemon's attacks do 1.25x on same gender targets; 0.75x on opposite gender.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Pickup",
+        "Short Description": "Finds items after battle",
+        "Battle Effect": "May find a random item after battle",
+        "Casual RP Effect": "Known for their resourcefulness, often finding useful items wherever they go",
+        "Random Fact": "Often surprises others with how easily they seem to find exactly what they need, even in unlikely places"
     },
     {
-        "id": "RKSSYSTEM",
-        "name": "RKS System",
-        "description": "If this Pokemon is a Silvally, its type changes to match its held Memory.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Pixilate",
+        "Short Description": "Converts Normal-type moves to Fairy-type",
+        "Battle Effect": "All Normal-type moves become Fairy-type and receive a boost",
+        "Casual RP Effect": "Known for their magical, otherworldly nature, often enchanting those around them",
+        "Random Fact": "Often seen as someone who brings a bit of magic to everything they do"
     },
     {
-        "id": "ROCKHEAD",
-        "name": "Rock Head",
-        "description": "This Pokemon does not take recoil damage besides Struggle/Life Orb/crash damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Plus",
+        "Short Description": "Boosts Special Attack when paired with Minus",
+        "Battle Effect": "Increases Special Attack when an ally has Minus",
+        "Casual RP Effect": "Known for their positive attitude, often uplifting those around them",
+        "Random Fact": "Often seen as a natural optimist, always seeing the bright side of things"
     },
     {
-        "id": "ROUGHSKIN",
-        "name": "Rough Skin",
-        "description": "Pokemon making contact with this Pokemon lose 1/8 of their max HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Poison Heal",
+        "Short Description": "Heals HP instead of taking damage from poison",
+        "Battle Effect": "Regains HP when poisoned instead of losing it",
+        "Casual RP Effect": "Known for their toxic resilience, often thriving in situations that would harm others",
+        "Random Fact": "Often seen as someone who can turn even the worst situations to their advantage"
     },
     {
-        "id": "RUNAWAY",
-        "name": "Run Away",
-        "description": "No competitive use.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Poison Point",
+        "Short Description": "May poison the attacker on contact",
+        "Battle Effect": "30% chance to poison an attacker on contact",
+        "Casual RP Effect": "Known for their prickly personality, often leaving others feeling a bit 'off' after an encounter",
+        "Random Fact": "Often seen as someone who’s best approached with caution, as they have a tendency to leave a lasting, unpleasant impression"
     },
     {
-        "id": "SANDFORCE",
-        "name": "Sand Force",
-        "description": "This Pokemon's Ground/Rock/Steel attacks do 1.3x in Sandstorm; immunity to it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Poison Puppeteer",
+        "Short Description": "Inflicts poison on all opponents upon entry",
+        "Battle Effect": "All opponents are poisoned when the Pokémon enters battle",
+        "Casual RP Effect": "The Pokémon is feared for its toxic influence.",
+        "Random Fact": "Known for using puppetry to control its poison."
     },
     {
-        "id": "SANDRUSH",
-        "name": "Sand Rush",
-        "description": "If Sandstorm is active, this Pokemon's Speed is doubled; immunity to Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Poison Touch",
+        "Short Description": "May poison the attacker on contact",
+        "Battle Effect": "30% chance to poison the attacker on physical contact",
+        "Casual RP Effect": "Touching this Pokémon can lead to unexpected harm.",
+        "Random Fact": "Its touch can leave lingering effects on foes."
     },
     {
-        "id": "SANDSPIT",
-        "name": "Sand Spit",
-        "description": "When this Pokemon is hit, Sandstorm begins.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Power Construct",
+        "Short Description": "Transforms into a different form at low HP",
+        "Battle Effect": "Changes form to a more powerful one when HP is halved",
+        "Casual RP Effect": "Grows stronger when in dire situations.",
+        "Random Fact": "Known for rising from adversity like a phoenix."
     },
     {
-        "id": "SANDSTREAM",
-        "name": "Sand Stream",
-        "description": "On switch-in, this Pokemon summons Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Power Spot",
+        "Short Description": "Boosts the power of allies’ moves",
+        "Battle Effect": "Increases the power of allies' moves in battle",
+        "Casual RP Effect": "Enhances team dynamics, boosting morale.",
+        "Random Fact": "Seen as a natural leader in group settings."
     },
     {
-        "id": "SANDVEIL",
-        "name": "Sand Veil",
-        "description": "If Sandstorm is active, this Pokemon's evasiveness is 1.25x; immunity to Sandstorm.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Power of Alchemy",
+        "Short Description": "Copies an opponent's Ability when hit by a move",
+        "Battle Effect": "Gains the opponent’s Ability when hit by an attack",
+        "Casual RP Effect": "Adapts to various situations by borrowing traits.",
+        "Random Fact": "Can become a mirror of its foes' strengths."
     },
     {
-        "id": "SAPSIPPER",
-        "name": "Sap Sipper",
-        "description": "This Pokemon's Attack is raised 1 stage if hit by a Grass move; Grass immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Prankster",
+        "Short Description": "Gives priority to status moves",
+        "Battle Effect": "Status moves have increased priority in battle",
+        "Casual RP Effect": "Often causes mischief before others can react.",
+        "Random Fact": "Known for playful tricks and cunning strategies."
     },
     {
-        "id": "SCHOOLING",
-        "name": "Schooling",
-        "description": "If user is Wishiwashi, changes to School Form if it has > 1/4 max HP, else Solo Form.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Pressure",
+        "Short Description": "Increases the opponent’s PP usage",
+        "Battle Effect": "Opponents use more PP for their moves",
+        "Casual RP Effect": "Affects the confidence of foes in casual encounters.",
+        "Random Fact": "Can wear down even the strongest opponents."
     },
     {
-        "id": "SCRAPPY",
-        "name": "Scrappy",
-        "description": "Fighting, Normal moves hit Ghost. Immune to Intimidate.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Primordial Sea",
+        "Short Description": "Sets up Heavy Rain when entering battle",
+        "Battle Effect": "Summons Heavy Rain, affecting Water-type moves",
+        "Casual RP Effect": "Creates a calming atmosphere with rain, boosting spirits.",
+        "Random Fact": "Known for being the bringer of storms."
     },
     {
-        "id": "SCREENCLEANER",
-        "name": "Screen Cleaner",
-        "description": "On switch-in, the effects of Aurora Veil, Light Screen, and Reflect end for both sides.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Prism Armor",
+        "Short Description": "Reduces damage from super-effective attacks",
+        "Battle Effect": "Halves damage taken from super-effective moves",
+        "Casual RP Effect": "Provides a sense of safety in casual interactions.",
+        "Random Fact": "Its reflective nature can confuse attackers."
     },
     {
-        "id": "SERENEGRACE",
-        "name": "Serene Grace",
-        "description": "This Pokemon's moves have their secondary effect chance doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Propeller Tail",
+        "Short Description": "Ignores opponent's abilities that lower priority",
+        "Battle Effect": "Allows moves to bypass effects that lower priority",
+        "Casual RP Effect": "Ensures smooth interactions without hindrance.",
+        "Random Fact": "Often compared to a streamlined vehicle."
     },
     {
-        "id": "SHADOWSHIELD",
-        "name": "Shadow Shield",
-        "description": "If this Pokemon is at full HP, damage taken from attacks is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Protean",
+        "Short Description": "Changes type to the type of the move used",
+        "Battle Effect": "Changes the Pokémon's type to match the move it uses",
+        "Casual RP Effect": "Adapts seamlessly to situations, surprising others.",
+        "Random Fact": "Known for its ability to keep foes guessing."
     },
     {
-        "id": "SHADOWTAG",
-        "name": "Shadow Tag",
-        "description": "Prevents adjacent foes from choosing to switch unless they also have this Ability.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Protosynthesis",
+        "Short Description": "Boosts the Pokémon's highest stat in sunlight",
+        "Battle Effect": "Increases the highest stat under harsh sunlight",
+        "Casual RP Effect": "Shines brightly in social situations, attracting attention.",
+        "Random Fact": "Often admired for its radiant energy."
     },
     {
-        "id": "SHEDSKIN",
-        "name": "Shed Skin",
-        "description": "This Pokemon has a 33% chance to have its status cured at the end of each turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Psychic Surge",
+        "Short Description": "Sets up Psychic Terrain when entering battle",
+        "Battle Effect": "Creates Psychic Terrain, preventing priority moves",
+        "Casual RP Effect": "Creates a serene environment that calms others.",
+        "Random Fact": "Known for enhancing mental focus in its vicinity."
     },
     {
-        "id": "SHEERFORCE",
-        "name": "Sheer Force",
-        "description": "This Pokemon's attacks with secondary effects have 1.3x power; nullifies the effects.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Punk Rock",
+        "Short Description": "Boosts sound-based moves and negates sound-based effects",
+        "Battle Effect": "Increases power of sound-based moves by 30%",
+        "Casual RP Effect": "Loves to express itself through music and rhythm.",
+        "Random Fact": "Often performs in local gatherings, drawing crowds."
     },
     {
-        "id": "SHELLARMOR",
-        "name": "Shell Armor",
-        "description": "This Pokemon cannot be struck by a critical hit.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Pure Power",
+        "Short Description": "Doubles the Pokémon's Attack stat",
+        "Battle Effect": "Doubles the Pokémon's Attack stat for physical moves",
+        "Casual RP Effect": "Known for its impressive strength, often admired.",
+        "Random Fact": "Sometimes challenges others to strength contests."
     },
     {
-        "id": "SHIELDDUST",
-        "name": "Shield Dust",
-        "description": "This Pokemon is not affected by the secondary effect of another Pokemon's attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Purifying Salt",
+        "Short Description": "Halves damage from Ghost-type moves and prevents status",
+        "Battle Effect": "Halves damage from Ghost-type moves, protects from status",
+        "Casual RP Effect": "Provides comfort to others, often seen as a healer.",
+        "Random Fact": "Believed to have cleansing properties."
     },
     {
-        "id": "SHIELDSDOWN",
-        "name": "Shields Down",
-        "description": "If Minior, switch-in/end of turn it changes to Core at 1/2 max HP or less, else Meteor.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Quark Drive",
+        "Short Description": "Boosts the Pokémon's highest stat in Electric Terrain",
+        "Battle Effect": "Increases the highest stat when Electric Terrain is active",
+        "Casual RP Effect": "Generates energy and excitement in social settings.",
+        "Random Fact": "Can often be found in energetic groups."
     },
     {
-        "id": "SIMPLE",
-        "name": "Simple",
-        "description": "When this Pokemon's stat stages are raised or lowered, the effect is doubled instead.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Queenly Majesty",
+        "Short Description": "Protects allies from priority moves",
+        "Battle Effect": "Prevents opposing Pokémon from using priority moves",
+        "Casual RP Effect": "Seen as a protector, often looked up to by others.",
+        "Random Fact": "Commands respect and admiration wherever it goes."
     },
     {
-        "id": "SKILLLINK",
-        "name": "Skill Link",
-        "description": "This Pokemon's multi-hit attacks always hit the maximum number of times.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Quick Draw",
+        "Short Description": "Increases speed in the first turn",
+        "Battle Effect": "Higher chance of striking first in the first turn",
+        "Casual RP Effect": "Often takes the lead in conversations and actions.",
+        "Random Fact": "Known for its quick wit and responsiveness."
     },
     {
-        "id": "SLOWSTART",
-        "name": "Slow Start",
-        "description": "On switch-in, this Pokemon's Attack and Speed are halved for 5 turns.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Quick Feet",
+        "Short Description": "Boosts speed when affected by a status condition",
+        "Battle Effect": "Increases speed stat when affected by status",
+        "Casual RP Effect": "Thrives in chaotic situations, often taking charge.",
+        "Random Fact": "Moves faster when challenged or pressured."
     },
     {
-        "id": "SLUSHRUSH",
-        "name": "Slush Rush",
-        "description": "If Hail is active, this Pokemon's Speed is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "RKS System",
+        "Short Description": "Changes type based on held Memory disk",
+        "Battle Effect": "Changes the Pokémon's type to match the Memory disk",
+        "Casual RP Effect": "Easily adapts to different groups and situations.",
+        "Random Fact": "Often found experimenting with different identities."
     },
     {
-        "id": "SNIPER",
-        "name": "Sniper",
-        "description": "If this Pokemon strikes with a critical hit, the damage is multiplied by 1.5.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Rain Dish",
+        "Short Description": "Restores HP in rain",
+        "Battle Effect": "Restores 1/16 of maximum HP per turn in rain",
+        "Casual RP Effect": "Enjoys rainy weather and finds it soothing.",
+        "Random Fact": "Thrives in damp environments, often found near water."
     },
     {
-        "id": "SNOWCLOAK",
-        "name": "Snow Cloak",
-        "description": "If Hail is active, this Pokemon's evasiveness is 1.25x; immunity to Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Rattled",
+        "Short Description": "Boosts Speed when hit by a Dark, Ghost, or Bug move",
+        "Battle Effect": "Increases Speed by one stage when hit by these types",
+        "Casual RP Effect": "Quickly adapts and reacts to threats around it.",
+        "Random Fact": "Often regarded as a quick thinker in crises."
     },
     {
-        "id": "SNOWWARNING",
-        "name": "Snow Warning",
-        "description": "On switch-in, this Pokemon summons Hail.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Receiver",
+        "Short Description": "Copies an ally's Ability when they faint",
+        "Battle Effect": "Takes on the Ability of an ally that faints",
+        "Casual RP Effect": "Can step up in group scenarios, filling roles as needed.",
+        "Random Fact": "Known for being the reliable backup in tough times."
     },
     {
-        "id": "SOLARPOWER",
-        "name": "Solar Power",
-        "description": "If Sunny Day is active, this Pokemon's Sp. Atk is 1.5x; loses 1/8 max HP per turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Reckless",
+        "Short Description": "Boosts damage of recoil moves",
+        "Battle Effect": "Increases damage dealt by recoil moves",
+        "Casual RP Effect": "Often takes risks for greater rewards.",
+        "Random Fact": "Known for being daring in its approach to challenges."
     },
     {
-        "id": "SOLIDROCK",
-        "name": "Solid Rock",
-        "description": "This Pokemon receives 3/4 damage from supereffective attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Refrigerate",
+        "Short Description": "Converts Normal-type moves into Ice-type moves",
+        "Battle Effect": "Changes Normal-type moves to Ice-type, boosting their power",
+        "Casual RP Effect": "Often enjoys cool environments, thriving in icy areas.",
+        "Random Fact": "Loves snow and is often found in winter-themed gatherings."
     },
     {
-        "id": "SOULHEART",
-        "name": "Soul-Heart",
-        "description": "This Pokemon's Sp. Atk is raised by 1 stage when another Pokemon faints.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Regenerator",
+        "Short Description": "Restores HP when switched out",
+        "Battle Effect": "Restores 1/3 of max HP upon switching out",
+        "Casual RP Effect": "Seen as a natural healer, providing support to allies.",
+        "Random Fact": "Known for its ability to bounce back from adversity."
     },
     {
-        "id": "SOUNDPROOF",
-        "name": "Soundproof",
-        "description": "This Pokemon is immune to sound-based moves, including Heal Bell.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Ripen",
+        "Short Description": "Doubles the effects of Berries",
+        "Battle Effect": "Doubles the effects of Berries used during battle",
+        "Casual RP Effect": "Often brings snacks to gatherings, enhancing meals.",
+        "Random Fact": "Believed to be the life of the party with treats."
     },
     {
-        "id": "SPEEDBOOST",
-        "name": "Speed Boost",
-        "description": "This Pokemon's Speed is raised 1 stage at the end of each full turn on the field.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Rivalry",
+        "Short Description": "Deals more damage to Pokémon of the same gender",
+        "Battle Effect": "Increases damage dealt to opponents of the same gender",
+        "Casual RP Effect": "Creates playful rivalries, enhancing friendly competition.",
+        "Random Fact": "Often found engaging in friendly contests."
     },
     {
-        "id": "STAKEOUT",
-        "name": "Stakeout",
-        "description": "This Pokemon's attacking stat is doubled against a target that switched in this turn.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Rock Head",
+        "Short Description": "Prevents recoil damage",
+        "Battle Effect": "Prevents damage from recoil moves",
+        "Casual RP Effect": "Can take risks without fear of consequences.",
+        "Random Fact": "Known for its ability to withstand challenges without flinching."
     },
     {
-        "id": "STALL",
-        "name": "Stall",
-        "description": "This Pokemon moves last among Pokemon using the same or greater priority moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Rocky Payload",
+        "Short Description": "Increases damage of moves that make contact",
+        "Battle Effect": "Boosts damage of contact moves by 30%",
+        "Casual RP Effect": "Always ready for a challenge, enjoys physical contests.",
+        "Random Fact": "Known for its weighty presence and powerful attacks."
     },
     {
-        "id": "STALWART",
-        "name": "Stalwart",
-        "description": "This Pokemon's moves cannot be redirected to a different target by any effect.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Rough Skin",
+        "Short Description": "Deals damage to attackers on contact",
+        "Battle Effect": "Inflicts damage on foes that make physical contact",
+        "Casual RP Effect": "Known for its rough texture that can hurt others",
+        "Random Fact": "Often seen as prickly or abrasive"
     },
     {
-        "id": "STAMINA",
-        "name": "Stamina",
-        "description": "This Pokemon's Defense is raised by 1 stage after it is damaged by a move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Run Away",
+        "Short Description": "Ensures escape from battle",
+        "Battle Effect": "Guarantees escape from battle",
+        "Casual RP Effect": "Known for always finding a way to flee danger",
+        "Random Fact": "Often seen as someone who avoids confrontation"
     },
     {
-        "id": "STANCECHANGE",
-        "name": "Stance Change",
-        "description": "If Aegislash, changes Forme to Blade before attacks and Shield before King's Shield.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sand Force",
+        "Short Description": "Boosts Ground, Rock, and Steel-type moves in sand",
+        "Battle Effect": "Increases the power of certain moves in Sandstorm",
+        "Casual RP Effect": "Known for their strength in sandy conditions",
+        "Random Fact": "Thrives in harsh, sandy environments"
     },
     {
-        "id": "STATIC",
-        "name": "Static",
-        "description": "30% chance a Pokemon making contact with this Pokemon will be paralyzed.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sand Rush",
+        "Short Description": "Doubles Speed in sandstorm",
+        "Battle Effect": "Increases Speed by two stages in Sandstorm",
+        "Casual RP Effect": "Moves quickly and efficiently in sand",
+        "Random Fact": "Often seen racing through sandstorms"
     },
     {
-        "id": "STEADFAST",
-        "name": "Steadfast",
-        "description": "If this Pokemon flinches, its Speed is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sand Spit",
+        "Short Description": "Creates sandstorm when hit",
+        "Battle Effect": "Summons Sandstorm when hit by an attack",
+        "Casual RP Effect": "Creates chaos and disruption when attacked",
+        "Random Fact": "Known for their ability to stir up sandstorms"
     },
     {
-        "id": "STEAMENGINE",
-        "name": "Steam Engine",
-        "description": "This Pokemon's Speed is raised by 6 stages after it is damaged by Fire/Water moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sand Stream",
+        "Short Description": "Summons a sandstorm when entering battle",
+        "Battle Effect": "Starts Sandstorm upon entry into battle",
+        "Casual RP Effect": "Brings a storm of sand with them",
+        "Random Fact": "Often seen as a harbinger of sandstorms"
     },
     {
-        "id": "STEELWORKER",
-        "name": "Steelworker",
-        "description": "This Pokemon's attacking stat is multiplied by 1.5 while using a Steel-type attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sand Veil",
+        "Short Description": "Boosts evasion in sandstorm",
+        "Battle Effect": "Increases evasion during Sandstorm",
+        "Casual RP Effect": "Hard to spot or hit in sandstorms",
+        "Random Fact": "Often seen as elusive in sandy conditions"
     },
     {
-        "id": "STEELYSPIRIT",
-        "name": "Steely Spirit",
-        "description": "This Pokemon and its allies' Steel-type moves have their power multiplied by 1.5.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sap Sipper",
+        "Short Description": "Boosts Attack when hit by Grass-type moves",
+        "Battle Effect": "Increases Attack by one stage when hit by Grass-type move",
+        "Casual RP Effect": "Gains strength from what should have been a weakness",
+        "Random Fact": "Known for turning Grass-type moves into an advantage"
     },
     {
-        "id": "STENCH",
-        "name": "Stench",
-        "description": "This Pokemon's attacks without a chance to flinch gain a 10% chance to flinch.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Schooling",
+        "Short Description": "Changes form when in a group",
+        "Battle Effect": "Transforms into a stronger form when in a group",
+        "Casual RP Effect": "Acts differently when with others",
+        "Random Fact": "Known for gaining strength in numbers"
     },
     {
-        "id": "STICKYHOLD",
-        "name": "Sticky Hold",
-        "description": "This Pokemon cannot lose its held item due to another Pokemon's attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Scrappy",
+        "Short Description": "Hits Ghost-types with Normal and Fighting moves",
+        "Battle Effect": "Normal and Fighting-type moves affect Ghost-types",
+        "Casual RP Effect": "Can confront what would otherwise be untouchable",
+        "Random Fact": "Often seen as someone who faces challenges head-on"
     },
     {
-        "id": "STORMDRAIN",
-        "name": "Storm Drain",
-        "description": "This Pokemon draws Water moves to itself to raise Sp. Atk by 1; Water immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Screen Cleaner",
+        "Short Description": "Removes barriers and screens",
+        "Battle Effect": "Clears all screens and barriers on the field",
+        "Casual RP Effect": "Clears away obstacles and protection in encounters",
+        "Random Fact": "Known for their ability to cut through defenses"
     },
     {
-        "id": "STRONGJAW",
-        "name": "Strong Jaw",
-        "description": "This Pokemon's bite-based attacks have 1.5x power. Bug Bite is not boosted.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Seed Sower",
+        "Short Description": "Creates Grassy Terrain when hit by an attack",
+        "Battle Effect": "Summons Grassy Terrain when hit by a move",
+        "Casual RP Effect": "Brings an aura of vitality and growth",
+        "Random Fact": "Known for rejuvenating areas with vegetation"
     },
     {
-        "id": "STURDY",
-        "name": "Sturdy",
-        "description": "If this Pokemon is at full HP, it survives one hit with at least 1 HP. Immune to OHKO.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Serene Grace",
+        "Short Description": "Doubles the chances of secondary effects",
+        "Battle Effect": "Increases the chance of additional effects occurring",
+        "Casual RP Effect": "Known for their graceful, effective abilities",
+        "Random Fact": "Often seen as someone with a touch of luck"
     },
     {
-        "id": "SUCTIONCUPS",
-        "name": "Suction Cups",
-        "description": "This Pokemon cannot be forced to switch out by another Pokemon's attack or item.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Shadow Shield",
+        "Short Description": "Reduces damage when at full HP",
+        "Battle Effect": "Halves damage taken when at full health",
+        "Casual RP Effect": "Provides a sense of security and protection",
+        "Random Fact": "Known for their defensive and shield-like qualities"
     },
     {
-        "id": "SUPERLUCK",
-        "name": "Super Luck",
-        "description": "This Pokemon's critical hit ratio is raised by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Shadow Tag",
+        "Short Description": "Prevents the opponent from fleeing",
+        "Battle Effect": "Opponents cannot switch out or escape",
+        "Casual RP Effect": "Traps others in a situation with no escape",
+        "Random Fact": "Often seen as someone who traps others in their plans"
     },
     {
-        "id": "SURGESURFER",
-        "name": "Surge Surfer",
-        "description": "If Electric Terrain is active, this Pokemon's Speed is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sharpness",
+        "Short Description": "Boosts the power of slicing moves",
+        "Battle Effect": "Increases power of slicing moves by 50%",
+        "Casual RP Effect": "Makes slicing actions more effective",
+        "Random Fact": "Known for their precision and cutting power"
     },
     {
-        "id": "SWARM",
-        "name": "Swarm",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Bug attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Shed Skin",
+        "Short Description": "May heal from status conditions each turn",
+        "Battle Effect": "1 in 3 chance to heal from status conditions each turn",
+        "Casual RP Effect": "Known for recovering from ailments quickly",
+        "Random Fact": "Often seen as resilient and adaptable"
     },
     {
-        "id": "SWEETVEIL",
-        "name": "Sweet Veil",
-        "description": "This Pokemon and its allies cannot fall asleep.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sheer Force",
+        "Short Description": "Boosts power of moves by 30% but removes additional effects",
+        "Battle Effect": "Increases move power by 30% but loses secondary effects",
+        "Casual RP Effect": "Known for their raw power without additional effects",
+        "Random Fact": "Often surprises others with sheer strength"
     },
     {
-        "id": "SWIFTSWIM",
-        "name": "Swift Swim",
-        "description": "If Rain Dance is active, this Pokemon's Speed is doubled.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Shell Armor",
+        "Short Description": "Protects from critical hits",
+        "Battle Effect": "Prevents taking critical hits",
+        "Casual RP Effect": "Provides a protective barrier from harm",
+        "Random Fact": "Known for their tough, armor-like exterior"
     },
     {
-        "id": "SYMBIOSIS",
-        "name": "Symbiosis",
-        "description": "If an ally uses its item, this Pokemon gives its item to that ally immediately.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Shield Dust",
+        "Short Description": "Prevents secondary effects of moves",
+        "Battle Effect": "Blocks additional effects of moves",
+        "Casual RP Effect": "Shields from additional harm",
+        "Random Fact": "Known for their ability to deflect extra effects"
     },
     {
-        "id": "SYNCHRONIZE",
-        "name": "Synchronize",
-        "description": "If another Pokemon burns/poisons/paralyzes this Pokemon, it also gets that status.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Shields Down",
+        "Short Description": "Changes form when HP is low",
+        "Battle Effect": "Changes to a more offensive form when HP is below half",
+        "Casual RP Effect": "Reveals true power when weakened",
+        "Random Fact": "Known for revealing strength when in dire situations"
     },
     {
-        "id": "TANGLEDFEET",
-        "name": "Tangled Feet",
-        "description": "This Pokemon's evasiveness is doubled as long as it is confused.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Simple",
+        "Short Description": "Doubles the effects of stat changes",
+        "Battle Effect": "Stat changes are doubled",
+        "Casual RP Effect": "Enhances abilities with simplicity",
+        "Random Fact": "Known for making things straightforward and effective"
     },
     {
-        "id": "TANGLINGHAIR",
-        "name": "Tangling Hair",
-        "description": "Pokemon making contact with this Pokemon have their Speed lowered by 1 stage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Skill Link",
+        "Short Description": "Hits multiple times with multi-strike moves",
+        "Battle Effect": "Ensures maximum hits with multi-strike moves",
+        "Casual RP Effect": "Known for their ability to maximize repeated actions",
+        "Random Fact": "Often seen as reliable in executing multi-strike attacks"
     },
     {
-        "id": "TECHNICIAN",
-        "name": "Technician",
-        "description": "This Pokemon's moves of 60 power or less have 1.5x power. Includes Struggle.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Slow Start",
+        "Short Description": "Halves Attack and Speed for the first five turns",
+        "Battle Effect": "Reduces Attack and Speed by half for the first five turns",
+        "Casual RP Effect": "Starts off slow but gains momentum over time",
+        "Random Fact": "Known for being a slow starter with a strong finish"
     },
     {
-        "id": "TELEPATHY",
-        "name": "Telepathy",
-        "description": "This Pokemon does not take damage from attacks made by its allies.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Slush Rush",
+        "Short Description": "Doubles Speed in hailstorm",
+        "Battle Effect": "Increases Speed by two stages in Hail",
+        "Casual RP Effect": "Moves quickly and efficiently in hail",
+        "Random Fact": "Often seen racing through hailstorms"
     },
     {
-        "id": "TERAVOLT",
-        "name": "Teravolt",
-        "description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sniper",
+        "Short Description": "Increases critical hit damage by 50%",
+        "Battle Effect": "Boosts damage of critical hits by 50%",
+        "Casual RP Effect": "Known for making every critical hit count",
+        "Random Fact": "Often seen as a sharpshooter with precise strikes"
     },
     {
-        "id": "THICKFAT",
-        "name": "Thick Fat",
-        "description": "Fire/Ice-type moves against this Pokemon deal damage with a halved attacking stat.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Snow Cloak",
+        "Short Description": "Boosts evasion in hailstorm",
+        "Battle Effect": "Increases evasion during Hail",
+        "Casual RP Effect": "Becomes harder to hit in snowy conditions",
+        "Random Fact": "Often seen as elusive in snowy weather"
     },
     {
-        "id": "TINTEDLENS",
-        "name": "Tinted Lens",
-        "description": "This Pokemon's attacks that are not very effective on a target deal double damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Snow Warning",
+        "Short Description": "Summons hailstorm when entering battle",
+        "Battle Effect": "Creates Hail upon entry into battle",
+        "Casual RP Effect": "Brings a cold, wintry presence to battles",
+        "Random Fact": "Often known for starting snowstorms upon arrival"
     },
     {
-        "id": "TORRENT",
-        "name": "Torrent",
-        "description": "At 1/3 or less of its max HP, this Pokemon's attacking stat is 1.5x with Water attacks.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Solar Power",
+        "Short Description": "Boosts Special Attack in sunlight",
+        "Battle Effect": "Increases Special Attack by 50% in sunlight",
+        "Casual RP Effect": "Gains strength from sunlight",
+        "Random Fact": "Often seen as thriving in bright, sunny conditions"
     },
     {
-        "id": "TOUGHCLAWS",
-        "name": "Tough Claws",
-        "description": "This Pokemon's contact moves have their power multiplied by 1.3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Solid Rock",
+        "Short Description": "Reduces damage from super-effective attacks",
+        "Battle Effect": "Halves damage from super-effective moves",
+        "Casual RP Effect": "Provides a strong defense against powerful attacks",
+        "Random Fact": "Known for their solid, rock-like resilience"
     },
     {
-        "id": "TOXICBOOST",
-        "name": "Toxic Boost",
-        "description": "While this Pokemon is poisoned, its physical attacks have 1.5x power.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Soul-Heart",
+        "Short Description": "Boosts Special Attack when a teammate faints",
+        "Battle Effect": "Increases Special Attack by one stage when a teammate faints",
+        "Casual RP Effect": "Gains strength from the loss of allies",
+        "Random Fact": "Known for growing stronger through loss"
     },
     {
-        "id": "TRACE",
-        "name": "Trace",
-        "description": "On switch-in, or when it can, this Pokemon copies a random adjacent foe's Ability.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Soundproof",
+        "Short Description": "Immune to sound-based moves",
+        "Battle Effect": "Blocks all sound-based moves",
+        "Casual RP Effect": "Immune to sound-based disruptions",
+        "Random Fact": "Known for their ability to stay calm amidst noise"
     },
     {
-        "id": "TRANSISTOR",
-        "name": "Transistor",
-        "description": "This Pokemon's attacking stat is multiplied by 1.5 while using an Electric-type attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Speed Boost",
+        "Short Description": "Increases Speed each turn",
+        "Battle Effect": "Raises Speed by one stage each turn",
+        "Casual RP Effect": "Gains speed over time, becoming faster as the battle progresses",
+        "Random Fact": "Often seen as accelerating quickly in encounters"
     },
     {
-        "id": "TRIAGE",
-        "name": "Triage",
-        "description": "This Pokemon's healing moves have their priority increased by 3.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Stakeout",
+        "Short Description": "Doubles damage to an opponent that has switched in",
+        "Battle Effect": "Deals double damage to foes that switch in",
+        "Casual RP Effect": "Known for taking advantage of foes who try to escape",
+        "Random Fact": "Often surprises others by exploiting their movements"
     },
     {
-        "id": "TRUANT",
-        "name": "Truant",
-        "description": "This Pokemon skips every other turn instead of using a move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Stall",
+        "Short Description": "Makes the target move last in battle",
+        "Battle Effect": "Ensures the target moves last",
+        "Casual RP Effect": "Ensures control over the pace of battle",
+        "Random Fact": "Known for their ability to slow down opponents"
     },
     {
-        "id": "TURBOBLAZE",
-        "name": "Turboblaze",
-        "description": "This Pokemon's moves and their effects ignore the Abilities of other Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Stalwart",
+        "Short Description": "Prevents opponents from using moves that prevent switching",
+        "Battle Effect": "Blocks moves that trap or hinder switching",
+        "Casual RP Effect": "Ensures freedom of movement in battles",
+        "Random Fact": "Known for their steadfast approach in battles"
     },
     {
-        "id": "UNAWARE",
-        "name": "Unaware",
-        "description": "This Pokemon ignores other Pokemon's stat stages when taking or doing damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Stamina",
+        "Short Description": "Boosts Defense when hit",
+        "Battle Effect": "Increases Defense by one stage when hit by an attack",
+        "Casual RP Effect": "Grows stronger in defense when facing attacks",
+        "Random Fact": "Often seen as gaining strength through adversity"
     },
     {
-        "id": "UNBURDEN",
-        "name": "Unburden",
-        "description": "Speed is doubled on held item loss; boost is lost if it switches, gets new item/Ability.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Stance Change",
+        "Short Description": "Changes form between Shield and Sword forms",
+        "Battle Effect": "Switches between a defensive and offensive form",
+        "Casual RP Effect": "Adapts form based on the situation in battles",
+        "Random Fact": "Known for their adaptability in different battle scenarios"
     },
     {
-        "id": "UNNERVE",
-        "name": "Unnerve",
-        "description": "While this Pokemon is active, it prevents opposing Pokemon from using their Berries.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Static",
+        "Short Description": "May cause paralysis on contact",
+        "Battle Effect": "30% chance to paralyze the attacker on contact",
+        "Casual RP Effect": "Can cause others to become immobilized when touched",
+        "Random Fact": "Often seen as having a shocking effect on contact"
     },
     {
-        "id": "UNSEENFIST",
-        "name": "Unseen Fist",
-        "description": "All contact moves hit through protection.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Steadfast",
+        "Short Description": "Boosts Speed when flinched",
+        "Battle Effect": "Increases Speed by one stage when flinched",
+        "Casual RP Effect": "Gains speed through persistence in battles",
+        "Random Fact": "Often seen as becoming faster through endurance"
     },
     {
-        "id": "VICTORYSTAR",
-        "name": "Victory Star",
-        "description": "This Pokemon and its allies' moves have their accuracy multiplied by 1.1.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Steam Engine",
+        "Short Description": "Doubles Speed when hit by a Fire-type move",
+        "Battle Effect": "Increases Speed by two stages when hit by Fire-type move",
+        "Casual RP Effect": "Gains momentum from being hit by Fire-type attacks",
+        "Random Fact": "Known for heating up and speeding up with fire"
     },
     {
-        "id": "VITALSPIRIT",
-        "name": "Vital Spirit",
-        "description": "This Pokemon cannot fall asleep. Gaining this Ability while asleep cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Steelworker",
+        "Short Description": "Boosts Steel-type moves",
+        "Battle Effect": "Increases Steel-type move power by 50%",
+        "Casual RP Effect": "Enhances abilities related to Steel-type actions",
+        "Random Fact": "Often seen as a master of Steel-type moves"
     },
     {
-        "id": "VOLTABSORB",
-        "name": "Volt Absorb",
-        "description": "This Pokemon heals 1/4 of its max HP when hit by Electric moves; Electric immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Steely Spirit",
+        "Short Description": "Boosts the power of Steel-type moves for allies",
+        "Battle Effect": "Increases allies' Steel-type move power",
+        "Casual RP Effect": "Supports and empowers allies with Steel-type moves",
+        "Random Fact": "Known for enhancing teamwork with Steel-type power"
     },
     {
-        "id": "WANDERINGSPIRIT",
-        "name": "Wandering Spirit",
-        "description": "Pokemon making contact with this Pokemon have their Ability swapped with this one.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Stench",
+        "Short Description": "May cause opponents to flinch",
+        "Battle Effect": "10% chance to make foes flinch",
+        "Casual RP Effect": "Emits a strong odor that can be off-putting",
+        "Random Fact": "Known for their pungent presence"
     },
     {
-        "id": "WATERABSORB",
-        "name": "Water Absorb",
-        "description": "This Pokemon heals 1/4 of its max HP when hit by Water moves; Water immunity.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sticky Hold",
+        "Short Description": "Prevents item removal",
+        "Battle Effect": "Prevents the holder from losing their held item",
+        "Casual RP Effect": "Keeps belongings secure in challenging situations",
+        "Random Fact": "Known for their ability to hold onto possessions"
     },
     {
-        "id": "WATERBUBBLE",
-        "name": "Water Bubble",
-        "description": "This Pokemon's Water power is 2x; it can't be burned; Fire power against it is halved.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Storm Drain",
+        "Short Description": "Draws in Water-type moves, boosting Special Attack",
+        "Battle Effect": "Absorbs Water-type moves, boosting Special Attack by 1",
+        "Casual RP Effect": "Gains strength from water around them",
+        "Random Fact": "Thrives in watery environments"
     },
     {
-        "id": "WATERCOMPACTION",
-        "name": "Water Compaction",
-        "description": "This Pokemon's Defense is raised 2 stages after it is damaged by a Water-type move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Strong Jaw",
+        "Short Description": "Boosts power of biting moves",
+        "Battle Effect": "Increases power of biting moves by 50%",
+        "Casual RP Effect": "Known for their strong bite and powerful jaws",
+        "Random Fact": "Often feared for their biting strength"
     },
     {
-        "id": "WATERVEIL",
-        "name": "Water Veil",
-        "description": "This Pokemon cannot be burned. Gaining this Ability while burned cures it.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sturdy",
+        "Short Description": "Protects from being knocked out",
+        "Battle Effect": "Prevents being knocked out from full HP",
+        "Casual RP Effect": "Stays strong even in tough situations",
+        "Random Fact": "Known for their unyielding nature"
     },
     {
-        "id": "WEAKARMOR",
-        "name": "Weak Armor",
-        "description": "If a physical attack hits this Pokemon, Defense is lowered by 1, Speed is raised by 2.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Suction Cups",
+        "Short Description": "Prevents escaping from battle",
+        "Battle Effect": "Prevents switching out of battle",
+        "Casual RP Effect": "Holds onto situations tightly",
+        "Random Fact": "Known for their grip on circumstances"
     },
     {
-        "id": "WHITESMOKE",
-        "name": "White Smoke",
-        "description": "Prevents other Pokemon from lowering this Pokemon's stat stages.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Super Luck",
+        "Short Description": "Increases critical hit ratio",
+        "Battle Effect": "Boosts critical hit ratio by 1 stage",
+        "Casual RP Effect": "Known for their favorable outcomes in challenges",
+        "Random Fact": "Often seen as lucky in various situations"
     },
     {
-        "id": "WIMPOUT",
-        "name": "Wimp Out",
-        "description": "This Pokemon switches out when it reaches 1/2 or less of its maximum HP.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Supersweet Syrup",
+        "Short Description": "Heals allies and boosts their moves",
+        "Battle Effect": "Restores HP and boosts allies’ moves",
+        "Casual RP Effect": "Sweetens the atmosphere around allies",
+        "Random Fact": "Known for their sweet and nurturing nature"
     },
     {
-        "id": "WONDERGUARD",
-        "name": "Wonder Guard",
-        "description": "This Pokemon can only be damaged by supereffective moves and indirect damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Supreme Overlord",
+        "Short Description": "Gains power based on the number of allies",
+        "Battle Effect": "Boosts Attack and Special Attack based on allies present",
+        "Casual RP Effect": "Rises to challenges when surrounded by allies",
+        "Random Fact": "Known for leading others with overwhelming strength"
     },
     {
-        "id": "WONDERSKIN",
-        "name": "Wonder Skin",
-        "description": "Status moves with accuracy checks are 50% accurate when used on this Pokemon.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Surge Surfer",
+        "Short Description": "Doubles Speed in Electric Terrain",
+        "Battle Effect": "Increases Speed by two stages in Electric Terrain",
+        "Casual RP Effect": "Moves swiftly when surrounded by electrical energy",
+        "Random Fact": "Often seen racing through electric environments"
     },
     {
-        "id": "ZENMODE",
-        "name": "Zen Mode",
-        "description": "If Darmanitan, at end of turn changes Mode to Standard if > 1/2 max HP, else Zen.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Swarm",
+        "Short Description": "Boosts Bug-type moves when at low HP",
+        "Battle Effect": "Increases Bug-type move power when HP is below 1/3",
+        "Casual RP Effect": "Gains strength when cornered",
+        "Random Fact": "Known for finding strength in desperate situations"
     },
     {
-        "id": "ANGERSHELL",
-        "name": "Anger Shell",
-        "description": "When an attack causes its HP to drop to half or less, the Pokémon gets angry. This lowers its Defense and Sp. Def stats but boosts its Attack, Sp. Atk, and Speed stats.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sweet Veil",
+        "Short Description": "Prevents sleeping for allies",
+        "Battle Effect": "Prevents allies from falling asleep",
+        "Casual RP Effect": "Keeps allies alert and awake",
+        "Random Fact": "Known for ensuring vigilance in battles"
     },
     {
-        "id": "ARMORTAIL",
-        "name": "Armor Tail",
-        "description": "The mysterious tail covering the Pokémon's head makes opponents unable to use priority moves against the Pokémon or its allies.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Swift Swim",
+        "Short Description": "Doubles Speed in rain",
+        "Battle Effect": "Increases Speed by two stages in rain",
+        "Casual RP Effect": "Moves quickly and efficiently in rainy weather",
+        "Random Fact": "Often seen dashing through rain"
     },
     {
-        "id": "BEADSOFRUIN",
-        "name": "Beads of Ruin",
-        "description": "The power of the Pokémon's ruinous beads lowers the Sp. Def stats of all Pokémon except itself.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Sword of Ruin",
+        "Short Description": "Lowers Defense of opposing Pokémon",
+        "Battle Effect": "Reduces the Defense stat of all opposing Pokémon",
+        "Casual RP Effect": "Creates an intimidating atmosphere around opponents",
+        "Random Fact": "Known for being fearsome in presence"
     },
     {
-        "id": "COMMANDER",
-        "name": "Commander",
-        "description": "Can get protected by an ally Dondozo if one is on the field. The Pokémon then issues commands from the protection.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Symbiosis",
+        "Short Description": "Shares held items with allies",
+        "Battle Effect": "Transfers held item to an ally when they are in need",
+        "Casual RP Effect": "Promotes cooperation and sharing",
+        "Random Fact": "Known for fostering teamwork and collaboration"
     },
     {
-        "id": "COSTAR",
-        "name": "Costar",
-        "description": "When the Pokémon enters a battle, it copies an ally's stat changes.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Synchronize",
+        "Short Description": "Passes status conditions to the opponent",
+        "Battle Effect": "Shares any status conditions with the attacker",
+        "Casual RP Effect": "Reflects experiences, both good and bad",
+        "Random Fact": "Known for their empathic connection with others"
     },
     {
-        "id": "CUDCHEW",
-        "name": "Cud Chew",
-        "description": "When the Pokémon eats a Berry, it will regurgitate that Berry at the end of the next turn and eat it one more time.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tablets of Ruin",
+        "Short Description": "Reduces Attack of opposing Pokémon",
+        "Battle Effect": "Lowers Attack stat of all opposing Pokémon",
+        "Casual RP Effect": "Creates an aura of uncertainty around foes",
+        "Random Fact": "Known for causing doubt and fear"
     },
     {
-        "id": "EARTHEATER",
-        "name": "Earth Eater",
-        "description": "If hit by a Ground-type move, the Pokémon has its HP restored instead of taking damage.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tangled Feet",
+        "Short Description": "Raises evasion when confused",
+        "Battle Effect": "Increases evasion when the Pokémon is confused",
+        "Casual RP Effect": "Becomes hard to hit while disoriented",
+        "Random Fact": "Often seen as elusive in chaotic situations"
     },
     {
-        "id": "ELECTROMORPHOSIS",
-        "name": "Electromorphosis",
-        "description": "The Pokémon becomes charged when it takes damage, boosting the power of the next Electric-type move the Pokémon uses.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tangling Hair",
+        "Short Description": "Lowers Speed of opponents that make contact",
+        "Battle Effect": "Lowers Speed stat of foes that make contact",
+        "Casual RP Effect": "Creates confusion and disruption around them",
+        "Random Fact": "Known for their messy, chaotic nature"
     },
     {
-        "id": "GOODASGOLD",
-        "name": "Good as Gold",
-        "description": "A body of pure, solid gold gives the Pokémon full immunity to other Pokémon's status moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Technician",
+        "Short Description": "Boosts power of weaker moves",
+        "Battle Effect": "Increases power of moves with a base power of 60 or less",
+        "Casual RP Effect": "Enhances smaller actions to be more effective",
+        "Random Fact": "Known for making the most out of minimal resources"
     },
     {
-        "id": "GUARDDOG",
-        "name": "Guard Dog",
-        "description": "Boosts the Pokémon's Attack stat if intimidated. Moves and items that would force the Pokémon to switch out also fail to work.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Telepathy",
+        "Short Description": "Prevents damage from allies' attacks",
+        "Battle Effect": "Avoids damage from allies’ moves",
+        "Casual RP Effect": "Creates a strong bond that helps avoid conflict",
+        "Random Fact": "Known for their ability to connect on a deeper level"
     },
     {
-        "id": "HADRONENGINE",
-        "name": "Hadron Engine",
-        "description": "Turns the ground into Electric Terrain when the Pokémon enters a battle. The futuristic engine within the Pokémon also boosts its Sp. Atk stat on Electric Terrain.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tera Shell",
+        "Short Description": "Increases defense against special moves",
+        "Battle Effect": "Boosts Defense against Special-type moves",
+        "Casual RP Effect": "Provides protection from various special attacks",
+        "Random Fact": "Often seen as a protective shield"
     },
     {
-        "id": "LINGERINGAROMA",
-        "name": "Lingering Aroma",
-        "description": "Contact with the Pokémon changes the attacker's Ability to Lingering Aroma.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tera Shift",
+        "Short Description": "Changes type based on the move used",
+        "Battle Effect": "Alters Pokémon's type based on the move it uses",
+        "Casual RP Effect": "Adapts to situations dynamically",
+        "Random Fact": "Known for its versatility in battle"
     },
     {
-        "id": "MYCELIUMMIGHT",
-        "name": "Mycelium Might",
-        "description": "The Pokémon will always act more slowly when using status moves, but these moves will be unimpeded by the Ability of the target.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Teraform Zero",
+        "Short Description": "Resets all stat changes on entry",
+        "Battle Effect": "Clears all stat changes upon entry",
+        "Casual RP Effect": "Starts fresh in every encounter",
+        "Random Fact": "Known for providing a clean slate in battles"
     },
     {
-        "id": "OPPORTUNIST",
-        "name": "Opportunist",
-        "description": "If an opponent's stat is boosted, the Pokémon seizes the opportunity to boost the same stat for itself.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Teravolt",
+        "Short Description": "Ignores abilities that prevent moves",
+        "Battle Effect": "Bypasses abilities that block moves",
+        "Casual RP Effect": "Overcomes obstacles effortlessly",
+        "Random Fact": "Known for breaking through barriers"
     },
     {
-        "id": "ORICHALCUMPULSE",
-        "name": "Orichalcum Pulse",
-        "description": "Turns the sunlight harsh when the Pokémon enters a battle. The ancient pulse thrumming through the Pokémon also boosts its Attack stat in harsh sunlight.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Thermal Exchange",
+        "Short Description": "Gains boosts in hot conditions",
+        "Battle Effect": "Increases Attack and Speed in sunny weather",
+        "Casual RP Effect": "Thrives in warmth and heat",
+        "Random Fact": "Known for being active in hot environments"
     },
     {
-        "id": "PROTOSYNTHESIS",
-        "name": "Protosynthesis",
-        "description": "Boosts the Pokémon's most proficient stat in harsh sunlight or if the Pokémon is holding Booster Energy.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Thick Fat",
+        "Short Description": "Reduces damage from Fire and Ice moves",
+        "Battle Effect": "Halves damage from Fire and Ice-type moves",
+        "Casual RP Effect": "Provides extra protection against extreme weather",
+        "Random Fact": "Known for their resilience against temperature extremes"
     },
     {
-        "id": "PURIFYINGSALT",
-        "name": "Purifying Salt",
-        "description": "The Pokémon's pure salt protects it from status conditions and halves the damage taken from Ghost-type moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tinted Lens",
+        "Short Description": "Increases power of not very effective moves",
+        "Battle Effect": "Doubles damage of not very effective moves",
+        "Casual RP Effect": "Makes less effective actions more impactful",
+        "Random Fact": "Known for seeing things in a different light"
     },
     {
-        "id": "QUARKDRIVE",
-        "name": "Quark Drive",
-        "description": "Boosts the Pokémon's most proficient stat on Electric Terrain or if the Pokémon is holding Booster Energy.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Torrent",
+        "Short Description": "Boosts Water-type moves when at low HP",
+        "Battle Effect": "Increases Water-type move power when HP is below 1/3",
+        "Casual RP Effect": "Gains strength from being pushed to the limit",
+        "Random Fact": "Often seen as a powerhouse when cornered"
     },
     {
-        "id": "ROCKYPAYLOAD",
-        "name": "Rocky Payload",
-        "description": "Powers up Rock-type moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Tough Claws",
+        "Short Description": "Boosts power of contact moves",
+        "Battle Effect": "Increases power of moves that make contact by 30%",
+        "Casual RP Effect": "Known for their strong, claw-like attacks",
+        "Random Fact": "Often feared for their fierce nature"
     },
     {
-        "id": "SEEDSOWER",
-        "name": "Seed Sower",
-        "description": "Turns the ground into Grassy Terrain when the Pokémon is hit by an attack.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Toxic Boost",
+        "Short Description": "Boosts Attack when poisoned",
+        "Battle Effect": "Increases Attack by 50% when poisoned",
+        "Casual RP Effect": "Gains strength from negative conditions",
+        "Random Fact": "Known for rising to the challenge in adverse situations"
     },
     {
-        "id": "SHARPNESS",
-        "name": "Sharpness",
-        "description": "Powers up slicing moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Toxic Chain",
+        "Short Description": "Leaves a lingering poison effect",
+        "Battle Effect": "Poisons the target and may continue to spread",
+        "Casual RP Effect": "Leaves a toxic trail in interactions",
+        "Random Fact": "Known for causing disruption in environments"
     },
     {
-        "id": "SUPREMEOVERLORD",
-        "name": "Supreme Overlord",
-        "description": "When the Pokémon enters a battle, its Attack and Sp. Atk stats are slightly boosted for each of the allies in its party that have already been defeated.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Toxic Debris",
+        "Short Description": "Sets toxic spikes upon fainting",
+        "Battle Effect": "Sets Toxic Spikes upon fainting",
+        "Casual RP Effect": "Creates hazardous situations when defeated",
+        "Random Fact": "Known for leaving a mark even in defeat"
     },
     {
-        "id": "SWORDOFRUIN",
-        "name": "Sword of Ruin",
-        "description": "The power of the Pokémon's ruinous sword lowers the Defense stats of all Pokémon except itself.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Trace",
+        "Short Description": "Copies the opponent's Ability",
+        "Battle Effect": "Copies the Ability of the opposing Pokémon",
+        "Casual RP Effect": "Adapts abilities based on surroundings",
+        "Random Fact": "Known for being flexible and adaptive"
     },
     {
-        "id": "TABLETSOFRUIN",
-        "name": "Tablets of Ruin",
-        "description": "The power of the Pokémon's ruinous wooden tablets lowers the Attack stats of all Pokémon except itself.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Transistor",
+        "Short Description": "Boosts Electric-type moves",
+        "Battle Effect": "Increases Electric-type move power by 50%",
+        "Casual RP Effect": "Enhances electrical interactions around them",
+        "Random Fact": "Known for electrifying battles"
     },
     {
-        "id": "THERMALEXCHANGE",
-        "name": "Thermal Exchange",
-        "description": "Boosts the Attack stat when the Pokémon is hit by a Fire-type move. The Pokémon also cannot be burned.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Triage",
+        "Short Description": "Heals allies with priority",
+        "Battle Effect": "Heals allies before other moves",
+        "Casual RP Effect": "Takes care of others first in dire situations",
+        "Random Fact": "Known for being nurturing and protective"
     },
     {
-        "id": "TOXICDEBRIS",
-        "name": "Toxic Debris",
-        "description": "Scatters poison spikes at the feet of the opposing team when the Pokémon takes damage from physical moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "VESSELOFRUIN",
-        "name": "Vessel of Ruin",
-        "description": "The power of the Pokémon's ruinous vessel lowers the Sp. Atk stats of all Pokémon except itself.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WELLBAKEDBODY",
-        "name": "Well-Baked Body",
-        "description": "The Pokémon takes no damage when hit by Fire-type moves. Instead, its Defense stat is sharply boosted.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WINDPOWER",
-        "name": "Wind Power",
-        "description": "The Pokémon becomes charged when it is hit by a wind move, boosting the power of the next Electric-type move the Pokémon uses.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "WINDRIDER",
-        "name": "Wind Rider",
-        "description": "Boosts the Pokémon's Attack stat if Tailwind takes effect or if the Pokémon is hit by a wind move. The Pokémon also takes no damage from wind moves.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "ZEROTOHERO",
-        "name": "Zero to Hero",
-        "description": "The Pokémon transforms into its Hero Form when it switches out.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "SUPERSWEETSYRUP",
-        "name": "Supersweet Syrup",
-        "description": "Lowers the evasion of opposing Pokémon by 1 stage when first sent into battle",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "HOSPITABILITY",
-        "name": "Hospitability",
-        "description": "Heals up to 25% of its partner Pokémon's Maximum Hit Points when it enters battle",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TOXICCHAIN",
-        "name": "Toxic Chain",
-        "description": "The power of the Pokémon's toxic chain may badly poison any target the Pokémon hits with a move.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "POISONPUPPETEER",
-        "name": "Poison Puppeteer",
-        "description": "Pokémon poisoned by Pecharunt's moves will also become confused.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TERASHIFT",
-        "name": "Tera Shift",
-        "description": "Absorbs the energy around itself and transforms into its Terastal Form.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TERASHELL",
-        "name": "Tera Shell",
-        "description": "All damage-dealing moves that hit the Pokémon when its HP is full will not be very effective.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
-    },
-    {
-        "id": "TERAFORMZERO",
-        "name": "Teraform Zero",
-        "description": "It uses its hidden powers to eliminate all effects of weather and terrain, reducing them to zero.",
-        "battle": "",
-        "outside": "",
-        "random_fact": ""
+        "Name": "Truant",
+        "Short Description": "Alternates between moving and resting",
+        "Battle Effect": "Only moves every other turn",
+        "Casual RP Effect": "Takes time to recharge during encounters",
+        "Random Fact": "Known for their need to pause in action"
+    },
+    {
+        "Name": "Turboblaze",
+        "Short Description": "Ignores abilities that prevent moves",
+        "Battle Effect": "Bypasses abilities that block moves",
+        "Casual RP Effect": "Can push through any obstacles in their path",
+        "Random Fact": "Known for breaking down barriers"
+    },
+    {
+        "Name": "Unaware",
+        "Short Description": "Ignores opponent's stat changes",
+        "Battle Effect": "Does not account for opponent's stat changes",
+        "Casual RP Effect": "Maintains focus regardless of surroundings",
+        "Random Fact": "Known for their strong will amidst distractions"
+    },
+    {
+        "Name": "Unburden",
+        "Short Description": "Doubles Speed after item loss",
+        "Battle Effect": "Increases Speed by two stages after losing an item",
+        "Casual RP Effect": "Moves swiftly when unencumbered",
+        "Random Fact": "Known for their lightness once free of burdens"
+    },
+    {
+        "Name": "Unnerve",
+        "Short Description": "Prevents opponents from eating Berries",
+        "Battle Effect": "Opponents cannot use Berries",
+        "Casual RP Effect": "Disrupts normal eating habits of others",
+        "Random Fact": "Known for causing distress at meal times"
+    },
+    {
+        "Name": "Unseen Fist",
+        "Short Description": "Hits through protect and similar moves",
+        "Battle Effect": "Bypasses Protect and similar moves",
+        "Casual RP Effect": "Can surprise others with unexpected actions",
+        "Random Fact": "Known for their stealthy attacks"
+    },
+    {
+        "Name": "Vessel of Ruin",
+        "Short Description": "Reduces the Special Defense of opposing Pokémon",
+        "Battle Effect": "Lowers Special Defense stat of all opposing Pokémon",
+        "Casual RP Effect": "Creates an atmosphere of vulnerability around foes",
+        "Random Fact": "Known for instilling fear in enemies"
+    },
+    {
+        "Name": "Victory Star",
+        "Short Description": "Boosts accuracy of allies",
+        "Battle Effect": "Increases allies’ move accuracy by 10%",
+        "Casual RP Effect": "Creates a winning atmosphere among allies",
+        "Random Fact": "Known for ensuring favorable outcomes"
+    },
+    {
+        "Name": "Vital Spirit",
+        "Short Description": "Prevents falling asleep",
+        "Battle Effect": "Immune to Sleep conditions",
+        "Casual RP Effect": "Remains awake and alert in any situation",
+        "Random Fact": "Known for their energy and liveliness"
+    },
+    {
+        "Name": "Volt Absorb",
+        "Short Description": "Heals when hit by Electric moves",
+        "Battle Effect": "Restores 1/4 of max HP when hit by Electric moves",
+        "Casual RP Effect": "Energizes when exposed to electrical energy",
+        "Random Fact": "Known for their connection to electricity"
+    },
+    {
+        "Name": "Wandering Spirit",
+        "Short Description": "Switches Abilities with the opponent",
+        "Battle Effect": "Exchanges Abilities with the opposing Pokémon",
+        "Casual RP Effect": "Reflects and adapts to the presence of others",
+        "Random Fact": "Known for their dynamic nature"
+    },
+    {
+        "Name": "Water Absorb",
+        "Short Description": "Heals when hit by Water moves",
+        "Battle Effect": "Restores 1/4 of max HP when hit by Water moves",
+        "Casual RP Effect": "Thrives in wet environments",
+        "Random Fact": "Often found near water sources"
+    },
+    {
+        "Name": "Water Bubble",
+        "Short Description": "Halves damage from Fire moves and prevents burns",
+        "Battle Effect": "Reduces Fire-type move damage by half and prevents burns",
+        "Casual RP Effect": "Creates a protective bubble in water",
+        "Random Fact": "Known for their buoyancy and protection"
+    },
+    {
+        "Name": "Water Compaction",
+        "Short Description": "Raises Defense when hit by Water moves",
+        "Battle Effect": "Increases Defense by 1 stage when hit by Water moves",
+        "Casual RP Effect": "Becomes tougher when surrounded by water",
+        "Random Fact": "Known for their resilience in aquatic situations"
+    },
+    {
+        "Name": "Water Veil",
+        "Short Description": "Prevents burns",
+        "Battle Effect": "Immune to burn conditions",
+        "Casual RP Effect": "Keeps cool and collected in heated situations",
+        "Random Fact": "Often sought after in hot environments"
+    },
+    {
+        "Name": "Weak Armor",
+        "Short Description": "Lowers Defense and boosts Speed when hit",
+        "Battle Effect": "Lowers Defense by 1 stage and boosts Speed by 1 stage",
+        "Casual RP Effect": "Becomes quicker when facing adversity",
+        "Random Fact": "Known for their agility in tough situations"
+    },
+    {
+        "Name": "Well-Baked Body",
+        "Short Description": "Immune to Fire moves and boosts Defense in sunlight",
+        "Battle Effect": "Immune to Fire-type moves and increases Defense in sunlight",
+        "Casual RP Effect": "Thrives in sunny conditions",
+        "Random Fact": "Known for their warmth and resilience"
+    },
+    {
+        "Name": "White Smoke",
+        "Short Description": "Prevents stat lowering",
+        "Battle Effect": "Prevents other Pokémon from lowering its stats",
+        "Casual RP Effect": "Stays focused without worrying about distractions",
+        "Random Fact": "Known for their unyielding nature"
+    },
+    {
+        "Name": "Wimp Out",
+        "Short Description": "Switches out when hit",
+        "Battle Effect": "Faints when HP drops below half",
+        "Casual RP Effect": "Can’t handle pressure and retreats",
+        "Random Fact": "Known for avoiding confrontations"
+    },
+    {
+        "Name": "Wind Power",
+        "Short Description": "Boosts moves in windy conditions",
+        "Battle Effect": "Increases power of moves during strong winds",
+        "Casual RP Effect": "Flows smoothly in breezy environments",
+        "Random Fact": "Known for harnessing the power of the wind"
+    },
+    {
+        "Name": "Wind Rider",
+        "Short Description": "Increases Speed and boosts moves in windy conditions",
+        "Battle Effect": "Boosts Speed and moves in strong winds",
+        "Casual RP Effect": "Flies gracefully through windy areas",
+        "Random Fact": "Often seen soaring in blustery environments"
+    },
+    {
+        "Name": "Wonder Guard",
+        "Short Description": "Only weak to super effective moves",
+        "Battle Effect": "Only takes damage from super effective moves",
+        "Casual RP Effect": "Survives against overwhelming odds",
+        "Random Fact": "Known for being incredibly hard to defeat"
+    },
+    {
+        "Name": "Wonder Skin",
+        "Short Description": "Makes non-damaging moves less accurate",
+        "Battle Effect": "Reduces accuracy of non-damaging moves by 50%",
+        "Casual RP Effect": "Creates an aura that confuses attackers",
+        "Random Fact": "Known for their elusive nature"
+    },
+    {
+        "Name": "Zen Mode",
+        "Short Description": "Changes form when HP is low",
+        "Battle Effect": "Transforms into a different form when HP is below half",
+        "Casual RP Effect": "Adapts to situations based on health",
+        "Random Fact": "Known for their calm demeanor in crises"
+    },
+    {
+        "Name": "Zero to Hero",
+        "Short Description": "Boosts stats when behind in battle",
+        "Battle Effect": "Increases all stats when the Pokémon is at a disadvantage",
+        "Casual RP Effect": "Becomes stronger when underestimated",
+        "Random Fact": "Known for turning the tide in tough situations"
     }
 ]

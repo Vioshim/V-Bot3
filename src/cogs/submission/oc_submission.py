@@ -52,8 +52,8 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from src.cogs.roles.roles import RPModal
 from src.cogs.submission.area_selection import RegionViewComplex
 from src.cogs.submission.oc_parsers import ParserMethods
-from src.pagination.complex import Complex
 from src.pagination.boolean import BooleanView
+from src.pagination.complex import Complex
 from src.pagination.text_input import ModernInput
 from src.pagination.view_base import Basic
 from src.structures.bot import CustomBot

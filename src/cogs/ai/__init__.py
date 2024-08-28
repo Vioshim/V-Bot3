@@ -249,10 +249,6 @@ class AiCog(commands.Cog):
                 msg.attachments[0].url,
             )
 
-            
-
-
-
     @app_commands.guilds(1196879060173852702)
     @commands.max_concurrency(1, wait=False)
     @commands.guild_only()

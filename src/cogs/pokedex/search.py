@@ -43,7 +43,7 @@ from src.structures.character import (
     Weight,
 )
 from src.structures.mon_typing import TypingEnum
-from src.structures.move import Move, Category
+from src.structures.move import Category, Move
 from src.structures.pronouns import Pronoun
 from src.structures.species import CustomSpecies, Fakemon, Fusion, Species
 
@@ -402,9 +402,7 @@ class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" "
     fakemon: Optional[FakemonArg] = commands.flag(default=None, description="Search fakemon species")
     move_id: Optional[MoveArg] = commands.flag(default=None, description="Move to lookup")
     size: Optional[SizeCategory] = commands.flag(default=None, description="Size to lookup")
-    level: int = commands.flag(default=0, description="Level to calculate stats for")
-    ivs: int = commands.flag(default=0, description="IVs to calculate stats for")
-    evs: int = commands.flag(default=0, description="EVs to calculate stats for")
+
 
 class DexFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="--"):
     species: Optional[DefaultSpeciesArg] = commands.flag(

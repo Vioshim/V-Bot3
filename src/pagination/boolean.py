@@ -53,7 +53,7 @@ class BooleanView(Basic):
             embed=embed,
         )
         self.value = value
-        
+
         if value is True:
             self.confirm.label = "Yes (Selected)"
         else:
@@ -89,14 +89,14 @@ class BooleanView(Basic):
         finally:
             await aux.delete()
 
-    @button(label="Yes", row=0, emoji="✅", style = ButtonStyle.blurple)
+    @button(label="Yes", row=0, emoji="✅", style=ButtonStyle.blurple)
     async def confirm(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         self.value = True
         await resp.edit_message(content=f"{self.embed.title}\nAnswer: Yes", view=None)
         await self.delete()
 
-    @button(label="No", row=0, emoji="❌", style = ButtonStyle.blurple)
+    @button(label="No", row=0, emoji="❌", style=ButtonStyle.blurple)
     async def deny(self, interaction: Interaction, _: Button):
         resp: InteractionResponse = interaction.response
         self.value = False
