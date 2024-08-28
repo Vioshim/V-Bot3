@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import Enum
 from functools import lru_cache
 from json import load
 from re import split
@@ -41,18 +41,18 @@ ALL_MOVES_BY_NAME = frozendict()
 ALL_MOVES_DEX: dict[str, dict[str, dict[str, str]]] = {"Physical": {}, "Special": {}, "Status": {}}
 
 
-class Category(IntEnum):
-    Status = 1080656476357525615
-    Physical = 1080656480446971914
-    Special = 1080656483190059038
+class Category(Enum):
+    Status = PartialEmoji(name="Status", id=1080656476357525615)
+    Physical = PartialEmoji(name="Physical", id=108065648044697191)4
+    Special = PartialEmoji(name="Special", id=1080656483190059038)
 
     @property
     def url(self):
-        return f"https://cdn.discordapp.com/emojis/{self.value}.png"
+        return self.value.url
 
     @property
     def emoji(self):
-        return PartialEmoji(name=self.name, id=self.value)
+        return self.value
 
     @classmethod
     def from_id(cls, value: int):
@@ -487,7 +487,7 @@ class Move:
             embed.set_author(name=f"Originally {self.type.name} Type ", icon_url=self.type.emoji.url)
 
         cat = self.category
-        embed.set_footer(text=cat.name, icon_url=cat.emoji.url)
+        embed.set_footer(text=cat.name, icon_url=cat.url)
         embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
         embed.add_field(name="Max Power", value=self.max_move_base)
@@ -519,7 +519,7 @@ class Move:
             icon_url=self.type.emoji.url if self.type != item else None,
         )
         cat = self.category
-        embed.set_footer(text=cat.name, icon_url=cat.emoji.url)
+        embed.set_footer(text=cat.name, icon_url=cat.url)
         embed.set_thumbnail(url=self.type.emoji.url)
         embed.set_image(url=WHITE_BAR)
         if effect := self.z_effect:
@@ -560,7 +560,7 @@ class Move:
             name=f"Original Move: {self.name}",
             icon_url=item.emoji.url if item != self.type else None,
         )
-        embed.set_footer(text=cat.name, icon_url=cat.emoji.url)
+        embed.set_footer(text=cat.name, icon_url=cat.url)
         embed.set_thumbnail(url=item.emoji.url)
         embed.set_image(url=WHITE_BAR)
 
