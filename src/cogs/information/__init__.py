@@ -286,7 +286,9 @@ class Information(commands.Cog):
 
         if role:
             if not name and not icon and not color:
-                return await role.delete()
+                await role.delete(reason=f"{ctx.author} requested deletion")
+                await ctx.reply("Role Deleted Successfully", ephemeral=True)
+                return 
 
             display_icon = await icon.read() if icon else MISSING
 
