@@ -155,6 +155,7 @@ class Pokedex(commands.Cog):
             Species to check
         """
         embed = Embed(title=species.name, color=ctx.author.color)
+        embed.set_thumbnail(url=species.base_image)
         for k, v in species.dex.items():
             embed.add_field(name=k, value=v, inline=False)
         await ctx.reply(embed=embed, ephemeral=True)
