@@ -32,7 +32,7 @@ from yaml import dump
 
 from src.cogs.information.poll import PollView
 from src.structures.bot import CustomBot
-from src.structures.converters import ColorConverter
+from src.structures.converters import ColorArg
 from src.utils.etc import DEFAULT_TIMEZONE, LINK_EMOJI, WHITE_BAR
 from src.utils.functions import message_line, name_emoji_from_channel, safe_username
 from src.utils.matches import TUPPER_REPLY_PATTERN
@@ -252,7 +252,7 @@ class Information(commands.Cog):
         self,
         ctx: commands.Context[CustomBot],
         name: Optional[commands.Range[str, 1, 100]] = None,
-        color: Optional[ColorConverter] = None,
+        color: Optional[ColorArg] = None,
         icon: Optional[discord.Attachment] = None,
     ):
         """Custom Role for Supporters!

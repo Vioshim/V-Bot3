@@ -73,6 +73,8 @@ class ColorConverter(commands.Converter[discord.Color], Transformer):
         ]
 
 
+ColorArg = Transform[discord.Colour, ColorConverter]
+
 class DateConverter(commands.Converter[datetime]):
     async def convert(self, ctx: commands.Context[CustomBot], argument: str, /) -> datetime:
         db = ctx.bot.mongo_db("AFK")
@@ -633,7 +635,7 @@ class EmbedFlags(commands.FlagConverter, prefix="--", delimiter=" "):
     title: str = commands.flag(default="", aliases=["t"])
     description: str = commands.flag(default="", aliases=["d", "desc"])
     url: Optional[str] = None
-    color: Optional[ColorConverter] = commands.flag(default=None, aliases=["colour"])
+    color: Optional[ColorArg] = commands.flag(default=None, aliases=["colour"])
     image: Optional[ImageURLConverter] = None
     thumbnail: Optional[ImageURLConverter] = commands.flag(default=None, aliases=["th"])
     timestamp: Optional[DateConverter] = commands.flag(default=None, aliases=["date", "time"])
@@ -732,6 +734,4 @@ class EmbedFlags(commands.FlagConverter, prefix="--", delimiter=" "):
                 )
             )
         return "\n".join(text)
-
-ColorArg = Transform[discord.Colour, ColorConverter]
 
