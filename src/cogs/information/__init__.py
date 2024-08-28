@@ -250,7 +250,7 @@ class Information(commands.Cog):
     async def custom_role(
         self,
         itx: discord.Interaction[CustomBot],
-        name: Optional[commands.Range[str, 1, 100]] = None,
+        name: Optional[str] = None,
         color: Optional[discord.Colour] = None,
         icon: Optional[discord.Attachment] = None,
     ):
@@ -292,6 +292,8 @@ class Information(commands.Cog):
                 )
             except discord.NotFound:
                 role = None
+            except discord.HTTPException as e:
+                return await itx.response.send_message(f"Error: {e}", ephemeral=True)
 
         if not role:
             display_icon = await icon.read() if icon else MISSING
