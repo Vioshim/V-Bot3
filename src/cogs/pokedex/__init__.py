@@ -156,7 +156,7 @@ class Pokedex(commands.Cog):
         """
         embed = Embed(title=species.name, color=ctx.author.color)
         for k, v in species.dex.items():
-            embed.add_field(name=f"{species.name} | {k}", value=v, inline=False)
+            embed.add_field(name=k, value=v, inline=False)
         await ctx.reply(embed=embed, ephemeral=True)
 
     @dex.command()
@@ -173,8 +173,10 @@ class Pokedex(commands.Cog):
             Category to check
         """ 
         embed = Embed(title=move.name, color=ctx.author.color)
+        category = category or move.category
+        embed.set_footer(text=category.name, icon_url=category.emoji.url)
         for k, v in move.dex_category(category).items():
-            embed.add_field(name=f"{move.name} | {k}", value=v, inline=False)
+            embed.add_field(name=k, value=v, inline=False)
         await ctx.reply(embed=embed, ephemeral=True)
 
     @dex.command()
@@ -245,8 +247,9 @@ class Pokedex(commands.Cog):
             Type to check
         """
         embed = Embed(title=type.name, color=type.color)
+        embed.set_thumbnail(url=type.emoji.url)
         for k, v in type.dex.items():
-            embed.add_field(name=f"{type.emoji} | {k}", value=v, inline=False)
+            embed.add_field(name=k, value=v, inline=False)
         await ctx.reply(embed=embed, ephemeral=True)
 
     @dex.command()
@@ -262,7 +265,7 @@ class Pokedex(commands.Cog):
         """
         embed = Embed(title=ability.name, color=ctx.author.color)
         for k, v in ability.dex.items():
-            embed.add_field(name=f"{ability.name} | {k}", value=v, inline=False)
+            embed.add_field(name=k, value=v, inline=False)
         await ctx.reply(embed=embed, ephemeral=True)
 
     @dex.command()
