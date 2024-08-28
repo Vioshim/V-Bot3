@@ -145,13 +145,33 @@ class Pokedex(commands.Cog):
 
     @dex.command()
     async def species(self, ctx: commands.Context[CustomBot], *, species: DefaultSpeciesArg):
+        """Command to check Species Information
+        
+        Parameters
+        ----------
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
+        species : DefaultSpeciesArg
+            Species to check
+        """
         embed = Embed(title=species.name, color=ctx.author.color)
         for k, v in species.dex.items():
             embed.add_field(name=f"{species.name} | {k}", value=v, inline=False)
         await ctx.reply(embed=embed, ephemeral=True)
 
     @dex.command()
-    async def move(self, ctx: commands.Context[CustomBot], move: MoveArg, *, category: Optional[Category] = None):
+    async def move(self, ctx: commands.Context[CustomBot], move: MoveArg, *, category: Optional[Category] = None,):
+        """Command to check Move Information
+
+        Parameters
+        ----------
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
+        move : MoveArg
+            Move to check
+        category : Optional[Category]
+            Category to check
+        """ 
         embed = Embed(title=move.name, color=ctx.author.color)
         for k, v in move.dex_category(category).items():
             embed.add_field(name=f"{move.name} | {k}", value=v, inline=False)
@@ -215,6 +235,15 @@ class Pokedex(commands.Cog):
 
     @dex.command()
     async def type(self, ctx: commands.Context[CustomBot], type: TypingEnum):
+        """Command to check Type Information
+
+        Parameters
+        ----------
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
+        type : TypingEnum
+            Type to check
+        """
         embed = Embed(title=type.name, color=type.color)
         for k, v in type.dex.items():
             embed.add_field(name=f"{type.emoji} | {k}", value=v, inline=False)
@@ -222,6 +251,15 @@ class Pokedex(commands.Cog):
 
     @dex.command()
     async def ability(self, ctx: commands.Context[CustomBot], *, ability: AbilityArg):
+        """Command to check Ability Information
+
+        Parameters
+        ----------
+        ctx : Interaction[CustomBot]
+            Interaction[CustomBot]
+        ability : AbilityArg
+            Ability to check
+        """
         embed = Embed(title=ability.name, color=ctx.author.color)
         for k, v in ability.dex.items():
             embed.add_field(name=f"{ability.name} | {k}", value=v, inline=False)
