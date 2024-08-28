@@ -281,6 +281,9 @@ class Information(commands.Cog):
         if icon and not str(icon.content_type).startswith("image"):
             return await ctx.reply("Valid File Format: image/png", ephemeral=True)
 
+        if icon and ctx.guild.premium_tier < 2:
+            icon = None
+
         if role:
             if not name and not icon and not color:
                 return await role.delete()
