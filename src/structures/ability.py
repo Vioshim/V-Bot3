@@ -169,9 +169,6 @@ class Ability:
 
     @classmethod
     def hook(cls, data: dict[str, str]):
-        if "name" not in data:
-            return
-
         return cls(
             id=fix(data["name"]),
             name=data["name"],
@@ -299,5 +296,4 @@ class AbilityEncoder(JSONEncoder):
 
 
 with open("resources/abilities.json", mode="r", encoding="utf8") as f:
-    abilities: list[Ability] = load(f, object_hook=lambda x: Ability.hook(x) or SpAbility.hook(x) or x)
-    ALL_ABILITIES = frozendict({ab.id: ab for ab in abilities})
+    ALL_ABILITIES = frozendict({ab.id: ab for ab in map(Ability.hook, load(f))})
