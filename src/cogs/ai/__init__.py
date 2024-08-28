@@ -120,7 +120,6 @@ class AiCog(commands.Cog):
     @commands.max_concurrency(1, wait=False)
     @commands.check(lambda ctx: get(ctx.author.mutual_guilds, id=1196879060173852702) is not None)
     @commands.hybrid_command(nsfw=True)
-    @app_commands.guilds(952518750748438549, 1196879060173852702)
     @app_commands.allowed_installs(users=True, guilds=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ai(self, ctx: commands.Context[CustomBot], *, flags: GenerateFlags):
