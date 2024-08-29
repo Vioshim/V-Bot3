@@ -133,13 +133,11 @@ class HeightView(Basic):
                 label=item.name,
                 value=item.name,
                 default=item == size_kind,
-                description=f"Multiplier: {item.value:.2f}x",
                 emoji=item.emoji,
             )
 
         self.choice.options.clear()
         middle = AMOUNT // 2
-        ref = size_kind.value * self.oc.age.scale
         minimum, maximum = 1.0 * self.oc.age.scale, 2.0 * self.oc.age.scale
         for index, value in enumerate(np.linspace(maximum, minimum, AMOUNT)):
             if index == middle:
@@ -150,8 +148,7 @@ class HeightView(Basic):
                 emoji = "🟦"
 
             label = Size.Average.height_info(value)
-            info = Size.Average.height_info(value * ref)
-            self.choice.add_option(label=label, value=str(value), emoji=emoji, description=f"POV: {info}")
+            self.choice.add_option(label=label, value=str(value), emoji=emoji)
 
         return self
 
