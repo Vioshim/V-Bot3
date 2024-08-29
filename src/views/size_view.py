@@ -35,7 +35,7 @@ class HeightModal(Modal, title="Height"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        ref = self.oc.age.value
+        ref = self.oc.age.scale
         self.oc.size = round(min(2.0 * ref, max(1.0 * ref, self.value)), 4)
         info = Size.Average.height_info(self.oc.size)
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
@@ -167,7 +167,7 @@ class HeightView(Basic):
 
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
-        ref = self.oc.age.value
+        ref = self.oc.age.scale
         self.oc.size = round(max(1.0 * ref, min(2.0 * ref, float(sct.values[0]))), 4)
         await self.delete(itx)
 
