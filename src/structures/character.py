@@ -381,7 +381,7 @@ class SizeKind(float, Enum):
             return f"{n} ({mi:.2f} m / {mi/0.9144:.2f} yd - {ma:.2f} m / {ma/0.9144:.2f} yd)"
 
         if ma_ft >= 1:
-            return f"{n} ({mi:.2f} m / {mi_ft}' {mi_in:.0f}\" ft - {ma:.2f} m / {ma_ft}' {ma_in:.0f}\" ft)"
+            return f"{n} ({mi:.2f} m / {mi_ft:.0f}' {mi_in:.0f}\" ft - {ma:.2f} m / {ma_ft:.0f}' {ma_in:.0f}\" ft)"
 
         if mi_in >= 0.1:
             return f"{n} ({mi*100:.2f} cm / {mi_in:.2f} in - {ma*100:.2f} cm / {ma_in:.2f} in)"
