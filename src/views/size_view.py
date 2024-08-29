@@ -145,9 +145,9 @@ class HeightView(Basic):
             if index == middle:
                 emoji = "🟩"
             elif index < middle:
-                emoji = "🟦"
-            else:
                 emoji = "🟧"
+            else:
+                emoji = "🟦"
 
             label = Size.Average.height_info(value)
             info = Size.Average.height_info(value * ref)
