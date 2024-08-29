@@ -266,7 +266,7 @@ class Size(float, Enum):
         value_ft, value_in = value // 0.3048, value / 0.3048 % 1 * 12
 
         if value_ft > 0:
-            return f"{value:.2f} m / {value_ft}' {value_in:.0f}\" ft"
+            return f"{value:.2f} m / {value_ft:.0f}' {value_in:.0f}\" ft"
 
         if value_in >= 0.1:
             return f"{value*100:.2f} cm / {value_in:.2f} in"
