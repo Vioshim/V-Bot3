@@ -341,17 +341,23 @@ class Gender(Enum):
     Fluid = "Uses transformations to change gender frequently."
 
 
-class SizeKind(Enum):
-    Kaiju = 10.0, "🟧"
-    Regular = 1.0, "🟩"
-    Shrunk = 0.1, "🟦"
+class SizeKind(float, Enum):
+    Kaiju = 10.0
+    Regular = 1.0
+    Shrunk = 0.1
 
     @property
     def emoji(self):
-        return self.value[1]
+        match self:
+            case self.Kaiju:
+                return "🟧"
+            case self.Regular:
+                return "🟩"
+            case self.Shrunk:
+                return "🟦"
     
     def is_valid(self):
-        return 0.1 <= self.value[0] <= 10.0
+        return 0.1 <= self.value <= 10.0
 
     def label_for(self, scale: float = 1.0, minimum: float = 1.0, maximum: float = 2.0, real: bool = False):
         n = self.name.replace("_", " ")
@@ -359,8 +365,8 @@ class SizeKind(Enum):
         mi = minimum * scale
 
         if real:
-            ma *= self.value[0]
-            mi *= self.value[0]
+            ma *= self.value
+            mi *= self.value
 
         if mi >= 5.87862537e10:
             return f"{n} ({mi/9.461e+15:.2f} ly / {mi/5.87862537e12:.2f} au - {ma/9.461e+15:.2f} ly / {ma/5.87862537e12:.2f} au)"
