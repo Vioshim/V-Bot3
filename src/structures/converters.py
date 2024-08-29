@@ -23,11 +23,14 @@ import discord
 import webcolors
 from dateparser import parse
 from discord import Member, Message, User
+from discord.app_commands import Choice
+from discord.app_commands.transformers import Transform, Transformer
 from discord.ext import commands
 from discord.file import File
 from discord.utils import get, utcnow
 from humanize import naturaltime
 from rapidfuzz import process
+from rapidfuzz.utils import default_process
 
 from src.structures.bot import CustomBot
 from src.structures.exceptions import (
@@ -40,11 +43,6 @@ from src.structures.mon_typing import TypingEnum
 from src.structures.move import Category, Move
 from src.structures.species import Species
 from src.utils.matches import REGEX_URL
-from discord.app_commands.transformers import Transform, Transformer
-from discord.app_commands import Choice
-
-from rapidfuzz.utils import default_process
-import webcolors
 
 AUTOCOMPLETE_SCORE = 60
 
@@ -74,6 +72,7 @@ class ColorConverter(commands.Converter[discord.Color], Transformer):
 
 
 ColorArg = Transform[discord.Colour, ColorConverter]
+
 
 class DateConverter(commands.Converter[datetime]):
     async def convert(self, ctx: commands.Context[CustomBot], argument: str, /) -> datetime:
@@ -734,4 +733,3 @@ class EmbedFlags(commands.FlagConverter, prefix="--", delimiter=" "):
                 )
             )
         return "\n".join(text)
-

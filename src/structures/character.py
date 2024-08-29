@@ -355,7 +355,7 @@ class SizeKind(float, Enum):
                 return "🟩"
             case self.Shrunk:
                 return "🟦"
-    
+
     def is_valid(self):
         return 0.1 <= self.value <= 10.0
 
@@ -387,6 +387,7 @@ class SizeKind(float, Enum):
             return f"{n} ({mi*100:.2f} cm / {mi_in:.2f} in - {ma*100:.2f} cm / {ma_in:.2f} in)"
 
         return f"{n} ({mi*1000:.2f} mm / {mi_in*1000:.2f} th - {ma*1000:.2f} mm / {ma_in*1000:.2f} th)"
+
 
 class Weight(float, Enum):
     Obese = 1.500
@@ -523,7 +524,7 @@ class Character:
                 self.size_kind = SizeKind(self.size_kind)
             except ValueError:
                 self.size_kind = SizeKind.Regular
-        
+
         self.size = min(2.0 * self.age.scale, max(1.0 * self.age.scale, self.size))
 
     def __eq__(self, other: Character):
@@ -664,7 +665,7 @@ class Character:
     @property
     def height_text(self):
         return Size.Average.height_info(self.height_value)
-    
+
     @property
     def real_height_text(self):
         return Size.Average.height_info(self.real_height_value)
@@ -676,7 +677,7 @@ class Character:
         else:
             value = self.size
         return round(value, 4)
-    
+
     @property
     def real_height_value(self):
         return round(self.height_value * self.size_kind.value, 4)

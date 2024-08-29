@@ -27,6 +27,7 @@ from discord.ext import commands
 from discord.ui import Button, Modal, Select, TextInput, View, select
 from discord.utils import MISSING, format_dt, get, utcnow
 from motor.motor_asyncio import AsyncIOMotorCollection
+from mystbin import File
 from rapidfuzz import fuzz
 from yaml import dump
 
@@ -288,7 +289,7 @@ class Information(commands.Cog):
             if not name and not icon and not color:
                 await role.delete(reason=f"{ctx.author} requested deletion")
                 await ctx.reply("Role Deleted Successfully", ephemeral=True)
-                return 
+                return
 
             display_icon = await icon.read() if icon else MISSING
 
@@ -1237,16 +1238,21 @@ class Information(commands.Cog):
             thread = MISSING
 
         w = await self.bot.webhook(channel_id, reason="Bulk delete logging")
+
         if (
             messages := [message_line(x) for x in messages if x.id not in self.bot.msg_cache and x.webhook_id != w.id]
         ) and (
             paste := await self.bot.m_bin.create_paste(
-                filename=f"{utcnow().strftime('%x')} - {msg.channel}.yaml",
-                content=dump(
-                    data=messages,
-                    allow_unicode=True,
-                    sort_keys=False,
-                ),
+                files=[
+                    File(
+                        filename=f"{utcnow().strftime('%x')} - {msg.channel}.yaml",
+                        content=dump(
+                            data=messages,
+                            allow_unicode=True,
+                            sort_keys=False,
+                        ),
+                    )
+                ],
             )
         ):
             embed = discord.Embed(
