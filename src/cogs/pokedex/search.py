@@ -39,7 +39,6 @@ from src.structures.character import (
     Kind,
     Nature,
     Size,
-    SizeCategory,
     Weight,
 )
 from src.structures.mon_typing import TypingEnum
@@ -401,7 +400,6 @@ class MovepoolFlags(commands.FlagConverter, case_insensitive=True, delimiter=" "
     fused2: Optional[DefaultSpeciesArg] = commands.flag(default=None, description="To check when fused")
     fakemon: Optional[FakemonArg] = commands.flag(default=None, description="Search fakemon species")
     move_id: Optional[MoveArg] = commands.flag(default=None, description="Move to lookup")
-    size: Optional[SizeCategory] = commands.flag(default=None, description="Size to lookup")
 
 
 class DexFlags(commands.FlagConverter, case_insensitive=True, delimiter=" ", prefix="--"):

@@ -20,7 +20,7 @@ from discord import ButtonStyle, Interaction, Member
 from discord.ui import Button, Modal, Select, TextInput, button, select
 
 from src.pagination.view_base import Basic
-from src.structures.character import Character, Size, SizeCategory
+from src.structures.character import Character, Size, SizeKind
 
 __all__ = ("HeightView",)
 
@@ -35,7 +35,8 @@ class HeightModal(Modal, title="Height"):
         return 0
 
     async def on_submit(self, interaction: Interaction, /) -> None:
-        self.oc.size = self.value
+        ref = self.oc.age.value
+        self.oc.size = round(min(2.0 * ref, max(1.0 * ref, self.value)), 4)
         info = Size.Average.height_info(self.oc.size)
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -100,7 +101,7 @@ class HeightModal2(HeightModal):
             return 0
 
 
-AMOUNT = 9
+AMOUNT = 15
 
 
 class HeightView(Basic):
@@ -119,33 +120,28 @@ class HeightView(Basic):
         except ValueError:
             self.manual_1.label, self.manual_2.label = info, "Feet & Inches"
 
-        current_category = self.oc.size_category
+        size_kind = self.oc.size_kind
 
         self.category.options.clear()
         if self.unlock:
-            items = SizeCategory
+            items = SizeKind
         else:
-            items = filter(SizeCategory.is_valid, SizeCategory)
+            items = filter(SizeKind.is_valid, SizeKind)
 
         for item in items:
             self.category.add_option(
                 label=item.label_for(self.oc.age.scale),
                 value=item.name,
-                default=item == current_category,
-                description=item.description,
+                default=item == size_kind,
+                description=item.label_for(self.oc.age.scale, real=True),
                 emoji=item.emoji,
             )
 
         self.choice.options.clear()
         middle = AMOUNT // 2
-        ref = current_category.average * self.oc.age.scale
-        for index, value in enumerate(
-            np.linspace(
-                current_category.maximum * self.oc.age.scale,
-                current_category.minimum * self.oc.age.scale,
-                AMOUNT,
-            )
-        ):
+        ref = size_kind.value * self.oc.age.scale
+        minimum, maximum = 1.0 * self.oc.age.scale, 2.0 * self.oc.age.scale
+        for index, value in enumerate(np.linspace(minimum, maximum, AMOUNT)):
             if index == middle:
                 emoji = "🟩"
             elif index < middle:
@@ -154,7 +150,7 @@ class HeightView(Basic):
                 emoji = "🟧"
 
             label = Size.Average.height_info(value)
-            info = Size.Average.height_info(1.65 * value / ref)
+            info = Size.Average.height_info(value * ref)
             self.choice.add_option(label=label, value=str(value), emoji=emoji, description=f"POV: {info}")
 
         return self
@@ -162,16 +158,17 @@ class HeightView(Basic):
     @select(placeholder="Multiplier for Size", min_values=0, max_values=1)
     async def category(self, itx: Interaction, sct: Select):
         try:
-            size_category = SizeCategory[sct.values[0]]
+            size_kind = SizeKind[sct.values[0]]
         except (KeyError, IndexError):
-            size_category = SizeCategory.Average
+            size_kind = SizeKind.Regular
 
-        self.oc.size = round(size_category.average * self.oc.age.scale, 4)
+        self.oc.size_kind = size_kind
         await itx.response.edit_message(view=self.format())
 
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
-        self.oc.size = round(float(sct.values[0]), 4)
+        ref = self.oc.age.value
+        self.oc.size = round(max(1.0 * ref, min(2.0 * ref, float(sct.values[0]))), 4)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")

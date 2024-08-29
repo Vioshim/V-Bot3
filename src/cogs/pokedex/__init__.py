@@ -96,10 +96,6 @@ class Pokedex(commands.Cog):
         else:
             movepool = Movepool()
 
-        if flags.size:
-            scale = species.age.scale if isinstance(species, Character) else 1
-            embed.add_field(name="Height", value=flags.size.label_for(scale))
-
         view = None
         if flags.move_id is None:
             view = MovepoolView(member=ctx.author, movepool=movepool, target=ctx)

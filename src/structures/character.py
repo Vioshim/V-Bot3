@@ -341,79 +341,26 @@ class Gender(Enum):
     Fluid = "Uses transformations to change gender frequently."
 
 
-class SizeCategory(Enum):
-    Scale_5_Itty_Bitty = 0.0001, 0.001, "As strong as an ant.", "⬜"
-    Scale_4_Itty_Bitty = 0.0010, 0.010, "As strong as a bug.", "⬜"
-    Scale_3_Itty_Bitty = 0.0100, 0.025, "As strong as an ant.", "⬜"
-    Scale_2_Itty_Bitty = 0.0250, 0.050, "As strong as a bug.", "⬜"
-    Scale_1_Itty_Bitty = 0.0500, 0.100, "As strong as a mouse.", "⬜"
-
-    Tiny = 0.1, 0.5, "As strong as a rabbit.", "🟦"
-    Small = 0.5, 0.75, "As strong as a medium-sized dog.", "🟦"
-    Below_Average = 0.75, 1.25, "As strong as a human.", "🟦"
-    Slightly_Average = 1.25, 1.5, "As strong as a human.", "🟩"
-
-    Average = 1.5, 1.80, "As strong as a human.", "🟩"
-
-    Above_Average = 1.8, 2.0, "As strong as a human.", "🟩"
-    Large = 2.0, 2.5, "As strong as a horse.", "🟧"
-    Huge = 2.50, 5.0, "As strong as a bear.", "🟧"
-    Giant = 5.0, 7.5, "As strong as a large bear", "🟧"
-
-    Scale_1_Kaiju = 7.50, 13.0, "As strong as a small truck", "🟥"
-    Scale_2_Kaiju = 13.0, 18.5, "As strong as a large truck", "🟥"
-    Scale_3_Kaiju = 18.5, 24.0, "As strong as a whale", "🟥"
-    Scale_4_Kaiju = 24.0, 29.5, "As strong as a large whale", "🟥"
-    Scale_5_Kaiju = 29.5, 35.0, "As strong as a natural disaster", "🟥"
-
-    Scale_1_Cosmic = 35.0, 10000.0, "As strong as a small planet", "🟪"
-    Scale_2_Cosmic = 10000.0, 5000000.0, "As strong as a large planet", "🟪"
-    Scale_3_Cosmic = 5000000.0, 9.461e15 * 0.5, "As strong as a small star", "🟪"
-    Scale_4_Cosmic = 9.461e15 * 0.5, 9.461e15, "As strong as a large star", "🟪"
-    Scale_5_Cosmic = 9.461e15, 9.461e15 * 2.5, "As strong as a small galaxy", "🟪"
-
-    def is_valid(self):
-        return not self.name.endswith(("Itty_Bitty", "Cosmic"))
-
-    @classmethod
-    def category_for(cls, value: float, scale: float = 1.0):
-        items = sorted(cls, key=lambda x: (not x.is_valid(), x.minimum))
-        minimal = min(filter(cls.is_valid, cls), key=lambda x: abs(x.average - value))
-        return next((x for x in items if x.check_for(scale, value)), minimal)
-
-    @property
-    def minimum(self):
-        return self.value[0]
-
-    @property
-    def maximum(self):
-        return self.value[1]
-
-    @property
-    def description(self):
-        return self.value[2]
+class SizeKind(Enum):
+    Kaiju = 10.0, "🟧"
+    Regular = 1.0, "🟩"
+    Shrunk = 0.1, "🟦"
 
     @property
     def emoji(self):
-        return self.value[3]
+        return self.value[1]
+    
+    def is_valid(self):
+        return 0.1 <= self.value <= 10.0
 
-    @property
-    def average(self):
-        return (self.value[0] + self.value[1]) / 2.0
-
-    @property
-    def ref_name(self):
-        return self.name.replace("_", " ")
-
-    def label_for(
-        self,
-        scale: float = 1.0,
-        minimum: float = 0.0,
-        maximum: float = 0.0,
-    ):
+    def label_for(self, scale: float = 1.0, minimum: float = 1.0, maximum: float = 2.0, real: bool = False):
         n = self.name.replace("_", " ")
-        ma = (maximum or self.maximum) * scale
-        mi = (minimum or self.minimum) * scale
+        ma = maximum * scale
+        mi = minimum * scale
+
+        if real:
+            ma *= self.value
+            mi *= self.value
 
         if mi >= 5.87862537e10:
             return f"{n} ({mi/9.461e+15:.2f} ly / {mi/5.87862537e12:.2f} au - {ma/9.461e+15:.2f} ly / {ma/5.87862537e12:.2f} au)"
@@ -434,20 +381,6 @@ class SizeCategory(Enum):
             return f"{n} ({mi*100:.2f} cm / {mi_in:.2f} in - {ma*100:.2f} cm / {ma_in:.2f} in)"
 
         return f"{n} ({mi*1000:.2f} mm / {mi_in*1000:.2f} th - {ma*1000:.2f} mm / {ma_in*1000:.2f} th)"
-
-    def check_for(
-        self,
-        scale: float = 1.0,
-        value: float = 1.65,
-        minimum: float = 0.0,
-        maximum: float = 0.0,
-    ):
-        ma, mi = (maximum or self.maximum) * scale, 0
-        minimal = min(SizeCategory, key=lambda x: x.minimum)
-        if self != minimal:
-            mi = (minimum or self.minimum) * scale
-        return mi <= value <= ma
-
 
 class Weight(float, Enum):
     Obese = 1.500
@@ -481,6 +414,7 @@ class Character:
     location: Optional[int] = None
     hidden_power: Optional[TypingEnum] = None
     size: float = 1.65
+    size_kind: SizeKind = SizeKind.Regular
     weight: Weight = Weight.Average
     last_used: Optional[int] = None
     nature: Optional[Nature] = None
@@ -577,6 +511,8 @@ class Character:
         self.age = AgeGroup.parse(self.age)
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
+
+        self.size = min(2.0 * self.age.scale, max(1.0 * self.age.scale, self.size))
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
@@ -716,6 +652,10 @@ class Character:
     @property
     def height_text(self):
         return Size.Average.height_info(self.height_value)
+    
+    @property
+    def real_height_text(self):
+        return Size.Average.height_info(self.real_height_value)
 
     @property
     def height_value(self):
@@ -724,6 +664,10 @@ class Character:
         else:
             value = self.size
         return round(value, 4)
+    
+    @property
+    def real_height_value(self):
+        return round(self.height_value * self.size_kind.value, 4)
 
     @property
     def weight_text(self):
@@ -777,10 +721,6 @@ class Character:
         return Color.blurple()
 
     @property
-    def size_category(self):
-        return SizeCategory.category_for(self.size, self.age.scale)
-
-    @property
     def embeds(self) -> list[Embed]:
         """Discord embed out of the character
 
@@ -797,8 +737,7 @@ class Character:
 
         gender_text = self.gender.name if self.gender != Gender.Genderless else "Pronouns"
         c_embed.add_field(name=gender_text, value=self.pronoun_text or "Unknown")
-        cat = self.size_category
-        c_embed.add_field(name=cat.ref_name, value=self.age.title)
+        c_embed.add_field(name="Age", value=self.age.title)
 
         if species_data := self.species_data:
             name1, name2 = species_data
@@ -841,7 +780,7 @@ class Character:
 
         if self.nature:
             footer_elements.append(f"Nature: {self.nature.name}")
-        footer_elements.append(f"Height: {self.height_text}")
+        footer_elements.append(f"{self.size_kind.name}: {self.height_text}")
         footer_elements.append(f"Weight: {self.weight_text}")
         footer_text = "\n".join(footer_elements) or "No additional information."
         c_embed.set_footer(text=footer_text)

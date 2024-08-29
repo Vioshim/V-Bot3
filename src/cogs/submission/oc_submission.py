@@ -529,8 +529,8 @@ class SizeField(TemplateField):
 
     @classmethod
     def evaluate(cls, oc: Character):
-        if not oc.size_category.is_valid():
-            return oc.size_category.label_for(oc.age.scale)
+        if not oc.size_kind.is_valid():
+            return "Invalid Size Kind"
 
     @classmethod
     async def on_submit(
@@ -544,7 +544,7 @@ class SizeField(TemplateField):
         view = HeightView(target=itx, member=itx.user, oc=oc, unlock=itx.permissions.administrator)
         await view.send(
             title=f"{template.title} Character's Size.",
-            description=f"> {oc.height_text}",
+            description=f"> {oc.height_text}\n> POV: {oc.real_height_text}",
             ephemeral=ephemeral,
             image="https://cdn.discordapp.com/attachments/1244123820004999270/1270002674863046748/image.png",
         )
