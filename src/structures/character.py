@@ -518,6 +518,12 @@ class Character:
         if self.hidden_power:
             self.hidden_power = TypingEnum.deduce(self.hidden_power)
 
+        if isinstance(self.size_kind, float):
+            try:
+                self.size_kind = SizeKind(self.size_kind)
+            except ValueError:
+                self.size_kind = SizeKind.Regular
+        
         self.size = min(2.0 * self.age.scale, max(1.0 * self.age.scale, self.size))
 
     def __eq__(self, other: Character):
