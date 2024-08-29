@@ -141,7 +141,7 @@ class HeightView(Basic):
         middle = AMOUNT // 2
         ref = size_kind.value * self.oc.age.scale
         minimum, maximum = 1.0 * self.oc.age.scale, 2.0 * self.oc.age.scale
-        for index, value in enumerate(np.linspace(minimum, maximum, AMOUNT)):
+        for index, value in enumerate(np.linspace(maximum, minimum, AMOUNT)):
             if index == middle:
                 emoji = "🟩"
             elif index < middle:
