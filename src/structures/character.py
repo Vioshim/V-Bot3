@@ -351,7 +351,7 @@ class SizeKind(Enum):
         return self.value[1]
     
     def is_valid(self):
-        return 0.1 <= self.value <= 10.0
+        return 0.1 <= self.value[0] <= 10.0
 
     def label_for(self, scale: float = 1.0, minimum: float = 1.0, maximum: float = 2.0, real: bool = False):
         n = self.name.replace("_", " ")
@@ -359,8 +359,8 @@ class SizeKind(Enum):
         mi = minimum * scale
 
         if real:
-            ma *= self.value
-            mi *= self.value
+            ma *= self.value[0]
+            mi *= self.value[0]
 
         if mi >= 5.87862537e10:
             return f"{n} ({mi/9.461e+15:.2f} ly / {mi/5.87862537e12:.2f} au - {ma/9.461e+15:.2f} ly / {ma/5.87862537e12:.2f} au)"
