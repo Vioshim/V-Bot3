@@ -36,7 +36,7 @@ class HeightModal(Modal, title="Height"):
 
     async def on_submit(self, interaction: Interaction, /) -> None:
         ref = self.oc.age.scale
-        self.oc.size = round(min(2.0 * ref, max(1.0 * ref, self.value)), 4)
+        self.oc.size = round(min(2.1 * ref, max(1.2 * ref, self.value)), 4)
         info = Size.Average.height_info(self.oc.size)
         await interaction.response.send_message(info, ephemeral=True, delete_after=3)
         self.stop()
@@ -138,7 +138,7 @@ class HeightView(Basic):
 
         self.choice.options.clear()
         middle = AMOUNT // 2
-        minimum, maximum = 1.0 * self.oc.age.scale, 2.0 * self.oc.age.scale
+        minimum, maximum = 1.2 * self.oc.age.scale, 2.1 * self.oc.age.scale
         for index, value in enumerate(np.linspace(maximum, minimum, AMOUNT)):
             if index == middle:
                 emoji = "🟩"
@@ -165,7 +165,7 @@ class HeightView(Basic):
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
         ref = self.oc.age.scale
-        self.oc.size = round(max(1.0 * ref, min(2.0 * ref, float(sct.values[0]))), 4)
+        self.oc.size = round(max(1.2 * ref, min(2.1 * ref, float(sct.values[0]))), 4)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")

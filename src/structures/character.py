@@ -525,7 +525,7 @@ class Character:
             except ValueError:
                 self.size_kind = SizeKind.Regular
 
-        self.size = min(2.0 * self.age.scale, max(1.0 * self.age.scale, self.size))
+        self.size = min(2.1 * self.age.scale, max(1.2 * self.age.scale, self.size))
 
     def __eq__(self, other: Character):
         return isinstance(other, Character) and self.id == other.id
