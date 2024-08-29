@@ -130,10 +130,10 @@ class HeightView(Basic):
 
         for item in items:
             self.category.add_option(
-                label=item.label_for(self.oc.age.scale),
+                label=item.name,
                 value=item.name,
                 default=item == size_kind,
-                description=item.label_for(self.oc.age.scale, real=True),
+                description=f"Multiplier: {item.value:.2f}x",
                 emoji=item.emoji,
             )
 
