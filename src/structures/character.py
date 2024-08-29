@@ -373,7 +373,7 @@ class SizeCategory(Enum):
     Scale_5_Cosmic = 9.461e15, 9.461e15 * 2.5, "As strong as a small galaxy", "🟪"
 
     def is_valid(self):
-        return not self.name.startswith("Scale_")
+        return not self.name.endswith(("Itty_Bitty", "Cosmic"))
 
     @classmethod
     def category_for(cls, value: float, scale: float = 1.0):
