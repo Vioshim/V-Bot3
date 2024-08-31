@@ -425,13 +425,12 @@ class Species:
         if not value or isinstance(value, str):
             return cls.from_ID(value)
 
-        children_classes = {x.__name__.removeprefix("Custom").lower(): x for x in CustomSpecies.__subclasses__()}
-        children_classes["base"] = Variant
-
         item = value.copy()
-        for k, v in children_classes.items():
-            if data := item.pop(k, None):
-                return v(base=data, **item)
+        if data := item.pop("base", None):
+            return Variant.from_base(base=data, **item)
+
+        if data := item.pop("fakemon", None):
+            return Fakemon.from_base(base=data, **item)
 
         if data := item.get("fusion", []):
             if isinstance(data, dict):
@@ -621,10 +620,10 @@ class CustomSpecies(Species):
     def from_base(
         cls,
         name: str = "",
-        base: Optional[Species] = None,
-        abilities: Optional[frozenset[Ability]] = None,
-        movepool: Optional[Movepool] = None,
-        types: Optional[frozenset[TypingEnum]] = None,
+        base: Optional[str | Species] = None,
+        abilities: Optional[frozenset[Ability | str]] = None,
+        movepool: Optional[Movepool | dict] = None,
+        types: Optional[frozenset[TypingEnum | str]] = None,
         evolves_from: Optional[str] = None,
     ):
         if isinstance(base, str):
