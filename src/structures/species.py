@@ -32,7 +32,7 @@ from src.structures.ability import Ability
 from src.structures.mon_typing import TypingEnum
 from src.structures.movepool import Movepool
 from src.structures.pronouns import Pronoun
-from src.utils.functions import fix
+from src.utils.functions import common_pop_get, fix
 
 __all__ = (
     "Species",
@@ -426,7 +426,7 @@ class Species:
             return cls.from_ID(value)
 
         item = value.copy()
-        if data := item.pop("base", None):
+        if data := common_pop_get(item, "base", "variant"):
             return Variant.from_base(base=data, **item)
 
         if data := item.pop("fakemon", None):
