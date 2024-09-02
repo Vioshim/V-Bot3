@@ -60,7 +60,7 @@ class Pokeball(Enum):
 
     @property
     def emoji(self):
-        return PartialEmoji(name="Pokeball", id=1080677576713977856)
+        return PartialEmoji(name="Pokeball", id=1280113944173744128)
 
     @property
     def url(self):
