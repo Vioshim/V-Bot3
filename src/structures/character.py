@@ -754,8 +754,7 @@ class Character:
 
         if species_data := self.species_data:
             name1, name2 = species_data
-            types_text = "".join(str(x.emoji) for x in self.types)
-            c_embed.add_field(name=f"{name1}\n{types_text}", value=name2)
+            c_embed.add_field(name=name1, value=name2)
 
         if (sp_ability := self.sp_ability) and sp_ability.valid:
             sp_embed = Embed(
@@ -780,7 +779,7 @@ class Character:
         phrase = "OC's Moveset" if not self.static else "NPC's Moveset"
         if hidden_power := self.hidden_power:
             color = Color(hidden_power.color)
-            moveset_title = f"{hidden_power.emoji} {phrase}"
+            moveset_title = f"{phrase} - H. Power: {hidden_power.name}"
         else:
             color = Color.blurple()
             moveset_title = phrase
@@ -793,6 +792,7 @@ class Character:
 
         if self.nature:
             footer_elements.append(f"Nature: {self.nature.name}")
+        footer_elements.append(f"Types: {', '.join(x.name for x in self.types)}")
         footer_elements.append(f"{self.size_kind.name}: {self.height_text}")
         footer_elements.append(f"Weight: {self.weight_text}")
         footer_text = "\n".join(footer_elements) or "No additional information."
