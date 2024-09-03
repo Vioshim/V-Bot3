@@ -42,9 +42,9 @@ ALL_MOVES_DEX: dict[str, dict[str, dict[str, str]]] = {"Physical": {}, "Special"
 
 
 class Category(Enum):
-    Status = PartialEmoji(name="Status", id=1080656476357525615)
-    Physical = PartialEmoji(name="Physical", id=1080656480446971914)
-    Special = PartialEmoji(name="Special", id=1080656483190059038)
+    Status = PartialEmoji(name="Status", id=1280113876771409961)
+    Physical = PartialEmoji(name="Physical", id=1280113886686875669)
+    Special = PartialEmoji(name="Special", id=1280113899353669710)
 
     @property
     def url(self):

@@ -46,14 +46,14 @@ __all__ = (
 
 
 class ArrowEmotes(NamedTuple):
-    START = PartialEmoji(name="DoubleArrowLeft", id=1080654556272283739)
-    BACK = PartialEmoji(name="ArrowLeft", id=1080654546461786122)
-    CLOSE = PartialEmoji(name="Stop", id=1080654549062275142)
-    FORWARD = PartialEmoji(name="ArrowRight", id=1080654553927663758)
-    END = PartialEmoji(name="DoubleArrowRight", id=1080654551373324338)
+    START = PartialEmoji(name="DoubleArrowLeft", id=1280113654406053940)
+    BACK = PartialEmoji(name="ArrowLeft", id=1280113599548887143)
+    CLOSE = PartialEmoji(name="Stop", id=1280113612429463664)
+    FORWARD = PartialEmoji(name="ArrowRight", id=1280113643513708644)
+    END = PartialEmoji(name="DoubleArrowRight", id=1280113624916168765)
 
 
-REPLY_EMOJI = PartialEmoji(name="IconReply", id=1080654543672594432)
+REPLY_EMOJI = PartialEmoji(name="IconReply", id=1280113582905888768)
 EMOTE_CREATE_EMOJI = PartialEmoji(name="emotecreate", id=460538984263581696)
 EMOTE_REMOVE_EMOJI = PartialEmoji(name="emoteremove", id=460538983965786123)
 EMOTE_UPDATE_EMOJI = PartialEmoji(name="emoteupdate", id=460539246508507157)
@@ -61,7 +61,7 @@ PING_EMOJI = PartialEmoji(name="IconInsights", id=751160378800472186)
 DEFAULT_TIMEZONE = timezone(name="GMT-5", offset=timedelta(hours=-5))
 WHITE_BAR = "https://dummyimage.com/500x5/FFFFFF/000000&text=%20"
 STICKER_EMOJI = PartialEmoji(name="MessageSticker", id=753338258963824801)
-RICH_PRESENCE_EMOJI = PartialEmoji(name="StatusRichPresence", id=842328614883295232)
+RICH_PRESENCE_EMOJI = PartialEmoji(name="StatusRichPresence", id=1280113911873671250)
 MOBILE_EMOJI = PartialEmoji(name="StatusMobileOld", id=716828817796104263)
 SETTING_EMOJI = PartialEmoji(name="setting", id=962380600902320148, animated=True)
 LOADING_EMOJI = PartialEmoji(name="loading", id=969722876003512320, animated=True)
@@ -69,10 +69,10 @@ LINK_EMOJI = PartialEmoji(name="MessageLink", id=778925231506587668)
 THUMBS_UP_EMOJI = PartialEmoji(name="thumbs_up", id=995303508419026954)
 THUMBS_DOWN_EMOJI = PartialEmoji(name="thumbs_down", id=995303546503311380)
 INVITE_EMOJI = PartialEmoji(name="IconInvite", id=778931752835088426)
-LIST_EMOJI = PartialEmoji(name="list", id=432986579007569922)
+LIST_EMOJI = PartialEmoji(name="list", id=1280113567357603850)
 KOFI_EMOJI = PartialEmoji(name="kofi", id=952523061171716097)
-CREATE_EMOJI = PartialEmoji(name="channelcreate", id=432986578781077514)
-DELETE_EMOJI = PartialEmoji(name="channeldelete", id=432986579674333215)
+CREATE_EMOJI = PartialEmoji(name="ChannelCreate", id=1280113923315728446)
+DELETE_EMOJI = PartialEmoji(name="ChannelDelete", id=1280113933780258857)
 PRESENCE_EMOJI = PartialEmoji(name="StatusRichPresence", id=842328614883295232)
 DICE_NUMBERS = [
     PartialEmoji(name="one", id=952524707129868308),
