@@ -390,15 +390,32 @@ class SizeKind(float, Enum):
 
 
 class Weight(float, Enum):
-    Obese = 1.500
-    Very_Overweight = 1.375
-    Overweight = 1.250
-    Slightly_Overweight = 1.125
-    Average = 1.000
-    Slightly_Underweight = 0.875
-    Underweight = 0.750
-    Very_Underweight = 0.625
-    Scrawny = 0.500
+    Very_Robust = 1.500
+    Obese = Very_Robust
+
+    Slightly_Robust = 1.375
+    Very_Overweight = Slightly_Robust
+
+    Very_Sturdy = 1.250
+    Overweight = Very_Sturdy
+
+    Slightly_Sturdy = 1.125
+    Slightly_Overweight = Slightly_Sturdy
+
+    Balanced = 1.000
+    Average = Balanced
+
+    Slightly_Lean = 0.875
+    Slightly_Underweight = Slightly_Lean
+
+    Very_Lean = 0.750
+    Underweight = Very_Lean
+
+    Slightly_Delicate = 0.625
+    Very_Underweight = Slightly_Delicate
+
+    Very_Delicate = 0.500
+    Scrawny = Very_Delicate
 
 
 @dataclass(slots=True)

@@ -552,8 +552,8 @@ class SizeField(TemplateField):
         progress.add(cls.name)
 
 
-class WeightField(TemplateField):
-    "Modify the OC's Weight"
+class BodyShapeField(TemplateField):
+    "Modify the OC's Body Shape"
 
     @classmethod
     async def on_submit(
@@ -575,7 +575,7 @@ class WeightField(TemplateField):
             auto_choice_info=True,
         )
         async with view.send(
-            title=f"{template.title} Character's Weight.",
+            title=f"{template.title} Character's Body Shape.",
             description=f"> {oc.weight_text}",
             ephemeral=ephemeral,
             single=True,
