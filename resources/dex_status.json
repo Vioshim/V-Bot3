@@ -5452,6 +5452,13 @@
         "Long-Range": "A long-range electric trap that surrounds distant foes, dealing damage and preventing escape.",
         "Area-of-Effect (AoE)": "A thunder cage that traps all nearby foes, causing damage and preventing escape."
     },
+    "Thunder Fang": {
+        "Close Combat": "Bites the target, applying paralysis or flinch status directly.",
+        "Melee": "Electrifies bite with a small shock, inflicting paralysis with each contact.",
+        "Mid-Range": "Sends a shockwave from the fangs to paralyze enemies at a short distance.",
+        "Long-Range": "Sends an electric jolt toward far enemies to paralyze them remotely.",
+        "Area-of-Effect (AoE)": "Bites the ground, creating a shockwave that spreads, paralyzing multiple targets nearby."
+    },
     "Thunder Punch": {
         "Close Combat": "A close-range punch that delivers an electric shock, possibly causing paralysis.",
         "Melee": "A melee thunder punch that shocks the target, with a chance to paralyze.",
