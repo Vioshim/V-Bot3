@@ -811,7 +811,7 @@ class Character:
             footer_elements.append(f"Nature: {self.nature.name}")
         footer_elements.append(f"Types: {', '.join(x.name for x in self.types)}")
         footer_elements.append(f"{self.size_kind.name}: {self.height_text}")
-        footer_elements.append(f"Weight: {self.weight_text}")
+        footer_elements.append(f"Shape: {self.weight_text}")
         footer_text = "\n".join(footer_elements) or "No additional information."
         c_embed.set_footer(text=footer_text)
 
