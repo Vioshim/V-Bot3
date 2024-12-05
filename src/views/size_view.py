@@ -140,7 +140,7 @@ class HeightView(Basic):
     @select(placeholder="Select a Size.", min_values=1, max_values=1)
     async def choice(self, itx: Interaction, sct: Select):
         ref = self.oc.age.scale
-        self.oc.size = round(max(MIN_VALUE * ref, min(MAX_VALUE * ref, float(sct.values[0]))), 4)
+        self.oc.size = round(max(0.1 * ref, min(3 * ref, float(sct.values[0]))), 4)
         await self.delete(itx)
 
     @button(label="Meters", style=ButtonStyle.blurple, emoji="\N{PENCIL}")

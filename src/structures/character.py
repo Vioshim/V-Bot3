@@ -501,7 +501,7 @@ class Character:
         self.moveset = Move.deduce_many(*self.moveset)
 
         try:
-            self.size = Size[self.size].height_value(1.65) if isinstance(self.size, str) else float(self.size)
+            self.size = Size[self.size].height_value(1) if isinstance(self.size, str) else float(self.size)
         except (KeyError, ValueError):
             self.size = 1.65
 
@@ -691,7 +691,7 @@ class Character:
     @property
     def height_value(self):
         if isinstance(self.size, Size):
-            value = self.size.height_value(1.65)
+            value = self.size.height_value(1)
         else:
             value = self.size
         return round(value, 4)
