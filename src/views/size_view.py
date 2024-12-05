@@ -126,8 +126,8 @@ class HeightView(Basic):
         middle = AMOUNT // 2
         for index, value in enumerate(
             np.linspace(
-                MIN_VALUE * self.oc.age.scale,
                 MAX_VALUE * self.oc.age.scale,
+                MIN_VALUE * self.oc.age.scale,
                 AMOUNT,
             )
         ):
