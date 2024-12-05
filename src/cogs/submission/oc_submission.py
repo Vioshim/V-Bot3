@@ -403,6 +403,10 @@ class Template(TemplateItem, Enum):
                     return
 
         match len(choices):
+            case 1:
+                oc.species = Variant.from_base(base=choices[0])
+            case 2 | 3:
+                oc.species = Fusion(*choices)
             case 0 if self == self.Fakemon:
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
@@ -420,14 +424,10 @@ class Template(TemplateItem, Enum):
                                 base_image=oc.image_url,
                                 movepool=Movepool(other=oc.moveset.copy()),
                             )
-            case 1:
-                oc.species = Variant.from_base(base=choices[0])
-            case 2 | 3:
-                oc.species = Fusion(*choices)
 
     @property
     def min_values(self):
-        return 1
+        return 1 if self in (self.Fakemon, self.Pokemon) else 0
 
     @property
     def max_values(self):
