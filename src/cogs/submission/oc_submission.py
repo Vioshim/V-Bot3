@@ -383,31 +383,32 @@ class Template(TemplateItem, Enum):
     async def process(self, oc: Character, itx: Interaction[CustomBot], ephemeral: bool):
         choices: list[Species] = []
         db: AsyncIOMotorCollection = itx.client.mongo_db("Characters")
+        mons = self.total_species
+        
+        key = {"server": itx.guild_id}
+        if role := get(itx.guild.roles, name="Roleplayer"):
+            key["author"] = {"$in": [x.id for x in role.members]}
 
-        if mons := self.total_species:
-            key = {"server": itx.guild_id}
-            if role := get(itx.guild.roles, name="Roleplayer"):
-                key["author"] = {"$in": [x.id for x in role.members]}
-            ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
-            view = SpeciesComplex(
-                member=itx.user,
-                target=itx,
-                mon_total=mons,
-                max_values=self.max_values,
-                ocs=ocs,
-            )
-            async with view.send(ephemeral=ephemeral) as data:
-                if self.min_values <= len(data) <= self.max_values:
-                    choices.extend(data)
-                else:
-                    return
+        ocs = [Character.from_mongo_dict(x) async for x in db.find(key)]
+        view = SpeciesComplex(
+            member=itx.user,
+            target=itx,
+            mon_total=mons,
+            max_values=self.max_values,
+            ocs=ocs,
+        )
+        async with view.send(ephemeral=ephemeral) as data:
+            if self.min_values <= len(data) <= self.max_values:
+                choices.extend(data)
+            else:
+                return
 
         match len(choices):
             case 1:
                 oc.species = Variant.from_base(base=choices[0])
             case 2 | 3:
                 oc.species = Fusion(*choices)
-            case 0 if self == self.Fakemon:
+            case 0 if self != self.Pokemon:
                 name = oc.species.name if isinstance(oc.species, Fakemon) else None
                 async with ModernInput(member=itx.user, target=itx).handle(
                     label="OC's Species.",
@@ -427,11 +428,11 @@ class Template(TemplateItem, Enum):
 
     @property
     def min_values(self):
-        return 1 if self in (self.Fakemon, self.Pokemon) else 0
+        return 1
 
     @property
     def max_values(self):
-        return 3 if self == self.Pokemon else 0
+        return 3
 
     @property
     def total_species(self) -> frozenset[Species]:
